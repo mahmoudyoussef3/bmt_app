@@ -39,20 +39,30 @@ class ClientSeatMap extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        for (var r = 0; r < blueprint.rows.length; r++)
-          Padding(
-            padding: EdgeInsets.only(top: r == 0 ? 0 : rowGap),
-            child: Row(
-              mainAxisSize: centerRows ? MainAxisSize.min : MainAxisSize.max,
-              mainAxisAlignment: centerRows
-                  ? MainAxisAlignment.center
-                  : MainAxisAlignment.start,
-              children: _rowChildren(context, blueprint.rows[r]),
+    // A cabin is a physical object and does not mirror with the writing system.
+    // Column 1 of a blueprint is the driver's side of a left-hand-drive vehicle,
+    // so under Arabic the ambient RTL would flip the whole van: steering wheel on
+    // the right, the aisle on the wrong side, and every window seat against the
+    // opposite wall from the one the rider will actually sit by. Seat *labels* are
+    // unaffected — they travel with their tile — so this corrects the drawing
+    // without changing which seat any number refers to.
+    return Directionality(
+      textDirection: TextDirection.ltr,
+      child: Column(
+        children: [
+          for (var r = 0; r < blueprint.rows.length; r++)
+            Padding(
+              padding: EdgeInsets.only(top: r == 0 ? 0 : rowGap),
+              child: Row(
+                mainAxisSize: centerRows ? MainAxisSize.min : MainAxisSize.max,
+                mainAxisAlignment: centerRows
+                    ? MainAxisAlignment.center
+                    : MainAxisAlignment.start,
+                children: _rowChildren(context, blueprint.rows[r]),
+              ),
             ),
-          ),
-      ],
+        ],
+      ),
     );
   }
 

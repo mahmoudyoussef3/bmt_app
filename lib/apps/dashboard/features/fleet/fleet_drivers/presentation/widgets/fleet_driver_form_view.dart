@@ -396,15 +396,21 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
               ),
               const SizedBox(height: AppSpacing.medium),
             ],
-                        FleetFormActionsBar(
-                          saving: _saving,
-                          onCancel: _handleBack,
-                          onSave: _onSave,
-                          saveLabel: isEdit ? 'حفظ التعديلات' : 'حفظ السائق',
-                        ),
                       ],
                     ),
                   ),
+                ),
+              ),
+              // Docked, not scrolled — same reason as the vehicle form: this form is
+              // taller than any window it opens in, so an action bar at the end of
+              // the scroll view is never on screen when the operator wants it.
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                child: FleetFormActionsBar(
+                  saving: _saving,
+                  onCancel: _handleBack,
+                  onSave: _onSave,
+                  saveLabel: isEdit ? 'حفظ التعديلات' : 'حفظ السائق',
                 ),
               ),
             ],

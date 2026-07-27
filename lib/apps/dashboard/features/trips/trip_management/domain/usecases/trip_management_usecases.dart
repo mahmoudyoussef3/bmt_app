@@ -1,4 +1,5 @@
 import '../../../shared/domain/entities/operation_trip.dart';
+import '../../../shared/domain/entities/trip_lifecycle.dart';
 import '../repositories/trips_repository.dart';
 
 class GetOperationTripsUseCase {
@@ -26,8 +27,36 @@ class UpdateTripStatusUseCase {
 
   const UpdateTripStatusUseCase(this._repository);
 
-  Future<OperationTrip> call(String tripId, OperationTripStatus status) {
-    return _repository.updateTripStatus(tripId, status);
+  Future<OperationTrip> call(
+    String tripId,
+    OperationTripStatus status, {
+    String? reason,
+  }) {
+    return _repository.updateTripStatus(tripId, status, reason: reason);
+  }
+}
+
+class CancelTripUseCase {
+  final TripsRepository _repository;
+
+  const CancelTripUseCase(this._repository);
+
+  Future<OperationTrip> call(String tripId, String reason) {
+    return _repository.cancelTrip(tripId, reason);
+  }
+}
+
+class CloseStaleTripUseCase {
+  final TripsRepository _repository;
+
+  const CloseStaleTripUseCase(this._repository);
+
+  Future<OperationTrip> call(
+    String tripId,
+    StaleTripOutcome outcome, {
+    String? reason,
+  }) {
+    return _repository.closeStaleTrip(tripId, outcome, reason: reason);
   }
 }
 

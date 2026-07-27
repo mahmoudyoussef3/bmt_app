@@ -127,7 +127,24 @@ class FleetVehiclesCardList extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(width: AppSpacing.small),
-                              StatusChip(label: vehicle.status.label),
+                              // Two readings, deliberately side by side: what the
+                              // bus is doing, and what state its record is in.
+                              // Wrap so a large text scale stacks them instead of
+                              // overflowing the card header.
+                              Wrap(
+                                spacing: AppSpacing.xSmall,
+                                runSpacing: AppSpacing.xSmall,
+                                alignment: WrapAlignment.end,
+                                children: [
+                                  FleetOperationalChip(
+                                    status: workspace.operationalStatusOf(
+                                      vehicle,
+                                    ),
+                                    duty: workspace.currentDutyOf(vehicle),
+                                  ),
+                                  StatusChip(label: vehicle.status.label),
+                                ],
+                              ),
                             ],
                           ),
                         ),

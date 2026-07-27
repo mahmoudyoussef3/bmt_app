@@ -48,6 +48,8 @@ void registerTripsDependencies(GetIt di) {
     () => UpdateTripStatusUseCase(di<TripsRepository>()),
   );
   di.registerLazySingleton(() => UpdateTripInfoUseCase(di<TripsRepository>()));
+  di.registerLazySingleton(() => CancelTripUseCase(di<TripsRepository>()));
+  di.registerLazySingleton(() => CloseStaleTripUseCase(di<TripsRepository>()));
   di.registerLazySingleton(() => DeleteTripUseCase(di<TripsRepository>()));
   di.registerLazySingleton(
     () => WatchOperationTripsUseCase(di<TripsRepository>()),
@@ -97,6 +99,8 @@ void registerTripsDependencies(GetIt di) {
       getTripDetails: di<GetTripDetailsUseCase>(),
       updateTripStatus: di<UpdateTripStatusUseCase>(),
       updateTripInfo: di<UpdateTripInfoUseCase>(),
+      cancelTrip: di<CancelTripUseCase>(),
+      closeStaleTrip: di<CloseStaleTripUseCase>(),
       watchTripDetails: di<WatchTripDetailsUseCase>(),
     ),
   );

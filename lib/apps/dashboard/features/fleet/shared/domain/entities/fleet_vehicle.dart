@@ -44,10 +44,10 @@ class SeatLayoutItem {
       _ => 'passenger',
     };
     return SeatLayoutItem(
-      seatNumber: json['seat_number'] as String,
+      seatNumber: json['seat_number']?.toString() ?? '',
       seatType: seatType,
-      row: json['row'] as int,
-      column: json['column'] as int,
+      row: (json['row'] as num?)?.toInt() ?? 0,
+      column: (json['column'] as num?)?.toInt() ?? 0,
     );
   }
 }
@@ -69,15 +69,34 @@ class SeatConfiguration {
     'seats': seats.map((s) => s.toJson()).toList(),
   };
 
+  /// Reads a stored `vehicles.seat_configuration`.
+  ///
+  /// Defensive on purpose: the column defaults to `'{}'`, so a row written by
+  /// anything other than this form — a seed script, a backfill, a hand-fixed
+  /// row — arrives with no `rows`/`columns` at all. Casting those straight to
+  /// `int` threw, and because the fleet workspace is loaded in one pass, a single
+  /// such row blanked the entire Fleet screen with a cast error rather than
+  /// showing the vehicle as unconfigured.
   factory SeatConfiguration.fromJson(Map<String, dynamic> json) {
+    final seats =
+        (json['seats'] as List?)
+            ?.whereType<Map<String, dynamic>>()
+            .map(SeatLayoutItem.fromJson)
+            .toList() ??
+        const <SeatLayoutItem>[];
+
+    // Fall back to the geometry the seats themselves describe, which is the only
+    // honest answer when the stored envelope is missing or disagrees with them.
+    final derivedRows = seats.fold<int>(0, (max, s) => s.row > max ? s.row : max);
+    final derivedColumns = seats.fold<int>(
+      0,
+      (max, s) => s.column > max ? s.column : max,
+    );
+
     return SeatConfiguration(
-      rows: json['rows'] as int,
-      columns: json['columns'] as int,
-      seats:
-          (json['seats'] as List?)
-              ?.map((s) => SeatLayoutItem.fromJson(s as Map<String, dynamic>))
-              .toList() ??
-          [],
+      rows: (json['rows'] as num?)?.toInt() ?? derivedRows,
+      columns: (json['columns'] as num?)?.toInt() ?? derivedColumns,
+      seats: seats,
     );
   }
 

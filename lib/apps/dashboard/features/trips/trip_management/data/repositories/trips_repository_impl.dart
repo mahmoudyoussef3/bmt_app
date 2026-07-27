@@ -1,4 +1,5 @@
 import '../../../shared/domain/entities/operation_trip.dart';
+import '../../../shared/domain/entities/trip_lifecycle.dart';
 import '../../../shared/domain/entities/trip_pricing.dart';
 import '../../domain/repositories/trips_repository.dart';
 import '../datasources/trips_datasource.dart';
@@ -29,24 +30,72 @@ class TripsRepositoryImpl implements TripsRepository {
   @override
   Future<OperationTrip> updateTripStatus(
     String tripId,
-    OperationTripStatus status,
-  ) async {
+    OperationTripStatus status, {
+    String? reason,
+  }) async {
     try {
       final trip = await _datasource.fetchTripById(tripId);
       if (trip.status == status) {
         return trip;
       }
-      if (!_canTransitionTripStatus(trip.status, status)) {
+      if (!TripLifecycle.canTransition(trip.status, status)) {
         throw Exception(
           'لا يمكن نقل الرحلة من "${trip.status.label}" إلى "${status.label}". استخدم الخطوة التشغيلية التالية فقط.',
         );
       }
-      return await _datasource.updateTripStatus(tripId, status);
+      // Explained before the round trip so the operator gets an instruction rather
+      // than a refusal. The server runs the same gate regardless.
+      if (status == OperationTripStatus.openForBooking) {
+        final blocker = TripPublishBlocker.evaluate(trip);
+        if (blocker != null) {
+          throw Exception('تعذر فتح الحجز: ${blocker.message}');
+        }
+      }
+      if (status == OperationTripStatus.cancelled) {
+        return await cancelTrip(tripId, reason ?? '');
+      }
+      return await _datasource.updateTripStatus(tripId, status, reason: reason);
     } catch (e) {
       if (e.toString().contains('Exception:')) {
         rethrow;
       }
       throw Exception('تعذر تحديث حالة الرحلة: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<OperationTrip> cancelTrip(String tripId, String reason) async {
+    try {
+      final trimmed = reason.trim();
+      if (trimmed.isEmpty) {
+        throw Exception('يجب تحديد سبب إلغاء الرحلة.');
+      }
+      return await _datasource.cancelTrip(tripId, trimmed);
+    } catch (e) {
+      if (e.toString().contains('Exception:')) {
+        rethrow;
+      }
+      throw Exception('تعذر إلغاء الرحلة: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<OperationTrip> closeStaleTrip(
+    String tripId,
+    StaleTripOutcome outcome, {
+    String? reason,
+  }) async {
+    try {
+      return await _datasource.closeStaleTrip(
+        tripId,
+        outcome,
+        reason: reason?.trim().isEmpty ?? true ? null : reason!.trim(),
+      );
+    } catch (e) {
+      if (e.toString().contains('Exception:')) {
+        rethrow;
+      }
+      throw Exception('تعذر إغلاق الرحلة: ${e.toString()}');
     }
   }
 
@@ -147,8 +196,23 @@ class TripsRepositoryImpl implements TripsRepository {
   @override
   Future<void> deleteTrip(String tripId) async {
     try {
+      // Deleting a trip that carries bookings used to leave paid bookings pointing at
+      // nothing — operation_bookings.trip_id is ON DELETE SET NULL — with no refund
+      // trail and no word to the rider. Checked here so the operator is told to cancel
+      // instead; `trg_enforce_trip_delete_guard` refuses it regardless.
+      final trip = await _datasource.fetchTripById(tripId);
+      if (!TripLifecycle.canDelete(trip)) {
+        throw Exception(
+          trip.passengers.isNotEmpty
+              ? 'لا يمكن حذف رحلة عليها ركاب — ألغِها بدلاً من ذلك ليتم إشعارهم وتحرير المقاعد.'
+              : 'لا يمكن حذف رحلة تم نشرها — ألغِها بدلاً من ذلك.',
+        );
+      }
       await _datasource.deleteTrip(tripId);
     } catch (e) {
+      if (e.toString().contains('Exception:')) {
+        rethrow;
+      }
       throw Exception('تعذر حذف الرحلة: ${e.toString()}');
     }
   }
@@ -311,21 +375,3 @@ class TripsRepositoryImpl implements TripsRepository {
       _datasource.watchTripChanges(tripId);
 }
 
-bool _canTransitionTripStatus(
-  OperationTripStatus current,
-  OperationTripStatus next,
-) {
-  return switch (current) {
-    OperationTripStatus.scheduled =>
-      next == OperationTripStatus.openForBooking ||
-          next == OperationTripStatus.cancelled,
-    OperationTripStatus.openForBooking =>
-      next == OperationTripStatus.boarding ||
-          next == OperationTripStatus.cancelled,
-    OperationTripStatus.boarding =>
-      next == OperationTripStatus.inProgress ||
-          next == OperationTripStatus.cancelled,
-    OperationTripStatus.inProgress => next == OperationTripStatus.completed,
-    OperationTripStatus.completed || OperationTripStatus.cancelled => false,
-  };
-}

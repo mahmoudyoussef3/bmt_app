@@ -76,28 +76,46 @@ class FleetSeatLayoutVisualizer extends StatelessWidget {
                     color: scheme.primaryContainer.withAlpha(100),
                   ),
                   const SizedBox(height: AppSpacing.medium),
-                  for (final row in blueprint.rows)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: AppSpacing.small),
-                      child: Row(
-                        children: [
-                          for (final slot in row)
-                            Expanded(
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 2,
-                                ),
-                                child: _SlotTile(
-                                  slot: slot,
-                                  label: slot.isSeat
-                                      ? _labelFor(passengers, slot.seatNumber)
-                                      : slot.label,
-                                ),
-                              ),
+                  // The cabin is a physical object, not a block of text. Column 1
+                  // of a blueprint is the driver's side of a left-hand-drive
+                  // vehicle, and under the dashboard's global RTL a plain Row
+                  // would flip it to the right — putting the steering wheel on
+                  // the wrong side and every window seat on the wrong wall. The
+                  // grid is pinned to LTR; the Arabic labels around it are not.
+                  Directionality(
+                    textDirection: TextDirection.ltr,
+                    child: Column(
+                      children: [
+                        for (final row in blueprint.rows)
+                          Padding(
+                            padding: const EdgeInsets.only(
+                              bottom: AppSpacing.small,
                             ),
-                        ],
-                      ),
+                            child: Row(
+                              children: [
+                                for (final slot in row)
+                                  Expanded(
+                                    child: Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 2,
+                                      ),
+                                      child: _SlotTile(
+                                        slot: slot,
+                                        label: slot.isSeat
+                                            ? _labelFor(
+                                                passengers,
+                                                slot.seatNumber,
+                                              )
+                                            : slot.label,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                      ],
                     ),
+                  ),
                   const SizedBox(height: AppSpacing.xSmall),
                   _CabinBanner(
                     label: 'مؤخرة الحافلة',

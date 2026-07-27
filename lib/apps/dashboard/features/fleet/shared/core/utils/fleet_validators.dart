@@ -1,4 +1,27 @@
 class FleetValidators {
+  /// Rewrites Arabic-Indic (`٠..٩`) and Extended Arabic-Indic (`۰..۹`) digits as
+  /// ASCII.
+  ///
+  /// Dart's `\d` and `FilteringTextInputFormatter.digitsOnly` are both ASCII-only,
+  /// so a number typed the way it is printed on an Egyptian number plate is not a
+  /// number as far as any of them are concerned. Every numeric field in the fleet
+  /// forms except the plate is ASCII by construction (a `digitsOnly` formatter
+  /// strips anything else as it is typed); the plate is free text because a plate
+  /// is not a number, and it is the one place the difference is load-bearing.
+  static String normalizeDigits(String value) {
+    final buffer = StringBuffer();
+    for (final rune in value.runes) {
+      if (rune >= 0x0660 && rune <= 0x0669) {
+        buffer.writeCharCode(rune - 0x0660 + 0x30); // ٠..٩
+      } else if (rune >= 0x06F0 && rune <= 0x06F9) {
+        buffer.writeCharCode(rune - 0x06F0 + 0x30); // ۰..۹
+      } else {
+        buffer.writeCharCode(rune);
+      }
+    }
+    return buffer.toString();
+  }
+
   static String? validateName(String? value) {
     if (value == null || value.trim().isEmpty) return 'الاسم الكامل مطلوب';
     final trimmed = value.trim();
@@ -67,11 +90,24 @@ class FleetValidators {
     return null;
   }
 
+  /// An Egyptian plate is digits plus letters, in either script.
+  ///
+  /// This used to reject `٣٣٠٠ ق ل` — a plate transcribed exactly as it appears on
+  /// the vehicle — on two counts at once: `\d` matches only ASCII digits, and the
+  /// "letters" class `[\u0600-\u06FF]` *contains* the Arabic-Indic digits, so
+  /// `٣٣٠٠` read as four letters and no digits at all. In an Arabic-first
+  /// dashboard that made a whole class of real plate numbers unsaveable, and with
+  /// them the vehicle's seat layout, driver assignment and documents.
   static String? validatePlateNumber(String? value) {
     if (value == null || value.trim().isEmpty) return 'رقم اللوحة مطلوب';
-    final trimmed = value.trim();
-    final hasDigits = RegExp(r'\d').hasMatch(trimmed);
-    final hasLetters = RegExp(r'[\u0600-\u06FFa-zA-Z]').hasMatch(trimmed);
+    final trimmed = normalizeDigits(value.trim());
+    final hasDigits = RegExp(r'[0-9]').hasMatch(trimmed);
+    // Arabic letters only. The two Arabic-Indic digit blocks (U+0660-U+0669 and
+    // U+06F0-U+06F9) sit deliberately outside these ranges, so a plate of bare
+    // digits is never mistaken for one carrying letters.
+    final hasLetters = RegExp(
+      r'[a-zA-Z\u0621-\u063A\u0641-\u064A\u0671-\u06D3]',
+    ).hasMatch(trimmed);
     if (!hasDigits || !hasLetters) {
       return 'رقم اللوحة يجب أن يحتوي على أرقام وحروف معاً (مثال: 123 أ ب ج)';
     }

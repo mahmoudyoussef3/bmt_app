@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/operation_trip.dart';
+import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/trip_lifecycle.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/trip_pricing.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/trip_management/domain/repositories/trips_repository.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/trip_management/domain/usecases/trip_management_usecases.dart';
@@ -68,8 +69,20 @@ class _FakeRepo implements TripsRepository {
   @override
   Future<OperationTrip> updateTripStatus(
     String tripId,
-    OperationTripStatus status,
-  ) => throw UnimplementedError();
+    OperationTripStatus status, {
+    String? reason,
+  }) => throw UnimplementedError();
+
+  @override
+  Future<OperationTrip> cancelTrip(String tripId, String reason) =>
+      throw UnimplementedError();
+
+  @override
+  Future<OperationTrip> closeStaleTrip(
+    String tripId,
+    StaleTripOutcome outcome, {
+    String? reason,
+  }) => throw UnimplementedError();
 
   @override
   Future<OperationTrip> updateSeatState(

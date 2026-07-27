@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/operation_trip.dart';
+import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/trip_lifecycle.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/trip_pricing.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/shared/data/models/operation_trip_model.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/shared/data/models/trip_pricing_model.dart';
@@ -342,7 +343,11 @@ class _MockTripsDatasource implements TripsDatasource {
         driver: 'أحمد حسن',
         vehicleId: 'vehicle-active',
         vehicle: 'ق س أ 1234',
-        date: '2026-06-12',
+        // Dated far ahead so this fixture stays publishable as the clock moves. The
+        // publish gate added in 20260727160000 refuses a trip whose departure day has
+        // already passed, which pinned the old fixed 2026-06-12 to a date that
+        // eventually became the past.
+        date: '2099-01-01',
         departure: '09:00',
         arrival: '10:30',
         status: OperationTripStatus.scheduled,
@@ -475,8 +480,9 @@ class _MockTripsDatasource implements TripsDatasource {
   @override
   Future<OperationTripModel> updateTripStatus(
     String tripId,
-    OperationTripStatus status,
-  ) async {
+    OperationTripStatus status, {
+    String? reason,
+  }) async {
     final idx = _trips.indexWhere((t) => t.id == tripId);
     if (idx != -1) {
       final trip = _trips[idx];
@@ -486,6 +492,30 @@ class _MockTripsDatasource implements TripsDatasource {
       return _trips[idx];
     }
     throw Exception('Trip not found');
+  }
+
+  String? lastCancelReason;
+  StaleTripOutcome? lastStaleOutcome;
+
+  @override
+  Future<OperationTripModel> cancelTrip(String tripId, String reason) async {
+    lastCancelReason = reason;
+    return updateTripStatus(tripId, OperationTripStatus.cancelled);
+  }
+
+  @override
+  Future<OperationTripModel> closeStaleTrip(
+    String tripId,
+    StaleTripOutcome outcome, {
+    String? reason,
+  }) async {
+    lastStaleOutcome = outcome;
+    return updateTripStatus(
+      tripId,
+      outcome == StaleTripOutcome.operated
+          ? OperationTripStatus.completed
+          : OperationTripStatus.cancelled,
+    );
   }
 
   @override
@@ -670,8 +700,23 @@ class _FailingTripsDatasource implements TripsDatasource {
   @override
   Future<OperationTripModel> updateTripStatus(
     String tripId,
-    OperationTripStatus status,
-  ) {
+    OperationTripStatus status, {
+    String? reason,
+  }) {
+    throw StateError('failure');
+  }
+
+  @override
+  Future<OperationTripModel> cancelTrip(String tripId, String reason) {
+    throw StateError('failure');
+  }
+
+  @override
+  Future<OperationTripModel> closeStaleTrip(
+    String tripId,
+    StaleTripOutcome outcome, {
+    String? reason,
+  }) {
     throw StateError('failure');
   }
 

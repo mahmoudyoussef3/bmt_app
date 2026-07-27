@@ -1,4 +1,5 @@
 import '../../../shared/domain/entities/operation_trip.dart';
+import '../../../shared/domain/entities/trip_lifecycle.dart';
 import '../../../shared/domain/entities/trip_pricing.dart';
 import '../../../shared/data/models/operation_trip_model.dart';
 import '../../../shared/data/models/trip_pricing_model.dart';
@@ -11,8 +12,21 @@ abstract class TripsDatasource {
   Future<void> deleteTrip(String tripId);
   Future<OperationTripModel> updateTripStatus(
     String tripId,
-    OperationTripStatus status,
-  );
+    OperationTripStatus status, {
+    String? reason,
+  });
+
+  /// Cancellation goes through its own RPC because it always carries a reason and
+  /// always means the same thing, rather than being reached through a generic status
+  /// setter.
+  Future<OperationTripModel> cancelTrip(String tripId, String reason);
+
+  /// Closes a trip whose departure day passed while it was still open for booking.
+  Future<OperationTripModel> closeStaleTrip(
+    String tripId,
+    StaleTripOutcome outcome, {
+    String? reason,
+  });
   Future<OperationTripModel> updateSeatState(
     String tripId,
     String seatId,

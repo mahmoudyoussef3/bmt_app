@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_operational_status.dart';
+import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
+import 'package:bmt_app/core/widgets/status_chip.dart';
 
 class FleetAvatar extends StatelessWidget {
   final String label;
@@ -197,41 +200,64 @@ class FleetFormActionsBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final hint = Text(
+      saving ? 'جاري الحفظ والرفع...' : 'راجع البيانات قبل الحفظ النهائي.',
+      maxLines: 2,
+      overflow: TextOverflow.ellipsis,
+      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+        fontWeight: FontWeight.w700,
+      ),
+    );
+
+    final cancel = OutlinedButton(
+      onPressed: saving ? null : onCancel,
+      child: const Text('إلغاء'),
+    );
+
+    final save = FilledButton.icon(
+      onPressed: saving ? null : onSave,
+      icon: saving
+          ? const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : const Icon(Icons.save_rounded),
+      label: Text(saveLabel, maxLines: 1, overflow: TextOverflow.ellipsis),
+    );
+
     return AppCard(
       padding: const EdgeInsets.all(AppSpacing.medium),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              saving
-                  ? 'جاري الحفظ والرفع...'
-                  : 'راجع البيانات قبل الحفظ النهائي.',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-          const SizedBox(width: AppSpacing.medium),
-          OutlinedButton(
-            onPressed: saving ? null : onCancel,
-            child: const Text('إلغاء'),
-          ),
-          const SizedBox(width: AppSpacing.small),
-          FilledButton.icon(
-            onPressed: saving ? null : onSave,
-            icon: saving
-                ? const SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.save_rounded),
-            label: Text(saveLabel),
-          ),
-        ],
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // The reassurance line is the first thing to go: on a narrow pane, or
+          // once Arabic labels grow at a large text scale, the two buttons still
+          // have to fit and stay tappable. Dropping the hint before wrapping the
+          // buttons keeps the bar one row for as long as it honestly can.
+          final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
+          final roomForHint = constraints.maxWidth >= 520 * scale;
+
+          if (roomForHint) {
+            return Row(
+              children: [
+                Expanded(child: hint),
+                const SizedBox(width: AppSpacing.medium),
+                cancel,
+                const SizedBox(width: AppSpacing.small),
+                save,
+              ],
+            );
+          }
+
+          return Row(
+            children: [
+              Expanded(child: cancel),
+              const SizedBox(width: AppSpacing.small),
+              Expanded(child: save),
+            ],
+          );
+        },
       ),
     );
   }
@@ -371,6 +397,67 @@ class FleetMetaRow extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// The "what is this bus doing right now" chip.
+///
+/// Sits next to the lifecycle [StatusChip] rather than replacing it, because the
+/// two answer different questions and are allowed to disagree — a vehicle marked
+/// for maintenance while a trip is under way reads "في الصيانة" and "في رحلة" side
+/// by side, which is exactly the contradiction a dispatcher needs to see.
+class FleetOperationalChip extends StatelessWidget {
+  const FleetOperationalChip({super.key, required this.status, this.duty});
+
+  final FleetOperationalStatus status;
+
+  /// The trip behind an `onTrip` / `assigned` reading, shown as a tooltip so the
+  /// chip stays short but the operator can find out which trip without leaving
+  /// the list.
+  final FleetVehicleDuty? duty;
+
+  @override
+  Widget build(BuildContext context) {
+    final (background, foreground) = switch (status) {
+      FleetOperationalStatus.available => (
+        AppStatusColors.successContainer,
+        AppStatusColors.onSuccessContainer,
+      ),
+      FleetOperationalStatus.assigned => (
+        AppStatusColors.infoContainer,
+        AppStatusColors.onInfoContainer,
+      ),
+      FleetOperationalStatus.onTrip => (
+        AppStatusColors.specialContainer,
+        AppStatusColors.onSpecialContainer,
+      ),
+      FleetOperationalStatus.maintenance => (
+        AppStatusColors.warningContainer,
+        AppStatusColors.onWarningContainer,
+      ),
+      FleetOperationalStatus.unavailable => (
+        AppStatusColors.errorContainer,
+        AppStatusColors.onErrorContainer,
+      ),
+      FleetOperationalStatus.retired => (
+        AppStatusColors.neutralContainer,
+        AppStatusColors.onNeutralContainer,
+      ),
+    };
+
+    final chip = StatusChip(
+      label: status.label,
+      color: background,
+      textColor: foreground,
+    );
+
+    if (duty == null) return chip;
+
+    final route = duty!.routeName.isEmpty ? '' : ' • ${duty!.routeName}';
+    return Tooltip(
+      message: 'رحلة ${duty!.tripCode}$route • ${duty!.departureTime}',
+      child: chip,
     );
   }
 }

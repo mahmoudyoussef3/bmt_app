@@ -352,16 +352,23 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
               ),
             ),
           ],
-                    const SizedBox(height: AppSpacing.large),
-                    FleetFormActionsBar(
-                      saving: _saving,
-                      onCancel: widget.onBack,
-                      onSave: _onSave,
-                      saveLabel: isEdit ? 'حفظ التعديلات' : 'إضافة المركبة',
-                    ),
                   ],
                 ),
               ),
+            ),
+          ),
+          // Docked, not scrolled. This form is ~2400px tall once the seat map and
+          // the document section are laid out, so an action bar at the end of the
+          // scroll view put "حفظ" below the fold on every real window — the
+          // operator had to scroll past the whole document uploader to save an
+          // edit they made at the top.
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+            child: FleetFormActionsBar(
+              saving: _saving,
+              onCancel: widget.onBack,
+              onSave: _onSave,
+              saveLabel: isEdit ? 'حفظ التعديلات' : 'إضافة المركبة',
             ),
           ),
         ],
@@ -744,8 +751,12 @@ class _VehicleImagePickerCard extends StatelessWidget {
             GestureDetector(
               onTap: onPick,
               child: Container(
-                height: 140,
+                // A floor, not a ceiling. At text scale 1.6 the two lines of
+                // Arabic below the icon are taller than 140px, and a fixed height
+                // clipped them rather than letting the drop zone grow.
+                constraints: const BoxConstraints(minHeight: 140),
                 width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: AppSpacing.medium),
                 decoration: BoxDecoration(
                   color: scheme.surfaceContainerHighest.withAlpha(80),
                   borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
@@ -756,6 +767,7 @@ class _VehicleImagePickerCard extends StatelessWidget {
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
                       Icons.add_photo_alternate_outlined,

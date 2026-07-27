@@ -162,14 +162,52 @@ Open **الرحلات**.
 1. Create the trip: route, date, departure time, vehicle, captain, ticket price.
 2. Assigning a vehicle brings its seat layout with it; that layout is what the client app sells.
 3. Move the trip to **مفتوحة للحجز** when you want it on sale. Until then it exists but sells
-   nothing.
+   nothing — that unpublished state *is* the draft, and it is where a trip should sit until it
+   is genuinely ready.
 4. Trips whose date has passed while still open are flagged **فات موعدها**. They are never
    closed automatically — that is a deliberate decision, so a trip you actually ran is not
-   silently cancelled while you were busy. Close them yourself.
+   silently cancelled while you were busy. Close them yourself, with the honest answer:
+   **نُفّذت بالفعل** if it ran, **لم تُنفَّذ** if it did not. The first records it as completed
+   without spamming riders about a departure that already happened; the second cancels it and
+   tells them.
 
 The status ladder is **scheduled → open_for_booking → boarding → in_progress → completed**, with
-cancellation available before completion. Captains drive `boarding` and `in_progress` from their
-app; the desk does not need to.
+cancellation available at any point before completion. Captains drive `boarding` and
+`in_progress` from their app; the desk does not need to. **You cannot skip a rung** — the
+database refuses it, whichever screen the request comes from.
+
+### If فتح الحجز is greyed out
+
+The trip is not ready to sell. The button says which of these is missing:
+
+| Message | Fix |
+|---|---|
+| لا يوجد سائق معيّن | Assign a captain |
+| لا توجد مركبة معيّنة | Assign a vehicle |
+| لم يتم تجهيز مقاعد | The vehicle had no seat layout when the trip was made — fix the vehicle, remake the trip |
+| لم يتم ضبط أسعار الرحلة | Open the **الأسعار** tab and set the fare. **This one matters most:** without it the client app charges the package catalogue price, not yours |
+| تاريخ الرحلة قد فات | The departure day is in the past; the client app would never show it |
+
+### Cancelling a trip
+
+**إلغاء الرحلة** is on every trip that has not finished. Before you confirm, the dialog tells
+you how many riders and seats it affects. You are asked for a reason, and once the captain has
+started boarding a reason is **required** — that cancellation strands people who are already at
+the stop, so the record has to say why.
+
+Cancelling releases every seat, cancels every booking and passenger, and notifies every affected
+rider — including ones whose receipt you had not reviewed yet.
+
+**It does not refund anybody.** Money that was already approved stays approved, because nothing
+has actually been paid back. Those bookings appear in the payments screen as paid-but-cancelled,
+and that is your refund worklist.
+
+### Deleting vs cancelling
+
+Delete only works on an unpublished trip with no bookings — a genuine mistake you want gone.
+Everything else must be **cancelled**. Deleting a booked trip would strip the trip off paying
+customers' bookings with no refund trail and no notification, so the option is disabled with
+that reason shown.
 
 ---
 

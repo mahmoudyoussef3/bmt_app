@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/dashboard/core/di/dashboard_di.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/operation_trip.dart';
+import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/trip_lifecycle.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/trip_creation/presentation/cubit/trip_creation_cubit.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/trip_management/presentation/cubit/trips_list_cubit.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
@@ -163,19 +164,29 @@ class TripRowCard extends StatelessWidget {
                       if (value == 'copy') _duplicate(context);
                       if (value == 'delete') _delete(context);
                     },
-                    itemBuilder: (_) => const [
-                      PopupMenuItem(
+                    itemBuilder: (_) => [
+                      const PopupMenuItem(
                         value: 'copy',
                         child: ListTile(
                           leading: Icon(Icons.copy_rounded),
                           title: Text('نسخ الرحلة'),
                         ),
                       ),
+                      // Only an unpublished, unbooked trip can be deleted. Anything
+                      // else must be cancelled so its riders are told and its seats
+                      // are released — deleting it would leave paid bookings pointing
+                      // at no trip at all. Disabled rather than hidden so the reason
+                      // is visible where the action used to be.
                       PopupMenuItem(
                         value: 'delete',
+                        enabled: TripLifecycle.canDelete(trip),
                         child: ListTile(
-                          leading: Icon(Icons.delete_outline_rounded),
-                          title: Text('حذف الرحلة'),
+                          enabled: TripLifecycle.canDelete(trip),
+                          leading: const Icon(Icons.delete_outline_rounded),
+                          title: const Text('حذف الرحلة'),
+                          subtitle: TripLifecycle.canDelete(trip)
+                              ? null
+                              : const Text('ألغِ الرحلة بدلاً من حذفها'),
                         ),
                       ),
                     ],

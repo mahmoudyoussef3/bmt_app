@@ -83,6 +83,29 @@ class SupabaseFleetDatasource implements FleetDatasource {
           .eq('office_id', officeId)
           .order('assigned_at', ascending: false);
 
+      // What each vehicle is actually doing. `assignments` records which driver a
+      // bus is paired with; it says nothing about whether that bus is on the road,
+      // which only `operation_trips` knows. Restricted to trips that can still
+      // commit a vehicle — anything cancelled or completed holds nothing — and to
+      // today onward, so the fleet list is not paying for years of history.
+      final dutiesData = await _client
+          .from('operation_trips')
+          .select(
+            'id, trip_code, status, trip_date, departure_time, vehicle_id, '
+            'driver_id, operation_routes(name)',
+          )
+          .eq('office_id', officeId)
+          .not('vehicle_id', 'is', null)
+          .inFilter('status', const [
+            'scheduled',
+            'open_for_booking',
+            'boarding',
+            'in_progress',
+          ])
+          .gte('trip_date', _daysFromToday(-1))
+          .order('trip_date')
+          .order('departure_time');
+
       // Documents have no office_id of their own — they inherit it from the driver or
       // vehicle they belong to, so they are filtered through that owner.
       final driverIds = driversData.map((d) => d['id'] as String).toList();
@@ -201,11 +224,28 @@ class SupabaseFleetDatasource implements FleetDatasource {
         );
       }).toList();
 
+      final duties = dutiesData.map<FleetVehicleDuty>((json) {
+        final route = json['operation_routes'] as Map<String, dynamic>?;
+        return FleetVehicleDuty(
+          vehicleId: json['vehicle_id'] as String? ?? '',
+          tripId: json['id'] as String? ?? '',
+          tripCode: json['trip_code'] as String? ?? '',
+          status: json['status'] as String? ?? '',
+          tripDate:
+              DateTime.tryParse(json['trip_date'] as String? ?? '') ??
+              DateTime.now(),
+          departureTime: json['departure_time'] as String? ?? '',
+          driverId: json['driver_id'] as String? ?? '',
+          routeName: route?['name'] as String? ?? '',
+        );
+      }).toList();
+
       debugPrint(
         '[SupabaseFleetDatasource] Loaded: '
         '${drivers.length} drivers, '
         '${vehicles.length} vehicles, '
-        '${assignments.length} assignments.',
+        '${assignments.length} assignments, '
+        '${duties.length} active duties.',
       );
 
       return FleetWorkspace(
@@ -213,6 +253,7 @@ class SupabaseFleetDatasource implements FleetDatasource {
         vehicles: vehicles,
         assignments: assignments,
         documents: <FleetDocument>[...driverDocs, ...vehicleDocs],
+        duties: duties,
       );
     } on PostgrestException catch (e) {
       throw Exception(_formatPostgrestError(e));
@@ -308,6 +349,20 @@ class SupabaseFleetDatasource implements FleetDatasource {
   @override
   Future<void> deleteDriver(String driverId) async {
     try {
+      // Ask before destroying anything. The assignments and documents are removed
+      // first so the RESTRICT foreign keys let the driver row go — which means a
+      // delete that the database then refuses would already have taken the
+      // driver's history with it. `operation_trips.driver_id` is ON DELETE SET
+      // NULL, so a driver who has ever run a trip must be archived, never erased,
+      // or every one of those trips silently forgets who drove it.
+      await _assertNoTripHistory(
+        column: 'driver_id',
+        id: driverId,
+        message:
+            'لا يمكن حذف السائق لارتباطه بـ %d رحلة مسجّلة. '
+            'استخدم "أرشفة" للحفاظ على السجل التشغيلي.',
+      );
+
       await _client.from('assignments').delete().eq('driver_id', driverId);
       await _client.from('driver_documents').delete().eq('driver_id', driverId);
       await _client.from('drivers').delete().eq('id', driverId);
@@ -404,6 +459,14 @@ class SupabaseFleetDatasource implements FleetDatasource {
   @override
   Future<void> deleteVehicle(String vehicleId) async {
     try {
+      await _assertNoTripHistory(
+        column: 'vehicle_id',
+        id: vehicleId,
+        message:
+            'لا يمكن حذف المركبة لارتباطها بـ %d رحلة مسجّلة. '
+            'استخدم "أرشفة" للحفاظ على السجل التشغيلي.',
+      );
+
       await _client.from('assignments').delete().eq('vehicle_id', vehicleId);
       await _client
           .from('vehicle_documents')
@@ -414,6 +477,29 @@ class SupabaseFleetDatasource implements FleetDatasource {
       throw Exception(_formatPostgrestError(e));
     } catch (e) {
       throw Exception('Unexpected delete vehicle error: $e');
+    }
+  }
+
+  /// Refuses the delete before it starts if any trip still points at this row.
+  ///
+  /// The database enforces the same rule (`enforce_fleet_delete_guard`) and is the
+  /// authority; this exists so the operator gets an Arabic sentence naming the
+  /// number of trips instead of a Postgres exception, and — more importantly — so
+  /// the delete stops *before* the assignments and documents have been removed to
+  /// clear the way for it.
+  Future<void> _assertNoTripHistory({
+    required String column,
+    required String id,
+    required String message,
+  }) async {
+    final trips = await _client
+        .from('operation_trips')
+        .select('id')
+        .eq(column, id)
+        .eq('office_id', _session.officeId);
+
+    if (trips.isNotEmpty) {
+      throw Exception(message.replaceFirst('%d', '${trips.length}'));
     }
   }
 
@@ -777,6 +863,19 @@ class SupabaseFleetDatasource implements FleetDatasource {
     return payload;
   }
 
+  /// Fields whose empty value is a real instruction rather than a missing one.
+  ///
+  /// `_onlyAllowed` drops empty strings so a partially-filled payload cannot blank
+  /// a column by omission. For these three that guard was the bug: removing a
+  /// vehicle's last photo, or clearing an operations note, produces `''` — which
+  /// was then dropped, so the old value stayed and the operator's deletion
+  /// silently did nothing.
+  static const Set<String> _clearableColumns = {
+    'image_url',
+    'profile_image_url',
+    'notes',
+  };
+
   Map<String, dynamic> _onlyAllowed(
     Map<String, dynamic> raw,
     Set<String> allowedKeys,
@@ -789,7 +888,9 @@ class SupabaseFleetDatasource implements FleetDatasource {
       }
     }
 
-    payload.removeWhere((key, value) => value == '');
+    payload.removeWhere(
+      (key, value) => value == '' && !_clearableColumns.contains(key),
+    );
 
     return payload;
   }
@@ -813,4 +914,13 @@ class SupabaseFleetDatasource implements FleetDatasource {
   }
 
   String _today() => DateTime.now().toIso8601String().split('T').first;
+
+  /// A trip that departed at 23:00 and is still `in_progress` at 01:00 carries
+  /// yesterday's `trip_date`, so the duty window starts one day back — otherwise
+  /// the bus that is most definitely on the road would read "متاح".
+  String _daysFromToday(int days) => DateTime.now()
+      .add(Duration(days: days))
+      .toIso8601String()
+      .split('T')
+      .first;
 }

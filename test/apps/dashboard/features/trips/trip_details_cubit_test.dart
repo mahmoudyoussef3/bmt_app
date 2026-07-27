@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/operation_trip.dart';
+import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/trip_lifecycle.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/trip_pricing.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/trip_management/domain/repositories/trips_repository.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/trip_management/domain/usecases/trip_management_usecases.dart';
@@ -45,6 +46,8 @@ class _FakeRepo implements TripsRepository {
 
   Map<String, OperationTrip> tripsById;
   int fetchByIdCount = 0;
+  String? lastReason;
+  StaleTripOutcome? lastOutcome;
   final _changesByTrip = <String, StreamController<void>>{};
 
   void emitChange(String tripId) {
@@ -69,9 +72,37 @@ class _FakeRepo implements TripsRepository {
   @override
   Future<OperationTrip> updateTripStatus(
     String tripId,
-    OperationTripStatus status,
-  ) async {
+    OperationTripStatus status, {
+    String? reason,
+  }) async {
+    lastReason = reason;
     final updated = tripsById[tripId]!.copyWith(status: status);
+    tripsById[tripId] = updated;
+    return updated;
+  }
+
+  @override
+  Future<OperationTrip> cancelTrip(String tripId, String reason) async {
+    lastReason = reason;
+    final updated = tripsById[tripId]!.copyWith(
+      status: OperationTripStatus.cancelled,
+    );
+    tripsById[tripId] = updated;
+    return updated;
+  }
+
+  @override
+  Future<OperationTrip> closeStaleTrip(
+    String tripId,
+    StaleTripOutcome outcome, {
+    String? reason,
+  }) async {
+    lastOutcome = outcome;
+    final updated = tripsById[tripId]!.copyWith(
+      status: outcome == StaleTripOutcome.operated
+          ? OperationTripStatus.completed
+          : OperationTripStatus.cancelled,
+    );
     tripsById[tripId] = updated;
     return updated;
   }
@@ -155,6 +186,8 @@ TripDetailsCubit _cubit(_FakeRepo repo) {
     getTripDetails: GetTripDetailsUseCase(repo),
     updateTripStatus: UpdateTripStatusUseCase(repo),
     updateTripInfo: UpdateTripInfoUseCase(repo),
+    cancelTrip: CancelTripUseCase(repo),
+    closeStaleTrip: CloseStaleTripUseCase(repo),
     watchTripDetails: WatchTripDetailsUseCase(repo),
   );
 }

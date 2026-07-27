@@ -21,10 +21,14 @@ import 'package:bmt_app/core/theme/tokens.dart';
 
 enum _VehiclesViewState { list, details }
 
+/// The filters an operator actually reaches for. The first group asks what a bus
+/// is *doing* (answered from `operation_trips`), the second what state its record
+/// is in (`vehicles.status`) — the same split the two chips on each row draw.
 enum _VehicleOpsFilter {
   all('الكل'),
-  active('نشطة'),
-  assigned('مع سائق'),
+  available('متاحة الآن'),
+  onTrip('في رحلة'),
+  assignedToTrip('مُعيّنة لرحلة'),
   withoutDriver('بدون سائق'),
   documents('وثائق تحتاج متابعة'),
   maintenance('صيانة');
@@ -76,12 +80,19 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
     return sorted;
   }
 
-  List<FleetVehicle> _applyOperationsFilter(List<FleetVehicle> vehicles) {
+  List<FleetVehicle> _applyOperationsFilter(
+    List<FleetVehicle> vehicles,
+    FleetWorkspace workspace,
+  ) {
     return vehicles.where((vehicle) {
+      final operational = workspace.operationalStatusOf(vehicle);
       return switch (_opsFilter) {
         _VehicleOpsFilter.all => true,
-        _VehicleOpsFilter.active => vehicle.status == FleetVehicleStatus.active,
-        _VehicleOpsFilter.assigned => vehicle.currentDriverId.isNotEmpty,
+        _VehicleOpsFilter.available =>
+          operational == FleetOperationalStatus.available,
+        _VehicleOpsFilter.onTrip => operational == FleetOperationalStatus.onTrip,
+        _VehicleOpsFilter.assignedToTrip =>
+          operational == FleetOperationalStatus.assigned,
         _VehicleOpsFilter.withoutDriver => vehicle.currentDriverId.isEmpty,
         _VehicleOpsFilter.documents =>
           vehicle.hasExpiredDocument || vehicle.hasDocumentExpiringSoon,
@@ -136,7 +147,7 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
         if (state is FleetVehiclesLoaded) {
           final cubit = context.read<FleetVehiclesCubit>();
           final sorted = _sortVehicles(
-            _applyOperationsFilter(state.filteredVehicles),
+            _applyOperationsFilter(state.filteredVehicles, workspace),
           );
 
           return LayoutBuilder(
@@ -160,7 +171,7 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
               final master = Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _buildReadinessSummary(context, state.vehicles),
+                  _buildReadinessSummary(context, state.vehicles, workspace),
                   const SizedBox(height: AppSpacing.large),
                   _buildToolbar(context, state, cubit, workspace),
                   const SizedBox(height: AppSpacing.medium),
@@ -352,28 +363,27 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
   Widget _buildReadinessSummary(
     BuildContext context,
     List<FleetVehicle> vehicles,
+    FleetWorkspace workspace,
   ) {
+    int countWhere(FleetOperationalStatus status) => vehicles
+        .where((vehicle) => workspace.operationalStatusOf(vehicle) == status)
+        .length;
+
     final summaries = <_VehicleSummaryItem>[
       _VehicleSummaryItem(
-        label: 'نشطة',
-        value: vehicles
-            .where((vehicle) => vehicle.status == FleetVehicleStatus.active)
-            .length,
+        label: 'متاحة الآن',
+        value: countWhere(FleetOperationalStatus.available),
         icon: Icons.task_alt_rounded,
       ),
       _VehicleSummaryItem(
-        label: 'مع سائق',
-        value: vehicles
-            .where((vehicle) => vehicle.currentDriverId.isNotEmpty)
-            .length,
-        icon: Icons.badge_outlined,
+        label: 'في رحلة',
+        value: countWhere(FleetOperationalStatus.onTrip),
+        icon: Icons.directions_bus_filled_rounded,
       ),
       _VehicleSummaryItem(
-        label: 'بدون سائق',
-        value: vehicles
-            .where((vehicle) => vehicle.currentDriverId.isEmpty)
-            .length,
-        icon: Icons.person_off_outlined,
+        label: 'مُعيّنة لرحلة',
+        value: countWhere(FleetOperationalStatus.assigned),
+        icon: Icons.event_available_rounded,
       ),
       _VehicleSummaryItem(
         label: 'وثائق تحتاج متابعة',
@@ -475,7 +485,11 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
       builder: (ctx) => AlertDialog(
         title: const Text('حذف المركبة نهائياً'),
         content: Text(
-          'سيتم حذف المركبة "${vehicle.vehicleNumber}" من قاعدة البيانات مع وثائقها وتعييناتها. لا يمكن التراجع عن هذا الإجراء.',
+          'سيتم حذف المركبة "${vehicle.vehicleNumber}" من قاعدة البيانات مع وثائقها '
+          'وتعييناتها. لا يمكن التراجع عن هذا الإجراء.\n\n'
+          'الحذف متاح فقط للمركبات التي لم تُسجَّل عليها أي رحلة. إذا كانت المركبة '
+          'قد عملت من قبل، استخدم "أرشفة" بدلاً من الحذف حتى لا يفقد سجل الرحلات '
+          'السابقة المركبة التي نفّذتها.',
         ),
         actions: [
           TextButton(

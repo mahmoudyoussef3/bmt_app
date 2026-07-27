@@ -1,4 +1,5 @@
 import '../../../shared/domain/entities/operation_trip.dart';
+import '../../../shared/domain/entities/trip_lifecycle.dart';
 import '../../../shared/domain/entities/trip_pricing.dart';
 
 abstract class TripsRepository {
@@ -6,8 +7,22 @@ abstract class TripsRepository {
   Future<OperationTrip> getTripById(String tripId);
   Future<OperationTrip> updateTripStatus(
     String tripId,
-    OperationTripStatus status,
-  );
+    OperationTripStatus status, {
+    String? reason,
+  });
+
+  /// Cancels a trip, releasing its seats and cancelling its bookings and passengers.
+  /// [reason] is required — the server refuses a reasonless cancellation of a trip
+  /// that is already boarding or running.
+  Future<OperationTrip> cancelTrip(String tripId, String reason);
+
+  /// Closes a trip whose departure day passed while it was still open for booking,
+  /// either as having operated or as cancelled.
+  Future<OperationTrip> closeStaleTrip(
+    String tripId,
+    StaleTripOutcome outcome, {
+    String? reason,
+  });
   Future<OperationTrip> updateSeatState(
     String tripId,
     String seatId,

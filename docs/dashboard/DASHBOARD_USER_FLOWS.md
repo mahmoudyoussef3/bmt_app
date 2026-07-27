@@ -98,18 +98,62 @@ graph LR
 3. Submit calls `office_create_trip`. The trip code is minted **server-side**.
 4. The new trip appears in the list; the wizard closes and the list reloads.
 
+**Publishing a trip** (`مجدولة → مفتوحة للحجز`) is the moment it becomes sellable, and it
+cannot be undone — there is no un-publish edge, only cancellation. It therefore passes a
+readiness gate first:
+
+| Requirement | Why |
+|---|---|
+| A driver is assigned | Nobody can run it otherwise |
+| A vehicle is assigned | Same |
+| Seat inventory exists | Nothing to sell |
+| At least one active fare row | Without `trip_pricing` the booking RPC falls back to the **package catalogue price** — the office would sell seats at a price it never set |
+| The departure day has not passed | The Client app filters those out, so it would be invisible inventory |
+
+The **فتح الحجز** button shows the blocking reason and stays disabled until it is fixed.
+The server (`trip_publish_blocker`) enforces the same five checks regardless.
+
 **Running a trip:** open the trip to reach its workspace, then work the tabs —
 overview, passengers, seats, pricing, payments, history — and advance status via
-`office_update_trip_status`. The list and details stay current through a realtime
-subscription plus a periodic refresh; a failed background refresh keeps the last good
-data rather than throwing the operator out.
+`office_update_trip_status`. Each state offers exactly one forward step. The list and
+details stay current through a realtime subscription plus a periodic refresh; a failed
+background refresh keeps the last good data rather than throwing the operator out.
+
+The captain drives `صعود الركاب` and `جارية` from their own app; the operator can also
+force either. Neither side can skip a step — the database refuses it.
+
+**Cancelling a trip** is available from any non-terminal state via **إلغاء الرحلة**:
+
+1. A dialog states the consequences: how many riders will be cancelled, how many seats
+   released, and that paid bookings will need a manual refund from the payments screen.
+2. A reason is captured. Once boarding has started the server *requires* one — a
+   cancellation that strands people at the stop may not be a mis-tap.
+3. On confirm: every open booking is cancelled, every passenger is cancelled, every seat
+   is released with its holds cleared, and **every** affected rider is notified — including
+   those whose payment was still under review, who used to be cancelled silently.
+4. `payment_status` is deliberately left alone. No refund has happened, so claiming
+   `refunded` would be false. Paid-but-cancelled bookings surface in the payments screen's
+   contradiction list, which is where the refund is actioned.
 
 **Finding trips:** three view modes (list / grouped / timeline), a quick-filter chip
 row (today, active, upcoming, completed, stale), debounced search, and advanced filters
 on status, route, driver, vehicle, occupancy and date.
 
-> Past-dated trips still open for booking are flagged **فات موعدها** for the operator to
-> deal with. Nothing closes them automatically — that is a deliberate business decision.
+**Closing a stale trip.** Past-dated trips still open for booking are flagged
+**فات موعدها** for the operator rather than auto-closed — a deliberate business decision.
+The banner offers the only two honest answers:
+
+- **نُفّذت بالفعل — إنهاؤها**: it ran and nobody closed it. The server walks the real
+  machine to `مكتملة`, applying every side effect, with rider notifications suppressed
+  (replaying "انطلقت رحلتك" for a departure a week ago tells them nothing true).
+- **لم تُنفَّذ — إلغاؤها**: it never departed. Cancels normally, so riders *are* told.
+
+Only a published trip is offered the first option: an unpublished one could never be
+booked, so it cannot have carried anyone.
+
+**Deleting a trip** is possible only while it is `مجدولة` with no bookings; otherwise the
+menu item is disabled and says to cancel instead. Deleting a booked trip would leave paid
+bookings attached to no trip at all, with no refund trail and no word to the rider.
 
 ### 2.3 Booking and payment review — the core money flow
 

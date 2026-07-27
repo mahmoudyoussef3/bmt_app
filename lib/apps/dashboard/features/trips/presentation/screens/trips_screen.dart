@@ -5,6 +5,7 @@ import 'package:bmt_app/apps/dashboard/core/di/dashboard_di.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/operation_trip.dart';
+import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/trip_lifecycle.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/trip_creation/presentation/cubit/trip_creation_cubit.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/trip_management/presentation/cubit/trip_details_cubit.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/trip_management/presentation/cubit/trips_list_cubit.dart';
@@ -17,6 +18,7 @@ import 'package:bmt_app/core/widgets/status_chip.dart';
 import 'package:bmt_app/core/widgets/debounced_search_field.dart';
 
 import '../widgets/trips_analytics.dart';
+import '../widgets/trip_cancellation_dialog.dart';
 import '../widgets/trip_creation_wizard.dart';
 import '../widgets/trip_pricing_tab.dart';
 import '../widgets/trip_row_card.dart';
@@ -556,7 +558,15 @@ class _DetailsHeader extends StatelessWidget {
     // Advancing a trip that already departed to "boarding" would contradict the
     // notice below, so the forward action is withheld until the operator
     // resolves the trip.
-    final next = isStale ? null : _nextStatus(trip.status);
+    final next = isStale ? null : TripLifecycle.nextStep(trip.status);
+    // Why the forward step cannot be taken yet, when that step is publishing. Shown
+    // on the button itself: the server refuses an unready trip either way, and an
+    // operator who is told "no pricing configured" can fix it, where one who is told
+    // only that it failed cannot.
+    final publishBlocker = next == OperationTripStatus.openForBooking
+        ? TripPublishBlocker.evaluate(trip)
+        : null;
+    final canCancel = !TripLifecycle.isTerminal(trip.status);
     final scheme = Theme.of(context).colorScheme;
     return Container(
       color: scheme.surface,
@@ -623,18 +633,40 @@ class _DetailsHeader extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               if (next != null)
-                FilledButton.icon(
+                Tooltip(
+                  message: publishBlocker?.message ?? '',
+                  child: FilledButton.icon(
+                    onPressed: state.isSaving || publishBlocker != null
+                        ? null
+                        : () => _changeStatus(context, next),
+                    icon: state.isSaving
+                        ? const SizedBox.square(
+                            dimension: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : Icon(
+                            publishBlocker != null
+                                ? Icons.lock_outline_rounded
+                                : Icons.play_arrow_rounded,
+                          ),
+                    label: Text(_actionLabel(next)),
+                  ),
+                ),
+              if (canCancel && !isStale) ...[
+                const SizedBox(width: 8),
+                // Cancellation used to be reachable from exactly one place — the
+                // stale-trip banner — so a trip that simply was not going to run had
+                // no cancel action at all, and an operator's only recourse was to
+                // delete it out from under its passengers.
+                OutlinedButton.icon(
                   onPressed: state.isSaving
                       ? null
-                      : () => _changeStatus(context, next),
-                  icon: state.isSaving
-                      ? const SizedBox.square(
-                          dimension: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Icon(Icons.play_arrow_rounded),
-                  label: Text(_actionLabel(next)),
+                      : () => _cancelTrip(context, trip),
+                  icon: const Icon(Icons.cancel_outlined, size: 18),
+                  label: const Text('إلغاء الرحلة'),
+                  style: OutlinedButton.styleFrom(foregroundColor: scheme.error),
                 ),
+              ],
               const SizedBox(width: 8),
               IconButton.filledTonal(
                 tooltip: 'إغلاق',
@@ -673,25 +705,30 @@ class _DetailsHeader extends StatelessWidget {
                   spacing: 8,
                   runSpacing: 8,
                   children: [
-                    FilledButton.tonalIcon(
-                      onPressed: state.isSaving
-                          ? null
-                          : () => _changeStatus(
-                              context,
-                              OperationTripStatus.completed,
-                            ),
-                      icon: const Icon(Icons.task_alt_rounded, size: 18),
-                      label: const Text('إنهاء الرحلة'),
-                    ),
+                    // "إنهاء الرحلة" used to fire `open_for_booking → completed`,
+                    // which is not an edge of the state machine — so this button
+                    // could only ever fail, and the failure surfaced as an
+                    // unexplained "تعذر تحديث حالة الرحلة.". It now walks the real
+                    // machine server-side, and is only offered for a trip that was
+                    // actually published (an unpublished one could not be booked, so
+                    // it cannot have carried anyone).
+                    if (trip.status == OperationTripStatus.openForBooking)
+                      FilledButton.tonalIcon(
+                        onPressed: state.isSaving
+                            ? null
+                            : () => _closeStale(
+                                context,
+                                StaleTripOutcome.operated,
+                              ),
+                        icon: const Icon(Icons.task_alt_rounded, size: 18),
+                        label: const Text('نُفّذت بالفعل — إنهاؤها'),
+                      ),
                     TextButton.icon(
                       onPressed: state.isSaving
                           ? null
-                          : () => _changeStatus(
-                              context,
-                              OperationTripStatus.cancelled,
-                            ),
+                          : () => _cancelTrip(context, trip),
                       icon: const Icon(Icons.cancel_outlined, size: 18),
-                      label: const Text('إلغاء الرحلة'),
+                      label: const Text('لم تُنفَّذ — إلغاؤها'),
                     ),
                   ],
                 ),
@@ -707,14 +744,63 @@ class _DetailsHeader extends StatelessWidget {
     BuildContext context,
     OperationTripStatus next,
   ) async {
-    final updated = await context.read<TripDetailsCubit>().updateStatus(next);
-    if (updated != null && context.mounted) {
-      context.read<TripsListCubit>().updateTripInList(updated);
-    } else if (context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('تعذر تحديث حالة الرحلة.')));
+    await _run(context, 'تعذر تحديث حالة الرحلة.', (cubit) {
+      return cubit.updateStatus(next);
+    });
+  }
+
+  Future<void> _cancelTrip(BuildContext context, OperationTrip trip) async {
+    final reason = await showTripCancellationDialog(
+      context,
+      trip: trip,
+      reasonRequired: TripLifecycle.cancellationNeedsReason(trip.status),
+    );
+    if (reason == null || !context.mounted) return;
+    await _run(context, 'تعذر إلغاء الرحلة.', (cubit) {
+      return cubit.cancelTrip(reason);
+    });
+  }
+
+  Future<void> _closeStale(
+    BuildContext context,
+    StaleTripOutcome outcome,
+  ) async {
+    await _run(context, 'تعذر إغلاق الرحلة.', (cubit) {
+      return cubit.closeStaleTrip(outcome);
+    });
+  }
+
+  /// Runs a lifecycle action, keeps the list in step on success, and shows the
+  /// *server's* reason on failure.
+  ///
+  /// Every lifecycle refusal is specific — no pricing configured, a reason missing,
+  /// the transition not being an edge of the machine — and all of it used to be
+  /// discarded in favour of one fixed sentence, which turned a fixable problem into
+  /// an unexplained one.
+  Future<void> _run(
+    BuildContext context,
+    String fallback,
+    Future<OperationTrip?> Function(TripDetailsCubit cubit) action,
+  ) async {
+    // Everything the result is delivered to is resolved before the await, so no
+    // BuildContext is carried across it.
+    final details = context.read<TripDetailsCubit>();
+    final list = context.read<TripsListCubit>();
+    final messenger = ScaffoldMessenger.of(context);
+
+    final updated = await action(details);
+    if (updated != null) {
+      list.updateTripInList(updated);
+      return;
     }
+    final state = details.state;
+    final message = state is TripDetailsLoaded ? state.lastError : null;
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(message?.isNotEmpty == true ? message! : fallback),
+        duration: const Duration(seconds: 6),
+      ),
+    );
   }
 }
 
@@ -1525,16 +1611,6 @@ class _SeatLegend extends StatelessWidget {
       ],
     );
   }
-}
-
-OperationTripStatus? _nextStatus(OperationTripStatus status) {
-  return switch (status) {
-    OperationTripStatus.scheduled => OperationTripStatus.openForBooking,
-    OperationTripStatus.openForBooking => OperationTripStatus.boarding,
-    OperationTripStatus.boarding => OperationTripStatus.inProgress,
-    OperationTripStatus.inProgress => OperationTripStatus.completed,
-    OperationTripStatus.completed || OperationTripStatus.cancelled => null,
-  };
 }
 
 String _actionLabel(OperationTripStatus status) {

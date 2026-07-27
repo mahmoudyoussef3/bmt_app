@@ -4,7 +4,7 @@ The honest state of the EWT operations dashboard: what is finished, what is fini
 wrong*, what is half-built, and what is risky. Written to be read before planning work, not
 after.
 
-**Last full pass:** 2026-07-27 (Re-Ownership Program, Phases 1–2).
+**Last full pass:** 2026-07-28 (Re-Ownership Program, Phase 4).
 **Verification standard used here:** a feature is "verified" only if it was exercised —
 tests run, or SQL executed against the live database. Reading the code is an *audit*, not a
 verification, and is labelled as such below.
@@ -17,8 +17,8 @@ verification, and is labelled as such below.
 |---|---|---|
 | **1 — Live Operations** | Map, tracking health, delay detection, incident lifecycle | ✅ **Complete** (2026-07-27) |
 | **2 — Booking & Payment control** | Separate booking / payment / trip state; enforce transitions | ✅ **Complete** (2026-07-27) |
-| 3 — Trip Operations | Full lifecycle draft → completed, cancellation paths | ⏳ Not started (transition guard exists, see §4) |
-| 4 — Fleet | Vehicles, types, seat layouts, availability, double-booking | ⏳ Not started — **2 known test failures**, see §3 |
+| **3 — Trip Operations** | Server-authoritative lifecycle, publish gate, cancellation paths | ✅ **Complete** (2026-07-27) |
+| **4 — Fleet** | Vehicles, types, seat layouts, availability, double-booking | ✅ **Complete** (2026-07-28) |
 | 5 — Captains | Onboarding → approval → assignment → suspension | ⏳ Not started |
 | 6 — Multi-office | Isolation audit across every module | ⏳ Partial — Live Ops proven (§5); rest audited only |
 | 7 — Analytics & Reports | Actionable KPIs over decorative charts | ⏳ Not started |
@@ -66,6 +66,36 @@ overflow sweep); migration applied to the live database, with the trigger, the b
 the detection view each proven transactionally (seed → assert → `ROLLBACK`, rollback
 confirmed).
 
+### Trip lifecycle — ✅ verified
+Full audit and design in [`TRIP_LIFECYCLE_DESIGN.md`](../architecture/TRIP_LIFECYCLE_DESIGN.md).
+
+- **The state machine is now authoritative.** It already existed and was already correct;
+  nothing compelled anyone to use it. RLS cannot restrict columns, so any operator — and any
+  captain — could `UPDATE operation_trips SET status = …` straight through PostgREST. The
+  dashboard's own `updateTripInfo` did exactly that. A `BEFORE UPDATE` trigger now permits a
+  status change only from inside `update_trip_status`.
+- **No new status was added.** `scheduled` already *was* DRAFT — unsellable, unstartable,
+  undiscoverable, with publish and cancel as its only exits. What was missing was a gate on
+  the exit, not a seventh state. Publishing now requires driver, vehicle, seats, active
+  pricing and a date that has not passed.
+- **Booking availability became a server-side rule** (`trip_is_bookable`) instead of a Dart
+  convention. `lock_trip_seat` read no trip state at all and would lock a seat on a cancelled
+  trip; the `trip_date >= today` half of the rule lived only in the Flutter client.
+- **Cancellation is complete**: `trip_passengers` are cancelled (previously left `confirmed`
+  on a trip that would never run), seat holds cleared, and riders whose payment was still
+  under review are notified — they were being cancelled in silence.
+- **Completion closes bookings**: `confirmed → completed` for bookings and passengers.
+  `operation_bookings.status` permitted `completed` and nothing had ever written it.
+- **The stale-trip banner's "إنهاء الرحلة" button could never succeed** —
+  `open_for_booking → completed` is not an edge — and the failure surfaced as a generic
+  "تعذر تحديث حالة الرحلة.". Replaced with two outcomes that both work, and every lifecycle
+  refusal now reaches the operator with its real cause.
+
+**Verification:** 106 database cases (transactional, `ROLLBACK`, impersonating a real
+operator, a real captain, a foreign-office operator and a real client) + 73 new Dart tests;
+`flutter analyze` clean; migration `20260727160000` applied to the live database and the
+suite re-run green against the applied schema.
+
 ### Earlier work (carried forward, not re-verified in this pass)
 Multi-office migration, platform office management + analytics, trip map (captain), packages
 marketplace, support-ticket office routing, dashboard home as a composition root. See the
@@ -96,7 +126,7 @@ the substrate booking correctness sits on.
 
 | Area | What exists | What is missing |
 |---|---|---|
-| **Trip lifecycle** | `OperationTripStatus` enum with all 6 states; a transition guard in `trips_repository_impl.dart`; captain app drives `boarding` / `in_progress` | No `draft` concept; cancellation/failure paths not modelled as first-class; capacity/occupancy/assignment consistency across states unaudited. **Phase 3.** |
+| **Trip lifecycle** | ✅ **Phase 3 complete.** The machine is server-authoritative (`update_trip_status` + `trg_enforce_trip_write_authority`); publish is gated; cancellation is first-class and carries a reason; completion closes bookings and passengers. See [`TRIP_LIFECYCLE_DESIGN.md`](../architecture/TRIP_LIFECYCLE_DESIGN.md). | `create_trip` still rejects a second trip for the same driver **or** vehicle on the same *day* (whole-day granularity, looser check in Dart), so a shuttle route cannot run multiple departures with one driver. Scheduling, not lifecycle — **Phase 4.** |
 | **Incident history** | Closed reports now carry `resolution_note`, `resolved_by`, `acknowledged_at`/`_by` | Nothing reads them back. This is audit data with no reporting surface yet. |
 | **Fleet map route geometry** | Vehicles plotted | Planned route path not drawn; `trip_route_points` + `RouteGeometryService` make it cheap when wanted. |
 | **Captain contact from Live Ops** | Phone number displayed on the trip card | No tel: link or in-app message action. |
@@ -117,6 +147,12 @@ the substrate booking correctness sits on.
 | Privileged booking RPCs are unreachable from the client | `approve_payment`, `reject_payment`, `approve_booking`, `reject_booking`, `reassign_booking`, `bulk_update_booking_status`, `request_payment_review` are granted to `postgres`/`service_role` **only** — never `authenticated`. The only reachable path is the `office_*` wrapper, which calls `assert_office_owns_booking` first. | `proacl` inspection of all 11 functions | 2026-07-27 |
 | `booking_state_contradictions` is office-scoped | `security_invoker = on`, so the view runs as the caller and `operation_bookings` RLS applies | `reloptions` inspection | 2026-07-27 |
 | `booking_state_contradictions` is read-only | Explicit `revoke all … from authenticated` then `grant select` | `relacl` = `authenticated=r` | 2026-07-27 |
+| **Trip status can only change through the state machine** | `trg_enforce_trip_write_authority` permits a `status` write only when `update_trip_status` has set a transaction-local flag. RLS cannot restrict columns, so `trips_office_manage` (ALL) and `trips_captain_update` (UPDATE) previously let any operator — **and any captain** — set any status directly through PostgREST, skipping every rule, side effect and notification. | Transactional SQL suite as a real operator and a real captain: 11 direct-write cases, all refused, rollback confirmed | 2026-07-27 |
+| **Captains cannot write `operation_trips` directly** | Same trigger: a writer with a driver row and no office row is refused any authored column change. Previously a captain could rewrite `ticket_price`, `capacity`, `trip_date` and `driver_id` on their own assigned trip. | Transactional SQL suite impersonating a real captain | 2026-07-27 |
+| **A captain cannot exceed their status allowlist via the office wrapper** | `office_update_trip_status` now applies the captain subset (`boarding`/`in_progress`/`completed`) when the caller is the trip's driver rather than an office user. Previously `captain_update_trip_status`'s allowlist was advisory — a captain could reach cancellation simply by calling the other wrapper. | Transactional SQL suite: captain cancel + publish via the office wrapper, both refused | 2026-07-27 |
+| **A departed trip cannot be re-planned** | Same trigger freezes `route_id`, `trip_date`, `departure_time`, `capacity`, `ticket_price` and the `actual_*` stamps once a trip is boarding or later (driver/vehicle stay editable while running, for a breakdown swap) | Transactional SQL suite, 5 freeze cases | 2026-07-27 |
+| **A trip carrying bookings cannot be deleted** | `trg_enforce_trip_delete_guard` refuses a delete unless the trip is `scheduled` with no bookings. `operation_bookings.trip_id` is `ON DELETE SET NULL`, so this previously orphaned paid bookings silently. | Transactional SQL suite, 3 cases | 2026-07-27 |
+| **A seat cannot be locked on a non-bookable trip** | `lock_trip_seat` now calls `trip_is_bookable` — it read no trip state at all before, and would lock a seat on a *cancelled* trip, re-occupying seats the cancellation had just released | Transactional SQL suite: 6 status/date cases as a real client | 2026-07-27 |
 
 ### Open risks
 
@@ -137,7 +173,7 @@ the substrate booking correctness sits on.
 |---|---|---|
 | D1 | The dashboard deliberately avoids freezed/codegen and hand-writes `fromJson` + sealed states. This is house style, applied consistently. | None today — but it is a convention future contributors must be told about, since `CLAUDE.md` prescribes freezed. Documented here so the divergence is intentional rather than accidental. |
 | D2 | `operation_trips.revenue` is dead — never maintained. Correct revenue is the sum of approved bookings. | Any report that reads it silently reports zero. Phase 7 must not use it. |
-| D3 | `operation_trips.booked_seats` is likewise unmaintained; seat states in `trip_seats` are the truth. | Same class of bug. Live Ops already counts seats from `trip_seats`. |
+| ~~D3~~ | ~~`operation_trips.booked_seats` is likewise unmaintained~~ | ✅ **Fixed 2026-07-27** (Phase 3). `trg_sync_trip_booked_seats` recomputes it from `trip_seats` on every seat change, and the existing rows were backfilled. This also repaired `public_trips.available_seats`, which derives from it and had been reporting **every trip as completely empty**. `trip_seats` remains the truth; the counter is now a faithful projection of it. |
 | D4 | Two subscription "worlds" (`transport_packages`/`transport_subscriptions` vs `packages`/`subscriptions`) | Phase 2 must map which is authoritative before touching payment state. |
 | D5 | Client `features/<x>/di/<x>_di.dart` files are dead code; real DI is inline in `core/di/client_di.dart` | Confusing, but client-side — out of this program's scope. |
 | D6 | **Two vocabularies for one payment concept.** `operation_bookings.payment_status` uses camelCase `underReview`; `booking_payments.status` uses snake_case `under_review`. Every RPC that touches both must remember to switch. | A future writer using the wrong casing silently violates a CHECK or, worse, matches nothing in a `where status in (…)` filter. Not changed here: the columns are read by the client and captain apps too, so renaming is a cross-workstream migration. |
@@ -163,36 +199,25 @@ Phases 3–7 are **not started**. This section records what each one must cover,
 findings already gathered during the Phases 1–2 audit, so the next session starts from evidence
 rather than from scratch.
 
-### Phase 3 — Trip Operations
-*Already known:*
-- `operation_trips_status_check` allows `scheduled · open_for_booking · boarding · in_progress ·
-  completed · cancelled`. There is **no `draft`** state in the database, so the requested
-  `Draft → Scheduled → …` lifecycle needs either a migration or a decision that `scheduled` *is*
-  draft until opened for booking. Recommend the latter — a seventh state earns its keep only if
-  something behaves differently in it.
-- A transition guard already exists in `trips_repository_impl.dart:323-328` covering
-  `openForBooking → boarding → inProgress → completed`. It has never been audited for the
-  cancellation paths.
-- The captain app drives `boarding` and `in_progress` (`trip_execution_datasource.dart`), so any
-  dashboard-side rule must not contradict `trips_captain_update` RLS.
-- **The live database currently holds no `boarding` or `in_progress` trips at all** — statuses
-  present are `completed`, `cancelled`, `open_for_booking` across 9 trips. Phase 3 verification
-  will therefore need transactionally-seeded fixtures, as Phases 1–2 used.
+### Phase 4 — Fleet — ✅ done 2026-07-28
+Full design and audit in `DASHBOARD_FLEET_MANAGEMENT.md`. Migration
+`20260728090000_fleet_authority.sql`; regression `supabase/tests/fleet_authority_regression.sql`
+(54 cases, all green against the live database).
 
-*Must cover:* cancellation and failure paths as first-class; capacity / occupancy / captain /
-vehicle consistency across every state; what happens to bookings when a trip is cancelled.
+Resolved from the list this section used to carry:
+- **B1/B2** were not a seat-layout bug at all. The root cause was `validatePlateNumber`:
+  Dart's `\d` does not match Arabic-Indic digits and the Arabic "letters" range *contains*
+  them, so `٣٣٠٠ ق ل` — a plate transcribed as printed — failed validation and the save never
+  ran. Seat persistence itself was correct. Fixed, with regression cover.
+- **Double-booking of vehicles and captains across overlapping trips** now exists and is
+  enforced by GiST exclusion constraints on a generated `service_window`, replacing a
+  whole-day rule that capped each bus at one departure per day.
+- A **critical** anonymous write path into `vehicles` / `drivers` / `offices` through
+  auto-updatable SECURITY DEFINER views was found and closed (F-1 in the fleet doc).
 
-### Phase 4 — Fleet
-*Already known:*
-- **B1 and B2 are open failing tests** in `fleet_vehicle_form_vehicle_type_test.dart` covering
-  Coaster-30 and Hiace-14 seat persistence. Start here: seat layout is the substrate booking
-  correctness sits on.
-- `trip_seats_state_check` allows `available · reserved · paid · subscription · blocked`.
-- `release_expired_seat_holds` exists as an RPC and **nothing schedules it** (recommendation
-  R14), so abandoned checkouts hold seats indefinitely.
-
-*Must cover:* double-booking prevention for both vehicles and captains across overlapping
-trips — this is the single most important fleet invariant and has not been verified to exist.
+*Still open, carried forward:* `release_expired_seat_holds` is still unscheduled (R14), and
+one live vehicle row is typed `Coaster` while carrying a 14-seat Hiace layout — see §12 of the
+fleet doc.
 
 ### Phase 5 — Captains
 *Already known:*

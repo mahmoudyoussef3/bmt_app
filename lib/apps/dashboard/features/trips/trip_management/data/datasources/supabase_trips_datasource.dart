@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:bmt_app/core/vehicles/vehicles.dart';
 import '../../../../../core/session/dashboard_session.dart';
 import '../../../shared/domain/entities/operation_trip.dart';
+import '../../../shared/domain/entities/trip_lifecycle.dart';
 import '../../../shared/domain/entities/trip_pricing.dart';
 import '../../../shared/data/models/operation_trip_model.dart';
 import '../../../shared/data/models/trip_pricing_model.dart';
@@ -213,6 +214,10 @@ class SupabaseTripsDatasource implements TripsDatasource {
   @override
   Future<OperationTripModel> updateTripInfo(OperationTrip trip) async {
     try {
+      // `status` is deliberately absent. Writing it here was a direct table update that
+      // skipped the state machine entirely — any status to any status, with none of the
+      // side effects or notifications. Since migration 20260727160000 the database
+      // rejects it outright; status moves through updateTripStatus.
       await _client
           .from('operation_trips')
           .update({
@@ -221,7 +226,6 @@ class SupabaseTripsDatasource implements TripsDatasource {
             'trip_date': trip.date,
             'departure_time': trip.departure,
             'arrival_time': trip.arrival.isEmpty ? null : trip.arrival,
-            'status': trip.status.dbValue,
             'ticket_price': trip.ticketPrice,
             'currency': trip.currency,
           })
@@ -251,12 +255,53 @@ class SupabaseTripsDatasource implements TripsDatasource {
   @override
   Future<OperationTripModel> updateTripStatus(
     String tripId,
-    OperationTripStatus status,
-  ) async {
+    OperationTripStatus status, {
+    String? reason,
+  }) async {
     try {
       await _client.rpc(
         'office_update_trip_status',
-        params: {'p_trip_id': tripId, 'p_new_status': status.dbValue},
+        params: {
+          'p_trip_id': tripId,
+          'p_new_status': status.dbValue,
+          'p_reason': reason,
+        },
+      );
+
+      return await fetchTripById(tripId);
+    } catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  @override
+  Future<OperationTripModel> cancelTrip(String tripId, String reason) async {
+    try {
+      await _client.rpc(
+        'office_cancel_trip',
+        params: {'p_trip_id': tripId, 'p_reason': reason},
+      );
+
+      return await fetchTripById(tripId);
+    } catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  @override
+  Future<OperationTripModel> closeStaleTrip(
+    String tripId,
+    StaleTripOutcome outcome, {
+    String? reason,
+  }) async {
+    try {
+      await _client.rpc(
+        'office_close_stale_trip',
+        params: {
+          'p_trip_id': tripId,
+          'p_outcome': outcome.dbValue,
+          'p_reason': reason,
+        },
       );
 
       return await fetchTripById(tripId);
@@ -768,8 +813,56 @@ class SupabaseTripsDatasource implements TripsDatasource {
 
   Exception _handleError(dynamic error) {
     if (error is PostgrestException) {
+      final translated = _translateServerError(error.message);
+      if (translated != null) return Exception(translated);
       return Exception('خطأ بقاعدة البيانات: ${error.message} (${error.code})');
     }
     return Exception(error.toString());
+  }
+
+  /// Turns the lifecycle machine's error codes into something an operator can act on.
+  ///
+  /// These used to reach the screen as a raw Postgres message behind a fixed
+  /// "تعذر تحديث حالة الرحلة." — so a refusal that had a specific, fixable cause
+  /// (no pricing configured, say) read as an unexplained failure.
+  String? _translateServerError(String message) {
+    if (message.contains('trip_not_publishable:')) {
+      final code = message.split('trip_not_publishable:').last.split(
+        RegExp(r'[^a-z_]'),
+      )[0];
+      final blocker = TripPublishBlocker.fromCode(code);
+      return 'تعذر فتح الحجز: ${blocker?.message ?? 'الرحلة غير جاهزة للنشر.'}';
+    }
+    if (message.contains('cancellation_reason_required')) {
+      return 'يجب تحديد سبب الإلغاء لرحلة بدأ صعود ركابها أو انطلقت بالفعل.';
+    }
+    if (message.contains('trip_status_direct_update_forbidden') ||
+        message.contains('trip_direct_write_forbidden')) {
+      return 'لا يمكن تغيير حالة الرحلة بهذه الطريقة. استخدم الإجراء التشغيلي المتاح.';
+    }
+    if (message.contains('invalid_transition')) {
+      return 'هذا الانتقال غير مسموح به في دورة حياة الرحلة.';
+    }
+    if (message.contains('trip_locked')) {
+      return 'لا يمكن تعديل بيانات رحلة انطلقت أو انتهت بالفعل.';
+    }
+    if (message.contains('trip_delete_forbidden')) {
+      return message.contains('has bookings')
+          ? 'لا يمكن حذف رحلة عليها حجوزات — ألغِها بدلاً من ذلك.'
+          : 'لا يمكن حذف رحلة تم نشرها — ألغِها بدلاً من ذلك.';
+    }
+    if (message.contains('trip_never_published')) {
+      return 'لم يتم نشر هذه الرحلة أصلاً، فلا يمكن اعتبارها منفَّذة. ألغِها بدلاً من ذلك.';
+    }
+    if (message.contains('trip_already_closed')) {
+      return 'تم إغلاق هذه الرحلة بالفعل.';
+    }
+    if (message.contains('not_authorized')) {
+      return 'غير مصرح لك بتنفيذ هذا الإجراء على هذه الرحلة.';
+    }
+    if (message.contains('trip_not_found')) {
+      return 'الرحلة غير موجودة.';
+    }
+    return null;
   }
 }

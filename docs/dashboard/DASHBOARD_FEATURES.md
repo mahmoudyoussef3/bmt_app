@@ -217,7 +217,16 @@ left to release.
 Scheduling and live operation of trips. Split into focused sub-cubits: list, details,
 creation, seats, pricing, passengers.
 
-**Lifecycle** — `OperationTripStatus`: `scheduled` → `openForBooking` → `boarding` → `inProgress` → `completed`, or `cancelled`. Status changes go through `office_update_trip_status`.
+**Lifecycle** — `OperationTripStatus`: `scheduled` → `openForBooking` → `boarding` →
+`inProgress` → `completed`, or `cancelled` from any non-terminal state.
+
+The state machine lives in the **database** (`public.update_trip_status`) and is the only
+way a status can change: since migration `20260727160000` a direct table write raises
+`trip_status_direct_update_forbidden`, for operators and captains alike.
+`TripLifecycle` (`shared/domain/entities/trip_lifecycle.dart`) mirrors it so the dashboard
+offers the right actions — it never decides whether one is allowed. Full design and
+state-transition matrix: [`TRIP_LIFECYCLE_DESIGN.md`](../architecture/TRIP_LIFECYCLE_DESIGN.md).
+
 **Seats** — `TripSeatState`: `available` / `reserved` / `paid` / `subscription` / `blocked`.
 
 - **Three view modes**: `list` (driven by a quick-filter chip), `grouped` (upcoming /
@@ -227,6 +236,15 @@ creation, seats, pricing, passengers.
 - **Creation wizard**: picks route, driver, vehicle, date/time, capacity and fare, then
   calls `office_create_trip`. The trip code is generated **server-side**
   (`next_office_trip_code`) — client-side codes collided across offices.
+- **Publishing** (`scheduled → openForBooking`) passes a five-point readiness gate:
+  driver, vehicle, seat inventory, at least one active `trip_pricing` row, and a
+  departure date that has not passed. The button carries the blocking reason, so an
+  unready trip reads as an instruction rather than a failure. Enforced server-side by
+  `trip_publish_blocker`.
+- **Cancelling** is available on any non-terminal trip and always captures a reason; the
+  server *requires* one once boarding has started. The dialog states what will happen —
+  how many riders are cancelled, how many seats released, and that paid bookings will
+  need a manual refund. Calls `office_cancel_trip`.
 - **Details workspace tabs**: overview, passengers, seats, pricing, payments, history.
 - **Live sync**: realtime subscription plus a periodic refresh; a failed background
   refresh preserves the last good trip rather than showing an error.
@@ -234,8 +252,17 @@ creation, seats, pricing, passengers.
 
 Passenger operations: edit, cancel a booking, relocate to another seat.
 
+**Deleting** a trip is only possible while it is `scheduled` and carries no bookings.
+Anything else must be cancelled — deleting it would leave paid bookings pointing at no
+trip at all (`operation_bookings.trip_id` is `ON DELETE SET NULL`) with no refund trail
+and no word to the rider. The menu item is disabled with that reason in place.
+
 **Stale trips** are flagged (فات موعدها) for the operator rather than auto-closed — a
-deliberate business choice, not an oversight.
+deliberate business choice, not an oversight. A flagged trip is closed one of two honest
+ways via `office_close_stale_trip`: **نُفّذت بالفعل**, which walks the real machine to
+`completed` server-side with rider notifications suppressed (replaying "انطلقت رحلتك" for
+a week-old departure tells the rider nothing true), or **لم تُنفَّذ**, which cancels it
+normally so riders *are* told.
 
 ### 2.4 المسارات — Routes
 `features/routes/` · permission: `routes` · **owner only**
