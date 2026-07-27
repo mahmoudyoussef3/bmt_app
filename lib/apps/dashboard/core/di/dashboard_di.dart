@@ -137,6 +137,7 @@ import '../../features/subscriptions/plans/domain/repositories/subscription_plan
 import '../../features/subscriptions/plans/domain/usecases/subscription_plans_usecases.dart';
 import '../../features/subscriptions/plans/presentation/cubit/subscription_plans_cubit.dart';
 import '../../features/trips/trips_di.dart';
+import '../../features/live_ops/live_ops_di.dart';
 // Mock vehicles removed
 import '../../features/tickets/data/datasources/supabase_tickets_datasource.dart';
 import '../../features/tickets/data/repositories/tickets_repository_impl.dart';
@@ -887,6 +888,7 @@ void registerDashboardDependencies() {
   }
 
   registerTripsDependencies(dashboardDi);
+  registerLiveOpsDependencies(dashboardDi);
 
   // Mock vehicles registrations removed
 

@@ -2,6 +2,7 @@ class DashboardRoutes {
   const DashboardRoutes._();
 
   static const home = '/';
+  static const liveOps = '/live-ops';
   static const bookings = '/bookings';
   static const trips = '/trips';
   static const fleet = '/fleet';

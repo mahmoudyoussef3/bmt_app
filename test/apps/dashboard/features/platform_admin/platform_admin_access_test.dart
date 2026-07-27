@@ -80,16 +80,46 @@ void main() {
       );
     });
 
-    test('the support-agent set gained nothing', () {
+    test('the support-agent set is exactly this, and nothing more', () {
       expect(
         DashboardPermissions.permissionsFor(DashboardRole.supportAgent),
         const {
+          // Added deliberately with the Live Operations Center: a support agent
+          // answering "where is my bus?" needs the live picture. This is a
+          // read-only grant — see the incident-action assertion below.
+          DashboardPermission.liveOps,
           DashboardPermission.bookings,
           DashboardPermission.tickets,
           DashboardPermission.reports,
           DashboardPermission.paymentVerification,
           DashboardPermission.notifications,
         },
+      );
+    });
+
+    test('a support agent may watch live ops but not close incidents', () {
+      expect(
+        DashboardPermissions.canAccess(
+          DashboardRole.supportAgent,
+          DashboardPermission.liveOps,
+        ),
+        isTrue,
+      );
+      // Deciding a captain's breakdown report is handled is an operations call
+      // that writes a permanent audit trail against whoever made it.
+      expect(
+        DashboardPermissions.canAccess(
+          DashboardRole.supportAgent,
+          DashboardPermission.liveOpsIncidentAction,
+        ),
+        isFalse,
+      );
+      expect(
+        DashboardPermissions.canAccess(
+          DashboardRole.admin,
+          DashboardPermission.liveOpsIncidentAction,
+        ),
+        isTrue,
       );
     });
   });

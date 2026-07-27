@@ -1,0 +1,327 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import 'package:bmt_app/core/theme/colors.dart';
+import 'package:bmt_app/core/theme/spacing.dart';
+import 'package:bmt_app/core/theme/tokens.dart';
+
+import '../../../../core/widgets/dashboard_module_header.dart';
+import '../../../../core/widgets/dashboard_panel.dart';
+import '../../../../core/widgets/dashboard_state_views.dart';
+import '../../domain/entities/live_ops_snapshot.dart';
+import '../cubit/live_ops_cubit.dart';
+import '../cubit/live_ops_state.dart';
+import '../widgets/incident_queue_section.dart';
+import '../widgets/live_ops_map.dart';
+import '../widgets/live_ops_summary_bar.dart';
+import '../widgets/live_trip_card.dart';
+
+/// The Live Operations Center — the dashboard's answer to "what is happening on
+/// the road right now?". It renders the office's active trips with an honest
+/// read of each trip's tracking health, and the open incident queue, refreshing
+/// itself on both a realtime trigger and a steady poll.
+class LiveOpsScreen extends StatelessWidget {
+  /// Whether this operator may move incidents through their lifecycle. Support
+  /// agents get the module read-only — see [DashboardPermission.liveOpsIncidentAction].
+  final bool canResolveIncidents;
+
+  const LiveOpsScreen({super.key, this.canResolveIncidents = true});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocConsumer<LiveOpsCubit, LiveOpsState>(
+      listenWhen: (prev, curr) =>
+          curr is LiveOpsLoaded && curr.actionError != null,
+      listener: (context, state) {
+        if (state is LiveOpsLoaded && state.actionError != null) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(state.actionError!)));
+        }
+      },
+      builder: (context, state) {
+        return switch (state) {
+          LiveOpsLoading() => const DashboardLoading(),
+          LiveOpsError(:final message) => DashboardErrorState(
+            message: message,
+            onRetry: () => context.read<LiveOpsCubit>().load(),
+          ),
+          LiveOpsLoaded() => _LiveOpsBody(
+            state: state,
+            canResolveIncidents: canResolveIncidents,
+          ),
+        };
+      },
+    );
+  }
+}
+
+class _LiveOpsBody extends StatelessWidget {
+  final LiveOpsLoaded state;
+  final bool canResolveIncidents;
+
+  const _LiveOpsBody({required this.state, required this.canResolveIncidents});
+
+  @override
+  Widget build(BuildContext context) {
+    // Measured once per emit; the cubit re-emits every poll (~15s) so this stays
+    // fresh, and every health/age read on the page agrees on one clock.
+    final now = DateTime.now();
+    final snapshot = state.snapshot;
+    final cubit = context.read<LiveOpsCubit>();
+
+    return ListView(
+      padding: const EdgeInsets.all(AppSpacing.large),
+      children: [
+        DashboardModuleHeader(
+          icon: Icons.monitor_heart_rounded,
+          title: 'مركز العمليات المباشر',
+          subtitle:
+              'الرحلات الجارية الآن، صحة تتبّع كل مركبة، والبلاغات المفتوحة من الكباتن.',
+          actions: [
+            FilledButton.tonalIcon(
+              onPressed: cubit.refresh,
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('تحديث'),
+            ),
+          ],
+          child: LiveOpsSummaryBar(snapshot: snapshot, now: now),
+        ),
+        if (snapshot.hasCriticalIncident) ...[
+          const SizedBox(height: AppSpacing.medium),
+          const _CriticalBanner(),
+        ],
+        // The map is the fastest read of the situation, so it sits directly
+        // under the headline — but only once there is something to draw, so a
+        // quiet office is not handed an empty map of Egypt.
+        if (snapshot.activeTrips.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.medium),
+          DashboardPanel(
+            icon: Icons.map_rounded,
+            title: 'خريطة الأسطول المباشرة',
+            subtitle: '${snapshot.mappableTrips.length} مركبة ترسل موقعها',
+            child: LiveOpsMap(
+              trips: snapshot.activeTrips,
+              now: now,
+              selectedTripId: state.selectedTripId,
+              onSelect: cubit.selectTrip,
+            ),
+          ),
+        ],
+        const SizedBox(height: AppSpacing.medium),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final trips = _TripsPanel(
+              trips: snapshot.activeTrips,
+              now: now,
+              selectedTripId: state.selectedTripId,
+              onSelect: cubit.selectTrip,
+            );
+            final incidents = _IncidentsPanel(
+              snapshot: snapshot,
+              now: now,
+              canAct: canResolveIncidents,
+            );
+
+            if (constraints.maxWidth >= 1080) {
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(flex: 3, child: trips),
+                  const SizedBox(width: AppSpacing.medium),
+                  Expanded(flex: 2, child: incidents),
+                ],
+              );
+            }
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                trips,
+                const SizedBox(height: AppSpacing.medium),
+                incidents,
+              ],
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
+
+class _TripsPanel extends StatelessWidget {
+  final List<LiveTrip> trips;
+  final DateTime now;
+  final String? selectedTripId;
+  final ValueChanged<String?> onSelect;
+
+  const _TripsPanel({
+    required this.trips,
+    required this.now,
+    required this.selectedTripId,
+    required this.onSelect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    // Overdue trips lead: the desk should meet the trip that has not left
+    // before the ones already running to plan.
+    final ordered = [...trips]
+      ..sort((a, b) {
+        final byOverdue = (b.isOverdueAt(now) ? 1 : 0).compareTo(
+          a.isOverdueAt(now) ? 1 : 0,
+        );
+        if (byOverdue != 0) return byOverdue;
+        return a.departureTime.compareTo(b.departureTime);
+      });
+
+    return DashboardPanel(
+      icon: Icons.route_rounded,
+      title: 'الرحلات على الطريق',
+      subtitle: trips.isEmpty ? null : '${trips.length} رحلة نشطة',
+      child: trips.isEmpty
+          ? const _NoActiveTrips()
+          : LayoutBuilder(
+              builder: (context, constraints) {
+                // Two columns once a card can keep a comfortable width, one
+                // otherwise. Cards size themselves to the column.
+                final twoCols = constraints.maxWidth >= 680;
+                final width = twoCols
+                    ? (constraints.maxWidth - AppSpacing.medium) / 2
+                    : constraints.maxWidth;
+                return Wrap(
+                  spacing: AppSpacing.medium,
+                  runSpacing: AppSpacing.medium,
+                  children: [
+                    for (final trip in ordered)
+                      SizedBox(
+                        width: width,
+                        child: LiveTripCard(
+                          trip: trip,
+                          now: now,
+                          selected: trip.id == selectedTripId,
+                          onTap: () => onSelect(trip.id),
+                        ),
+                      ),
+                  ],
+                );
+              },
+            ),
+    );
+  }
+}
+
+class _IncidentsPanel extends StatelessWidget {
+  final LiveOpsSnapshot snapshot;
+  final DateTime now;
+  final bool canAct;
+
+  const _IncidentsPanel({
+    required this.snapshot,
+    required this.now,
+    required this.canAct,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final open = snapshot.openIncidents;
+    final unacknowledged = snapshot.unacknowledgedCount;
+    return DashboardPanel(
+      icon: Icons.report_rounded,
+      title: 'البلاغات المفتوحة',
+      subtitle: open.isEmpty
+          ? null
+          : (unacknowledged > 0
+                ? '$unacknowledged بحاجة استلام من ${open.length}'
+                : '${open.length} قيد المعالجة'),
+      child: IncidentQueueSection(
+        incidents: open,
+        now: now,
+        canAct: canAct,
+        onAction: (incident, next, {note}) => context
+            .read<LiveOpsCubit>()
+            .updateIncident(incident, next, note: note),
+      ),
+    );
+  }
+}
+
+class _NoActiveTrips extends StatelessWidget {
+  const _NoActiveTrips();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.large),
+      child: Column(
+        children: [
+          Icon(
+            Icons.nightlight_round,
+            size: 40,
+            color: scheme.onSurfaceVariant.withAlpha(140),
+          ),
+          const SizedBox(height: AppSpacing.small),
+          Text(
+            'لا توجد رحلات على الطريق حالياً',
+            style: text.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'ستظهر الرحلات هنا فور أن يبدأ الكباتن تنفيذها، مع تتبّع مباشر لكل مركبة.',
+            textAlign: TextAlign.center,
+            style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CriticalBanner extends StatelessWidget {
+  const _CriticalBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.medium),
+      decoration: BoxDecoration(
+        color: AppStatusColors.errorContainer,
+        borderRadius: BorderRadius.circular(AppTokens.radius),
+        border: Border.all(
+          color: AppStatusColors.onErrorContainer.withAlpha(60),
+        ),
+      ),
+      child: Row(
+        children: [
+          const Icon(
+            Icons.sos_rounded,
+            color: AppStatusColors.onErrorContainer,
+          ),
+          const SizedBox(width: AppSpacing.medium),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'بلاغ طوارئ نشط',
+                  style: text.titleSmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: AppStatusColors.onErrorContainer,
+                  ),
+                ),
+                Text(
+                  'أحد الكباتن أرسل بلاغ نجدة — يتطلب تدخلاً فورياً من فريق العمليات.',
+                  style: text.bodySmall?.copyWith(
+                    color: AppStatusColors.onErrorContainer,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

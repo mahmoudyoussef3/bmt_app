@@ -15,6 +15,8 @@ import '../../features/dashboard_home/presentation/screens/dashboard_home_screen
 import '../../features/fleet/overview/presentation/cubit/fleet_overview_cubit.dart';
 import '../../features/fleet/overview/presentation/screens/fleet_overview_screen.dart';
 import '../../features/fleet/shared/domain/entities/fleet_common.dart';
+import '../../features/live_ops/presentation/cubit/live_ops_cubit.dart';
+import '../../features/live_ops/presentation/screens/live_ops_screen.dart';
 import '../../features/notifications/presentation/cubit/notifications_dispatch_cubit.dart';
 import '../../features/notifications/presentation/cubit/operational_alerts_badge_cubit.dart';
 import '../../features/notifications/presentation/cubit/operational_alerts_cubit.dart';
@@ -92,6 +94,14 @@ class _DashboardShellState extends State<DashboardShell> {
       route: DashboardRoutes.home,
       icon: Icons.home_outlined,
       selectedIcon: Icons.home_rounded,
+    ),
+    _DashboardNavItem(
+      label: 'العمليات المباشرة',
+      route: DashboardRoutes.liveOps,
+      icon: Icons.monitor_heart_outlined,
+      selectedIcon: Icons.monitor_heart_rounded,
+      permission: DashboardPermission.liveOps,
+      group: _navOperations,
     ),
     _DashboardNavItem(
       label: 'الحجوزات',
@@ -364,14 +374,29 @@ class _DashboardShellState extends State<DashboardShell> {
     return switch (_route) {
       DashboardRoutes.home => MultiBlocProvider(
         providers: [
-          BlocProvider(create: (_) => dashboardDi<DashboardHomeCubit>()..load()),
           BlocProvider(
-            create: (_) => dashboardDi<OperationalAlertsCubit>()..startWatching(),
+            create: (_) => dashboardDi<DashboardHomeCubit>()..load(),
+          ),
+          BlocProvider(
+            create: (_) =>
+                dashboardDi<OperationalAlertsCubit>()..startWatching(),
           ),
         ],
         child: DashboardHomeScreen(
           office: widget.office,
           onOpenModule: _openRoute,
+        ),
+      ),
+      DashboardRoutes.liveOps => BlocProvider(
+        create: (_) => dashboardDi<LiveOpsCubit>()..startWatching(),
+        child: LiveOpsScreen(
+          // The signed-in role, not the locally switched `_role`: closing a
+          // report writes a permanent audit trail, so the capability must follow
+          // the real account and not a debug role selector.
+          canResolveIncidents: DashboardPermissions.canAccess(
+            widget.office.role,
+            DashboardPermission.liveOpsIncidentAction,
+          ),
         ),
       ),
       DashboardRoutes.bookings => BlocProvider(
@@ -463,9 +488,12 @@ class _DashboardShellState extends State<DashboardShell> {
       DashboardRoutes.permissions => const UsersScreen(),
       _ => MultiBlocProvider(
         providers: [
-          BlocProvider(create: (_) => dashboardDi<DashboardHomeCubit>()..load()),
           BlocProvider(
-            create: (_) => dashboardDi<OperationalAlertsCubit>()..startWatching(),
+            create: (_) => dashboardDi<DashboardHomeCubit>()..load(),
+          ),
+          BlocProvider(
+            create: (_) =>
+                dashboardDi<OperationalAlertsCubit>()..startWatching(),
           ),
         ],
         child: DashboardHomeScreen(

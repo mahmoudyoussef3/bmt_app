@@ -9,6 +9,17 @@ enum DashboardPermission {
   vehicles,
   routes,
   trips,
+  // The live operations center — active trips, tracking health, and the open
+  // incident queue. Available to support agents too: "what is affecting a
+  // customer or captain right now" is exactly their remit during an incident.
+  // This grants *visibility* only; closing a report needs the permission below.
+  liveOps,
+  // Acknowledging, resolving or dismissing a captain's incident report. Owner
+  // only, and deliberately separate from [liveOps]: a support agent answering a
+  // passenger needs to see that a bus broke down, but deciding that the breakdown
+  // is *handled* is an operations call with a permanent audit trail attached to
+  // whoever made it.
+  liveOpsIncidentAction,
   bookings,
   subscriptions,
   referrals,
@@ -44,6 +55,7 @@ class DashboardPermissions {
     return switch (role) {
       DashboardRole.admin => DashboardPermission.values.toSet(),
       DashboardRole.supportAgent => const {
+        DashboardPermission.liveOps,
         DashboardPermission.bookings,
         DashboardPermission.tickets,
         DashboardPermission.reports,
