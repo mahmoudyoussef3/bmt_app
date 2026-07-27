@@ -58,8 +58,14 @@ void main() {
       }
 
       expect(methodFor('instapay'), BookingPaymentMethod.instaPay.name);
-      expect(methodFor('vodafone_cash'), BookingPaymentMethod.vodafoneCash.name);
-      expect(methodFor('bank_transfer'), BookingPaymentMethod.bankTransfer.name);
+      expect(
+        methodFor('vodafone_cash'),
+        BookingPaymentMethod.vodafoneCash.name,
+      );
+      expect(
+        methodFor('bank_transfer'),
+        BookingPaymentMethod.bankTransfer.name,
+      );
       expect(methodFor('credit_card'), BookingPaymentMethod.card.name);
     });
 

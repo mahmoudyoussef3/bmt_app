@@ -11,6 +11,14 @@ enum BookingStatus {
   const BookingStatus(this.label);
 }
 
+/// Mirrors the `operation_bookings_payment_status_check` allowlist exactly.
+///
+/// [cancelled] was missing until 2026-07-27. Because the model resolves this
+/// enum by name with a `pending` fallback, every cancelled payment in the
+/// database rendered as *"قيد الانتظار"* — telling the operator that money was
+/// still expected on a booking where the payment had been called off. Two live
+/// rows were affected. Any value added to the database CHECK must be added here
+/// in the same change.
 enum PaymentStatus {
   pending('قيد الانتظار'),
   submitted('تم الرفع'),
@@ -18,7 +26,8 @@ enum PaymentStatus {
   approved('مقبول'),
   rejected('مرفوض'),
   refunded('مسترد'),
-  failed('فاشل');
+  failed('فاشل'),
+  cancelled('ملغى');
 
   final String label;
 

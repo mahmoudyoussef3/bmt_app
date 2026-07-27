@@ -139,7 +139,11 @@ class OperationBookingModel extends OperationBooking {
     _ => BookingPaymentMethod.cash,
   };
 
-  static T _enumByName<T extends Enum>(List<T> values, String? name, T fallback) {
+  static T _enumByName<T extends Enum>(
+    List<T> values,
+    String? name,
+    T fallback,
+  ) {
     return values.firstWhere((v) => v.name == name, orElse: () => fallback);
   }
 

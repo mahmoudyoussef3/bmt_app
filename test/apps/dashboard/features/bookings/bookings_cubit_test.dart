@@ -50,19 +50,29 @@ class _FakeRepo implements BookingsRepository {
 
   @override
   Future<OperationBooking> approveBooking(String id, String? note) async =>
-      _booking(id, status: BookingStatus.confirmed, paymentStatus: PaymentStatus.approved);
+      _booking(
+        id,
+        status: BookingStatus.confirmed,
+        paymentStatus: PaymentStatus.approved,
+      );
 
   @override
   Future<OperationBooking> rejectBooking(String id, String reason) async =>
-      _booking(id, status: BookingStatus.cancelled, paymentStatus: PaymentStatus.rejected);
+      _booking(
+        id,
+        status: BookingStatus.cancelled,
+        paymentStatus: PaymentStatus.rejected,
+      );
 
   @override
   Future<OperationBooking> requestReupload(String id, String reason) async =>
       _booking(id, paymentStatus: PaymentStatus.underReview);
 
   @override
-  Future<List<OperationBooking>> bulkApprove(List<String> ids, String? n) async =>
-      [for (final id in ids) await approveBooking(id, n)];
+  Future<List<OperationBooking>> bulkApprove(
+    List<String> ids,
+    String? n,
+  ) async => [for (final id in ids) await approveBooking(id, n)];
 
   @override
   Future<List<OperationBooking>> bulkReject(List<String> ids, String r) async =>
@@ -131,22 +141,25 @@ void main() {
       await cubit.close();
     });
 
-    test('bulkApprove approves every selected booking and clears selection', () async {
-      final cubit = _cubit(_FakeRepo([_booking('1'), _booking('2')]));
-      await cubit.load();
+    test(
+      'bulkApprove approves every selected booking and clears selection',
+      () async {
+        final cubit = _cubit(_FakeRepo([_booking('1'), _booking('2')]));
+        await cubit.load();
 
-      cubit.toggleSelection('1');
-      cubit.toggleSelection('2');
-      await cubit.bulkApprove(null);
+        cubit.toggleSelection('1');
+        cubit.toggleSelection('2');
+        await cubit.bulkApprove(null);
 
-      final state = cubit.state as BookingsLoaded;
-      expect(state.selectedIds, isEmpty);
-      expect(
-        state.bookings.every((b) => b.status == BookingStatus.confirmed),
-        isTrue,
-      );
-      await cubit.close();
-    });
+        final state = cubit.state as BookingsLoaded;
+        expect(state.selectedIds, isEmpty);
+        expect(
+          state.bookings.every((b) => b.status == BookingStatus.confirmed),
+          isTrue,
+        );
+        await cubit.close();
+      },
+    );
 
     test('bookingsForClient counts every booking a client has made', () async {
       final cubit = _cubit(

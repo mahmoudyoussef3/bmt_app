@@ -4,7 +4,7 @@ The honest state of the EWT operations dashboard: what is finished, what is fini
 wrong*, what is half-built, and what is risky. Written to be read before planning work, not
 after.
 
-**Last full pass:** 2026-07-27 (Re-Ownership Program, Phase 1).
+**Last full pass:** 2026-07-27 (Re-Ownership Program, Phases 1–2).
 **Verification standard used here:** a feature is "verified" only if it was exercised —
 tests run, or SQL executed against the live database. Reading the code is an *audit*, not a
 verification, and is labelled as such below.
@@ -16,7 +16,7 @@ verification, and is labelled as such below.
 | Phase | Scope | State |
 |---|---|---|
 | **1 — Live Operations** | Map, tracking health, delay detection, incident lifecycle | ✅ **Complete** (2026-07-27) |
-| 2 — Booking & Payment control | Separate booking / payment / trip state; enforce transitions | ⏳ Not started |
+| **2 — Booking & Payment control** | Separate booking / payment / trip state; enforce transitions | ✅ **Complete** (2026-07-27) |
 | 3 — Trip Operations | Full lifecycle draft → completed, cancellation paths | ⏳ Not started (transition guard exists, see §4) |
 | 4 — Fleet | Vehicles, types, seat layouts, availability, double-booking | ⏳ Not started — **2 known test failures**, see §3 |
 | 5 — Captains | Onboarding → approval → assignment → suspension | ⏳ Not started |
@@ -44,6 +44,28 @@ Full design in `DASHBOARD_LIVE_OPS_CENTER.md`.
 sweep); `flutter analyze` clean; migration applied to the live database and its office gate
 proven by transactional test (own office 1 row, foreign office 0 rows, rollback confirmed).
 
+### Booking & Payment control — ✅ verified
+
+- **Three state machines, explicitly separated**: booking state, payment state, and the
+  trip's operational state, in `booking_lifecycle.dart`. Each has a `canTransitionTo`
+  rule set with a stated reason for every edge (a rejected receipt may be replaced;
+  approved money is refunded, never un-approved; a boarded passenger is not cancelled).
+- **Cross-machine contradiction detection** (`detectBookingIssues`) covering
+  paid-but-cancelled, confirmed-without-payment, travelled-without-payment and
+  completed-but-refunded — mirrored exactly by the `booking_state_contradictions` SQL view.
+- **A next-action resolver** driving the booking inspector, so the panel states *what to do
+  and why* instead of showing two status chips the operator must interpret. A contradiction
+  outranks routine work, because acting on a booking whose money and seat disagree makes it
+  worse.
+- **`payment_review_status` drift eliminated** — it is now derived by trigger from
+  `payment_status`, so the two columns can no longer disagree regardless of who writes.
+- **`cancelled_at` stamped automatically** on the transition into `cancelled`.
+
+**Verification:** 56 tests (40 state-machine + 16 widget, incl. a 4-width × 3-text-scale
+overflow sweep); migration applied to the live database, with the trigger, the backfill and
+the detection view each proven transactionally (seed → assert → `ROLLBACK`, rollback
+confirmed).
+
 ### Earlier work (carried forward, not re-verified in this pass)
 Multi-office migration, platform office management + analytics, trip map (captain), packages
 marketplace, support-ticket office routing, dashboard home as a composition root. See the
@@ -60,6 +82,10 @@ migration audit at `docs/architecture/MULTI_OFFICE_MIGRATION_AUDIT.md`.
 | B3 | Live Ops | `_HealthDot` built its `AnimationController` lazily, so a non-live badge first touched it in `dispose()` → *"Looking up a deactivated widget's ancestor is unsafe"* on every navigation away | High | ✅ **Fixed** 2026-07-27 |
 | B4 | Live Ops | `_MetaRow` overflowed up to 33px at narrow widths / large text scales | Low | ✅ **Fixed** 2026-07-27 |
 | B5 | Live Ops | Unbounded `trip_live_locations` query: ~7,200 rows per 15s poll at 20 active trips | High (perf) | ✅ **Fixed** 2026-07-27 (RPC) |
+| B6 | Bookings | `PaymentStatus` enum was missing `cancelled`, which the database CHECK allows. The model resolves the enum by name with a `pending` fallback, so **every cancelled payment rendered as "قيد الانتظار"** — telling operators money was still expected on a booking whose payment had been called off. 2 live rows affected. | High | ✅ **Fixed** 2026-07-27 |
+| B7 | Bookings | `payment_review_status` disagreed with `payment_status` on 2 live rows (`approved` vs `pending`, `reviewed_at` null — written outside `approve_payment`) | Medium | ✅ **Fixed** 2026-07-27 (derived by trigger + reconciled) |
+| B8 | Bookings | 3 cancelled bookings had `cancelled_at` null — no record of when the seat was released | Low | ✅ **Fixed** 2026-07-27 (trigger + backfill from `updated_at`) |
+| B9 | Bookings | `booking_state_contradictions` view inherited a database default grant giving `authenticated` ALL privileges. A single-table view is updatable, so operators could have written `operation_bookings` through it, bypassing the RPC discipline. | Medium | ✅ **Fixed** 2026-07-27 (explicit revoke, `authenticated=r` verified) |
 
 B1/B2 are the reason Phase 4 should not be deferred indefinitely: seat-layout persistence is
 the substrate booking correctness sits on.
@@ -88,6 +114,9 @@ the substrate booking correctness sits on.
 | Incident status values are constrained | `driver_trip_reports_status_check`, `convalidated = true` | SQL inspection after apply | 2026-07-27 |
 | Position RPC is not public | `revoke … from public, anon` / `grant … to authenticated` | `proacl` inspection | 2026-07-27 |
 | Support agents cannot close incidents | `liveOpsIncidentAction` absent from their permission set | Unit test + widget test (no buttons rendered) | 2026-07-27 |
+| Privileged booking RPCs are unreachable from the client | `approve_payment`, `reject_payment`, `approve_booking`, `reject_booking`, `reassign_booking`, `bulk_update_booking_status`, `request_payment_review` are granted to `postgres`/`service_role` **only** — never `authenticated`. The only reachable path is the `office_*` wrapper, which calls `assert_office_owns_booking` first. | `proacl` inspection of all 11 functions | 2026-07-27 |
+| `booking_state_contradictions` is office-scoped | `security_invoker = on`, so the view runs as the caller and `operation_bookings` RLS applies | `reloptions` inspection | 2026-07-27 |
+| `booking_state_contradictions` is read-only | Explicit `revoke all … from authenticated` then `grant select` | `relacl` = `authenticated=r` | 2026-07-27 |
 
 ### Open risks
 
@@ -97,6 +126,8 @@ the substrate booking correctness sits on.
 | **S2** | `driver_trip_reports.report_type` has no CHECK constraint | A malformed type falls through to `other`; handled defensively in `IncidentType.fromDb`, so impact is cosmetic | **Accepted.** A constraint risks rejecting a captain-app write if a new type ships first. Revisit if the captain app's type list stabilises. |
 | **S3** | Realtime subscription on `driver_trip_reports` carries no filter | Every office's dashboard wakes on every office's incident insert | **Low.** The wake only triggers a re-fetch, which is RLS-scoped, so no data leaks — it is noise, not exposure. The table has no `office_id` column to filter on. |
 | **S4** | `watchChanges` unsubscribes its channel but does not remove it from the Supabase client | Minor channel accumulation over a long session | **Open**, cosmetic. |
+| **S5** | `is_admin()` returns true for **any** active `office_users` row, including support agents. Every booking RPC gates on it, so at the database level a support agent can approve payments. | The dashboard's own permission set does grant `paymentVerification` to support agents, so this is currently intentional — but the database has no role distinction to fall back on if that product decision changes. | **Documented, not a defect today.** If payment approval is ever restricted to owners, `is_admin()` is not the function to gate it with; a `current_office_role()` check is needed. |
+| **S6** | `bulkApprove` / `bulkReject` loop one RPC per booking with no surrounding transaction | A partial failure leaves half a batch approved with no rollback | **Open.** Low frequency, but a `bulk_office_approve_payment(uuid[])` RPC would make it atomic. Phase 7 candidate. |
 
 ---
 
@@ -109,6 +140,8 @@ the substrate booking correctness sits on.
 | D3 | `operation_trips.booked_seats` is likewise unmaintained; seat states in `trip_seats` are the truth. | Same class of bug. Live Ops already counts seats from `trip_seats`. |
 | D4 | Two subscription "worlds" (`transport_packages`/`transport_subscriptions` vs `packages`/`subscriptions`) | Phase 2 must map which is authoritative before touching payment state. |
 | D5 | Client `features/<x>/di/<x>_di.dart` files are dead code; real DI is inline in `core/di/client_di.dart` | Confusing, but client-side — out of this program's scope. |
+| D6 | **Two vocabularies for one payment concept.** `operation_bookings.payment_status` uses camelCase `underReview`; `booking_payments.status` uses snake_case `under_review`. Every RPC that touches both must remember to switch. | A future writer using the wrong casing silently violates a CHECK or, worse, matches nothing in a `where status in (…)` filter. Not changed here: the columns are read by the client and captain apps too, so renaming is a cross-workstream migration. |
+| D7 | `operation_bookings` carries 3 status columns, one of which (`payment_review_status`) is now fully derived. It could be dropped entirely once no reader depends on it. | Dead weight; the trigger keeps it honest in the meantime. |
 
 ---
 
@@ -128,8 +161,9 @@ the substrate booking correctness sits on.
 
 ```bash
 # Tests
-flutter test test/apps/dashboard/            # expect 414 pass, 2 fail (B1, B2)
-flutter test test/apps/dashboard/features/live_ops/   # expect 99 pass
+flutter test test/apps/dashboard/                      # expect 456 pass, 2 fail (B1, B2)
+flutter test test/apps/dashboard/features/live_ops/    # expect 99 pass
+flutter test test/apps/dashboard/features/bookings/    # expect 56 pass
 
 # Analyzer
 flutter analyze lib/apps/dashboard/ test/apps/dashboard/   # expect clean
@@ -141,4 +175,15 @@ supabase db query --linked "select proname, prosecdef, array_to_string(proacl,',
   from pg_proc where proname='dashboard_active_trip_fixes';"
 supabase db query --linked "select relname, relrowsecurity from pg_class
   where relname in ('driver_trip_reports','trip_live_locations');"
+
+# Phase 2 invariants — all three must return 0
+supabase db query --linked "
+select 'review_status drift' as check, count(*) from operation_bookings
+ where payment_review_status is distinct from case
+   when payment_status in ('approved','rejected') then 'reviewed'
+   when payment_status='underReview' then 'under_review' else 'pending' end
+union all select 'cancelled without timestamp', count(*) from operation_bookings
+ where status='cancelled' and cancelled_at is null
+union all select 'critical contradictions', count(*)
+ from booking_state_contradictions where severity='critical';"
 ```

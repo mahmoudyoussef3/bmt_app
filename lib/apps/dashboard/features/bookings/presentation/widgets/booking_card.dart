@@ -58,7 +58,8 @@ class BookingCard extends StatelessWidget {
                   ),
                 ),
                 StatusChip(
-                  label: '${booking.status.label} / ${booking.paymentStatus.label}',
+                  label:
+                      '${booking.status.label} / ${booking.paymentStatus.label}',
                 ),
               ],
             ),

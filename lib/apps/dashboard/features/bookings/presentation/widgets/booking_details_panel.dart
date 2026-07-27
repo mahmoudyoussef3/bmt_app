@@ -8,6 +8,7 @@ import 'package:bmt_app/core/widgets/status_chip.dart';
 
 import '../../domain/entities/operation_booking.dart';
 import '../cubit/bookings_cubit.dart';
+import 'booking_next_action_banner.dart';
 import 'booking_reassign_dialog.dart';
 import 'booking_review_intents.dart' as intents;
 
@@ -41,13 +42,15 @@ class BookingDetailsPanel extends StatelessWidget {
                   spacing: AppSpacing.small,
                   runSpacing: AppSpacing.small,
                   children: [
-                    StatusChip(label: booking.status.label),
+                    StatusChip(label: 'الحجز: ${booking.status.label}'),
                     StatusChip(
-                      label: booking.paymentStatus.label,
+                      label: 'الدفع: ${booking.paymentStatus.label}',
                       color: AppStatusColors.onWarningContainer,
                     ),
                   ],
                 ),
+                const SizedBox(height: AppSpacing.medium),
+                BookingNextActionBanner(booking: booking),
                 if (booking.awaitingReview) ...[
                   const SizedBox(height: AppSpacing.medium),
                   _ReviewButtons(booking: booking, cubit: cubit),
