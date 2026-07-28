@@ -6,9 +6,14 @@ import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_det
 import '../../client_test_app.dart';
 import '../../tracking_cubit_stub.dart';
 
+/// [bookingState] defaults to `confirmed`: these cases describe bookings the
+/// operator has approved. A `reserved` booking is only a held seat, and Trip
+/// Details is expected to say so rather than offer journey actions — covered in
+/// `trip_attention_test.dart`.
 TripData _trip({
   required TripStatus status,
   required PaymentStatus paymentStatus,
+  BookingState bookingState = BookingState.confirmed,
   bool isReviewed = false,
 }) {
   return TripData(
@@ -28,6 +33,7 @@ TripData _trip({
     vehicleId: 'v1',
     seats: const ['1'],
     paymentStatus: paymentStatus,
+    bookingState: bookingState,
     fare: 'EGP 50',
     isReviewed: isReviewed,
   );

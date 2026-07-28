@@ -7,6 +7,7 @@ import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
 import '../../domain/entities/client_notification.dart';
+import '../../domain/entities/notification_destination.dart';
 import '../cubit/notifications_cubit.dart';
 import '../cubit/notifications_state.dart';
 import '../widgets/notification_tile.dart';
@@ -20,14 +21,24 @@ import '../widgets/notifications_empty_view.dart';
 class NotificationsScreen extends StatelessWidget {
   const NotificationsScreen({super.key});
 
-  /// `action_url` is a route name supplied by the server. Unrecognised values
-  /// are absorbed by the app's `onUnknownRoute`, so a stale row can never crash
-  /// a tap — it lands back on the shell instead.
+  /// Opens whatever the notification is actually about.
+  ///
+  /// The destination comes from the row's own `type` and `data` rather than from
+  /// `action_url`, which no backend writer populates — see
+  /// [resolveNotificationDestination]. Passing the resolved arguments is the
+  /// part that matters: a bare push to Trip Details opens *the newest booking*,
+  /// not the one the notification names.
+  ///
+  /// A server-supplied `action_url` still wins when present; an unrecognised
+  /// value is absorbed by the app's `onUnknownRoute`, so a stale row can never
+  /// crash a tap.
   void _handleTap(BuildContext context, ClientNotification notification) {
     context.read<NotificationsCubit>().markAsRead(notification.id);
-    final target = notification.actionUrl;
-    if (target == null || target.isEmpty) return;
-    Navigator.of(context).pushNamed(target);
+    final destination = resolveNotificationDestination(notification);
+    if (destination == null) return;
+    Navigator.of(
+      context,
+    ).pushNamed(destination.route, arguments: destination.arguments);
   }
 
   @override

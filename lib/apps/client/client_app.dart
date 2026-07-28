@@ -12,6 +12,7 @@ import 'package:bmt_app/apps/client/core/theme/client_theme.dart';
 import 'package:bmt_app/apps/client/core/theme/client_theme_store.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/screens/welcome_screen.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/screens/client_splash_gate.dart';
+import 'package:bmt_app/apps/client/features/notifications/presentation/client_push_destination.dart';
 import 'package:bmt_app/apps/client/features/onboarding/presentation/cubit/onboarding_cubit.dart';
 import 'package:bmt_app/apps/client/features/onboarding/presentation/cubit/onboarding_state.dart';
 import 'package:bmt_app/apps/client/features/onboarding/presentation/screens/onboarding_screen.dart';
@@ -87,6 +88,7 @@ class _ClientAppState extends State<ClientApp> {
       appType: 'client',
       supabase: supabase,
       navigatorKey: _navigatorKey,
+      resolveDestination: clientPushDestination,
     );
   }
 

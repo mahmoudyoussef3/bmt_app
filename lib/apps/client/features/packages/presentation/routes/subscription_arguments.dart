@@ -1,51 +1,38 @@
-import '../../domain/entities/package_plan.dart';
-
 /// Arguments for `PackagesRoutes.subscription`.
 ///
-/// The seat flow forwards the booked trip (driver, vehicle, route, fare)
-/// through here so the payment step can show a real ticket instead of empty
-/// placeholders. Opening the screen *without* booking context — from the
-/// profile hub or an office profile — means the rider has no trip picked yet,
-/// so the subscribe CTA sends them to choose a route first.
+/// The screen is a **catalogue**: it shows what an office sells, not a checkout.
+/// A commute package is priced against a route and consumed by trips on it, so
+/// buying one always happens inside the booking wizard's package step, where a
+/// route, a date and a seat already exist.
 ///
-/// An office profile also passes [initialOfficeId] so the marketplace opens
-/// already filtered to that seller.
+/// An office profile passes [initialOfficeId] so the marketplace opens already
+/// filtered to that seller.
+///
+/// ### What was removed and why
+///
+/// This class used to carry a `bookingData` map and a `hasBookingContext` flag
+/// that routed the subscribe CTA to a standalone checkout. Nothing ever supplied
+/// a trip through it — the only navigations pass either nothing, an office id,
+/// or `{'hasActiveSubscription': …}` from Home. That last one made the map
+/// non-empty, so `hasBookingContext` read `true` and Home's "Packages" tile led
+/// to a checkout with no trip, no seat and a permanently blocked pay button.
+/// The flag is gone rather than repaired: there is no second checkout to route
+/// to, so there is nothing for it to decide.
 class SubscriptionArguments {
-  const SubscriptionArguments({this.bookingData, this.initialOfficeId});
+  const SubscriptionArguments({this.initialOfficeId});
 
   factory SubscriptionArguments.fromArguments(Object? arguments) {
     if (arguments is! Map) return const SubscriptionArguments();
 
-    final map = Map<String, dynamic>.from(arguments);
-    // The office hint rides the same argument channel as booking data but is
-    // not itself a trip, so it is lifted out before deciding whether a trip is
-    // present. What remains is booking context only when it still holds trip
-    // fields — an office-only navigation leaves the map empty.
-    final officeId = map.remove('initialOfficeId')?.toString();
-
+    final officeId = arguments['initialOfficeId']?.toString();
     return SubscriptionArguments(
-      bookingData: map.isEmpty ? null : map,
       initialOfficeId: (officeId != null && officeId.isNotEmpty)
           ? officeId
           : null,
     );
   }
 
-  final Map<String, dynamic>? bookingData;
-
   /// The office the marketplace should open filtered to, or `null` for the whole
   /// marketplace.
   final String? initialOfficeId;
-
-  bool get hasBookingContext => bookingData != null;
-
-  /// The payload handed to checkout: the forwarded trip plus the chosen plan.
-  Map<String, dynamic> checkoutPayload(PackagePlan package) {
-    return <String, dynamic>{
-      ...?bookingData,
-      'packageId': package.id,
-      'package': package.displayName,
-      'baseFare': package.priceInPounds,
-    };
-  }
 }

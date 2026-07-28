@@ -3,6 +3,15 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:bmt_app/core/localization/l10n_context.dart';
+
+/// Where a tapped push should land: a route name and the arguments that route
+/// needs. Each app supplies its own resolver, so this file stays free of any
+/// app's route table.
+typedef PushDestination = ({String route, Object? arguments});
+typedef PushDestinationResolver =
+    PushDestination? Function(Map<String, dynamic> data);
+
 class FcmService {
   FcmService._();
   static final FcmService instance = FcmService._();
@@ -10,20 +19,29 @@ class FcmService {
   GlobalKey<NavigatorState>? _navigatorKey;
   String? _userId;
   String? _appType;
+  PushDestinationResolver? _resolveDestination;
   bool _initialized = false;
 
   /// Call once after the user authenticates.
   /// [appType] is 'client' | 'captain' | 'dashboard'
+  ///
+  /// [resolveDestination] turns a push payload into a screen. Without it a tap
+  /// falls back to pushing `data['action_url']` verbatim — which is what every
+  /// app did before, and which lands on the wrong record whenever the route
+  /// needs an id (Trip Details with no argument opens the newest booking, not
+  /// the one the push named).
   Future<void> initialize({
     required String userId,
     required String appType,
     required SupabaseClient supabase,
     required GlobalKey<NavigatorState> navigatorKey,
+    PushDestinationResolver? resolveDestination,
   }) async {
     if (_initialized && _userId == userId) return;
     _userId = userId;
     _appType = appType;
     _navigatorKey = navigatorKey;
+    _resolveDestination = resolveDestination;
     _initialized = true;
 
     final settings = await FirebaseMessaging.instance.requestPermission(
@@ -100,7 +118,7 @@ class FcmService {
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 5),
         action: SnackBarAction(
-          label: 'عرض',
+          label: ctx.l10n.common_view,
           onPressed: () => _onTap(message),
         ),
       ),
@@ -108,6 +126,15 @@ class FcmService {
   }
 
   void _onTap(RemoteMessage message) {
+    final destination = _resolveDestination?.call(message.data);
+    if (destination != null) {
+      _navigatorKey?.currentState?.pushNamed(
+        destination.route,
+        arguments: destination.arguments,
+      );
+      return;
+    }
+
     final url = message.data['action_url'] as String?;
     if (url != null && url.isNotEmpty) {
       _navigatorKey?.currentState?.pushNamed(url);

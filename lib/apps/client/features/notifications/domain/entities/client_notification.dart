@@ -36,6 +36,7 @@ class ClientNotification {
     required this.category,
     required this.isRead,
     required this.createdAt,
+    this.type = '',
     this.actionUrl,
     this.data = const {},
     this.priority = NotificationPriority.normal,
@@ -45,6 +46,15 @@ class ClientNotification {
   final String title;
   final String body;
   final NotificationCategory category;
+
+  /// The raw `notifications.type` string.
+  ///
+  /// [category] is an enum and folds anything it does not know into
+  /// [NotificationCategory.general] — which is most of the live vocabulary
+  /// (`booking_received`, `payment_approved`, `payment_rejected`, …). Routing a
+  /// tap needs to tell those apart, so the unmapped string is carried alongside.
+  final String type;
+
   final bool isRead;
   final DateTime createdAt;
   final String? actionUrl;
@@ -56,6 +66,7 @@ class ClientNotification {
         title: title,
         body: body,
         category: category,
+        type: type,
         isRead: isRead ?? this.isRead,
         createdAt: createdAt,
         actionUrl: actionUrl,

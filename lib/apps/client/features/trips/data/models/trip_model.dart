@@ -21,6 +21,7 @@ class TripModel {
     required this.seats,
     required this.paymentStatus,
     required this.fare,
+    this.bookingState = BookingState.reserved,
     this.tripId = '',
     this.seatMap = const [],
     this.officeName = '',
@@ -35,6 +36,7 @@ class TripModel {
   final List<TripSeat> seatMap;
   final String reference;
   final TripStatus status;
+  final BookingState bookingState;
   final String pickup;
   final String destination;
   final String dateLabel;
@@ -61,6 +63,7 @@ class TripModel {
       seatMap: seatMap,
       reference: reference,
       status: status,
+      bookingState: bookingState,
       pickup: pickup,
       destination: destination,
       dateLabel: dateLabel,

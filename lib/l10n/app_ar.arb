@@ -1,6 +1,7 @@
 {
   "@@locale": "ar",
   "common_retry": "إعادة المحاولة",
+  "common_view": "عرض",
   "common_dismiss": "إغلاق",
   "common_confirm": "تأكيد",
   "common_cancel": "إلغاء",
@@ -209,16 +210,28 @@
   "packages_officeSearchHint": "ابحث باسم المكتب",
   "packages_noOfficeMatch": "لا يوجد مكتب يطابق \"{query}\"",
   "@packages_noOfficeMatch": {
-    "placeholders": { "query": { "type": "String" } }
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
   },
   "packages_fromOffice": "باقات {office}",
   "@packages_fromOffice": {
-    "placeholders": { "office": { "type": "String" } }
+    "placeholders": {
+      "office": {
+        "type": "String"
+      }
+    }
   },
   "packages_showAllOffices": "عرض الكل",
   "packages_officePackagesCount": "{count, plural, =1{باقة واحدة} =2{باقتان} few{{count} باقات} other{{count} باقة}}",
   "@packages_officePackagesCount": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "packages_emptyMarketplaceTitle": "لا توجد باقات متاحة حالياً",
   "packages_emptyMarketplaceBody": "لم يطرح أي مكتب باقات للحجز بعد. استكشف الرحلات المتاحة الآن.",
@@ -1483,5 +1496,26 @@
   "mySubscription_unlimitedTrips": "رحلات غير محدودة",
   "mySubscription_emptyTitle": "لا يوجد اشتراك نشط",
   "mySubscription_emptyBody": "تصفح الباقات لتجد ما يناسب تنقلك اليومي.",
-  "mySubscription_browsePackages": "تصفح الباقات"
+  "mySubscription_browsePackages": "تصفح الباقات",
+  "trips_attentionAwaitingReviewTitle": "بانتظار مراجعة المكتب لعملية الدفع",
+  "trips_attentionAwaitingReviewBody": "مقعدك محجوز مؤقتاً ريثما يراجع {office} الإيصال. سنُعلمك فور اعتماده.",
+  "trips_attentionAwaitingReviewBodyNoOffice": "مقعدك محجوز مؤقتاً ريثما يراجع المكتب الإيصال. سنُعلمك فور اعتماده.",
+  "trips_attentionPaymentIncompleteTitle": "لم يكتمل الدفع",
+  "trips_attentionPaymentIncompleteBody": "مقعدك محجوز مؤقتاً حتى تتم تسوية الدفع. أكمل الدفع أو ألغِ الحجز لتحرير المقعد.",
+  "trips_attentionPaymentRejectedTitle": "لم يتم قبول الدفع",
+  "trips_attentionPaymentRejectedBody": "تعذّر على المكتب التحقق من هذه الدفعة. تواصل مع الدعم أو احجز من جديد.",
+  "trips_attentionRefundDueTitle": "أُلغيت هذه الرحلة بعد دفعك",
+  "trips_attentionRefundDueBody": "لك مبلغ مُستردّ عن هذا الحجز. افتح الدعم لمتابعته.",
+  "trips_attentionNeedsSupportTitle": "هذا الحجز يحتاج إلى مراجعة",
+  "trips_attentionNeedsSupportBody": "بيانات الحجز والدفع غير متطابقة، ولن نخمّن. تواصل مع الدعم بالرقم المرجعي {reference}.",
+  "trips_attentionOpenSupport": "تواصل مع الدعم",
+  "trips_seatHeldNotYours": "مقعد محجوز مؤقتاً — غير مؤكد بعد",
+  "trips_bookingStateReserved": "بانتظار الاعتماد",
+  "trips_bookingStateConfirmed": "مؤكد",
+  "trips_bookingStateCompleted": "تمت",
+  "trips_bookingStateCancelled": "ملغي",
+  "offices_nothingListedTitle": "لا يوجد لدى هذا المكتب أي معروض حالياً",
+  "offices_nothingListedBody": "لم يُنشر بعد أي مواعيد أو خطوط سير. جرّب مكتباً آخر، أو ابحث في كل الخطوط المتاحة على المنصة.",
+  "offices_browseOtherOffices": "تصفّح مكاتب أخرى",
+  "offices_searchAllRoutes": "ابحث في كل الخطوط"
 }

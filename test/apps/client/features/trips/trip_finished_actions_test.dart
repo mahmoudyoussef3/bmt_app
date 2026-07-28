@@ -2,9 +2,17 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
 
+/// A booking that travelled: paid, confirmed, on a real trip.
+///
+/// [bookingState] defaults to `confirmed` rather than to the entity's own
+/// `reserved` default because these cases describe journeys that happened. A
+/// `reserved` booking is a seat that was only ever held — it puts nobody on the
+/// vehicle, so it must not offer to be rated or tracked, which is asserted
+/// separately below.
 TripData _trip({
   required TripStatus status,
   PaymentStatus paymentStatus = PaymentStatus.paid,
+  BookingState bookingState = BookingState.confirmed,
   bool isReviewed = false,
 }) {
   return TripData(
@@ -24,6 +32,7 @@ TripData _trip({
     vehicleId: 'v1',
     seats: const ['A1'],
     paymentStatus: paymentStatus,
+    bookingState: bookingState,
     fare: 'EGP 50',
     isReviewed: isReviewed,
   );
@@ -64,6 +73,20 @@ void main() {
     test('a completed trip that was already rated is never asked again', () {
       expect(
         _trip(status: TripStatus.completed, isReviewed: true).canBeReviewed,
+        isFalse,
+      );
+    });
+
+    test('a seat that was only ever held is not a journey to rate', () {
+      // The operator can complete a trip while this rider's booking never left
+      // `reserved` — they did not travel on it, so they are not asked to say how
+      // it went.
+      expect(
+        _trip(
+          status: TripStatus.completed,
+          bookingState: BookingState.reserved,
+          paymentStatus: PaymentStatus.underReview,
+        ).canBeReviewed,
         isFalse,
       );
     });

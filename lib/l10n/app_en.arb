@@ -1,6 +1,7 @@
 {
   "@@locale": "en",
   "common_retry": "Retry",
+  "common_view": "View",
   "common_dismiss": "Dismiss",
   "common_confirm": "Confirm",
   "common_cancel": "Cancel",
@@ -286,16 +287,28 @@
   "packages_officeSearchHint": "Search by office name",
   "packages_noOfficeMatch": "No office matches \"{query}\"",
   "@packages_noOfficeMatch": {
-    "placeholders": { "query": { "type": "String" } }
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
   },
   "packages_fromOffice": "{office} packages",
   "@packages_fromOffice": {
-    "placeholders": { "office": { "type": "String" } }
+    "placeholders": {
+      "office": {
+        "type": "String"
+      }
+    }
   },
   "packages_showAllOffices": "Show all",
   "packages_officePackagesCount": "{count, plural, =1{1 package} other{{count} packages}}",
   "@packages_officePackagesCount": {
-    "placeholders": { "count": { "type": "int" } }
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
   },
   "packages_emptyMarketplaceTitle": "No packages available yet",
   "packages_emptyMarketplaceBody": "No office has listed packages for booking yet. Explore the available trips instead.",
@@ -2248,7 +2261,9 @@
   "offices_ratingsCount": "{count, plural, =1{1 review} other{{count} reviews}}",
   "@offices_ratingsCount": {
     "placeholders": {
-      "count": {"type": "int"}
+      "count": {
+        "type": "int"
+      }
     }
   },
   "routes_officesCardTitle": "Transport offices",
@@ -2475,5 +2490,40 @@
   "mySubscription_unlimitedTrips": "Unlimited trips",
   "mySubscription_emptyTitle": "No active subscription",
   "mySubscription_emptyBody": "Browse packages to find one that fits your commute.",
-  "mySubscription_browsePackages": "Browse Packages"
+  "mySubscription_browsePackages": "Browse Packages",
+  "trips_attentionAwaitingReviewTitle": "Waiting for the office to check your payment",
+  "trips_attentionAwaitingReviewBody": "Your seat is held while {office} reviews the receipt. We'll notify you as soon as it's approved.",
+  "@trips_attentionAwaitingReviewBody": {
+    "placeholders": {
+      "office": {
+        "type": "String"
+      }
+    }
+  },
+  "trips_attentionAwaitingReviewBodyNoOffice": "Your seat is held while the office reviews the receipt. We'll notify you as soon as it's approved.",
+  "trips_attentionPaymentIncompleteTitle": "Payment not completed",
+  "trips_attentionPaymentIncompleteBody": "Your seat is only held until payment is settled. Finish paying or cancel to free it.",
+  "trips_attentionPaymentRejectedTitle": "Payment was not accepted",
+  "trips_attentionPaymentRejectedBody": "The office could not verify this payment. Contact support or book again.",
+  "trips_attentionRefundDueTitle": "This trip was cancelled after you paid",
+  "trips_attentionRefundDueBody": "You are owed a refund for this booking. Open support to follow it up.",
+  "trips_attentionNeedsSupportTitle": "This booking needs checking",
+  "trips_attentionNeedsSupportBody": "Its booking and payment records disagree, so we won't guess. Please contact support with reference {reference}.",
+  "@trips_attentionNeedsSupportBody": {
+    "placeholders": {
+      "reference": {
+        "type": "String"
+      }
+    }
+  },
+  "trips_attentionOpenSupport": "Contact support",
+  "trips_seatHeldNotYours": "Seat held — not confirmed yet",
+  "trips_bookingStateReserved": "Awaiting approval",
+  "trips_bookingStateConfirmed": "Confirmed",
+  "trips_bookingStateCompleted": "Travelled",
+  "trips_bookingStateCancelled": "Cancelled",
+  "offices_nothingListedTitle": "This office has nothing listed right now",
+  "offices_nothingListedBody": "No departures and no routes are published yet. Try another office, or search every route on the platform.",
+  "offices_browseOtherOffices": "Browse other offices",
+  "offices_searchAllRoutes": "Search all routes"
 }

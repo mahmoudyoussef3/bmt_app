@@ -30,6 +30,7 @@ abstract final class TripMapper {
     final dbPaymentStatus =
         data['payment_status']?.toString() ?? paymentStatusStr;
     final id = data['id']?.toString() ?? '';
+    final bookingStatus = data['status']?.toString() ?? 'draft';
 
     return TripModel(
       id: id,
@@ -38,8 +39,9 @@ abstract final class TripMapper {
       reference: data['booking_number']?.toString() ?? _reference(id),
       status: TripStatusMapper.tripStatus(
         tripObj?['status']?.toString() ?? 'scheduled',
-        data['status']?.toString() ?? 'draft',
+        bookingStatus,
       ),
+      bookingState: TripStatusMapper.bookingState(bookingStatus),
       pickup: pickup,
       destination: destination,
       dateLabel: data['trip_date']?.toString() ?? '',

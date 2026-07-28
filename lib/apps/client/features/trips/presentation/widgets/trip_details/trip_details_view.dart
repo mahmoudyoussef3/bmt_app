@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/cubit/trips_cubit.dart';
+import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_attention_banner.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_cancellation_flow.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_actions_bar.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_boarding_card.dart';
@@ -80,6 +81,11 @@ class TripDetailsView extends StatelessWidget {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
             children: [
+              // Above the hero on purpose: if this booking needs something, that
+              // is the first thing the rider must read — not the route poster.
+              TripAttentionBanner(trip: trip),
+              if (trip.attention != TripAttention.none)
+                const SizedBox(height: 14),
               TripHeroCard(trip: trip),
               const SizedBox(height: 14),
               if (showBoarding) ...[

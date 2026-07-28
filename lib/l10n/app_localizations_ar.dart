@@ -12,6 +12,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get common_retry => 'إعادة المحاولة';
 
   @override
+  String get common_view => 'عرض';
+
+  @override
   String get common_dismiss => 'إغلاق';
 
   @override
@@ -4737,4 +4740,78 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get mySubscription_browsePackages => 'تصفح الباقات';
+
+  @override
+  String get trips_attentionAwaitingReviewTitle =>
+      'بانتظار مراجعة المكتب لعملية الدفع';
+
+  @override
+  String trips_attentionAwaitingReviewBody(String office) {
+    return 'مقعدك محجوز مؤقتاً ريثما يراجع $office الإيصال. سنُعلمك فور اعتماده.';
+  }
+
+  @override
+  String get trips_attentionAwaitingReviewBodyNoOffice =>
+      'مقعدك محجوز مؤقتاً ريثما يراجع المكتب الإيصال. سنُعلمك فور اعتماده.';
+
+  @override
+  String get trips_attentionPaymentIncompleteTitle => 'لم يكتمل الدفع';
+
+  @override
+  String get trips_attentionPaymentIncompleteBody =>
+      'مقعدك محجوز مؤقتاً حتى تتم تسوية الدفع. أكمل الدفع أو ألغِ الحجز لتحرير المقعد.';
+
+  @override
+  String get trips_attentionPaymentRejectedTitle => 'لم يتم قبول الدفع';
+
+  @override
+  String get trips_attentionPaymentRejectedBody =>
+      'تعذّر على المكتب التحقق من هذه الدفعة. تواصل مع الدعم أو احجز من جديد.';
+
+  @override
+  String get trips_attentionRefundDueTitle => 'أُلغيت هذه الرحلة بعد دفعك';
+
+  @override
+  String get trips_attentionRefundDueBody =>
+      'لك مبلغ مُستردّ عن هذا الحجز. افتح الدعم لمتابعته.';
+
+  @override
+  String get trips_attentionNeedsSupportTitle => 'هذا الحجز يحتاج إلى مراجعة';
+
+  @override
+  String trips_attentionNeedsSupportBody(String reference) {
+    return 'بيانات الحجز والدفع غير متطابقة، ولن نخمّن. تواصل مع الدعم بالرقم المرجعي $reference.';
+  }
+
+  @override
+  String get trips_attentionOpenSupport => 'تواصل مع الدعم';
+
+  @override
+  String get trips_seatHeldNotYours => 'مقعد محجوز مؤقتاً — غير مؤكد بعد';
+
+  @override
+  String get trips_bookingStateReserved => 'بانتظار الاعتماد';
+
+  @override
+  String get trips_bookingStateConfirmed => 'مؤكد';
+
+  @override
+  String get trips_bookingStateCompleted => 'تمت';
+
+  @override
+  String get trips_bookingStateCancelled => 'ملغي';
+
+  @override
+  String get offices_nothingListedTitle =>
+      'لا يوجد لدى هذا المكتب أي معروض حالياً';
+
+  @override
+  String get offices_nothingListedBody =>
+      'لم يُنشر بعد أي مواعيد أو خطوط سير. جرّب مكتباً آخر، أو ابحث في كل الخطوط المتاحة على المنصة.';
+
+  @override
+  String get offices_browseOtherOffices => 'تصفّح مكاتب أخرى';
+
+  @override
+  String get offices_searchAllRoutes => 'ابحث في كل الخطوط';
 }

@@ -3,6 +3,7 @@ import 'trip_seat.dart';
 import 'trip_status.dart';
 
 export 'reviewable_trip.dart';
+export 'trip_attention.dart';
 export 'trip_policies.dart';
 export 'trip_status.dart';
 
@@ -26,6 +27,7 @@ class TripData {
     required this.seats,
     required this.paymentStatus,
     required this.fare,
+    this.bookingState = BookingState.reserved,
     this.tripId = '',
     this.seatMap = const [],
     this.officeName = '',
@@ -50,7 +52,15 @@ class TripData {
   final List<TripSeat> seatMap;
 
   final String reference;
+
+  /// Where the *journey* stands. Not the same question as [bookingState].
   final TripStatus status;
+
+  /// Where the *rider's seat* stands. A trip can be open for booking while this
+  /// rider's own booking is still unpaid, and a trip can complete over a booking
+  /// that was never confirmed — so these two are read together, never merged.
+  final BookingState bookingState;
+
   final String pickup;
   final String destination;
   final String dateLabel;

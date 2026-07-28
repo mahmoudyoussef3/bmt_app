@@ -8,6 +8,7 @@ class ClientNotificationModel {
     required this.category,
     required this.isRead,
     required this.createdAt,
+    this.type = '',
     this.actionUrl,
     this.data = const {},
     this.priority = NotificationPriority.normal,
@@ -17,6 +18,7 @@ class ClientNotificationModel {
   final String title;
   final String body;
   final NotificationCategory category;
+  final String type;
   final bool isRead;
   final DateTime createdAt;
   final String? actionUrl;
@@ -31,6 +33,7 @@ class ClientNotificationModel {
       category: NotificationCategory.fromString(
         map['category'] as String? ?? map['type'] as String? ?? 'general',
       ),
+      type: map['type'] as String? ?? '',
       isRead: map['is_read'] as bool? ?? false,
       createdAt: DateTime.parse(map['created_at'] as String).toLocal(),
       actionUrl: map['action_url'] as String?,
@@ -46,6 +49,7 @@ class ClientNotificationModel {
         title: title,
         body: body,
         category: category,
+        type: type,
         isRead: isRead,
         createdAt: createdAt,
         actionUrl: actionUrl,

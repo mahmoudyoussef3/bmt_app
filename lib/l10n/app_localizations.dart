@@ -104,6 +104,12 @@ abstract class AppLocalizations {
   /// **'Retry'**
   String get common_retry;
 
+  /// No description provided for @common_view.
+  ///
+  /// In en, this message translates to:
+  /// **'View'**
+  String get common_view;
+
   /// No description provided for @common_dismiss.
   ///
   /// In en, this message translates to:
@@ -8521,6 +8527,132 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Browse Packages'**
   String get mySubscription_browsePackages;
+
+  /// No description provided for @trips_attentionAwaitingReviewTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for the office to check your payment'**
+  String get trips_attentionAwaitingReviewTitle;
+
+  /// No description provided for @trips_attentionAwaitingReviewBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your seat is held while {office} reviews the receipt. We\'ll notify you as soon as it\'s approved.'**
+  String trips_attentionAwaitingReviewBody(String office);
+
+  /// No description provided for @trips_attentionAwaitingReviewBodyNoOffice.
+  ///
+  /// In en, this message translates to:
+  /// **'Your seat is held while the office reviews the receipt. We\'ll notify you as soon as it\'s approved.'**
+  String get trips_attentionAwaitingReviewBodyNoOffice;
+
+  /// No description provided for @trips_attentionPaymentIncompleteTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment not completed'**
+  String get trips_attentionPaymentIncompleteTitle;
+
+  /// No description provided for @trips_attentionPaymentIncompleteBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Your seat is only held until payment is settled. Finish paying or cancel to free it.'**
+  String get trips_attentionPaymentIncompleteBody;
+
+  /// No description provided for @trips_attentionPaymentRejectedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment was not accepted'**
+  String get trips_attentionPaymentRejectedTitle;
+
+  /// No description provided for @trips_attentionPaymentRejectedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The office could not verify this payment. Contact support or book again.'**
+  String get trips_attentionPaymentRejectedBody;
+
+  /// No description provided for @trips_attentionRefundDueTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This trip was cancelled after you paid'**
+  String get trips_attentionRefundDueTitle;
+
+  /// No description provided for @trips_attentionRefundDueBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You are owed a refund for this booking. Open support to follow it up.'**
+  String get trips_attentionRefundDueBody;
+
+  /// No description provided for @trips_attentionNeedsSupportTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This booking needs checking'**
+  String get trips_attentionNeedsSupportTitle;
+
+  /// No description provided for @trips_attentionNeedsSupportBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Its booking and payment records disagree, so we won\'t guess. Please contact support with reference {reference}.'**
+  String trips_attentionNeedsSupportBody(String reference);
+
+  /// No description provided for @trips_attentionOpenSupport.
+  ///
+  /// In en, this message translates to:
+  /// **'Contact support'**
+  String get trips_attentionOpenSupport;
+
+  /// No description provided for @trips_seatHeldNotYours.
+  ///
+  /// In en, this message translates to:
+  /// **'Seat held — not confirmed yet'**
+  String get trips_seatHeldNotYours;
+
+  /// No description provided for @trips_bookingStateReserved.
+  ///
+  /// In en, this message translates to:
+  /// **'Awaiting approval'**
+  String get trips_bookingStateReserved;
+
+  /// No description provided for @trips_bookingStateConfirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirmed'**
+  String get trips_bookingStateConfirmed;
+
+  /// No description provided for @trips_bookingStateCompleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Travelled'**
+  String get trips_bookingStateCompleted;
+
+  /// No description provided for @trips_bookingStateCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get trips_bookingStateCancelled;
+
+  /// No description provided for @offices_nothingListedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'This office has nothing listed right now'**
+  String get offices_nothingListedTitle;
+
+  /// No description provided for @offices_nothingListedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'No departures and no routes are published yet. Try another office, or search every route on the platform.'**
+  String get offices_nothingListedBody;
+
+  /// No description provided for @offices_browseOtherOffices.
+  ///
+  /// In en, this message translates to:
+  /// **'Browse other offices'**
+  String get offices_browseOtherOffices;
+
+  /// No description provided for @offices_searchAllRoutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Search all routes'**
+  String get offices_searchAllRoutes;
 }
 
 class _AppLocalizationsDelegate

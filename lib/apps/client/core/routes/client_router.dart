@@ -44,9 +44,6 @@ import 'package:bmt_app/apps/client/features/packages/presentation/routes/packag
 import 'package:bmt_app/apps/client/features/packages/presentation/routes/subscription_arguments.dart';
 import 'package:bmt_app/apps/client/features/packages/presentation/screens/my_subscription_screen.dart';
 import 'package:bmt_app/apps/client/features/packages/presentation/screens/subscription_screen.dart';
-import 'package:bmt_app/apps/client/features/payments/domain/entities/payment_models.dart';
-import 'package:bmt_app/apps/client/features/payments/presentation/routes/payment_routes.dart';
-import 'package:bmt_app/apps/client/features/payments/presentation/screens/payment_checkout_screen.dart';
 import 'package:bmt_app/apps/client/features/profile/domain/entities/legal_document_data.dart';
 import 'package:bmt_app/apps/client/features/profile/presentation/routes/profile_routes.dart';
 import 'package:bmt_app/apps/client/features/profile/presentation/screens/legal_document_screen.dart';
@@ -56,8 +53,6 @@ import 'package:bmt_app/apps/client/features/referrals/presentation/screens/refe
 import 'package:bmt_app/apps/client/features/routes/presentation/screens/routes_hub_screen.dart';
 import 'package:bmt_app/apps/client/features/seat_release/presentation/routes/seat_release_routes.dart';
 import 'package:bmt_app/apps/client/features/seat_release/presentation/screens/seat_release_screen.dart';
-import 'package:bmt_app/apps/client/features/seat_selection/presentation/routes/seat_selection_routes.dart';
-import 'package:bmt_app/apps/client/features/seat_selection/presentation/screens/seat_selection_screen.dart';
 import 'package:bmt_app/apps/client/features/support/presentation/routes/support_routes.dart';
 import 'package:bmt_app/apps/client/features/support/presentation/screens/create_support_ticket_screen.dart';
 import 'package:bmt_app/apps/client/features/support/presentation/screens/support_center_screen.dart';
@@ -218,21 +213,32 @@ abstract final class ClientRouter {
 
   // --- Seats ----------------------------------------------------------------
 
+  // `SeatSelectionRoutes.seatSelection` is deliberately absent. It fronted a
+  // second, older booking funnel (seat map → PaymentCheckoutScreen →
+  // PaymentProcessingScreen) that nothing navigates to and that no longer works:
+  // its confirm call omits `p_package_id` / `p_plan_start_date`, which the live
+  // `confirm_seat_booking_v2` requires, so PostgREST cannot resolve the function
+  // at all. It also called confirm *without* first taking a seat lock, and
+  // rendered "Payment submitted" after a card checkout the rider had cancelled.
+  //
+  // Seats are chosen in the booking wizard (`BookingRoutes.wizard`), which locks
+  // and confirms as one unit through `PlaceSeatBookingUseCase`. Registering the
+  // old path here made a broken money flow one `action_url` away from a rider.
   static Map<String, WidgetBuilder> get _seats => <String, WidgetBuilder>{
-    SeatSelectionRoutes.seatSelection: (_) =>
-        ClientCubitScopes.seatSelection(const SeatSelectionScreen()),
     SeatReleaseRoutes.seatRelease: (_) =>
         ClientCubitScopes.seatRelease(const SeatReleaseScreen()),
   };
 
   // --- Payments & packages --------------------------------------------------
 
+  // `PaymentRoutes.checkout` is deliberately absent — see the note on [_seats].
+  // It was the second half of the dead funnel, and the only caller left
+  // (`PackageDetailsView`) reached it with no trip and no seat, so its pay bar
+  // could never unblock: a screen a rider could open but never finish.
+  //
+  // Packages are paid for inside the wizard's package + payment steps, which is
+  // also the only place a subscription can be bound to the route it is sold for.
   static Map<String, WidgetBuilder> get _payments => <String, WidgetBuilder>{
-    PaymentRoutes.checkout: (context) => ClientCubitScopes.payment(
-      PaymentCheckoutScreen(
-        checkoutData: PaymentCheckoutData.fromArguments(_args(context)),
-      ),
-    ),
     PackagesRoutes.subscription: (context) {
       final arguments = SubscriptionArguments.fromArguments(_args(context));
       return ClientCubitScopes.packages(
@@ -276,11 +282,19 @@ abstract final class ClientRouter {
         ClientCubitScopes.support(const SupportCenterScreen()),
     SupportRoutes.createTicket: (_) =>
         ClientCubitScopes.support(const CreateSupportTicketScreen()),
-    SupportRoutes.ticketDetails: (context) =>
-        ClientCubitScopes.supportTicketDetails(
-          const SupportTicketDetailsScreen(),
-          ticketId: _args(context)! as String,
-        ),
+    // A notification tap or a stale `action_url` can reach this path without an
+    // id. Falling back to the ticket list is the honest answer; the previous
+    // `_args(context)! as String` crashed on the null-check operator instead.
+    SupportRoutes.ticketDetails: (context) {
+      final ticketId = _args(context);
+      if (ticketId is! String || ticketId.trim().isEmpty) {
+        return ClientCubitScopes.support(const SupportCenterScreen());
+      }
+      return ClientCubitScopes.supportTicketDetails(
+        const SupportTicketDetailsScreen(),
+        ticketId: ticketId,
+      );
+    },
   };
 
   // --- Engagement -----------------------------------------------------------

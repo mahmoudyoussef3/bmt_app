@@ -25,6 +25,28 @@ abstract final class TripStatusMapper {
     }
   }
 
+  /// The rider's own booking row status, kept as its own axis.
+  ///
+  /// The vocabulary is the Dashboard's `BookingStatus`
+  /// (`draft`, `reserved`, `confirmed`, `boarded`, `completed`, `cancelled`),
+  /// folded onto the four states a passenger can act on. `boarded` maps to
+  /// `confirmed`, not `completed`: a rider on the vehicle has a seat that is
+  /// theirs, but has not finished the journey — that fact belongs to
+  /// [TripStatus], not here.
+  ///
+  /// `reserved` is the default for anything unrecognised (including `draft`): a
+  /// booking the app cannot classify has certainly not been confirmed, and
+  /// treating an unknown value as confirmed would tell a rider their seat is
+  /// theirs on no evidence.
+  static BookingState bookingState(String status) {
+    return switch (status.toLowerCase()) {
+      'confirmed' || 'boarded' || 'approved' || 'paid' => BookingState.confirmed,
+      'completed' => BookingState.completed,
+      'cancelled' || 'canceled' || 'rejected' => BookingState.cancelled,
+      _ => BookingState.reserved,
+    };
+  }
+
   static PaymentStatus paymentStatus(String status) {
     switch (status.toLowerCase()) {
       case 'paid':

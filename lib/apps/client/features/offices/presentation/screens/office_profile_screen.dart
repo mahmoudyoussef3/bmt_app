@@ -13,6 +13,7 @@ import '../../domain/entities/office_summary.dart';
 import '../../domain/entities/office_trip.dart';
 import '../cubit/office_profile_cubit.dart';
 import '../cubit/office_profile_state.dart';
+import '../widgets/office_nothing_listed_view.dart';
 import '../widgets/office_package_tile.dart';
 import '../widgets/office_profile_header.dart';
 import '../widgets/office_route_tile.dart';
@@ -88,6 +89,11 @@ class OfficeProfileScreen extends StatelessWidget {
                 onRetry: () =>
                     context.read<OfficeProfileCubit>().load(office.id),
               ),
+              // An office with nothing published is a dead end unless it ends
+              // somewhere: two "none" notes and no action was the whole screen.
+              OfficeProfileLoaded(:final routes, :final trips) when
+                  routes.isEmpty && trips.isEmpty =>
+                const OfficeNothingListedView(),
               OfficeProfileLoaded(
                 :final routes,
                 :final trips,

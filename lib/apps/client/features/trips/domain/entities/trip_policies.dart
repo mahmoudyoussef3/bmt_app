@@ -10,6 +10,10 @@ extension TripPolicies on TripData {
   /// the same rule on the seat and the money.
   bool get canBeCancelled {
     if (status != TripStatus.upcoming) return false;
+    // Read off the booking axis, not the journey one: `reserved` is precisely
+    // the state `cancel_booking_by_client` still accepts. Gating on the trip's
+    // status alone offered the button on bookings the RPC would refuse.
+    if (bookingState != BookingState.reserved) return false;
     return paymentStatus == PaymentStatus.pending ||
         paymentStatus == PaymentStatus.underReview;
   }
@@ -28,8 +32,16 @@ extension TripPolicies on TripData {
   /// client's payment is still under review — and there is nothing left to
   /// follow on a map once the trip has ended.
   bool get canBeTracked =>
-      status == TripStatus.inProgress && paymentStatus == PaymentStatus.paid;
+      status == TripStatus.inProgress &&
+      paymentStatus == PaymentStatus.paid &&
+      bookingState != BookingState.cancelled;
 
-  /// Rating is offered on a completed trip the passenger has not rated yet.
-  bool get canBeReviewed => status == TripStatus.completed && !isReviewed;
+  /// Rating is offered on a completed trip the passenger has not rated yet —
+  /// and actually travelled on. A booking that never left `reserved` did not
+  /// put anyone on that vehicle, so it is not theirs to rate.
+  bool get canBeReviewed =>
+      status == TripStatus.completed &&
+      !isReviewed &&
+      (bookingState == BookingState.completed ||
+          bookingState == BookingState.confirmed);
 }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_driver_row.dart';
+import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_list/trip_card_attention_strip.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_route_marks.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_status_mapping.dart';
 import 'package:bmt_app/core/widgets/directional_icon.dart';
@@ -115,6 +116,7 @@ class TripCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           TripDriverRow(trip: trip),
+          TripCardAttentionStrip(trip: trip),
         ],
       ),
     );

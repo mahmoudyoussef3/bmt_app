@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_routes.dart';
-import 'package:bmt_app/apps/client/features/payments/presentation/routes/payment_routes.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
 import '../../cubit/packages_state.dart';
@@ -13,9 +12,9 @@ import 'package_provider_office_card.dart';
 import 'package_route_limits_card.dart';
 import 'package_terms_card.dart';
 
-/// Step two: what the chosen package includes and who provides it. From a
-/// booking context it ends at checkout; opened as pure discovery it points the
-/// rider at a trip first, since a subscription is always bound to a route.
+/// Step two: what the chosen package includes and who provides it, ending at a
+/// route picker — a subscription is always bound to a route, so the rider
+/// chooses one before they can buy.
 class PackageDetailsView extends StatelessWidget {
   const PackageDetailsView({
     super.key,
@@ -26,19 +25,10 @@ class PackageDetailsView extends StatelessWidget {
   final PackagesLoaded state;
   final SubscriptionArguments arguments;
 
+  /// A subscription needs a route to price and bind to, so the rider picks one
+  /// first and buys the plan inside the booking wizard's package step. There is
+  /// no package-only checkout to branch to — see [SubscriptionArguments].
   void _onSubscribe(BuildContext context) {
-    if (arguments.hasBookingContext) {
-      final package = state.selectedPackage;
-      if (package == null) return;
-      Navigator.of(context).pushNamed(
-        PaymentRoutes.checkout,
-        arguments: arguments.checkoutPayload(package),
-      );
-      return;
-    }
-    // No trip picked yet — a subscription needs a route to price and bind to,
-    // so send the rider to choose one. This reuses the existing booking flow
-    // rather than inventing a package-only checkout.
     Navigator.of(context).pushNamed(BookingRoutes.popularRoutes);
   }
 
@@ -47,10 +37,7 @@ class PackageDetailsView extends StatelessWidget {
     final package = state.selectedPackage;
     if (package == null) return const SizedBox.shrink();
 
-    final l10n = context.l10n;
-    final ctaLabel = arguments.hasBookingContext
-        ? l10n.packages_continueToPayment
-        : l10n.packages_chooseTripToSubscribe;
+    final ctaLabel = context.l10n.packages_chooseTripToSubscribe;
 
     return Column(
       children: [

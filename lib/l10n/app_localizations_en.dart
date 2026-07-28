@@ -12,6 +12,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get common_retry => 'Retry';
 
   @override
+  String get common_view => 'View';
+
+  @override
   String get common_dismiss => 'Dismiss';
 
   @override
@@ -4767,4 +4770,79 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mySubscription_browsePackages => 'Browse Packages';
+
+  @override
+  String get trips_attentionAwaitingReviewTitle =>
+      'Waiting for the office to check your payment';
+
+  @override
+  String trips_attentionAwaitingReviewBody(String office) {
+    return 'Your seat is held while $office reviews the receipt. We\'ll notify you as soon as it\'s approved.';
+  }
+
+  @override
+  String get trips_attentionAwaitingReviewBodyNoOffice =>
+      'Your seat is held while the office reviews the receipt. We\'ll notify you as soon as it\'s approved.';
+
+  @override
+  String get trips_attentionPaymentIncompleteTitle => 'Payment not completed';
+
+  @override
+  String get trips_attentionPaymentIncompleteBody =>
+      'Your seat is only held until payment is settled. Finish paying or cancel to free it.';
+
+  @override
+  String get trips_attentionPaymentRejectedTitle => 'Payment was not accepted';
+
+  @override
+  String get trips_attentionPaymentRejectedBody =>
+      'The office could not verify this payment. Contact support or book again.';
+
+  @override
+  String get trips_attentionRefundDueTitle =>
+      'This trip was cancelled after you paid';
+
+  @override
+  String get trips_attentionRefundDueBody =>
+      'You are owed a refund for this booking. Open support to follow it up.';
+
+  @override
+  String get trips_attentionNeedsSupportTitle => 'This booking needs checking';
+
+  @override
+  String trips_attentionNeedsSupportBody(String reference) {
+    return 'Its booking and payment records disagree, so we won\'t guess. Please contact support with reference $reference.';
+  }
+
+  @override
+  String get trips_attentionOpenSupport => 'Contact support';
+
+  @override
+  String get trips_seatHeldNotYours => 'Seat held — not confirmed yet';
+
+  @override
+  String get trips_bookingStateReserved => 'Awaiting approval';
+
+  @override
+  String get trips_bookingStateConfirmed => 'Confirmed';
+
+  @override
+  String get trips_bookingStateCompleted => 'Travelled';
+
+  @override
+  String get trips_bookingStateCancelled => 'Cancelled';
+
+  @override
+  String get offices_nothingListedTitle =>
+      'This office has nothing listed right now';
+
+  @override
+  String get offices_nothingListedBody =>
+      'No departures and no routes are published yet. Try another office, or search every route on the platform.';
+
+  @override
+  String get offices_browseOtherOffices => 'Browse other offices';
+
+  @override
+  String get offices_searchAllRoutes => 'Search all routes';
 }
