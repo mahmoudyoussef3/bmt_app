@@ -44,7 +44,10 @@ void main() {
     });
 
     test('a fix inside the window reads as live and states the cadence', () {
-      final status = statusAt(sharing: true, sinceLastFix: kAutoLocationInterval);
+      final status = statusAt(
+        sharing: true,
+        sinceLastFix: kAutoLocationInterval,
+      );
 
       expect(status.health, LocationSharingHealth.live);
       expect(status.isHealthy, isTrue);
@@ -62,7 +65,10 @@ void main() {
       expect(status.isHealthy, isFalse);
       // The headline must name the failure, not the intent.
       expect(status.headline, contains('تعذّر'));
-      expect(status.headline, isNot(contains('${kAutoLocationInterval.inSeconds} ثانية')));
+      expect(
+        status.headline,
+        isNot(contains('${kAutoLocationInterval.inSeconds} ثانية')),
+      );
     });
 
     test('the boundary is inclusive of live, exclusive of stale', () {
@@ -107,10 +113,16 @@ void main() {
 
   group('age formatting', () {
     test('reads naturally in Arabic across the ranges', () {
-      expect(formatLocationAge(const Duration(seconds: 20)), 'منذ أقل من دقيقة');
+      expect(
+        formatLocationAge(const Duration(seconds: 20)),
+        'منذ أقل من دقيقة',
+      );
       expect(formatLocationAge(const Duration(minutes: 7)), 'منذ 7 دقيقة');
       expect(formatLocationAge(const Duration(hours: 2)), 'منذ 2 ساعة');
-      expect(formatLocationAge(const Duration(hours: 2, minutes: 30)), 'منذ 2س 30د');
+      expect(
+        formatLocationAge(const Duration(hours: 2, minutes: 30)),
+        'منذ 2س 30د',
+      );
     });
   });
 }

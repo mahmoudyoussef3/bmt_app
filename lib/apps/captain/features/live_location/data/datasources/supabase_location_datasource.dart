@@ -17,9 +17,14 @@ class SupabaseLocationDatasource implements LocationDatasource {
     await _ensureLocationAvailable();
 
     // The driver stamped on the fix is the signed-in captain, not whoever the
-    // trip row names — `trip_live_locations` has no RLS (it is kept open so
-    // realtime delivery works), so the row's own driver_id was the only thing
-    // tying a fix to a captain, and it was read from the target trip itself.
+    // trip row names. The database no longer takes this on trust either — the
+    // `trip_live_locations_captain_publish` policy refuses an insert for a trip
+    // that is not this captain's, and `enforce_live_location_authorship`
+    // overwrites `driver_id` with the server-resolved captain regardless of
+    // what the payload says (migrations 20260728120000 / 20260729090000). What
+    // follows is the client-side half: it produces a correct row and a readable
+    // Arabic message, rather than letting the captain watch an opaque
+    // Postgrest error.
     final driverId = await _identity.driverId();
     if (driverId == null) {
       throw Exception('لا يمكن إرسال الموقع: لم يتم التعرف على السائق.');

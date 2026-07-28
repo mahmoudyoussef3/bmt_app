@@ -209,9 +209,8 @@ void _registerOnboardingDependencies() {
   }
   if (!captainGetIt.isRegistered<GetActiveOfficesUseCase>()) {
     captainGetIt.registerLazySingleton<GetActiveOfficesUseCase>(
-      () => GetActiveOfficesUseCase(
-        captainGetIt<CaptainOnboardingRepository>(),
-      ),
+      () =>
+          GetActiveOfficesUseCase(captainGetIt<CaptainOnboardingRepository>()),
     );
   }
   if (!captainGetIt.isRegistered<CaptainOnboardingCubit>()) {
@@ -519,11 +518,20 @@ void _registerLiveLocationDependencies() {
       () => SendLocationUpdateUseCase(captainGetIt<LocationRepository>()),
     );
   }
+  // A singleton, unlike every other cubit here, and deliberately so: this one
+  // owns the trip's position-reporting timer. A factory registration handed a
+  // fresh timer to every widget that asked, so two live publishers could exist
+  // at once (double the GPS wake-ups, double the inserts), and the running one
+  // died with whichever widget happened to be holding it. Position reporting
+  // belongs to the trip, so it is registered for the app's lifetime and the
+  // screen only ever borrows it — `TripLocationAutoShare` provides it with
+  // `BlocProvider.value` so no disposal can close it.
   if (!captainGetIt.isRegistered<LiveLocationCubit>()) {
-    captainGetIt.registerFactory<LiveLocationCubit>(
+    captainGetIt.registerLazySingleton<LiveLocationCubit>(
       () => LiveLocationCubit(
         sendLocation: captainGetIt<SendLocationUpdateUseCase>(),
       ),
+      dispose: (cubit) => cubit.close(),
     );
   }
 }

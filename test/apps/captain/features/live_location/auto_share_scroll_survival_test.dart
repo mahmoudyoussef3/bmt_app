@@ -8,20 +8,21 @@ import 'package:bmt_app/apps/captain/features/live_location/domain/usecases/send
 import 'package:bmt_app/apps/captain/features/live_location/presentation/cubit/live_location_cubit.dart';
 import 'package:bmt_app/apps/captain/features/live_location/presentation/widgets/trip_location_auto_share.dart';
 
-/// The 30-second cadence is only worth what the widget driving it is worth.
+/// The 30-second cadence is only worth what survives a captain using the page.
 ///
-/// `TripLocationAutoShare` owns the timer through a `BlocProvider` it creates
-/// itself, and it is mounted as one child of the trip-execution page's
-/// `SliverList`. A sliver list builds its children lazily: an element scrolled
-/// beyond the viewport *and* the cache extent is deactivated and disposed. If
-/// that happens here, the provider closes the cubit, `close()` cancels the
-/// timer, and the client's map goes dark — with no error, no state change, and
-/// nothing on screen to tell the captain that the trip stopped reporting.
+/// `TripLocationAutoShare` is mounted as one child of the trip-execution page's
+/// `SliverList`, and a sliver list builds its children lazily: an element
+/// scrolled beyond the viewport *and* the cache extent is deactivated and
+/// disposed. When the widget owned the cubit, that disposal closed it, `close()`
+/// cancelled the timer, and the client's map went dark — with no error, no state
+/// change, and nothing on screen to tell the captain the trip had stopped
+/// reporting.
 ///
-/// That is not something the cubit's own unit tests can see: they drive the
-/// cubit directly and never scroll. These tests reproduce the page's real
-/// sliver structure and scroll it the way a captain does when they check the
-/// route or the passenger list mid-trip.
+/// The publisher is now an app-lifetime singleton, so a disposed card cannot
+/// take reporting down with it. These tests keep the scroll scenario that found
+/// the original defect and hold the invariant it produced: the cadence is a
+/// property of the trip, not of what part of the page is on screen.
+/// `live_location_publisher_test.dart` covers the ownership rules themselves.
 void main() {
   late _RecordingRepository repository;
 
@@ -33,14 +34,23 @@ void main() {
     captainGetIt.registerLazySingleton<SendLocationUpdateUseCase>(
       () => SendLocationUpdateUseCase(captainGetIt<LocationRepository>()),
     );
-    captainGetIt.registerFactory<LiveLocationCubit>(
+    // A singleton, as in `captain_di.dart`: position reporting belongs to the
+    // trip, not to whichever widget built a cubit first.
+    captainGetIt.registerLazySingleton<LiveLocationCubit>(
       () => LiveLocationCubit(
         sendLocation: captainGetIt<SendLocationUpdateUseCase>(),
       ),
     );
   });
 
-  tearDown(() => captainGetIt.reset());
+  // The publisher deliberately outlives the widget tree now, so the test has to
+  // stop it explicitly — the same thing sign-out does in `captain/main.dart`.
+  // Without this the framework fails the test on a pending timer, which is the
+  // survival behaviour being asserted, not a leak.
+  tearDown(() async {
+    captainGetIt<LiveLocationCubit>().stopAutoSharing();
+    await captainGetIt.reset();
+  });
 
   testWidgets('keeps reporting while the captain scrolls the trip page', (
     tester,
@@ -76,6 +86,14 @@ void main() {
           'way, so the client map must keep moving whatever part of the page '
           'the captain happens to be looking at',
     );
+
+    // End the trip. The publisher outlives the widget tree by design, so
+    // something has to stop it, and `enabled: false` is exactly what the real
+    // page does when the captain finishes — exercising the stop path rather
+    // than reaching into the cubit.
+    await tester.pumpWidget(_host(enabled: false));
+    await tester.pump();
+    await tester.pump();
   });
 
   testWidgets('reports on the same cadence whether scrolled or not', (
@@ -103,12 +121,20 @@ void main() {
       3,
       reason: 'three intervals scrolled away must still produce three fixes',
     );
+
+    // End the trip. The publisher outlives the widget tree by design, so
+    // something has to stop it, and `enabled: false` is exactly what the real
+    // page does when the captain finishes — exercising the stop path rather
+    // than reaching into the cubit.
+    await tester.pumpWidget(_host(enabled: false));
+    await tester.pump();
+    await tester.pump();
   });
 }
 
 /// The trip-execution page's real body: a `CustomScrollView` whose
 /// `SliverList.list` holds the sharing card above a long run of content.
-Widget _host() {
+Widget _host({bool enabled = true}) {
   return MaterialApp(
     theme: CaptainTheme.light(),
     locale: const Locale('ar'),
@@ -119,7 +145,7 @@ Widget _host() {
           slivers: [
             SliverList.list(
               children: [
-                const TripLocationAutoShare(tripId: 'trip-1', enabled: true),
+                TripLocationAutoShare(tripId: 'trip-1', enabled: enabled),
                 // Stands in for the next-stop banner, route timeline, tools and
                 // manifest that sit below the card on the real page.
                 for (var i = 0; i < 12; i++)

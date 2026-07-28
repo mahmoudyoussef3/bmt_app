@@ -10,13 +10,17 @@ import 'live_ops_datasource.dart';
 
 /// Reads the live operational picture for the signed-in office.
 ///
-/// Office isolation is enforced by RLS on the tables this touches:
-/// `operation_trips` (office policy) and `driver_trip_reports`
-/// (`driver_trip_reports_office_manage`). `trip_live_locations` has no RLS by
-/// design — it is kept open so realtime map delivery to client apps works — so
-/// it is never queried directly here; positions come from the
-/// `dashboard_active_trip_fixes` RPC, which applies the office check
-/// server-side (migration `20260727090000`).
+/// Office isolation is enforced by RLS on every table this touches:
+/// `operation_trips` (office policy), `driver_trip_reports`
+/// (`driver_trip_reports_office_manage`) and, since migration
+/// `20260729090000`, `trip_live_locations` (`trip_live_locations_read`, which
+/// admits the operating office among the four parties allowed to look).
+///
+/// Positions still come from the `dashboard_active_trip_fixes` RPC rather than
+/// a direct read. The RPC predates the policy and was written to compensate for
+/// its absence, but it earns its place independently: it returns one latest fix
+/// per active trip in a single `distinct on` rather than making the board fetch
+/// a feed per vehicle and reduce it client-side.
 class SupabaseLiveOpsDatasource implements LiveOpsDatasource {
   final SupabaseClient _client;
   final DashboardSession _session;

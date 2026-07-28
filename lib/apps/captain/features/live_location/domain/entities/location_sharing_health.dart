@@ -44,7 +44,8 @@ enum LocationSharingHealth {
 /// means the sends are not landing. Tied to [kAutoLocationInterval] rather than
 /// written as a literal so changing the cadence cannot silently leave this
 /// threshold behind.
-final Duration kLocationStaleAfter = kAutoLocationInterval * 2 + kAutoLocationInterval;
+final Duration kLocationStaleAfter =
+    kAutoLocationInterval * 2 + kAutoLocationInterval;
 
 /// Resolves reporting health, and the sentence the captain reads for it.
 ///

@@ -5,6 +5,7 @@ import 'package:bmt_app/apps/captain/core/routes/captain_app_shell.dart';
 import 'package:bmt_app/apps/captain/core/session/captain_session_store.dart';
 import 'package:bmt_app/apps/captain/features/auth/presentation/cubit/captain_auth_cubit.dart';
 import 'package:bmt_app/apps/captain/features/auth/presentation/screens/captain_login_screen.dart';
+import 'package:bmt_app/apps/captain/features/live_location/presentation/cubit/live_location_cubit.dart';
 import 'package:bmt_app/apps/captain/features/onboarding/presentation/cubit/captain_onboarding_cubit.dart';
 import 'package:bmt_app/apps/captain/features/onboarding/presentation/screens/captain_onboarding_flow.dart';
 import 'package:bmt_app/apps/captain/features/onboarding/presentation/screens/captain_welcome_home.dart';
@@ -132,7 +133,15 @@ class _CaptainAuthGateState extends State<_CaptainAuthGate> {
     _signOutSub = Supabase.instance.client.auth.onAuthStateChange.listen((
       event,
     ) {
-      if (event.event == AuthChangeEvent.signedOut) _forgetLocalSession();
+      if (event.event == AuthChangeEvent.signedOut) {
+        // Position reporting is owned by the app now, not by the trip screen,
+        // which is what lets it survive a captain navigating away mid-trip.
+        // Sign-out is therefore the one place that has to stop it explicitly:
+        // otherwise the timer outlives the session and keeps trying to publish
+        // for a captain who is no longer signed in.
+        captainGetIt<LiveLocationCubit>().stopAutoSharing();
+        _forgetLocalSession();
+      }
     });
   }
 

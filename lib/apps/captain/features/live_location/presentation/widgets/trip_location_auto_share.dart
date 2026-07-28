@@ -20,9 +20,15 @@ import '../cubit/live_location_state.dart';
 /// and the button is what a captain reaches for when a passenger on the phone
 /// asks "where are you now?" and a stale fix isn't good enough.
 ///
-/// Sharing is bound to [enabled] — the trip actually being under way — so the
-/// timer starts on departure and stops the moment the trip ends or the
-/// captain leaves the screen. Nothing runs in the background.
+/// Sharing is bound to [enabled] — the trip actually being under way — and to
+/// nothing else. It starts on departure and stops when the trip stops or the
+/// captain signs out; it explicitly does **not** stop because this card was
+/// scrolled past, rebuilt, or left behind when the captain opened the map or
+/// the chat. The publisher is an app-lifetime singleton, so this widget is a
+/// view onto it rather than its owner.
+///
+/// Still foreground only: a minimised app stops reporting, and the card's
+/// health line is derived from when a fix last landed so it says so.
 class TripLocationAutoShare extends StatelessWidget {
   const TripLocationAutoShare({
     super.key,
@@ -35,8 +41,11 @@ class TripLocationAutoShare extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<LiveLocationCubit>(
-      create: (_) => captainGetIt<LiveLocationCubit>(),
+    // `.value`, never `create:` — the cubit is a singleton owned by the app, and
+    // `create:` would hand this widget's disposal the power to close it and kill
+    // a running trip's reporting.
+    return BlocProvider<LiveLocationCubit>.value(
+      value: captainGetIt<LiveLocationCubit>(),
       child: _AutoShareController(tripId: tripId, enabled: enabled),
     );
   }
@@ -55,21 +64,38 @@ class _AutoShareController extends StatefulWidget {
 }
 
 class _AutoShareControllerState extends State<_AutoShareController>
-    with AutomaticKeepAliveClientMixin {
+    with AutomaticKeepAliveClientMixin, WidgetsBindingObserver {
   /// The card is one child of the trip-execution page's `SliverList`, and a
-  /// sliver list disposes children scrolled past its cache extent. Without
-  /// this, scrolling down to read the route or the manifest tore down the
-  /// provider, `close()` cancelled the timer, and the trip stopped reporting
-  /// — silently, with the card still claiming "كل 30 ثانية" when the captain
-  /// scrolled back up and it rebuilt. Only worth holding while a trip is
-  /// actually under way.
+  /// sliver list disposes children scrolled past its cache extent. The timer no
+  /// longer rides on this element's life — the publisher is a singleton — but
+  /// keeping the element alive while a trip is under way still avoids the
+  /// rebuild churn of tearing the card down and rebuilding it on every scroll
+  /// past the cache extent.
   @override
   bool get wantKeepAlive => widget.enabled;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _sync();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    // Deliberately does not stop reporting. This widget going away means the
+    // captain navigated, scrolled, or rotated — none of which is the trip
+    // ending, and all of which used to take the client's map down with them.
+    super.dispose();
+  }
+
+  /// Timers do not survive backgrounding, so a resumed app has a gap to close.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      context.read<LiveLocationCubit>().resumeIfStale();
+    }
   }
 
   @override
@@ -77,7 +103,7 @@ class _AutoShareControllerState extends State<_AutoShareController>
     super.didUpdateWidget(oldWidget);
     if (oldWidget.enabled != widget.enabled ||
         oldWidget.tripId != widget.tripId) {
-      _sync();
+      _sync(previousTripId: oldWidget.tripId);
       // `enabled` drives whether this element is worth holding across a
       // scroll, so the keep-alive has to be re-evaluated with it.
       updateKeepAlive();
@@ -86,14 +112,17 @@ class _AutoShareControllerState extends State<_AutoShareController>
 
   /// Deferred past the current frame: this runs from `initState` /
   /// `didUpdateWidget`, and `startAutoSharing` emits synchronously.
-  void _sync() {
+  void _sync({String? previousTripId}) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final cubit = context.read<LiveLocationCubit>();
       if (widget.enabled) {
         cubit.startAutoSharing(widget.tripId);
       } else {
-        cubit.stopAutoSharing();
+        // Named, so this can only ever stop the trip this card is about. With a
+        // shared publisher an unnamed stop would let a card rebuilding for a
+        // finished trip silence a different trip that is still running.
+        cubit.stopAutoSharing(tripId: previousTripId ?? widget.tripId);
       }
     });
   }
@@ -126,6 +155,9 @@ class _AutoShareCard extends StatelessWidget {
       builder: (context, state) {
         final isSending = state is LiveLocationLoading;
         final lastSentAt = state is LiveLocationReady ? state.lastSentAt : null;
+        final failures = state is LiveLocationReady
+            ? state.consecutiveFailures
+            : 0;
         final error = switch (state) {
           LiveLocationReady(:final lastError) => lastError,
           LiveLocationError(:final message) => message,
@@ -145,6 +177,7 @@ class _AutoShareCard extends StatelessWidget {
             lastSentAt: lastSentAt,
             error: error,
             isSending: isSending,
+            failures: failures,
           ),
         );
       },
@@ -157,6 +190,7 @@ class _AutoShareCard extends StatelessWidget {
     required DateTime? lastSentAt,
     required String? error,
     required bool isSending,
+    required int failures,
   }) {
     final (icon, tone) = switch (status.health) {
       LocationSharingHealth.live => (
@@ -220,6 +254,20 @@ class _AutoShareCard extends StatelessWidget {
               style: CaptainTypography.bodySmall(
                 context,
               ).copyWith(color: CaptainColors.textSecondaryFor(context)),
+            ),
+          ],
+          // A single dropped tick is a pothole in the signal and is not worth a
+          // word. A run of them means the client's map has been frozen for
+          // minutes, and the captain — the only person who can move the phone,
+          // check the signal, or call the office — is told plainly.
+          if (failures >= 2) ...[
+            const SizedBox(height: 4),
+            Text(
+              'فشل آخر $failures محاولات إرسال — خريطة الركاب متوقفة',
+              style: CaptainTypography.bodySmall(context).copyWith(
+                color: CaptainColors.error,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ],
           if (error != null) ...[

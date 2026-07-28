@@ -9,10 +9,16 @@ class TrackingTripQuery {
 
   /// A booking is only trackable once its payment has actually been approved
   /// (`confirmed`/`boarded`/`completed`) — never while it is still `draft` or
-  /// `reserved` (payment pending) or `cancelled` (payment rejected). Enforced
+  /// `reserved` (payment pending) or `cancelled` (payment rejected). Checked
   /// here, not just by hiding the "Track" button, so that no entry point
   /// (explicit booking id, explicit trip id, or the "current active trip"
-  /// lookup) can surface a live vehicle position before payment is approved.
+  /// lookup) surfaces a live vehicle position before payment is approved.
+  ///
+  /// The boundary itself is the database: `can_read_trip_fixes` (migration
+  /// `20260729090000`) admits a passenger only for a booking in this same
+  /// status set, so a caller bypassing this class entirely still reads nothing.
+  /// Keep the two lists in step — this one exists to fail early and legibly,
+  /// not to be the thing standing between a stranger and a vehicle's position.
   static const trackableStatuses = ['confirmed', 'boarded', 'completed'];
 
   Future<Map<String, dynamic>?> findBooking({
