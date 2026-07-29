@@ -12,6 +12,7 @@ import 'package:bmt_app/apps/dashboard/features/trips/trip_management/data/repos
 import 'package:bmt_app/apps/dashboard/features/trips/trip_management/domain/repositories/trips_repository.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/trip_management/domain/usecases/trip_management_usecases.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/trip_management/presentation/cubit/trip_details_cubit.dart';
+import 'package:bmt_app/apps/dashboard/features/trips/trip_creation/domain/entities/trip_driver_option.dart';
 
 /// Phase 3 behaviours: cancellation carries a reason, a stale trip has two honest
 /// outcomes, publishing is gated, deletion is refused where it would orphan a booking,
@@ -26,15 +27,18 @@ void main() {
   });
 
   group('cancellation', () {
-    test('goes through the cancel RPC, never the generic status setter', () async {
-      datasource.seed(_trip(status: OperationTripStatus.openForBooking));
+    test(
+      'goes through the cancel RPC, never the generic status setter',
+      () async {
+        datasource.seed(_trip(status: OperationTripStatus.openForBooking));
 
-      final updated = await repository.cancelTrip('trip-1', 'عطل بالمركبة');
+        final updated = await repository.cancelTrip('trip-1', 'عطل بالمركبة');
 
-      expect(updated.status, OperationTripStatus.cancelled);
-      expect(datasource.cancelReasons, ['عطل بالمركبة']);
-      expect(datasource.statusCalls, isEmpty);
-    });
+        expect(updated.status, OperationTripStatus.cancelled);
+        expect(datasource.cancelReasons, ['عطل بالمركبة']);
+        expect(datasource.statusCalls, isEmpty);
+      },
+    );
 
     test('an empty reason never reaches the server', () async {
       datasource.seed(_trip(status: OperationTripStatus.boarding));
@@ -87,7 +91,11 @@ void main() {
         repository = TripsRepositoryImpl(datasource);
 
         final updated = await repository.cancelTrip('trip-1', 'سبب');
-        expect(updated.status, OperationTripStatus.cancelled, reason: status.name);
+        expect(
+          updated.status,
+          OperationTripStatus.cancelled,
+          reason: status.name,
+        );
       }
     });
   });
@@ -147,9 +155,9 @@ void main() {
   group('stale trip close', () {
     test('operated walks the trip to completed', () async {
       datasource.seed(
-        _trip(status: OperationTripStatus.openForBooking).copyWith(
-          date: '2020-01-01',
-        ),
+        _trip(
+          status: OperationTripStatus.openForBooking,
+        ).copyWith(date: '2020-01-01'),
       );
 
       final updated = await repository.closeStaleTrip(
@@ -163,9 +171,9 @@ void main() {
 
     test('cancelled closes it as cancelled', () async {
       datasource.seed(
-        _trip(status: OperationTripStatus.openForBooking).copyWith(
-          date: '2020-01-01',
-        ),
+        _trip(
+          status: OperationTripStatus.openForBooking,
+        ).copyWith(date: '2020-01-01'),
       );
 
       final updated = await repository.closeStaleTrip(
@@ -178,17 +186,20 @@ void main() {
       expect(datasource.staleReasons, ['لم تنطلق']);
     });
 
-    test('a blank reason is sent as null rather than as an empty string', () async {
-      datasource.seed(_trip(status: OperationTripStatus.openForBooking));
+    test(
+      'a blank reason is sent as null rather than as an empty string',
+      () async {
+        datasource.seed(_trip(status: OperationTripStatus.openForBooking));
 
-      await repository.closeStaleTrip(
-        'trip-1',
-        StaleTripOutcome.cancelled,
-        reason: '   ',
-      );
+        await repository.closeStaleTrip(
+          'trip-1',
+          StaleTripOutcome.cancelled,
+          reason: '   ',
+        );
 
-      expect(datasource.staleReasons, [null]);
-    });
+        expect(datasource.staleReasons, [null]);
+      },
+    );
   });
 
   group('delete guard', () {
@@ -251,9 +262,9 @@ void main() {
 
     test('closeStaleTrip completes an operated trip', () async {
       datasource.seed(
-        _trip(status: OperationTripStatus.openForBooking).copyWith(
-          date: '2020-01-01',
-        ),
+        _trip(
+          status: OperationTripStatus.openForBooking,
+        ).copyWith(date: '2020-01-01'),
       );
       final cubit = _cubit(repository);
       await cubit.showDetails(datasource.current);
@@ -480,11 +491,11 @@ class _Datasource implements TripsDatasource {
       throw UnimplementedError();
 
   @override
-  Future<List<Map<String, dynamic>>> fetchActiveDrivers() =>
+  Future<List<TripDriverOption>> fetchActiveDrivers() =>
       throw UnimplementedError();
 
   @override
-  Future<List<Map<String, dynamic>>> fetchActiveVehicles() =>
+  Future<TripDriverOption?> fetchDriverAssignment(String driverId) =>
       throw UnimplementedError();
 
   @override
@@ -497,27 +508,6 @@ class _Datasource implements TripsDatasource {
     required String departureTime,
     required String arrivalTime,
   }) => throw UnimplementedError();
-
-  @override
-  Future<bool> checkDuplicateTrip(
-    String vehicleId,
-    String date,
-    String departureTime,
-  ) => throw UnimplementedError();
-
-  @override
-  Future<bool> checkDriverTripConflict(
-    String driverId,
-    String date,
-    String departureTime,
-  ) => throw UnimplementedError();
-
-  @override
-  Future<String> getDriverStatus(String driverId) => throw UnimplementedError();
-
-  @override
-  Future<String> getVehicleStatus(String vehicleId) =>
-      throw UnimplementedError();
 
   @override
   Future<String> getRouteStatus(String routeId) => throw UnimplementedError();

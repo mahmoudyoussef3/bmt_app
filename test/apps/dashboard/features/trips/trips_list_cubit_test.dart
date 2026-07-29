@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/operation_trip.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/trip_lifecycle.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/trip_pricing.dart';
+import 'package:bmt_app/apps/dashboard/features/trips/trip_creation/domain/entities/trip_driver_option.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/trip_management/domain/repositories/trips_repository.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/trip_management/domain/usecases/trip_management_usecases.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/trip_management/presentation/cubit/trips_list_cubit.dart';
@@ -14,7 +15,10 @@ import 'package:bmt_app/apps/dashboard/features/trips/trip_management/presentati
 // no realtime subscription, so operators only saw a captain's status/seat/
 // passenger changes after manually leaving and re-entering the screen.
 
-OperationTrip _trip(String id, {OperationTripStatus status = OperationTripStatus.scheduled}) {
+OperationTrip _trip(
+  String id, {
+  OperationTripStatus status = OperationTripStatus.scheduled,
+}) {
   return OperationTrip(
     id: id,
     routeId: 'route-1',
@@ -135,11 +139,7 @@ class _FakeRepo implements TripsRepository {
       throw UnimplementedError();
 
   @override
-  Future<List<Map<String, dynamic>>> getActiveDrivers() =>
-      throw UnimplementedError();
-
-  @override
-  Future<List<Map<String, dynamic>>> getActiveVehicles() =>
+  Future<List<TripDriverOption>> getActiveDrivers() =>
       throw UnimplementedError();
 
   @override
@@ -200,20 +200,23 @@ void main() {
       },
     );
 
-    test('rapid bursts of changes only cause a single refetch (debounced)', () async {
-      final repo = _FakeRepo([_trip('trip-1')]);
-      final cubit = _cubit(repo);
-      await cubit.load();
-      expect(repo.fetchCount, 1);
+    test(
+      'rapid bursts of changes only cause a single refetch (debounced)',
+      () async {
+        final repo = _FakeRepo([_trip('trip-1')]);
+        final cubit = _cubit(repo);
+        await cubit.load();
+        expect(repo.fetchCount, 1);
 
-      repo.emitChange();
-      repo.emitChange();
-      repo.emitChange();
-      await Future<void>.delayed(const Duration(milliseconds: 400));
+        repo.emitChange();
+        repo.emitChange();
+        repo.emitChange();
+        await Future<void>.delayed(const Duration(milliseconds: 400));
 
-      expect(repo.fetchCount, 2);
-      await cubit.close();
-    });
+        expect(repo.fetchCount, 2);
+        await cubit.close();
+      },
+    );
 
     test('preserves existing filters when a realtime refresh lands', () async {
       final repo = _FakeRepo([_trip('trip-1'), _trip('trip-2')]);

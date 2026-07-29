@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/dashboard/core/session/office_context.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
+import 'package:bmt_app/core/theme/app_layout.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 
 import '../../domain/entities/dashboard_home_summary.dart';
@@ -24,10 +25,15 @@ import '../widgets/trips_snapshot_section.dart';
 ///
 /// Owns no data source of its own: [DashboardHomeCubit] composes the same
 /// use cases every other module already calls, so every number here matches
-/// its full module screen for this office. Laid out by business priority —
-/// office identity + KPIs, then operational health + what needs attention,
-/// then trips/bookings/payments, then fleet/captains/activity, then
-/// marketplace status — per the requested information hierarchy.
+/// its full module screen for this office.
+///
+/// Laid out as an operations command center: office identity + KPIs span the
+/// full width, then the page splits into a main operations column (today's
+/// status, trips, bookings/payments, fleet/captains, secondary queues)
+/// beside a fixed "needs you now" rail (urgent action items + live activity)
+/// on wide screens — the two most time-sensitive panels stay in view the
+/// whole time the operator scans the rest. Narrow screens can't afford a
+/// rail, so action items move to the top of a single column instead.
 class DashboardHomeScreen extends StatelessWidget {
   const DashboardHomeScreen({
     super.key,
@@ -70,30 +76,77 @@ class _LoadedView extends StatelessWidget {
   final DashboardHomeSummary summary;
   final ValueChanged<String> onOpenModule;
 
+  static const double _railBreakpoint = AppLayout.breakpointTablet;
+
   @override
   Widget build(BuildContext context) {
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.large),
       children: [
-        // Level 1 — office identity + critical KPIs.
-        HomeHeaderBanner(office: office),
+        HomeHeaderBanner(
+          office: office,
+          onRefresh: () => context.read<DashboardHomeCubit>().load(),
+        ),
         const SizedBox(height: AppSpacing.medium),
         HomeKpiGrid(summary: summary),
-        const SizedBox(height: AppSpacing.medium),
+        const SizedBox(height: AppSpacing.large),
+        LayoutBuilder(
+          builder: (context, constraints) {
+            if (constraints.maxWidth >= _railBreakpoint) {
+              return _WideLayout(summary: summary, onOpenModule: onOpenModule);
+            }
+            return _NarrowLayout(summary: summary, onOpenModule: onOpenModule);
+          },
+        ),
+      ],
+    );
+  }
+}
 
-        // Level 2 — operational health + what needs attention.
-        OperationalOverviewSection(summary: summary),
-        const SizedBox(height: AppSpacing.medium),
+/// Desktop: a main operations column beside a fixed-priority attention rail,
+/// so urgent items and live activity never scroll out of reach.
+class _WideLayout extends StatelessWidget {
+  const _WideLayout({required this.summary, required this.onOpenModule});
+
+  final DashboardHomeSummary summary;
+  final ValueChanged<String> onOpenModule;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Expanded(
+          flex: 3,
+          child: _MainColumn(summary: summary, onOpenModule: onOpenModule),
+        ),
+        const SizedBox(width: AppSpacing.large),
+        Expanded(flex: 2, child: _AttentionRail(onOpenModule: onOpenModule)),
+      ],
+    );
+  }
+}
+
+/// Narrow: a single column, with action items promoted right under the KPIs
+/// since there's no room for a persistent rail.
+class _NarrowLayout extends StatelessWidget {
+  const _NarrowLayout({required this.summary, required this.onOpenModule});
+
+  final DashboardHomeSummary summary;
+  final ValueChanged<String> onOpenModule;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
         ActionRequiredSection(onOpenModule: onOpenModule),
         const SizedBox(height: AppSpacing.medium),
-
-        // Level 3 — trips, bookings, payments.
+        OperationalOverviewSection(summary: summary),
+        const SizedBox(height: AppSpacing.medium),
         TripsSnapshotSection(summary: summary, onOpenModule: onOpenModule),
         const SizedBox(height: AppSpacing.medium),
         BookingsPaymentsSection(summary: summary, onOpenModule: onOpenModule),
         const SizedBox(height: AppSpacing.medium),
-
-        // Level 4 — fleet, captains, activity.
         _TwoColumn(
           left: FleetSnapshotCard(summary: summary, onOpenModule: onOpenModule),
           right: CaptainsSnapshotCard(
@@ -104,14 +157,69 @@ class _LoadedView extends StatelessWidget {
         const SizedBox(height: AppSpacing.medium),
         const RecentActivitySection(),
         const SizedBox(height: AppSpacing.medium),
-
-        // Level 5 — secondary insights.
         ComplaintsSubscriptionsSection(
           summary: summary,
           onOpenModule: onOpenModule,
         ),
         const SizedBox(height: AppSpacing.medium),
         MarketplaceStatusCard(summary: summary),
+      ],
+    );
+  }
+}
+
+/// Today's pulse, then the operational detail panels in business priority:
+/// trips, bookings/payments, fleet/captains, then secondary queues.
+class _MainColumn extends StatelessWidget {
+  const _MainColumn({required this.summary, required this.onOpenModule});
+
+  final DashboardHomeSummary summary;
+  final ValueChanged<String> onOpenModule;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        OperationalOverviewSection(summary: summary),
+        const SizedBox(height: AppSpacing.medium),
+        TripsSnapshotSection(summary: summary, onOpenModule: onOpenModule),
+        const SizedBox(height: AppSpacing.medium),
+        BookingsPaymentsSection(summary: summary, onOpenModule: onOpenModule),
+        const SizedBox(height: AppSpacing.medium),
+        _TwoColumn(
+          left: FleetSnapshotCard(summary: summary, onOpenModule: onOpenModule),
+          right: CaptainsSnapshotCard(
+            summary: summary,
+            onOpenModule: onOpenModule,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.medium),
+        ComplaintsSubscriptionsSection(
+          summary: summary,
+          onOpenModule: onOpenModule,
+        ),
+        const SizedBox(height: AppSpacing.medium),
+        MarketplaceStatusCard(summary: summary),
+      ],
+    );
+  }
+}
+
+/// "What needs you right now": urgent action items above a live activity
+/// feed — both already sourced from `OperationalAlertsCubit`, so pairing
+/// them in one rail is reuse, not a new data path.
+class _AttentionRail extends StatelessWidget {
+  const _AttentionRail({required this.onOpenModule});
+
+  final ValueChanged<String> onOpenModule;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        ActionRequiredSection(onOpenModule: onOpenModule),
+        const SizedBox(height: AppSpacing.medium),
+        const RecentActivitySection(),
       ],
     );
   }
@@ -129,7 +237,11 @@ class _TwoColumn extends StatelessWidget {
       builder: (context, constraints) {
         if (constraints.maxWidth < 780) {
           return Column(
-            children: [left, const SizedBox(height: AppSpacing.medium), right],
+            children: [
+              left,
+              const SizedBox(height: AppSpacing.medium),
+              right,
+            ],
           );
         }
         return Row(

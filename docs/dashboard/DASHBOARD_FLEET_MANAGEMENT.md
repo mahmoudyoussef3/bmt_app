@@ -174,9 +174,11 @@ sequenceDiagram
     Note over Form: preview and payload are the same call
     Form->>DB: seat_configuration + capacity
     Note over DB: CHECK capacity = passenger count<br/>CHECK layout well-formed, labels unique
-    Op->>RPC: create trip on this vehicle
+    Op->>RPC: create trip — driver only
+    RPC->>RPC: driver_active_vehicle(driver_id)
+    Note over RPC: the VEHICLE is derived from the<br/>driver's active assignment
     RPC->>DB: vehicle_trip_seats(vehicle_id)
-    Note over RPC: capacity and seats are DERIVED here;<br/>the client's p_seats is ignored
+    Note over RPC: capacity and seats are DERIVED here;<br/>the client sends neither
     RPC->>Seats: one row per bookable seat
     Note over Seats: UNIQUE (trip_id, seat_label)
     Client->>Seats: read the seat map
@@ -190,7 +192,11 @@ A trip's seats are a snapshot of the vehicle **at the moment the trip was create
 a vehicle afterwards never moves seats under a rider who already booked one. This was already
 true (nothing wrote `trip_seats` on a vehicle edit) and is now true *and* deliberate:
 
-- `create_trip` builds `trip_seats` from `vehicle_trip_seats(p_vehicle_id)`.
+- `create_trip` builds `trip_seats` from `vehicle_trip_seats()` on the **resolved** vehicle.
+- The resolution happens once, at creation. Reassigning the driver to a different bus in
+  August leaves a July trip pointing at the bus that actually carried it — the pairing rule
+  is enforced only on INSERT and on an UPDATE that changes `driver_id`/`vehicle_id`, never on
+  rows at rest (`20260731090000_driver_vehicle_authority`).
 - A mid-service vehicle swap is allowed (swapping a broken-down bus is a real operation) but
   the replacement must have **at least** as many seats as the trip already sold a map of —
   `vehicle_too_small` in `enforce_trip_resource_availability`.
@@ -374,7 +380,8 @@ privilege rather than a redundant one.
 
 | Function | Executable by | Checks |
 |---|---|---|
-| `office_create_trip` | `authenticated` | route, driver and vehicle must all be in `current_office_id()` |
+| `office_create_trip` | `authenticated` | route and driver must be in `current_office_id()`; the vehicle is not a parameter — it is resolved from the driver's active assignment |
+| `driver_active_vehicle` | `authenticated` | takes a driver id, returns only that driver's assigned vehicle id |
 | `create_trip` | `service_role` only | called through the wrapper above |
 | `reassign_booking` | `service_role` only | called through `office_reassign_booking`, which asserts both offices match |
 | `vehicle_trip_seats` | `authenticated` | reads a vehicle the caller can already see |

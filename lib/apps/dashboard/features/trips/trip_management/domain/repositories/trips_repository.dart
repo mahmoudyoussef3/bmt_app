@@ -1,6 +1,7 @@
 import '../../../shared/domain/entities/operation_trip.dart';
 import '../../../shared/domain/entities/trip_lifecycle.dart';
 import '../../../shared/domain/entities/trip_pricing.dart';
+import '../../../trip_creation/domain/entities/trip_driver_option.dart';
 
 abstract class TripsRepository {
   Future<List<OperationTrip>> getTrips();
@@ -42,8 +43,11 @@ abstract class TripsRepository {
   Future<TripPricing> upsertTripPricing(TripPricing pricing);
   Future<TripPricing> toggleTripPricingStatus(String pricingId, bool isActive);
   Future<List<TripEvent>> getTripEvents(String tripId);
-  Future<List<Map<String, dynamic>>> getActiveDrivers();
-  Future<List<Map<String, dynamic>>> getActiveVehicles();
+
+  /// Schedulable drivers with the vehicle each one operates. The planner picks a
+  /// driver; the vehicle comes with them. There is deliberately no `getActiveVehicles`.
+  Future<List<TripDriverOption>> getActiveDrivers();
+
   Future<List<Map<String, dynamic>>> getActiveRoutes();
 
   /// Drivers/vehicles already committed to an overlapping trip for the given

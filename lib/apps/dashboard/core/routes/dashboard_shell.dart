@@ -403,7 +403,7 @@ class _DashboardShellState extends State<DashboardShell> {
         create: (_) => dashboardDi<BookingsCubit>()..load(),
         child: const BookingsScreen(),
       ),
-      DashboardRoutes.trips => const TripsScreen(),
+      DashboardRoutes.trips => TripsScreen(onOpenModule: _openRoute),
       DashboardRoutes.fleet => BlocProvider(
         create: (_) => dashboardDi<FleetOverviewCubit>()..loadWorkspace(),
         child: const FleetOverviewScreen(),

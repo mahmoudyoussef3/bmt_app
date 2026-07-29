@@ -65,9 +65,6 @@ void registerTripsDependencies(GetIt di) {
     () => GetActiveDriversUseCase(di<TripsRepository>()),
   );
   di.registerLazySingleton(
-    () => GetActiveVehiclesUseCase(di<TripsRepository>()),
-  );
-  di.registerLazySingleton(
     () => GetResourceConflictsUseCase(di<TripsRepository>()),
   );
 
@@ -112,7 +109,6 @@ void registerTripsDependencies(GetIt di) {
       createTrip: di<CreateTripUseCase>(),
       getActiveRoutes: di<GetActiveRoutesUseCase>(),
       getActiveDrivers: di<GetActiveDriversUseCase>(),
-      getActiveVehicles: di<GetActiveVehiclesUseCase>(),
       getResourceConflicts: di<GetResourceConflictsUseCase>(),
     ),
   );

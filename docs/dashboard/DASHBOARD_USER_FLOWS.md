@@ -95,7 +95,9 @@ graph LR
 
 1. الرحلات → **رحلة جديدة** opens the creation wizard.
 2. Pick route → driver → vehicle → date, departure/arrival time → capacity → fare.
-3. Submit calls `office_create_trip`. The trip code is minted **server-side**.
+3. Submit calls `office_create_trip` with the driver, never a vehicle: the operator picks a
+   driver and the system resolves the bus from the office's driver↔vehicle assignment,
+   showing it read-only. The trip code is minted **server-side**.
 4. The new trip appears in the list; the wizard closes and the list reloads.
 
 **Publishing a trip** (`مجدولة → مفتوحة للحجز`) is the moment it becomes sellable, and it

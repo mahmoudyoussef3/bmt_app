@@ -3,6 +3,7 @@ import 'package:bmt_app/core/pricing/package_tier_pricing.dart';
 import '../../../shared/domain/entities/operation_trip.dart';
 import '../../../shared/domain/entities/trip_pricing.dart';
 import '../../../trip_management/domain/repositories/trips_repository.dart';
+import '../entities/trip_driver_option.dart';
 
 class CreateTripUseCase {
   final TripsRepository _repository;
@@ -84,23 +85,19 @@ class GetActiveRoutesUseCase {
   }
 }
 
+/// The drivers the operator may schedule, each with the vehicle they operate.
+///
+/// There is no `GetActiveVehiclesUseCase` any more, on purpose. Trip creation is a
+/// single resource choice — the driver — and the vehicle follows from the office's
+/// driver↔vehicle assignment. Offering the fleet as a second, independent list is what
+/// allowed a driver to be dispatched onto a bus that is not theirs.
 class GetActiveDriversUseCase {
   final TripsRepository _repository;
 
   const GetActiveDriversUseCase(this._repository);
 
-  Future<List<Map<String, dynamic>>> call() {
+  Future<List<TripDriverOption>> call() {
     return _repository.getActiveDrivers();
-  }
-}
-
-class GetActiveVehiclesUseCase {
-  final TripsRepository _repository;
-
-  const GetActiveVehiclesUseCase(this._repository);
-
-  Future<List<Map<String, dynamic>>> call() {
-    return _repository.getActiveVehicles();
   }
 }
 

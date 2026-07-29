@@ -12,6 +12,7 @@ import 'package:bmt_app/apps/dashboard/features/notifications/domain/entities/op
 import 'package:bmt_app/apps/dashboard/features/notifications/presentation/cubit/operational_alerts_cubit.dart';
 import 'package:bmt_app/apps/dashboard/features/notifications/presentation/cubit/operational_alerts_state.dart';
 import 'package:bmt_app/apps/dashboard/features/dashboard_home/presentation/widgets/action_required_section.dart';
+import 'package:bmt_app/apps/dashboard/features/dashboard_home/presentation/widgets/home_kpi_grid.dart';
 
 import 'dashboard_home_test_fixtures.dart';
 
@@ -76,7 +77,10 @@ Widget _wrap({
               create: (_) => _FakeOperationalAlertsCubit(alertsState),
             ),
           ],
-          child: DashboardHomeScreen(office: _office, onOpenModule: onOpenModule),
+          child: DashboardHomeScreen(
+            office: _office,
+            onOpenModule: onOpenModule,
+          ),
         ),
       ),
     ),
@@ -94,16 +98,17 @@ void _useTallViewport(WidgetTester tester) {
 }
 
 void main() {
-  testWidgets('shows the loading skeleton while DashboardHomeCubit is loading', (
-    tester,
-  ) async {
-    await tester.pumpWidget(_wrap(homeState: const DashboardHomeLoading()));
-    await tester.pump();
+  testWidgets(
+    'shows the loading skeleton while DashboardHomeCubit is loading',
+    (tester) async {
+      await tester.pumpWidget(_wrap(homeState: const DashboardHomeLoading()));
+      await tester.pump();
 
-    expect(find.byType(DashboardHomeScreen), findsOneWidget);
-    expect(find.text('تعذر تحميل البيانات'), findsNothing);
-    expect(tester.takeException(), isNull);
-  });
+      expect(find.byType(DashboardHomeScreen), findsOneWidget);
+      expect(find.text('تعذر تحميل البيانات'), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('shows an error state with a retry button that calls load()', (
     tester,
@@ -120,33 +125,45 @@ void main() {
     await tester.tap(retryButton);
     await tester.pump();
 
-    final cubit = BlocProvider.of<DashboardHomeCubit>(
-      tester.element(find.byType(DashboardHomeScreen)),
-    ) as _FakeDashboardHomeCubit;
+    final cubit =
+        BlocProvider.of<DashboardHomeCubit>(
+              tester.element(find.byType(DashboardHomeScreen)),
+            )
+            as _FakeDashboardHomeCubit;
     expect(cubit.loadCalls, 1);
   });
 
-  testWidgets('renders real KPI values from the loaded summary, no fake trend text', (
-    tester,
-  ) async {
-    final now = DateTime.now();
-    final summary = buildSummary(
-      trips: [buildTrip(id: 't1', at: now, capacity: 10, bookedSeats: 5)],
-      bookings: [buildBooking(id: 'b1', date: now)],
-      revenue: emptyRevenueMetrics,
-    );
+  testWidgets(
+    'renders real KPI values from the loaded summary, no fake trend text',
+    (tester) async {
+      final now = DateTime.now();
+      final summary = buildSummary(
+        trips: [buildTrip(id: 't1', at: now, capacity: 10, bookedSeats: 5)],
+        bookings: [buildBooking(id: 'b1', date: now)],
+        revenue: emptyRevenueMetrics,
+      );
 
-    await tester.pumpWidget(
-      _wrap(homeState: DashboardHomeLoaded(summary)),
-    );
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(_wrap(homeState: DashboardHomeLoaded(summary)));
+      await tester.pumpAndSettle();
 
-    expect(find.text('رحلات اليوم'), findsOneWidget);
-    expect(find.text('1'), findsWidgets); // today's trip count / booking count
-    expect(find.text('50%'), findsOneWidget); // occupancy KPI: 5 of 10 seats
-    expect(find.textContaining('↑'), findsNothing);
-    expect(tester.takeException(), isNull);
-  });
+      expect(find.text('رحلات اليوم'), findsOneWidget);
+      expect(
+        find.text('1'),
+        findsWidgets,
+      ); // today's trip count / booking count
+      // Scoped to the KPI grid: other panels (e.g. marketplace profile
+      // completeness) can legitimately show the same "50%" by coincidence.
+      expect(
+        find.descendant(
+          of: find.byType(HomeKpiGrid),
+          matching: find.text('50%'),
+        ),
+        findsOneWidget,
+      ); // occupancy KPI: 5 of 10 seats
+      expect(find.textContaining('↑'), findsNothing);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('marketplace card reflects a draft (unlisted) office honestly', (
     tester,
@@ -227,21 +244,22 @@ void main() {
     },
   );
 
-  testWidgets('collapses KPI grid to a single column on narrow widths, no overflow', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(400, 900);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
+  testWidgets(
+    'collapses KPI grid to a single column on narrow widths, no overflow',
+    (tester) async {
+      tester.view.physicalSize = const Size(400, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
 
-    final summary = buildSummary(
-      trips: [buildTrip(id: 't1', at: DateTime.now())],
-    );
+      final summary = buildSummary(
+        trips: [buildTrip(id: 't1', at: DateTime.now())],
+      );
 
-    await tester.pumpWidget(_wrap(homeState: DashboardHomeLoaded(summary)));
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(_wrap(homeState: DashboardHomeLoaded(summary)));
+      await tester.pumpAndSettle();
 
-    expect(tester.takeException(), isNull);
-  });
+      expect(tester.takeException(), isNull);
+    },
+  );
 }

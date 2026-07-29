@@ -234,7 +234,9 @@ state-transition matrix: [`TRIP_LIFECYCLE_DESIGN.md`](../architecture/TRIP_LIFEC
 - **Filters**: search plus advanced filters on status, route, driver, vehicle, occupancy
   and date.
 - **Creation wizard**: picks route, driver, vehicle, date/time, capacity and fare, then
-  calls `office_create_trip`. The trip code is generated **server-side**
+  calls `office_create_trip` with the **driver only** — the vehicle, the capacity and the
+  seat map are derived server-side from that driver's active assignment. The trip code is
+  generated **server-side**
   (`next_office_trip_code`) — client-side codes collided across offices.
 - **Publishing** (`scheduled → openForBooking`) passes a five-point readiness gate:
   driver, vehicle, seat inventory, at least one active `trip_pricing` row, and a

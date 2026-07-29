@@ -12,9 +12,10 @@ import 'package:bmt_app/core/theme/tokens.dart';
 /// or a profile menu — the shell's top bar already renders both, and this is
 /// the screen body, not another copy of the chrome around it.
 class HomeHeaderBanner extends StatelessWidget {
-  const HomeHeaderBanner({super.key, required this.office});
+  const HomeHeaderBanner({super.key, required this.office, this.onRefresh});
 
   final OfficeContext office;
+  final VoidCallback? onRefresh;
 
   static const _navy = Color(0xFF0F2747);
 
@@ -33,7 +34,7 @@ class HomeHeaderBanner extends StatelessWidget {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final identity = _Identity(office: office, name: name);
-          final trailing = _Trailing(office: office);
+          final trailing = _Trailing(office: office, onRefresh: onRefresh);
           if (constraints.maxWidth < 620) {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -133,15 +134,20 @@ class _OfficeLogo extends StatelessWidget {
       ),
       child: url.isEmpty
           ? fallback
-          : Image.network(url, fit: BoxFit.cover, errorBuilder: (_, _, _) => fallback),
+          : Image.network(
+              url,
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => fallback,
+            ),
     );
   }
 }
 
 class _Trailing extends StatelessWidget {
-  const _Trailing({required this.office});
+  const _Trailing({required this.office, this.onRefresh});
 
   final OfficeContext office;
+  final VoidCallback? onRefresh;
 
   @override
   Widget build(BuildContext context) {
@@ -149,15 +155,49 @@ class _Trailing extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          _formatArabicDate(DateTime.now()),
-          style: Theme.of(
-            context,
-          ).textTheme.bodySmall?.copyWith(color: Colors.white70),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              _formatArabicDate(DateTime.now()),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: Colors.white70),
+            ),
+            if (onRefresh != null) ...[
+              const SizedBox(width: AppSpacing.small),
+              _RefreshButton(onRefresh: onRefresh!),
+            ],
+          ],
         ),
         const SizedBox(height: AppSpacing.small),
         _MarketplaceMiniBadge(listingStatus: office.listingStatus),
       ],
+    );
+  }
+}
+
+class _RefreshButton extends StatelessWidget {
+  const _RefreshButton({required this.onRefresh});
+
+  final VoidCallback onRefresh;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: 'تحديث البيانات',
+      child: Material(
+        color: Colors.white.withAlpha(28),
+        shape: const CircleBorder(),
+        child: InkWell(
+          onTap: onRefresh,
+          customBorder: const CircleBorder(),
+          child: const Padding(
+            padding: EdgeInsets.all(6),
+            child: Icon(Icons.refresh_rounded, size: 16, color: Colors.white),
+          ),
+        ),
+      ),
     );
   }
 }

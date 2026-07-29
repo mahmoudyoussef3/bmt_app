@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../shared/domain/entities/operation_trip.dart';
 import '../../../shared/domain/entities/trip_pricing.dart';
+import '../../domain/entities/trip_driver_option.dart';
 import '../../domain/usecases/trip_creation_usecases.dart';
 
 sealed class TripCreationState {
@@ -22,13 +23,14 @@ class TripCreationError extends TripCreationState {
 
 class TripCreationWizardDataLoaded extends TripCreationState {
   final List<Map<String, dynamic>> routes;
-  final List<Map<String, dynamic>> drivers;
-  final List<Map<String, dynamic>> vehicles;
+
+  /// Drivers with the vehicle each one operates. There is no separate vehicle list:
+  /// the planner offers one resource choice and derives the bus from it.
+  final List<TripDriverOption> drivers;
 
   const TripCreationWizardDataLoaded({
     required this.routes,
     required this.drivers,
-    required this.vehicles,
   });
 }
 
@@ -41,33 +43,33 @@ class TripCreationCubit extends Cubit<TripCreationState> {
   final CreateTripUseCase _createTrip;
   final GetActiveRoutesUseCase _getActiveRoutes;
   final GetActiveDriversUseCase _getActiveDrivers;
-  final GetActiveVehiclesUseCase _getActiveVehicles;
   final GetResourceConflictsUseCase _getResourceConflicts;
 
   TripCreationCubit({
     required CreateTripUseCase createTrip,
     required GetActiveRoutesUseCase getActiveRoutes,
     required GetActiveDriversUseCase getActiveDrivers,
-    required GetActiveVehiclesUseCase getActiveVehicles,
     required GetResourceConflictsUseCase getResourceConflicts,
   }) : _createTrip = createTrip,
        _getActiveRoutes = getActiveRoutes,
        _getActiveDrivers = getActiveDrivers,
-       _getActiveVehicles = getActiveVehicles,
        _getResourceConflicts = getResourceConflicts,
        super(const TripCreationInitial());
 
+  /// Two independent reads, issued together. They used to be three, run one after the
+  /// other — routes, then drivers, then the whole vehicle list for a dropdown that no
+  /// longer exists.
   Future<void> loadWizardData() async {
     emit(const TripCreationLoading());
     try {
-      final routes = await _getActiveRoutes();
-      final drivers = await _getActiveDrivers();
-      final vehicles = await _getActiveVehicles();
+      final results = await Future.wait([
+        _getActiveRoutes(),
+        _getActiveDrivers(),
+      ]);
       emit(
         TripCreationWizardDataLoaded(
-          routes: routes,
-          drivers: drivers,
-          vehicles: vehicles,
+          routes: results[0] as List<Map<String, dynamic>>,
+          drivers: results[1] as List<TripDriverOption>,
         ),
       );
     } catch (e) {
@@ -122,15 +124,31 @@ class TripCreationCubit extends Cubit<TripCreationState> {
   /// exclusion-constraint names appear when a conflicting write reaches the table
   /// without going through `create_trip`.
   static String _friendlyError(String raw) {
+    // The driver and the bus they are paired with are one resource, so both refusals
+    // are phrased as being about that pair — telling the operator to "pick another
+    // vehicle" would be advice they can no longer act on from this screen.
+    if (raw.contains('driver_has_no_vehicle')) {
+      return 'هذا السائق غير مرتبط بسيارة حالياً. عيّن له سيارة من إدارة الأسطول '
+          'ثم أعد المحاولة.';
+    }
+    if (raw.contains('driver_vehicle_mismatch')) {
+      return 'تم تغيير السيارة المخصصة لهذا السائق منذ فتح هذه الشاشة. أعد تحميل '
+          'قائمة السائقين ثم أنشئ الرحلة من جديد.';
+    }
+    if (raw.contains('driver_required')) {
+      return 'يجب اختيار السائق قبل إنشاء الرحلة.';
+    }
     if (raw.contains('driver_conflict') ||
         raw.contains('operation_trips_driver_no_overlap')) {
-      return 'السائق لديه رحلة أخرى تتداخل مع هذا التوقيت (مع احتساب 30 دقيقة '
-          'للاستعداد بين الرحلات). اختر سائقاً آخر أو غيّر التوقيت.';
+      return 'السائق والسيارة المخصصة له غير متاحين في هذا التوقيت — لديهما رحلة '
+          'أخرى متداخلة (مع احتساب 30 دقيقة للاستعداد بين الرحلات). اختر سائقاً '
+          'آخر أو غيّر التوقيت.';
     }
     if (raw.contains('vehicle_conflict') ||
         raw.contains('operation_trips_vehicle_no_overlap')) {
-      return 'المركبة مرتبطة برحلة أخرى تتداخل مع هذا التوقيت (مع احتساب 30 دقيقة '
-          'للاستعداد بين الرحلات). اختر مركبة أخرى أو غيّر التوقيت.';
+      return 'السيارة المخصصة لهذا السائق مرتبطة برحلة أخرى تتداخل مع هذا التوقيت '
+          '(مع احتساب 30 دقيقة للاستعداد بين الرحلات). اختر سائقاً آخر أو غيّر '
+          'التوقيت.';
     }
     if (raw.contains('vehicle_unavailable')) {
       return 'المركبة غير متاحة للتشغيل حالياً (صيانة أو موقوفة أو مؤرشفة). '

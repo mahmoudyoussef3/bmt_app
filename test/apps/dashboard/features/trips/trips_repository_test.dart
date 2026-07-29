@@ -9,10 +9,26 @@ import 'package:bmt_app/apps/dashboard/features/trips/trip_management/domain/rep
 import 'package:bmt_app/apps/dashboard/features/trips/trip_management/data/repositories/trips_repository_impl.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/trip_management/data/datasources/trips_datasource.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/trip_management/domain/usecases/trip_management_usecases.dart';
+import 'package:bmt_app/apps/dashboard/features/trips/trip_creation/domain/entities/trip_driver_option.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/trip_creation/domain/usecases/trip_creation_usecases.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/trip_seats/domain/usecases/trip_seats_usecases.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/trip_passengers/domain/usecases/trip_passengers_usecases.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/trip_pricing/domain/usecases/trip_pricing_usecases.dart';
+
+/// A complete, valid plan. Only the driver and the route vary between cases — there is
+/// nothing else about the trip's resources for a caller to get wrong.
+CreateTripInput _input({required String driverId, String routeId = 'route-1'}) {
+  return CreateTripInput(
+    routeId: routeId,
+    route: 'بنها - القرية الذكية',
+    driverId: driverId,
+    driver: 'أحمد حسن',
+    date: '2026-06-12',
+    departure: '09:00',
+    arrival: '10:30',
+    ticketPrice: 75,
+  );
+}
 
 void main() {
   group('Trips clean architecture chain', () {
@@ -64,125 +80,96 @@ void main() {
       },
     );
 
-    test('creates trip with validations', () async {
+    // The cases below replace an older set that passed a `vehicleId` and a `capacity`
+    // alongside the driver and asserted on a client-side duplicate check. Both encoded
+    // the model 20260731090000_driver_vehicle_authority removed: a trip's vehicle is
+    // the one its driver is assigned to, and overlap is the server's exclusion
+    // constraints to judge, not an exact date + departure-time match here.
+    test('a driver with an assigned vehicle can be scheduled', () async {
       final createTrip = CreateTripUseCase(repository);
 
-      // 1. Success case
-      final input = const CreateTripInput(
-        routeId: 'route-1',
-        route: 'بنها - القرية الذكية',
-        driverId: 'driver-active',
-        driver: 'أحمد حسن',
-        vehicleId: 'vehicle-active',
-        vehicle: 'ق س أ 1234',
-        date: '2026-06-12',
-        departure: '09:00',
-        arrival: '10:30',
-        ticketPrice: 75,
-        capacity: 14,
-      );
+      final created = await createTrip(_input(driverId: 'driver-active'), []);
 
-      final created = await createTrip(input, []);
       expect(created.id, isNotEmpty);
       expect(created.driver, 'أحمد حسن');
       expect(created.vehicle, 'ق س أ 1234');
+      expect(created.capacity, 14);
+      expect(created.seats, hasLength(14));
+    });
 
-      // 2. Route archived validation
-      final inputArchivedRoute = const CreateTripInput(
-        routeId: 'route-archived',
-        route: 'بنها - القرية الذكية',
-        driverId: 'driver-active',
-        driver: 'أحمد حسن',
-        vehicleId: 'vehicle-active',
-        vehicle: 'ق س أ 1234',
-        date: '2026-06-12',
-        departure: '09:00',
-        arrival: '10:30',
-        ticketPrice: 75,
-        capacity: 14,
-      );
+    test(
+      'the vehicle and capacity come from the fleet, not from the planner',
+      () async {
+        final createTrip = CreateTripUseCase(repository);
+        final created = await createTrip(_input(driverId: 'driver-active'), []);
+
+        // `CreateTripInput` has no vehicle or capacity field to carry — that is enforced
+        // by the compiler. What this asserts is the consequence: the trip still comes
+        // back with the assigned bus and its seat count.
+        expect(datasource.lastCreateInput?.driverId, 'driver-active');
+        expect(created.vehicleId, 'vehicle-active');
+        expect(created.capacity, 14);
+      },
+    );
+
+    test('a driver with no assigned vehicle is blocked, in Arabic', () {
+      final createTrip = CreateTripUseCase(repository);
+
       expect(
-        () => createTrip(inputArchivedRoute, []),
+        () => createTrip(_input(driverId: 'driver-no-vehicle'), []),
+        throwsA(
+          isA<Exception>().having(
+            (e) => e.toString(),
+            'message',
+            contains('هذا السائق غير مرتبط بسيارة حالياً'),
+          ),
+        ),
+      );
+    });
+
+    test('a driver whose vehicle is out of service is blocked', () {
+      final createTrip = CreateTripUseCase(repository);
+
+      expect(
+        () => createTrip(_input(driverId: 'driver-vehicle-maintenance'), []),
+        throwsA(
+          isA<Exception>().having(
+            (e) => e.toString(),
+            'message',
+            allOf(contains('غير متاحة للتشغيل'), contains('ق س أ 9999')),
+          ),
+        ),
+      );
+    });
+
+    test('a driver outside the office is rejected', () {
+      final createTrip = CreateTripUseCase(repository);
+
+      expect(
+        () => createTrip(_input(driverId: 'driver-other-office'), []),
+        throwsA(
+          isA<Exception>().having(
+            (e) => e.toString(),
+            'message',
+            contains('لا يتبع مكتبك'),
+          ),
+        ),
+      );
+    });
+
+    test('an archived route is still refused', () {
+      final createTrip = CreateTripUseCase(repository);
+
+      expect(
+        () => createTrip(
+          _input(driverId: 'driver-active', routeId: 'route-archived'),
+          [],
+        ),
         throwsA(
           isA<Exception>().having(
             (e) => e.toString(),
             'message',
             contains('لا يمكن جدولة رحلة لمسار مؤرشف'),
-          ),
-        ),
-      );
-
-      // 3. Driver suspended validation
-      final inputSuspendedDriver = const CreateTripInput(
-        routeId: 'route-1',
-        route: 'بنها - القرية الذكية',
-        driverId: 'driver-suspended',
-        driver: 'أحمد حسن',
-        vehicleId: 'vehicle-active',
-        vehicle: 'ق س أ 1234',
-        date: '2026-06-12',
-        departure: '09:00',
-        arrival: '10:30',
-        ticketPrice: 75,
-        capacity: 14,
-      );
-      expect(
-        () => createTrip(inputSuspendedDriver, []),
-        throwsA(
-          isA<Exception>().having(
-            (e) => e.toString(),
-            'message',
-            contains('السائق غير نشط'),
-          ),
-        ),
-      );
-
-      // 4. Vehicle maintenance validation
-      final inputMaintenanceVehicle = const CreateTripInput(
-        routeId: 'route-1',
-        route: 'بنها - القرية الذكية',
-        driverId: 'driver-active',
-        driver: 'أحمد حسن',
-        vehicleId: 'vehicle-maintenance',
-        vehicle: 'ق س أ 1234',
-        date: '2026-06-12',
-        departure: '09:00',
-        arrival: '10:30',
-        ticketPrice: 75,
-        capacity: 14,
-      );
-      expect(
-        () => createTrip(inputMaintenanceVehicle, []),
-        throwsA(
-          isA<Exception>().having(
-            (e) => e.toString(),
-            'message',
-            contains('المركبة غير متاحة للتشغيل'),
-          ),
-        ),
-      );
-
-      // 5. Duplicate trip validation
-      final inputDuplicate = const CreateTripInput(
-        routeId: 'route-1',
-        route: 'بنها - القرية الذكية',
-        driverId: 'driver-active',
-        driver: 'أحمد حسن',
-        vehicleId: 'vehicle-active',
-        vehicle: 'ق س أ 1234',
-        date: '2026-06-12',
-        departure: 'duplicate-time',
-        arrival: '10:30',
-        ticketPrice: 75,
-        capacity: 14,
-      );
-      expect(
-        () => createTrip(inputDuplicate, []),
-        throwsA(
-          isA<Exception>().having(
-            (e) => e.toString(),
-            'message',
-            contains('توجد رحلة مجدولة بالفعل'),
           ),
         ),
       );
@@ -328,6 +315,51 @@ class _MockTripsDatasource implements TripsDatasource {
   final List<OperationTripModel> _trips = [];
   final List<TripPricingModel> _pricings = [];
 
+  /// The office's fleet as the pairing model sees it: a driver either holds a bus or
+  /// does not, and the bus is either in service or not. `driver-active` is the happy
+  /// path; the other three are the states trip creation must refuse.
+  final Map<String, TripDriverOption> _drivers = {
+    'driver-active': const TripDriverOption(
+      id: 'driver-active',
+      name: 'أحمد حسن',
+      phone: '01000000001',
+      assignedVehicle: AssignedVehicle(
+        id: 'vehicle-active',
+        plateNumber: 'ق س أ 1234',
+        vehicleCode: 'V-1',
+        vehicleType: 'Hiace',
+        brand: 'Toyota',
+        model: 'Hiace',
+        capacity: 14,
+        status: 'active',
+      ),
+    ),
+    'driver-no-vehicle': const TripDriverOption(
+      id: 'driver-no-vehicle',
+      name: 'سائق بلا مركبة',
+      phone: '01000000002',
+    ),
+    'driver-vehicle-maintenance': const TripDriverOption(
+      id: 'driver-vehicle-maintenance',
+      name: 'سائق مركبته في الصيانة',
+      phone: '01000000003',
+      assignedVehicle: AssignedVehicle(
+        id: 'vehicle-maintenance',
+        plateNumber: 'ق س أ 9999',
+        vehicleCode: 'V-2',
+        vehicleType: 'Hiace',
+        brand: 'Toyota',
+        model: 'Hiace',
+        capacity: 14,
+        status: 'maintenance',
+      ),
+    ),
+  };
+
+  /// The last input handed to [createTrip], so a test can assert what the planner
+  /// actually sends to the server.
+  CreateTripInput? lastCreateInput;
+
   _MockTripsDatasource() {
     _trips.add(
       OperationTripModel(
@@ -426,8 +458,15 @@ class _MockTripsDatasource implements TripsDatasource {
     return _trips.firstWhere((t) => t.id == tripId);
   }
 
+  /// Stands in for `office_create_trip`: the vehicle, the capacity and the seat map all
+  /// come from the driver's assignment, never from the caller.
   @override
   Future<OperationTripModel> createTrip(CreateTripInput input) async {
+    lastCreateInput = input;
+    final vehicle = _drivers[input.driverId]?.assignedVehicle;
+    if (vehicle == null) {
+      throw Exception('driver_has_no_vehicle');
+    }
     final newTrip = OperationTripModel(
       id: 'trip-new',
       routeId: input.routeId,
@@ -435,17 +474,17 @@ class _MockTripsDatasource implements TripsDatasource {
       routePoints: const [],
       driverId: input.driverId,
       driver: input.driver,
-      vehicleId: input.vehicleId,
-      vehicle: input.vehicle,
+      vehicleId: vehicle.id,
+      vehicle: vehicle.plateNumber,
       date: input.date,
       departure: input.departure,
       arrival: input.arrival,
       ticketPrice: input.ticketPrice,
       currency: input.currency,
       status: OperationTripStatus.scheduled,
-      capacity: input.capacity,
+      capacity: vehicle.capacity,
       seats: List.generate(
-        input.capacity,
+        vehicle.capacity,
         (i) => TripSeat(
           id: 'seat-new-$i',
           label: 'S${i + 1}',
@@ -634,13 +673,13 @@ class _MockTripsDatasource implements TripsDatasource {
   }
 
   @override
-  Future<List<Map<String, dynamic>>> fetchActiveDrivers() async {
-    return [];
+  Future<List<TripDriverOption>> fetchActiveDrivers() async {
+    return _drivers.values.toList();
   }
 
   @override
-  Future<List<Map<String, dynamic>>> fetchActiveVehicles() async {
-    return [];
+  Future<TripDriverOption?> fetchDriverAssignment(String driverId) async {
+    return _drivers[driverId];
   }
 
   @override
@@ -655,36 +694,6 @@ class _MockTripsDatasource implements TripsDatasource {
     required String arrivalTime,
   }) async {
     return [];
-  }
-
-  @override
-  Future<bool> checkDuplicateTrip(
-    String vehicleId,
-    String date,
-    String departureTime,
-  ) async {
-    return departureTime == 'duplicate-time';
-  }
-
-  @override
-  Future<bool> checkDriverTripConflict(
-    String driverId,
-    String date,
-    String departureTime,
-  ) async {
-    return false;
-  }
-
-  @override
-  Future<String> getDriverStatus(String driverId) async {
-    if (driverId == 'driver-active') return 'active';
-    return 'suspended';
-  }
-
-  @override
-  Future<String> getVehicleStatus(String vehicleId) async {
-    if (vehicleId == 'vehicle-active') return 'active';
-    return 'maintenance';
   }
 
   @override
@@ -802,12 +811,12 @@ class _FailingTripsDatasource implements TripsDatasource {
   }
 
   @override
-  Future<List<Map<String, dynamic>>> fetchActiveDrivers() {
+  Future<List<TripDriverOption>> fetchActiveDrivers() {
     throw StateError('failure');
   }
 
   @override
-  Future<List<Map<String, dynamic>>> fetchActiveVehicles() {
+  Future<TripDriverOption?> fetchDriverAssignment(String driverId) {
     throw StateError('failure');
   }
 
@@ -822,34 +831,6 @@ class _FailingTripsDatasource implements TripsDatasource {
     required String departureTime,
     required String arrivalTime,
   }) {
-    throw StateError('failure');
-  }
-
-  @override
-  Future<bool> checkDuplicateTrip(
-    String vehicleId,
-    String date,
-    String departureTime,
-  ) {
-    throw StateError('failure');
-  }
-
-  @override
-  Future<bool> checkDriverTripConflict(
-    String driverId,
-    String date,
-    String departureTime,
-  ) {
-    throw StateError('failure');
-  }
-
-  @override
-  Future<String> getDriverStatus(String driverId) {
-    throw StateError('failure');
-  }
-
-  @override
-  Future<String> getVehicleStatus(String vehicleId) {
     throw StateError('failure');
   }
 

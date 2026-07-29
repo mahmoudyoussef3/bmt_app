@@ -88,6 +88,27 @@ exception when others then
   values (p_section, p_name, false, 'unexpected error: ' || sqlerrm);
 end $$;
 
+-- Pair a driver with a vehicle the way the Fleet screen does: end whatever either of
+-- them is holding, then open one active assignment.
+--
+-- Added with 20260731090000_driver_vehicle_authority. Before that migration a trip took
+-- a driver and a vehicle as two unrelated arguments, so this suite scheduled whichever
+-- pair each case happened to need and no assignment existed at all. That is the model
+-- the migration removed: a trip now runs on the vehicle the driver is actually paired
+-- with, so every case below states that pairing explicitly.
+create function pg_temp.pair(p_driver uuid, p_vehicle uuid) returns void
+language plpgsql as $$
+declare v_office uuid;
+begin
+  update public.assignments set status = 'ended', ended_at = now(), updated_at = now()
+   where status = 'active' and (driver_id = p_driver or vehicle_id = p_vehicle);
+
+  select office_id into v_office from public.drivers where id = p_driver;
+
+  insert into public.assignments (office_id, driver_id, vehicle_id, assigned_at, status)
+  values (v_office, p_driver, p_vehicle, now(), 'active');
+end $$;
+
 -- A valid seat_configuration of p_count bookable seats, three across, plus the driver.
 create function pg_temp.seat_cfg(p_count int) returns jsonb
 language sql immutable as $$
@@ -162,6 +183,11 @@ values
    '01000000203', 'القاهرة', 'RGXNID003', 'RGXLIC003', current_date + 400, current_date - 400, 'archived'),
   (pg_temp.fx('drv_b'), pg_temp.fx('office_b'), 'RGX-D4', 'سائق ب', '01000000104',
    '01000000204', 'القاهرة', 'RGXNID004', 'RGXLIC004', current_date + 400, current_date - 400, 'active');
+
+-- The opening fleet pairing. Sections D onward schedule these drivers, and a trip can
+-- only run on the vehicle its driver is paired with.
+select pg_temp.pair(pg_temp.fx('drv_a'),  pg_temp.fx('veh_a'));
+select pg_temp.pair(pg_temp.fx('drv_a2'), pg_temp.fx('veh_small'));
 
 -- ═══════════════════════════════════════════════════════════════════════════════════
 -- A. Security — the SECURITY DEFINER view write path
@@ -347,6 +373,13 @@ select pg_temp.expect_ok('E', 'the SAME vehicle may run a second departure later
         'point_name','A','point_order',1)),
       '[]'::jsonb)$$);
 
+-- The vehicle rule bites independently of the driver rule, and since
+-- 20260731090000_driver_vehicle_authority this is the shape it takes: the bus was
+-- handed to a different driver between the two departures. (It used to be written as
+-- "another driver takes the same bus while its own driver is out", which the pairing
+-- rule now makes impossible to express — and was never a real dispatch anyway.)
+select pg_temp.pair(pg_temp.fx('drv_a2'), pg_temp.fx('veh_a'));
+
 select pg_temp.expect_error('E', 'a vehicle may not run two trips that overlap in time',
   $$select public.create_trip('RGX-T5', (select v from _fx where k='route_a'),
       (select v from _fx where k='drv_a2'), (select v from _fx where k='veh_a'),
@@ -355,6 +388,10 @@ select pg_temp.expect_error('E', 'a vehicle may not run two trips that overlap i
         'point_name','A','point_order',1)),
       '[]'::jsonb)$$,
   'vehicle_conflict');
+
+-- سائق أ has moved onto RGX-A2, so their own 08:00 trip is what stops them here — not
+-- the bus, which is free.
+select pg_temp.pair(pg_temp.fx('drv_a'), pg_temp.fx('veh_a2'));
 
 select pg_temp.expect_error('E', 'a driver may not run two trips that overlap in time',
   $$select public.create_trip('RGX-T6', (select v from _fx where k='route_a'),
@@ -396,31 +433,49 @@ select pg_temp.expect_ok('E', 'a cancelled trip stops reserving its vehicle',
 -- F. Vehicle and driver lifecycle
 -- ═══════════════════════════════════════════════════════════════════════════════════
 
-select pg_temp.expect_error('F', 'a vehicle in maintenance cannot be scheduled',
-  $$select public.create_trip('RGX-TA', (select v from _fx where k='route_a'),
-      (select v from _fx where k='drv_a2'), (select v from _fx where k='veh_maint'),
-      current_date + 60, '08:00'::time, '10:00'::time, 14, 100, 'ج.م', array['x'],
-      jsonb_build_array(jsonb_build_object('route_point_id', gen_random_uuid(),
-        'point_name','A','point_order',1)),
-      '[]'::jsonb)$$,
+-- These three used to be written as "schedule this driver onto that unavailable
+-- vehicle". Since 20260731090000_driver_vehicle_authority a trip cannot name a vehicle
+-- at all — the driver's assignment does — so the same three guarantees are now proven
+-- one layer earlier (the pairing is refused) and one layer lower (the trip table still
+-- refuses a direct write), which is strictly stronger than what they asserted before.
+
+select pg_temp.expect_error('F', 'a vehicle in maintenance cannot even be assigned',
+  $$insert into public.assignments (office_id, driver_id, vehicle_id, assigned_at, status)
+    values ((select v from _fx where k='office_a'), (select v from _fx where k='drv_arch'),
+            (select v from _fx where k='veh_maint'), now(), 'active')$$,
+  'assignment_driver_unavailable');
+
+select pg_temp.expect_error('F', 'a vehicle in maintenance is refused by the trip table',
+  $$insert into public.operation_trips (trip_code, route_id, driver_id, vehicle_id,
+      trip_date, departure_time, arrival_time, capacity, ticket_price, currency, status)
+    values ('RGX-TA', (select v from _fx where k='route_a'), null,
+            (select v from _fx where k='veh_maint'),
+            current_date + 60, '08:00'::time, '10:00'::time, 14, 100, 'ج.م', 'scheduled')$$,
   'vehicle_unavailable');
 
 select pg_temp.expect_error('F', 'an archived driver cannot be scheduled',
-  $$select public.create_trip('RGX-TB', (select v from _fx where k='route_a'),
-      (select v from _fx where k='drv_arch'), (select v from _fx where k='veh_a2'),
-      current_date + 60, '08:00'::time, '10:00'::time, 14, 100, 'ج.م', array['x'],
-      jsonb_build_array(jsonb_build_object('route_point_id', gen_random_uuid(),
-        'point_name','A','point_order',1)),
-      '[]'::jsonb)$$,
+  $$insert into public.operation_trips (trip_code, route_id, driver_id, vehicle_id,
+      trip_date, departure_time, arrival_time, capacity, ticket_price, currency, status)
+    values ('RGX-TB', (select v from _fx where k='route_a'),
+            (select v from _fx where k='drv_arch'), (select v from _fx where k='veh_a2'),
+            current_date + 60, '08:00'::time, '10:00'::time, 14, 100, 'ج.م', 'scheduled')$$,
   'driver_unavailable');
 
-select pg_temp.expect_error('F', 'a trip cannot borrow another office''s vehicle',
-  $$select public.create_trip('RGX-TC', (select v from _fx where k='route_a'),
-      (select v from _fx where k='drv_a2'), (select v from _fx where k='veh_b'),
-      current_date + 61, '08:00'::time, '10:00'::time, 30, 100, 'ج.م', array['x'],
+select pg_temp.expect_error('F', 'an archived driver has no vehicle to be scheduled with',
+  $$select public.create_trip('RGX-TB2', (select v from _fx where k='route_a'),
+      (select v from _fx where k='drv_arch'), null,
+      current_date + 60, '08:00'::time, '10:00'::time, null, 100, 'ج.م', array['x'],
       jsonb_build_array(jsonb_build_object('route_point_id', gen_random_uuid(),
         'point_name','A','point_order',1)),
       '[]'::jsonb)$$,
+  'driver_has_no_vehicle');
+
+select pg_temp.expect_error('F', 'a trip cannot borrow another office''s vehicle',
+  $$insert into public.operation_trips (trip_code, route_id, driver_id, vehicle_id,
+      trip_date, departure_time, arrival_time, capacity, ticket_price, currency, status)
+    values ('RGX-TC', (select v from _fx where k='route_a'), null,
+            (select v from _fx where k='veh_b'),
+            current_date + 61, '08:00'::time, '10:00'::time, 30, 100, 'ج.م', 'scheduled')$$,
   'vehicle_not_in_office');
 
 select pg_temp.expect_error('F', 'a live trip cannot be swapped onto a smaller vehicle',

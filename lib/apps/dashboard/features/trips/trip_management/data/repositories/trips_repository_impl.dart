@@ -1,6 +1,7 @@
 import '../../../shared/domain/entities/operation_trip.dart';
 import '../../../shared/domain/entities/trip_lifecycle.dart';
 import '../../../shared/domain/entities/trip_pricing.dart';
+import '../../../trip_creation/domain/entities/trip_driver_option.dart';
 import '../../domain/repositories/trips_repository.dart';
 import '../datasources/trips_datasource.dart';
 
@@ -122,9 +123,6 @@ class TripsRepositoryImpl implements TripsRepository {
       if (input.driverId.trim().isEmpty || input.driver.trim().isEmpty) {
         throw Exception('السائق مطلوب لإنشاء رحلة.');
       }
-      if (input.vehicleId.trim().isEmpty || input.vehicle.trim().isEmpty) {
-        throw Exception('المركبة مطلوبة لإنشاء رحلة.');
-      }
       if (input.date.trim().isEmpty) {
         throw Exception('تاريخ الرحلة مطلوب.');
       }
@@ -134,53 +132,48 @@ class TripsRepositoryImpl implements TripsRepository {
       if (input.arrival.trim().isEmpty) {
         throw Exception('وقت الوصول مطلوب.');
       }
-      if (input.capacity <= 0) {
-        throw Exception('سعة الركاب يجب أن تكون أكبر من صفر.');
-      }
       if (input.ticketPrice <= 0) {
         throw Exception('سعر التذكرة مطلوب ويجب أن يكون أكبر من صفر.');
       }
 
-      // 2. Cannot create trip with archived route
+      // 2. Cannot create trip with archived route.
+      //    Kept client-side because it is the one rule the server does not run:
+      //    office_create_trip checks the route's office, not its lifecycle.
       final routeStatus = await _datasource.getRouteStatus(input.routeId);
       if (routeStatus == 'archived') {
         throw Exception('لا يمكن جدولة رحلة لمسار مؤرشف.');
       }
 
-      // 3. Cannot create trip with suspended or archived driver
-      final driverStatus = await _datasource.getDriverStatus(input.driverId);
-      if (driverStatus != 'active') {
-        throw Exception('السائق غير نشط حالياً (حالة السائق: $driverStatus).');
-      }
-
-      // 4. Cannot create trip with maintenance, suspended, or archived vehicle
-      final vehicleStatus = await _datasource.getVehicleStatus(input.vehicleId);
-      if (vehicleStatus != 'active') {
-        throw Exception(
-          'المركبة غير متاحة للتشغيل حالياً (حالة المركبة: $vehicleStatus).',
-        );
-      }
-
-      // 5. Cannot create duplicate trip for same vehicle/date/time
-      final isDuplicate = await _datasource.checkDuplicateTrip(
-        input.vehicleId,
-        input.date,
-        input.departure,
-      );
-      if (isDuplicate) {
-        throw Exception(
-          'توجد رحلة مجدولة بالفعل لهذه المركبة في نفس التاريخ ووقت الانطلاق.',
-        );
-      }
-
-      final hasDriverConflict = await _datasource.checkDriverTripConflict(
+      // 3. The driver must actually have a bus, and it must be in service.
+      //
+      //    Re-read here rather than trusted from the form: the planner can sit open
+      //    while another operator reassigns the fleet. The server refuses the same
+      //    cases (`driver_has_no_vehicle`, `vehicle_unavailable`) and is the authority;
+      //    this exists so the operator is told which driver to fix and can be sent to
+      //    the assignment screen, instead of reading a database error.
+      //
+      //    Driver *availability* (overlapping trips) is deliberately not pre-checked
+      //    here any more. It used to be two queries comparing an exact date + departure
+      //    time, which stopped matching reality when the fleet-authority migration
+      //    replaced same-instant duplicates with service-window overlap. The wizard
+      //    pre-filters busy drivers from `getResourceConflicts`, which mirrors the
+      //    exclusion constraints exactly, and the server has the final word.
+      final assignment = await _datasource.fetchDriverAssignment(
         input.driverId,
-        input.date,
-        input.departure,
       );
-      if (hasDriverConflict) {
+      if (assignment == null) {
+        throw Exception('السائق المختار لا يتبع مكتبك. أعد تحميل الصفحة.');
+      }
+      final vehicle = assignment.assignedVehicle;
+      if (vehicle == null) {
         throw Exception(
-          'السائق لديه رحلة مجدولة بالفعل في نفس التاريخ ووقت الانطلاق.',
+          'هذا السائق غير مرتبط بسيارة حالياً. عيّن له سيارة من إدارة الأسطول أولاً.',
+        );
+      }
+      if (!vehicle.isSchedulable) {
+        throw Exception(
+          'السيارة المخصصة للسائق (${vehicle.plateNumber}) غير متاحة للتشغيل حالياً. '
+          'أعدها إلى حالة "نشطة" من إدارة الأسطول أو عيّن للسائق سيارة أخرى.',
         );
       }
 
@@ -221,25 +214,51 @@ class TripsRepositoryImpl implements TripsRepository {
   Future<OperationTrip> updateTripInfo(OperationTrip trip) async {
     try {
       if (trip.driverId.trim().isEmpty ||
-          trip.vehicleId.trim().isEmpty ||
           trip.date.trim().isEmpty ||
           trip.departure.trim().isEmpty) {
         throw Exception('البيانات الأساسية للرحلة مطلوبة.');
       }
 
-      // Check driver
-      final driverStatus = await _datasource.getDriverStatus(trip.driverId);
-      if (driverStatus != 'active') {
-        throw Exception('السائق الجديد غير نشط حالياً.');
+      final current = await _datasource.fetchTripById(trip.id);
+
+      // Changing the driver changes the bus with them — the pairing is what dispatch
+      // means, and the server refuses a trip whose driver and vehicle contradict it.
+      //
+      // Leaving the driver alone leaves the vehicle *exactly* as recorded, even if that
+      // driver has since been reassigned. The trip's vehicle is a snapshot of who was
+      // paired with whom on the day it was created; re-deriving it on every save would
+      // quietly rewrite which bus carried which passengers.
+      final OperationTrip outgoing;
+      if (trip.driverId == current.driverId) {
+        outgoing = trip.copyWith(
+          vehicleId: current.vehicleId,
+          vehicle: current.vehicle,
+        );
+      } else {
+        final assignment = await _datasource.fetchDriverAssignment(
+          trip.driverId,
+        );
+        if (assignment == null) {
+          throw Exception('السائق الجديد لا يتبع مكتبك.');
+        }
+        final vehicle = assignment.assignedVehicle;
+        if (vehicle == null) {
+          throw Exception(
+            'السائق الجديد غير مرتبط بسيارة حالياً. عيّن له سيارة من إدارة الأسطول أولاً.',
+          );
+        }
+        if (!vehicle.isSchedulable) {
+          throw Exception(
+            'السيارة المخصصة للسائق الجديد (${vehicle.plateNumber}) غير متاحة للتشغيل.',
+          );
+        }
+        outgoing = trip.copyWith(
+          vehicleId: vehicle.id,
+          vehicle: vehicle.plateNumber,
+        );
       }
 
-      // Check vehicle
-      final vehicleStatus = await _datasource.getVehicleStatus(trip.vehicleId);
-      if (vehicleStatus != 'active') {
-        throw Exception('المركبة الجديدة غير متاحة للتشغيل.');
-      }
-
-      return await _datasource.updateTripInfo(trip);
+      return await _datasource.updateTripInfo(outgoing);
     } catch (e) {
       if (e.toString().contains('Exception:')) {
         rethrow;
@@ -353,13 +372,8 @@ class TripsRepositoryImpl implements TripsRepository {
   }
 
   @override
-  Future<List<Map<String, dynamic>>> getActiveDrivers() {
+  Future<List<TripDriverOption>> getActiveDrivers() {
     return _datasource.fetchActiveDrivers();
-  }
-
-  @override
-  Future<List<Map<String, dynamic>>> getActiveVehicles() {
-    return _datasource.fetchActiveVehicles();
   }
 
   @override
@@ -387,4 +401,3 @@ class TripsRepositoryImpl implements TripsRepository {
   Stream<void> watchTripChanges(String tripId) =>
       _datasource.watchTripChanges(tripId);
 }
-

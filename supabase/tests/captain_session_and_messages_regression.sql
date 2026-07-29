@@ -72,14 +72,47 @@ begin
      'CAP-TEST-C', 'c0f20000-0000-4000-8000-00000000000c',
      'c0f20000-0000-4000-8000-0000000000cc');
 
+  -- A bus per captain, and the assignment that pairs them. Added with
+  -- 20260731090000_driver_vehicle_authority: a trip runs on the vehicle its driver is
+  -- assigned to, so a driver-only trip is no longer a state the table accepts.
+  insert into public.vehicles
+        (id, office_id, vehicle_code, plate_number, vehicle_type, brand, model,
+         manufacture_year, color, capacity, seat_layout_type, status,
+         seat_configuration) values
+    ('a0f20000-0000-4000-8000-0000000000a5', 'a0f20000-0000-4000-8000-00000000000a',
+     'VH-TEST-CAP-A', 'TEST-CAP-A-01', 'Hiace', 'Toyota', 'Hiace', 2022, 'white', 4,
+     'standard', 'active', '{"rows":2,"columns":2,"seats":[
+        {"seat_number":"D","seat_type":"driver","row":1,"column":1},
+        {"seat_number":"1","seat_type":"passenger","row":1,"column":2},
+        {"seat_number":"2","seat_type":"passenger","row":2,"column":1},
+        {"seat_number":"3","seat_type":"passenger","row":2,"column":2},
+        {"seat_number":"4","seat_type":"passenger","row":3,"column":1}]}'::jsonb),
+    ('b0f20000-0000-4000-8000-0000000000b5', 'b0f20000-0000-4000-8000-00000000000b',
+     'VH-TEST-CAP-B', 'TEST-CAP-B-01', 'Hiace', 'Toyota', 'Hiace', 2022, 'white', 4,
+     'standard', 'active', '{"rows":2,"columns":2,"seats":[
+        {"seat_number":"D","seat_type":"driver","row":1,"column":1},
+        {"seat_number":"1","seat_type":"passenger","row":1,"column":2},
+        {"seat_number":"2","seat_type":"passenger","row":2,"column":1},
+        {"seat_number":"3","seat_type":"passenger","row":2,"column":2},
+        {"seat_number":"4","seat_type":"passenger","row":3,"column":1}]}'::jsonb);
+
+  insert into public.assignments (office_id, driver_id, vehicle_id, assigned_at, status)
+  values
+    ('a0f20000-0000-4000-8000-00000000000a', 'a0f20000-0000-4000-8000-0000000000a3',
+     'a0f20000-0000-4000-8000-0000000000a5', now(), 'active'),
+    ('b0f20000-0000-4000-8000-00000000000b', 'b0f20000-0000-4000-8000-0000000000b3',
+     'b0f20000-0000-4000-8000-0000000000b5', now(), 'active');
+
   insert into public.operation_trips
-        (id, trip_code, route_id, driver_id, trip_date, departure_time,
+        (id, trip_code, route_id, driver_id, vehicle_id, trip_date, departure_time,
          arrival_time, status, capacity, ticket_price, currency) values
     ('a0f20000-0000-4000-8000-0000000000a4', 'TR-TEST-CAP-A',
      'a0f20000-0000-4000-8000-0000000000a1', 'a0f20000-0000-4000-8000-0000000000a3',
+     'a0f20000-0000-4000-8000-0000000000a5',
      current_date + 1, '09:00', '11:00', 'open_for_booking', 4, 100, 'EGP'),
     ('b0f20000-0000-4000-8000-0000000000b4', 'TR-TEST-CAP-B',
      'b0f20000-0000-4000-8000-0000000000b1', 'b0f20000-0000-4000-8000-0000000000b3',
+     'b0f20000-0000-4000-8000-0000000000b5',
      current_date + 1, '09:00', '11:00', 'open_for_booking', 4, 100, 'EGP');
 end $fix$;
 

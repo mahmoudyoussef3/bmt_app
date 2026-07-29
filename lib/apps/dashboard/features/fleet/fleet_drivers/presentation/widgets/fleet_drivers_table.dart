@@ -202,7 +202,15 @@ class FleetDriversTable extends StatelessWidget {
             ),
           ),
           StatusChip(label: snapshot.status.label),
-          Text(vehicle.isEmpty ? 'بدون مركبة' : vehicle),
+          // The pairing decides whether this driver can be scheduled at all, so it
+          // reads as a status, not as a value that happens to be blank.
+          vehicle.isEmpty
+              ? const StatusChip(
+                  label: 'بدون سيارة',
+                  color: AppStatusColors.warningContainer,
+                  textColor: AppStatusColors.onWarningContainer,
+                )
+              : Text(vehicle, maxLines: 1, overflow: TextOverflow.ellipsis),
           Text(
             driver.licenseExpiry,
             maxLines: 1,

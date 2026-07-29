@@ -37,6 +37,11 @@ class FleetDriversCardList extends StatelessWidget {
     return match.first.vehicleNumber;
   }
 
+  FleetVehicle? _vehicleOf(String vehicleId) {
+    if (vehicleId.isEmpty) return null;
+    return workspace.vehicles.where((v) => v.id == vehicleId).firstOrNull;
+  }
+
   Color _healthColor(BuildContext context, DriverHealthLevel health) {
     final scheme = Theme.of(context).colorScheme;
     return switch (health) {
@@ -150,6 +155,16 @@ class FleetDriversCardList extends StatelessWidget {
                             status: snapshot.status.label,
                             reason: snapshot.primaryReason,
                             color: healthColor,
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.small),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: AppSpacing.medium,
+                          ),
+                          child: _DriverAssignmentBanner(
+                            vehicle: _vehicleOf(driver.currentVehicleId),
+                            onAssign: () => onEdit(driver),
                           ),
                         ),
                         if (driver.isLicenseExpired) ...[
@@ -400,6 +415,119 @@ class _DriverOperationalStrip extends StatelessWidget {
 }
 
 enum _DriverAlertSeverity { warning, critical }
+
+/// Which bus this driver operates — the fact that now decides whether they can be
+/// scheduled at all.
+///
+/// Since 20260731090000_driver_vehicle_authority a trip is created by naming a driver,
+/// and the driver's active assignment supplies the vehicle. A driver with no vehicle is
+/// therefore not "missing an optional field", they are unschedulable — which is why
+/// this reads as a banner with a fix attached rather than as one cell in the meta grid.
+class _DriverAssignmentBanner extends StatelessWidget {
+  const _DriverAssignmentBanner({
+    required this.vehicle,
+    required this.onAssign,
+  });
+
+  final FleetVehicle? vehicle;
+  final VoidCallback onAssign;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final assigned = vehicle;
+
+    if (assigned == null) {
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(AppSpacing.small),
+        decoration: BoxDecoration(
+          color: AppStatusColors.warningContainer,
+          borderRadius: BorderRadius.circular(AppTokens.radius),
+          border: Border.all(
+            color: AppStatusColors.onWarningContainer.withAlpha(90),
+          ),
+        ),
+        child: Wrap(
+          spacing: AppSpacing.small,
+          runSpacing: AppSpacing.xSmall,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.warning_amber_rounded,
+                  size: 18,
+                  color: AppStatusColors.onWarningContainer,
+                ),
+                const SizedBox(width: AppSpacing.xSmall),
+                Text(
+                  'لا توجد سيارة مخصصة — لا يمكن جدولة رحلات لهذا السائق',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppStatusColors.onWarningContainer,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ),
+            FilledButton.tonalIcon(
+              onPressed: onAssign,
+              icon: const Icon(Icons.link_rounded, size: 18),
+              label: const Text('تعيين سيارة'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final available = assigned.status == FleetVehicleStatus.active;
+    final tint = available
+        ? scheme.primary
+        : AppStatusColors.onWarningContainer;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.small),
+      decoration: BoxDecoration(
+        color: tint.withAlpha(24),
+        borderRadius: BorderRadius.circular(AppTokens.radius),
+        border: Border.all(color: tint.withAlpha(80)),
+      ),
+      child: Row(
+        children: [
+          Icon(Icons.directions_bus_rounded, size: 18, color: tint),
+          const SizedBox(width: AppSpacing.small),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'السيارة المخصصة: ${assigned.vehicleNumber}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: tint,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                Text(
+                  '${assigned.type} • ${assigned.capacity} مقعد'
+                  '${available ? '' : ' • ${assigned.status.label}'}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelSmall?.copyWith(color: tint.withAlpha(200)),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 class _DriverAlertBanner extends StatelessWidget {
   const _DriverAlertBanner({

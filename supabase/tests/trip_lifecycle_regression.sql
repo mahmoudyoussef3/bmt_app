@@ -104,11 +104,59 @@ insert into _fx (k, v) values
   ('client_1',        'f6d901ac-1b2a-420d-9265-ae8e3c3e9654'),
   ('client_2',        '6ab16dee-a931-444a-8488-fbbb0d8dce19');
 
+insert into _fx (k, v) values ('vehicle_b', gen_random_uuid());
+
+-- ───────────────────────────────────────────────────────────────────────────────────
+-- Fleet pairing
+-- ───────────────────────────────────────────────────────────────────────────────────
+-- Added with 20260731090000_driver_vehicle_authority: a trip may only run on the
+-- vehicle its driver is actually assigned to, so this suite's two drivers each need
+-- one. `driver_b` gets a vehicle of its own — before the migration it borrowed
+-- `vehicle_a` from `driver_a`, which is exactly the dispatch the migration forbids.
+-- All of this is inside the suite's transaction and rolls back with everything else.
+
+insert into public.vehicles
+  (id, office_id, vehicle_code, plate_number, vehicle_type, brand, model,
+   manufacture_year, color, capacity, seat_layout_type, status, seat_configuration)
+values
+  (pg_temp.fx('vehicle_b'), pg_temp.fx('office_a'), 'TLC-B', 'TLC B', 'Hiace',
+   'Toyota', 'Hiace', 2022, 'أبيض', 3, 'standard',
+   'active', '{"rows":2,"columns":3,"seats":[
+      {"seat_number":"D","seat_type":"driver","row":1,"column":1},
+      {"seat_number":"1","seat_type":"passenger","row":2,"column":1},
+      {"seat_number":"2","seat_type":"passenger","row":2,"column":2},
+      {"seat_number":"3","seat_type":"passenger","row":2,"column":3}]}'::jsonb);
+
+create function pg_temp.pair(p_driver uuid, p_vehicle uuid) returns void
+language plpgsql as $$
+declare v_office uuid;
+begin
+  update public.assignments set status = 'ended', ended_at = now(), updated_at = now()
+   where status = 'active' and (driver_id = p_driver or vehicle_id = p_vehicle);
+
+  select office_id into v_office from public.drivers where id = p_driver;
+
+  insert into public.assignments (office_id, driver_id, vehicle_id, assigned_at, status)
+  values (v_office, p_driver, p_vehicle, now(), 'active');
+end $$;
+
+select pg_temp.pair(pg_temp.fx('driver_a'), pg_temp.fx('vehicle_a'));
+select pg_temp.pair(pg_temp.fx('driver_b'), pg_temp.fx('vehicle_b'));
+
 -- ───────────────────────────────────────────────────────────────────────────────────
 -- Fixture builder
 -- ───────────────────────────────────────────────────────────────────────────────────
 -- Built as `postgres` with auth.uid() null, which the write-authority trigger treats as
 -- service context — the same carve-out migrations and backfills use.
+
+-- Every fixture trip gets its own day. This suite was written before Phase 4 added the
+-- `operation_trips_{driver,vehicle}_no_overlap` exclusion constraints, and it schedules
+-- ~40 trips onto one driver and one bus — all at 08:00, all on `current_date + 10`. The
+-- second insert has been failing on the constraint ever since, which took the whole
+-- suite down before its first assertion. The day is shifted away from today in whatever
+-- direction the caller asked for, so "past" fixtures stay in the past and "future" ones
+-- stay in the future; nothing here asserts on a specific date.
+create sequence pg_temp.trip_day_seq;
 
 create function pg_temp.mk_trip(
   p_key       text,
@@ -120,9 +168,12 @@ create function pg_temp.mk_trip(
   p_pricing   boolean default true
 ) returns uuid language plpgsql as $$
 declare
-  v_id uuid;
-  v_p1 uuid;
-  v_p2 uuid;
+  v_id   uuid;
+  v_p1   uuid;
+  v_p2   uuid;
+  v_day  int := nextval('pg_temp.trip_day_seq');
+  v_date date := case when p_date < current_date then p_date - v_day
+                      else p_date + v_day end;
 begin
   insert into public.operation_trips (
     trip_code, route_id, driver_id, vehicle_id, trip_date, departure_time,
@@ -132,7 +183,7 @@ begin
     pg_temp.fx('route_a'),
     coalesce(p_driver, pg_temp.fx('driver_a')),
     coalesce(p_vehicle, pg_temp.fx('vehicle_a')),
-    p_date, '08:00', '10:00', p_status, greatest(p_seats, 1), 50, 'ج.م'
+    v_date, '08:00', '10:00', p_status, greatest(p_seats, 1), 50, 'ج.م'
   ) returning id into v_id;
 
   -- Nulling after insert: sync_trip_office needs route_id, and the not-null office
@@ -190,7 +241,8 @@ begin
     payment_status, created_by_source
   ) values (
     p_client, p_trip, 'Fixture Rider', '01000000000', 'A → B', '08:00',
-    current_date + 10, v_label, 'instapay', 50, v_seat, p_booking_status,
+    (select trip_date from public.operation_trips where id = p_trip),
+    v_label, 'instapay', 50, v_seat, p_booking_status,
     'TEST-' || substr(gen_random_uuid()::text, 1, 10), p_payment_status, 'client'
   ) returning id into v_bk;
 
@@ -318,7 +370,21 @@ select pg_temp.mk_trip('c_ok',        'scheduled');
 select pg_temp.mk_trip('c_nodriver',  'scheduled');
 update public.operation_trips set driver_id = null where id = pg_temp.fx('c_nodriver');
 select pg_temp.mk_trip('c_novehicle', 'scheduled');
+
+-- Since 20260731090000_driver_vehicle_authority a trip that has a driver but no vehicle
+-- can no longer be produced at all — the driver's assignment supplies the vehicle, and
+-- taking it away is refused. The `no_vehicle` publish gate below therefore only ever
+-- applies to rows that predate that rule, so the fixture is built the way such a row
+-- would have been: with the pairing trigger stood down for exactly one statement, as
+-- `postgres`, inside this suite's rolled-back transaction.
+select pg_temp.expect_error('C', 'a driver''s trip can no longer lose its vehicle',
+  $q$ update public.operation_trips set vehicle_id = null
+      where id = pg_temp.fx('c_novehicle') $q$,
+  'driver_vehicle_mismatch');
+
+alter table public.operation_trips disable trigger trg_trip_resource_authority;
 update public.operation_trips set vehicle_id = null where id = pg_temp.fx('c_novehicle');
+alter table public.operation_trips enable trigger trg_trip_resource_authority;
 
 select pg_temp.as_user(pg_temp.fx('operator_a'));
 set local role authenticated;
@@ -351,7 +417,8 @@ select pg_temp.expect_that('C', 'blocked trips stayed scheduled',
 -- ═══════════════════════════════════════════════════════════════════════════════════
 select pg_temp.mk_trip('d_open',   'open_for_booking');
 select pg_temp.mk_trip('d_open2',  'open_for_booking');
-select pg_temp.mk_trip('d_other',  'open_for_booking', current_date + 10, pg_temp.fx('driver_b'));
+select pg_temp.mk_trip('d_other',  'open_for_booking', current_date + 10,
+                       pg_temp.fx('driver_b'), pg_temp.fx('vehicle_b'));
 
 -- Foreign office operator
 select pg_temp.as_user(pg_temp.fx('operator_b'));

@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/operation_trip.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/trip_lifecycle.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/trip_pricing.dart';
+import 'package:bmt_app/apps/dashboard/features/trips/trip_creation/domain/entities/trip_driver_option.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/trip_management/domain/repositories/trips_repository.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/trip_management/domain/usecases/trip_management_usecases.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/trip_management/presentation/cubit/trip_details_cubit.dart';
@@ -169,11 +170,7 @@ class _FakeRepo implements TripsRepository {
       throw UnimplementedError();
 
   @override
-  Future<List<Map<String, dynamic>>> getActiveDrivers() =>
-      throw UnimplementedError();
-
-  @override
-  Future<List<Map<String, dynamic>>> getActiveVehicles() =>
+  Future<List<TripDriverOption>> getActiveDrivers() =>
       throw UnimplementedError();
 
   @override
@@ -249,19 +246,22 @@ void main() {
       },
     );
 
-    test('closeDetails() cancels the subscription for the previous trip', () async {
-      final repo = _FakeRepo({'trip-1': _trip('trip-1')});
-      final cubit = _cubit(repo);
-      await cubit.showDetails(_trip('trip-1'));
+    test(
+      'closeDetails() cancels the subscription for the previous trip',
+      () async {
+        final repo = _FakeRepo({'trip-1': _trip('trip-1')});
+        final cubit = _cubit(repo);
+        await cubit.showDetails(_trip('trip-1'));
 
-      cubit.closeDetails();
-      repo.emitChange('trip-1');
-      await Future<void>.delayed(const Duration(milliseconds: 400));
+        cubit.closeDetails();
+        repo.emitChange('trip-1');
+        await Future<void>.delayed(const Duration(milliseconds: 400));
 
-      expect(repo.fetchByIdCount, 0);
-      expect(cubit.state, isA<TripDetailsInitial>());
-      await cubit.close();
-    });
+        expect(repo.fetchByIdCount, 0);
+        expect(cubit.state, isA<TripDetailsInitial>());
+        await cubit.close();
+      },
+    );
 
     test(
       'switching trips resubscribes to the newly opened trip only',
@@ -298,22 +298,19 @@ void main() {
       },
     );
 
-    test(
-      'a failed background refresh preserves the last loaded trip instead '
-      'of surfacing an error screen',
-      () async {
-        final repo = _FakeRepo({'trip-1': _trip('trip-1')});
-        final cubit = _cubit(repo);
-        await cubit.showDetails(_trip('trip-1'));
+    test('a failed background refresh preserves the last loaded trip instead '
+        'of surfacing an error screen', () async {
+      final repo = _FakeRepo({'trip-1': _trip('trip-1')});
+      final cubit = _cubit(repo);
+      await cubit.showDetails(_trip('trip-1'));
 
-        repo.tripsById.remove('trip-1'); // next getTripById() will throw
-        repo.emitChange('trip-1');
-        await Future<void>.delayed(const Duration(milliseconds: 400));
+      repo.tripsById.remove('trip-1'); // next getTripById() will throw
+      repo.emitChange('trip-1');
+      await Future<void>.delayed(const Duration(milliseconds: 400));
 
-        expect(cubit.state, isA<TripDetailsLoaded>());
-        expect((cubit.state as TripDetailsLoaded).trip.id, 'trip-1');
-        await cubit.close();
-      },
-    );
+      expect(cubit.state, isA<TripDetailsLoaded>());
+      expect((cubit.state as TripDetailsLoaded).trip.id, 'trip-1');
+      await cubit.close();
+    });
   });
 }

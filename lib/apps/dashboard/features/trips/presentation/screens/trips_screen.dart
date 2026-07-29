@@ -30,7 +30,13 @@ import '../widgets/trips_view_mode_switch.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 
 class TripsScreen extends StatelessWidget {
-  const TripsScreen({super.key});
+  const TripsScreen({super.key, this.onOpenModule});
+
+  /// Switches the shell to another module. Used by the trip planner to send an
+  /// operator to Fleet when the driver they picked has no vehicle assigned — the fix
+  /// is one screen away and the planner cannot make it from here. Same prop-drilled
+  /// shape the home screen's module cards use.
+  final ValueChanged<String>? onOpenModule;
 
   @override
   Widget build(BuildContext context) {
@@ -42,13 +48,15 @@ class TripsScreen extends StatelessWidget {
         BlocProvider(create: (_) => dashboardDi<TripPricingCubit>()),
         BlocProvider(create: (_) => dashboardDi<TripPassengersCubit>()),
       ],
-      child: _TripsView(),
+      child: _TripsView(onOpenModule: onOpenModule),
     );
   }
 }
 
 class _TripsView extends StatelessWidget {
-  const _TripsView();
+  const _TripsView({this.onOpenModule});
+
+  final ValueChanged<String>? onOpenModule;
 
   @override
   Widget build(BuildContext context) {
@@ -79,7 +87,10 @@ class _TripsView extends StatelessWidget {
               message: message,
               onRetry: () => context.read<TripsListCubit>().load(),
             ),
-            TripsListLoaded() => _LoadedTrips(state: state),
+            TripsListLoaded() => _LoadedTrips(
+              state: state,
+              onOpenModule: onOpenModule,
+            ),
             _ => const SizedBox.shrink(),
           };
         },
@@ -89,9 +100,10 @@ class _TripsView extends StatelessWidget {
 }
 
 class _LoadedTrips extends StatelessWidget {
-  const _LoadedTrips({required this.state});
+  const _LoadedTrips({required this.state, this.onOpenModule});
 
   final TripsListLoaded state;
+  final ValueChanged<String>? onOpenModule;
 
   @override
   Widget build(BuildContext context) {
@@ -141,7 +153,7 @@ class _LoadedTrips extends StatelessWidget {
       barrierDismissible: false,
       builder: (_) => BlocProvider(
         create: (_) => dashboardDi<TripCreationCubit>()..loadWizardData(),
-        child: TripCreationWizardDialog(),
+        child: TripCreationWizardDialog(onOpenModule: onOpenModule),
       ),
     ).then((_) => listCubit.load());
   }
@@ -664,7 +676,9 @@ class _DetailsHeader extends StatelessWidget {
                       : () => _cancelTrip(context, trip),
                   icon: const Icon(Icons.cancel_outlined, size: 18),
                   label: const Text('إلغاء الرحلة'),
-                  style: OutlinedButton.styleFrom(foregroundColor: scheme.error),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: scheme.error,
+                  ),
                 ),
               ],
               const SizedBox(width: 8),

@@ -376,7 +376,8 @@ class SupabaseFleetDatasource implements FleetDatasource {
   @override
   Future<FleetVehicleModel> createVehicle(FleetVehicle vehicle) async {
     try {
-      final payload = _vehiclePayload(vehicle)..['office_id'] = _session.officeId;
+      final payload = _vehiclePayload(vehicle)
+        ..['office_id'] = _session.officeId;
 
       final response = await _client
           .from('vehicles')
@@ -895,7 +896,51 @@ class SupabaseFleetDatasource implements FleetDatasource {
     return payload;
   }
 
+  /// Turns the driver↔vehicle invariants the database now enforces into sentences an
+  /// operator can act on.
+  ///
+  /// These are the refusals from 20260731090000_driver_vehicle_authority. Before it,
+  /// the Dashboard's Dart was the only thing keeping a suspended driver off an active
+  /// bus or a pairing inside one office; now the database refuses them outright, so
+  /// they can reach this screen as raw Postgres text unless they are named here.
+  String? _translateFleetError(String message) {
+    if (message.contains('assignment_cross_office')) {
+      return 'لا يمكن ربط سائق بسيارة تتبع مكتباً آخر. اختر سيارة من أسطول مكتبك.';
+    }
+    if (message.contains('assignment_driver_unavailable')) {
+      return 'لا يمكن تخصيص سيارة لسائق غير نشط. أعد تفعيل السائق أولاً ثم اربطه '
+          'بالسيارة.';
+    }
+    if (message.contains('assignment_vehicle_unavailable')) {
+      return 'لا يمكن تخصيص سيارة غير متاحة للتشغيل (صيانة أو موقوفة أو مؤرشفة). '
+          'أعدها إلى حالة "نشطة" أولاً.';
+    }
+    if (message.contains('uniq_active_assignment_per_driver')) {
+      return 'هذا السائق مرتبط بسيارة أخرى بالفعل. فك الارتباط الحالي أولاً.';
+    }
+    if (message.contains('uniq_active_assignment_per_vehicle')) {
+      return 'هذه السيارة مخصصة لسائق آخر بالفعل. فك الارتباط الحالي أولاً.';
+    }
+    if (message.contains('driver_vehicle_mismatch')) {
+      return 'لا يمكن تشغيل هذا السائق على سيارة غير المخصصة له. عدّل التخصيص من '
+          'إدارة الأسطول أولاً.';
+    }
+    if (message.contains('driver_has_no_vehicle')) {
+      return 'هذا السائق غير مرتبط بسيارة حالياً — عيّن له سيارة قبل جدولة رحلات له.';
+    }
+    if (message.contains('vehicle_delete_forbidden')) {
+      return 'لا يمكن حذف سيارة مرتبطة برحلات مسجّلة. استخدم "أرشفة" بدلاً من ذلك.';
+    }
+    if (message.contains('driver_delete_forbidden')) {
+      return 'لا يمكن حذف سائق مرتبط برحلات مسجّلة. استخدم "أرشفة" بدلاً من ذلك.';
+    }
+    return null;
+  }
+
   String _formatPostgrestError(PostgrestException e) {
+    final friendly = _translateFleetError(e.message);
+    if (friendly != null) return friendly;
+
     final buffer = StringBuffer(e.message);
 
     if (e.code != null && e.code!.isNotEmpty) {

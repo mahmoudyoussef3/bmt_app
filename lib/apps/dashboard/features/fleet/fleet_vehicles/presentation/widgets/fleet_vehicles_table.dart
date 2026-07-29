@@ -4,6 +4,7 @@ import 'package:bmt_app/apps/dashboard/core/widgets/ops_data_table.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_workspace.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/widgets/fleet_shared_widgets.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_vehicles/presentation/cubit/fleet_vehicles_cubit.dart';
+import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_snackbar.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
@@ -69,11 +70,19 @@ class FleetVehiclesTable extends StatelessWidget {
             onChanged: (_) => cubit.toggleSelection(vehicle.id),
           ),
           _VehicleIdentityCell(vehicle: vehicle),
-          Text(
-            driverName.isEmpty ? 'بدون سائق' : driverName,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
+          // A bus with no driver cannot be dispatched: trips are scheduled onto the
+          // driver, and this vehicle is not on the end of any driver's assignment.
+          driverName.isEmpty
+              ? const StatusChip(
+                  label: 'غير مخصص',
+                  color: AppStatusColors.warningContainer,
+                  textColor: AppStatusColors.onWarningContainer,
+                )
+              : Text(
+                  'مخصص للسائق: $driverName',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
           FleetOperationalChip(
             status: workspace.operationalStatusOf(vehicle),
             duty: workspace.currentDutyOf(vehicle),

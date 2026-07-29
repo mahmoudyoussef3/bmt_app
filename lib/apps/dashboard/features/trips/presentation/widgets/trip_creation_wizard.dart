@@ -5,18 +5,26 @@ import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
+import 'package:bmt_app/apps/dashboard/core/routes/dashboard_routes.dart';
 
 import '../../../routes/domain/entities/operation_route.dart';
-import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_vehicle.dart';
-import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_driver.dart';
 import '../../shared/domain/entities/operation_trip.dart';
 import '../../shared/presentation/widgets/trip_fare_controllers.dart';
 import '../../shared/presentation/widgets/trip_fare_fields.dart';
+import '../../trip_creation/domain/entities/trip_driver_option.dart';
 import '../../trip_creation/presentation/cubit/trip_creation_cubit.dart';
 
 class TripCreationWizardDialog extends StatelessWidget {
-  const TripCreationWizardDialog({super.key, this.prefillTrip});
+  const TripCreationWizardDialog({
+    super.key,
+    this.prefillTrip,
+    this.onOpenModule,
+  });
   final OperationTrip? prefillTrip;
+
+  /// Switches the shell to another module. Supplied so the planner can send an
+  /// operator to Fleet when the driver they picked has no vehicle assigned.
+  final ValueChanged<String>? onOpenModule;
 
   @override
   Widget build(BuildContext context) {
@@ -79,15 +87,11 @@ class TripCreationWizardDialog extends StatelessWidget {
         }
 
         if (state is TripCreationWizardDataLoaded) {
-          final parsedRoutes = state.routes.map(_parseRoute).toList();
-          final parsedVehicles = state.vehicles.map(_parseVehicle).toList();
-          final parsedDrivers = state.drivers.map(_parseDriver).toList();
-
           return TripCreationWizard(
-            routes: parsedRoutes,
-            vehicles: parsedVehicles,
-            drivers: parsedDrivers,
+            routes: state.routes.map(_parseRoute).toList(),
+            drivers: state.drivers,
             prefillTrip: prefillTrip,
+            onOpenModule: onOpenModule,
           );
         }
 
@@ -127,62 +131,24 @@ class TripCreationWizardDialog extends StatelessWidget {
       notes: const [],
     );
   }
-
-  FleetVehicle _parseVehicle(Map<String, dynamic> map) {
-    return FleetVehicle(
-      id: map['id'] as String,
-      vehicleCode: map['vehicle_code'] as String? ?? '',
-      plateNumber: map['plate_number'] as String? ?? '',
-      vehicleType: map['vehicle_type'] as String? ?? 'ميكروباص',
-      brand: map['brand'] as String? ?? '',
-      model:
-          map['model'] as String? ?? map['vehicle_code'] as String? ?? 'مركبة',
-      manufactureYear: 2024,
-      color: '',
-      capacity: map['capacity'] as int? ?? 14,
-      seatLayoutType: '',
-      imageUrl: '',
-      notes: '',
-      status: FleetVehicleStatus.active,
-      seatConfiguration: SeatConfiguration.empty(),
-      licenseExpiry: '',
-      insuranceExpiry: '',
-      inspectionExpiry: '',
-    );
-  }
-
-  FleetDriver _parseDriver(Map<String, dynamic> map) {
-    return FleetDriver(
-      id: map['id'] as String,
-      employeeCode: '',
-      fullName: map['full_name'] as String? ?? 'سائق',
-      phone: map['phone'] as String? ?? '',
-      emergencyPhone: '',
-      address: '',
-      nationalId: '',
-      profileImageUrl: '',
-      licenseNumber: '',
-      licenseExpiryDate: '',
-      hireDate: '',
-      notes: '',
-      status: FleetDriverStatus.active,
-      currentVehicleId: '',
-    );
-  }
 }
 
 class TripCreationWizard extends StatefulWidget {
   final List<OperationRoute> routes;
-  final List<FleetVehicle> vehicles;
-  final List<FleetDriver> drivers;
+
+  /// Drivers with the bus each one operates. There is no vehicle list: the operator
+  /// picks a driver and the vehicle comes with them.
+  final List<TripDriverOption> drivers;
+
   final OperationTrip? prefillTrip;
+  final ValueChanged<String>? onOpenModule;
 
   const TripCreationWizard({
     super.key,
     required this.routes,
-    required this.vehicles,
     required this.drivers,
     this.prefillTrip,
+    this.onOpenModule,
   });
 
   @override
@@ -190,10 +156,11 @@ class TripCreationWizard extends StatefulWidget {
 }
 
 class _TripCreationWizardState extends State<TripCreationWizard> {
-  // Selected values
+  // Selected values. The vehicle is not among them — it is read off
+  // `_selectedDriver.assignedVehicle` wherever it is needed, so the two can never
+  // drift apart in this form.
   OperationRoute? _selectedRoute;
-  FleetVehicle? _selectedVehicle;
-  FleetDriver? _selectedDriver;
+  TripDriverOption? _selectedDriver;
 
   // Schedule values
   final _dateController = TextEditingController();
@@ -229,9 +196,9 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
       _selectedRoute = widget.routes
           .where((r) => r.id == prefill.routeId)
           .firstOrNull;
-      _selectedVehicle = widget.vehicles
-          .where((v) => v.id == prefill.vehicleId)
-          .firstOrNull;
+      // Only the driver is carried over. A copied trip re-derives its vehicle from
+      // whoever that driver is paired with *now* — copying the old trip's vehicle id
+      // would recreate the very mismatch this planner exists to prevent.
       _selectedDriver = widget.drivers
           .where((d) => d.id == prefill.driverId)
           .firstOrNull;
@@ -239,7 +206,9 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
       _arrivalController.text = prefill.arrival;
       _dateController.text = prefill.date;
       if (prefill.ticketPrice > 0) {
-        _fare.oneTime.text = TripFareControllers.formatFare(prefill.ticketPrice);
+        _fare.oneTime.text = TripFareControllers.formatFare(
+          prefill.ticketPrice,
+        );
         _fare.syncTiersFromBase();
       }
       if (_selectedRoute != null) _initializeWizardData();
@@ -468,38 +437,78 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
         ),
         border: Border(top: BorderSide(color: scheme.outline.withAlpha(50))),
       ),
-      child: Row(
-        children: [
-          OutlinedButton.icon(
-            onPressed: () => Navigator.of(context).pop(),
-            icon: const Icon(Icons.close_rounded),
-            label: const Text('إلغاء'),
-          ),
-          const SizedBox(width: AppSpacing.small),
-          TextButton.icon(
-            onPressed: _resetPlanner,
-            icon: const Icon(Icons.restart_alt_rounded),
-            label: const Text('إعادة ضبط'),
-          ),
-          const Spacer(),
-          Text(
+      // The readiness line now carries whole sentences — "this driver has no vehicle
+      // assigned", not just a list of missing fields — so it needs room to wrap rather
+      // than a fixed slot between the buttons. Below ~720 logical pixels, or at a large
+      // text scale, it moves onto its own line instead of squeezing the actions out.
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final message = Text(
             ready ? 'كل شيء جاهز للتشغيل' : _readinessMessage(),
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: ready ? scheme.primary : scheme.onSurfaceVariant,
               fontWeight: ready ? FontWeight.w700 : null,
             ),
-          ),
-          const SizedBox(width: AppSpacing.medium),
-          FilledButton.icon(
-            onPressed: ready ? _onSubmitTrip : null,
-            icon: const Icon(Icons.rocket_launch_outlined),
-            label: const Text('إنشاء الرحلة'),
-          ),
-        ],
+          );
+          final actions = [
+            OutlinedButton.icon(
+              onPressed: () => Navigator.of(context).pop(),
+              icon: const Icon(Icons.close_rounded),
+              label: const Text('إلغاء'),
+            ),
+            TextButton.icon(
+              onPressed: _resetPlanner,
+              icon: const Icon(Icons.restart_alt_rounded),
+              label: const Text('إعادة ضبط'),
+            ),
+            FilledButton.icon(
+              onPressed: ready ? _onSubmitTrip : null,
+              icon: const Icon(Icons.rocket_launch_outlined),
+              label: const Text('إنشاء الرحلة'),
+            ),
+          ];
+
+          if (constraints.maxWidth < 720) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                message,
+                const SizedBox(height: AppSpacing.small),
+                Wrap(
+                  spacing: AppSpacing.small,
+                  runSpacing: AppSpacing.small,
+                  children: actions,
+                ),
+              ],
+            );
+          }
+
+          return Row(
+            children: [
+              actions[0],
+              const SizedBox(width: AppSpacing.small),
+              actions[1],
+              const SizedBox(width: AppSpacing.medium),
+              Expanded(
+                child: Align(
+                  alignment: AlignmentDirectional.centerEnd,
+                  child: message,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.medium),
+              actions[2],
+            ],
+          );
+        },
       ),
     );
   }
 
+  /// Route → Driver → (derived) Vehicle.
+  ///
+  /// The vehicle card sits below the driver, is never a picker, and is marked as
+  /// system-derived rather than as a step the operator completes — which is why it
+  /// carries no completion tick of its own.
   Widget _buildSelectionColumn() {
     return Column(
       children: [
@@ -511,20 +520,27 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
         ),
         const SizedBox(height: AppSpacing.medium),
         _PlannerSectionCard(
-          title: 'المركبة',
-          icon: Icons.airport_shuttle_rounded,
-          done: _selectedVehicle != null,
-          child: _buildVehiclePicker(),
-        ),
-        const SizedBox(height: AppSpacing.medium),
-        _PlannerSectionCard(
           title: 'السائق',
           icon: Icons.person_outline_rounded,
           done: _selectedDriver != null,
           child: _buildDriverPicker(),
         ),
+        const SizedBox(height: AppSpacing.medium),
+        _AssignedVehicleCard(
+          driver: _selectedDriver,
+          busyTrip: _assignedVehicleConflict,
+          onAssignVehicle: _openFleetAssignment,
+        ),
       ],
     );
+  }
+
+  /// The conflicting trip already holding this driver's bus, if any. Read through the
+  /// driver rather than from a vehicle the operator chose, because the bus is only ever
+  /// reached through the driver now.
+  Map<String, dynamic>? get _assignedVehicleConflict {
+    final vehicleId = _selectedDriver?.assignedVehicle?.id;
+    return vehicleId == null ? null : _busyVehicleInfo[vehicleId];
   }
 
   Widget _buildPlanningColumn() {
@@ -565,6 +581,9 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
       children: [
         DropdownButtonFormField<String>(
           initialValue: _selectedRoute?.id,
+          // Route names are long and the selection column is narrow; without this the
+          // field sizes to the widest name and overflows its own decoration.
+          isExpanded: true,
           decoration: const InputDecoration(
             labelText: 'اختر المسار',
             prefixIcon: Icon(Icons.route_outlined),
@@ -602,86 +621,19 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
     );
   }
 
-  Widget _buildVehiclePicker() {
-    final scheme = Theme.of(context).colorScheme;
-    final activeVehicles = widget.vehicles
-        .where((vehicle) => vehicle.status == FleetVehicleStatus.active)
-        .toList();
-    return Column(
-      children: [
-        DropdownButtonFormField<String>(
-          initialValue: _selectedVehicle?.id,
-          decoration: InputDecoration(
-            labelText: 'اختر المركبة',
-            prefixIcon: const Icon(Icons.directions_bus_outlined),
-            suffixIcon: _checkingAvailability
-                ? const Padding(
-                    padding: EdgeInsets.all(14),
-                    child: SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  )
-                : null,
-          ),
-          items: activeVehicles.map((vehicle) {
-            final conflict = _busyVehicleInfo[vehicle.id];
-            return DropdownMenuItem(
-              value: vehicle.id,
-              enabled: conflict == null,
-              child: Text(
-                conflict == null
-                    ? '${vehicle.plateNumber} • ${vehicle.capacity} مقعد'
-                    : '${vehicle.plateNumber} • مشغولة (${_conflictLabel(conflict)})',
-                overflow: TextOverflow.ellipsis,
-                style: conflict == null
-                    ? null
-                    : TextStyle(color: scheme.onSurfaceVariant.withAlpha(150)),
-              ),
-            );
-          }).toList(),
-          onChanged: (id) {
-            final vehicle = activeVehicles
-                .where((candidate) => candidate.id == id)
-                .firstOrNull;
-            if (vehicle == null) return;
-            setState(() => _selectedVehicle = vehicle);
-          },
-        ),
-        if (_selectedVehicle != null) ...[
-          const SizedBox(height: AppSpacing.medium),
-          _SelectedAssetTile(
-            title: _selectedVehicle!.model,
-            subtitle:
-                '${_selectedVehicle!.plateNumber} • ${_selectedVehicle!.type}',
-            trailing: '${_selectedVehicle!.capacity} مقعد',
-            icon: Icons.airline_seat_recline_normal,
-          ),
-        ],
-        if (_busyVehicleInfo.isNotEmpty) ...[
-          const SizedBox(height: AppSpacing.small),
-          Text(
-            'المركبات المشغولة لديها رحلة أخرى قريبة من هذا التوقيت (مع احتساب '
-            'نصف ساعة للاستعداد بين الرحلات).',
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
-          ),
-        ],
-      ],
-    );
-  }
-
+  /// The only resource choice in this planner.
+  ///
+  /// A driver is offered as busy when *either* they or their bus is already committed
+  /// to an overlapping trip — the two are one resource once they are paired, and the
+  /// operator has no way to swap one without the other from here.
   Widget _buildDriverPicker() {
     final scheme = Theme.of(context).colorScheme;
-    final activeDrivers = widget.drivers
-        .where((driver) => driver.status == FleetDriverStatus.active)
-        .toList();
+    final drivers = widget.drivers;
     return Column(
       children: [
         DropdownButtonFormField<String>(
           initialValue: _selectedDriver?.id,
+          isExpanded: true,
           decoration: InputDecoration(
             labelText: 'اختر السائق',
             prefixIcon: const Icon(Icons.badge_outlined),
@@ -696,24 +648,27 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
                   )
                 : null,
           ),
-          items: activeDrivers.map((driver) {
-            final conflict = _busyDriverInfo[driver.id];
+          items: drivers.map((driver) {
+            final conflict = _driverConflict(driver);
+            // Only a scheduling clash disables the option. A driver with no bus — or
+            // whose bus is off the road — stays selectable on purpose: picking them is
+            // how the operator gets the card below to explain what is wrong and offer
+            // the fix. A greyed-out row that says nothing is the error state this
+            // planner is meant to replace.
             return DropdownMenuItem(
               value: driver.id,
               enabled: conflict == null,
               child: Text(
-                conflict == null
-                    ? '${driver.name} • ${driver.phone}'
-                    : '${driver.name} • مشغول (${_conflictLabel(conflict)})',
+                _driverOptionLabel(driver, conflict),
                 overflow: TextOverflow.ellipsis,
-                style: conflict == null
+                style: conflict == null && driver.isSchedulable
                     ? null
-                    : TextStyle(color: scheme.onSurfaceVariant.withAlpha(150)),
+                    : TextStyle(color: scheme.onSurfaceVariant.withAlpha(180)),
               ),
             );
           }).toList(),
           onChanged: (id) {
-            final driver = activeDrivers
+            final driver = drivers
                 .where((candidate) => candidate.id == id)
                 .firstOrNull;
             if (driver == null) return;
@@ -725,15 +680,15 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
           _SelectedAssetTile(
             title: _selectedDriver!.name,
             subtitle: _selectedDriver!.phone,
-            trailing: _selectedDriver!.status.label,
+            trailing: 'نشط',
             icon: Icons.person_outline_rounded,
           ),
         ],
-        if (_busyDriverInfo.isNotEmpty) ...[
+        if (_busyDriverInfo.isNotEmpty || _busyVehicleInfo.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.small),
           Text(
-            'السائقون المشغولون لديهم رحلة أخرى قريبة من هذا التوقيت (مع احتساب '
-            'نصف ساعة للاستعداد بين الرحلات).',
+            'السائقون المشغولون لديهم — أو لدى سيارتهم — رحلة أخرى قريبة من هذا '
+            'التوقيت (مع احتساب نصف ساعة للاستعداد بين الرحلات).',
             style: Theme.of(
               context,
             ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
@@ -741,6 +696,37 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
         ],
       ],
     );
+  }
+
+  /// The overlapping trip that makes this driver unpickable — theirs, or their bus's.
+  Map<String, dynamic>? _driverConflict(TripDriverOption driver) {
+    return _busyDriverInfo[driver.id] ??
+        (driver.assignedVehicle == null
+            ? null
+            : _busyVehicleInfo[driver.assignedVehicle!.id]);
+  }
+
+  String _driverOptionLabel(
+    TripDriverOption driver,
+    Map<String, dynamic>? conflict,
+  ) {
+    if (!driver.hasVehicle) return '${driver.name} • بدون سيارة مخصصة';
+    final vehicle = driver.assignedVehicle!;
+    if (!vehicle.isSchedulable) {
+      return '${driver.name} • سيارته ${vehicle.plateNumber} غير متاحة';
+    }
+    if (conflict != null) {
+      return '${driver.name} • مشغول (${_conflictLabel(conflict)})';
+    }
+    return '${driver.name} • ${vehicle.plateNumber} • ${vehicle.capacity} مقعد';
+  }
+
+  /// Sends the operator to Fleet to pair the driver with a bus. The planner closes
+  /// first: coming back to a half-filled form whose driver list is now stale would be
+  /// worse than restarting it with correct data.
+  void _openFleetAssignment() {
+    Navigator.of(context).pop();
+    widget.onOpenModule?.call(DashboardRoutes.assignments);
   }
 
   Widget _buildPlannerSummary() {
@@ -781,25 +767,35 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
               ],
             ),
           ),
-          Wrap(
-            spacing: AppSpacing.xSmall,
-            runSpacing: AppSpacing.xSmall,
-            children: [
-              _PlannerStatusChip(label: 'مسار', done: _selectedRoute != null),
-              _PlannerStatusChip(
-                label: 'مركبة',
-                done: _selectedVehicle != null,
-              ),
-              _PlannerStatusChip(label: 'سائق', done: _selectedDriver != null),
-              _PlannerStatusChip(
-                label: 'موعد',
-                done:
-                    _dateController.text.isNotEmpty &&
-                    _timeController.text.isNotEmpty &&
-                    _arrivalController.text.isNotEmpty,
-              ),
-              _PlannerStatusChip(label: 'سعر', done: _fare.isValid),
-            ],
+          // Flexible, not bare: a Wrap next to an Expanded takes its full intrinsic
+          // width and overflows the card the moment the text scale grows.
+          Flexible(
+            child: Wrap(
+              alignment: WrapAlignment.end,
+              spacing: AppSpacing.xSmall,
+              runSpacing: AppSpacing.xSmall,
+              children: [
+                _PlannerStatusChip(label: 'مسار', done: _selectedRoute != null),
+                _PlannerStatusChip(
+                  label: 'سائق',
+                  done: _selectedDriver != null,
+                ),
+                // Derived, not chosen — it ticks when the chosen driver brings a
+                // schedulable bus with them.
+                _PlannerStatusChip(
+                  label: 'سيارة',
+                  done: _selectedDriver?.isSchedulable ?? false,
+                ),
+                _PlannerStatusChip(
+                  label: 'موعد',
+                  done:
+                      _dateController.text.isNotEmpty &&
+                      _timeController.text.isNotEmpty &&
+                      _arrivalController.text.isNotEmpty,
+                ),
+                _PlannerStatusChip(label: 'سعر', done: _fare.isValid),
+              ],
+            ),
           ),
         ],
       ),
@@ -898,10 +894,7 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
           ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
         ),
         const SizedBox(height: AppSpacing.medium),
-        TripFareFields(
-          controllers: _fare,
-          onChanged: () => setState(() {}),
-        ),
+        TripFareFields(controllers: _fare, onChanged: () => setState(() {})),
         const SizedBox(height: AppSpacing.small),
         Text(
           'تُطبَّق هذه الأسعار على جميع مقاطع الصعود والنزول في هذه الرحلة، '
@@ -942,10 +935,12 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
     );
   }
 
+  /// A driver with no bus — or a bus that is out of service — is not a complete plan.
+  /// The submit button stays disabled rather than letting the operator discover it from
+  /// a server refusal.
   bool _isTripReady() {
     return _selectedRoute != null &&
-        _selectedVehicle != null &&
-        _selectedDriver != null &&
+        (_selectedDriver?.isSchedulable ?? false) &&
         _dateController.text.isNotEmpty &&
         _timeController.text.isNotEmpty &&
         _arrivalController.text.isNotEmpty &&
@@ -953,10 +948,16 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
   }
 
   String _readinessMessage() {
+    final driver = _selectedDriver;
+    if (driver != null && !driver.hasVehicle) {
+      return 'هذا السائق غير مرتبط بسيارة حالياً — عيّن له سيارة أولاً.';
+    }
+    if (driver != null && !driver.isSchedulable) {
+      return 'السيارة المخصصة لهذا السائق غير متاحة للتشغيل حالياً.';
+    }
     final missing = <String>[
       if (_selectedRoute == null) 'المسار',
-      if (_selectedVehicle == null) 'المركبة',
-      if (_selectedDriver == null) 'السائق',
+      if (driver == null) 'السائق',
       if (_dateController.text.isEmpty ||
           _timeController.text.isEmpty ||
           _arrivalController.text.isEmpty)
@@ -967,13 +968,15 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
   }
 
   String _tripSummaryLine() {
-    return '${_selectedRoute?.name ?? '-'} • ${_selectedVehicle?.plateNumber ?? '-'} • ${_selectedDriver?.name ?? '-'} • ${_dateController.text} ${_timeController.text}';
+    final vehicle = _selectedDriver?.assignedVehicle;
+    return '${_selectedRoute?.name ?? '-'} • ${_selectedDriver?.name ?? '-'} • '
+        '${vehicle?.plateNumber ?? '-'} • ${_dateController.text} '
+        '${_timeController.text}';
   }
 
   void _resetPlanner() {
     setState(() {
       _selectedRoute = null;
-      _selectedVehicle = null;
       _selectedDriver = null;
       _stopWaits = {};
       _customArrivals.clear();
@@ -999,11 +1002,13 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
     final requestId = ++_availabilityRequestId;
     setState(() => _checkingAvailability = true);
     try {
-      final conflicts = await context.read<TripCreationCubit>().getResourceConflicts(
-        date: date,
-        departureTime: departure,
-        arrivalTime: arrival,
-      );
+      final conflicts = await context
+          .read<TripCreationCubit>()
+          .getResourceConflicts(
+            date: date,
+            departureTime: departure,
+            arrivalTime: arrival,
+          );
       if (!mounted || requestId != _availabilityRequestId) return;
 
       final busyDrivers = <String, Map<String, dynamic>>{};
@@ -1021,18 +1026,25 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
         _checkingAvailability = false;
       });
 
-      final busyDriver = _selectedDriver;
-      if (busyDriver != null && busyDrivers.containsKey(busyDriver.id)) {
+      // One selection to re-validate, against both halves of the resource: the driver
+      // and the bus they are paired with are committed together, so either being taken
+      // clears the pick — and the notice names which one it was, because "choose
+      // another driver" for a bus that is out is otherwise baffling.
+      final chosen = _selectedDriver;
+      if (chosen == null) return;
+
+      final vehicleId = chosen.assignedVehicle?.id;
+      if (busyDrivers.containsKey(chosen.id)) {
         setState(() => _selectedDriver = null);
         _showAvailabilityNotice(
-          'السائق "${busyDriver.name}" أصبح غير متاح لهذا التوقيت — اختر سائقاً آخر.',
+          'السائق "${chosen.name}" أصبح غير متاح لهذا التوقيت — اختر سائقاً آخر.',
         );
-      }
-      final busyVehicle = _selectedVehicle;
-      if (busyVehicle != null && busyVehicles.containsKey(busyVehicle.id)) {
-        setState(() => _selectedVehicle = null);
+      } else if (vehicleId != null && busyVehicles.containsKey(vehicleId)) {
+        setState(() => _selectedDriver = null);
         _showAvailabilityNotice(
-          'المركبة "${busyVehicle.plateNumber}" أصبحت غير متاحة لهذا التوقيت — اختر مركبة أخرى.',
+          'السيارة المخصصة للسائق "${chosen.name}" '
+          '(${chosen.assignedVehicle!.plateNumber}) أصبحت مرتبطة برحلة أخرى في هذا '
+          'التوقيت — اختر سائقاً آخر أو غيّر الموعد.',
         );
       }
     } catch (_) {
@@ -1130,12 +1142,9 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
       route: _selectedRoute!.name,
       driverId: _selectedDriver!.id,
       driver: _selectedDriver!.name,
-      vehicleId: _selectedVehicle!.id,
-      vehicle: _selectedVehicle!.plateNumber,
       date: _dateController.text,
       departure: _timeController.text,
       arrival: _arrivalController.text,
-      capacity: _selectedVehicle!.capacity,
       ticketPrice: _fare.baseFare,
       packageTierPrices: _fare.tierPrices,
       currency: 'ج.م',
@@ -1291,6 +1300,259 @@ class _MiniInfoGrid extends StatelessWidget {
           ),
         );
       }).toList(),
+    );
+  }
+}
+
+/// The vehicle the system chose, shown as information rather than as a field.
+///
+/// It is styled deliberately unlike the pickers above it — a tinted, outlined panel
+/// with a "derived automatically" line instead of a form control — so that at a glance
+/// the operator can tell what they chose (route, driver) from what the system chose
+/// (this bus). Nothing in here is tappable except the escape hatch for a driver who has
+/// no bus at all.
+class _AssignedVehicleCard extends StatelessWidget {
+  const _AssignedVehicleCard({
+    required this.driver,
+    required this.busyTrip,
+    required this.onAssignVehicle,
+  });
+
+  final TripDriverOption? driver;
+
+  /// The overlapping trip already holding this bus, if the schedule picked one that is
+  /// out. Explained here rather than only on submit, because the operator's fix is to
+  /// change the time or the driver — both of which are on this screen.
+  final Map<String, dynamic>? busyTrip;
+
+  final VoidCallback onAssignVehicle;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
+    final current = driver;
+    final vehicle = current?.assignedVehicle;
+
+    final (Color tint, Color line, IconData icon) = switch (current) {
+      null => (
+        scheme.surfaceContainerHighest,
+        scheme.outline,
+        Icons.directions_bus_outlined,
+      ),
+      _ when vehicle == null => (
+        scheme.errorContainer,
+        scheme.error,
+        Icons.report_problem_outlined,
+      ),
+      _ when !vehicle.isSchedulable || busyTrip != null => (
+        scheme.tertiaryContainer,
+        scheme.tertiary,
+        Icons.build_circle_outlined,
+      ),
+      _ => (
+        scheme.primaryContainer,
+        scheme.primary,
+        Icons.airport_shuttle_rounded,
+      ),
+    };
+
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.medium),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: line),
+              const SizedBox(width: AppSpacing.small),
+              Expanded(
+                child: Text(
+                  'السيارة المخصصة للسائق',
+                  style: text.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              Icon(Icons.lock_outline_rounded, size: 18, color: scheme.outline),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.medium),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(AppSpacing.medium),
+            decoration: BoxDecoration(
+              color: tint.withAlpha(55),
+              borderRadius: BorderRadius.circular(AppTokens.radius),
+              border: Border.all(color: line.withAlpha(80)),
+            ),
+            child: _body(context, current, vehicle, line),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _body(
+    BuildContext context,
+    TripDriverOption? current,
+    AssignedVehicle? vehicle,
+    Color line,
+  ) {
+    final scheme = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
+
+    if (current == null) {
+      return Text(
+        'اختر السائق أولاً وستظهر هنا السيارة المخصصة له تلقائياً.',
+        style: text.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
+      );
+    }
+
+    if (vehicle == null) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'هذا السائق غير مرتبط بسيارة حالياً',
+            style: text.titleSmall?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: line,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'لا يمكن إنشاء رحلة لسائق بدون سيارة مخصصة. اربطه بسيارة من إدارة '
+            'الأسطول ثم أعد فتح مخطط الرحلة.',
+            style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+          ),
+          const SizedBox(height: AppSpacing.small),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: FilledButton.tonalIcon(
+              onPressed: onAssignVehicle,
+              icon: const Icon(Icons.link_rounded),
+              label: const Text('تعيين سيارة للسائق'),
+            ),
+          ),
+        ],
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          vehicle.displayName,
+          style: text.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        const SizedBox(height: AppSpacing.small),
+        // Wrap, not Row: at 1.6x text scale a fixed row of three facts is exactly
+        // where a planner panel overflows.
+        Wrap(
+          spacing: AppSpacing.small,
+          runSpacing: AppSpacing.xSmall,
+          children: [
+            _VehicleFact(label: 'رقم اللوحة', value: vehicle.plateNumber),
+            _VehicleFact(label: 'عدد المقاعد', value: '${vehicle.capacity}'),
+            if (vehicle.vehicleCode.isNotEmpty)
+              _VehicleFact(label: 'كود المركبة', value: vehicle.vehicleCode),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.small),
+        if (!vehicle.isSchedulable)
+          _VehicleNotice(
+            icon: Icons.build_circle_outlined,
+            color: line,
+            message:
+                'هذه السيارة غير متاحة للتشغيل حالياً. أعدها إلى حالة "نشطة" من '
+                'إدارة الأسطول أو عيّن للسائق سيارة أخرى.',
+          )
+        else if (busyTrip != null)
+          _VehicleNotice(
+            icon: Icons.event_busy_outlined,
+            color: line,
+            message:
+                'هذه السيارة مرتبطة برحلة أخرى تتداخل مع هذا التوقيت. غيّر الموعد '
+                'أو اختر سائقاً آخر.',
+          )
+        else
+          _VehicleNotice(
+            icon: Icons.check_circle_outline_rounded,
+            color: line,
+            message:
+                'سيتم استخدام السيارة المخصصة للسائق تلقائياً، وسيتم بناء مقاعد '
+                'الرحلة من تخطيط مقاعدها.',
+          ),
+      ],
+    );
+  }
+}
+
+class _VehicleFact extends StatelessWidget {
+  const _VehicleFact({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.small,
+        vertical: AppSpacing.xSmall,
+      ),
+      decoration: BoxDecoration(
+        color: scheme.surface.withAlpha(160),
+        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: text.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
+          ),
+          Text(
+            value.isEmpty ? '-' : value,
+            style: text.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _VehicleNotice extends StatelessWidget {
+  const _VehicleNotice({
+    required this.icon,
+    required this.color,
+    required this.message,
+  });
+
+  final IconData icon;
+  final Color color;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 18, color: color),
+        const SizedBox(width: AppSpacing.xSmall),
+        Expanded(
+          child: Text(
+            message,
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: color),
+          ),
+        ),
+      ],
     );
   }
 }

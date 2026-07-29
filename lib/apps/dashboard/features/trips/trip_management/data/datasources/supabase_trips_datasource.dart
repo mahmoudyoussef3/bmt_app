@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:developer' as developer;
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:bmt_app/core/vehicles/vehicles.dart';
 import '../../../../../core/session/dashboard_session.dart';
+import '../../../trip_creation/domain/entities/trip_driver_option.dart';
 import '../../../shared/domain/entities/operation_trip.dart';
 import '../../../shared/domain/entities/trip_lifecycle.dart';
 import '../../../shared/domain/entities/trip_pricing.dart';
@@ -116,89 +116,32 @@ class SupabaseTripsDatasource implements TripsDatasource {
         });
       }
 
-      // 3. Build seats array from vehicle seat_configuration or default layout
-      final vehicleResponse = await _client
-          .from('vehicles')
-          .select('vehicle_type, seat_configuration')
-          .eq('id', input.vehicleId)
-          .single();
-
-      final config =
-          vehicleResponse['seat_configuration'] as Map<String, dynamic>?;
-      final List<Map<String, dynamic>> seats = [];
-
-      if (config != null && config['seats'] != null) {
-        for (final seatVal in config['seats'] as List) {
-          final s = seatVal as Map<String, dynamic>;
-          final type = s['seat_type'] as String? ?? 'passenger';
-          if (type != 'passenger') continue;
-          seats.add({
-            'seat_label': s['seat_number'] as String,
-            'seat_row': s['row'] as int? ?? 0,
-            'seat_column': s['column'] as int? ?? 0,
-          });
-        }
-      }
-
-      if (seats.isEmpty) {
-        // The vehicle has no stored configuration. Fall back to its type's
-        // cabin so a Coaster never gets a Hiace-shaped seat map, and only drop
-        // to a plain grid for types with no blueprint at all.
-        final type = VehicleTypeParser.fromDatabase(
-          vehicleResponse['vehicle_type'] as String?,
-        );
-        final blueprint = VehicleSeatLayouts.blueprintFor(type);
-
-        if (blueprint != null && blueprint.capacity == input.capacity) {
-          for (final seat in blueprint.seatDefinitions()) {
-            if (seat.isDriver) continue;
-            seats.add({
-              'seat_label': seat.label,
-              'seat_row': seat.row,
-              'seat_column': seat.column,
-            });
-          }
-        } else {
-          const colCount = 3;
-          var curRow = 1;
-          var seatNum = 1;
-          while (seatNum <= input.capacity) {
-            for (var col = 1; col <= colCount; col++) {
-              if (seatNum > input.capacity) break;
-              seats.add({
-                'seat_label': '$seatNum',
-                'seat_row': curRow,
-                'seat_column': col,
-              });
-              seatNum++;
-            }
-            curRow++;
-          }
-        }
-      }
-
-      // 4. Single atomic RPC call — all inserts in one transaction.
+      // 3. Single atomic RPC call — all inserts in one transaction.
       //    If any insert fails the entire trip creation rolls back.
       //
-      //    office_create_trip validates that the route, driver and vehicle all belong
-      //    to this office, and mints the trip code server-side. The code used to be
-      //    generated here as 'TR-<millis>', which collides once a second office exists
-      //    and is no longer unique per office.
+      //    No vehicle, no capacity and no seat array are sent. Since
+      //    20260731090000_driver_vehicle_authority the server resolves the vehicle from
+      //    the driver's active assignment and derives the trip's capacity and seat map
+      //    from that vehicle. This method used to assemble a seat array here — from the
+      //    vehicle's stored configuration, or from a blueprint, or from a bare 3-wide
+      //    grid — and post it alongside a vehicle id the operator had picked
+      //    independently of the driver. Both were the client deciding things only the
+      //    fleet can know.
+      //
+      //    office_create_trip also validates that the route and driver belong to this
+      //    office and mints the trip code server-side.
       final rpcResult = await _client.rpc(
         'office_create_trip',
         params: {
           'p_route_id': input.routeId,
           'p_driver_id': input.driverId,
-          'p_vehicle_id': input.vehicleId,
           'p_trip_date': input.date,
           'p_departure_time': input.departure,
           'p_arrival_time': input.arrival,
-          'p_capacity': input.capacity,
           'p_ticket_price': input.ticketPrice,
           'p_currency': input.currency,
           'p_notes': ['تم إنشاء الرحلة ونمذجة المحطات والمقاعد تلقائياً'],
           'p_route_points': routePoints,
-          'p_seats': seats,
         },
       );
 
@@ -604,39 +547,100 @@ class SupabaseTripsDatasource implements TripsDatasource {
     }
   }
 
-  // Helper for driver and vehicle validation in wizard
+  /// Schedulable drivers, each carrying the vehicle they operate.
+  ///
+  /// One round trip, with the assignment and its vehicle embedded. The planner used to
+  /// make two — the whole driver list and the whole vehicle list — and then let the
+  /// operator combine them freely, which is the pairing bug this shape removes. Drivers
+  /// with no assignment are still returned: the planner has to be able to show them and
+  /// say *why* they cannot be scheduled, rather than hiding them and leaving the
+  /// operator wondering where their driver went.
   @override
-  Future<List<Map<String, dynamic>>> fetchActiveDrivers() async {
+  Future<List<TripDriverOption>> fetchActiveDrivers() async {
     try {
       final response = await _client
           .from('drivers')
-          .select('id, full_name, phone, status, license_expiry_date')
+          .select('''
+            id, full_name, phone,
+            assignments(
+              status,
+              vehicles(id, plate_number, vehicle_code, vehicle_type, brand, model,
+                       capacity, status)
+            )
+          ''')
           .eq('office_id', _session.officeId)
           .eq('status', 'active')
           .gte(
             'license_expiry_date',
             DateTime.now().toIso8601String().split('T').first,
-          );
-      return List<Map<String, dynamic>>.from(response);
+          )
+          .order('full_name');
+
+      return (response as List)
+          .map((json) => _driverOption(json as Map<String, dynamic>))
+          .toList();
     } catch (e) {
       throw _handleError(e);
     }
   }
 
+  /// The one driver's pairing, for the pre-flight check on submit. Same shape as a row
+  /// of [fetchActiveDrivers], re-read at submit time because the planner may have been
+  /// open long enough for the fleet to have moved underneath it.
   @override
-  Future<List<Map<String, dynamic>>> fetchActiveVehicles() async {
+  Future<TripDriverOption?> fetchDriverAssignment(String driverId) async {
     try {
       final response = await _client
-          .from('vehicles')
-          .select(
-            'id, plate_number, vehicle_code, brand, model, capacity, vehicle_type, status, seat_configuration',
-          )
+          .from('drivers')
+          .select('''
+            id, full_name, phone, status,
+            assignments(
+              status,
+              vehicles(id, plate_number, vehicle_code, vehicle_type, brand, model,
+                       capacity, status)
+            )
+          ''')
+          .eq('id', driverId)
           .eq('office_id', _session.officeId)
-          .eq('status', 'active');
-      return List<Map<String, dynamic>>.from(response);
+          .maybeSingle();
+
+      if (response == null) return null;
+      return _driverOption(response);
     } catch (e) {
       throw _handleError(e);
     }
+  }
+
+  /// `assignments` is filtered in Dart rather than in the query: PostgREST's filter on
+  /// an embedded table drops the *parent* row when nothing matches, which would silently
+  /// hide every driver without a bus — exactly the drivers the planner needs to name.
+  TripDriverOption _driverOption(Map<String, dynamic> json) {
+    final assignments = (json['assignments'] as List? ?? const [])
+        .cast<Map<String, dynamic>>();
+
+    final active = assignments
+        .where((a) => a['status'] == 'active' && a['vehicles'] != null)
+        .firstOrNull;
+
+    final vehicle = active?['vehicles'] as Map<String, dynamic>?;
+
+    return TripDriverOption(
+      id: json['id'] as String,
+      name: json['full_name'] as String? ?? '',
+      phone: json['phone'] as String? ?? '',
+      assignedVehicle: vehicle == null
+          ? null
+          : AssignedVehicle(
+              id: vehicle['id'] as String,
+              plateNumber: vehicle['plate_number'] as String? ?? '',
+              vehicleCode: vehicle['vehicle_code'] as String? ?? '',
+              vehicleType: vehicle['vehicle_type'] as String? ?? '',
+              brand: vehicle['brand'] as String? ?? '',
+              model: vehicle['model'] as String? ?? '',
+              capacity: vehicle['capacity'] as int? ?? 0,
+              status: vehicle['status'] as String? ?? '',
+            ),
+    );
   }
 
   @override
@@ -648,48 +652,6 @@ class SupabaseTripsDatasource implements TripsDatasource {
           .eq('office_id', _session.officeId)
           .eq('status', 'active');
       return List<Map<String, dynamic>>.from(response);
-    } catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  @override
-  Future<bool> checkDuplicateTrip(
-    String vehicleId,
-    String date,
-    String departureTime,
-  ) async {
-    try {
-      final response = await _client
-          .from('operation_trips')
-          .select('id')
-          .eq('office_id', _session.officeId)
-          .eq('vehicle_id', vehicleId)
-          .eq('trip_date', date)
-          .eq('departure_time', departureTime)
-          .not('status', 'in', '(completed,cancelled)');
-      return (response as List).isNotEmpty;
-    } catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  @override
-  Future<bool> checkDriverTripConflict(
-    String driverId,
-    String date,
-    String departureTime,
-  ) async {
-    try {
-      final response = await _client
-          .from('operation_trips')
-          .select('id')
-          .eq('office_id', _session.officeId)
-          .eq('driver_id', driverId)
-          .eq('trip_date', date)
-          .eq('departure_time', departureTime)
-          .not('status', 'in', '(completed,cancelled)');
-      return (response as List).isNotEmpty;
     } catch (e) {
       throw _handleError(e);
     }
@@ -735,34 +697,6 @@ class SupabaseTripsDatasource implements TripsDatasource {
   }
 
   @override
-  Future<String> getDriverStatus(String driverId) async {
-    try {
-      final response = await _client
-          .from('drivers')
-          .select('status')
-          .eq('id', driverId)
-          .single();
-      return response['status'] as String? ?? 'suspended';
-    } catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  @override
-  Future<String> getVehicleStatus(String vehicleId) async {
-    try {
-      final response = await _client
-          .from('vehicles')
-          .select('status')
-          .eq('id', vehicleId)
-          .single();
-      return response['status'] as String? ?? 'suspended';
-    } catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  @override
   Future<String> getRouteStatus(String routeId) async {
     try {
       final response = await _client
@@ -796,7 +730,11 @@ class SupabaseTripsDatasource implements TripsDatasource {
           callback: notify,
         );
 
-    for (final table in const ['trip_seats', 'trip_passengers', 'trip_events']) {
+    for (final table in const [
+      'trip_seats',
+      'trip_passengers',
+      'trip_events',
+    ]) {
       channel = channel.onPostgresChanges(
         event: PostgresChangeEvent.all,
         schema: 'public',
@@ -831,7 +769,11 @@ class SupabaseTripsDatasource implements TripsDatasource {
           callback: notify,
         );
 
-    for (final table in const ['trip_seats', 'trip_passengers', 'trip_events']) {
+    for (final table in const [
+      'trip_seats',
+      'trip_passengers',
+      'trip_events',
+    ]) {
       channel = channel.onPostgresChanges(
         event: PostgresChangeEvent.all,
         schema: 'public',
@@ -866,9 +808,10 @@ class SupabaseTripsDatasource implements TripsDatasource {
   /// (no pricing configured, say) read as an unexplained failure.
   String? _translateServerError(String message) {
     if (message.contains('trip_not_publishable:')) {
-      final code = message.split('trip_not_publishable:').last.split(
-        RegExp(r'[^a-z_]'),
-      )[0];
+      final code = message
+          .split('trip_not_publishable:')
+          .last
+          .split(RegExp(r'[^a-z_]'))[0];
       final blocker = TripPublishBlocker.fromCode(code);
       return 'تعذر فتح الحجز: ${blocker?.message ?? 'الرحلة غير جاهزة للنشر.'}';
     }

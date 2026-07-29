@@ -283,8 +283,11 @@ released seat can still look "held" to any reader that inspects those columns.
   to `transport_packages.price` — the **catalogue** price, not the operator's fare. The office
   sells seats at a price it never set.
 - **a past `trip_date`** — invisible to riders, permanently "open" on the dashboard.
-- **no driver or no vehicle** — both FKs are nullable and `office_create_trip` treats them as
-  optional.
+- **no driver or no vehicle** — both FKs are nullable and `office_create_trip` treated them as
+  optional. *Closed by `20260731090000_driver_vehicle_authority`*: the RPC now requires a driver
+  (`driver_required`), derives the vehicle from that driver's active assignment, and refuses a
+  driver who has none (`driver_has_no_vehicle`). A trip with a driver and no vehicle can no
+  longer be written to `operation_trips` at all.
 - **no seats** — nothing requires `trip_seats` to be non-empty.
 
 ### 3.5 — S2 — The dashboard offers an operation that can never succeed

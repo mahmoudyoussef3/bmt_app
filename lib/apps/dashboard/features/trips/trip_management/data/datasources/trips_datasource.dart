@@ -3,6 +3,7 @@ import '../../../shared/domain/entities/trip_lifecycle.dart';
 import '../../../shared/domain/entities/trip_pricing.dart';
 import '../../../shared/data/models/operation_trip_model.dart';
 import '../../../shared/data/models/trip_pricing_model.dart';
+import '../../../trip_creation/domain/entities/trip_driver_option.dart';
 
 abstract class TripsDatasource {
   Future<List<OperationTripModel>> fetchTrips();
@@ -49,19 +50,18 @@ abstract class TripsDatasource {
     bool isActive,
   );
   Future<List<TripEventModel>> fetchTripEvents(String tripId);
-  Future<List<Map<String, dynamic>>> fetchActiveDrivers();
-  Future<List<Map<String, dynamic>>> fetchActiveVehicles();
+
+  /// Schedulable drivers, each carrying the vehicle they are assigned to. There is no
+  /// matching `fetchActiveVehicles`: the planner does not choose a vehicle, so fetching
+  /// the fleet to offer it was both a wasted round trip and the source of the
+  /// driver/vehicle mismatches 20260731090000_driver_vehicle_authority closed.
+  Future<List<TripDriverOption>> fetchActiveDrivers();
+
+  /// One driver's current pairing, re-read at submit time. Null when the driver is not
+  /// this office's.
+  Future<TripDriverOption?> fetchDriverAssignment(String driverId);
+
   Future<List<Map<String, dynamic>>> fetchActiveRoutes();
-  Future<bool> checkDuplicateTrip(
-    String vehicleId,
-    String date,
-    String departureTime,
-  );
-  Future<bool> checkDriverTripConflict(
-    String driverId,
-    String date,
-    String departureTime,
-  );
 
   /// Rows (`driver_id`, `vehicle_id`, `trip_code`, `trip_date`, `departure_time`,
   /// `arrival_time`) of every non-cancelled trip whose `service_window` overlaps the
@@ -74,8 +74,10 @@ abstract class TripsDatasource {
     required String departureTime,
     required String arrivalTime,
   });
-  Future<String> getDriverStatus(String driverId);
-  Future<String> getVehicleStatus(String vehicleId);
+
+  /// Route lifecycle, checked before scheduling. There is no `getDriverStatus` /
+  /// `getVehicleStatus` pair any more: [fetchDriverAssignment] answers both in one
+  /// round trip, and the server refuses an inactive driver or vehicle regardless.
   Future<String> getRouteStatus(String routeId);
   Stream<void> watchTripsChanges();
   Stream<void> watchTripChanges(String tripId);

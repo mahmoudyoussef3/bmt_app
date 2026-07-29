@@ -311,17 +311,22 @@ class TripEvent {
   });
 }
 
+/// What the operator actually chooses when planning a trip.
+///
+/// There is deliberately no vehicle and no capacity here. The office pairs each driver
+/// with one bus, so naming the driver names the bus; the server resolves it from that
+/// driver's active assignment and derives the trip's capacity and seat map from it.
+/// Letting the planner send a vehicle of its own is how a driver ends up dispatched to
+/// a bus another driver is assigned to — which is what six of the ten trips on file
+/// before 20260731090000_driver_vehicle_authority actually did.
 class CreateTripInput {
   final String routeId;
   final String route;
   final String driverId;
   final String driver;
-  final String vehicleId;
-  final String vehicle;
   final String date;
   final String departure;
   final String arrival;
-  final int capacity;
   final double ticketPrice;
 
   /// Package tier totals configured alongside [ticketPrice] in the planner's
@@ -339,12 +344,9 @@ class CreateTripInput {
     required this.route,
     required this.driverId,
     required this.driver,
-    required this.vehicleId,
-    required this.vehicle,
     required this.date,
     required this.departure,
     this.arrival = '',
-    required this.capacity,
     this.ticketPrice = 0,
     this.packageTierPrices = const {},
     this.currency = 'ج.م',

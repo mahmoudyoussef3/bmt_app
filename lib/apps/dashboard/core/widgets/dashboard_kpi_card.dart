@@ -66,11 +66,18 @@ class DashboardKpiCard extends StatelessWidget {
             ),
           ),
           const SizedBox(width: AppSpacing.small),
-          Text(
-            value,
-            style: Theme.of(
-              context,
-            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+          // Flexible + ellipsis: most values are short numbers, but some
+          // callers (e.g. marketplace listing status) pass a full phrase —
+          // it must shrink instead of overflowing the row at narrower widths.
+          Flexible(
+            child: Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
