@@ -274,11 +274,25 @@ Defines the transit network: routes and their ordered stations.
 **Lifecycle** — `OperationRouteStatus`: `draft` / `active` / `paused` / `archived`.
 
 Route operations: create, update, duplicate, pause, archive, delete.
-Station operations: add, update, delete, **reorder** (drag to re-sequence).
 
-Includes a geo route form for plotting the path, a route timeline view, an analytics
-strip, and filters on status, city and stop count. Tables: `operation_routes`,
-`route_stations`.
+**Route builder** (`presentation/widgets/route_builder/`) — the single editor for a
+route's shape, used for both creating and editing. A map pane sits beside the stop list
+at all times; the operator resolves an origin and a destination (place search, or arming
+the map and tapping it) and everything else is derived: the road distance, the total
+duration, each stop's arrival/departure offsets, the route name (`origin - destination`)
+and a free `RT-nn` code. Intermediate stops are optional, drag-ordered, and each carries
+its own boarding rule (`صعود ونزول` / `صعود فقط` / `نزول فقط`) and dwell minutes.
+Recalculation is automatic and debounced — there is no "calculate" button — and a
+rejected save is reported inside the builder so the draft survives it.
+
+`RouteDraft` (`domain/entities/`) holds the rules: what blocks a save, how a draft maps
+to `OperationRoute`, how a saved route maps back. `RouteBuilderCubit` owns one draft, the
+active stop, and the geo calculation.
+
+The route detail page renders the stops **read-only** and sends every change to the
+builder. Also: an analytics strip and filters on status, city and stop count. Tables:
+`operation_routes`, `route_stations` (the update path syncs stations, not just the route
+row).
 
 ### 2.5 إدارة الأسطول — Fleet
 `features/fleet/` · permission: `fleet` · **owner only**

@@ -14,6 +14,9 @@ class MapControlCluster extends StatelessWidget {
     required this.onZoomOut,
     this.onToggleFollow,
     this.followActive = false,
+    this.recenterTooltip = 'Fit route',
+    this.zoomInTooltip = 'Zoom in',
+    this.zoomOutTooltip = 'Zoom out',
   });
 
   final VoidCallback onRecenter;
@@ -23,6 +26,12 @@ class MapControlCluster extends StatelessWidget {
   /// When provided, renders a follow-vehicle toggle above the other controls.
   final VoidCallback? onToggleFollow;
   final bool followActive;
+
+  /// Tooltips are overridable so the Arabic dashboard does not surface English
+  /// map chrome; the client and captain apps keep the defaults.
+  final String recenterTooltip;
+  final String zoomInTooltip;
+  final String zoomOutTooltip;
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +59,7 @@ class MapControlCluster extends StatelessWidget {
           children: [
             _ControlButton(
               icon: Icons.center_focus_strong_rounded,
-              tooltip: 'Fit route',
+              tooltip: recenterTooltip,
               onTap: onRecenter,
             ),
           ],
@@ -60,7 +69,7 @@ class MapControlCluster extends StatelessWidget {
           children: [
             _ControlButton(
               icon: Icons.add_rounded,
-              tooltip: 'Zoom in',
+              tooltip: zoomInTooltip,
               onTap: onZoomIn,
             ),
             Container(
@@ -70,7 +79,7 @@ class MapControlCluster extends StatelessWidget {
             ),
             _ControlButton(
               icon: Icons.remove_rounded,
-              tooltip: 'Zoom out',
+              tooltip: zoomOutTooltip,
               onTap: onZoomOut,
             ),
           ],

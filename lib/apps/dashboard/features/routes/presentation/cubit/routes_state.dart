@@ -1,6 +1,12 @@
 import '../../domain/entities/operation_route.dart';
 
-enum RoutesView { list, details, form, success }
+/// The routes module has three surfaces: the board of routes, one route's
+/// operations detail, and the builder that creates or edits a route.
+///
+/// There used to be a fourth — a full-page "route created" takeover. Creating a
+/// route now lands on that route's detail page with a confirmation toast, which
+/// is where the operator's next action (add trips, review stops) actually is.
+enum RoutesView { list, details, form }
 
 enum StopsCountFilter {
   all('كل المحطات'),
@@ -35,7 +41,17 @@ class RoutesLoaded extends RoutesState {
   final OperationRouteStatus? statusFilter;
   final String cityFilter;
   final StopsCountFilter stopsFilter;
-  final OperationRoute? successRoute;
+
+  /// A write is in flight (saving the builder, archiving, deleting).
+  final bool saving;
+
+  /// A failed *action*. Kept beside the loaded data instead of replacing the
+  /// screen with an error state, because dropping the builder would throw away
+  /// everything the operator just entered.
+  final String actionError;
+
+  /// One-shot confirmation for the UI to surface as a toast.
+  final String flashMessage;
 
   const RoutesLoaded({
     required this.routes,
@@ -46,7 +62,9 @@ class RoutesLoaded extends RoutesState {
     this.statusFilter,
     this.cityFilter = 'الكل',
     this.stopsFilter = StopsCountFilter.all,
-    this.successRoute,
+    this.saving = false,
+    this.actionError = '',
+    this.flashMessage = '',
   });
 
   OperationRoute get selectedRoute {
@@ -68,10 +86,15 @@ class RoutesLoaded extends RoutesState {
     return match.first;
   }
 
+  /// Codes already taken, so the builder can reserve the next free one.
+  List<String> get routeCodes =>
+      routes.map((route) => route.routeCode).where((code) => code.isNotEmpty).toList();
+
   List<String> get cityOptions {
     final cities =
         routes
             .expand((route) => [route.startCity, route.endCity])
+            .where((city) => city.isNotEmpty)
             .toSet()
             .toList()
           ..sort();
@@ -115,8 +138,9 @@ class RoutesLoaded extends RoutesState {
     bool clearStatusFilter = false,
     String? cityFilter,
     StopsCountFilter? stopsFilter,
-    OperationRoute? successRoute,
-    bool clearSuccessRoute = false,
+    bool? saving,
+    String? actionError,
+    String? flashMessage,
   }) {
     return RoutesLoaded(
       routes: routes ?? this.routes,
@@ -131,9 +155,11 @@ class RoutesLoaded extends RoutesState {
           : statusFilter ?? this.statusFilter,
       cityFilter: cityFilter ?? this.cityFilter,
       stopsFilter: stopsFilter ?? this.stopsFilter,
-      successRoute: clearSuccessRoute
-          ? null
-          : successRoute ?? this.successRoute,
+      saving: saving ?? this.saving,
+      // Transient by design: any state change that does not explicitly restate
+      // them clears them, so a stale error can never outlive the action.
+      actionError: actionError ?? '',
+      flashMessage: flashMessage ?? '',
     );
   }
 }

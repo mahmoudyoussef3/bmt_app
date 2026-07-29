@@ -112,6 +112,11 @@ class SupabaseRoutesDatasource implements RoutesDatasource {
 
       await _client.from('operation_routes').update(payload).eq('id', route.id);
 
+      // Stations are part of the route, not a separate save. This used to write
+      // only the `operation_routes` row, so every stop the operator added,
+      // moved, renamed or removed in the builder was silently discarded.
+      await _syncStations(route.id, route.stations);
+
       return _assembleRoute(route.id);
     } on PostgrestException catch (e) {
       throw Exception(_formatPostgrestError(e));
@@ -261,6 +266,63 @@ class SupabaseRoutesDatasource implements RoutesDatasource {
     return data
         .map<RouteStationModel>((json) => RouteStationModel.fromJson(json))
         .toList();
+  }
+
+  /// Makes `route_stations` match [stations] exactly: rows the operator dropped
+  /// are deleted, new ones inserted, the rest updated in their new order.
+  ///
+  /// Rows that did not change are skipped, so status-only writes (pause,
+  /// archive) — which pass the route's full station list along — don't rewrite
+  /// every stop.
+  Future<void> _syncStations(String routeId, List<RouteStation> stations) async {
+    final existing = await _fetchStationsForRoute(routeId);
+    final keptIds = stations
+        .map((station) => station.id)
+        .where((id) => id.isNotEmpty)
+        .toSet();
+
+    final removedIds = existing
+        .map((station) => station.id)
+        .where((id) => !keptIds.contains(id))
+        .toList();
+    if (removedIds.isNotEmpty) {
+      await _client.from('route_stations').delete().inFilter('id', removedIds);
+    }
+
+    final existingById = {for (final station in existing) station.id: station};
+
+    for (final entry in stations.indexed) {
+      final (index, station) = entry;
+      final model = RouteStationModel.fromEntity(
+        station.copyWith(order: index + 1),
+      );
+      if (station.id.isEmpty) {
+        await _client
+            .from('route_stations')
+            .insert(model.toJson(routeId: routeId));
+        continue;
+      }
+      final current = existingById[station.id];
+      if (current != null && _sameStation(current, model)) continue;
+      await _client
+          .from('route_stations')
+          .update(model.toJson(routeId: routeId))
+          .eq('id', station.id);
+    }
+  }
+
+  static bool _sameStation(RouteStation a, RouteStation b) {
+    return a.name == b.name &&
+        a.area == b.area &&
+        a.arrivalOffset == b.arrivalOffset &&
+        a.departureOffset == b.departureOffset &&
+        a.locationDescription == b.locationDescription &&
+        a.notes == b.notes &&
+        a.latitude == b.latitude &&
+        a.longitude == b.longitude &&
+        a.pickupAllowed == b.pickupAllowed &&
+        a.dropoffAllowed == b.dropoffAllowed &&
+        a.order == b.order;
   }
 
   Future<void> _normalizeStationOrder(String routeId) async {

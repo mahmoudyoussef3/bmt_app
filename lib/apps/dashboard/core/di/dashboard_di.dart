@@ -115,6 +115,7 @@ import '../../features/routes/domain/usecases/update_route_station_usecase.dart'
 import '../../features/routes/domain/usecases/update_route_usecase.dart';
 import '../../features/routes/domain/usecases/search_places_usecase.dart';
 import '../../features/routes/domain/usecases/get_route_geometry_usecase.dart';
+import '../../features/routes/presentation/cubit/route_builder_cubit.dart';
 import '../../features/routes/presentation/cubit/routes_cubit.dart';
 import 'package:bmt_app/core/geo/geo_service.dart';
 import 'package:bmt_app/core/geo/ors_geo_service.dart';
@@ -745,6 +746,14 @@ void registerDashboardDependencies() {
         deleteStation: dashboardDi<DeleteRouteStationUseCase>(),
         reorderStations: dashboardDi<ReorderRouteStationsUseCase>(),
       ),
+    );
+  }
+
+  // One per builder session: the cubit holds an in-progress draft, so a stale
+  // one must never be handed to the next route the operator opens.
+  if (!dashboardDi.isRegistered<RouteBuilderCubit>()) {
+    dashboardDi.registerFactory(
+      () => RouteBuilderCubit(dashboardDi<GetRouteGeometryUseCase>()),
     );
   }
 

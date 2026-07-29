@@ -60,37 +60,19 @@ class RoutesCubit extends Cubit<RoutesState> {
   void showBuilder() {
     final current = state;
     if (current is! RoutesLoaded) return;
-    emit(
-      current.copyWith(
-        view: RoutesView.form,
-        clearEditingRoute: true,
-        clearSuccessRoute: true,
-      ),
-    );
+    emit(current.copyWith(view: RoutesView.form, clearEditingRoute: true));
   }
 
   void showEditRoute(OperationRoute route) {
     final current = state;
     if (current is! RoutesLoaded) return;
-    emit(
-      current.copyWith(
-        view: RoutesView.form,
-        editingRoute: route,
-        clearSuccessRoute: true,
-      ),
-    );
+    emit(current.copyWith(view: RoutesView.form, editingRoute: route));
   }
 
   void showOperations() {
     final current = state;
     if (current is! RoutesLoaded) return;
-    emit(
-      current.copyWith(
-        view: RoutesView.list,
-        clearEditingRoute: true,
-        clearSuccessRoute: true,
-      ),
-    );
+    emit(current.copyWith(view: RoutesView.list, clearEditingRoute: true));
   }
 
   void showDetails(OperationRoute route) {
@@ -101,7 +83,6 @@ class RoutesCubit extends Cubit<RoutesState> {
         selectedRouteId: route.id,
         view: RoutesView.details,
         clearEditingRoute: true,
-        clearSuccessRoute: true,
       ),
     );
   }
@@ -136,41 +117,47 @@ class RoutesCubit extends Cubit<RoutesState> {
     emit(current.copyWith(stopsFilter: filter, view: RoutesView.list));
   }
 
-  Future<void> createRoute(OperationRoute route) async {
+  /// Creates or updates the route the builder produced.
+  ///
+  /// Success lands on the route's detail page with a confirmation; failure
+  /// keeps the builder on screen and reports the reason next to the save
+  /// button. A rejected save used to emit [RoutesError], which replaced the
+  /// whole module with an error page and discarded the draft.
+  Future<void> saveRoute(OperationRoute route) async {
     final current = state;
-    if (current is! RoutesLoaded) return;
+    if (current is! RoutesLoaded || current.saving) return;
+    emit(current.copyWith(saving: true));
+    final creating = route.id.isEmpty;
     try {
-      final created = await _createRoute(route);
+      final saved = creating
+          ? await _createRoute(route)
+          : await _updateRoute(route);
+      final routes = creating
+          ? [saved, ...current.routes]
+          : current.routes
+                .map((item) => item.id == saved.id ? saved : item)
+                .toList();
       emit(
         current.copyWith(
-          routes: [created, ...current.routes],
-          selectedRouteId: created.id,
-          view: RoutesView.success,
-          successRoute: created,
+          routes: routes,
+          selectedRouteId: saved.id,
+          view: RoutesView.details,
           clearEditingRoute: true,
+          saving: false,
+          flashMessage: creating
+              ? 'تم إنشاء مسار "${saved.name}"'
+              : 'تم حفظ تعديلات "${saved.name}"',
         ),
       );
     } catch (error) {
-      emit(RoutesError(error.toString()));
-    }
-  }
-
-  Future<void> updateRoute(OperationRoute route) async {
-    final current = state;
-    if (current is! RoutesLoaded) return;
-    try {
-      final updated = await _updateRoute(route);
-      _emitUpdatedRoute(current, updated, view: RoutesView.details);
-    } catch (error) {
-      emit(RoutesError(error.toString()));
-    }
-  }
-
-  Future<void> saveRoute(OperationRoute route) async {
-    if (route.id.isEmpty) {
-      await createRoute(route);
-    } else {
-      await updateRoute(route);
+      emit(
+        current.copyWith(
+          saving: false,
+          view: RoutesView.form,
+          editingRoute: current.editingRoute,
+          actionError: _friendlyError(error.toString()),
+        ),
+      );
     }
   }
 
@@ -195,29 +182,34 @@ class RoutesCubit extends Cubit<RoutesState> {
           selectedRouteId: created.id,
           view: RoutesView.details,
           clearEditingRoute: true,
+          flashMessage: 'تم نسخ المسار',
         ),
       );
     } catch (error) {
-      emit(RoutesError(error.toString()));
+      emit(current.copyWith(actionError: _friendlyError(error.toString())));
     }
   }
 
   Future<void> archiveRoute(OperationRoute route) async {
-    final current = state;
-    if (current is! RoutesLoaded) return;
-    try {
-      final updated = await _updateRoute(
-        route.copyWith(status: OperationRouteStatus.archived),
-      );
-      _emitUpdatedRoute(current, updated, view: RoutesView.list);
-    } catch (error) {
-      emit(RoutesError(error.toString()));
-    }
+    await _mutate(
+      () => _updateRoute(route.copyWith(status: OperationRouteStatus.archived)),
+      view: RoutesView.list,
+      flashMessage: 'تمت أرشفة "${route.name}"',
+    );
+  }
+
+  Future<void> pauseRoute(OperationRoute route) async {
+    await _mutate(
+      () => _updateRoute(route.copyWith(status: OperationRouteStatus.paused)),
+      view: RoutesView.list,
+      flashMessage: 'تم إيقاف "${route.name}" مؤقتاً',
+    );
   }
 
   Future<void> deleteRoute(OperationRoute route) async {
     final current = state;
     if (current is! RoutesLoaded) return;
+    emit(current.copyWith(saving: true));
     try {
       await _deleteRoute(route.id);
       final routes = current.routes
@@ -229,91 +221,106 @@ class RoutesCubit extends Cubit<RoutesState> {
           selectedRouteId: routes.isNotEmpty ? routes.first.id : '',
           view: RoutesView.list,
           clearEditingRoute: true,
-          clearSuccessRoute: true,
+          saving: false,
+          flashMessage: 'تم حذف "${route.name}"',
         ),
       );
     } catch (error) {
-      emit(RoutesError(error.toString()));
-    }
-  }
-
-  Future<void> pauseRoute(OperationRoute route) async {
-    final current = state;
-    if (current is! RoutesLoaded) return;
-    try {
-      final updated = await _updateRoute(
-        route.copyWith(status: OperationRouteStatus.paused),
+      emit(
+        current.copyWith(
+          saving: false,
+          actionError: _friendlyError(error.toString()),
+        ),
       );
-      _emitUpdatedRoute(current, updated, view: RoutesView.list);
-    } catch (error) {
-      emit(RoutesError(error.toString()));
     }
   }
 
   Future<void> addStation(RouteStation station) async {
     final current = state;
     if (current is! RoutesLoaded) return;
-    try {
-      final updated = await _addStation(current.selectedRoute.id, station);
-      _emitUpdatedRoute(current, updated);
-    } catch (error) {
-      emit(RoutesError(error.toString()));
-    }
+    await _mutate(
+      () => _addStation(current.selectedRoute.id, station),
+      flashMessage: 'تمت إضافة المحطة',
+    );
   }
 
   Future<void> updateStation(RouteStation station) async {
     final current = state;
     if (current is! RoutesLoaded) return;
-    try {
-      final updated = await _updateStation(current.selectedRoute.id, station);
-      _emitUpdatedRoute(current, updated);
-    } catch (error) {
-      emit(RoutesError(error.toString()));
-    }
+    await _mutate(
+      () => _updateStation(current.selectedRoute.id, station),
+      flashMessage: 'تم تحديث المحطة',
+    );
   }
 
   Future<void> deleteStation(RouteStation station) async {
     final current = state;
     if (current is! RoutesLoaded) return;
-    try {
-      await _deleteStation(current.selectedRoute.id, station.id);
-      final routes = await _getRoutes();
-      emit(current.copyWith(routes: routes));
-    } catch (error) {
-      emit(RoutesError(error.toString()));
-    }
+    await _mutate(
+      () async {
+        await _deleteStation(current.selectedRoute.id, station.id);
+        final routes = await _getRoutes();
+        return routes.firstWhere(
+          (route) => route.id == current.selectedRoute.id,
+          orElse: () => current.selectedRoute,
+        );
+      },
+      flashMessage: 'تم حذف المحطة',
+    );
   }
 
   Future<void> reorderStations(int oldIndex, int newIndex) async {
     final current = state;
     if (current is! RoutesLoaded) return;
+    await _mutate(
+      () => _reorderStations(current.selectedRoute.id, oldIndex, newIndex),
+    );
+  }
+
+  /// Runs a write that returns the updated route, swapping it into the list.
+  /// Failure surfaces beside the data instead of replacing it.
+  Future<void> _mutate(
+    Future<OperationRoute> Function() action, {
+    RoutesView? view,
+    String flashMessage = '',
+  }) async {
+    final current = state;
+    if (current is! RoutesLoaded || current.saving) return;
+    emit(current.copyWith(saving: true));
     try {
-      final updated = await _reorderStations(
-        current.selectedRoute.id,
-        oldIndex,
-        newIndex,
+      final updated = await action();
+      emit(
+        current.copyWith(
+          routes: current.routes
+              .map((route) => route.id == updated.id ? updated : route)
+              .toList(),
+          selectedRouteId: updated.id,
+          view: view,
+          saving: false,
+          flashMessage: flashMessage,
+        ),
       );
-      _emitUpdatedRoute(current, updated);
     } catch (error) {
-      emit(RoutesError(error.toString()));
+      emit(
+        current.copyWith(
+          saving: false,
+          actionError: _friendlyError(error.toString()),
+        ),
+      );
     }
   }
 
-  void _emitUpdatedRoute(
-    RoutesLoaded current,
-    OperationRoute updated, {
-    RoutesView? view,
-  }) {
-    final routes = current.routes
-        .map((route) => route.id == updated.id ? updated : route)
-        .toList();
-    emit(
-      current.copyWith(
-        routes: routes,
-        selectedRouteId: updated.id,
-        view: view,
-        clearSuccessRoute: true,
-      ),
-    );
+  /// Turns a database rejection into something the operator can act on.
+  static String _friendlyError(String raw) {
+    if (raw.contains('duplicate key') && raw.contains('route_code')) {
+      return 'كود المسار مستخدم بالفعل في مكتبك. غيّر الكود ثم احفظ مرة أخرى.';
+    }
+    if (raw.contains('violates foreign key') && raw.contains('route')) {
+      return 'لا يمكن حذف هذا المسار لارتباطه برحلات محفوظة. أرشفه بدلاً من حذفه.';
+    }
+    if (raw.contains('row-level security') || raw.contains('permission denied')) {
+      return 'ليس لديك صلاحية تعديل مسارات هذا المكتب.';
+    }
+    return raw.replaceFirst('Exception: ', '');
   }
 }

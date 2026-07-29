@@ -232,19 +232,25 @@ with zoom, then approve / reject / request review / add an internal note.
 
 ```mermaid
 graph TD
-    A[المسارات] --> B[Create route: name, start/end city]
-    B --> C[Add stations in order]
-    C --> D[Set the geo path]
-    D --> E{Status}
-    E -->|draft| F[Not yet sellable]
-    E -->|active| G[Available for trip scheduling]
-    G --> H[paused — temporarily withdrawn]
+    A[المسارات] --> B[مسار جديد — route builder]
+    B --> C[Origin + destination: search, or arm the map and tap]
+    C --> D[Distance, duration, name and code derive themselves]
+    D --> E[Optional stops on the way: order, boarding rule, dwell]
+    E --> F{Status}
+    F -->|active| G[Available for trip scheduling]
+    F -->|paused| H[Temporarily withdrawn]
     G --> I[archived — retired]
 ```
 
-Stations can be added, edited, deleted and **reordered by dragging**. An existing route
-can be **duplicated** as the basis for a similar one. A route must exist before any trip
-can be scheduled against it.
+A route is two places; everything else is optional refinement. The builder is the **only**
+editor for a route's shape — the detail page shows the stops read-only and its
+"تعديل المحطات" button opens the same builder, so there is one place where order,
+position, boarding rules and dwell times are set. Saving an edited route rewrites its
+stations (added, moved, renamed, removed), not just the route row.
+
+An existing route can be **duplicated** as the basis for a similar one, and
+**عكس الاتجاه** flips a draft end-for-end to build the return leg. A route must exist
+before any trip can be scheduled against it.
 
 ### 3.2 Fleet readiness
 

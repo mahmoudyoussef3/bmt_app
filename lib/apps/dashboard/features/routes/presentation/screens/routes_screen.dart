@@ -3,24 +3,26 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 
-import 'package:bmt_app/apps/dashboard/core/di/dashboard_di.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_kpi_card.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
-import 'package:bmt_app/apps/dashboard/features/fleet/shared/core/utils/fleet_input_formatters.dart';
-import 'package:bmt_app/apps/dashboard/features/routes/domain/usecases/search_places_usecase.dart';
-import 'package:bmt_app/core/geo/geo_models.dart';
+import 'package:bmt_app/core/maps/map_route_stop.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
+import 'package:bmt_app/core/widgets/app_snackbar.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
 import 'package:bmt_app/core/widgets/debounced_search_field.dart';
+import 'package:bmt_app/core/widgets/maps/easyway_tile_layer.dart';
+import 'package:bmt_app/core/widgets/maps/markers/station_marker.dart';
+import 'package:bmt_app/core/widgets/maps/overlays/map_attribution.dart';
+import 'package:bmt_app/core/widgets/maps/route_line_style.dart';
+import 'package:bmt_app/core/widgets/maps/route_polyline_layers.dart';
 
 import '../../domain/entities/operation_route.dart';
 import '../cubit/routes_cubit.dart';
 import '../cubit/routes_state.dart';
-import '../widgets/geo_route_form_view.dart';
-import '../widgets/place_search_field.dart';
+import '../widgets/route_builder/route_builder_view.dart';
 import '../widgets/routes_analytics.dart';
 
 class RoutesScreen extends StatelessWidget {
@@ -28,7 +30,23 @@ class RoutesScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<RoutesCubit, RoutesState>(
+    return BlocConsumer<RoutesCubit, RoutesState>(
+      listenWhen: (previous, current) =>
+          current is RoutesLoaded &&
+          (current.flashMessage.isNotEmpty || current.actionError.isNotEmpty),
+      listener: (context, state) {
+        if (state is! RoutesLoaded) return;
+        if (state.flashMessage.isNotEmpty) {
+          AppSnackbar.success(context, state.flashMessage);
+          return;
+        }
+        // A failure while the builder is open is shown inside it, next to the
+        // save button that produced it — a toast would vanish before the
+        // operator could act on it.
+        if (state.view != RoutesView.form) {
+          AppSnackbar.error(context, state.actionError);
+        }
+      },
       builder: (context, state) {
         return switch (state) {
           RoutesLoading() => const DashboardLoading(rows: 5),
@@ -39,13 +57,35 @@ class RoutesScreen extends StatelessWidget {
           RoutesLoaded() => switch (state.view) {
             RoutesView.list => _RoutesListView(state: state),
             RoutesView.details => _RouteDetailsView(state: state),
-            RoutesView.form => GeoRouteFormView(route: state.editingRoute),
-            RoutesView.success => _RouteSuccessView(
-              route: state.successRoute ?? state.selectedRoute,
-            ),
+            RoutesView.form => _RouteBuilderHost(state: state),
           },
         };
       },
+    );
+  }
+}
+
+/// Mounts the builder and wires it back to the module: cancel returns where the
+/// operator came from, save goes through the routes cubit.
+class _RouteBuilderHost extends StatelessWidget {
+  final RoutesLoaded state;
+
+  const _RouteBuilderHost({required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    final cubit = context.read<RoutesCubit>();
+    final editing = state.editingRoute;
+    return RouteBuilderView(
+      // A fresh builder per route, so an open draft is never carried over.
+      key: ValueKey('route-builder-${editing?.id ?? 'new'}'),
+      route: editing,
+      existingCodes: state.routeCodes,
+      saving: state.saving,
+      saveError: state.actionError,
+      onCancel: () =>
+          editing == null ? cubit.showOperations() : cubit.showDetails(editing),
+      onSave: cubit.saveRoute,
     );
   }
 }
@@ -635,63 +675,51 @@ class _RouteMiniMap extends StatelessWidget {
         ),
       );
     }
+    final line = located
+        .map((station) => LatLng(station.latitude!, station.longitude!))
+        .toList();
     return ClipRRect(
       borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
       child: SizedBox(
         height: 64,
-        child: FlutterMap(
-          options: MapOptions(
-            initialCenter: LatLng(
-              located.first.latitude!,
-              located.first.longitude!,
-            ),
-            initialZoom: 9,
-            interactionOptions: const InteractionOptions(
-              flags: InteractiveFlag.none,
-            ),
-          ),
-          children: [
-            TileLayer(
-              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-              userAgentPackageName: 'com.bmt.app',
-            ),
-            if (located.length >= 2)
-              PolylineLayer(
-                polylines: [
-                  Polyline(
-                    points: located
-                        .map(
-                          (station) =>
-                              LatLng(station.latitude!, station.longitude!),
-                        )
-                        .toList(),
-                    color: scheme.primary,
-                    strokeWidth: 4,
-                  ),
-                ],
+        child: IgnorePointer(
+          child: FlutterMap(
+            options: MapOptions(
+              initialCenter: line.first,
+              initialZoom: 8.5,
+              interactionOptions: const InteractionOptions(
+                flags: InteractiveFlag.none,
               ),
-            MarkerLayer(
-              markers: [
-                for (final station in located)
-                  Marker(
-                    point: LatLng(station.latitude!, station.longitude!),
-                    width: 24,
-                    height: 24,
-                    child: CircleAvatar(
-                      backgroundColor: scheme.primary,
-                      child: Text(
-                        '${station.order}',
-                        style: TextStyle(
-                          color: scheme.onPrimary,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
+            ),
+            children: [
+              const EasyWayTileLayer(),
+              if (line.length >= 2)
+                PolylineLayer(
+                  polylines: buildRoutePolylines(
+                    context,
+                    line,
+                    style: RouteLineStyle.navigation,
+                  ),
+                ),
+              MarkerLayer(
+                markers: [
+                  for (final point in [line.first, line.last])
+                    Marker(
+                      point: point,
+                      width: 12,
+                      height: 12,
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: scheme.primary,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 2),
                         ),
                       ),
                     ),
-                  ),
-              ],
-            ),
-          ],
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -792,8 +820,11 @@ class _RouteDetailsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final route = state.selectedRoute;
-    final cubit = context.read<RoutesCubit>();
 
+    // One rendering of the stops, not three. This page used to show the same
+    // stations as an editable list, as a timeline, and again as a "client
+    // preview" of pickup/dropoff groups — every one of them a different shape
+    // for the same rows.
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.large),
       children: [
@@ -805,79 +836,44 @@ class _RouteDetailsView extends StatelessWidget {
             final medium = constraints.maxWidth >= 760;
             final readiness = _RouteReadinessCommandCard(route: route);
             final quickActions = _RouteQuickActionsCard(route: route);
-            final stations = _StopManagementPanel(
-              route: route,
-              onAdd: (station) => cubit.addStation(station),
-              onEdit: (station) => cubit.updateStation(station),
-              onDelete: cubit.deleteStation,
-              onReorder: cubit.reorderStations,
-            );
-            final mapAndFlow = Column(
-              children: [
-                _RouteMapPreviewPanel(route: route),
-                const SizedBox(height: AppSpacing.medium),
-                _StopsTimelinePanel(route: route),
-              ],
-            );
-            final clientPreview = _ClientRoutePreview(route: route);
+            final stops = _RouteStopsPanel(route: route);
+            final map = _RouteMapPreviewPanel(route: route);
 
-            Widget commandStrip;
-            if (medium) {
-              commandStrip = Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(child: readiness),
-                  const SizedBox(width: AppSpacing.medium),
-                  Expanded(child: quickActions),
-                ],
-              );
-            } else {
-              commandStrip = Column(
-                children: [
-                  readiness,
-                  const SizedBox(height: AppSpacing.medium),
-                  quickActions,
-                ],
-              );
-            }
-
-            if (!wide) {
-              return Column(
-                children: [
-                  commandStrip,
-                  const SizedBox(height: AppSpacing.medium),
-                  _RouteMapPreviewPanel(route: route),
-                  const SizedBox(height: AppSpacing.medium),
-                  clientPreview,
-                  const SizedBox(height: AppSpacing.medium),
-                  _StopsTimelinePanel(route: route),
-                  const SizedBox(height: AppSpacing.medium),
-                  stations,
-                ],
-              );
-            }
+            final commandStrip = medium
+                ? Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: readiness),
+                      const SizedBox(width: AppSpacing.medium),
+                      Expanded(child: quickActions),
+                    ],
+                  )
+                : Column(
+                    children: [
+                      readiness,
+                      const SizedBox(height: AppSpacing.medium),
+                      quickActions,
+                    ],
+                  );
 
             return Column(
               children: [
                 commandStrip,
                 const SizedBox(height: AppSpacing.medium),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      flex: 7,
-                      child: Column(
-                        children: [
-                          stations,
-                          const SizedBox(height: AppSpacing.medium),
-                          clientPreview,
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.medium),
-                    Expanded(flex: 5, child: mapAndFlow),
-                  ],
-                ),
+                if (wide)
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(flex: 7, child: stops),
+                      const SizedBox(width: AppSpacing.medium),
+                      Expanded(flex: 5, child: map),
+                    ],
+                  )
+                else ...[
+                  map,
+                  const SizedBox(height: AppSpacing.medium),
+                  stops,
+                ],
               ],
             );
           },
@@ -1104,27 +1100,26 @@ class _RouteQuickActionsCard extends StatelessWidget {
           _PanelTitle(
             icon: Icons.touch_app_outlined,
             title: 'إجراءات سريعة',
-            subtitle: 'تحديث المسار والمحطات',
+            subtitle: 'تحديث المسار وحالته',
           ),
           const SizedBox(height: AppSpacing.medium),
           SizedBox(
             width: double.infinity,
             child: FilledButton.icon(
-              onPressed: () => _openStopDialog(
-                context,
-                onSubmit: (station) => cubit.addStation(station),
-              ),
-              icon: const Icon(Icons.add_location_alt_outlined),
-              label: const Text('إضافة محطة بالخريطة'),
+              onPressed: () => cubit.showEditRoute(route),
+              icon: const Icon(Icons.edit_location_alt_outlined),
+              label: const Text('فتح محرر المسار'),
             ),
           ),
           const SizedBox(height: AppSpacing.small),
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
-              onPressed: () => cubit.showEditRoute(route),
-              icon: const Icon(Icons.map_outlined),
-              label: const Text('تعديل المسار الكامل'),
+              onPressed: route.status == OperationRouteStatus.paused
+                  ? null
+                  : () => cubit.pauseRoute(route),
+              icon: const Icon(Icons.pause_circle_outline_rounded),
+              label: const Text('إيقاف مؤقت'),
             ),
           ),
           const SizedBox(height: AppSpacing.small),
@@ -1224,79 +1219,6 @@ class _RouteReadinessRow extends StatelessWidget {
   }
 }
 
-class _ClientRoutePreview extends StatelessWidget {
-  final OperationRoute route;
-
-  const _ClientRoutePreview({required this.route});
-
-  @override
-  Widget build(BuildContext context) {
-    final pickups = route.stations.where((station) => station.pickupAllowed);
-    final dropoffs = route.stations.where((station) => station.dropoffAllowed);
-
-    return AppCard(
-      padding: const EdgeInsets.all(AppSpacing.medium),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _PanelTitle(
-            icon: Icons.phone_iphone_outlined,
-            title: 'معاينة تطبيق العميل',
-            subtitle:
-                'نقاط الصعود والنزول التي ستظهر للعميل حسب إعدادات المسار.',
-          ),
-          const SizedBox(height: AppSpacing.medium),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final columns = constraints.maxWidth >= 900
-                  ? 3
-                  : constraints.maxWidth >= 620
-                  ? 2
-                  : 1;
-              const gap = AppSpacing.medium;
-              final width =
-                  (constraints.maxWidth - (gap * (columns - 1))) / columns;
-              return Wrap(
-                spacing: gap,
-                runSpacing: gap,
-                children: [
-                  SizedBox(
-                    width: width,
-                    child: _PreviewStopGroup(
-                      icon: Icons.login_rounded,
-                      title: 'نقاط الصعود',
-                      stations: pickups.toList(),
-                      emptyLabel: 'لا توجد نقاط صعود',
-                    ),
-                  ),
-                  SizedBox(
-                    width: width,
-                    child: _PreviewStopGroup(
-                      icon: Icons.logout_rounded,
-                      title: 'نقاط النزول',
-                      stations: dropoffs.toList(),
-                      emptyLabel: 'لا توجد نقاط نزول',
-                    ),
-                  ),
-                  SizedBox(
-                    width: width,
-                    child: _PreviewStopGroup(
-                      icon: Icons.route_outlined,
-                      title: 'ترتيب الرحلة',
-                      stations: route.stations,
-                      emptyLabel: 'أضف محطات لعرض الترتيب',
-                    ),
-                  ),
-                ],
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _RouteMapPreviewPanel extends StatelessWidget {
   final OperationRoute route;
 
@@ -1383,253 +1305,72 @@ class _RouteStationsMap extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final center = LatLng(stations.first.latitude!, stations.first.longitude!);
-    final line = stations
+    final points = stations
         .map((station) => LatLng(station.latitude!, station.longitude!))
         .toList();
     return ClipRRect(
       borderRadius: BorderRadius.circular(AppTokens.radius),
       child: SizedBox(
         height: 320,
-        child: FlutterMap(
-          options: MapOptions(initialCenter: center, initialZoom: 11),
+        child: Stack(
           children: [
-            TileLayer(
-              urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-              userAgentPackageName: 'com.bmt.app',
-            ),
-            if (line.length >= 2)
-              PolylineLayer(
-                polylines: [
-                  Polyline(points: line, color: scheme.primary, strokeWidth: 5),
-                ],
+            FlutterMap(
+              options: MapOptions(
+                initialCameraFit: points.length >= 2
+                    ? CameraFit.bounds(
+                        bounds: LatLngBounds.fromPoints(points),
+                        padding: const EdgeInsets.all(48),
+                      )
+                    : null,
+                initialCenter: points.first,
+                initialZoom: 12,
               ),
-            MarkerLayer(
-              markers: [
-                for (final station in stations)
-                  Marker(
-                    point: LatLng(station.latitude!, station.longitude!),
-                    width: 52,
-                    height: 58,
-                    child: Tooltip(
-                      message: station.name,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          CircleAvatar(
-                            radius: 17,
-                            backgroundColor: scheme.primary,
-                            child: Text(
-                              '${station.order}',
-                              style: TextStyle(
-                                color: scheme.onPrimary,
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                          ),
-                          Icon(
-                            Icons.arrow_drop_down,
-                            color: scheme.primary,
-                            size: 24,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            RichAttributionWidget(
-              attributions: [
-                TextSourceAttribution('OpenStreetMap', onTap: () {}),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _PreviewStopGroup extends StatelessWidget {
-  final IconData icon;
-  final String title;
-  final List<RouteStation> stations;
-  final String emptyLabel;
-
-  const _PreviewStopGroup({
-    required this.icon,
-    required this.title,
-    required this.stations,
-    required this.emptyLabel,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withAlpha(70),
-        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-        border: Border.all(color: scheme.outline.withAlpha(35)),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.medium),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
               children: [
-                Icon(icon, size: 18, color: scheme.primary),
-                const SizedBox(width: AppSpacing.xSmall),
-                Expanded(
-                  child: Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                StatusChip(label: '${stations.length}'),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.small),
-            if (stations.isEmpty)
-              Text(
-                emptyLabel,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
-              )
-            else
-              ...stations.map(
-                (station) => Padding(
-                  padding: const EdgeInsets.only(bottom: AppSpacing.xSmall),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 12,
-                        backgroundColor: scheme.primaryContainer,
-                        child: Text(
-                          '${station.order}',
-                          style: Theme.of(context).textTheme.labelSmall
-                              ?.copyWith(
-                                color: scheme.onPrimaryContainer,
-                                fontWeight: FontWeight.bold,
-                              ),
+                const EasyWayTileLayer(),
+                if (points.length >= 2)
+                  PolylineLayer(polylines: buildRoutePolylines(context, points)),
+                MarkerLayer(
+                  markers: [
+                    for (final entry in stations.indexed)
+                      buildStationMarker(
+                        context,
+                        stop: MapRouteStop(
+                          coordinate: points[entry.$1],
+                          name: entry.$2.name,
                         ),
-                      ),
-                      const SizedBox(width: AppSpacing.xSmall),
-                      Expanded(
-                        child: Text(
-                          station.estimatedArrivalTime.isEmpty
-                              ? station.name
-                              : '${station.name} - ${station.estimatedArrivalTime}',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _StopsTimelinePanel extends StatelessWidget {
-  final OperationRoute route;
-
-  const _StopsTimelinePanel({required this.route});
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return AppCard(
-      padding: const EdgeInsets.all(AppSpacing.medium),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text('خط المحطات', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: AppSpacing.medium),
-          ...route.stations.indexed.map((entry) {
-            final (index, station) = entry;
-            final last = index == route.stations.length - 1;
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Column(
-                  children: [
-                    CircleAvatar(
-                      radius: 16,
-                      backgroundColor: scheme.primaryContainer,
-                      child: Text('${station.order}'),
-                    ),
-                    if (!last)
-                      Container(
-                        width: 2,
-                        height: 76,
-                        color: scheme.outline.withAlpha(120),
+                        index: entry.$1,
+                        count: stations.length,
+                        onTap: () {},
                       ),
                   ],
                 ),
-                const SizedBox(width: AppSpacing.medium),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.medium),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          station.name,
-                          style: Theme.of(context).textTheme.titleMedium,
-                        ),
-                        const SizedBox(height: AppSpacing.xSmall),
-                        Text(
-                          'وصول ${station.arrivalOffset} - مغادرة ${station.departureOffset.isEmpty ? station.arrivalOffset : station.departureOffset}',
-                        ),
-                        const SizedBox(height: AppSpacing.xSmall),
-                        Text(
-                          station.locationDescription,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: scheme.onSurfaceVariant),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
               ],
-            );
-          }),
-        ],
+            ),
+            const PositionedDirectional(
+              bottom: 4,
+              start: 6,
+              child: MapAttribution(),
+            ),
+          ],
+        ),
       ),
     );
   }
 }
 
-class _StopManagementPanel extends StatelessWidget {
+/// The route's stops, read-only. Changing any of them — order, name, position,
+/// boarding rule, dwell — happens in the route builder, which is the single
+/// editor for a route's shape. This page used to carry a second one: a dialog
+/// with raw latitude/longitude boxes and a free-text arrival field that wrote
+/// values the schedule maths could not read back.
+class _RouteStopsPanel extends StatelessWidget {
   final OperationRoute route;
-  final ValueChanged<RouteStation> onAdd;
-  final ValueChanged<RouteStation> onEdit;
-  final ValueChanged<RouteStation> onDelete;
-  final ReorderCallback onReorder;
 
-  const _StopManagementPanel({
-    required this.route,
-    required this.onAdd,
-    required this.onEdit,
-    required this.onDelete,
-    required this.onReorder,
-  });
+  const _RouteStopsPanel({required this.route});
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final cubit = context.read<RoutesCubit>();
     return AppCard(
       padding: const EdgeInsets.all(AppSpacing.medium),
       child: Column(
@@ -1637,19 +1378,18 @@ class _StopManagementPanel extends StatelessWidget {
         children: [
           LayoutBuilder(
             builder: (context, constraints) {
-              final compact = constraints.maxWidth < 620;
               final title = _PanelTitle(
-                icon: Icons.edit_location_alt_outlined,
-                title: 'إدارة المحطات',
-                subtitle: 'رتب نقاط المسار وحدد الصعود والنزول ومواقع الخريطة.',
+                icon: Icons.route_outlined,
+                title: 'محطات المسار',
+                subtitle: 'ترتيب الوقوف والتوقيتات وقواعد الصعود والنزول.',
               );
               final action = FilledButton.icon(
-                onPressed: () => _openStopDialog(context, onSubmit: onAdd),
-                icon: const Icon(Icons.add_location_alt_outlined),
-                label: const Text('إضافة محطة'),
+                onPressed: () => cubit.showEditRoute(route),
+                icon: const Icon(Icons.edit_location_alt_outlined),
+                label: const Text('تعديل المحطات'),
               );
               final count = StatusChip(label: '${route.stations.length} محطة');
-              if (compact) {
+              if (constraints.maxWidth < 620) {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -1675,37 +1415,13 @@ class _StopManagementPanel extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.medium),
           if (route.stations.isEmpty)
-            _StationsEmptyState(
-              onAdd: () => _openStopDialog(context, onSubmit: onAdd),
-            )
+            _StationsEmptyState(onAdd: () => cubit.showEditRoute(route))
           else
-            DecoratedBox(
-              decoration: BoxDecoration(
-                color: scheme.surfaceContainerHighest.withAlpha(28),
-                borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-                border: Border.all(color: scheme.outline.withAlpha(28)),
-              ),
-              child: ReorderableListView.builder(
-                shrinkWrap: true,
-                padding: const EdgeInsets.all(AppSpacing.small),
-                physics: const NeverScrollableScrollPhysics(),
-                buildDefaultDragHandles: false,
-                itemCount: route.stations.length,
-                onReorder: onReorder,
-                itemBuilder: (context, index) {
-                  final station = route.stations[index];
-                  return _StopManagementRow(
-                    key: ValueKey(station.id),
-                    station: station,
-                    index: index,
-                    onEdit: () => _openStopDialog(
-                      context,
-                      station: station,
-                      onSubmit: onEdit,
-                    ),
-                    onDelete: () => onDelete(station),
-                  );
-                },
+            ...route.stations.indexed.map(
+              (entry) => _RouteStopRow(
+                station: entry.$2,
+                index: entry.$1,
+                total: route.stations.length,
               ),
             ),
         ],
@@ -1733,11 +1449,7 @@ class _StationsEmptyState extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            Icons.add_location_alt_outlined,
-            color: scheme.primary,
-            size: 30,
-          ),
+          Icon(Icons.add_location_alt_outlined, color: scheme.primary, size: 30),
           const SizedBox(height: AppSpacing.small),
           Text(
             'لا توجد محطات بعد',
@@ -1747,7 +1459,7 @@ class _StationsEmptyState extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.xSmall),
           Text(
-            'أضف نقاط الصعود والنزول من الخريطة حتى يصبح المسار جاهزاً لإنشاء الرحلات.',
+            'افتح محرر المسار وحدد نقاط الصعود والنزول على الخريطة حتى يصبح المسار جاهزاً للرحلات.',
             style: Theme.of(
               context,
             ).textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
@@ -1755,8 +1467,8 @@ class _StationsEmptyState extends StatelessWidget {
           const SizedBox(height: AppSpacing.medium),
           FilledButton.icon(
             onPressed: onAdd,
-            icon: const Icon(Icons.add_rounded),
-            label: const Text('إضافة محطة'),
+            icon: const Icon(Icons.edit_location_alt_outlined),
+            label: const Text('تحديد المحطات'),
           ),
         ],
       ),
@@ -1764,256 +1476,107 @@ class _StationsEmptyState extends StatelessWidget {
   }
 }
 
-class _StopManagementRow extends StatelessWidget {
+/// One stop as a timeline entry: order, name, where it is, when the bus reaches
+/// it and what riders may do there.
+class _RouteStopRow extends StatelessWidget {
   final RouteStation station;
   final int index;
-  final VoidCallback onEdit;
-  final VoidCallback onDelete;
+  final int total;
 
-  const _StopManagementRow({
+  const _RouteStopRow({
     required this.station,
     required this.index,
-    required this.onEdit,
-    required this.onDelete,
-    super.key,
+    required this.total,
   });
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.small),
-      padding: const EdgeInsets.all(AppSpacing.medium),
-      decoration: BoxDecoration(
-        color: scheme.surface,
-        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-        border: Border.all(color: scheme.outline.withAlpha(45)),
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final compact = constraints.maxWidth < 760;
-          final title = Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                station.name,
-                maxLines: compact ? 2 : 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: AppSpacing.xSmall),
-              Text(
-                station.locationDescription.isEmpty
-                    ? station.area
-                    : station.locationDescription,
-                maxLines: compact ? 2 : 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
-              ),
-            ],
-          );
-          final facts = Wrap(
-            spacing: AppSpacing.small,
-            runSpacing: AppSpacing.xSmall,
-            children: [
-              _RouteFactPill(
-                icon: Icons.location_city_outlined,
-                label: station.area.isEmpty ? 'غير محدد' : station.area,
-              ),
-              _RouteFactPill(
-                icon: Icons.login_rounded,
-                label: station.pickupAllowed ? 'صعود' : 'بدون صعود',
-              ),
-              _RouteFactPill(
-                icon: Icons.logout_rounded,
-                label: station.dropoffAllowed ? 'نزول' : 'بدون نزول',
-              ),
-              _RouteFactPill(
-                icon: station.latitude == null || station.longitude == null
-                    ? Icons.location_off_outlined
-                    : Icons.location_on_outlined,
-                label: station.latitude == null || station.longitude == null
-                    ? 'بدون موقع'
-                    : 'على الخريطة',
-              ),
-              _RouteFactPill(
-                icon: Icons.schedule_outlined,
-                label:
-                    'وصول ${station.arrivalOffset} - مغادرة ${station.departureOffset.isEmpty ? station.arrivalOffset : station.departureOffset}',
-              ),
-            ],
-          );
-          final leading = Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ReorderableDragStartListener(
-                index: index,
-                child: Icon(
-                  Icons.drag_indicator_rounded,
-                  color: scheme.onSurfaceVariant,
+    final last = index == total - 1;
+    final located = station.latitude != null && station.longitude != null;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Column(
+          children: [
+            CircleAvatar(
+              radius: 15,
+              backgroundColor: located ? scheme.primary : scheme.errorContainer,
+              child: Text(
+                '${index + 1}',
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: located ? scheme.onPrimary : scheme.onErrorContainer,
                 ),
               ),
-              const SizedBox(width: AppSpacing.small),
-              CircleAvatar(
-                radius: 18,
-                backgroundColor: scheme.primary,
-                child: Text(
-                  '${station.order}',
-                  style: TextStyle(
-                    color: scheme.onPrimary,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
+            ),
+            if (!last)
+              Container(
+                width: 2,
+                height: 46,
+                color: scheme.outline.withAlpha(110),
               ),
-            ],
-          );
-          final actions = Wrap(
-            spacing: AppSpacing.xSmall,
-            children: [
-              IconButton.outlined(
-                tooltip: 'تعديل المحطة',
-                onPressed: onEdit,
-                icon: const Icon(Icons.edit_outlined),
-              ),
-              IconButton.outlined(
-                tooltip: 'حذف المحطة',
-                onPressed: onDelete,
-                icon: Icon(Icons.delete_outline, color: scheme.error),
-              ),
-            ],
-          );
-          if (compact) {
-            return Column(
+          ],
+        ),
+        const SizedBox(width: AppSpacing.medium),
+        Expanded(
+          child: Padding(
+            padding: EdgeInsets.only(bottom: last ? 0 : AppSpacing.medium),
+            child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
+                Text(
+                  station.name.isEmpty ? 'محطة بدون اسم' : station.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: AppSpacing.xSmall),
+                Wrap(
+                  spacing: AppSpacing.small,
+                  runSpacing: AppSpacing.xSmall,
                   children: [
-                    leading,
-                    const SizedBox(width: AppSpacing.medium),
-                    Expanded(child: title),
-                    actions,
+                    if (station.area.isNotEmpty)
+                      _RouteFactPill(
+                        icon: Icons.location_city_outlined,
+                        label: station.area,
+                      ),
+                    if (station.arrivalOffset.isNotEmpty)
+                      _RouteFactPill(
+                        icon: Icons.schedule_outlined,
+                        label: index == 0
+                            ? 'الانطلاق ${station.departureOffset.isEmpty ? station.arrivalOffset : station.departureOffset}'
+                            : 'وصول ${station.arrivalOffset}',
+                      ),
+                    _RouteFactPill(
+                      icon: station.pickupAllowed
+                          ? Icons.login_rounded
+                          : Icons.logout_rounded,
+                      label: _boardingLabel(station),
+                    ),
+                    if (!located)
+                      _RouteFactPill(
+                        icon: Icons.location_off_outlined,
+                        label: 'بدون موقع',
+                      ),
                   ],
                 ),
-                const SizedBox(height: AppSpacing.small),
-                facts,
               ],
-            );
-          }
-          return Row(
-            children: [
-              leading,
-              const SizedBox(width: AppSpacing.medium),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    title,
-                    const SizedBox(height: AppSpacing.small),
-                    facts,
-                  ],
-                ),
-              ),
-              const SizedBox(width: AppSpacing.small),
-              actions,
-            ],
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _RouteSuccessView extends StatelessWidget {
-  final OperationRoute route;
-
-  const _RouteSuccessView({required this.route});
-
-  @override
-  Widget build(BuildContext context) {
-    final cubit = context.read<RoutesCubit>();
-    final scheme = Theme.of(context).colorScheme;
-    final located = _locatedStations(route);
-    return Center(
-      child: SizedBox(
-        width: 720,
-        child: AppCard(
-          padding: const EdgeInsets.all(AppSpacing.large),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              CircleAvatar(
-                radius: 34,
-                backgroundColor: scheme.primaryContainer,
-                child: Icon(
-                  Icons.check_rounded,
-                  color: scheme.primary,
-                  size: 38,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.medium),
-              Text(
-                'تم إنشاء المسار',
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: AppSpacing.small),
-              Text(route.name, style: Theme.of(context).textTheme.titleMedium),
-              const SizedBox(height: AppSpacing.medium),
-              Wrap(
-                spacing: AppSpacing.small,
-                runSpacing: AppSpacing.small,
-                alignment: WrapAlignment.center,
-                children: [
-                  _RouteFactPill(
-                    icon: Icons.signpost_outlined,
-                    label: '${route.stations.length} محطات',
-                  ),
-                  _RouteFactPill(
-                    icon: Icons.map_outlined,
-                    label: '$located/${route.stations.length} على الخريطة',
-                  ),
-                  _RouteFactPill(
-                    icon: Icons.schedule_outlined,
-                    label: route.duration.isEmpty
-                        ? 'مدة غير محددة'
-                        : route.duration,
-                  ),
-                  _RouteFactPill(
-                    icon: Icons.health_and_safety_outlined,
-                    label: _routeReadinessLabel(route),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.large),
-              Wrap(
-                spacing: AppSpacing.small,
-                runSpacing: AppSpacing.small,
-                children: [
-                  FilledButton.icon(
-                    onPressed: () => cubit.showDetails(route),
-                    icon: const Icon(Icons.dashboard_outlined),
-                    label: const Text('إدارة المسار'),
-                  ),
-                  OutlinedButton.icon(
-                    onPressed: () => cubit.showEditRoute(route),
-                    icon: const Icon(Icons.edit_location_alt_outlined),
-                    label: const Text('تعديل بالخريطة'),
-                  ),
-                  OutlinedButton.icon(
-                    onPressed: cubit.showOperations,
-                    icon: const Icon(Icons.list_alt_outlined),
-                    label: const Text('العودة للقائمة'),
-                  ),
-                ],
-              ),
-            ],
+            ),
           ),
         ),
-      ),
+      ],
     );
+  }
+
+  static String _boardingLabel(RouteStation station) {
+    if (station.pickupAllowed && station.dropoffAllowed) return 'صعود ونزول';
+    if (station.pickupAllowed) return 'صعود فقط';
+    if (station.dropoffAllowed) return 'نزول فقط';
+    return 'غير متاحة للركاب';
   }
 }
 
@@ -2107,412 +1670,4 @@ void _confirmDeleteRoute(BuildContext context, OperationRoute route) {
       ],
     ),
   );
-}
-
-void _openStopDialog(
-  BuildContext context, {
-  RouteStation? station,
-  required ValueChanged<RouteStation> onSubmit,
-}) {
-  showDialog<void>(
-    context: context,
-    builder: (_) => _StopDialog(station: station, onSubmit: onSubmit),
-  );
-}
-
-class _StopDialog extends StatefulWidget {
-  final RouteStation? station;
-  final ValueChanged<RouteStation> onSubmit;
-
-  const _StopDialog({this.station, required this.onSubmit});
-
-  @override
-  State<_StopDialog> createState() => _StopDialogState();
-}
-
-class _StopDialogState extends State<_StopDialog> {
-  final _dialogFormKey = GlobalKey<FormState>();
-  late final SearchPlacesUseCase _searchPlaces;
-  late final MapController _mapController;
-  late final TextEditingController _name;
-  late final TextEditingController _area;
-  late final TextEditingController _arrival;
-  late final TextEditingController _departure;
-  late final TextEditingController _location;
-  late final TextEditingController _latitude;
-  late final TextEditingController _longitude;
-  LatLng? _selectedPoint;
-  late bool _pickupAllowed;
-  late bool _dropoffAllowed;
-
-  @override
-  void initState() {
-    super.initState();
-    final station = widget.station;
-    _searchPlaces = dashboardDi<SearchPlacesUseCase>();
-    _mapController = MapController();
-    _name = TextEditingController(text: station?.name ?? '');
-    _area = TextEditingController(text: station?.area ?? '');
-    _arrival = TextEditingController(text: station?.arrivalOffset ?? '');
-    _departure = TextEditingController(text: station?.departureOffset ?? '');
-    _location = TextEditingController(text: station?.locationDescription ?? '');
-    _latitude = TextEditingController(
-      text: station?.latitude?.toString() ?? '',
-    );
-    _longitude = TextEditingController(
-      text: station?.longitude?.toString() ?? '',
-    );
-    if (station?.latitude != null && station?.longitude != null) {
-      _selectedPoint = LatLng(station!.latitude!, station.longitude!);
-    }
-    _pickupAllowed = station?.pickupAllowed ?? true;
-    _dropoffAllowed = station?.dropoffAllowed ?? true;
-  }
-
-  @override
-  void dispose() {
-    _name.dispose();
-    _area.dispose();
-    _arrival.dispose();
-    _departure.dispose();
-    _location.dispose();
-    _latitude.dispose();
-    _longitude.dispose();
-    super.dispose();
-  }
-
-  void _setPoint(LatLng point, {bool moveMap = false}) {
-    setState(() {
-      _selectedPoint = point;
-      _latitude.text = point.latitude.toStringAsFixed(6);
-      _longitude.text = point.longitude.toStringAsFixed(6);
-    });
-    if (moveMap) {
-      _mapController.move(point, 15);
-    }
-  }
-
-  void _applyPlace(GeoPlace place) {
-    final point = LatLng(place.point.lat, place.point.lng);
-    setState(() {
-      if (_name.text.trim().isEmpty) _name.text = place.label;
-      _area.text = _areaFromLabel(place.label);
-      _location.text = place.label;
-    });
-    _setPoint(point, moveMap: true);
-  }
-
-  String _areaFromLabel(String label) {
-    final parts = label
-        .split(',')
-        .map((part) => part.trim())
-        .where((part) => part.isNotEmpty)
-        .toList();
-    if (parts.length >= 2) return parts[parts.length - 2];
-    return label.trim();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(widget.station == null ? 'إضافة محطة' : 'تعديل محطة'),
-      content: SizedBox(
-        width: 560,
-        child: SingleChildScrollView(
-          child: Form(
-            key: _dialogFormKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (_searchPlaces.enabled) ...[
-                  PlaceSearchField(
-                    label: 'ابحث عن المحطة على الخريطة',
-                    initialText:
-                        widget.station?.locationDescription ??
-                        widget.station?.name ??
-                        '',
-                    searchPlaces: _searchPlaces,
-                    focus: _selectedPoint == null
-                        ? null
-                        : GeoPoint(
-                            _selectedPoint!.latitude,
-                            _selectedPoint!.longitude,
-                          ),
-                    onSelected: _applyPlace,
-                  ),
-                  const SizedBox(height: AppSpacing.small),
-                ],
-                _StationMapPicker(
-                  controller: _mapController,
-                  point: _selectedPoint,
-                  onChanged: _setPoint,
-                ),
-                const SizedBox(height: AppSpacing.small),
-                TextFormField(
-                  controller: _name,
-                  decoration: const InputDecoration(labelText: 'اسم المحطة'),
-                  validator: (value) => value == null || value.trim().isEmpty
-                      ? 'يرجى إدخال اسم المحطة'
-                      : null,
-                ),
-                const SizedBox(height: AppSpacing.small),
-                TextFormField(
-                  controller: _area,
-                  decoration: const InputDecoration(
-                    labelText: 'ترتيب / منطقة المحطة',
-                  ),
-                  validator: (value) => value == null || value.trim().isEmpty
-                      ? 'يرجى إدخال منطقة المحطة'
-                      : null,
-                ),
-                const SizedBox(height: AppSpacing.small),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: _arrival,
-                        decoration: const InputDecoration(
-                          labelText: 'وقت الوصول (مثال: ١٥ دقيقة)',
-                        ),
-                        validator: (value) =>
-                            value == null || value.trim().isEmpty
-                            ? 'يرجى إدخال وقت الوصول'
-                            : null,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.small),
-                    Expanded(
-                      child: TextFormField(
-                        controller: _departure,
-                        decoration: const InputDecoration(
-                          labelText: 'وقت المغادرة (مثال: ١٨ دقيقة)',
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.small),
-                TextFormField(
-                  controller: _location,
-                  minLines: 2,
-                  maxLines: 3,
-                  decoration: const InputDecoration(labelText: 'وصف الموقع'),
-                  validator: (value) => value == null || value.trim().isEmpty
-                      ? 'يرجى إدخال وصف الموقع'
-                      : null,
-                ),
-                const SizedBox(height: AppSpacing.small),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: _latitude,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                          signed: true,
-                        ),
-                        inputFormatters: FleetInputFormatters.signedDecimal,
-                        decoration: const InputDecoration(
-                          labelText: 'خط العرض',
-                        ),
-                        validator: (value) => _coordinateValidator(
-                          value,
-                          label: 'خط العرض',
-                          min: -90,
-                          max: 90,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.small),
-                    Expanded(
-                      child: TextFormField(
-                        controller: _longitude,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                          signed: true,
-                        ),
-                        inputFormatters: FleetInputFormatters.signedDecimal,
-                        decoration: const InputDecoration(
-                          labelText: 'خط الطول',
-                        ),
-                        validator: (value) => _coordinateValidator(
-                          value,
-                          label: 'خط الطول',
-                          min: -180,
-                          max: 180,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.small),
-                CheckboxListTile(
-                  value: _pickupAllowed,
-                  onChanged: (value) {
-                    setState(() => _pickupAllowed = value ?? true);
-                  },
-                  title: const Text('يسمح بالصعود من هذه المحطة'),
-                  controlAffinity: ListTileControlAffinity.leading,
-                ),
-                CheckboxListTile(
-                  value: _dropoffAllowed,
-                  onChanged: (value) {
-                    setState(() => _dropoffAllowed = value ?? true);
-                  },
-                  title: const Text('يسمح بالنزول في هذه المحطة'),
-                  controlAffinity: ListTileControlAffinity.leading,
-                ),
-                if (!_pickupAllowed && !_dropoffAllowed)
-                  Text(
-                    'يجب أن تكون المحطة صعوداً أو نزولاً على الأقل.',
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.error,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: Navigator.of(context).pop,
-          child: const Text('إلغاء'),
-        ),
-        FilledButton(
-          onPressed: () {
-            if (_dialogFormKey.currentState?.validate() != true) return;
-            if (!_pickupAllowed && !_dropoffAllowed) return;
-            final existing = widget.station;
-            widget.onSubmit(
-              RouteStation(
-                id: existing?.id ?? '',
-                name: _name.text.trim(),
-                area: _area.text.trim(),
-                arrivalOffset: _arrival.text.trim(),
-                departureOffset: _departure.text.trim().isEmpty
-                    ? _arrival.text.trim()
-                    : _departure.text.trim(),
-                locationDescription: _location.text.trim(),
-                latitude: double.tryParse(_latitude.text.trim()),
-                longitude: double.tryParse(_longitude.text.trim()),
-                pickupAllowed: _pickupAllowed,
-                dropoffAllowed: _dropoffAllowed,
-                estimatedArrivalTime: _arrival.text.trim(),
-                notes: existing?.notes ?? '',
-                order: existing?.order ?? 0,
-              ),
-            );
-            Navigator.of(context).pop();
-          },
-          child: const Text('حفظ'),
-        ),
-      ],
-    );
-  }
-
-  String? _coordinateValidator(
-    String? value, {
-    required String label,
-    required double min,
-    required double max,
-  }) {
-    final trimmed = value?.trim() ?? '';
-    if (trimmed.isEmpty) return null;
-    final parsed = double.tryParse(trimmed);
-    if (parsed == null) return '$label يجب أن يكون رقماً صحيحاً';
-    if (parsed < min || parsed > max) {
-      return '$label يجب أن يكون بين $min و $max';
-    }
-    return null;
-  }
-}
-
-class _StationMapPicker extends StatelessWidget {
-  final MapController controller;
-  final LatLng? point;
-  final ValueChanged<LatLng> onChanged;
-
-  const _StationMapPicker({
-    required this.controller,
-    required this.point,
-    required this.onChanged,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final center = point ?? const LatLng(30.0444, 31.2357);
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(AppTokens.radius),
-      child: SizedBox(
-        height: 220,
-        child: Stack(
-          children: [
-            FlutterMap(
-              mapController: controller,
-              options: MapOptions(
-                initialCenter: center,
-                initialZoom: point == null ? 10 : 15,
-                onTap: (_, latLng) => onChanged(latLng),
-              ),
-              children: [
-                TileLayer(
-                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                  userAgentPackageName: 'com.bmt.app',
-                ),
-                if (point != null)
-                  MarkerLayer(
-                    markers: [
-                      Marker(
-                        point: point!,
-                        width: 48,
-                        height: 48,
-                        child: Icon(
-                          Icons.location_on_rounded,
-                          color: scheme.error,
-                          size: 42,
-                        ),
-                      ),
-                    ],
-                  ),
-              ],
-            ),
-            Positioned(
-              top: 10,
-              left: 10,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  color: scheme.surface.withAlpha(230),
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: scheme.outline.withAlpha(90)),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppSpacing.small,
-                    vertical: 6,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.touch_app_outlined,
-                        size: 16,
-                        color: scheme.primary,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        'اضغط على الخريطة لتحديد المحطة',
-                        style: Theme.of(context).textTheme.labelSmall,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
