@@ -7,6 +7,7 @@ import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/widget
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_drivers/presentation/cubit/fleet_drivers_cubit.dart';
 import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
+import 'package:bmt_app/core/widgets/app_snackbar.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
 
 /// Sortable column indices exposed by the drivers table header. Kept in one
@@ -143,8 +144,13 @@ class FleetDriversTable extends StatelessWidget {
         ],
       ),
     );
-    if (confirmed == true) {
-      cubit.deleteDriver(driver.id);
+    if (confirmed != true) return;
+    final error = await cubit.deleteDriver(driver.id);
+    if (!context.mounted) return;
+    if (error == null) {
+      AppSnackbar.success(context, 'تم حذف السائق "${driver.name}"');
+    } else {
+      AppSnackbar.error(context, error);
     }
   }
 

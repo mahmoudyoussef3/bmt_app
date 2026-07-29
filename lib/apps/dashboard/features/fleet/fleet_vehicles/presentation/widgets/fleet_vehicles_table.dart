@@ -5,6 +5,7 @@ import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fle
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/widgets/fleet_shared_widgets.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_vehicles/presentation/cubit/fleet_vehicles_cubit.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
+import 'package:bmt_app/core/widgets/app_snackbar.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 
@@ -331,8 +332,13 @@ class _VehicleRowActions extends StatelessWidget {
         ],
       ),
     );
-    if (confirmed == true) {
-      cubit.deleteVehicle(vehicle.id);
+    if (confirmed != true) return;
+    final error = await cubit.deleteVehicle(vehicle.id);
+    if (!context.mounted) return;
+    if (error == null) {
+      AppSnackbar.success(context, 'تم حذف المركبة "${vehicle.vehicleNumber}"');
+    } else {
+      AppSnackbar.error(context, error);
     }
   }
 }
