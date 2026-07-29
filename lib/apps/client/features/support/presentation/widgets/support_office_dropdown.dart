@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/support/domain/entities/support_office_option.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 import 'support_input_decoration.dart';
@@ -14,14 +15,31 @@ class SupportOfficeDropdown extends StatelessWidget {
     required this.options,
     required this.value,
     required this.onChanged,
+    this.hasError = false,
+    this.onRetry,
   });
 
   final List<SupportOfficeOption> options;
   final SupportOfficeOption? value;
   final ValueChanged<SupportOfficeOption?> onChanged;
 
+  /// Set when the last load attempt failed and the picker is still empty —
+  /// otherwise the required office field would fail silently with no way for
+  /// the client to recover.
+  final bool hasError;
+  final VoidCallback? onRetry;
+
   @override
   Widget build(BuildContext context) {
+    if (hasError && options.isEmpty) {
+      return ClientErrorCard(
+        compact: true,
+        message: context.l10n.support_officeLoadError,
+        retryLabel: context.l10n.common_retry,
+        onRetry: onRetry,
+      );
+    }
+
     final scheme = Theme.of(context).colorScheme;
     final itemStyle = ClientTypography.bodyMedium(
       context,

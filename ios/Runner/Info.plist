@@ -58,6 +58,20 @@
 		</dict>
 		<key>UIApplicationSupportsIndirectInputEvents</key>
 		<true/>
+		<!-- Password recovery deep link: Supabase's resetPasswordForEmail
+		     redirectTo points here so the client app can pick up the recovery
+		     session and open the reset-password screen. -->
+		<key>CFBundleURLTypes</key>
+		<array>
+			<dict>
+				<key>CFBundleURLName</key>
+				<string>com.easyway.passwordrecovery</string>
+				<key>CFBundleURLSchemes</key>
+				<array>
+					<string>easyway</string>
+				</array>
+			</dict>
+		</array>
 		<key>UIBackgroundModes</key>
 		<array>
 			<string>remote-notification</string>

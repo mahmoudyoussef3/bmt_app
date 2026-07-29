@@ -13,6 +13,8 @@ class PackagePlan {
     this.officeLogoUrl,
     this.officeRating = 0,
     this.officeRatingsCount = 0,
+    this.officeDescription = '',
+    this.officeServiceAreas = const [],
   });
 
   final String id;
@@ -34,6 +36,12 @@ class PackagePlan {
   /// same figure the office directory shows, never inferred from another score.
   final double officeRating;
   final int officeRatingsCount;
+
+  /// The seller's marketplace blurb and service areas, also straight off
+  /// `public_offices` — lets the office profile opened from this package
+  /// render as fully as one opened from the Offices Directory.
+  final String officeDescription;
+  final List<String> officeServiceAreas;
 
   /// Whether this package carries enough office identity to render the provider
   /// badge and route to the office profile. A package whose office is unlisted

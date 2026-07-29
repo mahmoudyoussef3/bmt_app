@@ -33,6 +33,7 @@ const Map<String, String> _declaredRoutes = <String, String>{
   'AuthRoutes.signIn': AuthRoutes.signIn,
   'AuthRoutes.signUp': AuthRoutes.signUp,
   'AuthRoutes.forgotPassword': AuthRoutes.forgotPassword,
+  'AuthRoutes.resetPassword': AuthRoutes.resetPassword,
   'AuthRoutes.success': AuthRoutes.success,
   'BookingRoutes.search': BookingRoutes.search,
   'BookingRoutes.routeSelection': BookingRoutes.routeSelection,

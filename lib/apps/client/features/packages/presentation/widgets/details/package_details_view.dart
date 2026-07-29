@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_search_query.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_routes.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
@@ -27,9 +28,17 @@ class PackageDetailsView extends StatelessWidget {
 
   /// A subscription needs a route to price and bind to, so the rider picks one
   /// first and buys the plan inside the booking wizard's package step. There is
-  /// no package-only checkout to branch to — see [SubscriptionArguments].
+  /// no package-only checkout to branch to — see [SubscriptionArguments]. The
+  /// reviewed package rides along as [BookingSearchQuery.initialPackageId] so
+  /// it opens pre-selected once the wizard reaches its package step.
   void _onSubscribe(BuildContext context) {
-    Navigator.of(context).pushNamed(BookingRoutes.popularRoutes);
+    final package = state.selectedPackage;
+    Navigator.of(context).pushNamed(
+      BookingRoutes.popularRoutes,
+      arguments: BookingSearchQuery(
+        initialPackageId: package?.id,
+      ).toArguments(),
+    );
   }
 
   @override

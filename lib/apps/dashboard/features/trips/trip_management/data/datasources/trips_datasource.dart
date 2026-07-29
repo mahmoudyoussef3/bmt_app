@@ -62,6 +62,18 @@ abstract class TripsDatasource {
     String date,
     String departureTime,
   );
+
+  /// Rows (`driver_id`, `vehicle_id`, `trip_code`, `trip_date`, `departure_time`,
+  /// `arrival_time`) of every non-cancelled trip whose `service_window` overlaps the
+  /// given departure→arrival slot, scoped to the office. Mirrors the
+  /// `operation_trips_driver_no_overlap` / `_vehicle_no_overlap` exclusion constraints
+  /// exactly, so the wizard's availability pre-filter can never show a resource as free
+  /// that the server would then reject.
+  Future<List<Map<String, dynamic>>> fetchResourceConflicts({
+    required String date,
+    required String departureTime,
+    required String arrivalTime,
+  });
   Future<String> getDriverStatus(String driverId);
   Future<String> getVehicleStatus(String vehicleId);
   Future<String> getRouteStatus(String routeId);

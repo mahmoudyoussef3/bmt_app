@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
 import '../../domain/entities/client_notification.dart';
@@ -19,8 +21,7 @@ class NotificationTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
+    final primary = ClientColors.primaryFor(context);
 
     return Dismissible(
       key: ValueKey(notification.id),
@@ -30,10 +31,10 @@ class NotificationTile extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         padding: const EdgeInsetsDirectional.only(end: 24),
         decoration: BoxDecoration(
-          color: cs.primaryContainer,
+          color: ClientColors.primaryContainerFor(context),
           borderRadius: BorderRadius.circular(24),
         ),
-        child: Icon(Icons.done_all_rounded, color: cs.onPrimaryContainer),
+        child: Icon(Icons.done_all_rounded, color: primary),
       ),
       confirmDismiss: (_) async {
         onMarkRead();
@@ -45,24 +46,26 @@ class NotificationTile extends StatelessWidget {
           margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: notification.isRead ? cs.surface : cs.primaryContainer.withAlpha(40),
+            color: notification.isRead
+                ? ClientColors.surfaceFor(context)
+                : ClientColors.primaryContainerFor(context).withAlpha(40),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
               color: notification.isRead
-                  ? cs.outlineVariant.withAlpha(50)
-                  : cs.primary.withAlpha(60),
+                  ? ClientColors.borderFor(context).withAlpha(50)
+                  : primary.withAlpha(60),
               width: 1,
             ),
             boxShadow: [
               if (!notification.isRead)
                 BoxShadow(
-                  color: cs.primary.withAlpha(10),
+                  color: primary.withAlpha(10),
                   blurRadius: 16,
                   offset: const Offset(0, 4),
                 )
               else
                 BoxShadow(
-                  color: cs.shadow.withAlpha(5),
+                  color: ClientColors.shadowFor(context).withAlpha(5),
                   blurRadius: 12,
                   offset: const Offset(0, 4),
                 ),
@@ -77,9 +80,11 @@ class NotificationTile extends StatelessWidget {
                   Expanded(
                     child: Text(
                       notification.title,
-                      style: tt.titleMedium?.copyWith(
-                        fontWeight: notification.isRead ? FontWeight.w600 : FontWeight.w800,
-                        color: cs.onSurface,
+                      style: ClientTypography.headingSmall(context).copyWith(
+                        fontWeight: notification.isRead
+                            ? FontWeight.w600
+                            : FontWeight.w800,
+                        color: ClientColors.textPrimaryFor(context),
                         letterSpacing: -0.3,
                       ),
                     ),
@@ -89,13 +94,13 @@ class NotificationTile extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
-                        color: cs.primary.withAlpha(20),
+                        color: primary.withAlpha(20),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
                         context.l10n.notifications_newBadge,
-                        style: tt.labelSmall?.copyWith(
-                          color: cs.primary,
+                        style: ClientTypography.labelSmall(context).copyWith(
+                          color: primary,
                           fontWeight: FontWeight.w900,
                         ),
                       ),
@@ -106,8 +111,8 @@ class NotificationTile extends StatelessWidget {
               const SizedBox(height: 8),
               Text(
                 notification.body,
-                style: tt.bodyMedium?.copyWith(
-                  color: cs.onSurfaceVariant.withAlpha(220),
+                style: ClientTypography.bodyMedium(context).copyWith(
+                  color: ClientColors.textSecondaryFor(context).withAlpha(220),
                   height: 1.5,
                 ),
                 maxLines: 3,
@@ -116,12 +121,16 @@ class NotificationTile extends StatelessWidget {
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Icon(Icons.access_time_rounded, size: 14, color: cs.onSurfaceVariant.withAlpha(150)),
+                  Icon(
+                    Icons.access_time_rounded,
+                    size: 14,
+                    color: ClientColors.textSecondaryFor(context).withAlpha(150),
+                  ),
                   const SizedBox(width: 6),
                   Text(
                     _formatDate(context, notification.createdAt),
-                    style: tt.labelMedium?.copyWith(
-                      color: cs.onSurfaceVariant.withAlpha(150),
+                    style: ClientTypography.labelMedium(context).copyWith(
+                      color: ClientColors.textSecondaryFor(context).withAlpha(150),
                       fontWeight: FontWeight.w600,
                     ),
                   ),

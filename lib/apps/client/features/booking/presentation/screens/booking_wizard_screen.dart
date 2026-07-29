@@ -25,20 +25,19 @@ class BookingWizardScreen extends StatelessWidget {
         // it, so a rider correcting a stop never loses the rest of the session.
         canPop: step == 0,
         onPopInvokedWithResult: (didPop, _) {
-          if (!didPop) context.read<BookingWizardStepCubit>().back();
+          if (didPop) return;
+          // A confirm in flight blocks the app bar's manual back button below;
+          // the system back gesture must be just as inert, or it can change
+          // the step underneath the blocking overlay mid-write.
+          if (_isBusy(context.read<BookingWizardConfirmCubit>().state)) return;
+          context.read<BookingWizardStepCubit>().back();
         },
         child: WizardConfirmListener(
           child: BlocBuilder<BookingWizardConfirmCubit, BookingWizardConfirmState>(
             builder: (context, confirmState) {
               // The gateway webview runs over the wizard, so the block stays up
               // until the payment resolves rather than only while the RPC runs.
-              final busy =
-                  confirmState is BookingWizardConfirming ||
-                  confirmState is BookingWizardCardCheckout ||
-                  // Still asking the backend whether the card actually cleared.
-                  // Letting the rider edit the booking mid-verification would
-                  // let them change what they are about to be told they bought.
-                  confirmState is BookingWizardVerifyingPayment;
+              final busy = _isBusy(confirmState);
 
               return Stack(
                 children: [
@@ -65,6 +64,16 @@ class BookingWizardScreen extends StatelessWidget {
       Navigator.of(context).maybePop();
     }
   }
+
+  /// The gateway webview runs over the wizard, so the block stays up until the
+  /// payment resolves rather than only while the RPC runs. Still asking the
+  /// backend whether the card actually cleared counts too: letting the rider
+  /// edit the booking mid-verification would let them change what they are
+  /// about to be told they bought.
+  static bool _isBusy(BookingWizardConfirmState state) =>
+      state is BookingWizardConfirming ||
+      state is BookingWizardCardCheckout ||
+      state is BookingWizardVerifyingPayment;
 }
 
 /// Swallows taps while a booking is being written — a second confirm would race

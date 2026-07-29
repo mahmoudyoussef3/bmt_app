@@ -649,6 +649,15 @@ class _MockTripsDatasource implements TripsDatasource {
   }
 
   @override
+  Future<List<Map<String, dynamic>>> fetchResourceConflicts({
+    required String date,
+    required String departureTime,
+    required String arrivalTime,
+  }) async {
+    return [];
+  }
+
+  @override
   Future<bool> checkDuplicateTrip(
     String vehicleId,
     String date,
@@ -804,6 +813,15 @@ class _FailingTripsDatasource implements TripsDatasource {
 
   @override
   Future<List<Map<String, dynamic>>> fetchActiveRoutes() {
+    throw StateError('failure');
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> fetchResourceConflicts({
+    required String date,
+    required String departureTime,
+    required String arrivalTime,
+  }) {
     throw StateError('failure');
   }
 

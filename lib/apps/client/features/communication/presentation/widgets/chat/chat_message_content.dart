@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 import '../../../domain/entities/chat_message.dart';
 
@@ -60,10 +61,22 @@ class _ImageContent extends StatelessWidget {
             width: double.infinity,
             color: scheme.surfaceContainerHighest,
             child: Center(
-              child: Icon(
-                Icons.image_rounded,
-                color: ClientColors.textTertiaryFor(context),
-                size: 30,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    Icons.image_rounded,
+                    color: ClientColors.textTertiaryFor(context),
+                    size: 30,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    context.l10n.communication_imagePreviewUnavailable,
+                    style: ClientTypography.labelSmall(
+                      context,
+                    ).copyWith(color: ClientColors.textTertiaryFor(context)),
+                  ),
+                ],
               ),
             ),
           ),

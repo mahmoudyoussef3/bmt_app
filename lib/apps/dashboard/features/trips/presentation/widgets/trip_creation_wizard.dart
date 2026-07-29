@@ -209,6 +209,17 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
   /// exists and the Client app never has to fall back to a guessed price.
   final _fare = TripFareControllers();
 
+  /// Driver/vehicle ids already committed to an overlapping trip for the
+  /// currently chosen date/departure/arrival, keyed to the conflicting row so
+  /// the picker can explain *why* — refreshed from the server on every
+  /// schedule change. The exclusion constraints in the database remain the
+  /// final word; this only keeps the operator from picking a resource that is
+  /// already known to fail before they submit.
+  Map<String, Map<String, dynamic>> _busyDriverInfo = {};
+  Map<String, Map<String, dynamic>> _busyVehicleInfo = {};
+  bool _checkingAvailability = false;
+  int _availabilityRequestId = 0;
+
   @override
   void initState() {
     super.initState();
@@ -233,6 +244,7 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
       }
       if (_selectedRoute != null) _initializeWizardData();
     }
+    _refreshAvailability();
   }
 
   @override
@@ -572,6 +584,7 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
               _selectedRoute = route;
               _initializeWizardData();
             });
+            _refreshAvailability();
           },
         ),
         if (_selectedRoute != null) ...[
@@ -590,6 +603,7 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
   }
 
   Widget _buildVehiclePicker() {
+    final scheme = Theme.of(context).colorScheme;
     final activeVehicles = widget.vehicles
         .where((vehicle) => vehicle.status == FleetVehicleStatus.active)
         .toList();
@@ -597,21 +611,36 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
       children: [
         DropdownButtonFormField<String>(
           initialValue: _selectedVehicle?.id,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             labelText: 'اختر المركبة',
-            prefixIcon: Icon(Icons.directions_bus_outlined),
+            prefixIcon: const Icon(Icons.directions_bus_outlined),
+            suffixIcon: _checkingAvailability
+                ? const Padding(
+                    padding: EdgeInsets.all(14),
+                    child: SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  )
+                : null,
           ),
-          items: activeVehicles
-              .map(
-                (vehicle) => DropdownMenuItem(
-                  value: vehicle.id,
-                  child: Text(
-                    '${vehicle.plateNumber} • ${vehicle.capacity} مقعد',
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              )
-              .toList(),
+          items: activeVehicles.map((vehicle) {
+            final conflict = _busyVehicleInfo[vehicle.id];
+            return DropdownMenuItem(
+              value: vehicle.id,
+              enabled: conflict == null,
+              child: Text(
+                conflict == null
+                    ? '${vehicle.plateNumber} • ${vehicle.capacity} مقعد'
+                    : '${vehicle.plateNumber} • مشغولة (${_conflictLabel(conflict)})',
+                overflow: TextOverflow.ellipsis,
+                style: conflict == null
+                    ? null
+                    : TextStyle(color: scheme.onSurfaceVariant.withAlpha(150)),
+              ),
+            );
+          }).toList(),
           onChanged: (id) {
             final vehicle = activeVehicles
                 .where((candidate) => candidate.id == id)
@@ -630,11 +659,22 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
             icon: Icons.airline_seat_recline_normal,
           ),
         ],
+        if (_busyVehicleInfo.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.small),
+          Text(
+            'المركبات المشغولة لديها رحلة أخرى قريبة من هذا التوقيت (مع احتساب '
+            'نصف ساعة للاستعداد بين الرحلات).',
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+          ),
+        ],
       ],
     );
   }
 
   Widget _buildDriverPicker() {
+    final scheme = Theme.of(context).colorScheme;
     final activeDrivers = widget.drivers
         .where((driver) => driver.status == FleetDriverStatus.active)
         .toList();
@@ -642,21 +682,36 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
       children: [
         DropdownButtonFormField<String>(
           initialValue: _selectedDriver?.id,
-          decoration: const InputDecoration(
+          decoration: InputDecoration(
             labelText: 'اختر السائق',
-            prefixIcon: Icon(Icons.badge_outlined),
+            prefixIcon: const Icon(Icons.badge_outlined),
+            suffixIcon: _checkingAvailability
+                ? const Padding(
+                    padding: EdgeInsets.all(14),
+                    child: SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  )
+                : null,
           ),
-          items: activeDrivers
-              .map(
-                (driver) => DropdownMenuItem(
-                  value: driver.id,
-                  child: Text(
-                    '${driver.name} • ${driver.phone}',
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              )
-              .toList(),
+          items: activeDrivers.map((driver) {
+            final conflict = _busyDriverInfo[driver.id];
+            return DropdownMenuItem(
+              value: driver.id,
+              enabled: conflict == null,
+              child: Text(
+                conflict == null
+                    ? '${driver.name} • ${driver.phone}'
+                    : '${driver.name} • مشغول (${_conflictLabel(conflict)})',
+                overflow: TextOverflow.ellipsis,
+                style: conflict == null
+                    ? null
+                    : TextStyle(color: scheme.onSurfaceVariant.withAlpha(150)),
+              ),
+            );
+          }).toList(),
           onChanged: (id) {
             final driver = activeDrivers
                 .where((candidate) => candidate.id == id)
@@ -672,6 +727,16 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
             subtitle: _selectedDriver!.phone,
             trailing: _selectedDriver!.status.label,
             icon: Icons.person_outline_rounded,
+          ),
+        ],
+        if (_busyDriverInfo.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.small),
+          Text(
+            'السائقون المشغولون لديهم رحلة أخرى قريبة من هذا التوقيت (مع احتساب '
+            'نصف ساعة للاستعداد بين الرحلات).',
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
           ),
         ],
       ],
@@ -810,7 +875,10 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
             ActionChip(
               avatar: const Icon(Icons.sync_rounded, size: 18),
               label: const Text('حساب الوصول من المسار'),
-              onPressed: () => setState(_syncArrivalFromRoute),
+              onPressed: () {
+                setState(_syncArrivalFromRoute);
+                _refreshAvailability();
+              },
             ),
           ],
         ),
@@ -913,6 +981,79 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
       _fare.clear();
       _applyDefaultSchedule();
     });
+    _refreshAvailability();
+  }
+
+  /// Re-queries which drivers/vehicles are already committed to an
+  /// overlapping trip for the current date/departure/arrival, so the pickers
+  /// below can stop offering them. Safe to call as often as the schedule
+  /// changes: stale in-flight responses are dropped via [_availabilityRequestId],
+  /// and a failed lookup just leaves the last-known availability in place
+  /// (fails open — the server's exclusion constraints still guard submission).
+  Future<void> _refreshAvailability() async {
+    final date = _dateController.text;
+    final departure = _timeController.text;
+    final arrival = _arrivalController.text;
+    if (date.isEmpty || departure.isEmpty) return;
+
+    final requestId = ++_availabilityRequestId;
+    setState(() => _checkingAvailability = true);
+    try {
+      final conflicts = await context.read<TripCreationCubit>().getResourceConflicts(
+        date: date,
+        departureTime: departure,
+        arrivalTime: arrival,
+      );
+      if (!mounted || requestId != _availabilityRequestId) return;
+
+      final busyDrivers = <String, Map<String, dynamic>>{};
+      final busyVehicles = <String, Map<String, dynamic>>{};
+      for (final row in conflicts) {
+        final driverId = row['driver_id'] as String?;
+        final vehicleId = row['vehicle_id'] as String?;
+        if (driverId != null) busyDrivers[driverId] = row;
+        if (vehicleId != null) busyVehicles[vehicleId] = row;
+      }
+
+      setState(() {
+        _busyDriverInfo = busyDrivers;
+        _busyVehicleInfo = busyVehicles;
+        _checkingAvailability = false;
+      });
+
+      final busyDriver = _selectedDriver;
+      if (busyDriver != null && busyDrivers.containsKey(busyDriver.id)) {
+        setState(() => _selectedDriver = null);
+        _showAvailabilityNotice(
+          'السائق "${busyDriver.name}" أصبح غير متاح لهذا التوقيت — اختر سائقاً آخر.',
+        );
+      }
+      final busyVehicle = _selectedVehicle;
+      if (busyVehicle != null && busyVehicles.containsKey(busyVehicle.id)) {
+        setState(() => _selectedVehicle = null);
+        _showAvailabilityNotice(
+          'المركبة "${busyVehicle.plateNumber}" أصبحت غير متاحة لهذا التوقيت — اختر مركبة أخرى.',
+        );
+      }
+    } catch (_) {
+      if (!mounted || requestId != _availabilityRequestId) return;
+      setState(() => _checkingAvailability = false);
+    }
+  }
+
+  void _showAvailabilityNotice(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), duration: const Duration(seconds: 4)),
+    );
+  }
+
+  /// "08:00" from a trip's conflicting `trip_code`/`departure_time`, for the
+  /// disabled-picker explanation.
+  String _conflictLabel(Map<String, dynamic> conflict) {
+    final departure = conflict['departure_time'] as String? ?? '';
+    final hhmm = departure.length >= 5 ? departure.substring(0, 5) : departure;
+    final code = conflict['trip_code'] as String?;
+    return code != null && code.isNotEmpty ? '$code • $hhmm' : hhmm;
   }
 
   Future<void> _pickTripDate() async {
@@ -925,6 +1066,7 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
     );
     if (date == null) return;
     setState(() => _dateController.text = _formatDate(date));
+    _refreshAvailability();
   }
 
   Future<void> _pickDepartureTime() async {
@@ -936,6 +1078,7 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
           '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}:00';
       _syncArrivalFromRoute();
     });
+    _refreshAvailability();
   }
 
   Future<void> _pickArrivalTime() async {
@@ -946,6 +1089,7 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
       _arrivalController.text =
           '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}:00';
     });
+    _refreshAvailability();
   }
 
   TimeOfDay _timeOfDayFromText(String value) {
@@ -958,6 +1102,7 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
   void _setDateOffset(int days) {
     final date = DateTime.now().add(Duration(days: days));
     setState(() => _dateController.text = _formatDate(date));
+    _refreshAvailability();
   }
 
   void _setNextHourDeparture() {
@@ -968,6 +1113,7 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
       _timeController.text = '${next.hour.toString().padLeft(2, '0')}:00:00';
       _syncArrivalFromRoute();
     });
+    _refreshAvailability();
   }
 
   void _onSubmitTrip() async {

@@ -17,7 +17,12 @@ class CreateSupportTicketScreen extends StatelessWidget {
   /// form.
   void _onStateChanged(BuildContext context, SupportState state) {
     if (state is SupportSuccess) {
-      _showSnack(context, context.l10n.support_ticketCreatedSnack);
+      _showSnack(
+        context,
+        state.attachmentFailed
+            ? context.l10n.support_ticketCreatedAttachmentFailedSnack
+            : context.l10n.support_ticketCreatedSnack,
+      );
       Navigator.pop(context);
       if (state.ticket != null) {
         Navigator.pushNamed(

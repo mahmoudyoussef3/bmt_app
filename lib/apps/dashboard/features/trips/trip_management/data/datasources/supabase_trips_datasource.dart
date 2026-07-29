@@ -696,6 +696,45 @@ class SupabaseTripsDatasource implements TripsDatasource {
   }
 
   @override
+  Future<List<Map<String, dynamic>>> fetchResourceConflicts({
+    required String date,
+    required String departureTime,
+    required String arrivalTime,
+  }) async {
+    try {
+      final start = DateTime.parse('$date $departureTime');
+      var end = arrivalTime.isEmpty
+          ? start.add(const Duration(hours: 1))
+          : DateTime.parse('$date $arrivalTime');
+      // Mirrors `service_window`'s generated formula: an arrival at or before
+      // departure means the trip runs past midnight.
+      if (arrivalTime.isNotEmpty && !end.isAfter(start)) {
+        end = end.add(const Duration(days: 1));
+      }
+      end = end.add(const Duration(minutes: 30));
+
+      final window = '[${_tsLiteral(start)},${_tsLiteral(end)})';
+      final response = await _client
+          .from('operation_trips')
+          .select(
+            'driver_id, vehicle_id, trip_code, trip_date, departure_time, arrival_time',
+          )
+          .eq('office_id', _session.officeId)
+          .neq('status', 'cancelled')
+          .overlaps('service_window', window);
+      return List<Map<String, dynamic>>.from(response);
+    } catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  String _tsLiteral(DateTime dt) {
+    String two(int n) => n.toString().padLeft(2, '0');
+    return '${dt.year.toString().padLeft(4, '0')}-${two(dt.month)}-${two(dt.day)} '
+        '${two(dt.hour)}:${two(dt.minute)}:${two(dt.second)}';
+  }
+
+  @override
   Future<String> getDriverStatus(String driverId) async {
     try {
       final response = await _client

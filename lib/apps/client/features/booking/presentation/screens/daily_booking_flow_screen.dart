@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/daily_booking_data.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/daily_booking_cubit.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/daily_booking_state.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_routes.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/daily_booking/daily_booking_header.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/daily_booking/daily_booking_message.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/daily_booking/daily_booking_progress.dart';
@@ -94,15 +96,35 @@ class _DailyBookingFlowScreenState extends State<DailyBookingFlowScreen> {
   }
 
   void _book(DailyBookingVehicle vehicle) {
-    Navigator.of(context).pushNamed(
-      '/seat-selection',
-      arguments: {
-        'tripId': vehicle.id,
-        'driverName': vehicle.driver,
-        'departureTime': vehicle.time,
-        'pickupPoint': _pickup,
-        'destination': _destination,
-      },
+    // This flow never fetched route points or trip pricing (it only lists
+    // distinct pickup/destination city names and same-day vehicles), so the
+    // route handed to the wizard is built entirely from what was selected
+    // here: two stops in travel order and the one trip the rider tapped.
+    final route = RouteOptionData(
+      id: vehicle.id,
+      routeName: '$_pickup - $_destination',
+      pickup: _pickup,
+      destination: _destination,
+      distance: '',
+      duration: '',
+      availableSeats: vehicle.seatsLeft,
+      startingPrice: '',
+      priceRange: '',
+      points: [
+        RoutePointData(name: _pickup, order: 0),
+        RoutePointData(name: _destination, order: 1),
+      ],
+      availableTrips: [
+        RouteTripOptionData(
+          id: vehicle.id,
+          departureTime: vehicle.time,
+          arrivalTime: _time,
+          availableSeats: vehicle.seatsLeft,
+          vehicleType: '',
+          price: '',
+        ),
+      ],
     );
+    Navigator.of(context).pushNamed(BookingRoutes.wizard, arguments: route);
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/core/localization/format_util.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
 import '../../../domain/entities/package_plan.dart';
@@ -21,7 +22,7 @@ class PackagePriceSummary extends StatelessWidget {
       children: [
         PackageStatColumn(
           label: l10n.packages_perRide,
-          value: l10n.packages_egpAmount(package.pricePerRide.toString()),
+          value: FormatUtil.currency(context, package.pricePerRide),
           valueColor: scheme.secondary,
         ),
         Column(
@@ -32,7 +33,7 @@ class PackagePriceSummary extends StatelessWidget {
               style: Theme.of(context).textTheme.labelSmall,
             ),
             Text(
-              l10n.packages_egpAmount(package.priceInPounds.toString()),
+              FormatUtil.currency(context, package.priceInPounds),
               style: Theme.of(context).textTheme.titleLarge?.copyWith(
                 fontWeight: FontWeight.w900,
                 color: scheme.primary,

@@ -14,11 +14,19 @@ abstract final class TripMapper {
     final vehicleObj = tripObj?['vehicles'] as Map<String, dynamic>?;
     final driverObj = tripObj?['drivers'] as Map<String, dynamic>?;
 
-    final routeParts = (data['route'] as String? ?? '').split(
-      RegExp(r'\s*(?:→|-)\s*'),
-    );
-    final pickup = routeParts.isNotEmpty ? routeParts[0] : 'Unknown';
-    final destination = routeParts.length > 1 ? routeParts[1] : 'Unknown';
+    // Routes are always assembled client-side as "$pickup → $destination".
+    // Split on the arrow first; only fall back to a whitespace-padded hyphen
+    // (never a bare mid-word one) for legacy rows, so place names such as
+    // "6th-of-October City" are not mis-split.
+    final routeRaw = data['route'] as String? ?? '';
+    final routeParts = routeRaw.contains('→')
+        ? routeRaw.split(RegExp(r'\s*→\s*'))
+        : routeRaw.split(RegExp(r'\s+-\s+'));
+    // Left blank rather than a hardcoded English word: the data layer cannot
+    // localize, so an unresolved pickup/destination is resolved to a
+    // localized fallback by the presentation widgets that display it.
+    final pickup = routeParts.isNotEmpty ? routeParts[0] : '';
+    final destination = routeParts.length > 1 ? routeParts[1] : '';
 
     final paymentDetails =
         data['payment_details'] as Map<String, dynamic>? ?? {};
@@ -46,15 +54,18 @@ abstract final class TripMapper {
       destination: destination,
       dateLabel: data['trip_date']?.toString() ?? '',
       timeLabel: data['trip_time']?.toString() ?? '',
-      driverName: driverObj?['full_name']?.toString() ?? 'Driver Pending',
+      // Blank rather than a hardcoded English word: the data layer cannot
+      // localize a missing driver/vehicle/seat, so the presentation widgets
+      // that display these resolve the localized fallback themselves.
+      driverName: driverObj?['full_name']?.toString() ?? '',
       driverPhone: driverObj?['phone']?.toString() ?? 'Not available',
       driverInitials: _initials(driverObj?['full_name']?.toString()),
       driverRating: (driverObj?['rating'] as num?)?.toDouble() ?? 0.0,
       driverRatingCount: (driverObj?['rating_count'] as num?)?.toInt() ?? 0,
-      vehicleName: vehicleObj?['brand']?.toString() ?? 'Vehicle Pending',
+      vehicleName: vehicleObj?['brand']?.toString() ?? '',
       vehicleType: vehicleObj?['vehicle_type']?.toString() ?? 'Vehicle',
       vehicleId: vehicleObj?['id']?.toString() ?? '',
-      seats: [data['seat']?.toString() ?? 'Seat Pending'],
+      seats: _seats(data['seat']),
       paymentStatus: TripStatusMapper.paymentStatus(dbPaymentStatus),
       fare: 'EGP $fare',
       officeName:
@@ -66,6 +77,14 @@ abstract final class TripMapper {
           data['payment_rejection_reason']?.toString() ??
           data['rejection_reason']?.toString(),
     );
+  }
+
+  /// Wraps the booking's raw seat label, or an empty list when it isn't set
+  /// yet — [TripData.mySeatLabels] already falls back to the live seat map,
+  /// and the "seat pending" copy is resolved by the presentation layer.
+  static List<String> _seats(Object? rawSeat) {
+    final seat = rawSeat?.toString().trim();
+    return seat == null || seat.isEmpty ? const [] : [seat];
   }
 
   static String _reference(String id) {

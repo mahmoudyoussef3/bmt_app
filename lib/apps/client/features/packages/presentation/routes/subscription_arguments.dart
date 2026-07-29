@@ -6,7 +6,8 @@
 /// route, a date and a seat already exist.
 ///
 /// An office profile passes [initialOfficeId] so the marketplace opens already
-/// filtered to that seller.
+/// filtered to that seller, or [initialPackageId] to jump straight to one
+/// package's detail pane instead of the filtered listing.
 ///
 /// ### What was removed and why
 ///
@@ -19,15 +20,19 @@
 /// The flag is gone rather than repaired: there is no second checkout to route
 /// to, so there is nothing for it to decide.
 class SubscriptionArguments {
-  const SubscriptionArguments({this.initialOfficeId});
+  const SubscriptionArguments({this.initialOfficeId, this.initialPackageId});
 
   factory SubscriptionArguments.fromArguments(Object? arguments) {
     if (arguments is! Map) return const SubscriptionArguments();
 
     final officeId = arguments['initialOfficeId']?.toString();
+    final packageId = arguments['initialPackageId']?.toString();
     return SubscriptionArguments(
       initialOfficeId: (officeId != null && officeId.isNotEmpty)
           ? officeId
+          : null,
+      initialPackageId: (packageId != null && packageId.isNotEmpty)
+          ? packageId
           : null,
     );
   }
@@ -35,4 +40,8 @@ class SubscriptionArguments {
   /// The office the marketplace should open filtered to, or `null` for the whole
   /// marketplace.
   final String? initialOfficeId;
+
+  /// The package whose detail pane the marketplace should open directly to,
+  /// or `null` to land on the listing as usual.
+  final String? initialPackageId;
 }

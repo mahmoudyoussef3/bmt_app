@@ -368,6 +368,19 @@ class TripsRepositoryImpl implements TripsRepository {
   }
 
   @override
+  Future<List<Map<String, dynamic>>> getResourceConflicts({
+    required String date,
+    required String departureTime,
+    required String arrivalTime,
+  }) {
+    return _datasource.fetchResourceConflicts(
+      date: date,
+      departureTime: departureTime,
+      arrivalTime: arrivalTime,
+    );
+  }
+
+  @override
   Stream<void> watchTripsChanges() => _datasource.watchTripsChanges();
 
   @override

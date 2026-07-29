@@ -1287,6 +1287,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profile_refreshFailed => 'We couldn\'t refresh your profile.';
 
   @override
+  String get profile_signInRequiredTitle => 'Sign in to view your profile';
+
+  @override
+  String get profile_signInRequiredBody =>
+      'You\'re browsing as a guest. Sign in to see your trips, packages and account details.';
+
+  @override
+  String get profile_signInCta => 'Sign in';
+
+  @override
   String get welcome_continueWithEmail => 'Continue with Email';
 
   @override
@@ -1377,6 +1387,42 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get auth_help => 'Help?';
+
+  @override
+  String get auth_resetPasswordTitle => 'Set a new password';
+
+  @override
+  String get auth_resetPasswordSubtitle =>
+      'Choose a new password for your account.';
+
+  @override
+  String get auth_newPassword => 'New Password';
+
+  @override
+  String get auth_confirmPassword => 'Confirm Password';
+
+  @override
+  String get auth_passwordsDoNotMatch => 'Passwords do not match';
+
+  @override
+  String get auth_updatePassword => 'Update Password';
+
+  @override
+  String get auth_updatingPassword => 'Updating...';
+
+  @override
+  String get auth_passwordUpdatedSnack =>
+      'Your password has been updated. Please sign in.';
+
+  @override
+  String get auth_resetPasswordFailed => 'Failed to update password';
+
+  @override
+  String get auth_resetLinkInvalid =>
+      'This reset link is invalid or has expired. Please request a new one.';
+
+  @override
+  String get auth_verifyingResetLink => 'Verifying your reset link...';
 
   @override
   String get auth_enterPhoneTitle => 'Enter your phone number';
@@ -2209,6 +2255,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get support_officeRequired => 'Please choose an office';
 
   @override
+  String get support_officeLoadError => 'Couldn\'t load offices.';
+
+  @override
+  String get support_attachmentOpenFailed => 'Couldn\'t open attachment.';
+
+  @override
   String get support_subjectLabel => 'Subject';
 
   @override
@@ -2262,6 +2314,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get support_ticketCreatedSnack =>
       'Ticket created. Our team will get back to you shortly.';
+
+  @override
+  String get support_ticketCreatedAttachmentFailedSnack =>
+      'Ticket submitted, but the attachment failed to upload.';
 
   @override
   String support_ticketNumberTitle(String number) {
@@ -2686,6 +2742,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trips_seatPending => 'Seat pending';
 
   @override
+  String get trips_driverPending => 'Driver Pending';
+
+  @override
+  String get trips_vehiclePending => 'Vehicle Pending';
+
+  @override
+  String get trips_routePointUnknown => 'Unknown';
+
+  @override
   String get trips_awaitingConfirmation => 'Awaiting confirmation';
 
   @override
@@ -2825,42 +2890,14 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get seatRelease_timeJustNow => 'Just now';
-
-  @override
-  String get seatRelease_confirmSheetTitle => 'Confirm Seat Release';
-
-  @override
-  String get seatRelease_confirmSheetBody =>
-      'Please confirm you want to release your seat for this specific trip. Released seats cannot be reclaimed once booked by other passengers.';
-
-  @override
   String get seatRelease_tripDateLabel => 'Trip Date';
-
-  @override
-  String get seatRelease_routeSegmentLabel => 'Route Segment';
 
   @override
   String get seatRelease_seatNumberLabel => 'Seat Number';
 
   @override
-  String get seatRelease_packageOriginLabel => 'Package Origin';
-
-  @override
-  String get seatRelease_confirmSheetWarning =>
-      'This action affects only this selected trip date. Future commute dates remain unaffected.';
-
-  @override
-  String get seatRelease_goBack => 'Go Back';
-
-  @override
-  String get seatRelease_confirmReleaseButton => 'Confirm Release';
-
-  @override
-  String get seatRelease_mockReleaseDateToday => 'Today, Jun 3';
-
-  @override
-  String get seatRelease_noNotesProvided => 'No notes provided';
+  String get seatRelease_actionUnavailable =>
+      'Seat release isn\'t available yet';
 
   @override
   String get seatRelease_statusWaiting => 'Waiting';
@@ -3319,6 +3356,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get payments_bookingReferenceLabel => 'Booking Reference';
+
+  @override
+  String get payments_bookingReferencePending => 'Reference pending';
 
   @override
   String get payments_departsLabel => 'Departs';
@@ -4026,6 +4066,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get referral_noBalanceToRedeem => 'No balance to redeem';
 
   @override
+  String get referral_redeemFailed => 'Redemption failed. Please try again.';
+
+  @override
   String referral_revealedCode(String code) {
     return 'Revealed Code: $code';
   }
@@ -4211,6 +4254,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get communication_messagesUnavailable => 'Messages unavailable';
 
   @override
+  String get communication_imagePreviewUnavailable =>
+      'Preview not available yet';
+
+  @override
   String get booking_whereGetOnOff => 'Where will you get on and off?';
 
   @override
@@ -4256,7 +4303,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get booking_seatHeldWhilePaying =>
-      'Your seat is held while you complete payment.';
+      'Your seat is locked in the moment you confirm and pay.';
 
   @override
   String get booking_chooseYourDeparture => 'Choose your departure';

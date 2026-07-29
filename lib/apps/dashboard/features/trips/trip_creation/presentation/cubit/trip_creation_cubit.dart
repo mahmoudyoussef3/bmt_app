@@ -42,16 +42,19 @@ class TripCreationCubit extends Cubit<TripCreationState> {
   final GetActiveRoutesUseCase _getActiveRoutes;
   final GetActiveDriversUseCase _getActiveDrivers;
   final GetActiveVehiclesUseCase _getActiveVehicles;
+  final GetResourceConflictsUseCase _getResourceConflicts;
 
   TripCreationCubit({
     required CreateTripUseCase createTrip,
     required GetActiveRoutesUseCase getActiveRoutes,
     required GetActiveDriversUseCase getActiveDrivers,
     required GetActiveVehiclesUseCase getActiveVehicles,
+    required GetResourceConflictsUseCase getResourceConflicts,
   }) : _createTrip = createTrip,
        _getActiveRoutes = getActiveRoutes,
        _getActiveDrivers = getActiveDrivers,
        _getActiveVehicles = getActiveVehicles,
+       _getResourceConflicts = getResourceConflicts,
        super(const TripCreationInitial());
 
   Future<void> loadWizardData() async {
@@ -91,6 +94,23 @@ class TripCreationCubit extends Cubit<TripCreationState> {
 
   void reset() {
     emit(const TripCreationInitial());
+  }
+
+  /// Rows of trips that already occupy part of the given time slot, keyed by
+  /// `driver_id`/`vehicle_id`. Deliberately does NOT emit a state: it is called
+  /// on every schedule tweak while the wizard form (routes/vehicles/drivers,
+  /// current selections) stays on screen, and swapping the sealed state would
+  /// tear that form down and lose the operator's in-progress picks.
+  Future<List<Map<String, dynamic>>> getResourceConflicts({
+    required String date,
+    required String departureTime,
+    required String arrivalTime,
+  }) {
+    return _getResourceConflicts(
+      date: date,
+      departureTime: departureTime,
+      arrivalTime: arrivalTime,
+    );
   }
 
   /// Turns a database rejection into a sentence that tells the operator what to do
@@ -136,6 +156,10 @@ class TripCreationCubit extends Cubit<TripCreationState> {
         raw.contains('driver_not_in_office') ||
         raw.contains('route_not_in_office')) {
       return 'أحد العناصر المختارة لا يتبع مكتبك. أعد تحميل الصفحة وحاول مجدداً.';
+    }
+    if (raw.contains('uq_operation_trips_office_trip_code') ||
+        (raw.contains('duplicate key') && raw.contains('trip_code'))) {
+      return 'حدث تعارض مؤقت أثناء ترقيم الرحلة. حاول إنشاء الرحلة مرة أخرى.';
     }
     return raw;
   }

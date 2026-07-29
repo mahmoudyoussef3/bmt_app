@@ -112,11 +112,14 @@ class _CreateTicketFormState extends State<CreateTicketForm> {
           SupportFieldLabel(
             label: context.l10n.support_officeLabel,
             hint: context.l10n.support_officeHint,
+            isRequired: true,
           ),
           SupportOfficeDropdown(
             options: officeOptions,
             value: _effectiveOffice(officeOptions),
             onChanged: (office) => setState(() => _office = office),
+            hasError: cubit.officeLoadFailed,
+            onRetry: cubit.loadOfficeOptions,
           ),
           const SizedBox(height: 24),
           // Hidden entirely when the client has no bookings: an empty picker

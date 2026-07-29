@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/core/localization/format_util.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
 import '../../../domain/entities/package_plan.dart';
@@ -50,7 +51,7 @@ class PackageCardBody extends StatelessWidget {
             Expanded(
               child: PackageStatColumn(
                 label: l10n.packages_perRide,
-                value: l10n.packages_egpAmount(package.pricePerRide.toString()),
+                value: FormatUtil.currency(context, package.pricePerRide),
                 valueColor: Theme.of(context).colorScheme.secondary,
               ),
             ),

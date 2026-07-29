@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/cubit/auth_state.dart';
@@ -65,6 +66,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: BlocBuilder<ProfileCubit, ProfileState>(
               builder: (context, state) => switch (state) {
                 ProfileLoading() => const ProfileSkeleton(),
+                ProfileUnauthenticated() => const _SignInRequiredPrompt(),
                 ProfileError(:final message) => ClientErrorCard.fullScreen(
                   message: message,
                   retryLabel: l10n.common_tryAgain,
@@ -134,5 +136,66 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final confirmed = await LogoutConfirmDialog.show(context);
     if (!confirmed || !mounted) return;
     context.read<ClientAuthCubit>().signOut();
+  }
+}
+
+/// Shown instead of [ClientErrorCard] when the rider is in guest mode: there
+/// is no session for Retry to recover, so the only honest affordance is a
+/// path to sign in.
+class _SignInRequiredPrompt extends StatelessWidget {
+  const _SignInRequiredPrompt();
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppLayout.spaceLg,
+          vertical: AppLayout.spaceXl,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: ClientColors.primaryFor(context).withAlpha(30),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.person_outline_rounded,
+                size: 32,
+                color: ClientColors.primaryFor(context),
+              ),
+            ),
+            const SizedBox(height: AppLayout.spaceLg),
+            Text(
+              l10n.profile_signInRequiredTitle,
+              textAlign: TextAlign.center,
+              style: ClientTypography.headingSmall(
+                context,
+              ).copyWith(color: ClientColors.textPrimaryFor(context)),
+            ),
+            const SizedBox(height: AppLayout.spaceSm),
+            Text(
+              l10n.profile_signInRequiredBody,
+              textAlign: TextAlign.center,
+              style: ClientTypography.bodySmall(
+                context,
+              ).copyWith(color: ClientColors.textSecondaryFor(context)),
+            ),
+            const SizedBox(height: AppLayout.spaceXl),
+            ClientButton(
+              label: l10n.profile_signInCta,
+              onPressed: () =>
+                  Navigator.of(context).pushNamed(AuthRoutes.signIn),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

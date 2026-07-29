@@ -18,7 +18,8 @@ class SupabasePackagesDatasource implements PackagesDatasource {
     var query = _supabase
         .from('transport_packages')
         .select(
-          '*, office:public_offices(id, name, logo_url, rating, ratings_count)',
+          '*, office:public_offices(id, name, logo_url, rating, '
+          'ratings_count, description, service_areas)',
         )
         .eq('active', true);
 

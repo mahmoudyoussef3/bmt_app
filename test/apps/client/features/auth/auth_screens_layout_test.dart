@@ -43,6 +43,9 @@ class _FakeAuthRepository implements ClientAuthRepository {
 
   @override
   Future<void> sendPasswordResetEmail(String email) async {}
+
+  @override
+  Future<void> updatePassword(String newPassword) async {}
 }
 
 class _EmptyRememberMeRepository implements RememberMeRepository {

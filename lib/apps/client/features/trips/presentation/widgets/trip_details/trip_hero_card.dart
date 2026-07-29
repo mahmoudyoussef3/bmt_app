@@ -9,6 +9,7 @@ import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_det
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_hero_facts.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_hero_glow.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_schedule_labels.dart';
+import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_identity_labels.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_status_mapping.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
@@ -75,8 +76,8 @@ class TripHeroCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 22),
                   HeroJourney(
-                    pickup: trip.pickup,
-                    destination: trip.destination,
+                    pickup: pickupLabelFor(context, trip),
+                    destination: destinationLabelFor(context, trip),
                     departureLabel: tripTimeLabel(context, trip),
                   ),
                   const SizedBox(height: 22),

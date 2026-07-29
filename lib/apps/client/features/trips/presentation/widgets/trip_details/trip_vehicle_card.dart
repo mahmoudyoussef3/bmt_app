@@ -4,6 +4,7 @@ import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_inline_badge.dart';
+import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_identity_labels.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// The assigned vehicle's icon, type, name, and code.
@@ -45,7 +46,7 @@ class TripVehicleCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  trip.vehicleName,
+                  vehicleNameFor(context, trip),
                   style: ClientTypography.headingSmall(
                     context,
                   ).copyWith(color: ClientColors.textPrimaryFor(context)),

@@ -36,11 +36,15 @@ class OfficeRatingRow extends StatelessWidget {
           ).copyWith(fontWeight: FontWeight.w800),
         ),
         const SizedBox(width: 4),
-        Text(
-          context.l10n.offices_ratingsCount(office.ratingsCount),
-          style: ClientTypography.labelSmall(
-            context,
-          ).copyWith(color: ClientColors.textSecondaryFor(context)),
+        Flexible(
+          child: Text(
+            context.l10n.offices_ratingsCount(office.ratingsCount),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: ClientTypography.labelSmall(
+              context,
+            ).copyWith(color: ClientColors.textSecondaryFor(context)),
+          ),
         ),
       ],
     );

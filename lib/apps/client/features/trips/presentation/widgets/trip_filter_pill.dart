@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_filter_count_badge.dart';
 
 /// A single filter as a tappable pill. No checkmark — selection reads from the
@@ -21,8 +23,9 @@ class TripFilterPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final foreground = active ? scheme.primary : scheme.onSurfaceVariant;
+    final foreground = active
+        ? ClientColors.primaryFor(context)
+        : ClientColors.textSecondaryFor(context);
 
     return Material(
       color: Colors.transparent,
@@ -35,11 +38,13 @@ class TripFilterPill extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
           decoration: BoxDecoration(
             color: active
-                ? scheme.primary.withAlpha(28)
-                : scheme.surfaceContainerHighest.withAlpha(90),
+                ? ClientColors.primaryFor(context).withAlpha(28)
+                : ClientColors.surfaceMutedFor(context).withAlpha(90),
             borderRadius: BorderRadius.circular(999),
             border: Border.all(
-              color: active ? scheme.primary : scheme.outline.withAlpha(70),
+              color: active
+                  ? ClientColors.primaryFor(context)
+                  : ClientColors.borderFor(context).withAlpha(70),
               width: active ? 1.4 : 1,
             ),
           ),
@@ -48,10 +53,9 @@ class TripFilterPill extends StatelessWidget {
             children: [
               Text(
                 label,
-                style: TextStyle(
+                style: ClientTypography.labelLarge(context).copyWith(
                   color: foreground,
                   fontWeight: active ? FontWeight.w800 : FontWeight.w600,
-                  fontSize: 13.5,
                 ),
               ),
               if (count > 0) ...[

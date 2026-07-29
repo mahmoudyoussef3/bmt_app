@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/client/features/profile/domain/entities/client_profile.dart';
 import 'package:bmt_app/apps/client/features/profile/presentation/cubit/profile_cubit.dart';
+import 'package:bmt_app/apps/client/features/profile/presentation/cubit/profile_state.dart';
 import 'package:bmt_app/apps/client/features/profile/presentation/widgets/appearance_sheet.dart';
 import 'package:bmt_app/apps/client/features/profile/presentation/widgets/edit_profile_sheet.dart';
 import 'package:bmt_app/apps/client/features/profile/presentation/widgets/language_sheet.dart';
@@ -26,11 +27,20 @@ abstract final class ProfileSheets {
       // keyboard instead of riding above it.
       builder: (sheetContext) => BlocProvider.value(
         value: cubit,
-        child: Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
+        // Closes the sheet itself on a successful save, so the confirmation
+        // snackbar (shown by the screen underneath) is actually visible
+        // instead of hiding behind a sheet nobody dismissed yet.
+        child: BlocListener<ProfileCubit, ProfileState>(
+          listenWhen: (previous, current) =>
+              current is ProfileLoaded &&
+              current.editStatus == ProfileEditStatus.success,
+          listener: (_, _) => Navigator.of(sheetContext).pop(),
+          child: Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
+            ),
+            child: EditProfileSheet(profile: profile),
           ),
-          child: EditProfileSheet(profile: profile),
         ),
       ),
     );

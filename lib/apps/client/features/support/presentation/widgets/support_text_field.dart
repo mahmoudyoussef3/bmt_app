@@ -32,7 +32,7 @@ class SupportTextField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SupportFieldLabel(label: label, hint: labelHint),
+        SupportFieldLabel(label: label, hint: labelHint, isRequired: true),
         TextFormField(
           controller: controller,
           maxLines: maxLines,

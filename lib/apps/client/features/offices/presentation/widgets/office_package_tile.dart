@@ -5,11 +5,13 @@ import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/packages/domain/entities/package_plan.dart';
+import 'package:bmt_app/core/localization/format_util.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// One of the office's commute packages, as it appears on the office profile:
-/// name, the duration/ride shape, and price. Tapping opens the marketplace
-/// already filtered to this office so the rider can compare and subscribe.
+/// name, the duration/ride shape, and price. Tapping opens this exact
+/// package's detail pane in the marketplace, the same way `PackageCard` does
+/// from the listing.
 class OfficePackageTile extends StatelessWidget {
   const OfficePackageTile({
     super.key,
@@ -72,7 +74,7 @@ class OfficePackageTile extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                l10n.packages_egpAmount(package.priceInPounds.toString()),
+                FormatUtil.currency(context, package.priceInPounds),
                 style: ClientTypography.priceSmall(
                   context,
                 ).copyWith(color: scheme.primary, fontWeight: FontWeight.w900),

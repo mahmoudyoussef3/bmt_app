@@ -167,138 +167,6 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
     };
   }
 
-  void _openConfirmationSheet() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        final scheme = Theme.of(context).colorScheme;
-        final l10n = context.l10n;
-        return Container(
-          decoration: BoxDecoration(
-            color: scheme.surfaceContainerHighest,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          ),
-          padding: const EdgeInsets.fromLTRB(24, 16, 24, 30),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.grey[600],
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              const SizedBox(height: 20),
-              Text(
-                l10n.seatRelease_confirmSheetTitle,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                l10n.seatRelease_confirmSheetBody,
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Colors.grey,
-                  height: 1.4,
-                ),
-              ),
-              const SizedBox(height: 20),
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: ClientColors.surfaceFor(context),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: ClientColors.borderFor(context)),
-                ),
-                child: Column(
-                  children: [
-                    _buildConfirmationRow(
-                      l10n.seatRelease_tripDateLabel,
-                      _selectedTripForRelease!.date,
-                    ),
-                    const SizedBox(height: 8),
-                    _buildConfirmationRow(
-                      l10n.seatRelease_routeSegmentLabel,
-                      _packageRoute,
-                    ),
-                    const SizedBox(height: 8),
-                    _buildConfirmationRow(
-                      l10n.seatRelease_seatNumberLabel,
-                      l10n.home_seatLabel(_selectedTripForRelease!.seatNumber),
-                    ),
-                    const SizedBox(height: 8),
-                    _buildConfirmationRow(
-                      l10n.seatRelease_packageOriginLabel,
-                      _packageName,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 18),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: scheme.error.withAlpha(24),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: scheme.error.withAlpha(60)),
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.warning_amber_rounded,
-                      color: scheme.error,
-                      size: 18,
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        l10n.seatRelease_confirmSheetWarning,
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: scheme.error,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-              Row(
-                children: [
-                  Expanded(
-                    child: TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: Text(l10n.seatRelease_goBack),
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: ClientButton(
-                      label: l10n.seatRelease_confirmReleaseButton,
-                      expand: true,
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        _submitRelease();
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   Widget _buildConfirmationRow(String label, String value) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -312,57 +180,14 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
     );
   }
 
-  void _submitRelease() {
-    if (_selectedTripForRelease == null) return;
-    final l10n = context.l10n;
-
-    final newRecord = SeatReleaseRecord(
-      releaseId: 'REL-${math.Random().nextInt(90000) + 10000}',
-      releaseDate: l10n.seatRelease_mockReleaseDateToday,
-      tripDate: _selectedTripForRelease!.date,
-      route: _packageRoute,
-      seatNumber: _selectedTripForRelease!.seatNumber,
-      reason: _selectedReason,
-      notes: _notesController.text.trim().isEmpty
-          ? l10n.seatRelease_noNotesProvided
-          : _notesController.text.trim(),
-      status: 'Waiting',
-    );
-
-    // Add to history list, remove from upcoming list, trigger confetti
-    setState(() {
-      _pastReleases.insert(0, newRecord);
-      _upcomingTrips.removeWhere((t) => t.id == _selectedTripForRelease!.id);
-      _releasedSeatsThisMonth++;
-      _activeRecord = newRecord;
-
-      // Add to notifications
-      _notifications.insert(
-        0,
-        NotificationItem(
-          title: l10n.seatRelease_notifReleasedTitle,
-          body: l10n.seatRelease_notifReleasedBody(
-            newRecord.seatNumber,
-            newRecord.tripDate,
-          ),
-          time: l10n.seatRelease_timeJustNow,
-          icon: Icons.event_busy_rounded,
-          color: Colors.orangeAccent,
-        ),
-      );
-
-      _notesController.clear();
-      _currentView = 4; // success view
-    });
-
-    _confetti.fire();
-  }
-
   // --- RENDERS ---
 
+  // `_seatReleaseDataApplied` only ever gates whether the loading/error
+  // screens give way to content (see the checks in `build` below) — it must
+  // never gate applying the data itself, or the refresh button in the app
+  // bar re-fetches from Supabase but the result never reaches the UI after
+  // the first load.
   void _applySeatReleaseData(SeatReleaseLoaded state) {
-    if (_seatReleaseDataApplied) return;
-
     final data = state.data;
     _packageName = data.packageName;
     _packageType = data.packageType;
@@ -946,26 +771,29 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
                           ),
                         ),
                         const SizedBox(width: 6),
-                        ElevatedButton(
-                          onPressed: () {
-                            setState(() {
-                              _selectedTripForRelease = trip;
-                              _currentView = 2; // form screen
-                            });
-                          },
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 8,
+                        // There is no release RPC yet (see
+                        // SeatReleaseRepository — read-only), so this stays
+                        // disabled rather than opening a request flow nothing
+                        // on the backend can honour.
+                        Tooltip(
+                          message: context.l10n.seatRelease_actionUnavailable,
+                          child: ElevatedButton(
+                            onPressed: null,
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 14,
+                                vertical: 8,
+                              ),
+                              backgroundColor: Colors.grey.shade300,
+                              disabledBackgroundColor: Colors.grey.shade300,
                             ),
-                            backgroundColor: scheme.primary,
-                          ),
-                          child: Text(
-                            context.l10n.seatRelease_releaseSeatButton,
-                            style: const TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
+                            child: Text(
+                              context.l10n.seatRelease_releaseSeatButton,
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey.shade700,
+                              ),
                             ),
                           ),
                         ),
@@ -1348,10 +1176,16 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
             ),
             const SizedBox(width: 14),
             Expanded(
-              child: ClientButton(
-                label: context.l10n.seatRelease_releaseSeatButton,
-                expand: true,
-                onPressed: _openConfirmationSheet,
+              // There is no release RPC yet (see SeatReleaseRepository —
+              // read-only), so this stays disabled rather than pretending to
+              // submit a request nothing on the backend can act on.
+              child: Tooltip(
+                message: context.l10n.seatRelease_actionUnavailable,
+                child: ClientButton(
+                  label: context.l10n.seatRelease_releaseSeatButton,
+                  expand: true,
+                  onPressed: null,
+                ),
               ),
             ),
           ],

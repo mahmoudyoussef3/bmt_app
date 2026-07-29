@@ -15,6 +15,8 @@ extension PackagePlanMapper on PackagePlanModel {
     officeLogoUrl: officeLogoUrl,
     officeRating: officeRating,
     officeRatingsCount: officeRatingsCount,
+    officeDescription: officeDescription,
+    officeServiceAreas: officeServiceAreas,
   );
 }
 

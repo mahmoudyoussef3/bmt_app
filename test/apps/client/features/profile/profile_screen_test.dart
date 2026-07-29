@@ -62,6 +62,9 @@ class _StubAuthRepository implements ClientAuthRepository {
 
   @override
   Future<void> sendPasswordResetEmail(String email) async {}
+
+  @override
+  Future<void> updatePassword(String newPassword) async {}
 }
 
 class _StubRememberMeRepository implements RememberMeRepository {

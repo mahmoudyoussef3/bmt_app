@@ -20,14 +20,18 @@ class PackageProviderOfficeCard extends StatelessWidget {
   final PackagePlan package;
 
   /// Builds the office marketplace summary the profile route expects from the
-  /// identity the package already carries. The profile then loads the seller's
-  /// routes, departures and packages fresh from this id.
+  /// identity the package already carries — the same `public_offices` join, so
+  /// this renders as full a header as opening the office from the Offices
+  /// Directory. The profile then loads the seller's routes, departures and
+  /// packages fresh from this id.
   OfficeSummary _asOfficeSummary() => OfficeSummary(
     id: package.officeId,
     name: package.officeName,
     logoUrl: package.officeLogoUrl,
+    description: package.officeDescription,
     rating: package.officeRating,
     ratingsCount: package.officeRatingsCount,
+    serviceAreas: package.officeServiceAreas,
   );
 
   void _openOffice(BuildContext context) {

@@ -40,6 +40,13 @@ class SupportOfficesLoaded extends SupportState {
   const SupportOfficesLoaded();
 }
 
+/// Signals that loading the office picker options failed. Like
+/// [SupportOfficesLoaded], it carries no data — the create form reads
+/// [SupportCubit.officeLoadFailed] to decide whether to show a retry.
+class SupportOfficesLoadError extends SupportState {
+  const SupportOfficesLoadError();
+}
+
 class SupportError extends SupportState {
   final String message;
 
@@ -85,8 +92,17 @@ class SupportSuccess extends SupportState {
   final String message;
   final SupportTicket? ticket;
 
-  const SupportSuccess({required this.message, this.ticket});
+  /// True when the ticket itself was created but its attachment failed to
+  /// upload. Still a success — the ticket exists — but the UI should say so
+  /// with a distinct, non-blocking message instead of a plain success toast.
+  final bool attachmentFailed;
+
+  const SupportSuccess({
+    required this.message,
+    this.ticket,
+    this.attachmentFailed = false,
+  });
 
   @override
-  List<Object?> get props => [message, ticket];
+  List<Object?> get props => [message, ticket, attachmentFailed];
 }

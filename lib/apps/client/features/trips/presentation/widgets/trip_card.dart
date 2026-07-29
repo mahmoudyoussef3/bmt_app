@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_driver_row.dart';
+import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_identity_labels.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_list/trip_card_attention_strip.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_route_marks.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_status_mapping.dart';
@@ -56,14 +57,18 @@ class TripCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      trip.pickup,
+                      pickupLabelFor(context, trip),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      trip.destination,
+                      destinationLabelFor(context, trip),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w700,
                       ),

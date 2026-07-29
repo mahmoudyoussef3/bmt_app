@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/referrals/domain/entities/referral_rewards.dart';
 import 'package:bmt_app/apps/client/features/referrals/presentation/cubit/referral_rewards_cubit.dart';
@@ -142,6 +143,18 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
 
     if (!mounted) return;
 
+    // The cubit returns 0 both when the balance was empty and when the
+    // redemption itself failed — either way there is nothing to celebrate.
+    if (redeemed <= 0) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(context.l10n.referral_redeemFailed),
+          backgroundColor: ClientColors.journeyRed,
+        ),
+      );
+      return;
+    }
+
     _confetti.fire();
 
     showDialog(
@@ -167,19 +180,22 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
               Text(
                 context.l10n.referral_redemptionSuccessBody,
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 13, height: 1.4),
+                style: ClientTypography.bodySmall(
+                  context,
+                ).copyWith(fontSize: 13, height: 1.4),
               ),
               const SizedBox(height: 10),
               Text(
                 context.l10n.referral_successfullyTransferred,
-                style: TextStyle(
+                style: ClientTypography.labelSmall(context).copyWith(
                   fontSize: 11,
+                  fontWeight: FontWeight.normal,
                   color: scheme.onSurface.withAlpha(150),
                 ),
               ),
               Text(
                 context.l10n.referral_egpTotal(redeemed),
-                style: TextStyle(
+                style: ClientTypography.priceMedium(context).copyWith(
                   fontSize: 22,
                   fontWeight: FontWeight.w900,
                   color: scheme.primary,
@@ -230,22 +246,25 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
                     width: 40,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: Colors.grey[600],
+                      color: ClientColors.borderStrongFor(context),
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     voucher.title,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: ClientTypography.bodyLarge(
+                      context,
+                    ).copyWith(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     context.l10n.referral_scratchSubtitle,
-                    style: const TextStyle(fontSize: 11, color: Colors.grey),
+                    style: ClientTypography.labelSmall(context).copyWith(
+                      fontSize: 11,
+                      fontWeight: FontWeight.normal,
+                      color: ClientColors.textSecondaryFor(context),
+                    ),
                   ),
                   const SizedBox(height: 24),
 
@@ -273,7 +292,9 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
                                 children: [
                                   Text(
                                     voucher.amount,
-                                    style: TextStyle(
+                                    style: ClientTypography.priceHero(
+                                      context,
+                                    ).copyWith(
                                       fontSize: 32,
                                       fontWeight: FontWeight.w900,
                                       color: scheme.primary,
@@ -283,9 +304,14 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
                                   Text(
                                     voucher.description,
                                     textAlign: TextAlign.center,
-                                    style: const TextStyle(
+                                    style: ClientTypography.labelSmall(
+                                      context,
+                                    ).copyWith(
                                       fontSize: 11,
-                                      color: Colors.grey,
+                                      fontWeight: FontWeight.normal,
+                                      color: ClientColors.textSecondaryFor(
+                                        context,
+                                      ),
                                     ),
                                   ),
                                   const SizedBox(height: 12),
@@ -306,7 +332,9 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
                                       children: [
                                         Text(
                                           voucher.promoCode,
-                                          style: TextStyle(
+                                          style: ClientTypography.bodyMedium(
+                                            context,
+                                          ).copyWith(
                                             fontSize: 13,
                                             fontWeight: FontWeight.bold,
                                             color: scheme.primary,
@@ -314,10 +342,12 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
                                           ),
                                         ),
                                         const SizedBox(width: 8),
-                                        const Icon(
+                                        Icon(
                                           Icons.copy,
                                           size: 14,
-                                          color: Colors.grey,
+                                          color: ClientColors.textSecondaryFor(
+                                            context,
+                                          ),
                                         ),
                                       ],
                                     ),
@@ -418,40 +448,49 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
           _data = state.data;
         }
 
-        return Scaffold(
-          backgroundColor: scheme.surfaceContainerHighest,
-          appBar: ClientAppBar(
-            title: _getViewTitle(context),
-            onBack: _onBackPress,
-            actions: [
-              IconButton(
-                tooltip: context.l10n.referral_refresh,
-                icon: const Icon(Icons.refresh_rounded),
-                onPressed: () => context.read<ReferralRewardsCubit>().load(),
-              ),
-            ],
-          ),
-          body: SafeArea(
-            child: switch (state) {
-              ReferralRewardsLoading() => const Center(
-                child: CircularProgressIndicator(),
-              ),
-              ReferralRewardsError(:final message) => EmptyState(
-                title: context.l10n.referral_rewardsUnavailable,
-                subtitle: message,
-              ),
-              ReferralRewardsLoaded() => Stack(
-                children: [
-                  // Core view
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 250),
-                    child: _buildCurrentView(scheme),
-                  ),
+        return PopScope(
+          // A system back gesture should step the inner view back first,
+          // matching what the app bar's back arrow does — the two used to
+          // disagree and a system back always popped the whole route.
+          canPop: _currentView == 1,
+          onPopInvokedWithResult: (didPop, _) {
+            if (!didPop) _onBackPress();
+          },
+          child: Scaffold(
+            backgroundColor: scheme.surfaceContainerHighest,
+            appBar: ClientAppBar(
+              title: _getViewTitle(context),
+              onBack: _onBackPress,
+              actions: [
+                IconButton(
+                  tooltip: context.l10n.referral_refresh,
+                  icon: const Icon(Icons.refresh_rounded),
+                  onPressed: () => context.read<ReferralRewardsCubit>().load(),
+                ),
+              ],
+            ),
+            body: SafeArea(
+              child: switch (state) {
+                ReferralRewardsLoading() => const Center(
+                  child: CircularProgressIndicator(),
+                ),
+                ReferralRewardsError(:final message) => EmptyState(
+                  title: context.l10n.referral_rewardsUnavailable,
+                  subtitle: message,
+                ),
+                ReferralRewardsLoaded() => Stack(
+                  children: [
+                    // Core view
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 250),
+                      child: _buildCurrentView(scheme),
+                    ),
 
-                  ConfettiOverlay(controller: _confetti),
-                ],
-              ),
-            },
+                    ConfettiOverlay(controller: _confetti),
+                  ],
+                ),
+              },
+            ),
           ),
         );
       },
@@ -514,16 +553,15 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
             children: [
               Icon(
                 Icons.emoji_events_rounded,
-                color: Colors.amber.shade700,
+                color: ClientColors.journeyAmber,
                 size: 20,
               ),
               const SizedBox(width: 8),
               Text(
                 context.l10n.referral_leaderboardTitle,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 15,
-                ),
+                style: ClientTypography.bodyMedium(
+                  context,
+                ).copyWith(fontWeight: FontWeight.bold, fontSize: 15),
               ),
             ],
           ),
@@ -539,7 +577,7 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
     ColorScheme scheme,
   ) {
     final medal = switch (entry.rank) {
-      1 => Colors.amber.shade600,
+      1 => ClientColors.journeyAmber,
       2 => Colors.blueGrey.shade300,
       3 => Colors.brown.shade400,
       _ => scheme.surfaceContainerHighest,
@@ -564,9 +602,8 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
             decoration: BoxDecoration(color: medal, shape: BoxShape.circle),
             child: Text(
               '${entry.rank}',
-              style: TextStyle(
+              style: ClientTypography.labelMedium(context).copyWith(
                 fontWeight: FontWeight.w900,
-                fontSize: 12,
                 color: entry.rank <= 3 ? Colors.white : scheme.onSurfaceVariant,
               ),
             ),
@@ -579,7 +616,9 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
                   : entry.name,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+              style: ClientTypography.bodyMedium(
+                context,
+              ).copyWith(fontWeight: FontWeight.w700, fontSize: 13),
             ),
           ),
           Column(
@@ -587,14 +626,15 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
             children: [
               Text(
                 context.l10n.referral_referralsCount(entry.successfulCount),
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
+                style: ClientTypography.labelMedium(
+                  context,
+                ).copyWith(fontWeight: FontWeight.bold),
               ),
               Text(
                 context.l10n.referral_egpTotal(entry.totalRewards),
-                style: TextStyle(fontSize: 10, color: scheme.onSurfaceVariant),
+                style: ClientTypography.labelSmall(
+                  context,
+                ).copyWith(fontWeight: FontWeight.normal, color: scheme.onSurfaceVariant),
               ),
             ],
           ),
@@ -650,14 +690,14 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
                   value: progress,
                   strokeWidth: 8,
                   backgroundColor: scheme.surface.withAlpha(100),
-                  color: Colors.orangeAccent,
+                  color: ClientColors.journeyAmber,
                 ),
               ),
               Icon(
                 remaining == 0
                     ? Icons.emoji_events_rounded
                     : Icons.people_alt_rounded,
-                color: Colors.orangeAccent,
+                color: ClientColors.journeyAmber,
                 size: 28,
               ),
             ],
@@ -669,7 +709,7 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
               children: [
                 Text(
                   milestoneLabel,
-                  style: const TextStyle(
+                  style: ClientTypography.bodyLarge(context).copyWith(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -678,7 +718,7 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
                 const SizedBox(height: 4),
                 Text(
                   milestoneDesc,
-                  style: TextStyle(
+                  style: ClientTypography.bodySmall(context).copyWith(
                     fontSize: 11,
                     color: scheme.onSurface.withAlpha(180),
                     height: 1.3,
@@ -687,8 +727,7 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
                 const SizedBox(height: 8),
                 Text(
                   l10n.referral_progressCount(current, target),
-                  style: TextStyle(
-                    fontSize: 10,
+                  style: ClientTypography.labelSmall(context).copyWith(
                     fontWeight: FontWeight.bold,
                     color: scheme.primary,
                   ),
@@ -726,7 +765,7 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
           context.l10n.referral_pending,
           '$_pendingReferrals',
           Icons.hourglass_bottom_rounded,
-          Colors.orange,
+          ClientColors.journeyAmber,
         ),
         _buildStatCard(
           context.l10n.referral_statTotalEarned,
@@ -760,13 +799,19 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
           const SizedBox(height: 10),
           Text(
             value,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+            style: ClientTypography.bodyMedium(
+              context,
+            ).copyWith(fontWeight: FontWeight.bold, fontSize: 14),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 4),
           Text(
             label,
-            style: const TextStyle(fontSize: 9, color: Colors.grey),
+            style: ClientTypography.labelSmall(context).copyWith(
+              fontSize: 9,
+              fontWeight: FontWeight.normal,
+              color: ClientColors.textSecondaryFor(context),
+            ),
             textAlign: TextAlign.center,
           ),
         ],
@@ -787,10 +832,9 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
         children: [
           Text(
             context.l10n.referral_yourCodeLabel,
-            style: const TextStyle(
+            style: ClientTypography.labelMedium(context).copyWith(
               fontSize: 11,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey,
+              color: ClientColors.textSecondaryFor(context),
             ),
           ),
           const SizedBox(height: 10),
@@ -812,7 +856,7 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
                     children: [
                       Text(
                         _referralCode,
-                        style: const TextStyle(
+                        style: ClientTypography.bodyMedium(context).copyWith(
                           fontSize: 14,
                           fontWeight: FontWeight.w900,
                           letterSpacing: 0.5,
@@ -874,7 +918,7 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
           badgeText: _walletBalance > 0
               ? context.l10n.referral_claimableBadge(_walletBalance)
               : null,
-          color: Colors.orangeAccent,
+          color: ClientColors.journeyAmber,
           onTap: () => setState(() => _currentView = 4),
           scheme: scheme,
         ),
@@ -933,10 +977,9 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
                           children: [
                             Text(
                               title,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
-                              ),
+                              style: ClientTypography.bodyMedium(
+                                context,
+                              ).copyWith(fontWeight: FontWeight.bold, fontSize: 13),
                             ),
                             if (badgeText != null) ...[
                               const SizedBox(width: 8),
@@ -946,14 +989,14 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
                                   vertical: 2,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.redAccent.withAlpha(40),
+                                  color: ClientColors.journeyAmber.withAlpha(40),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
                                   badgeText,
-                                  style: const TextStyle(
+                                  style: ClientTypography.labelSmall(context).copyWith(
                                     fontSize: 8,
-                                    color: Colors.redAccent,
+                                    color: ClientColors.journeyAmber,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -964,9 +1007,9 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
                         const SizedBox(height: 2),
                         Text(
                           subtitle,
-                          style: const TextStyle(
-                            fontSize: 10,
-                            color: Colors.grey,
+                          style: ClientTypography.labelSmall(context).copyWith(
+                            fontWeight: FontWeight.normal,
+                            color: ClientColors.textSecondaryFor(context),
                           ),
                         ),
                       ],
@@ -974,7 +1017,7 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
                   ),
                   DirectionalIcon(
                     Icons.chevron_right_rounded,
-                    color: Colors.grey,
+                    color: ClientColors.textSecondaryFor(context),
                   ),
                 ],
               ),
@@ -997,7 +1040,9 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
           title: Center(
             child: Text(
               context.l10n.referral_scanToJoin,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style: ClientTypography.bodyLarge(
+                context,
+              ).copyWith(fontSize: 16, fontWeight: FontWeight.bold),
             ),
           ),
           content: Column(
@@ -1022,7 +1067,7 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
               Text(
                 context.l10n.referral_qrHint,
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: ClientTypography.bodySmall(context).copyWith(
                   fontSize: 11,
                   color: scheme.onSurface.withAlpha(150),
                   height: 1.3,
@@ -1067,10 +1112,9 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
             children: [
               Text(
                 context.l10n.referral_yourCodeLabel,
-                style: const TextStyle(
+                style: ClientTypography.labelMedium(context).copyWith(
                   fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey,
+                  color: ClientColors.textSecondaryFor(context),
                 ),
               ),
               const SizedBox(height: 10),
@@ -1092,7 +1136,7 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
                         children: [
                           Text(
                             _referralCode,
-                            style: const TextStyle(
+                            style: ClientTypography.bodyMedium(context).copyWith(
                               fontSize: 15,
                               fontWeight: FontWeight.w900,
                               letterSpacing: 1,
@@ -1146,10 +1190,9 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
             children: [
               Text(
                 context.l10n.referral_howItWorks,
-                style: const TextStyle(
+                style: ClientTypography.labelMedium(context).copyWith(
                   fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey,
+                  color: ClientColors.textSecondaryFor(context),
                 ),
               ),
               const SizedBox(height: 14),
@@ -1166,7 +1209,7 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
                 number: '2',
                 title: context.l10n.referral_step2Title,
                 subtitle: context.l10n.referral_step2Subtitle,
-                color: Colors.orangeAccent,
+                color: ClientColors.journeyAmber,
               ),
               const SizedBox(height: 12),
               _buildHowItWorksStep(
@@ -1203,11 +1246,9 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
           alignment: Alignment.center,
           child: Text(
             number,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w900,
-              color: color,
-            ),
+            style: ClientTypography.labelMedium(
+              context,
+            ).copyWith(fontWeight: FontWeight.w900, color: color),
           ),
         ),
         const SizedBox(width: 12),
@@ -1217,17 +1258,16 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
             children: [
               Text(
                 title,
-                style: const TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: ClientTypography.labelMedium(
+                  context,
+                ).copyWith(fontSize: 12),
               ),
               const SizedBox(height: 2),
               Text(
                 subtitle,
-                style: const TextStyle(
-                  fontSize: 10,
-                  color: Colors.grey,
+                style: ClientTypography.labelSmall(context).copyWith(
+                  fontWeight: FontWeight.normal,
+                  color: ClientColors.textSecondaryFor(context),
                   height: 1.35,
                 ),
               ),
@@ -1247,10 +1287,9 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
         children: [
           Text(
             context.l10n.referral_directShareOptions,
-            style: const TextStyle(
+            style: ClientTypography.labelMedium(context).copyWith(
               fontSize: 11,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey,
+              color: ClientColors.textSecondaryFor(context),
             ),
           ),
           const SizedBox(height: 12),
@@ -1300,7 +1339,7 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
           const SizedBox(height: 8),
           Text(
             label,
-            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+            style: ClientTypography.labelSmall(context).copyWith(fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -1318,26 +1357,30 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
           children: [
             Text(
               context.l10n.referral_referralsLog,
-              style: const TextStyle(
+              style: ClientTypography.bodyMedium(context).copyWith(
                 fontSize: 13,
                 fontWeight: FontWeight.bold,
-                color: Colors.grey,
+                color: ClientColors.textSecondaryFor(context),
               ),
             ),
             Text(
               context.l10n.referral_totalReferralsCount(_history.length),
-              style: const TextStyle(fontSize: 11, color: Colors.grey),
+              style: ClientTypography.labelSmall(context).copyWith(
+                fontSize: 11,
+                fontWeight: FontWeight.normal,
+                color: ClientColors.textSecondaryFor(context),
+              ),
             ),
           ],
         ),
         const SizedBox(height: 12),
 
         ..._history.map((item) {
-          Color statusColor = Colors.grey;
+          Color statusColor = ClientColors.textSecondaryFor(context);
           if (item.status == 'Reward Granted') {
             statusColor = ClientColors.journeyCyan;
           } else if (item.status == 'Pending Registration') {
-            statusColor = Colors.amber;
+            statusColor = ClientColors.journeyAmber;
           }
 
           return Container(
@@ -1361,19 +1404,18 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
                     children: [
                       Text(
                         item.name,
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: ClientTypography.bodyMedium(
+                          context,
+                        ).copyWith(fontSize: 13, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 2),
                       Text(
                         context.l10n.referral_invitedOn(
                           _displayDate(context, item.date),
                         ),
-                        style: const TextStyle(
-                          fontSize: 10,
-                          color: Colors.grey,
+                        style: ClientTypography.labelSmall(context).copyWith(
+                          fontWeight: FontWeight.normal,
+                          color: ClientColors.textSecondaryFor(context),
                         ),
                       ),
                     ],
@@ -1386,12 +1428,11 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
                       item.rewardAmount > 0
                           ? context.l10n.referral_egpEarned(item.rewardAmount)
                           : context.l10n.referral_egpZero,
-                      style: TextStyle(
-                        fontSize: 12,
+                      style: ClientTypography.labelMedium(context).copyWith(
                         fontWeight: FontWeight.w900,
                         color: item.rewardAmount > 0
                             ? scheme.primary
-                            : Colors.grey,
+                            : ClientColors.textSecondaryFor(context),
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -1406,11 +1447,9 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
                       ),
                       child: Text(
                         _historyStatusLabel(context, item.status),
-                        style: TextStyle(
-                          fontSize: 8,
-                          fontWeight: FontWeight.bold,
-                          color: statusColor,
-                        ),
+                        style: ClientTypography.labelSmall(
+                          context,
+                        ).copyWith(fontSize: 8, color: statusColor),
                       ),
                     ),
                   ],
@@ -1436,10 +1475,10 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
         // Unscratched Cards
         Text(
           context.l10n.referral_claimVouchersTitle,
-          style: const TextStyle(
+          style: ClientTypography.bodyMedium(context).copyWith(
             fontSize: 13,
             fontWeight: FontWeight.bold,
-            color: Colors.grey,
+            color: ClientColors.textSecondaryFor(context),
           ),
         ),
         const SizedBox(height: 12),
@@ -1488,10 +1527,9 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
                 children: [
                   Text(
                     context.l10n.referral_walletLabel,
-                    style: const TextStyle(
+                    style: ClientTypography.labelMedium(context).copyWith(
                       fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey,
+                      color: ClientColors.textSecondaryFor(context),
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -1499,10 +1537,12 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
                     hasBalance
                         ? context.l10n.referral_walletAvailable(_walletBalance)
                         : context.l10n.referral_noBalanceYet,
-                    style: TextStyle(
+                    style: ClientTypography.priceMedium(context).copyWith(
                       fontSize: 20,
                       fontWeight: FontWeight.w900,
-                      color: hasBalance ? scheme.primary : Colors.grey,
+                      color: hasBalance
+                          ? scheme.primary
+                          : ClientColors.textSecondaryFor(context),
                     ),
                   ),
                 ],
@@ -1514,7 +1554,7 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
             hasBalance
                 ? context.l10n.referral_transferHint
                 : context.l10n.referral_earnBalanceHint,
-            style: TextStyle(
+            style: ClientTypography.bodySmall(context).copyWith(
               fontSize: 11,
               color: scheme.onSurface.withAlpha(155),
               height: 1.4,
@@ -1537,7 +1577,7 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
                 hasBalance
                     ? context.l10n.referral_redeemToWallet
                     : context.l10n.referral_noBalanceToRedeem,
-                style: const TextStyle(
+                style: ClientTypography.bodyMedium(context).copyWith(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
                   color: Colors.white,
@@ -1574,7 +1614,7 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
                     decoration: BoxDecoration(
                       color: voucher.isRevealed
                           ? scheme.primary.withAlpha(20)
-                          : Colors.orangeAccent.withAlpha(20),
+                          : ClientColors.journeyAmber.withAlpha(20),
                       shape: BoxShape.circle,
                     ),
                     alignment: Alignment.center,
@@ -1584,7 +1624,7 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
                           : Icons.lock_outline_rounded,
                       color: voucher.isRevealed
                           ? scheme.primary
-                          : Colors.orangeAccent,
+                          : ClientColors.journeyAmber,
                       size: 20,
                     ),
                   ),
@@ -1595,10 +1635,9 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
                       children: [
                         Text(
                           voucher.title,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          style: ClientTypography.bodyMedium(
+                            context,
+                          ).copyWith(fontSize: 13, fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 2),
                         Text(
@@ -1607,11 +1646,10 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
                                   voucher.promoCode,
                                 )
                               : context.l10n.referral_lockedScratchToReveal,
-                          style: TextStyle(
-                            fontSize: 10,
+                          style: ClientTypography.labelSmall(context).copyWith(
                             color: voucher.isRevealed
                                 ? ClientColors.journeyCyan
-                                : Colors.grey,
+                                : ClientColors.textSecondaryFor(context),
                             fontWeight: voucher.isRevealed
                                 ? FontWeight.bold
                                 : FontWeight.normal,
@@ -1622,7 +1660,7 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
                   ),
                   DirectionalIcon(
                     Icons.chevron_right_rounded,
-                    color: Colors.grey,
+                    color: ClientColors.textSecondaryFor(context),
                   ),
                 ],
               ),

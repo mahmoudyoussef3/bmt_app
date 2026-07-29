@@ -103,3 +103,21 @@ class GetActiveVehiclesUseCase {
     return _repository.getActiveVehicles();
   }
 }
+
+class GetResourceConflictsUseCase {
+  final TripsRepository _repository;
+
+  const GetResourceConflictsUseCase(this._repository);
+
+  Future<List<Map<String, dynamic>>> call({
+    required String date,
+    required String departureTime,
+    required String arrivalTime,
+  }) {
+    return _repository.getResourceConflicts(
+      date: date,
+      departureTime: departureTime,
+      arrivalTime: arrivalTime,
+    );
+  }
+}

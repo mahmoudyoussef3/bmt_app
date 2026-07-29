@@ -58,6 +58,13 @@ class RouteSelectionScreen extends StatelessWidget {
   }
 
   void _continueToBooking(BuildContext context, RouteOptionData route) {
-    Navigator.pushNamed(context, BookingRoutes.wizard, arguments: route);
+    final initialPackageId = query.initialPackageId;
+    Navigator.pushNamed(
+      context,
+      BookingRoutes.wizard,
+      arguments: initialPackageId == null
+          ? route
+          : {'route': route, 'initialPackageId': initialPackageId},
+    );
   }
 }

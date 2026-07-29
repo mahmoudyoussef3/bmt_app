@@ -47,6 +47,12 @@ class SupportCubit extends Cubit<SupportState> {
   /// bookings above.
   List<SupportOfficeOption> get officeOptions => _officeOptions;
 
+  bool _officeLoadFailed = false;
+
+  /// Set once [loadOfficeOptions] fails, so the create form can surface a
+  /// retry affordance instead of leaving the required picker silently empty.
+  bool get officeLoadFailed => _officeLoadFailed;
+
   /// Loads the client's recent bookings for the optional "related booking"
   /// picker. A linked ticket is routed to the operating office server-side;
   /// an unlinked one goes to the office the client picks — so this failing must
@@ -64,15 +70,17 @@ class SupportCubit extends Cubit<SupportState> {
   }
 
   /// Loads the offices the client can direct a complaint to. Unlike the
-  /// booking picker this one is required to file, so the form should surface a
-  /// retry when the list stays empty.
+  /// booking picker this one is required to file, so the form surfaces a
+  /// retry (see [officeLoadFailed]) when the list stays empty.
   Future<void> loadOfficeOptions() async {
     if (_officeOptions.isNotEmpty) return;
     try {
       _officeOptions = await _getOfficeOptions();
+      _officeLoadFailed = false;
       if (!isClosed) emit(const SupportOfficesLoaded());
     } catch (_) {
-      // Leaves the picker empty; the form blocks submit until an office loads.
+      _officeLoadFailed = true;
+      if (!isClosed) emit(const SupportOfficesLoadError());
     }
   }
 
@@ -125,15 +133,27 @@ class SupportCubit extends Cubit<SupportState> {
         relatedTripId: relatedTripId,
       );
 
+      // The ticket already exists at this point — an attachment failure must
+      // not surface as a hard error, or the client would resubmit and file a
+      // duplicate ticket. Treat it as a soft success instead.
+      var attachmentFailed = false;
       if (attachment != null) {
-        await _supportRepository.uploadAttachment(
-          ticketId: ticket.id,
-          file: attachment,
-        );
+        try {
+          await _supportRepository.uploadAttachment(
+            ticketId: ticket.id,
+            file: attachment,
+          );
+        } catch (_) {
+          attachmentFailed = true;
+        }
       }
 
       emit(
-        SupportSuccess(message: 'Ticket created successfully', ticket: ticket),
+        SupportSuccess(
+          message: 'Ticket created successfully',
+          ticket: ticket,
+          attachmentFailed: attachmentFailed,
+        ),
       );
     } catch (e) {
       emit(SupportError(_friendlyMessage(e)));

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/core/theme/app_layout.dart';
+import 'package:bmt_app/core/widgets/directional_icon.dart';
 
 /// One row of the profile hub.
 ///
@@ -85,13 +86,8 @@ class ProfileHubTile extends StatelessWidget {
                 ),
               ],
               const SizedBox(width: AppLayout.spaceXs),
-              Icon(
-                // Material chevrons do not mirror themselves, so in Arabic the
-                // affordance has to be flipped by hand or it points away from
-                // the direction the screen actually opens.
-                Directionality.of(context) == TextDirection.rtl
-                    ? Icons.chevron_left_rounded
-                    : Icons.chevron_right_rounded,
+              DirectionalIcon(
+                Icons.chevron_right_rounded,
                 size: 20,
                 color: ClientColors.textTertiaryFor(context),
               ),

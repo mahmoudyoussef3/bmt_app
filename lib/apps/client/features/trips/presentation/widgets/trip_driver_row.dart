@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
+import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_identity_labels.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_payment_chip.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_status_mapping.dart';
 
@@ -30,7 +31,7 @@ class TripDriverRow extends StatelessWidget {
         const SizedBox(width: 8),
         Expanded(
           child: Text(
-            trip.driverName,
+            driverNameFor(context, trip),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(

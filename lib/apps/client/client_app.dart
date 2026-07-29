@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -10,6 +11,7 @@ import 'package:bmt_app/apps/client/core/routes/client_router.dart';
 import 'package:bmt_app/apps/client/core/theme/client_app_theme.dart';
 import 'package:bmt_app/apps/client/core/theme/client_theme.dart';
 import 'package:bmt_app/apps/client/core/theme/client_theme_store.dart';
+import 'package:bmt_app/apps/client/features/auth/presentation/routes/auth_routes.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/screens/welcome_screen.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/screens/client_splash_gate.dart';
 import 'package:bmt_app/apps/client/features/notifications/presentation/client_push_destination.dart';
@@ -34,7 +36,9 @@ class _ClientAppState extends State<ClientApp> {
   ThemeMode _themeMode = ThemeMode.system;
   final _navigatorKey = GlobalKey<NavigatorState>();
   final _themeStore = ClientThemeStore();
+  final _appLinks = AppLinks();
   StreamSubscription<AuthState>? _authSub;
+  StreamSubscription<Uri>? _deepLinkSub;
 
   @override
   void initState() {
@@ -42,11 +46,13 @@ class _ClientAppState extends State<ClientApp> {
     registerClientDependencies();
     _restoreThemeMode();
     _listenAuth();
+    _listenDeepLinks();
   }
 
   @override
   void dispose() {
     _authSub?.cancel();
+    _deepLinkSub?.cancel();
     super.dispose();
   }
 
@@ -90,6 +96,27 @@ class _ClientAppState extends State<ClientApp> {
       navigatorKey: _navigatorKey,
       resolveDestination: clientPushDestination,
     );
+  }
+
+  /// Watches for the `easyway://reset-password/...` link a password-recovery
+  /// email opens the app with.
+  ///
+  /// `supabase_flutter` already listens for this same link internally (via
+  /// its own `AppLinks` instance) to exchange its code for a session — see
+  /// `ResetPasswordCubit`'s doc comment. `AppLinks()` is a singleton over a
+  /// broadcast stream, so subscribing here too is safe and does not steal
+  /// events from that internal listener; this subscription exists purely to
+  /// navigate to the reset-password screen, reusing the same `navigatorKey`
+  /// pattern `FcmService` uses to push routes from outside a widget context.
+  void _listenDeepLinks() {
+    _appLinks.getInitialLink().then(_handleDeepLink);
+    _deepLinkSub = _appLinks.uriLinkStream.listen(_handleDeepLink);
+  }
+
+  void _handleDeepLink(Uri? uri) {
+    if (uri == null) return;
+    if (uri.scheme != 'easyway' || uri.host != 'reset-password') return;
+    _navigatorKey.currentState?.pushNamed(AuthRoutes.resetPassword);
   }
 
   @override

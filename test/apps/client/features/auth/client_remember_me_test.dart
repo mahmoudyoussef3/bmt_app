@@ -34,6 +34,9 @@ class _FakeAuthRepository implements ClientAuthRepository {
 
   @override
   Future<void> sendPasswordResetEmail(String email) async {}
+
+  @override
+  Future<void> updatePassword(String newPassword) async {}
 }
 
 /// In-memory stand-in for the secure-storage-backed repository, so the

@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../domain/repositories/profile_repository.dart';
 import '../../domain/usecases/get_profile_data_usecase.dart';
 import '../../domain/usecases/update_profile_usecase.dart';
 import 'profile_state.dart';
@@ -21,6 +22,8 @@ class ProfileCubit extends Cubit<ProfileState> {
     try {
       final profile = await _getProfile();
       emit(ProfileLoaded(profile));
+    } on ProfileUnauthenticatedException {
+      emit(const ProfileUnauthenticated());
     } catch (error) {
       if (previous is ProfileLoaded) {
         emit(previous.copyWith(refreshFailed: true));

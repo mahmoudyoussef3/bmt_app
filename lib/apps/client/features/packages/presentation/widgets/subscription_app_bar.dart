@@ -45,7 +45,7 @@ class SubscriptionAppBar extends StatelessWidget
         IconButton(
           tooltip: context.l10n.packages_refreshTooltip,
           icon: const Icon(Icons.refresh_rounded),
-          onPressed: () => context.read<PackagesCubit>().load(),
+          onPressed: () => context.read<PackagesCubit>().refresh(),
         ),
       ],
     );

@@ -9,6 +9,13 @@ class ProfileLoading extends ProfileState {
   const ProfileLoading();
 }
 
+/// The rider is browsing in guest mode: there is no session to load a profile
+/// for. Distinct from [ProfileError] because retrying can never succeed here —
+/// the only way out is signing in.
+class ProfileUnauthenticated extends ProfileState {
+  const ProfileUnauthenticated();
+}
+
 class ProfileLoaded extends ProfileState {
   const ProfileLoaded(
     this.profile, {

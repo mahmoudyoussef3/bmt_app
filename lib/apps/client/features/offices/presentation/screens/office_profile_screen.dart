@@ -6,6 +6,7 @@ import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_search_query.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_routes.dart';
+import 'package:bmt_app/apps/client/features/packages/domain/entities/package_plan.dart';
 import 'package:bmt_app/apps/client/features/packages/presentation/routes/packages_routes.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
@@ -38,13 +39,17 @@ class OfficeProfileScreen extends StatelessWidget {
     );
   }
 
-  /// Opens the packages marketplace already filtered to this office, so the
-  /// rider lands on exactly this seller's plans and can compare and subscribe.
-  void _openPackages(BuildContext context) {
+  /// Opens the marketplace straight to this exact package's detail pane —
+  /// the same destination `PackageCard` opens from the listing — rather than
+  /// just the office-filtered listing, so a specific tap lands on that plan.
+  void _openPackage(BuildContext context, PackagePlan package) {
     Navigator.pushNamed(
       context,
       PackagesRoutes.subscription,
-      arguments: <String, dynamic>{'initialOfficeId': office.id},
+      arguments: <String, dynamic>{
+        'initialOfficeId': office.id,
+        'initialPackageId': package.id,
+      },
     );
   }
 
@@ -146,7 +151,7 @@ class OfficeProfileScreen extends StatelessWidget {
                             for (final package in packages) ...[
                               OfficePackageTile(
                                 package: package,
-                                onTap: () => _openPackages(context),
+                                onTap: () => _openPackage(context, package),
                               ),
                               const SizedBox(height: ClientSpacing.sm),
                             ],

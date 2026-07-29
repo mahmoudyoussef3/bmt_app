@@ -179,6 +179,13 @@ class _FakeRepo implements TripsRepository {
   @override
   Future<List<Map<String, dynamic>>> getActiveRoutes() =>
       throw UnimplementedError();
+
+  @override
+  Future<List<Map<String, dynamic>>> getResourceConflicts({
+    required String date,
+    required String departureTime,
+    required String arrivalTime,
+  }) => throw UnimplementedError();
 }
 
 TripDetailsCubit _cubit(_FakeRepo repo) {

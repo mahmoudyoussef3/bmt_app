@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/pressable_scale.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
 
@@ -30,7 +31,9 @@ class AuthSuccessCta extends StatelessWidget {
         ),
         child: Text(
           created ? l10n.authSuccess_getStarted : l10n.authSuccess_backToSignIn,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+          style: ClientTypography.labelLarge(
+            context,
+          ).copyWith(fontWeight: FontWeight.w900),
         ),
       ),
     );

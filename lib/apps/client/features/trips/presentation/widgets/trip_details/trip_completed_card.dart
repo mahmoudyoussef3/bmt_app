@@ -4,6 +4,7 @@ import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_premium_panel.dart';
+import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_identity_labels.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_review_flow.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_soft_icon.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
@@ -39,7 +40,9 @@ class TripCompletedCard extends StatelessWidget {
               child: Text(
                 rated
                     ? context.l10n.trips_completedRatedNote
-                    : context.l10n.trips_completedRateInvite(trip.driverName),
+                    : context.l10n.trips_completedRateInvite(
+                        driverNameFor(context, trip),
+                      ),
                 style: ClientTypography.bodyMedium(context).copyWith(
                   fontWeight: FontWeight.w700,
                   color: ClientColors.textPrimaryFor(context),

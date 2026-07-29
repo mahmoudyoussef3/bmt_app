@@ -16,6 +16,8 @@ class PackagePlanModel {
     this.officeLogoUrl,
     this.officeRating = 0,
     this.officeRatingsCount = 0,
+    this.officeDescription = '',
+    this.officeServiceAreas = const [],
   });
 
   final String id;
@@ -35,6 +37,13 @@ class PackagePlanModel {
   final double officeRating;
   final int officeRatingsCount;
 
+  /// The office's marketplace blurb and service areas, embedded from the same
+  /// `public_offices` join as the rest of the seller identity — carried so
+  /// opening the office from a package's "Provided by" card can render a full
+  /// profile header, not a thinner one than the Offices Directory shows.
+  final String officeDescription;
+  final List<String> officeServiceAreas;
+
   factory PackagePlanModel.fromJson(Map<String, dynamic> json) {
     final office = json['office'] as Map<String, dynamic>?;
     return PackagePlanModel(
@@ -50,6 +59,12 @@ class PackagePlanModel {
       officeLogoUrl: office?['logo_url'] as String?,
       officeRating: (office?['rating'] as num?)?.toDouble() ?? 0,
       officeRatingsCount: (office?['ratings_count'] as num?)?.toInt() ?? 0,
+      officeDescription: office?['description']?.toString() ?? '',
+      officeServiceAreas:
+          (office?['service_areas'] as List?)
+              ?.map((e) => e.toString())
+              .toList() ??
+          const [],
     );
   }
 }

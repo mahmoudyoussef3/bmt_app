@@ -1,6 +1,5 @@
 import 'package:bmt_app/apps/client/features/support/presentation/routes/support_routes.dart';
 import 'dart:async';
-import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/di/client_di.dart';
@@ -44,7 +43,6 @@ class BookingConfirmationScreen extends StatefulWidget {
 class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
     with TickerProviderStateMixin {
   bool _processing = true;
-  late final String _bookingId;
   late final AnimationController _checkController;
 
   Timer? _statusPollTimer;
@@ -58,7 +56,6 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
   @override
   void initState() {
     super.initState();
-    _bookingId = _generateBookingId();
     _checkController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
@@ -71,11 +68,10 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
     });
   }
 
-  String _generateBookingId() {
-    final rng = Random();
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-    return List.generate(8, (_) => chars[rng.nextInt(chars.length)]).join();
-  }
+  /// The real reference/id the RPC handed back — never a fabricated one. When
+  /// neither is available, callers show the honest "pending" copy instead.
+  String? get _realBookingReference =>
+      widget.bookingReference ?? widget.bookingId;
 
   /// While the receipt is under manual review, the vehicle must stay
   /// untrackable, so this keeps re-fetching the real booking/payment status
@@ -123,27 +119,17 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: ClientColors.surfaceSubtleFor(context),
+      // The booking is already written by the time this screen shows: there is
+      // nothing left mid-flow to abandon back into, so the arrow is drawn but
+      // inert rather than popping into the wizard/route screens underneath.
+      appBar: ClientAppBar(
+        title: context.l10n.payments_bookingTitle,
+        navigationIcon: Icons.close_rounded,
+        backEnabled: false,
+      ),
       body: SafeArea(
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  IconButton(
-                    onPressed: () => Navigator.of(context).maybePop(),
-                    icon: const Icon(Icons.close_rounded),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    context.l10n.payments_bookingTitle,
-                    style: ClientTypography.headingSmall(
-                      context,
-                    ).copyWith(color: ClientColors.textPrimaryFor(context)),
-                  ),
-                ],
-              ),
-            ),
             Expanded(
               child: Center(
                 child: AnimatedSwitcher(
@@ -198,7 +184,8 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
   }
 
   Widget _buildVerificationWaiting(BuildContext context) {
-    final bookingReference = widget.bookingReference ?? _bookingId;
+    final bookingReference =
+        _realBookingReference ?? context.l10n.payments_bookingReferencePending;
     final bookingId = widget.bookingId;
     return SingleChildScrollView(
       key: const ValueKey('verification'),
@@ -223,7 +210,8 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
   }
 
   Widget _buildSuccess(BuildContext context) {
-    final bookingReference = widget.bookingReference ?? _bookingId;
+    final bookingReference =
+        _realBookingReference ?? context.l10n.payments_bookingReferencePending;
     final driverInitials = widget.driver
         .split(' ')
         .map((s) => s.isEmpty ? '' : s[0])

@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 import '../../../domain/entities/support_attachment.dart';
 
@@ -33,9 +35,7 @@ class TicketAttachmentTile extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           borderRadius: BorderRadius.circular(16),
-          onTap: () {
-            // Future implementation: open or download attachment
-          },
+          onTap: () => _openAttachment(context),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
@@ -96,6 +96,18 @@ class TicketAttachmentTile extends StatelessWidget {
       ),
       ),
     );
+  }
+
+  Future<void> _openAttachment(BuildContext context) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final failedMessage = context.l10n.support_attachmentOpenFailed;
+    final uri = Uri.tryParse(attachment.fileUrl);
+    final opened =
+        uri != null &&
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!opened) {
+      messenger.showSnackBar(SnackBar(content: Text(failedMessage)));
+    }
   }
 
   String _formatFileSize(int bytes) {

@@ -492,6 +492,13 @@ class _Datasource implements TripsDatasource {
       throw UnimplementedError();
 
   @override
+  Future<List<Map<String, dynamic>>> fetchResourceConflicts({
+    required String date,
+    required String departureTime,
+    required String arrivalTime,
+  }) => throw UnimplementedError();
+
+  @override
   Future<bool> checkDuplicateTrip(
     String vehicleId,
     String date,

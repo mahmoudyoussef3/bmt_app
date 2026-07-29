@@ -17,19 +17,29 @@ class PackagesCubit extends Cubit<PackagesState> {
   final GetPackagesUseCase _getPackages;
   final FilterPackagesUseCase _filterPackages;
 
-  /// Loads the marketplace catalogue. [initialOfficeId] pre-selects the office
-  /// lens — an office profile opens the marketplace already narrowed to itself.
-  Future<void> load({String? initialOfficeId}) async {
+  /// Loads the marketplace catalogue fresh: always the listing, with no
+  /// filter carried over. [initialOfficeId] pre-selects the office lens — an
+  /// office profile opens the marketplace already narrowed to itself.
+  /// [initialPackageId] instead jumps straight to that package's detail pane,
+  /// the way an office profile's package tile opens one exact plan.
+  Future<void> load({String? initialOfficeId, String? initialPackageId}) async {
     emit(const PackagesLoading());
     try {
       final packages = await _getPackages();
       final officeId = (initialOfficeId != null && initialOfficeId.isNotEmpty)
           ? initialOfficeId
           : null;
+      final selected = (initialPackageId != null && initialPackageId.isNotEmpty)
+          ? _findPackage(packages, initialPackageId)
+          : null;
       emit(
         PackagesLoaded(
           packages: packages,
           officeFilter: officeId,
+          selectedPackage: selected,
+          step: selected != null
+              ? SubscriptionStep.details
+              : SubscriptionStep.listing,
           visiblePackages: _applyFilters(
             packages,
             filter: PackageFilter.all,
@@ -40,6 +50,43 @@ class PackagesCubit extends Cubit<PackagesState> {
     } catch (error) {
       emit(PackagesError(error.toString()));
     }
+  }
+
+  /// Refetches without disturbing whatever the rider is doing: same pane,
+  /// same duration/office filter. Used by the refresh action, which is
+  /// reachable from both the listing and the detail pane, so — unlike
+  /// [load] — it must never blink a detail pane back to the listing or
+  /// silently clear an active filter. A failed refresh keeps the last usable
+  /// catalogue rather than replacing it with an error.
+  Future<void> refresh() async {
+    final current = state;
+    if (current is! PackagesLoaded) return load();
+    try {
+      final packages = await _getPackages();
+      emit(
+        PackagesLoaded(
+          packages: packages,
+          visiblePackages: _applyFilters(
+            packages,
+            filter: current.filter,
+            officeId: current.officeFilter,
+          ),
+          filter: current.filter,
+          officeFilter: current.officeFilter,
+          selectedPackage: current.selectedPackage,
+          step: current.step,
+        ),
+      );
+    } catch (_) {
+      if (!isClosed) emit(current);
+    }
+  }
+
+  PackagePlan? _findPackage(List<PackagePlan> packages, String id) {
+    for (final package in packages) {
+      if (package.id == id) return package;
+    }
+    return null;
   }
 
   /// Narrows the catalogue by trip duration, keeping any office filter in place.

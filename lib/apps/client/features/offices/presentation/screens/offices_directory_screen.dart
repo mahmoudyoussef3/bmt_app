@@ -47,7 +47,13 @@ class OfficesDirectoryScreen extends StatelessWidget {
               Expanded(
                 child: loaded.isFilteredEmpty
                     ? OfficesEmptyView(query: loaded.query)
-                    : OfficesDirectoryList(offices: loaded.visibleOffices),
+                    : RefreshIndicator(
+                        onRefresh: () =>
+                            context.read<OfficesDirectoryCubit>().refresh(),
+                        child: OfficesDirectoryList(
+                          offices: loaded.visibleOffices,
+                        ),
+                      ),
               ),
             ],
           ),

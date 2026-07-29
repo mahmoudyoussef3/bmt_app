@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../domain/repositories/profile_repository.dart';
 import '../models/client_profile_model.dart';
 import 'profile_datasource.dart';
 import 'profile_queries.dart';
@@ -84,7 +85,7 @@ class SupabaseProfileDatasource implements ProfileDatasource {
   User _requireUser() {
     final user = _supabase.auth.currentUser;
     if (user == null) {
-      throw Exception('Please sign in to view your profile.');
+      throw const ProfileUnauthenticatedException();
     }
     return user;
   }

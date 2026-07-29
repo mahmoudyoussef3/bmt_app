@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/apps/client/core/di/client_di.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/cubit/forgot_password_cubit.dart';
+import 'package:bmt_app/apps/client/features/auth/presentation/cubit/reset_password_cubit.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_wizard_confirm_cubit.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_wizard_cubit.dart';
@@ -48,6 +49,12 @@ abstract final class ClientCubitScopes {
         child: child,
       );
 
+  static Widget resetPassword(Widget child) =>
+      BlocProvider<ResetPasswordCubit>(
+        create: (_) => clientGetIt<ResetPasswordCubit>(),
+        child: child,
+      );
+
   static Widget trips(Widget child) => BlocProvider<TripsCubit>(
     create: (_) => clientGetIt<TripsCubit>()..loadTrips(),
     child: child,
@@ -84,13 +91,18 @@ abstract final class ClientCubitScopes {
     child: child,
   );
 
-  static Widget packages(Widget child, {String? initialOfficeId}) =>
-      BlocProvider<PackagesCubit>(
-        create: (_) =>
-            clientGetIt<PackagesCubit>()
-              ..load(initialOfficeId: initialOfficeId),
-        child: child,
-      );
+  static Widget packages(
+    Widget child, {
+    String? initialOfficeId,
+    String? initialPackageId,
+  }) => BlocProvider<PackagesCubit>(
+    create: (_) => clientGetIt<PackagesCubit>()
+      ..load(
+        initialOfficeId: initialOfficeId,
+        initialPackageId: initialPackageId,
+      ),
+    child: child,
+  );
 
   static Widget mySubscription(Widget child) =>
       BlocProvider<MySubscriptionCubit>(
@@ -192,11 +204,15 @@ abstract final class ClientCubitScopes {
   /// The booking wizard runs on three cubits: the session of answers, the step
   /// on screen, and the confirm attempt. They are scoped together so leaving
   /// the wizard discards a half-finished booking with them.
-  static Widget bookingWizard(Widget child, {required RouteOptionData route}) =>
-      MultiBlocProvider(
+  static Widget bookingWizard(
+    Widget child, {
+    required RouteOptionData route,
+    String? initialPackageId,
+  }) => MultiBlocProvider(
         providers: [
           BlocProvider<BookingWizardCubit>(
-            create: (_) => BookingWizardCubit(route),
+            create: (_) =>
+                BookingWizardCubit(route, initialPackageId: initialPackageId),
           ),
           BlocProvider<BookingWizardStepCubit>(
             create: (_) => BookingWizardStepCubit(),

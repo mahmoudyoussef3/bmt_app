@@ -78,8 +78,8 @@ void main() {
       expect(find.text('Active'), findsOneWidget);
       expect(find.text('12 of 30 trips used'), findsOneWidget);
       expect(find.text('18 trips remaining'), findsOneWidget);
-      expect(find.text('1/7/2026'), findsOneWidget);
-      expect(find.text('31/7/2026'), findsOneWidget);
+      expect(find.text('Jul 1, 2026'), findsOneWidget);
+      expect(find.text('Jul 31, 2026'), findsOneWidget);
       // The bug this screen fixes: tapping the active-package card must never
       // land on the plan catalogue.
       expect(find.text('Commute Packages'), findsNothing);

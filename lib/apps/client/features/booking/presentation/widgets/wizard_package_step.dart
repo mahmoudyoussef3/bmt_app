@@ -26,7 +26,25 @@ class _WizardPackageStepState extends State<WizardPackageStep> {
   @override
   void initState() {
     super.initState();
-    context.read<PackagesCubit>().load();
+    _loadAndApplyInitialSelection();
+  }
+
+  /// Loads the catalogue, then applies the package reviewed before this
+  /// search started, if any and if nothing has been chosen yet.
+  Future<void> _loadAndApplyInitialSelection() async {
+    final packagesCubit = context.read<PackagesCubit>();
+    final wizardCubit = context.read<BookingWizardCubit>();
+    await packagesCubit.load();
+    if (!mounted || wizardCubit.state.selectedPackage != null) return;
+    final packageId = wizardCubit.initialPackageId;
+    final packagesState = packagesCubit.state;
+    if (packageId == null || packagesState is! PackagesLoaded) return;
+    for (final plan in packagesState.packages) {
+      if (plan.id == packageId) {
+        wizardCubit.selectPackage(plan);
+        break;
+      }
+    }
   }
 
   void _select(PackagePlan plan) {

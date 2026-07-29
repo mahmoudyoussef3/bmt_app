@@ -14,6 +14,7 @@ class OfficesDirectoryList extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+      physics: const AlwaysScrollableScrollPhysics(),
       itemCount: offices.length,
       separatorBuilder: (_, _) => const SizedBox(height: 12),
       itemBuilder: (context, index) => OfficeCard(

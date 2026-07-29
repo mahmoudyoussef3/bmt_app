@@ -7,8 +7,13 @@ import 'package:bmt_app/apps/client/features/packages/domain/entities/package_pl
 /// Holds all user selections throughout the booking wizard.
 /// The session object is the state — each selection emits a new session.
 class BookingWizardCubit extends Cubit<BookingWizardSession> {
-  BookingWizardCubit(RouteOptionData route)
+  BookingWizardCubit(RouteOptionData route, {this.initialPackageId})
     : super(BookingWizardSession(route: route));
+
+  /// A package the rider reviewed before this search, if any — the package
+  /// step applies it once, the first time its catalogue loads with no
+  /// selection made yet.
+  final String? initialPackageId;
 
   void selectPickup(RoutePointData stop) {
     emit(state.copyWith(pickupStop: stop, clearDropoff: true));
@@ -19,7 +24,13 @@ class BookingWizardCubit extends Cubit<BookingWizardSession> {
   }
 
   void selectTrip(RouteTripOptionData trip) {
+    // A seat/package chosen for the previous trip does not belong to this
+    // one (its id would be sent to `confirm_seat_booking_v2` alongside a
+    // `p_trip_id` it was never locked against), so switching trips must
+    // invalidate both.
     emit(state.copyWith(selectedTrip: trip));
+    clearSeat();
+    clearPackage();
   }
 
   void selectSeat(String seatId, String label) {

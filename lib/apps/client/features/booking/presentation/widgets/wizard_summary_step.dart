@@ -67,7 +67,9 @@ class WizardSummaryStep extends StatelessWidget {
 }
 
 /// Riders hesitate at checkout when they cannot tell whether the seat is
-/// actually theirs yet. It is: the seat is held while they pay.
+/// actually theirs yet. Nothing is locked in until Pay is tapped
+/// ([PlaceSeatBookingUseCase] does the lock + confirm as one unit), so this
+/// note describes what happens on confirm rather than an already-true state.
 class _AssuranceNote extends StatelessWidget {
   const _AssuranceNote();
 

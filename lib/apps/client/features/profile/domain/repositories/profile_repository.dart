@@ -1,5 +1,12 @@
 import '../entities/client_profile.dart';
 
+/// Thrown when a call requires a signed-in rider but the current session has
+/// none (guest mode). Kept distinct from other failures so the presentation
+/// layer can offer a sign-in prompt instead of a dead-end "try again".
+class ProfileUnauthenticatedException implements Exception {
+  const ProfileUnauthenticatedException();
+}
+
 abstract class ProfileRepository {
   Future<ClientProfile> getProfile();
 

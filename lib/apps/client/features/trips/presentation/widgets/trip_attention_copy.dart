@@ -25,6 +25,7 @@ class TripAttentionCopy {
 
 TripAttentionCopy? tripAttentionCopy(BuildContext context, TripData trip) {
   final l10n = context.l10n;
+  final color = _attentionColorFor(trip);
 
   return switch (trip.attention) {
     TripAttention.none => null,
@@ -35,35 +36,48 @@ TripAttentionCopy? tripAttentionCopy(BuildContext context, TripData trip) {
           ? l10n.trips_attentionAwaitingReviewBodyNoOffice
           : l10n.trips_attentionAwaitingReviewBody(trip.officeName),
       icon: Icons.pending_actions_rounded,
-      color: ClientColors.journeyAmber,
+      color: color,
     ),
 
     TripAttention.paymentIncomplete => TripAttentionCopy(
       title: l10n.trips_attentionPaymentIncompleteTitle,
       body: l10n.trips_attentionPaymentIncompleteBody,
       icon: Icons.hourglass_top_rounded,
-      color: ClientColors.journeyAmber,
+      color: color,
     ),
 
     TripAttention.paymentRejected => TripAttentionCopy(
       title: l10n.trips_attentionPaymentRejectedTitle,
       body: l10n.trips_attentionPaymentRejectedBody,
       icon: Icons.error_rounded,
-      color: ClientColors.journeyRed,
+      color: color,
     ),
 
     TripAttention.refundDue => TripAttentionCopy(
       title: l10n.trips_attentionRefundDueTitle,
       body: l10n.trips_attentionRefundDueBody,
       icon: Icons.replay_rounded,
-      color: ClientColors.primary,
+      color: color,
     ),
 
     TripAttention.needsSupport => TripAttentionCopy(
       title: l10n.trips_attentionNeedsSupportTitle,
       body: l10n.trips_attentionNeedsSupportBody(trip.reference),
       icon: Icons.help_outline_rounded,
-      color: ClientColors.journeyRed,
+      color: color,
     ),
+  };
+}
+
+/// Act-now bookings ([TripAttentionPolicy.needsRiderAction]) always read in
+/// the same urgent red as a rejection — that is the whole point of the flag:
+/// a rider must tell "I must act" apart from "I'm just waiting" on sight,
+/// which two same-colored states used to hide. Merely-waiting states keep
+/// their own distinct color so they read as informational, not urgent.
+Color _attentionColorFor(TripData trip) {
+  if (trip.needsRiderAction) return ClientColors.journeyRed;
+  return switch (trip.attention) {
+    TripAttention.refundDue => ClientColors.primary,
+    _ => ClientColors.journeyAmber,
   };
 }

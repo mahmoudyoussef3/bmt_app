@@ -86,6 +86,8 @@ class BoardingStubLine extends StatelessWidget {
           child: Text(
             value,
             textAlign: TextAlign.end,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: ClientTypography.bodySmall(context).copyWith(
               fontWeight: FontWeight.w800,
               color: ClientColors.textPrimaryFor(context),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/core/localization/format_util.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
 import '../../../domain/entities/my_subscription.dart';
@@ -30,12 +31,12 @@ class MySubscriptionValidityCard extends StatelessWidget {
             children: [
               PackageDetailRow(
                 label: l10n.mySubscription_started,
-                value: _formatDate(subscription.startDate),
+                value: _formatDate(context, subscription.startDate),
               ),
               const SizedBox(height: 8),
               PackageDetailRow(
                 label: l10n.mySubscription_expires,
-                value: _formatDate(subscription.endDate),
+                value: _formatDate(context, subscription.endDate),
               ),
               if (subscription.totalDays > 0) ...[
                 const SizedBox(height: 16),
@@ -71,8 +72,8 @@ class MySubscriptionValidityCard extends StatelessWidget {
     );
   }
 
-  String _formatDate(DateTime? date) {
+  String _formatDate(BuildContext context, DateTime? date) {
     if (date == null) return '—';
-    return '${date.day}/${date.month}/${date.year}';
+    return FormatUtil.date(context, date);
   }
 }

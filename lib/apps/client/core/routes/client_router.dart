@@ -6,6 +6,7 @@ import 'package:bmt_app/apps/client/core/routes/client_routes.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/routes/auth_routes.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/screens/auth_success_screen.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/screens/forgot_password_screen.dart';
+import 'package:bmt_app/apps/client/features/auth/presentation/screens/reset_password_screen.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/screens/sign_in_screen.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/screens/sign_up_screen.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/screens/welcome_screen.dart';
@@ -136,6 +137,11 @@ abstract final class ClientRouter {
     AuthRoutes.signUp: (_) => ClientCubitScopes.auth(const SignUpScreen()),
     AuthRoutes.forgotPassword: (_) =>
         ClientCubitScopes.forgotPassword(const ForgotPasswordScreen()),
+    // Reached only via the `easyway://reset-password/` deep link handled in
+    // `ClientApp`. The recovery tokens travel through Supabase's own session
+    // (see `ResetPasswordCubit`), not through this route's arguments.
+    AuthRoutes.resetPassword: (_) =>
+        ClientCubitScopes.resetPassword(const ResetPasswordScreen()),
     AuthRoutes.success: (context) {
       final args = _args(context);
       return AuthSuccessScreen(
@@ -195,13 +201,21 @@ abstract final class ClientRouter {
         ClientCubitScopes.dailyBooking(const DailyBookingFlowScreen()),
 
     // The wizard and overview are driven by a route object rather than a cubit
-    // fetch, so they render nothing if handed the wrong argument type.
+    // fetch, so they render nothing if handed the wrong argument type. The
+    // wizard also accepts a map wrapping the route alongside a package the
+    // rider reviewed before searching, so its package step can open with it
+    // pre-selected.
     BookingRoutes.wizard: (context) {
-      final route = _args(context);
+      final args = _args(context);
+      final route = args is Map ? args['route'] : args;
       if (route is! RouteOptionData) return const SizedBox.shrink();
+      final initialPackageId = args is Map
+          ? args['initialPackageId']?.toString()
+          : null;
       return ClientCubitScopes.bookingWizard(
         const BookingWizardScreen(),
         route: route,
+        initialPackageId: initialPackageId,
       );
     },
     BookingRoutes.routeOverview: (context) {
@@ -244,6 +258,7 @@ abstract final class ClientRouter {
       return ClientCubitScopes.packages(
         SubscriptionScreen(arguments: arguments),
         initialOfficeId: arguments.initialOfficeId,
+        initialPackageId: arguments.initialPackageId,
       );
     },
     PackagesRoutes.mySubscription: (_) =>
@@ -304,7 +319,12 @@ abstract final class ClientRouter {
         ClientCubitScopes.communication(const CommunicationScreen()),
     CommunicationRoutes.chatThread: (context) {
       final args = ChatThreadArguments.fromArguments(_args(context));
-      if (!args.isValid) return const SizedBox.shrink();
+      // A stale notification/deep link can reach this without a valid
+      // conversation id. Falling back to the thread list is the honest
+      // answer; a blank SizedBox with no app bar or back button is a dead end.
+      if (!args.isValid) {
+        return ClientCubitScopes.communication(const CommunicationScreen());
+      }
       return ClientCubitScopes.chatThread(
         const ChatThreadScreen(),
         conversationId: args.conversationId,

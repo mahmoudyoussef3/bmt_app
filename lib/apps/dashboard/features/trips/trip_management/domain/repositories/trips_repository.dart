@@ -46,6 +46,14 @@ abstract class TripsRepository {
   Future<List<Map<String, dynamic>>> getActiveVehicles();
   Future<List<Map<String, dynamic>>> getActiveRoutes();
 
+  /// Drivers/vehicles already committed to an overlapping trip for the given
+  /// departure→arrival slot. See `TripsDatasource.fetchResourceConflicts`.
+  Future<List<Map<String, dynamic>>> getResourceConflicts({
+    required String date,
+    required String departureTime,
+    required String arrivalTime,
+  });
+
   /// Emits whenever any trip's status, seats, passengers, or events change
   /// in the backend, so the trips list can refresh without a manual reload.
   Stream<void> watchTripsChanges();

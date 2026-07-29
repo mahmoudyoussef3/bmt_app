@@ -111,4 +111,22 @@ class SupabaseClientAuthDatasource implements ClientAuthDatasource {
       throw Exception('Unable to send reset link. Please try again later.');
     }
   }
+
+  @override
+  Future<void> updatePassword(String newPassword) async {
+    if (newPassword.length < 6) {
+      throw const FormatException(
+        'Password must be at least 6 characters.',
+      );
+    }
+    try {
+      await _supabase.auth.updateUser(
+        UserAttributes(password: newPassword),
+      );
+    } on AuthException catch (e) {
+      throw Exception(e.message);
+    } catch (_) {
+      throw Exception('Unable to update password. Please try again later.');
+    }
+  }
 }

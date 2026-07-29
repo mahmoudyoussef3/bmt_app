@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/home/domain/entities/home_data.dart';
+import 'package:bmt_app/core/localization/format_util.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 import 'package:bmt_app/core/widgets/badge.dart';
 
@@ -18,18 +21,17 @@ class HomeActivePackageCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? scheme.surfaceContainerHighest : Colors.white,
+        color: ClientColors.surfaceFor(context),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: scheme.outline.withAlpha(isDark ? 40 : 60)),
+        border: Border.all(color: ClientColors.borderFor(context)),
         boxShadow: [
           if (!isDark)
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
+              color: ClientColors.shadowFor(context).withAlpha(10),
               blurRadius: 16,
               offset: const Offset(0, 8),
             ),
@@ -51,25 +53,23 @@ class HomeActivePackageCard extends StatelessWidget {
                       width: 48,
                       height: 48,
                       decoration: BoxDecoration(
-                        color: scheme.primary.withAlpha(20),
+                        color: ClientColors.primaryFor(context).withAlpha(20),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(
                         Icons.card_membership_rounded,
-                        color: scheme.primary,
+                        color: ClientColors.primaryFor(context),
                         size: 24,
                       ),
                     ),
                     const SizedBox(width: 16),
-                    Expanded(
-                      child: _Titles(package: package, scheme: scheme),
-                    ),
+                    Expanded(child: _Titles(package: package)),
                     const AppBadge(text: 'ACTIVE'),
                   ],
                 ),
                 if (package.endDate != null) ...[
                   const SizedBox(height: 24),
-                  _Validity(package: package, scheme: scheme),
+                  _Validity(package: package),
                 ],
               ],
             ),
@@ -81,14 +81,12 @@ class HomeActivePackageCard extends StatelessWidget {
 }
 
 class _Titles extends StatelessWidget {
-  const _Titles({required this.package, required this.scheme});
+  const _Titles({required this.package});
 
   final HomeActivePackageData package;
-  final ColorScheme scheme;
 
   @override
   Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -96,7 +94,9 @@ class _Titles extends StatelessWidget {
           package.title,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: text.titleMedium?.copyWith(fontWeight: FontWeight.w800),
+          style: ClientTypography.headingSmall(
+            context,
+          ).copyWith(fontWeight: FontWeight.w800),
         ),
         if (package.routeLabel.isNotEmpty) ...[
           const SizedBox(height: 4),
@@ -104,10 +104,9 @@ class _Titles extends StatelessWidget {
             package.routeLabel,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: text.bodySmall?.copyWith(
-              color: scheme.onSurface.withAlpha(160),
-              fontWeight: FontWeight.w500,
-            ),
+            style: ClientTypography.bodySmall(
+              context,
+            ).copyWith(color: ClientColors.textSecondaryFor(context)),
           ),
         ],
       ],
@@ -118,14 +117,12 @@ class _Titles extends StatelessWidget {
 /// How much of the subscription window is left — the only progress the
 /// `subscriptions` table can honestly report.
 class _Validity extends StatelessWidget {
-  const _Validity({required this.package, required this.scheme});
+  const _Validity({required this.package});
 
   final HomeActivePackageData package;
-  final ColorScheme scheme;
 
   @override
   Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
     final remaining = package.remainingDays;
     final l10n = context.l10n;
     final label = remaining == 0
@@ -141,16 +138,16 @@ class _Validity extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Valid until ${_formatDate(package.endDate!)}',
-              style: text.bodySmall?.copyWith(
-                color: scheme.onSurface.withAlpha(160),
+              'Valid until ${FormatUtil.date(context, package.endDate!)}',
+              style: ClientTypography.bodySmall(context).copyWith(
+                color: ClientColors.textSecondaryFor(context),
                 fontWeight: FontWeight.w600,
               ),
             ),
             Text(
               label,
-              style: text.titleSmall?.copyWith(
-                color: scheme.onSurface,
+              style: ClientTypography.labelLarge(context).copyWith(
+                color: ClientColors.textPrimaryFor(context),
                 fontWeight: FontWeight.w800,
               ),
             ),
@@ -163,15 +160,14 @@ class _Validity extends StatelessWidget {
             child: LinearProgressIndicator(
               value: package.remainingRatio,
               minHeight: 8,
-              backgroundColor: scheme.primary.withAlpha(20),
-              valueColor: AlwaysStoppedAnimation<Color>(scheme.primary),
+              backgroundColor: ClientColors.primaryFor(context).withAlpha(20),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                ClientColors.primaryFor(context),
+              ),
             ),
           ),
         ],
       ],
     );
   }
-
-  String _formatDate(DateTime date) =>
-      '${date.day}/${date.month}/${date.year}';
 }

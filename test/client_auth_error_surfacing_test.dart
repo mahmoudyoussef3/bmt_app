@@ -59,6 +59,9 @@ class _FakeDatasource implements ClientAuthDatasource {
 
   @override
   Future<void> sendPasswordResetEmail(String email) async {}
+
+  @override
+  Future<void> updatePassword(String newPassword) async {}
 }
 
 ClientAuthCubit buildCubit(ClientAuthDatasource ds) {

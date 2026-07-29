@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/core/localization/format_util.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 import 'package:bmt_app/core/widgets/directional_icon.dart';
 
@@ -19,23 +20,25 @@ class PackageCardPriceRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              context.l10n.packages_startingPrice,
-              style: textTheme.labelSmall?.copyWith(
-                color: ClientColors.textTertiaryFor(context),
+        Flexible(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                context.l10n.packages_startingPrice,
+                style: textTheme.labelSmall?.copyWith(
+                  color: ClientColors.textTertiaryFor(context),
+                ),
               ),
-            ),
-            Text(
-              context.l10n.packages_egpAmount(package.priceInPounds.toString()),
-              style: textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w900,
-                color: scheme.primary,
+              Text(
+                FormatUtil.currency(context, package.priceInPounds),
+                style: textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  color: scheme.primary,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
         Container(
           padding: const EdgeInsets.all(8),

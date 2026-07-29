@@ -83,4 +83,19 @@ class ClientAuthRepositoryImpl implements ClientAuthRepository {
       throw Exception('Failed to send reset email: $error');
     }
   }
+
+  @override
+  Future<void> updatePassword(String newPassword) async {
+    try {
+      await _datasource.updatePassword(newPassword);
+    } on FormatException {
+      rethrow;
+    } on Exception {
+      // Preserve the datasource's actionable message (invalid/expired
+      // recovery session, weak password, etc.).
+      rethrow;
+    } catch (error) {
+      throw Exception('Failed to update password: $error');
+    }
+  }
 }

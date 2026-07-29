@@ -6,6 +6,7 @@ class BookingSearchQuery {
     this.destination = '',
     this.date = '',
     this.time = '',
+    this.initialPackageId,
   });
 
   final String? routeId;
@@ -13,6 +14,10 @@ class BookingSearchQuery {
   final String destination;
   final String date;
   final String time;
+
+  /// A package the rider reviewed before starting this search — carried
+  /// through so the wizard's package step can open with it pre-selected.
+  final String? initialPackageId;
 
   bool get isComplete => pickup.isNotEmpty && destination.isNotEmpty;
 
@@ -28,6 +33,7 @@ class BookingSearchQuery {
     String? destination,
     String? date,
     String? time,
+    String? initialPackageId,
   }) {
     return BookingSearchQuery(
       routeId: routeId ?? this.routeId,
@@ -35,6 +41,7 @@ class BookingSearchQuery {
       destination: destination ?? this.destination,
       date: date ?? this.date,
       time: time ?? this.time,
+      initialPackageId: initialPackageId ?? this.initialPackageId,
     );
   }
 
@@ -44,6 +51,7 @@ class BookingSearchQuery {
     'destination': destination,
     'date': date,
     'time': time,
+    'initialPackageId': ?initialPackageId,
   };
 
   static BookingSearchQuery fromArguments(Object? args) {
@@ -55,6 +63,7 @@ class BookingSearchQuery {
         destination: args['destination']?.toString() ?? '',
         date: args['date']?.toString() ?? '',
         time: args['time']?.toString() ?? '',
+        initialPackageId: args['initialPackageId']?.toString(),
       );
     }
     return const BookingSearchQuery();

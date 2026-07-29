@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
 
@@ -27,7 +29,6 @@ class NotificationsCategoryBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     final categories = _categories(context.l10n);
     return SizedBox(
       height: 48,
@@ -45,17 +46,20 @@ class NotificationsCategoryBar extends StatelessWidget {
               duration: const Duration(milliseconds: 180),
               padding: const EdgeInsets.symmetric(horizontal: 14),
               decoration: BoxDecoration(
-                color: selected ? cs.primary : cs.surfaceContainerHigh,
+                color: selected
+                    ? ClientColors.primaryFor(context)
+                    : ClientColors.surfaceMutedFor(context),
                 borderRadius: BorderRadius.circular(20),
               ),
               alignment: Alignment.center,
               child: Text(
                 label,
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: selected ? cs.onPrimary : cs.onSurfaceVariant,
-                      fontWeight:
-                          selected ? FontWeight.w600 : FontWeight.w500,
-                    ),
+                style: ClientTypography.labelMedium(context).copyWith(
+                  color: selected
+                      ? ClientColors.textInverse
+                      : ClientColors.textSecondaryFor(context),
+                  fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                ),
               ),
             ),
           );

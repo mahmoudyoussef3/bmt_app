@@ -7,6 +7,7 @@ import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_det
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/driver_identity.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_inline_action_button.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_inline_badge.dart';
+import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_identity_labels.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_status_mapping.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 import 'package:bmt_app/apps/client/features/tracking/presentation/routes/tracking_routes.dart';
@@ -32,7 +33,7 @@ class TripDriverCard extends StatelessWidget {
             const SizedBox(width: 14),
             Expanded(
               child: DriverIdentity(
-                name: trip.driverName,
+                name: driverNameFor(context, trip),
                 rating: trip.driverRating,
                 ratingCount: trip.driverRatingCount,
               ),

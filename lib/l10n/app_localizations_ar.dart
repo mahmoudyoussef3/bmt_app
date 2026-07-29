@@ -1285,6 +1285,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get profile_refreshFailed => 'تعذر تحديث بيانات حسابك.';
 
   @override
+  String get profile_signInRequiredTitle => 'سجّل الدخول لعرض ملفك الشخصي';
+
+  @override
+  String get profile_signInRequiredBody =>
+      'أنت تتصفح التطبيق كزائر. سجّل الدخول لعرض رحلاتك وباقاتك وبيانات حسابك.';
+
+  @override
+  String get profile_signInCta => 'تسجيل الدخول';
+
+  @override
   String get welcome_continueWithEmail => 'المتابعة بالبريد الإلكتروني';
 
   @override
@@ -1375,6 +1385,41 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get auth_help => 'مساعدة؟';
+
+  @override
+  String get auth_resetPasswordTitle => 'تعيين كلمة مرور جديدة';
+
+  @override
+  String get auth_resetPasswordSubtitle => 'اختر كلمة مرور جديدة لحسابك.';
+
+  @override
+  String get auth_newPassword => 'كلمة المرور الجديدة';
+
+  @override
+  String get auth_confirmPassword => 'تأكيد كلمة المرور';
+
+  @override
+  String get auth_passwordsDoNotMatch => 'كلمتا المرور غير متطابقتين';
+
+  @override
+  String get auth_updatePassword => 'تحديث كلمة المرور';
+
+  @override
+  String get auth_updatingPassword => 'جارٍ التحديث...';
+
+  @override
+  String get auth_passwordUpdatedSnack =>
+      'تم تحديث كلمة المرور. يرجى تسجيل الدخول.';
+
+  @override
+  String get auth_resetPasswordFailed => 'تعذر تحديث كلمة المرور';
+
+  @override
+  String get auth_resetLinkInvalid =>
+      'رابط إعادة التعيين غير صالح أو منتهي الصلاحية. يرجى طلب رابط جديد.';
+
+  @override
+  String get auth_verifyingResetLink => 'جارٍ التحقق من رابط إعادة التعيين...';
 
   @override
   String get auth_enterPhoneTitle => 'أدخل رقم هاتفك';
@@ -2198,6 +2243,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get support_officeRequired => 'من فضلك اختر مكتبًا';
 
   @override
+  String get support_officeLoadError => 'تعذّر تحميل المكاتب.';
+
+  @override
+  String get support_attachmentOpenFailed => 'تعذّر فتح المرفق.';
+
+  @override
   String get support_subjectLabel => 'الموضوع';
 
   @override
@@ -2252,6 +2303,10 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get support_ticketCreatedSnack =>
       'تم إنشاء التذكرة. سيتواصل معك فريقنا قريبًا.';
+
+  @override
+  String get support_ticketCreatedAttachmentFailedSnack =>
+      'تم إرسال التذكرة، ولكن تعذّر رفع المرفق.';
 
   @override
   String support_ticketNumberTitle(String number) {
@@ -2671,6 +2726,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get trips_seatPending => 'المقعد قيد التحديد';
 
   @override
+  String get trips_driverPending => 'الكابتن قيد التحديد';
+
+  @override
+  String get trips_vehiclePending => 'المركبة قيد التحديد';
+
+  @override
+  String get trips_routePointUnknown => 'غير معروف';
+
+  @override
   String get trips_awaitingConfirmation => 'بانتظار التأكيد';
 
   @override
@@ -2808,42 +2872,13 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get seatRelease_timeJustNow => 'الآن';
-
-  @override
-  String get seatRelease_confirmSheetTitle => 'تأكيد إخلاء المقعد';
-
-  @override
-  String get seatRelease_confirmSheetBody =>
-      'برجاء تأكيد رغبتك في إخلاء مقعدك لهذه الرحلة بالتحديد. لا يمكن استرجاع المقعد بعد أن يحجزه راكب آخر.';
-
-  @override
   String get seatRelease_tripDateLabel => 'تاريخ الرحلة';
-
-  @override
-  String get seatRelease_routeSegmentLabel => 'قطاع المسار';
 
   @override
   String get seatRelease_seatNumberLabel => 'رقم المقعد';
 
   @override
-  String get seatRelease_packageOriginLabel => 'مصدر الباقة';
-
-  @override
-  String get seatRelease_confirmSheetWarning =>
-      'هذا الإجراء يؤثر فقط على تاريخ الرحلة المحدد. مواعيد التنقل القادمة تظل دون تأثير.';
-
-  @override
-  String get seatRelease_goBack => 'رجوع';
-
-  @override
-  String get seatRelease_confirmReleaseButton => 'تأكيد الإخلاء';
-
-  @override
-  String get seatRelease_mockReleaseDateToday => 'اليوم، 3 يونيو';
-
-  @override
-  String get seatRelease_noNotesProvided => 'لا توجد ملاحظات';
+  String get seatRelease_actionUnavailable => 'إخلاء المقعد مش متاح لسه';
 
   @override
   String get seatRelease_statusWaiting => 'قيد الانتظار';
@@ -3299,6 +3334,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get payments_bookingReferenceLabel => 'مرجع الحجز';
+
+  @override
+  String get payments_bookingReferencePending => 'الرقم المرجعي قيد الإصدار';
 
   @override
   String get payments_departsLabel => 'موعد الانطلاق';
@@ -3999,6 +4037,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get referral_noBalanceToRedeem => 'لا يوجد رصيد للاستبدال';
 
   @override
+  String get referral_redeemFailed => 'فشل الاستبدال. حاول مرة أخرى.';
+
+  @override
   String referral_revealedCode(String code) {
     return 'الكود المكتشف: $code';
   }
@@ -4185,6 +4226,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get communication_messagesUnavailable => 'الرسائل غير متاحة';
 
   @override
+  String get communication_imagePreviewUnavailable => 'المعاينة غير متاحة بعد';
+
+  @override
   String get booking_whereGetOnOff => 'أين تركب وأين تنزل؟';
 
   @override
@@ -4228,7 +4272,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get booking_proceedToPayment => 'متابعة إلى الدفع';
 
   @override
-  String get booking_seatHeldWhilePaying => 'مقعدك محجوز لك أثناء إتمام الدفع.';
+  String get booking_seatHeldWhilePaying => 'مقعدك بيتحجز لحظة ما تأكد وتدفع.';
 
   @override
   String get booking_chooseYourDeparture => 'اختر موعد الانطلاق';

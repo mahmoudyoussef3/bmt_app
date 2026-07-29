@@ -35,14 +35,19 @@ class PackagesListingView extends StatelessWidget {
         Expanded(
           child: packages.isEmpty
               ? _EmptyState(state: state)
-              : ListView.separated(
-                  padding: const EdgeInsets.fromLTRB(20, 4, 20, 30),
-                  physics: const BouncingScrollPhysics(),
-                  itemCount: packages.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 16),
-                  itemBuilder: (_, index) => PackageCard(
-                    package: packages[index],
-                    arguments: arguments,
+              : RefreshIndicator(
+                  onRefresh: () => context.read<PackagesCubit>().refresh(),
+                  child: ListView.separated(
+                    padding: const EdgeInsets.fromLTRB(20, 4, 20, 30),
+                    physics: const AlwaysScrollableScrollPhysics(
+                      parent: BouncingScrollPhysics(),
+                    ),
+                    itemCount: packages.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 16),
+                    itemBuilder: (_, index) => PackageCard(
+                      package: packages[index],
+                      arguments: arguments,
+                    ),
                   ),
                 ),
         ),

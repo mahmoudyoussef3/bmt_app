@@ -7,6 +7,7 @@ import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/boarding_pass_parts.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_inline_badge.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_schedule_labels.dart';
+import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_identity_labels.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_soft_icon.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
@@ -86,7 +87,7 @@ class TripBoardingCard extends StatelessWidget {
           BoardingStubLine(
             icon: Icons.location_on_rounded,
             label: context.l10n.tracking_boardAt,
-            value: trip.pickup,
+            value: pickupLabelFor(context, trip),
           ),
           const SizedBox(height: 10),
           BoardingStubLine(

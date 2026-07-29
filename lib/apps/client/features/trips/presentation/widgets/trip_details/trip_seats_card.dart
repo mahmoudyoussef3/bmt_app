@@ -6,6 +6,7 @@ import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/screens/full_screen_seat_map_screen.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_seat_cabin.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_seat_summary.dart';
+import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_identity_labels.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// The passenger's reserved seat(s) rendered on the vehicle's real seat map —
@@ -38,7 +39,7 @@ class TripSeatsCard extends StatelessWidget {
                 MaterialPageRoute(
                   builder: (_) => FullScreenSeatMapScreen(
                     seats: trip.seatMap,
-                    vehicleName: trip.vehicleName,
+                    vehicleName: vehicleNameFor(context, trip),
                     vehicleType: trip.vehicleType,
                   ),
                 ),

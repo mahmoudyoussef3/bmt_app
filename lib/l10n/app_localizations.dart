@@ -2438,6 +2438,24 @@ abstract class AppLocalizations {
   /// **'We couldn\'t refresh your profile.'**
   String get profile_refreshFailed;
 
+  /// No description provided for @profile_signInRequiredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in to view your profile'**
+  String get profile_signInRequiredTitle;
+
+  /// No description provided for @profile_signInRequiredBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re browsing as a guest. Sign in to see your trips, packages and account details.'**
+  String get profile_signInRequiredBody;
+
+  /// No description provided for @profile_signInCta.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in'**
+  String get profile_signInCta;
+
   /// No description provided for @welcome_continueWithEmail.
   ///
   /// In en, this message translates to:
@@ -2599,6 +2617,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Help?'**
   String get auth_help;
+
+  /// No description provided for @auth_resetPasswordTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Set a new password'**
+  String get auth_resetPasswordTitle;
+
+  /// No description provided for @auth_resetPasswordSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a new password for your account.'**
+  String get auth_resetPasswordSubtitle;
+
+  /// No description provided for @auth_newPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'New Password'**
+  String get auth_newPassword;
+
+  /// No description provided for @auth_confirmPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm Password'**
+  String get auth_confirmPassword;
+
+  /// No description provided for @auth_passwordsDoNotMatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords do not match'**
+  String get auth_passwordsDoNotMatch;
+
+  /// No description provided for @auth_updatePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Update Password'**
+  String get auth_updatePassword;
+
+  /// No description provided for @auth_updatingPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Updating...'**
+  String get auth_updatingPassword;
+
+  /// No description provided for @auth_passwordUpdatedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Your password has been updated. Please sign in.'**
+  String get auth_passwordUpdatedSnack;
+
+  /// No description provided for @auth_resetPasswordFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to update password'**
+  String get auth_resetPasswordFailed;
+
+  /// No description provided for @auth_resetLinkInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'This reset link is invalid or has expired. Please request a new one.'**
+  String get auth_resetLinkInvalid;
+
+  /// No description provided for @auth_verifyingResetLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Verifying your reset link...'**
+  String get auth_verifyingResetLink;
 
   /// No description provided for @auth_enterPhoneTitle.
   ///
@@ -4088,6 +4172,18 @@ abstract class AppLocalizations {
   /// **'Please choose an office'**
   String get support_officeRequired;
 
+  /// No description provided for @support_officeLoadError.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t load offices.'**
+  String get support_officeLoadError;
+
+  /// No description provided for @support_attachmentOpenFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open attachment.'**
+  String get support_attachmentOpenFailed;
+
   /// No description provided for @support_subjectLabel.
   ///
   /// In en, this message translates to:
@@ -4189,6 +4285,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Ticket created. Our team will get back to you shortly.'**
   String get support_ticketCreatedSnack;
+
+  /// No description provided for @support_ticketCreatedAttachmentFailedSnack.
+  ///
+  /// In en, this message translates to:
+  /// **'Ticket submitted, but the attachment failed to upload.'**
+  String get support_ticketCreatedAttachmentFailedSnack;
 
   /// No description provided for @support_ticketNumberTitle.
   ///
@@ -4904,6 +5006,24 @@ abstract class AppLocalizations {
   /// **'Seat pending'**
   String get trips_seatPending;
 
+  /// No description provided for @trips_driverPending.
+  ///
+  /// In en, this message translates to:
+  /// **'Driver Pending'**
+  String get trips_driverPending;
+
+  /// No description provided for @trips_vehiclePending.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle Pending'**
+  String get trips_vehiclePending;
+
+  /// No description provided for @trips_routePointUnknown.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get trips_routePointUnknown;
+
   /// No description provided for @trips_awaitingConfirmation.
   ///
   /// In en, this message translates to:
@@ -5150,35 +5270,11 @@ abstract class AppLocalizations {
   /// **'You successfully released your seat (Seat {seat}) for the {date} trip.'**
   String seatRelease_notifReleasedBody(String seat, String date);
 
-  /// No description provided for @seatRelease_timeJustNow.
-  ///
-  /// In en, this message translates to:
-  /// **'Just now'**
-  String get seatRelease_timeJustNow;
-
-  /// No description provided for @seatRelease_confirmSheetTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Confirm Seat Release'**
-  String get seatRelease_confirmSheetTitle;
-
-  /// No description provided for @seatRelease_confirmSheetBody.
-  ///
-  /// In en, this message translates to:
-  /// **'Please confirm you want to release your seat for this specific trip. Released seats cannot be reclaimed once booked by other passengers.'**
-  String get seatRelease_confirmSheetBody;
-
   /// No description provided for @seatRelease_tripDateLabel.
   ///
   /// In en, this message translates to:
   /// **'Trip Date'**
   String get seatRelease_tripDateLabel;
-
-  /// No description provided for @seatRelease_routeSegmentLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Route Segment'**
-  String get seatRelease_routeSegmentLabel;
 
   /// No description provided for @seatRelease_seatNumberLabel.
   ///
@@ -5186,41 +5282,11 @@ abstract class AppLocalizations {
   /// **'Seat Number'**
   String get seatRelease_seatNumberLabel;
 
-  /// No description provided for @seatRelease_packageOriginLabel.
+  /// No description provided for @seatRelease_actionUnavailable.
   ///
   /// In en, this message translates to:
-  /// **'Package Origin'**
-  String get seatRelease_packageOriginLabel;
-
-  /// No description provided for @seatRelease_confirmSheetWarning.
-  ///
-  /// In en, this message translates to:
-  /// **'This action affects only this selected trip date. Future commute dates remain unaffected.'**
-  String get seatRelease_confirmSheetWarning;
-
-  /// No description provided for @seatRelease_goBack.
-  ///
-  /// In en, this message translates to:
-  /// **'Go Back'**
-  String get seatRelease_goBack;
-
-  /// No description provided for @seatRelease_confirmReleaseButton.
-  ///
-  /// In en, this message translates to:
-  /// **'Confirm Release'**
-  String get seatRelease_confirmReleaseButton;
-
-  /// No description provided for @seatRelease_mockReleaseDateToday.
-  ///
-  /// In en, this message translates to:
-  /// **'Today, Jun 3'**
-  String get seatRelease_mockReleaseDateToday;
-
-  /// No description provided for @seatRelease_noNotesProvided.
-  ///
-  /// In en, this message translates to:
-  /// **'No notes provided'**
-  String get seatRelease_noNotesProvided;
+  /// **'Seat release isn\'t available yet'**
+  String get seatRelease_actionUnavailable;
 
   /// No description provided for @seatRelease_statusWaiting.
   ///
@@ -6025,6 +6091,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Booking Reference'**
   String get payments_bookingReferenceLabel;
+
+  /// No description provided for @payments_bookingReferencePending.
+  ///
+  /// In en, this message translates to:
+  /// **'Reference pending'**
+  String get payments_bookingReferencePending;
 
   /// No description provided for @payments_departsLabel.
   ///
@@ -7232,6 +7304,12 @@ abstract class AppLocalizations {
   /// **'No balance to redeem'**
   String get referral_noBalanceToRedeem;
 
+  /// No description provided for @referral_redeemFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Redemption failed. Please try again.'**
+  String get referral_redeemFailed;
+
   /// No description provided for @referral_revealedCode.
   ///
   /// In en, this message translates to:
@@ -7556,6 +7634,12 @@ abstract class AppLocalizations {
   /// **'Messages unavailable'**
   String get communication_messagesUnavailable;
 
+  /// No description provided for @communication_imagePreviewUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Preview not available yet'**
+  String get communication_imagePreviewUnavailable;
+
   /// No description provided for @booking_whereGetOnOff.
   ///
   /// In en, this message translates to:
@@ -7637,7 +7721,7 @@ abstract class AppLocalizations {
   /// No description provided for @booking_seatHeldWhilePaying.
   ///
   /// In en, this message translates to:
-  /// **'Your seat is held while you complete payment.'**
+  /// **'Your seat is locked in the moment you confirm and pay.'**
   String get booking_seatHeldWhilePaying;
 
   /// No description provided for @booking_chooseYourDeparture.

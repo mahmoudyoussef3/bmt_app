@@ -22,8 +22,10 @@ import '../../features/auth/domain/usecases/sign_in_with_email_usecase.dart';
 import '../../features/auth/domain/usecases/sign_out_usecase.dart';
 import '../../features/auth/domain/usecases/sign_up_with_email_usecase.dart';
 import '../../features/auth/domain/usecases/send_password_reset_email_usecase.dart';
+import '../../features/auth/domain/usecases/update_password_usecase.dart';
 import '../../features/auth/presentation/cubit/auth_cubit.dart';
 import '../../features/auth/presentation/cubit/forgot_password_cubit.dart';
+import '../../features/auth/presentation/cubit/reset_password_cubit.dart';
 import '../../features/auth/presentation/cubit/remember_me_coordinator.dart';
 import '../storage/remember_me_store.dart';
 
@@ -343,6 +345,18 @@ void _registerAuthDependencies() {
   if (!clientGetIt.isRegistered<ForgotPasswordCubit>()) {
     clientGetIt.registerFactory<ForgotPasswordCubit>(
       () => ForgotPasswordCubit(clientGetIt<SendPasswordResetEmailUseCase>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<UpdatePasswordUseCase>()) {
+    clientGetIt.registerLazySingleton<UpdatePasswordUseCase>(
+      () => UpdatePasswordUseCase(clientGetIt<ClientAuthRepository>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<ResetPasswordCubit>()) {
+    clientGetIt.registerFactory<ResetPasswordCubit>(
+      () => ResetPasswordCubit(clientGetIt<UpdatePasswordUseCase>()),
     );
   }
 }

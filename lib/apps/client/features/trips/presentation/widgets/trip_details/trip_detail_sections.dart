@@ -23,7 +23,13 @@ class TripDetailSections extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isCompleted = trip.status == TripStatus.completed;
+    // A trip that never got past `reserved` (needsSupport) is completed on the
+    // journey axis but was never travelled on this booking — it must not offer
+    // (or dead-end on) a rating invite the attention banner already flags as
+    // needing support instead.
+    final isCompleted =
+        trip.status == TripStatus.completed &&
+        (trip.isReviewed || trip.canBeReviewed);
 
     return Column(
       children: [
