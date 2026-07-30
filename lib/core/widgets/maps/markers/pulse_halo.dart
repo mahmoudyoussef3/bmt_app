@@ -51,30 +51,41 @@ class _MapPulseHaloState extends State<MapPulseHalo>
 
   @override
   Widget build(BuildContext context) {
-    final reducedMotion = AppMotion.reduceMotion;
-    if (reducedMotion) {
-      return Container(
-        width: widget.diameter * 1.12,
-        height: widget.diameter * 1.12,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: widget.color.withAlpha(42),
-        ),
-      );
+    if (AppMotion.reduceMotion) {
+      return _layoutNeutral(_ring(1.12, 42));
     }
-    return AnimatedBuilder(
-      animation: _controller,
-      builder: (context, _) {
-        final t = Curves.easeOut.transform(_controller.value);
-        return Container(
-          width: widget.diameter * (1 + t * 0.75),
-          height: widget.diameter * (1 + t * 0.75),
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: widget.color.withAlpha(((1 - t) * 70).round()),
-          ),
-        );
-      },
+    return _layoutNeutral(
+      AnimatedBuilder(
+        animation: _controller,
+        builder: (context, _) {
+          final t = Curves.easeOut.transform(_controller.value);
+          return _ring(1 + t * 0.75, ((1 - t) * 70).round());
+        },
+      ),
     );
   }
+
+  Widget _ring(double scale, int alpha) => Container(
+    width: widget.diameter * scale,
+    height: widget.diameter * scale,
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      color: widget.color.withAlpha(alpha),
+    ),
+  );
+
+  /// The ring breathes out past [MapPulseHalo.diameter], but only [diameter] is
+  /// ever reported to the parent. Letting the animated size reach layout made
+  /// the marker it sits in overflow on the wide half of every pulse (the
+  /// yellow-and-black "RenderFlex overflowed" banner on the map) and shifted
+  /// the pin as it breathed. The ring still *paints* at full width — every host
+  /// Stack uses `clipBehavior: Clip.none`.
+  Widget _layoutNeutral(Widget ring) => SizedBox.square(
+    dimension: widget.diameter,
+    child: OverflowBox(
+      maxWidth: double.infinity,
+      maxHeight: double.infinity,
+      child: ring,
+    ),
+  );
 }

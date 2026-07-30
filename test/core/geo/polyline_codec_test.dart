@@ -26,6 +26,31 @@ void main() {
       expect(PolylineCodec.decode('_p~iF'), isEmpty);
     });
 
+    test('decodes long runs of negative deltas without drifting', () {
+      // Southbound + westbound geometry: every delta is negative. Decoding
+      // these with `~` gave an unsigned 32-bit result on the web, so each one
+      // jumped ~4.3e9 and the route left the planet. Guards the arithmetic
+      // (platform-independent) zigzag decode.
+      final points = PolylineCodec.decode('_p~iF~ps|U~ulL~nnqC~mqN~xq`@');
+
+      for (final point in points) {
+        expect(point.lat, inInclusiveRange(-90, 90));
+        expect(point.lng, inInclusiveRange(-180, 180));
+      }
+      expect(points[1].lat, lessThan(points[0].lat));
+      expect(points[1].lng, lessThan(points[0].lng));
+    });
+
+    test('returns empty list when a decoded point leaves the world', () {
+      // A latitude delta far past the poles: better no road geometry than a
+      // polyline that blows up LatLngBounds and takes the whole map down.
+      expect(PolylineCodec.decode('_gjaR_gjaR'), isEmpty);
+    });
+
+    test('returns empty list for an over-long varint', () {
+      expect(PolylineCodec.decode('~~~~~~~~~~~~'), isEmpty);
+    });
+
     test('supports precision 6 geometry', () {
       final five = PolylineCodec.decode('_p~iF~ps|U');
       final six = PolylineCodec.decode('_p~iF~ps|U', precision: 6);

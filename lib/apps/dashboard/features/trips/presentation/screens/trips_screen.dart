@@ -22,6 +22,7 @@ import '../widgets/trip_cancellation_dialog.dart';
 import '../widgets/trip_creation_wizard.dart';
 import '../widgets/trip_pricing_tab.dart';
 import '../widgets/trip_row_card.dart';
+import '../widgets/trip_seat_map.dart';
 import '../widgets/trip_ui_helpers.dart';
 import '../widgets/trips_filter_sheet.dart';
 import '../widgets/trips_grouped_view.dart';
@@ -1402,51 +1403,7 @@ class _SeatsTab extends StatelessWidget {
             ],
           ),
         ),
-        Expanded(
-          child: GridView.builder(
-            padding: const EdgeInsets.fromLTRB(20, 6, 20, 20),
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-              maxCrossAxisExtent: 120,
-              mainAxisExtent: 92,
-              crossAxisSpacing: 10,
-              mainAxisSpacing: 10,
-            ),
-            itemCount: trip.seats.length,
-            itemBuilder: (context, index) {
-              final seat = trip.seats[index];
-              return PopupMenuButton<TripSeatState>(
-                tooltip: 'تغيير حالة المقعد',
-                onSelected: (value) => context
-                    .read<TripSeatsCubit>()
-                    .changeSeatState(trip.id, seat.id, value),
-                itemBuilder: (_) => TripSeatState.values
-                    .map(
-                      (value) =>
-                          PopupMenuItem(value: value, child: Text(value.label)),
-                    )
-                    .toList(),
-                child: Card(
-                  elevation: 0,
-                  color: _seatColor(context, seat.state),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Icon(Icons.event_seat_rounded),
-                      Text(
-                        seat.label,
-                        style: const TextStyle(fontWeight: FontWeight.w900),
-                      ),
-                      Text(
-                        seat.state.label,
-                        style: const TextStyle(fontSize: 11),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
+        Expanded(child: TripSeatMap(trip: trip)),
       ],
     );
   }
@@ -1613,7 +1570,7 @@ class _SeatLegend extends StatelessWidget {
           width: 10,
           height: 10,
           decoration: BoxDecoration(
-            color: _seatColor(context, state),
+            color: tripSeatColor(context, state),
             shape: BoxShape.circle,
             border: Border.all(
               color: Theme.of(context).colorScheme.outlineVariant,
@@ -1634,17 +1591,6 @@ String _actionLabel(OperationTripStatus status) {
     OperationTripStatus.inProgress => 'بدء الرحلة',
     OperationTripStatus.completed => 'إنهاء الرحلة',
     _ => status.label,
-  };
-}
-
-Color _seatColor(BuildContext context, TripSeatState state) {
-  final scheme = Theme.of(context).colorScheme;
-  return switch (state) {
-    TripSeatState.available => scheme.primaryContainer,
-    TripSeatState.reserved => scheme.secondaryContainer,
-    TripSeatState.paid => Colors.green.withAlpha(60),
-    TripSeatState.subscription => scheme.tertiaryContainer,
-    TripSeatState.blocked => scheme.errorContainer,
   };
 }
 

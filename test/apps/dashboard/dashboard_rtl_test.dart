@@ -124,20 +124,22 @@ void main() {
     //
     //  1. A Latin-only value (a phone number), pinned so its digits are not
     //     reordered around the surrounding Arabic.
-    //  2. The vehicle cabin grid. A seat map is a picture of a physical object,
-    //     not a line of text: column 1 of a blueprint is the driver's side of a
-    //     left-hand-drive bus, and mirroring it for Arabic would move the
-    //     steering wheel to the right and every window seat to the opposite
-    //     wall. The Arabic labels around the grid still flow RTL.
+    //  2. The vehicle cabin grids — Fleet's layout preview and the trip seats
+    //     tab. A seat map is a picture of a physical object, not a line of
+    //     text: column 1 of a blueprint is the driver's side of a left-hand-
+    //     drive bus, and mirroring it for Arabic would move the steering wheel
+    //     to the right and every window seat to the opposite wall. The Arabic
+    //     labels around the grid still flow RTL.
     const allowed = {
       'lib/apps/dashboard/features/captain_requests/presentation/widgets/captain_request_card.dart',
       'lib/apps/dashboard/features/fleet/fleet_vehicles/presentation/widgets/fleet_seat_layout_visualizer.dart',
+      'lib/apps/dashboard/features/trips/presentation/widgets/trip_seat_map.dart',
     };
 
     final offenders = <String>[];
-    for (final entity in Directory('lib/apps/dashboard').listSync(
-      recursive: true,
-    )) {
+    for (final entity in Directory(
+      'lib/apps/dashboard',
+    ).listSync(recursive: true)) {
       if (entity is! File || !entity.path.endsWith('.dart')) continue;
       final path = entity.path.replaceAll(r'\', '/');
       if (allowed.contains(path)) continue;

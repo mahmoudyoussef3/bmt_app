@@ -20,8 +20,9 @@ void main() {
 
   Future<void> pumpMap(
     WidgetTester tester,
-    List<Marker> Function(BuildContext) markers,
-  ) async {
+    List<Marker> Function(BuildContext) markers, {
+    bool settle = true,
+  }) async {
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
@@ -46,7 +47,8 @@ void main() {
         ),
       ),
     );
-    await tester.pumpAndSettle();
+    // A selected pin pulses forever, so it can never settle.
+    if (settle) await tester.pumpAndSettle();
   }
 
   /// The stop is the map's initial center, so it projects to the exact centre
@@ -79,6 +81,44 @@ void main() {
 
     expect(tail.bottom, moreOrLessEquals(point.dy, epsilon: 1));
     expect(tail.center.dx, moreOrLessEquals(point.dx, epsilon: 1));
+  });
+
+  testWidgets('selected pin pulses without overflowing its marker box', (
+    tester,
+  ) async {
+    await pumpMap(
+      tester,
+      (context) => [
+        buildStationMarker(
+          context,
+          stop: const MapRouteStop(coordinate: stop, name: 'Ramses'),
+          index: 0,
+          count: 3,
+          selected: true,
+          onTap: () {},
+        ),
+      ],
+      settle: false,
+    );
+
+    // Walk a full pulse. The halo is widest near the end of the cycle, which
+    // is where it used to push the pin's Column past the marker box and paint
+    // the "RenderFlex overflowed" banner over the map.
+    for (var step = 0; step < 10; step++) {
+      await tester.pump(const Duration(milliseconds: 160));
+      expect(
+        tester.takeException(),
+        isNull,
+        reason: 'pulse step $step overflowed',
+      );
+    }
+
+    final pin = tester.getRect(
+      find.byWidgetPredicate(
+        (widget) => widget is CustomPaint && widget.painter is PinTailPainter,
+      ),
+    );
+    expect(pin.bottom, moreOrLessEquals(stopOnScreen(tester).dy, epsilon: 1));
   });
 
   testWidgets('callout floats above the pin instead of over the coordinate', (

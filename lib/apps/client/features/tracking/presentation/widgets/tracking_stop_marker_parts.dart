@@ -61,7 +61,12 @@ class TrackingStopPulse extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       alignment: Alignment.center,
-      children: [MapPulseHalo(color: color, diameter: diameter), child],
+      // The halo takes only [diameter] in layout and paints its ring beyond it.
+      clipBehavior: Clip.none,
+      children: [
+        MapPulseHalo(color: color, diameter: diameter),
+        child,
+      ],
     );
   }
 }

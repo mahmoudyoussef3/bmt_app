@@ -58,6 +58,15 @@ class OperationTrip {
   final String driver;
   final String vehicleId;
   final String vehicle;
+
+  /// The raw `vehicles.vehicle_type` of the bus running the trip.
+  ///
+  /// Kept next to the display name because [vehicle] is a human label
+  /// ("Hiace (V-12) ‎1234") that no parser should have to pick apart. The seat
+  /// map resolves the cabin blueprint from this, so the operator sees the same
+  /// physical layout the rider books from. Empty when the trip has no vehicle
+  /// yet, which draws the seats as stored rather than guessing a cabin.
+  final String vehicleType;
   final String date;
   final String departure;
   final String arrival;
@@ -79,6 +88,7 @@ class OperationTrip {
     required this.driver,
     required this.vehicleId,
     required this.vehicle,
+    this.vehicleType = '',
     required this.date,
     required this.departure,
     required this.arrival,
@@ -101,6 +111,7 @@ class OperationTrip {
     String? driver,
     String? vehicleId,
     String? vehicle,
+    String? vehicleType,
     String? date,
     String? departure,
     String? arrival,
@@ -122,6 +133,7 @@ class OperationTrip {
       driver: driver ?? this.driver,
       vehicleId: vehicleId ?? this.vehicleId,
       vehicle: vehicle ?? this.vehicle,
+      vehicleType: vehicleType ?? this.vehicleType,
       date: date ?? this.date,
       departure: departure ?? this.departure,
       arrival: arrival ?? this.arrival,
