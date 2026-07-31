@@ -1,32 +1,41 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
+import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
-import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/core/widgets/app_snackbar.dart';
 
 import '../../domain/entities/operation_booking.dart';
 import '../cubit/bookings_cubit.dart';
 import 'booking_next_action_banner.dart';
 import 'booking_reassign_dialog.dart';
 import 'booking_review_intents.dart' as intents;
+import 'booking_status_chips.dart';
 
 /// Right-hand (or bottom-sheet) inspector showing a booking's real customer,
 /// trip, payment, receipt and lifecycle data joined from the database.
+///
+/// The review actions are docked to the bottom of the panel rather than sitting
+/// in the scrolling body: they are why the panel is open, and on a short window
+/// they used to scroll out of reach behind the customer and trip sections.
 class BookingDetailsPanel extends StatelessWidget {
   const BookingDetailsPanel({
     super.key,
     required this.booking,
     required this.clientBookingsCount,
+    this.isProcessing = false,
   });
 
   final OperationBooking booking;
   final int clientBookingsCount;
+  final bool isProcessing;
 
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<BookingsCubit>();
+    final hasActions = booking.awaitingReview || booking.canBeReassigned;
 
     return AppCard(
       padding: EdgeInsets.zero,
@@ -38,27 +47,7 @@ class BookingDetailsPanel extends StatelessWidget {
             child: ListView(
               padding: const EdgeInsets.all(AppSpacing.medium),
               children: [
-                Wrap(
-                  spacing: AppSpacing.small,
-                  runSpacing: AppSpacing.small,
-                  children: [
-                    StatusChip(label: 'الحجز: ${booking.status.label}'),
-                    StatusChip(
-                      label: 'الدفع: ${booking.paymentStatus.label}',
-                      color: AppStatusColors.onWarningContainer,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.medium),
                 BookingNextActionBanner(booking: booking),
-                if (booking.awaitingReview) ...[
-                  const SizedBox(height: AppSpacing.medium),
-                  _ReviewButtons(booking: booking, cubit: cubit),
-                ],
-                if (booking.canBeReassigned) ...[
-                  const SizedBox(height: AppSpacing.small),
-                  _ReassignButton(booking: booking, cubit: cubit),
-                ],
                 const SizedBox(height: AppSpacing.medium),
                 _Section(
                   title: 'بيانات العميل',
@@ -93,8 +82,8 @@ class BookingDetailsPanel extends StatelessWidget {
                       ('الباقة', booking.packageName),
                   ],
                   trailing: booking.hasReceipt
-                      ? _ReceiptButton(url: booking.receiptUrl!)
-                      : null,
+                      ? _ReceiptPreview(url: booking.receiptUrl!)
+                      : const _NoReceiptNote(),
                 ),
                 if (booking.rejectionReason != null)
                   _Section(
@@ -108,6 +97,14 @@ class BookingDetailsPanel extends StatelessWidget {
               ],
             ),
           ),
+          if (hasActions) ...[
+            const Divider(height: 1),
+            _ActionBar(
+              booking: booking,
+              cubit: cubit,
+              isProcessing: isProcessing,
+            ),
+          ],
         ],
       ),
     );
@@ -126,83 +123,137 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
+
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.medium),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CircleAvatar(
-            radius: 24,
-            backgroundColor: scheme.primary.withAlpha(20),
-            child: Icon(Icons.person_outline, color: scheme.primary),
-          ),
-          const SizedBox(width: AppSpacing.small),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  booking.passengerName,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w900,
-                  ),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CircleAvatar(
+                radius: 22,
+                backgroundColor: scheme.primary.withAlpha(20),
+                child: Icon(Icons.person_outline, color: scheme.primary),
+              ),
+              const SizedBox(width: AppSpacing.small),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      booking.passengerName,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: text.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    _PhoneLine(
+                      bookingNumber: booking.bookingNumber,
+                      phone: booking.phone,
+                    ),
+                  ],
                 ),
-                Text(
-                  '${booking.bookingNumber} • ${booking.phone}',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
+              ),
+              IconButton(
+                onPressed: onClose,
+                tooltip: 'إغلاق',
+                icon: const Icon(Icons.close_rounded),
+              ),
+            ],
           ),
-          IconButton(onPressed: onClose, icon: const Icon(Icons.close_rounded)),
+          const SizedBox(height: AppSpacing.small),
+          Row(
+            children: [
+              Expanded(
+                child: Wrap(
+                  spacing: AppSpacing.xSmall,
+                  runSpacing: AppSpacing.xSmall,
+                  children: [
+                    BookingStateChip.booking(booking.status),
+                    BookingStateChip.payment(booking.paymentStatus),
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.small),
+              // The fare is the number every review decision turns on, so it
+              // sits in the header instead of three sections down.
+              Text(
+                booking.amountLabel,
+                style: text.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  color: scheme.primary,
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
   }
 }
 
-class _ReviewButtons extends StatelessWidget {
-  const _ReviewButtons({required this.booking, required this.cubit});
+/// Booking number + phone, with the phone copyable — support agents call the
+/// client straight from this panel and were retyping the number by hand.
+class _PhoneLine extends StatelessWidget {
+  const _PhoneLine({required this.bookingNumber, required this.phone});
 
-  final OperationBooking booking;
-  final BookingsCubit cubit;
+  final String bookingNumber;
+  final String phone;
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: AppSpacing.xSmall,
-      runSpacing: AppSpacing.xSmall,
+    final scheme = Theme.of(context).colorScheme;
+    final style = Theme.of(
+      context,
+    ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant);
+
+    return Row(
       children: [
-        FilledButton.icon(
-          onPressed: () => intents.approveBooking(context, cubit, booking),
-          icon: const Icon(Icons.check_rounded),
-          label: const Text('قبول الدفع'),
+        Flexible(
+          child: Text(
+            [
+              if (bookingNumber.isNotEmpty) bookingNumber,
+              if (phone.isNotEmpty) phone,
+            ].join(' • '),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: style,
+          ),
         ),
-        OutlinedButton.icon(
-          onPressed: () => intents.rejectBooking(context, cubit, booking),
-          icon: const Icon(Icons.close_rounded),
-          label: const Text('رفض'),
-        ),
-        OutlinedButton.icon(
-          onPressed: () => intents.requestReupload(context, cubit, booking),
-          icon: const Icon(Icons.refresh_rounded),
-          label: const Text('إعادة رفع'),
-        ),
+        if (phone.isNotEmpty)
+          IconButton(
+            tooltip: 'نسخ رقم الهاتف',
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+            icon: const Icon(Icons.copy_rounded, size: 14),
+            onPressed: () async {
+              await Clipboard.setData(ClipboardData(text: phone));
+              if (context.mounted) {
+                AppSnackbar.success(context, 'تم نسخ رقم الهاتف');
+              }
+            },
+          ),
       ],
     );
   }
 }
 
-/// Moves the passenger to another trip — the recovery path when a trip is
-/// cancelled, delayed, or the customer asks to travel on a different date.
-class _ReassignButton extends StatelessWidget {
-  const _ReassignButton({required this.booking, required this.cubit});
+class _ActionBar extends StatelessWidget {
+  const _ActionBar({
+    required this.booking,
+    required this.cubit,
+    required this.isProcessing,
+  });
 
   final OperationBooking booking;
   final BookingsCubit cubit;
+  final bool isProcessing;
 
   Future<void> _reassign(BuildContext context) async {
     final tripId = await BookingReassignDialog.show(
@@ -217,34 +268,163 @@ class _ReassignButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: AlignmentDirectional.centerStart,
-      child: OutlinedButton.icon(
-        onPressed: () => _reassign(context),
-        icon: const Icon(Icons.swap_horiz_rounded),
-        label: const Text('نقل إلى رحلة أخرى'),
+    final scheme = Theme.of(context).colorScheme;
+    final approved = paymentStatusStyle(PaymentStatus.approved);
+    final rejected = paymentStatusStyle(PaymentStatus.rejected);
+    final busy = isProcessing;
+
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.medium),
+      color: scheme.surfaceContainerHighest.withAlpha(60),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (busy) ...[
+            const LinearProgressIndicator(minHeight: 2),
+            const SizedBox(height: AppSpacing.small),
+          ],
+          if (booking.awaitingReview) ...[
+            Row(
+              children: [
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: busy
+                        ? null
+                        : () => intents.approveBooking(context, cubit, booking),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: approved.onContainer,
+                      foregroundColor: Colors.white,
+                    ),
+                    icon: const Icon(Icons.check_rounded, size: 18),
+                    label: const Text('قبول الدفع'),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.small),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: busy
+                        ? null
+                        : () => intents.rejectBooking(context, cubit, booking),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: rejected.onContainer,
+                    ),
+                    icon: const Icon(Icons.close_rounded, size: 18),
+                    label: const Text('رفض'),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.small),
+          ],
+          Wrap(
+            spacing: AppSpacing.small,
+            runSpacing: AppSpacing.small,
+            children: [
+              if (booking.awaitingReview)
+                TextButton.icon(
+                  onPressed: busy
+                      ? null
+                      : () => intents.requestReupload(context, cubit, booking),
+                  icon: const Icon(Icons.refresh_rounded, size: 18),
+                  label: const Text('طلب إعادة رفع'),
+                ),
+              if (booking.canBeReassigned)
+                TextButton.icon(
+                  onPressed: busy ? null : () => _reassign(context),
+                  icon: const Icon(Icons.swap_horiz_rounded, size: 18),
+                  label: const Text('نقل إلى رحلة أخرى'),
+                ),
+            ],
+          ),
+        ],
       ),
     );
   }
 }
 
-class _ReceiptButton extends StatelessWidget {
-  const _ReceiptButton({required this.url});
+/// The receipt is the evidence a payment review is decided on, so the panel
+/// shows it inline instead of hiding it behind a button.
+class _ReceiptPreview extends StatelessWidget {
+  const _ReceiptPreview({required this.url});
 
   final String url;
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: AlignmentDirectional.centerStart,
-      child: OutlinedButton.icon(
-        onPressed: () => showDialog<void>(
-          context: context,
-          builder: (_) => _ReceiptDialog(url: url),
+    final scheme = Theme.of(context).colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        InkWell(
+          onTap: () => showDialog<void>(
+            context: context,
+            builder: (_) => _ReceiptDialog(url: url),
+          ),
+          borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+          child: Container(
+            height: 150,
+            clipBehavior: Clip.antiAlias,
+            decoration: BoxDecoration(
+              color: scheme.surfaceContainerHighest.withAlpha(90),
+              borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+              border: Border.all(color: scheme.outline.withAlpha(90)),
+            ),
+            child: Image.network(
+              url,
+              fit: BoxFit.cover,
+              errorBuilder: (_, _, _) => Center(
+                child: Text(
+                  'تعذر تحميل صورة الإيصال',
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ),
+              loadingBuilder: (_, child, progress) => progress == null
+                  ? child
+                  : const Center(child: CircularProgressIndicator()),
+            ),
+          ),
         ),
-        icon: const Icon(Icons.receipt_long_rounded, size: 18),
-        label: const Text('عرض الإيصال'),
-      ),
+        const SizedBox(height: AppSpacing.xSmall),
+        Align(
+          alignment: AlignmentDirectional.centerStart,
+          child: TextButton.icon(
+            onPressed: () => showDialog<void>(
+              context: context,
+              builder: (_) => _ReceiptDialog(url: url),
+            ),
+            icon: const Icon(Icons.zoom_in_rounded, size: 18),
+            label: const Text('تكبير الإيصال'),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _NoReceiptNote extends StatelessWidget {
+  const _NoReceiptNote();
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Icon(
+          Icons.image_not_supported_outlined,
+          size: 16,
+          color: scheme.onSurfaceVariant,
+        ),
+        const SizedBox(width: AppSpacing.xSmall),
+        Expanded(
+          child: Text(
+            'لم يرفع العميل إيصالاً بعد.',
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -262,20 +442,22 @@ class _ReceiptDialog extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            InteractiveViewer(
-              child: Image.network(
-                url,
-                fit: BoxFit.contain,
-                errorBuilder: (_, _, _) => const Padding(
-                  padding: EdgeInsets.all(AppSpacing.large),
-                  child: Text('تعذر تحميل صورة الإيصال.'),
+            Flexible(
+              child: InteractiveViewer(
+                child: Image.network(
+                  url,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, _, _) => const Padding(
+                    padding: EdgeInsets.all(AppSpacing.large),
+                    child: Text('تعذر تحميل صورة الإيصال.'),
+                  ),
+                  loadingBuilder: (_, child, progress) => progress == null
+                      ? child
+                      : const Padding(
+                          padding: EdgeInsets.all(AppSpacing.large),
+                          child: CircularProgressIndicator(),
+                        ),
                 ),
-                loadingBuilder: (_, child, progress) => progress == null
-                    ? child
-                    : const Padding(
-                        padding: EdgeInsets.all(AppSpacing.large),
-                        child: CircularProgressIndicator(),
-                      ),
               ),
             ),
             const SizedBox(height: AppSpacing.small),
@@ -412,6 +594,8 @@ class _ListSection extends StatelessWidget {
   }
 }
 
+/// Lifecycle history drawn as a rail: dots and a connector make the order of
+/// events readable, where the old flat list of bold lines did not.
 class _Timeline extends StatelessWidget {
   const _Timeline({required this.events});
 
@@ -420,47 +604,90 @@ class _Timeline extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
+
     return AppCard(
       padding: const EdgeInsets.all(AppSpacing.medium),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'سجل العمليات',
-            style: Theme.of(
-              context,
-            ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900),
+          Row(
+            children: [
+              Icon(Icons.history_rounded, size: 18, color: scheme.primary),
+              const SizedBox(width: AppSpacing.xSmall),
+              Text(
+                'سجل العمليات',
+                style: text.titleSmall?.copyWith(fontWeight: FontWeight.w900),
+              ),
+            ],
           ),
           const SizedBox(height: AppSpacing.medium),
-          ...events.map(
-            (event) => Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.small),
-              child: Column(
+          if (events.isEmpty)
+            Text(
+              'لا يوجد سجل لهذا الحجز.',
+              style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+            ),
+          for (final (index, event) in events.indexed)
+            IntrinsicHeight(
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    event.action,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w800,
-                    ),
+                  Column(
+                    children: [
+                      Container(
+                        width: 10,
+                        height: 10,
+                        margin: const EdgeInsets.only(top: 4),
+                        decoration: BoxDecoration(
+                          color: index == events.length - 1
+                              ? scheme.primary
+                              : scheme.outline,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      if (index != events.length - 1)
+                        Expanded(
+                          child: Container(width: 2, color: scheme.outline),
+                        ),
+                    ],
                   ),
-                  Text(
-                    _formatTime(event.timestamp),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                    ),
-                  ),
-                  if (event.note != null)
-                    Text(
-                      event.note!,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
+                  const SizedBox(width: AppSpacing.small),
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(
+                        bottom: index == events.length - 1
+                            ? 0
+                            : AppSpacing.medium,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            event.action,
+                            style: text.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
+                          Text(
+                            _formatTime(event.timestamp),
+                            style: text.bodySmall?.copyWith(
+                              color: scheme.onSurfaceVariant,
+                            ),
+                          ),
+                          if (event.note != null)
+                            Text(
+                              event.note!,
+                              style: text.bodySmall?.copyWith(
+                                color: scheme.onSurfaceVariant,
+                              ),
+                            ),
+                        ],
                       ),
                     ),
+                  ),
                 ],
               ),
             ),
-          ),
         ],
       ),
     );

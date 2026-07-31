@@ -54,8 +54,8 @@ class TripHistoryDetailPage extends StatelessWidget {
               sliver: SliverList.list(
                 children: [
                   _JourneyCard(trip: trip),
-                  const SizedBox(height: CaptainDesignTokens.s16),
-                  _VehicleCard(trip: trip),
+                  const SizedBox(height: CaptainDesignTokens.s24),
+                  _VehicleSection(trip: trip),
                   const SizedBox(height: CaptainDesignTokens.s24),
                   _StopsSection(tripId: trip.id),
                 ],
@@ -112,8 +112,13 @@ class _JourneyCard extends StatelessWidget {
 /// The plate is new here — the entity always carried it and the screen never
 /// showed it, which is the one identifier a captain would come back to a
 /// finished trip to check.
-class _VehicleCard extends StatelessWidget {
-  const _VehicleCard({required this.trip});
+///
+/// Its heading sits outside the card, the way the route section's already did.
+/// The page used to name this one section from *inside* its own card and the
+/// other from above it, so two adjacent blocks stated their titles in two
+/// different places on the same screen.
+class _VehicleSection extends StatelessWidget {
+  const _VehicleSection({required this.trip});
 
   final TripHistoryItem trip;
 
@@ -122,27 +127,32 @@ class _VehicleCard extends StatelessWidget {
     final vehicle = trip.vehicleNumber.isEmpty ? '—' : trip.vehicleNumber;
     final plate = trip.plateNumber.isEmpty ? '—' : trip.plateNumber;
 
-    return CaptainCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const _SectionTitle(title: 'المركبة'),
-          const SizedBox(height: CaptainDesignTokens.s12),
-          CaptainDetailRow(
-            icon: Icons.directions_bus_rounded,
-            label: 'رقم المركبة',
-            value: vehicle,
-            valueIsIdentifier: true,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const _SectionTitle(title: 'المركبة'),
+        const SizedBox(height: CaptainDesignTokens.s12),
+        CaptainCard(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CaptainDetailRow(
+                icon: Icons.directions_bus_rounded,
+                label: 'رقم المركبة',
+                value: vehicle,
+                valueIsIdentifier: true,
+              ),
+              CaptainDetailRow(
+                icon: Icons.confirmation_number_rounded,
+                label: 'لوحة الترخيص',
+                value: plate,
+                valueIsIdentifier: true,
+                bottomSpacing: 0,
+              ),
+            ],
           ),
-          CaptainDetailRow(
-            icon: Icons.confirmation_number_rounded,
-            label: 'لوحة الترخيص',
-            value: plate,
-            valueIsIdentifier: true,
-            bottomSpacing: 0,
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -164,16 +174,11 @@ class _StopsSection extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Padding(
-              padding: const EdgeInsetsDirectional.only(
-                start: CaptainDesignTokens.s4,
-              ),
-              child: _SectionTitle(
-                title: 'مسار الرحلة',
-                trailing: stops.isEmpty
-                    ? null
-                    : TripHistoryLabels.stops(stops.length),
-              ),
+            _SectionTitle(
+              title: 'مسار الرحلة',
+              trailing: stops.isEmpty
+                  ? null
+                  : TripHistoryLabels.stops(stops.length),
             ),
             const SizedBox(height: CaptainDesignTokens.s12),
             switch (state) {
@@ -197,34 +202,42 @@ class _StopsSection extends StatelessWidget {
   }
 }
 
+/// Names the block beneath it, from the page background rather than from inside
+/// the card. The inset is carried here rather than at each call site so the
+/// screen's headings line up with each other by construction.
 class _SectionTitle extends StatelessWidget {
   const _SectionTitle({required this.title, this.trailing});
 
   final String title;
+
+  /// A count or aside, aligned to the heading's trailing edge.
   final String? trailing;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: CaptainTypography.titleSmall(
-              context,
-            ).copyWith(fontWeight: FontWeight.w900),
+    return Padding(
+      padding: const EdgeInsetsDirectional.only(start: CaptainDesignTokens.s4),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: CaptainTypography.titleSmall(
+                context,
+              ).copyWith(fontWeight: FontWeight.w900),
+            ),
           ),
-        ),
-        if (trailing != null)
-          Text(
-            trailing!,
-            style: CaptainTypography.labelMedium(
-              context,
-            ).copyWith(color: TripHistoryPalette.neutral(context)),
-          ),
-      ],
+          if (trailing != null)
+            Text(
+              trailing!,
+              style: CaptainTypography.labelMedium(
+                context,
+              ).copyWith(color: TripHistoryPalette.neutral(context)),
+            ),
+        ],
+      ),
     );
   }
 }

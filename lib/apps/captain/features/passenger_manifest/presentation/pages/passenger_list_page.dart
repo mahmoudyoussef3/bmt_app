@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import 'package:bmt_app/apps/captain/core/di/captain_di.dart';
-import 'package:bmt_app/apps/captain/core/routes/captain_nav.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_empty_state.dart';
@@ -139,11 +138,6 @@ class _PassengerListView extends StatelessWidget {
                   onCall: passenger.phone.trim().isEmpty
                       ? null
                       : () => _call(context, passenger.phone),
-                  onChat: () => context.openChatDetails(
-                    tripId: tripId,
-                    passengerId: passenger.id,
-                    title: passenger.name,
-                  ),
                 ),
               );
             },

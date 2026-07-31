@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/captain/features/assigned_trips/domain/entities/assigned_trip.dart';
 import 'package:bmt_app/apps/captain/features/auth/presentation/screens/captain_request_access_screen.dart';
-import 'package:bmt_app/apps/captain/features/communication/presentation/pages/chat_details_page.dart';
-import 'package:bmt_app/apps/captain/features/communication/presentation/pages/chats_page.dart';
 import 'package:bmt_app/apps/captain/features/incidents/presentation/pages/report_incident_page.dart';
 import 'package:bmt_app/apps/captain/features/live_location/presentation/pages/live_location_page.dart';
 import 'package:bmt_app/apps/captain/features/notifications/presentation/pages/captain_notifications_page.dart';
@@ -71,19 +69,9 @@ class CaptainAppRouter {
         LocationUpdatePage(tripId: args! as String),
       ),
 
-      CaptainRoutes.chats => _page(
-        settings,
-        ChatsPage(tripId: args! as String),
-      ),
-
       CaptainRoutes.statusUpdate => _page(
         settings,
         StatusUpdatePage(tripId: args! as String),
-      ),
-
-      CaptainRoutes.chatDetails => _buildChatDetails(
-        settings,
-        args! as ChatDetailsArgs,
       ),
 
       CaptainRoutes.reportIncident => _buildReportIncident(
@@ -98,20 +86,6 @@ class CaptainAppRouter {
 
       _ => null,
     };
-  }
-
-  static Route<dynamic> _buildChatDetails(
-    RouteSettings settings,
-    ChatDetailsArgs args,
-  ) {
-    return _page(
-      settings,
-      ChatDetailsPage(
-        tripId: args.tripId,
-        title: args.title,
-        passengerId: args.passengerId,
-      ),
-    );
   }
 
   static Route<dynamic> _buildReportIncident(

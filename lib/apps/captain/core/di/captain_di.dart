@@ -65,14 +65,6 @@ import '../../features/assigned_trips/domain/usecases/get_seen_trip_ids_usecase.
 import '../../features/assigned_trips/domain/usecases/mark_trips_seen_usecase.dart';
 import '../../features/assigned_trips/domain/usecases/watch_assigned_trips_usecase.dart';
 import '../../features/assigned_trips/presentation/cubit/assigned_trips_cubit.dart';
-import '../../features/communication/data/datasources/chat_datasource.dart';
-import '../../features/communication/data/datasources/supabase_chat_datasource.dart';
-import '../../features/communication/data/repositories/communication_repository_impl.dart';
-import '../../features/communication/domain/repositories/communication_repository.dart';
-import '../../features/communication/domain/usecases/get_conversation_usecase.dart';
-import '../../features/communication/domain/usecases/send_message_usecase.dart';
-import '../../features/communication/presentation/cubit/captain_notification_cubit.dart';
-import '../../features/communication/presentation/cubit/communication_cubit.dart';
 import '../../features/incidents/data/datasources/incident_datasource.dart';
 import '../../features/incidents/data/datasources/supabase_incident_datasource.dart';
 import '../../features/incidents/data/repositories/incident_repository_impl.dart';
@@ -149,7 +141,6 @@ void registerCaptainDependencies() {
   _registerLiveLocationDependencies();
   _registerTripExecutionDependencies();
   _registerTripMapDependencies();
-  _registerCommunicationDependencies();
   _registerIncidentsDependencies();
   _registerTripStatusUpdateDependencies();
   _registerNotificationsDependencies();
@@ -532,42 +523,6 @@ void _registerLiveLocationDependencies() {
         sendLocation: captainGetIt<SendLocationUpdateUseCase>(),
       ),
       dispose: (cubit) => cubit.close(),
-    );
-  }
-}
-
-void _registerCommunicationDependencies() {
-  if (!captainGetIt.isRegistered<ChatDatasource>()) {
-    captainGetIt.registerLazySingleton<ChatDatasource>(
-      () => SupabaseChatDatasource(captainGetIt<SupabaseClient>()),
-    );
-  }
-  if (!captainGetIt.isRegistered<CommunicationRepository>()) {
-    captainGetIt.registerLazySingleton<CommunicationRepository>(
-      () => CommunicationRepositoryImpl(captainGetIt<ChatDatasource>()),
-    );
-  }
-  if (!captainGetIt.isRegistered<GetConversationUseCase>()) {
-    captainGetIt.registerLazySingleton<GetConversationUseCase>(
-      () => GetConversationUseCase(captainGetIt<CommunicationRepository>()),
-    );
-  }
-  if (!captainGetIt.isRegistered<SendMessageUseCase>()) {
-    captainGetIt.registerLazySingleton<SendMessageUseCase>(
-      () => SendMessageUseCase(captainGetIt<CommunicationRepository>()),
-    );
-  }
-  if (!captainGetIt.isRegistered<CaptainCommunicationCubit>()) {
-    captainGetIt.registerFactory<CaptainCommunicationCubit>(
-      () => CaptainCommunicationCubit(
-        getConversation: captainGetIt<GetConversationUseCase>(),
-        sendMessage: captainGetIt<SendMessageUseCase>(),
-      ),
-    );
-  }
-  if (!captainGetIt.isRegistered<CaptainNotificationCubit>()) {
-    captainGetIt.registerLazySingleton<CaptainNotificationCubit>(
-      () => CaptainNotificationCubit(captainGetIt<CommunicationRepository>()),
     );
   }
 }

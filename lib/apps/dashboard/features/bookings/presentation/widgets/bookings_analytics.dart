@@ -1,13 +1,90 @@
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/core/theme/spacing.dart';
+import 'package:bmt_app/core/theme/tokens.dart';
+import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_panel.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_models.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/dashboard_donut_chart.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/dashboard_line_chart.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/dashboard_ranked_bars.dart';
 
 import '../../domain/entities/operation_booking.dart';
+import 'booking_status_chips.dart';
+
+/// Collapsible analytics block.
+///
+/// Four charts used to sit *above* the queue, so every visit to the busiest
+/// screen in the dashboard began by scrolling past them. They are reporting,
+/// not operating: the section now lives under the board and starts closed, one
+/// tap away for whoever wants it.
+class BookingsAnalyticsSection extends StatefulWidget {
+  const BookingsAnalyticsSection({super.key, required this.bookings});
+
+  final List<OperationBooking> bookings;
+
+  @override
+  State<BookingsAnalyticsSection> createState() =>
+      _BookingsAnalyticsSectionState();
+}
+
+class _BookingsAnalyticsSectionState extends State<BookingsAnalyticsSection> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        AppCard(
+          onTap: () => setState(() => _expanded = !_expanded),
+          padding: const EdgeInsets.all(AppSpacing.medium),
+          child: Row(
+            children: [
+              Icon(Icons.insights_rounded, color: scheme.primary, size: 20),
+              const SizedBox(width: AppSpacing.small),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'تحليلات الحجوزات',
+                      style: text.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      'توزيع الحالات، اتجاه الطلبات، وأكثر المسارات حجزاً',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: text.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.small),
+              AnimatedRotation(
+                turns: _expanded ? 0.5 : 0,
+                duration: AppTokens.motionBase,
+                child: const Icon(Icons.expand_more_rounded),
+              ),
+            ],
+          ),
+        ),
+        if (_expanded) ...[
+          const SizedBox(height: AppSpacing.medium),
+          BookingsAnalytics(bookings: widget.bookings),
+        ],
+      ],
+    );
+  }
+}
 
 /// Real-data booking analytics computed from the loaded bookings list:
 /// status mix, daily trend, top routes and paid-vs-pending breakdown.
@@ -96,7 +173,9 @@ class BookingsAnalytics extends StatelessWidget {
           ChartDatum(
             label: status.label,
             value: counts[status]!.toDouble(),
-            color: _statusColor(status),
+            // Same colour the status wears on every chip and KPI tile, instead
+            // of a second private palette that disagreed with them.
+            color: bookingStatusStyle(status).onContainer,
           ),
     ];
   }
@@ -119,17 +198,17 @@ class BookingsAnalytics extends StatelessWidget {
       ChartDatum(
         label: 'مدفوع',
         value: paid.toDouble(),
-        color: const Color(0xFF16A34A),
+        color: DashboardChartPalette.positive,
       ),
       ChartDatum(
         label: 'قيد التحصيل',
         value: pending.toDouble(),
-        color: const Color(0xFFF59E0B),
+        color: DashboardChartPalette.warning,
       ),
       ChartDatum(
         label: 'ملغي/مرفوض',
         value: cancelled.toDouble(),
-        color: const Color(0xFFDC2626),
+        color: DashboardChartPalette.negative,
       ),
     ];
   }
@@ -146,7 +225,7 @@ class BookingsAnalytics extends StatelessWidget {
         ChartDatum(
           label: '${day.day}/${day.month}',
           value: byDay[day]!.toDouble(),
-          color: const Color(0xFF2563EB),
+          color: DashboardChartPalette.active,
         ),
     ];
   }
@@ -160,21 +239,12 @@ class BookingsAnalytics extends StatelessWidget {
     final sorted = counts.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
     return [
-      for (final entry in sorted.take(6))
+      for (final (index, entry) in sorted.take(6).indexed)
         ChartDatum(
           label: entry.key,
           value: entry.value.toDouble(),
-          color: scheme.primary,
+          color: DashboardChartPalette.categoryAt(index),
         ),
     ];
   }
-
-  Color _statusColor(BookingStatus status) => switch (status) {
-    BookingStatus.draft => const Color(0xFF06B6D4),
-    BookingStatus.reserved => const Color(0xFF0EA5E9),
-    BookingStatus.confirmed => const Color(0xFF22C55E),
-    BookingStatus.boarded => const Color(0xFFF59E0B),
-    BookingStatus.completed => const Color(0xFF16A34A),
-    BookingStatus.cancelled => const Color(0xFF64748B),
-  };
 }

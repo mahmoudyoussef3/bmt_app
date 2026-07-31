@@ -9,14 +9,13 @@ import 'passenger_card_details.dart';
 import 'passenger_status_presentation.dart';
 import 'passenger_status_sheet.dart';
 
-/// One passenger on the manifest: who they are, where they board, and the three
-/// things a captain does about them — set status, call, message.
+/// One passenger on the manifest: who they are, where they board, and the two
+/// things a captain does about them — set their boarding status, or call them.
 class PassengerCard extends StatelessWidget {
   const PassengerCard({
     super.key,
     required this.passenger,
     required this.onCall,
-    required this.onChat,
   });
 
   final Passenger passenger;
@@ -24,7 +23,6 @@ class PassengerCard extends StatelessWidget {
   /// Null when the booking carries no phone number — the button then renders
   /// disabled instead of pretending a call is possible.
   final VoidCallback? onCall;
-  final VoidCallback onChat;
 
   @override
   Widget build(BuildContext context) {
@@ -50,11 +48,7 @@ class PassengerCard extends StatelessWidget {
                     const SizedBox(width: 16),
                     Expanded(child: PassengerCardDetails(passenger: passenger)),
                     const SizedBox(width: 12),
-                    _Actions(
-                      passenger: passenger,
-                      onCall: onCall,
-                      onChat: onChat,
-                    ),
+                    _Actions(passenger: passenger, onCall: onCall),
                   ],
                 ),
               ),
@@ -67,15 +61,10 @@ class PassengerCard extends StatelessWidget {
 }
 
 class _Actions extends StatelessWidget {
-  const _Actions({
-    required this.passenger,
-    required this.onCall,
-    required this.onChat,
-  });
+  const _Actions({required this.passenger, required this.onCall});
 
   final Passenger passenger;
   final VoidCallback? onCall;
-  final VoidCallback onChat;
 
   @override
   Widget build(BuildContext context) {
@@ -102,13 +91,6 @@ class _Actions extends StatelessWidget {
           tooltip: onCall == null ? 'لا يوجد رقم هاتف' : 'اتصال',
           color: CaptainColors.primaryBright,
           onPressed: onCall,
-        ),
-        const SizedBox(height: 8),
-        PassengerActionButton(
-          icon: Icons.chat_bubble_outline_rounded,
-          tooltip: 'مراسلة',
-          color: CaptainColors.primaryDeep,
-          onPressed: onChat,
         ),
       ],
     );

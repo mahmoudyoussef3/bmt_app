@@ -1,58 +1,65 @@
+import 'package:file_saver/file_saver.dart';
+
+import '../../domain/entities/finance_analytics.dart';
 import '../../domain/entities/finance_entities.dart';
 import '../../domain/repositories/finance_repository.dart';
 import '../datasources/finance_datasource.dart';
+import '../services/finance_statement_export_service.dart';
 
 class FinanceRepositoryImpl implements FinanceRepository {
   final FinanceDatasource _datasource;
+  final FinanceStatementExportService _exportService;
 
-  const FinanceRepositoryImpl(this._datasource);
-
-  @override
-  Future<List<PaymentRecord>> getPayments() async {
-    return _datasource.getPayments();
-  }
-
-  @override
-  Future<List<ReceiptReview>> getReceiptReviews() async {
-    return _datasource.getReceiptReviews();
-  }
+  FinanceRepositoryImpl(
+    this._datasource, {
+    FinanceStatementExportService? exportService,
+  }) : _exportService = exportService ?? FinanceStatementExportService();
 
   @override
-  Future<List<RefundRequest>> getRefundRequests() async {
-    return _datasource.getRefundRequests();
-  }
+  Future<List<PaymentRecord>> getPayments() => _datasource.getPayments();
 
   @override
-  Future<List<SubscriptionRecord>> getSubscriptions() async {
-    return _datasource.getSubscriptions();
-  }
+  Future<List<RefundRequest>> getRefundRequests() =>
+      _datasource.getRefundRequests();
 
   @override
-  Future<RevenueMetrics> getRevenueMetrics() async {
-    return _datasource.getRevenueMetrics();
-  }
+  Future<List<SubscriptionRecord>> getSubscriptions() =>
+      _datasource.getSubscriptions();
 
   @override
-  Future<List<RevenueTrendPoint>> getRevenueTrend() async {
-    return _datasource.getRevenueTrend();
-  }
+  Future<RevenueMetrics> getRevenueMetrics() => _datasource.getRevenueMetrics();
 
   @override
-  Future<void> reviewReceipt(
-    String id,
-    ReceiptReviewStatus action, {
-    String? notes,
-  }) async {
-    _datasource.reviewReceipt(id, action, notes: notes);
-  }
+  Future<String> exportStatement(
+    FinanceStatement statement,
+    String format,
+  ) async {
+    final bytes = await _exportService.generateExportBytes(statement, format);
 
-  @override
-  Future<void> processRefund(String id, RefundStatus action) async {
-    _datasource.processRefund(id, action);
-  }
+    final extension = switch (format.toLowerCase()) {
+      'excel' => 'xlsx',
+      final other => other,
+    };
+    final mimeType = switch (extension) {
+      'csv' => MimeType.csv,
+      'xlsx' => MimeType.microsoftExcel,
+      'pdf' => MimeType.pdf,
+      _ => MimeType.other,
+    };
 
-  @override
-  Future<void> cancelSubscription(String id) async {
-    _datasource.cancelSubscription(id);
+    final stamp = statement.generatedAt.toIso8601String().substring(0, 10);
+    final name = 'التقرير_المالي_${statement.periodLabel}_$stamp'.replaceAll(
+      ' ',
+      '_',
+    );
+
+    await FileSaver.instance.saveFile(
+      name: name,
+      bytes: bytes,
+      fileExtension: extension,
+      mimeType: mimeType,
+    );
+
+    return '$name.$extension';
   }
 }

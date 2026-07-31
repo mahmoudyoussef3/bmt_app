@@ -7,24 +7,6 @@ import 'package:bmt_app/apps/captain/features/incidents/domain/entities/incident
 /// means `CaptainAppRouter` is the *only* place that casts, and the
 /// `CaptainNav` extension gives every call site back its compile-time types.
 
-/// Arguments for [CaptainRoutes.chatDetails].
-class ChatDetailsArgs {
-  const ChatDetailsArgs({
-    required this.tripId,
-    required this.title,
-    this.passengerId,
-  });
-
-  final String tripId;
-
-  /// What the conversation is called in the app bar — a passenger's name, or
-  /// a broadcast label like 'جميع الركاب'.
-  final String title;
-
-  /// Null for a trip-wide broadcast; set for a one-to-one conversation.
-  final String? passengerId;
-}
-
 /// Arguments for [CaptainRoutes.reportIncident].
 class ReportIncidentArgs {
   const ReportIncidentArgs({

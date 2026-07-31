@@ -5,6 +5,40 @@ import 'package:flutter/material.dart';
 import '../theme/captain_colors.dart';
 import '../theme/captain_typography.dart';
 
+/// Title over an optional one-line subtitle, styled identically for both
+/// [CaptainSliverHeader] and [CaptainAppBar] — the single place that decides
+/// what a captain sub-screen's title looks like.
+Widget _captainHeaderTitle(
+  BuildContext context, {
+  required String title,
+  String? subtitle,
+}) {
+  return Column(
+    mainAxisSize: MainAxisSize.min,
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        title,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: CaptainTypography.titleMedium(context).copyWith(
+          fontWeight: FontWeight.w800,
+          color: CaptainColors.textPrimaryFor(context),
+        ),
+      ),
+      if (subtitle != null)
+        Text(
+          subtitle,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: CaptainTypography.labelMedium(
+            context,
+          ).copyWith(color: CaptainColors.textSecondaryFor(context)),
+        ),
+    ],
+  );
+}
+
 /// The shared header for captain sub-screens — trip history, trip execution,
 /// and the passenger manifest each hand-rolled this exact `SliverAppBar` shape
 /// with slightly different heights, paddings, and background-color sources
@@ -19,10 +53,19 @@ import '../theme/captain_typography.dart';
 /// Profile screen's identity bar are intentionally distinct, carrying the
 /// captain rather than a screen name.
 class CaptainSliverHeader extends StatelessWidget {
-  const CaptainSliverHeader({super.key, required this.title, this.subtitle});
+  const CaptainSliverHeader({
+    super.key,
+    required this.title,
+    this.subtitle,
+    this.actions,
+  });
 
   final String title;
   final String? subtitle;
+
+  /// Trailing controls (e.g. "mark all as read"). Rare — most sub-screens
+  /// carry none.
+  final List<Widget>? actions;
 
   @override
   Widget build(BuildContext context) {
@@ -40,30 +83,44 @@ class CaptainSliverHeader extends StatelessWidget {
       toolbarHeight: toolbarHeight,
       backgroundColor: CaptainColors.surfaceFor(context),
       iconTheme: IconThemeData(color: CaptainColors.textPrimaryFor(context)),
-      title: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: CaptainTypography.titleMedium(context).copyWith(
-              fontWeight: FontWeight.w800,
-              color: CaptainColors.textPrimaryFor(context),
-            ),
-          ),
-          if (subtitle != null)
-            Text(
-              subtitle!,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: CaptainTypography.labelMedium(
-                context,
-              ).copyWith(color: CaptainColors.textSecondaryFor(context)),
-            ),
-        ],
-      ),
+      title: _captainHeaderTitle(context, title: title, subtitle: subtitle),
+      actions: actions,
     );
   }
+}
+
+/// The fixed (non-sliver) counterpart to [CaptainSliverHeader], for the one
+/// shape of screen a sliver header doesn't fit: a message thread, where the
+/// scrollable list sits between a fixed title bar and a fixed composer.
+/// Forcing that layout into a `CustomScrollView` buys nothing — the composer
+/// still has to live outside the scroll view — so this exists to give
+/// `Scaffold.appBar` screens the same title/subtitle typography and colors as
+/// every sliver-headed sub-screen, rather than falling back to a bare
+/// `AppBar` that only inherits the ambient theme.
+///
+/// Prefer [CaptainSliverHeader] whenever the body is already (or can easily
+/// be) a `CustomScrollView` — it also grows with the user's text scale, which
+/// this fixed-height `PreferredSizeWidget` cannot.
+class CaptainAppBar extends StatelessWidget implements PreferredSizeWidget {
+  const CaptainAppBar({super.key, required this.title, this.subtitle, this.actions});
+
+  final String title;
+  final String? subtitle;
+  final List<Widget>? actions;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppBar(
+      elevation: 0,
+      toolbarHeight: preferredSize.height,
+      backgroundColor: CaptainColors.surfaceFor(context),
+      iconTheme: IconThemeData(color: CaptainColors.textPrimaryFor(context)),
+      title: _captainHeaderTitle(context, title: title, subtitle: subtitle),
+      actions: actions,
+    );
+  }
+
+  @override
+  Size get preferredSize =>
+      Size.fromHeight(subtitle == null ? kToolbarHeight : kToolbarHeight + 14);
 }

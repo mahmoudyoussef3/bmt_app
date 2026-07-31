@@ -1,4 +1,17 @@
+import '../../domain/entities/finance_analytics.dart';
 import '../../domain/entities/finance_entities.dart';
+
+/// The four money views. Nothing here decides anything — the section indexes
+/// map to reports, not to workflows.
+enum FinanceSection {
+  overview('نظرة عامة'),
+  ledger('الحركات المالية'),
+  analytics('التحليلات'),
+  reports('التقارير');
+
+  final String label;
+  const FinanceSection(this.label);
+}
 
 sealed class FinanceState {
   const FinanceState();
@@ -14,195 +27,143 @@ class FinanceError extends FinanceState {
 }
 
 class FinanceLoaded extends FinanceState {
-  final List<PaymentRecord> payments;
-  final List<ReceiptReview> receiptReviews;
+  /// The full ledger, unfiltered. [analytics] is the window-scoped view of it.
+  final List<FinanceLedgerEntry> ledger;
+
+  /// Refund *requests* — an outstanding-liability signal, kept out of the
+  /// ledger so an approved refund is never subtracted twice (it is already
+  /// mirrored on its booking).
   final List<RefundRequest> refundRequests;
+
   final List<SubscriptionRecord> subscriptions;
-  final RevenueMetrics metrics;
-  final List<RevenueTrendPoint> revenueTrend;
+  final FinancePeriod period;
+  final DateTime loadedAt;
 
-  final int
-  selectedSectionIndex; // 0: المدفوعات, 1: طلبات المراجعة, 2: المرتجعات, 3: الاشتراكات, 4: الإيرادات
-  final String? selectedPaymentId;
-  final String? selectedReceiptId;
-  final String? selectedRefundId;
-  final String? selectedSubscriptionId;
+  /// True when the backing query hit its row cap, so the window may be missing
+  /// older movements. Surfaced to the operator rather than silently swallowed.
+  final bool ledgerCapReached;
 
-  final FinancePaymentMethod? paymentMethodFilter;
-  final PaymentStatus? paymentStatusFilter;
-  final ReceiptReviewStatus? receiptStatusFilter;
-  final RefundStatus? refundStatusFilter;
-  final SubscriptionStatus? subscriptionStatusFilter;
+  final FinanceSection section;
+
+  // Ledger tab controls.
   final String searchQuery;
+  final FinanceEntryType? typeFilter;
+  final FinancePaymentMethod? methodFilter;
+  final PaymentStatus? statusFilter;
+  final int ledgerPage;
 
-  final bool actionLoading;
+  final bool exporting;
   final String? actionMessage;
-  final double receiptZoom;
-  final double receiptRotation;
 
-  const FinanceLoaded({
-    required this.payments,
-    required this.receiptReviews,
+  /// Derived once per state so every tab reads identical numbers.
+  final FinanceAnalytics analytics;
+
+  FinanceLoaded({
+    required this.ledger,
     required this.refundRequests,
     required this.subscriptions,
-    required this.metrics,
-    this.revenueTrend = const [],
-    this.selectedSectionIndex = 0,
-    this.selectedPaymentId,
-    this.selectedReceiptId,
-    this.selectedRefundId,
-    this.selectedSubscriptionId,
-    this.paymentMethodFilter,
-    this.paymentStatusFilter,
-    this.receiptStatusFilter,
-    this.refundStatusFilter,
-    this.subscriptionStatusFilter,
+    required this.loadedAt,
+    this.period = FinancePeriod.month,
+    this.ledgerCapReached = false,
+    this.section = FinanceSection.overview,
     this.searchQuery = '',
-    this.actionLoading = false,
+    this.typeFilter,
+    this.methodFilter,
+    this.statusFilter,
+    this.ledgerPage = 0,
+    this.exporting = false,
     this.actionMessage,
-    this.receiptZoom = 1.0,
-    this.receiptRotation = 0.0,
-  });
+  }) : analytics = FinanceAnalytics.from(
+         ledger: ledger,
+         period: period,
+         now: loadedAt,
+       );
 
-  PaymentRecord? get selectedPayment {
-    if (selectedPaymentId == null) return null;
-    return payments.cast<PaymentRecord?>().firstWhere(
-      (p) => p?.id == selectedPaymentId,
-      orElse: () => null,
-    );
+  static const ledgerPageSize = 25;
+
+  /// Packages that are currently earning — a live count, not a period figure.
+  int get activeSubscriptions => subscriptions
+      .where((s) => s.status == SubscriptionStatus.active)
+      .length;
+
+  /// Refund requests still awaiting a decision elsewhere in the dashboard:
+  /// money the office may still have to give back.
+  List<RefundRequest> get pendingRefundRequests => refundRequests
+      .where((r) => r.status == RefundStatus.pending)
+      .toList();
+
+  double get pendingRefundAmount =>
+      pendingRefundRequests.fold(0.0, (sum, r) => sum + r.amount);
+
+  /// The window's rows after the ledger tab's own search and filters.
+  List<FinanceLedgerEntry> get filteredEntries {
+    final query = searchQuery.trim().toLowerCase();
+    return analytics.entries.where((entry) {
+      final matchesQuery =
+          query.isEmpty ||
+          entry.party.toLowerCase().contains(query) ||
+          entry.reference.toLowerCase().contains(query) ||
+          entry.id.toLowerCase().contains(query);
+      final matchesType = typeFilter == null || entry.type == typeFilter;
+      final matchesMethod = methodFilter == null || entry.method == methodFilter;
+      final matchesStatus = statusFilter == null || entry.status == statusFilter;
+      return matchesQuery && matchesType && matchesMethod && matchesStatus;
+    }).toList();
   }
 
-  ReceiptReview? get selectedReceipt {
-    if (selectedReceiptId == null) return null;
-    return receiptReviews.cast<ReceiptReview?>().firstWhere(
-      (r) => r?.id == selectedReceiptId,
-      orElse: () => null,
-    );
-  }
+  /// Net money represented by whatever the ledger tab is currently showing, so
+  /// a filtered view still totals honestly.
+  double get filteredNet => filteredEntries
+      .where((e) => e.isRealised)
+      .fold(0.0, (sum, e) => sum + e.amount);
 
-  RefundRequest? get selectedRefund {
-    if (selectedRefundId == null) return null;
-    return refundRequests.cast<RefundRequest?>().firstWhere(
-      (r) => r?.id == selectedRefundId,
-      orElse: () => null,
-    );
-  }
-
-  SubscriptionRecord? get selectedSubscription {
-    if (selectedSubscriptionId == null) return null;
-    return subscriptions.cast<SubscriptionRecord?>().firstWhere(
-      (s) => s?.id == selectedSubscriptionId,
-      orElse: () => null,
-    );
-  }
-
-  /// Realised revenue (everything except cancelled) grouped by payment method.
-  Map<FinancePaymentMethod, double> get revenueByMethod {
-    final map = <FinancePaymentMethod, double>{};
-    for (final p in payments) {
-      if (p.status == PaymentStatus.cancelled) continue;
-      map[p.paymentMethod] = (map[p.paymentMethod] ?? 0) + p.amount;
-    }
-    return map;
-  }
-
-  /// Amount grouped by payment status (paid / pending / refunded / cancelled).
-  Map<PaymentStatus, double> get amountByStatus {
-    final map = <PaymentStatus, double>{};
-    for (final p in payments) {
-      map[p.status] = (map[p.status] ?? 0) + p.amount;
-    }
-    return map;
-  }
-
-  /// Top routes by realised revenue (descending), capped to [limit].
-  List<MapEntry<String, double>> revenueByRoute([int limit = 6]) {
-    final map = <String, double>{};
-    for (final p in payments) {
-      if (p.status == PaymentStatus.cancelled) continue;
-      final route = p.tripCode.isEmpty ? 'غير محدد' : p.tripCode;
-      map[route] = (map[route] ?? 0) + p.amount;
-    }
-    final entries = map.entries.toList()
-      ..sort((a, b) => b.value.compareTo(a.value));
-    return entries.take(limit).toList();
-  }
+  bool get hasAnyFilter =>
+      searchQuery.isNotEmpty ||
+      typeFilter != null ||
+      methodFilter != null ||
+      statusFilter != null;
 
   FinanceLoaded copyWith({
-    List<PaymentRecord>? payments,
-    List<ReceiptReview>? receiptReviews,
+    List<FinanceLedgerEntry>? ledger,
     List<RefundRequest>? refundRequests,
     List<SubscriptionRecord>? subscriptions,
-    RevenueMetrics? metrics,
-    List<RevenueTrendPoint>? revenueTrend,
-    int? selectedSectionIndex,
-    String? selectedPaymentId,
-    String? selectedReceiptId,
-    String? selectedRefundId,
-    String? selectedSubscriptionId,
-    bool clearPaymentSelection = false,
-    bool clearReceiptSelection = false,
-    bool clearRefundSelection = false,
-    bool clearSubscriptionSelection = false,
-    FinancePaymentMethod? paymentMethodFilter,
-    bool clearPaymentMethodFilter = false,
-    PaymentStatus? paymentStatusFilter,
-    bool clearPaymentStatusFilter = false,
-    ReceiptReviewStatus? receiptStatusFilter,
-    bool clearReceiptStatusFilter = false,
-    RefundStatus? refundStatusFilter,
-    bool clearRefundStatusFilter = false,
-    SubscriptionStatus? subscriptionStatusFilter,
-    bool clearSubscriptionStatusFilter = false,
+    FinancePeriod? period,
+    DateTime? loadedAt,
+    bool? ledgerCapReached,
+    FinanceSection? section,
     String? searchQuery,
-    bool? actionLoading,
+    FinanceEntryType? typeFilter,
+    bool clearTypeFilter = false,
+    FinancePaymentMethod? methodFilter,
+    bool clearMethodFilter = false,
+    PaymentStatus? statusFilter,
+    bool clearStatusFilter = false,
+    int? ledgerPage,
+    bool? exporting,
     String? actionMessage,
     bool clearActionMessage = false,
-    double? receiptZoom,
-    double? receiptRotation,
   }) {
     return FinanceLoaded(
-      payments: payments ?? this.payments,
-      receiptReviews: receiptReviews ?? this.receiptReviews,
+      ledger: ledger ?? this.ledger,
       refundRequests: refundRequests ?? this.refundRequests,
       subscriptions: subscriptions ?? this.subscriptions,
-      metrics: metrics ?? this.metrics,
-      revenueTrend: revenueTrend ?? this.revenueTrend,
-      selectedSectionIndex: selectedSectionIndex ?? this.selectedSectionIndex,
-      selectedPaymentId: clearPaymentSelection
-          ? null
-          : (selectedPaymentId ?? this.selectedPaymentId),
-      selectedReceiptId: clearReceiptSelection
-          ? null
-          : (selectedReceiptId ?? this.selectedReceiptId),
-      selectedRefundId: clearRefundSelection
-          ? null
-          : (selectedRefundId ?? this.selectedRefundId),
-      selectedSubscriptionId: clearSubscriptionSelection
-          ? null
-          : (selectedSubscriptionId ?? this.selectedSubscriptionId),
-      paymentMethodFilter: clearPaymentMethodFilter
-          ? null
-          : (paymentMethodFilter ?? this.paymentMethodFilter),
-      paymentStatusFilter: clearPaymentStatusFilter
-          ? null
-          : (paymentStatusFilter ?? this.paymentStatusFilter),
-      receiptStatusFilter: clearReceiptStatusFilter
-          ? null
-          : (receiptStatusFilter ?? this.receiptStatusFilter),
-      refundStatusFilter: clearRefundStatusFilter
-          ? null
-          : (refundStatusFilter ?? this.refundStatusFilter),
-      subscriptionStatusFilter: clearSubscriptionStatusFilter
-          ? null
-          : (subscriptionStatusFilter ?? this.subscriptionStatusFilter),
+      loadedAt: loadedAt ?? this.loadedAt,
+      period: period ?? this.period,
+      ledgerCapReached: ledgerCapReached ?? this.ledgerCapReached,
+      section: section ?? this.section,
       searchQuery: searchQuery ?? this.searchQuery,
-      actionLoading: actionLoading ?? this.actionLoading,
+      typeFilter: clearTypeFilter ? null : (typeFilter ?? this.typeFilter),
+      methodFilter: clearMethodFilter
+          ? null
+          : (methodFilter ?? this.methodFilter),
+      statusFilter: clearStatusFilter
+          ? null
+          : (statusFilter ?? this.statusFilter),
+      ledgerPage: ledgerPage ?? this.ledgerPage,
+      exporting: exporting ?? this.exporting,
       actionMessage: clearActionMessage
           ? null
           : (actionMessage ?? this.actionMessage),
-      receiptZoom: receiptZoom ?? this.receiptZoom,
-      receiptRotation: receiptRotation ?? this.receiptRotation,
     );
   }
 }

@@ -155,6 +155,64 @@ void main() {
     expect(find.text('BUS-104'), findsOneWidget);
   });
 
+  /// The vehicle rows used to split themselves 50/50 — the label and the value
+  /// each carried a flex, so the value was capped at half the card no matter
+  /// how short its label was. A plate then lost its tail to an ellipsis with
+  /// empty space sitting beside "لوحة الترخيص", and a truncated plate is a
+  /// *different* plate, not a clipped word.
+  group('label → value rows', () {
+    testWidgets('values of different lengths share one trailing column', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        repository: _FakeTripHistoryRepository(stops: _stops),
+      );
+
+      // The app runs RTL, so a row's trailing edge is its **left** edge.
+      final code = tester.getRect(find.text('BUS-104'));
+      final plate = tester.getRect(find.text('ط ن ج 4821'));
+
+      expect(
+        plate.left,
+        code.left,
+        reason: 'a plate and a bus code must start at the same trailing edge',
+      );
+      // The two genuinely differ in length — otherwise the assertion above
+      // would also hold for a layout that had gone back to fixed columns.
+      expect(plate.width, isNot(code.width));
+    });
+
+    testWidgets('a long plate never runs over its label', (tester) async {
+      await _pump(
+        tester,
+        repository: _FakeTripHistoryRepository(stops: _stops),
+        // Longer than any plate the fleet issues, on the narrowest phone.
+        trip: _trip(plate: 'ط ن ج 4821 مصر القاهرة الكبرى'),
+        size: const Size(320, 568),
+      );
+
+      final label = tester.getRect(find.text('لوحة الترخيص'));
+      final value = tester.getRect(find.text('ط ن ج 4821 مصر القاهرة الكبرى'));
+
+      expect(value.right, lessThanOrEqualTo(label.left));
+      expect(label.width, greaterThan(0));
+      expect(tester.takeException(), isNull);
+    });
+  });
+
+  testWidgets('both section headings start from the same edge', (tester) async {
+    // The page named one section from inside its own card and the other from
+    // above it, so two adjacent blocks stated their titles in two different
+    // places. Both now sit on the background, aligned with each other.
+    await _pump(tester, repository: _FakeTripHistoryRepository(stops: _stops));
+
+    expect(
+      tester.getRect(find.text('المركبة')).right,
+      tester.getRect(find.text('مسار الرحلة')).right,
+    );
+  });
+
   testWidgets('a trip with no recorded stops says so', (tester) async {
     await _pump(tester, repository: _FakeTripHistoryRepository());
 

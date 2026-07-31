@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../features/assigned_trips/presentation/cubit/assigned_trips_cubit.dart';
 import '../../features/assigned_trips/presentation/pages/assigned_trips_page.dart';
-import '../../features/communication/presentation/cubit/captain_notification_cubit.dart';
 import '../../features/notifications/presentation/cubit/captain_notification_badge_cubit.dart';
 import '../../features/profile/presentation/cubit/driver_profile_cubit.dart';
 import '../../features/profile/presentation/pages/driver_profile_page.dart';
@@ -53,70 +52,33 @@ class _CaptainAppShellState extends State<CaptainAppShell> {
         BlocProvider<DriverProfileCubit>(
           create: (_) => captainGetIt<DriverProfileCubit>()..load(),
         ),
-        BlocProvider<CaptainNotificationCubit>(
-          create: (_) =>
-              captainGetIt<CaptainNotificationCubit>()..startListening(),
-        ),
         BlocProvider<CaptainNotificationBadgeCubit>.value(
           value: captainGetIt<CaptainNotificationBadgeCubit>(),
         ),
       ],
-      child: BlocListener<CaptainNotificationCubit, CaptainNotificationState>(
-        listener: _showOperationsMessage,
-        // extendBody lets pages scroll under the floating nav; pages reserve
-        // CaptainBottomNav.reservedSpace so their controls stay reachable.
-        child: Scaffold(
-          extendBody: true,
-          body: IndexedStack(
-            index: _currentIndex,
-            children: const [
-              AssignedTripsPage(),
-              TripHistoryPage(),
-              DriverProfilePage(),
-            ],
-          ),
-          bottomNavigationBar: CaptainBottomNav(
-            currentIndex: _currentIndex,
-            tabs: _tabs,
-            onTabChanged: (i) => setState(() => _currentIndex = i),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showOperationsMessage(
-    BuildContext context,
-    CaptainNotificationState state,
-  ) {
-    if (state is! CaptainNotificationReceived) return;
-
-    // Not AppSnackbar: this is a longer-lived, dismissible operations
-    // broadcast (5s + a close action), not a transient success/warning/error
-    // confirmation — a different shape than the ones that helper covers.
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(
-              Icons.notifications_active_rounded,
-              color: Colors.white,
-              size: 18,
-            ),
-            const SizedBox(width: 8),
-            Expanded(child: Text('رسالة من العمليات: ${state.message}')),
+      // extendBody lets pages scroll under the floating nav; pages reserve
+      // CaptainBottomNav.reservedSpace so their controls stay reachable.
+      //
+      // Operations reaches the captain through the notifications feature (the
+      // bell and its badge), which is the app's one inbound channel. The shell
+      // used to also pop a snackbar for the newest `captain_messages` row from
+      // operations — that table was the chat feature's, and it went with it.
+      child: Scaffold(
+        extendBody: true,
+        body: IndexedStack(
+          index: _currentIndex,
+          children: const [
+            AssignedTripsPage(),
+            TripHistoryPage(),
+            DriverProfilePage(),
           ],
         ),
-        duration: const Duration(seconds: 5),
-        behavior: SnackBarBehavior.floating,
-        action: SnackBarAction(
-          label: 'إغلاق',
-          textColor: Colors.white,
-          onPressed: () =>
-              context.read<CaptainNotificationCubit>().clearNotification(),
+        bottomNavigationBar: CaptainBottomNav(
+          currentIndex: _currentIndex,
+          tabs: _tabs,
+          onTabChanged: (i) => setState(() => _currentIndex = i),
         ),
       ),
     );
-    context.read<CaptainNotificationCubit>().clearNotification();
   }
 }

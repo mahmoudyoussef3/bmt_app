@@ -43,12 +43,6 @@ class TripExecutionTools extends StatelessWidget {
           icon: Icons.people_alt_rounded,
           onTap: () => context.openPassengerManifest(tripId),
         ),
-        _Tool(
-          label: 'التواصل',
-          detail: 'رسائل الركاب والعمليات',
-          icon: Icons.chat_bubble_outline_rounded,
-          onTap: () => context.openChats(tripId),
-        ),
         if (stage.isLive) ...[
           _Tool(
             label: 'إرسال الموقع',

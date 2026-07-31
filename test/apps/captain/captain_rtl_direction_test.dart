@@ -112,10 +112,10 @@ void main() {
   });
 
   test('no captain source names a left chevron', () {
-    // The three drill-in sites — the shared list row, the trip-history card and
-    // the trip-chats entry — were each authored with the left-named chevron
-    // "because the app is RTL", which is exactly the double-flip above. This
-    // catches the next one at the source rather than on a device.
+    // The drill-in sites — the shared list row and the trip-history card —
+    // were each authored with the left-named chevron "because the app is RTL",
+    // which is exactly the double-flip above. This catches the next one at the
+    // source rather than on a device.
     final offenders = <String>[];
     final dir = Directory('lib/apps/captain');
     for (final entity in dir.listSync(recursive: true)) {

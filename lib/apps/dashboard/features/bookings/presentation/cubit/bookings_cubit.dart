@@ -13,6 +13,8 @@ import '../../domain/usecases/reject_booking_usecase.dart';
 import '../../domain/usecases/request_reupload_usecase.dart';
 import '../../domain/usecases/watch_bookings_usecase.dart';
 import '../models/booking_filters.dart';
+import '../models/booking_queue_tab.dart';
+import '../models/booking_sort.dart';
 import 'bookings_state.dart';
 
 class BookingsCubit extends Cubit<BookingsState> {
@@ -84,10 +86,36 @@ class BookingsCubit extends Cubit<BookingsState> {
     return super.close();
   }
 
-  void switchTab(BookingStatus status) {
+  void switchTab(BookingQueueTab tab) {
     final current = state;
     if (current is! BookingsLoaded) return;
-    emit(current.copyWith(activeTab: status, selectedIds: const {}));
+    emit(current.copyWith(activeTab: tab, selectedIds: const {}, page: 0));
+  }
+
+  /// Sorts by [field], flipping direction when the operator taps the column that
+  /// is already sorted — the interaction every desktop table has.
+  void sortBy(BookingSortField field) {
+    final current = state;
+    if (current is! BookingsLoaded) return;
+    final sameField = current.sortField == field;
+    emit(
+      current.copyWith(
+        sortField: field,
+        // Dates read best newest-first and text best A→Z, so a fresh column
+        // starts in the direction that column is normally read in.
+        sortAscending: sameField
+            ? !current.sortAscending
+            : field == BookingSortField.passenger ||
+                  field == BookingSortField.route,
+        page: 0,
+      ),
+    );
+  }
+
+  void goToPage(int page) {
+    final current = state;
+    if (current is! BookingsLoaded) return;
+    emit(current.copyWith(page: page));
   }
 
   void openBooking(OperationBooking booking) {
@@ -118,10 +146,36 @@ class BookingsCubit extends Cubit<BookingsState> {
     emit(current.copyWith(selectedIds: const {}));
   }
 
+  /// Selects (or clears) every reviewable row on the current page — the batch an
+  /// operator means by "select all", rather than the whole unseen result set.
+  void toggleSelectAllOnPage() {
+    final current = state;
+    if (current is! BookingsLoaded) return;
+    final pageIds = current.selectablePageBookings.map((b) => b.id).toSet();
+    if (pageIds.isEmpty) return;
+    final selected = {...current.selectedIds};
+    current.allPageSelected
+        ? selected.removeAll(pageIds)
+        : selected.addAll(pageIds);
+    emit(current.copyWith(selectedIds: selected));
+  }
+
   void updateFilters(BookingFilters filters) {
     final current = state;
     if (current is! BookingsLoaded) return;
-    emit(current.copyWith(filters: filters, selectedIds: const {}));
+    emit(current.copyWith(filters: filters, selectedIds: const {}, page: 0));
+  }
+
+  void clearFilters() {
+    final current = state;
+    if (current is! BookingsLoaded) return;
+    emit(
+      current.copyWith(
+        filters: const BookingFilters(),
+        selectedIds: const {},
+        page: 0,
+      ),
+    );
   }
 
   Future<void> approveBooking(String bookingId, String? note) async {

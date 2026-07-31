@@ -1,3 +1,10 @@
+/// Finance is the money-intelligence module: it *reads* every pound that moved
+/// and explains it. Verification of payment receipts (approve / reject / ask for
+/// a re-upload) deliberately lives in the Bookings module only — an operator
+/// must decide on a receipt where the booking context is, and a number here must
+/// never be a button.
+library;
+
 enum FinancePaymentMethod {
   instapay('انستا باي'),
   vodafoneCash('فودافون كاش'),
@@ -8,24 +15,16 @@ enum FinancePaymentMethod {
   const FinancePaymentMethod(this.label);
 }
 
+/// Money vocabulary, not workflow vocabulary: a finance reader cares whether an
+/// amount was *collected*, is still *outstanding*, fell through, or went back.
 enum PaymentStatus {
-  success('ناجحة'),
-  pending('معلقة'),
+  success('محصّلة'),
+  pending('قيد التحصيل'),
   cancelled('ملغاة'),
   refunded('مستردة');
 
   final String label;
   const PaymentStatus(this.label);
-}
-
-enum ReceiptReviewStatus {
-  pending('بانتظار المراجعة'),
-  accepted('مقبول'),
-  rejected('مرفوض'),
-  reuploadRequested('طلب إعادة رفع');
-
-  final String label;
-  const ReceiptReviewStatus(this.label);
 }
 
 enum RefundStatus {
@@ -45,6 +44,66 @@ enum SubscriptionStatus {
 
   final String label;
   const SubscriptionStatus(this.label);
+}
+
+/// The reporting window every figure on the screen is measured over. One
+/// selection drives the KPIs, the charts, the ledger and the exported
+/// statement, so two numbers on the same screen can never mean two periods.
+enum FinancePeriod {
+  today('اليوم', 1),
+  week('آخر ٧ أيام', 7),
+  month('آخر ٣٠ يوم', 30),
+  quarter('آخر ٩٠ يوم', 90),
+  all('كل الفترات', null);
+
+  final String label;
+
+  /// Window length in days, counting today. `null` means "no lower bound".
+  final int? days;
+
+  const FinancePeriod(this.label, this.days);
+
+  /// First instant included in the window, or `null` for [FinancePeriod.all].
+  DateTime? startFrom(DateTime now) {
+    final today = DateTime(now.year, now.month, now.day);
+    final length = days;
+    if (length == null) return null;
+    return today.subtract(Duration(days: length - 1));
+  }
+
+  /// Start of the equally long window immediately before this one — the basis
+  /// for every "مقارنة بالفترة السابقة" figure. `null` when there is nothing
+  /// meaningful to compare against.
+  DateTime? previousStartFrom(DateTime now) {
+    final length = days;
+    if (length == null) return null;
+    return startFrom(now)!.subtract(Duration(days: length));
+  }
+}
+
+/// Which side of the business a money movement came from.
+enum FinanceEntryType {
+  booking('حجز رحلة', 'الحجوزات'),
+  subscription('اشتراك باقة', 'الاشتراكات');
+
+  final String label;
+  final String pluralLabel;
+  const FinanceEntryType(this.label, this.pluralLabel);
+}
+
+/// Half-open reporting window `[start, end]` used by the analytics layer.
+/// Hand-rolled instead of `DateTimeRange` so the domain stays pure Dart.
+class FinanceDateRange {
+  final DateTime? start;
+  final DateTime end;
+
+  const FinanceDateRange({required this.start, required this.end});
+
+  bool contains(DateTime date) {
+    if (date.isAfter(end)) return false;
+    final from = start;
+    return from == null || !date.isBefore(from);
+  }
 }
 
 class PaymentRecord {
@@ -87,58 +146,6 @@ class PaymentRecord {
   }
 }
 
-class ReceiptReview {
-  final String id;
-  final String transactionId;
-  final String clientName;
-  final String tripCode;
-  final double amount;
-  final DateTime date;
-  final String receiptUrl;
-  final ReceiptReviewStatus status;
-  final String? notes;
-  final List<String> history;
-
-  const ReceiptReview({
-    required this.id,
-    required this.transactionId,
-    required this.clientName,
-    required this.tripCode,
-    required this.amount,
-    required this.date,
-    required this.receiptUrl,
-    required this.status,
-    this.notes,
-    required this.history,
-  });
-
-  ReceiptReview copyWith({
-    String? id,
-    String? transactionId,
-    String? clientName,
-    String? tripCode,
-    double? amount,
-    DateTime? date,
-    String? receiptUrl,
-    ReceiptReviewStatus? status,
-    String? notes,
-    List<String>? history,
-  }) {
-    return ReceiptReview(
-      id: id ?? this.id,
-      transactionId: transactionId ?? this.transactionId,
-      clientName: clientName ?? this.clientName,
-      tripCode: tripCode ?? this.tripCode,
-      amount: amount ?? this.amount,
-      date: date ?? this.date,
-      receiptUrl: receiptUrl ?? this.receiptUrl,
-      status: status ?? this.status,
-      notes: notes ?? this.notes,
-      history: history ?? this.history,
-    );
-  }
-}
-
 class RefundRequest {
   final String id;
   final String transactionId;
@@ -147,7 +154,6 @@ class RefundRequest {
   final DateTime date;
   final RefundStatus status;
   final String reason;
-  final List<String> history;
 
   const RefundRequest({
     required this.id,
@@ -157,7 +163,6 @@ class RefundRequest {
     required this.date,
     required this.status,
     required this.reason,
-    required this.history,
   });
 
   RefundRequest copyWith({
@@ -168,7 +173,6 @@ class RefundRequest {
     DateTime? date,
     RefundStatus? status,
     String? reason,
-    List<String>? history,
   }) {
     return RefundRequest(
       id: id ?? this.id,
@@ -178,7 +182,6 @@ class RefundRequest {
       date: date ?? this.date,
       status: status ?? this.status,
       reason: reason ?? this.reason,
-      history: history ?? this.history,
     );
   }
 }
@@ -188,6 +191,11 @@ class SubscriptionRecord {
   final String clientName;
   final String packageName;
   final double amount;
+
+  /// Purchase date — the date the money moved, and therefore the date the
+  /// ledger files it under. [startDate] is when the *rides* begin, which can be
+  /// a different day entirely.
+  final DateTime createdAt;
   final DateTime startDate;
   final DateTime endDate;
   final SubscriptionStatus status;
@@ -200,6 +208,7 @@ class SubscriptionRecord {
     required this.clientName,
     required this.packageName,
     required this.amount,
+    required this.createdAt,
     required this.startDate,
     required this.endDate,
     required this.status,
@@ -213,6 +222,7 @@ class SubscriptionRecord {
     String? clientName,
     String? packageName,
     double? amount,
+    DateTime? createdAt,
     DateTime? startDate,
     DateTime? endDate,
     SubscriptionStatus? status,
@@ -225,6 +235,7 @@ class SubscriptionRecord {
       clientName: clientName ?? this.clientName,
       packageName: packageName ?? this.packageName,
       amount: amount ?? this.amount,
+      createdAt: createdAt ?? this.createdAt,
       startDate: startDate ?? this.startDate,
       endDate: endDate ?? this.endDate,
       status: status ?? this.status,
@@ -235,17 +246,104 @@ class SubscriptionRecord {
   }
 }
 
-/// A single day on the revenue trend line, sourced from `revenue_daily_view`.
-class RevenueTrendPoint {
-  final DateTime date;
-  final double amount;
-  final int bookings;
+/// One money movement, whatever produced it. Trip bookings and package
+/// purchases are two different tables but one ledger — reading them together is
+/// the only way a revenue figure here can mean "all the money", and netting the
+/// refunded rows out of it is the only way "صافي الإيراد" is real.
+class FinanceLedgerEntry {
+  final String id;
+  final FinanceEntryType type;
 
-  const RevenueTrendPoint({
-    required this.date,
+  /// Who the money came from.
+  final String party;
+
+  /// What it was for — a route code for bookings, a package name for
+  /// subscriptions.
+  final String reference;
+
+  /// Always positive; [PaymentStatus.refunded] is what marks money that came in
+  /// and then went back out.
+  final double amount;
+  final FinancePaymentMethod? method;
+  final PaymentStatus status;
+  final DateTime date;
+
+  const FinanceLedgerEntry({
+    required this.id,
+    required this.type,
+    required this.party,
+    required this.reference,
     required this.amount,
-    required this.bookings,
+    required this.status,
+    required this.date,
+    this.method,
   });
+
+  /// Money the office received *and kept* — the only figure that may be added
+  /// into net revenue. Everything else is a promise, a dead row, or a reversal.
+  bool get isRealised => status == PaymentStatus.success;
+
+  /// Received at some point, whether or not it was later returned.
+  bool get wasReceived =>
+      status == PaymentStatus.success || status == PaymentStatus.refunded;
+}
+
+/// Flattens the money-in sources into one chronological ledger.
+///
+/// Refunds are **not** appended as separate rows: an approved refund is already
+/// mirrored on its booking as [PaymentStatus.refunded], and adding the
+/// `refund_requests` row on top of it would subtract the same pound twice.
+/// Those requests are read separately, as an outstanding-liability signal.
+class FinanceLedger {
+  const FinanceLedger._();
+
+  /// How many booking transactions the ledger pulls. Everything on the finance
+  /// screen is derived from this list, so the cap is the module's real horizon:
+  /// when a load comes back full, the screen says so instead of quietly
+  /// under-reporting the older end of the window.
+  static const rowCap = 3000;
+
+  static List<FinanceLedgerEntry> build({
+    required List<PaymentRecord> payments,
+    required List<SubscriptionRecord> subscriptions,
+  }) {
+    final entries = <FinanceLedgerEntry>[
+      for (final payment in payments)
+        FinanceLedgerEntry(
+          id: payment.id,
+          type: FinanceEntryType.booking,
+          party: payment.clientName,
+          reference: payment.tripCode.isEmpty ? 'غير محدد' : payment.tripCode,
+          amount: payment.amount,
+          method: payment.paymentMethod,
+          status: payment.status,
+          date: payment.date,
+        ),
+      for (final subscription in subscriptions)
+        FinanceLedgerEntry(
+          id: subscription.id,
+          type: FinanceEntryType.subscription,
+          party: subscription.clientName,
+          reference: subscription.packageName,
+          amount: subscription.amount,
+          status: subscriptionMoneyStatus(subscription.status),
+          date: subscription.createdAt,
+        ),
+    ];
+    entries.sort((a, b) => b.date.compareTo(a.date));
+    return entries;
+  }
+
+  /// A cancelled package was never collected; one still awaiting payment is
+  /// outstanding. Everything else (active or expired) was paid for.
+  static PaymentStatus subscriptionMoneyStatus(SubscriptionStatus status) {
+    return switch (status) {
+      SubscriptionStatus.active || SubscriptionStatus.expired =>
+        PaymentStatus.success,
+      SubscriptionStatus.pendingPayment => PaymentStatus.pending,
+      SubscriptionStatus.cancelled => PaymentStatus.cancelled,
+    };
+  }
 }
 
 class RevenueMetrics {
@@ -265,7 +363,8 @@ class RevenueMetrics {
     this.totalSubscriptionsRevenue = 0,
   });
 
-  double get grandTotalRevenue => totalBookingsRevenue + totalSubscriptionsRevenue;
+  double get grandTotalRevenue =>
+      totalBookingsRevenue + totalSubscriptionsRevenue;
 
   RevenueMetrics copyWith({
     double? todayRevenue,

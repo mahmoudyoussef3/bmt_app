@@ -4,9 +4,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
-import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/app_snackbar.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_kpi_card.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 
@@ -21,6 +21,11 @@ import '../widgets/bookings_queue_board.dart';
 
 /// Bookings operations centre: review the payment queue, act on receipts, and
 /// inspect the real booking / customer / trip data behind each request.
+///
+/// The page is ordered by what an operator does, not by what is easiest to
+/// render: summary → filters → **the queue** → reporting. Four analytics charts
+/// used to sit between the header and the list, so the screen the office opens
+/// dozens of times a day started with a scroll.
 class BookingsScreen extends StatelessWidget {
   const BookingsScreen({super.key});
 
@@ -51,6 +56,11 @@ class BookingsScreen extends StatelessWidget {
 class _LoadedView extends StatelessWidget {
   const _LoadedView({required this.state});
 
+  /// Below this the inspector takes the whole screen as a sheet instead of
+  /// splitting it, because a 440px panel beside a 700px board leaves neither
+  /// side usable.
+  static const double splitBreakpoint = 1180;
+
   final BookingsLoaded state;
 
   @override
@@ -59,7 +69,7 @@ class _LoadedView extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isWide = constraints.maxWidth >= 1180;
+        final isWide = constraints.maxWidth >= splitBreakpoint;
         final isCompact = constraints.maxWidth < 760;
 
         final content = CustomScrollView(
@@ -70,16 +80,14 @@ class _LoadedView extends StatelessWidget {
               ),
               sliver: SliverList(
                 delegate: SliverChildListDelegate.fixed([
-                  _Header(total: state.bookings.length),
-                  const SizedBox(height: AppSpacing.medium),
-                  _SummaryCards(state: state),
-                  const SizedBox(height: AppSpacing.medium),
-                  BookingsAnalytics(bookings: state.bookings),
+                  _Header(state: state),
                   const SizedBox(height: AppSpacing.medium),
                   BookingsToolbar(state: state),
                   const SizedBox(height: AppSpacing.medium),
-                  BookingBulkActions(selectedCount: state.selectedIds.length),
+                  BookingBulkActions(state: state),
                   BookingsQueueBoard(state: state),
+                  const SizedBox(height: AppSpacing.large),
+                  BookingsAnalyticsSection(bookings: state.bookings),
                 ]),
               ),
             ),
@@ -95,27 +103,44 @@ class _LoadedView extends StatelessWidget {
           );
         }
 
+        // The panel is a share of the window rather than a constant, so it stays
+        // readable at 1200px and does not swallow a 2560px screen.
+        final panelWidth = constraints.maxWidth.clamp(0.0, 3000.0) * 0.30;
+
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(child: content),
             AnimatedContainer(
-              duration: const Duration(milliseconds: 240),
+              duration: AppTokens.motionSlow,
               curve: Curves.easeOutCubic,
-              width: opened == null ? 0 : 440,
+              width: opened == null
+                  ? 0
+                  : panelWidth.clamp(380.0, 460.0).toDouble(),
+              // Clipped fixed-width child: laying the panel out at its final
+              // width behind the clip is what keeps the open/close animation
+              // from overflowing while the container is mid-transition.
               child: opened == null
                   ? const SizedBox.shrink()
-                  : Padding(
-                      padding: const EdgeInsetsDirectional.fromSTEB(
-                        0,
-                        AppSpacing.large,
-                        AppSpacing.large,
-                        AppSpacing.large,
-                      ),
-                      child: BookingDetailsPanel(
-                        booking: opened,
-                        clientBookingsCount: state.bookingsForClient(
-                          opened.clientId,
+                  : ClipRect(
+                      child: OverflowBox(
+                        alignment: AlignmentDirectional.centerStart,
+                        minWidth: 380,
+                        maxWidth: 460,
+                        child: Padding(
+                          padding: const EdgeInsetsDirectional.fromSTEB(
+                            0,
+                            AppSpacing.large,
+                            AppSpacing.large,
+                            AppSpacing.large,
+                          ),
+                          child: BookingDetailsPanel(
+                            booking: opened,
+                            clientBookingsCount: state.bookingsForClient(
+                              opened.clientId,
+                            ),
+                            isProcessing: state.isProcessing,
+                          ),
                         ),
                       ),
                     ),
@@ -127,6 +152,10 @@ class _LoadedView extends StatelessWidget {
   }
 }
 
+/// Full-height inspector for narrow layouts.
+///
+/// The scrim now dismisses the sheet: it looked like a modal barrier but
+/// swallowed taps, so the only way out was the small close button.
 class _DetailsSheet extends StatelessWidget {
   const _DetailsSheet({required this.booking, required this.state});
 
@@ -135,43 +164,70 @@ class _DetailsSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final cubit = context.read<BookingsCubit>();
+
     return Positioned.fill(
-      child: ColoredBox(
-        color: Colors.black.withAlpha(65),
-        child: Align(
-          alignment: AlignmentDirectional.bottomCenter,
-          child: FractionallySizedBox(
-            heightFactor: 0.88,
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.medium),
-              child: BookingDetailsPanel(
-                booking: booking,
-                clientBookingsCount: state.bookingsForClient(booking.clientId),
+      child: Stack(
+        children: [
+          GestureDetector(
+            onTap: cubit.closePanel,
+            child: ColoredBox(
+              color: Colors.black.withAlpha(90),
+              child: const SizedBox.expand(),
+            ),
+          ),
+          Align(
+            alignment: AlignmentDirectional.bottomCenter,
+            child: FractionallySizedBox(
+              heightFactor: 0.92,
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpacing.small),
+                child: BookingDetailsPanel(
+                  booking: booking,
+                  clientBookingsCount: state.bookingsForClient(
+                    booking.clientId,
+                  ),
+                  isProcessing: state.isProcessing,
+                ),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
 }
 
 class _Header extends StatelessWidget {
-  const _Header({required this.total});
+  const _Header({required this.state});
 
-  final int total;
+  final BookingsLoaded state;
 
   @override
   Widget build(BuildContext context) {
+    final cubit = context.read<BookingsCubit>();
+
     return DashboardModuleHeader(
       icon: Icons.event_seat_rounded,
       title: 'مركز عمليات الحجوزات',
       subtitle: 'راجع الطلبات، تحقق من الدفع، وافتح تفاصيل الحجز من مكان واحد.',
-      actions: [StatusChip(label: '$total طلب')],
+      actions: [
+        StatusChip(label: '${state.bookings.length} طلب'),
+        IconButton(
+          tooltip: 'تحديث البيانات',
+          onPressed: state.isProcessing ? null : cubit.load,
+          icon: const Icon(Icons.refresh_rounded),
+        ),
+      ],
+      child: _SummaryCards(state: state),
     );
   }
 }
 
+/// The KPI strip, built on the shared [DashboardKpiCard] instead of a private
+/// tile, and reporting what an office is asked about — the review backlog and
+/// the money accepted — rather than six raw status tallies (the per-status
+/// counts now live on the queue tabs, next to the tab that opens them).
 class _SummaryCards extends StatelessWidget {
   const _SummaryCards({required this.state});
 
@@ -179,120 +235,54 @@ class _SummaryCards extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final items = [
-      _SummaryItem(
-        'مسودة',
-        state.countByStatus(BookingStatus.draft),
-        Icons.fiber_new_rounded,
-        AppStatusColors.onInfoContainer,
-      ),
-      _SummaryItem(
-        'مراجعة الدفع',
-        state.countByPaymentStatus(PaymentStatus.underReview) +
-            state.countByPaymentStatus(PaymentStatus.submitted),
-        Icons.hourglass_top_rounded,
-        AppStatusColors.onWarningContainer,
-      ),
-      _SummaryItem(
-        'محجوزة',
-        state.countByStatus(BookingStatus.reserved),
-        Icons.book_online_outlined,
-        AppStatusColors.onSuccessContainer,
-      ),
-      _SummaryItem(
-        'مؤكدة',
-        state.countByStatus(BookingStatus.confirmed),
-        Icons.verified_outlined,
-        AppStatusColors.onSpecialContainer,
-      ),
-      _SummaryItem(
-        'مرفوضة الدفع',
-        state.countByPaymentStatus(PaymentStatus.rejected),
-        Icons.cancel_outlined,
-        AppStatusColors.onErrorContainer,
-      ),
-      _SummaryItem(
-        'ملغاة',
-        state.countByStatus(BookingStatus.cancelled),
-        Icons.block_outlined,
-        AppStatusColors.onNeutralContainer,
-      ),
-    ];
+    final scheme = Theme.of(context).colorScheme;
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final columns = constraints.maxWidth >= 1200
-            ? 6
-            : constraints.maxWidth >= 860
-            ? 3
-            : 2;
-
-        return GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          itemCount: items.length,
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: columns,
-            crossAxisSpacing: AppSpacing.medium,
-            mainAxisSpacing: AppSpacing.medium,
-            mainAxisExtent: 96,
-          ),
-          itemBuilder: (context, index) => _SummaryCard(item: items[index]),
-        );
-      },
-    );
-  }
-}
-
-class _SummaryItem {
-  const _SummaryItem(this.label, this.count, this.icon, this.color);
-
-  final String label;
-  final int count;
-  final IconData icon;
-  final Color color;
-}
-
-class _SummaryCard extends StatelessWidget {
-  const _SummaryCard({required this.item});
-
-  final _SummaryItem item;
-
-  @override
-  Widget build(BuildContext context) {
-    return AppCard(
-      padding: const EdgeInsets.all(AppSpacing.medium),
-      child: Row(
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: item.color.withAlpha(22),
-              borderRadius: BorderRadius.circular(AppTokens.radius),
-            ),
-            child: Icon(item.icon, color: item.color, size: 22),
-          ),
-          const SizedBox(width: AppSpacing.small),
-          Expanded(
-            child: Text(
-              item.label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w700),
-            ),
-          ),
-          Text(
-            '${item.count}',
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-              color: item.color,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-        ],
-      ),
+    return DashboardKpiGrid(
+      maxColumns: 3,
+      children: [
+        DashboardKpiCard(
+          label: 'إجمالي الطلبات',
+          value: '${state.bookings.length}',
+          detail: 'كل الحجوزات المحمّلة',
+          icon: Icons.receipt_long_rounded,
+          color: scheme.primary,
+        ),
+        DashboardKpiCard(
+          label: 'بانتظار المراجعة',
+          value: '${state.awaitingReviewCount}',
+          detail: 'إيصالات تنتظر قراراً',
+          icon: Icons.hourglass_top_rounded,
+          color: AppStatusColors.onWarningContainer,
+        ),
+        DashboardKpiCard(
+          label: 'محجوزة',
+          value: '${state.countByStatus(BookingStatus.reserved)}',
+          detail: 'مقاعد محجوزة لم تُؤكد',
+          icon: Icons.event_seat_rounded,
+          color: AppStatusColors.onInfoContainer,
+        ),
+        DashboardKpiCard(
+          label: 'مؤكدة',
+          value: '${state.countByStatus(BookingStatus.confirmed)}',
+          detail: 'دفع معتمد وحجز مؤكد',
+          icon: Icons.verified_rounded,
+          color: AppStatusColors.onSuccessContainer,
+        ),
+        DashboardKpiCard(
+          label: 'إيرادات معتمدة',
+          value: '${state.approvedRevenue.toStringAsFixed(0)} ج.م',
+          detail: 'مجموع المدفوعات المقبولة',
+          icon: Icons.payments_rounded,
+          color: AppStatusColors.onSuccessContainer,
+        ),
+        DashboardKpiCard(
+          label: 'مرفوضة أو ملغاة',
+          value: '${state.settledOutCount}',
+          detail: 'دفع مرفوض أو حجز ملغى',
+          icon: Icons.block_rounded,
+          color: AppStatusColors.onErrorContainer,
+        ),
+      ],
     );
   }
 }

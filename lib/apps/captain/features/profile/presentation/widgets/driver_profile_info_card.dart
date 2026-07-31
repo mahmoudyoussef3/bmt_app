@@ -35,14 +35,18 @@ class DriverProfileInfoCard extends StatelessWidget {
             ),
             if (profile.employeeCode != null)
               CaptainListRow(
-                icon: Icons.badge_outlined,
+                // Distinct glyphs on purpose: the code and the licence number
+                // used to sit under `badge_outlined` and `badge_rounded`, two
+                // near-identical shapes stacked in the same icon column, so the
+                // column stopped telling the rows apart at a glance.
+                icon: Icons.tag_rounded,
                 label: 'كود الكابتن',
                 value: profile.employeeCode!,
                 valueIsIdentifier: true,
               ),
             if (profile.licenseNumber != null)
               CaptainListRow(
-                icon: Icons.badge_rounded,
+                icon: Icons.credit_card_rounded,
                 label: 'رقم الرخصة',
                 value: profile.licenseNumber!,
                 valueIsIdentifier: true,

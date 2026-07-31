@@ -33,9 +33,6 @@ extension CaptainNav on BuildContext {
   Future<void> openLocationUpdate(String tripId) =>
       _push<void>(CaptainRoutes.locationUpdate, tripId);
 
-  Future<void> openChats(String tripId) =>
-      _push<void>(CaptainRoutes.chats, tripId);
-
   Future<void> openStatusUpdate(String tripId) =>
       _push<void>(CaptainRoutes.statusUpdate, tripId);
 
@@ -45,15 +42,6 @@ extension CaptainNav on BuildContext {
 
   Future<void> openTripHistoryDetail(TripHistoryItem trip) =>
       _push<void>(CaptainRoutes.tripHistoryDetail, trip);
-
-  Future<void> openChatDetails({
-    required String tripId,
-    required String title,
-    String? passengerId,
-  }) => _push<void>(
-    CaptainRoutes.chatDetails,
-    ChatDetailsArgs(tripId: tripId, title: title, passengerId: passengerId),
-  );
 
   Future<void> openReportIncident(
     String tripId, {

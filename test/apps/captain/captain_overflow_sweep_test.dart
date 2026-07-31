@@ -68,7 +68,6 @@ void main() {
                         child: PassengerCard(
                           passenger: passenger,
                           onCall: () {},
-                          onChat: () {},
                         ),
                       ),
                   ],

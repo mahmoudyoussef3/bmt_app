@@ -50,18 +50,20 @@ DriverProfile _profile({
   String name = 'محمود عبد الرحمن السيد',
   double rating = 4.8,
   String plate = 'ط ن ج 4821',
+  String license = 'LIC-99120',
+  String model = 'Mercedes Sprinter',
 }) {
   return DriverProfile(
     id: 'd1',
     name: name,
     phone: '01001234567',
-    licenseNumber: 'LIC-99120',
+    licenseNumber: license,
     averageRating: rating,
     totalTrips: 1284,
     totalPassengers: 24310,
     vehicleCode: 'BUS-104',
     plateNumber: plate,
-    vehicleModel: 'Mercedes Sprinter',
+    vehicleModel: model,
     vehicleCapacity: 24,
     employeeCode: 'EMP-2201',
     licenseExpiryDate: DateTime.now().add(const Duration(days: 400)),
@@ -233,6 +235,110 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   }
+
+  /// The detail rows are the body of this screen, and they used to split each
+  /// row 50/50 between the label and the value: both children carried `flex: 1`,
+  /// so a value was capped at half the row no matter how short its label was.
+  /// A licence number then lost its tail to an ellipsis while empty space sat
+  /// beside a three-letter label — and a truncated identifier is a *different*
+  /// number, not just a clipped one.
+  ///
+  /// These assert the shape that replaced it: the value takes only the width it
+  /// needs, every value lines up on the row's trailing edge, and a long one is
+  /// bounded rather than allowed to run over the label.
+  group('label → value rows', () {
+    /// Every `CaptainListRow` value on the screen, paired with its rect. The
+    /// app runs RTL, so a row's trailing edge is its **left** edge.
+    Map<String, Rect> valueRects(WidgetTester tester) {
+      const values = [
+        '01001234567', // phone
+        'EMP-2201', // captain code
+        'BUS-104', // vehicle code
+      ];
+      return {
+        for (final value in values)
+          if (find.text(value).evaluate().isNotEmpty)
+            value: tester.getRect(find.text(value)),
+      };
+    }
+
+    testWidgets('values of different lengths share one trailing column', (
+      tester,
+    ) async {
+      // Tall enough that every group is laid out without scrolling.
+      tester.view.physicalSize = const Size(390, 2000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        _host(
+          BlocProvider<DriverProfileCubit>(
+            create: (_) => _StubProfileCubit(DriverProfileLoaded(_profile())),
+            child: const DriverProfilePage(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final rects = valueRects(tester);
+      expect(rects, hasLength(3), reason: 'all three value rows should render');
+
+      final edges = rects.values.map((rect) => rect.left).toSet();
+      expect(
+        edges,
+        hasLength(1),
+        reason:
+            'an 11-digit phone number and a 7-character vehicle code must '
+            'still start at the same trailing edge: $rects',
+      );
+
+      // The lengths genuinely differ — otherwise the assertion above would
+      // hold for a layout that had gone back to fixed-width columns.
+      final widths = rects.values.map((rect) => rect.width).toSet();
+      expect(widths, hasLength(greaterThan(1)));
+    });
+
+    testWidgets('a value never runs over its label', (tester) async {
+      tester.view.physicalSize = const Size(320, 2000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
+
+      await tester.pumpWidget(
+        _host(
+          BlocProvider<DriverProfileCubit>(
+            create: (_) => _StubProfileCubit(
+              DriverProfileLoaded(
+                _profile(
+                  // Longer than anything the fleet actually issues, on the
+                  // narrowest phone the app supports.
+                  license: '2981234567890123456789',
+                  model: 'Mercedes Benz Sprinter 519 CDI Tourer Extra Long',
+                ),
+              ),
+            ),
+            child: const DriverProfilePage(),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      for (final pair in {
+        'رقم الرخصة': '2981234567890123456789',
+        'الموديل': 'Mercedes Benz Sprinter 519 CDI Tourer Extra Long',
+      }.entries) {
+        final label = tester.getRect(find.text(pair.key));
+        final value = tester.getRect(find.text(pair.value));
+        expect(
+          value.right,
+          lessThanOrEqualTo(label.left),
+          reason: '"${pair.key}" and its value overlap',
+        );
+        expect(label.width, greaterThan(0), reason: pair.key);
+      }
+
+      expect(tester.takeException(), isNull);
+    });
+  });
 
   testWidgets('profile header survives a long name and no rating', (
     tester,

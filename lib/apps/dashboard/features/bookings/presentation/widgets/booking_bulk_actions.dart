@@ -5,22 +5,30 @@ import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 
 import '../cubit/bookings_cubit.dart';
+import '../cubit/bookings_state.dart';
 import 'booking_action_dialogs.dart';
+import 'booking_status_chips.dart';
+import '../../domain/entities/operation_booking.dart';
 
 /// Batch review bar shown when one or more bookings are selected. Both actions
 /// run the same audited per-booking RPCs (`approve_payment` / `reject_payment`)
 /// in sequence — there is no direct bulk status write.
 class BookingBulkActions extends StatelessWidget {
-  const BookingBulkActions({super.key, required this.selectedCount});
+  const BookingBulkActions({super.key, required this.state});
 
-  final int selectedCount;
+  final BookingsLoaded state;
 
   @override
   Widget build(BuildContext context) {
+    final selectedCount = state.selectedIds.length;
     if (selectedCount == 0) return const SizedBox.shrink();
 
     final scheme = Theme.of(context).colorScheme;
+    final text = Theme.of(context).textTheme;
     final cubit = context.read<BookingsCubit>();
+    final busy = state.isProcessing;
+    final approved = paymentStatusStyle(PaymentStatus.approved);
+    final rejected = paymentStatusStyle(PaymentStatus.rejected);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.medium),
@@ -36,25 +44,66 @@ class BookingBulkActions extends StatelessWidget {
           runSpacing: AppSpacing.small,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            Text(
-              '$selectedCount طلب محدد',
-              style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w900,
-                color: scheme.primary,
-              ),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // While a batch runs the bar reports progress instead of just
+                // greying out: the RPCs are sequential, so a large batch can
+                // take several seconds and silence reads as a frozen screen.
+                if (busy)
+                  const Padding(
+                    padding: EdgeInsetsDirectional.only(end: AppSpacing.small),
+                    child: SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  )
+                else
+                  Padding(
+                    padding: const EdgeInsetsDirectional.only(
+                      end: AppSpacing.small,
+                    ),
+                    child: Icon(
+                      Icons.checklist_rounded,
+                      size: 18,
+                      color: scheme.primary,
+                    ),
+                  ),
+                Flexible(
+                  child: Text(
+                    busy
+                        ? 'جارٍ تنفيذ المراجعة على $selectedCount طلب…'
+                        : '$selectedCount طلب محدد للمراجعة',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: text.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      color: scheme.primary,
+                    ),
+                  ),
+                ),
+              ],
             ),
             FilledButton.icon(
-              onPressed: () => _bulkApprove(context, cubit),
-              icon: const Icon(Icons.check_rounded),
-              label: const Text('اعتماد الدفع'),
+              onPressed: busy ? null : () => _bulkApprove(context, cubit),
+              style: FilledButton.styleFrom(
+                backgroundColor: approved.onContainer,
+                foregroundColor: Colors.white,
+              ),
+              icon: const Icon(Icons.check_rounded, size: 18),
+              label: Text('اعتماد الدفع ($selectedCount)'),
             ),
             OutlinedButton.icon(
-              onPressed: () => _bulkReject(context, cubit),
-              icon: const Icon(Icons.close_rounded),
-              label: const Text('رفض الدفع'),
+              onPressed: busy ? null : () => _bulkReject(context, cubit),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: rejected.onContainer,
+              ),
+              icon: const Icon(Icons.close_rounded, size: 18),
+              label: Text('رفض الدفع ($selectedCount)'),
             ),
             TextButton(
-              onPressed: cubit.clearSelection,
+              onPressed: busy ? null : cubit.clearSelection,
               child: const Text('إلغاء التحديد'),
             ),
           ],
@@ -66,7 +115,7 @@ class BookingBulkActions extends StatelessWidget {
   void _bulkApprove(BuildContext context, BookingsCubit cubit) {
     openApprovalDialog(
       context,
-      message: 'سيتم اعتماد الدفع لـ $selectedCount حجز محدد.',
+      message: 'سيتم اعتماد الدفع لـ ${state.selectedIds.length} حجز محدد.',
       onConfirm: cubit.bulkApprove,
     );
   }
@@ -74,7 +123,8 @@ class BookingBulkActions extends StatelessWidget {
   void _bulkReject(BuildContext context, BookingsCubit cubit) {
     openRejectionDialog(
       context,
-      message: 'سيتم رفض الدفع لـ $selectedCount حجز محدد وتحرير مقاعدها.',
+      message:
+          'سيتم رفض الدفع لـ ${state.selectedIds.length} حجز محدد وتحرير مقاعدها.',
       onConfirm: cubit.bulkReject,
     );
   }

@@ -1,5 +1,7 @@
 import '../../domain/entities/operation_booking.dart';
 import '../models/booking_filters.dart';
+import '../models/booking_queue_tab.dart';
+import '../models/booking_sort.dart';
 
 sealed class BookingsState {
   const BookingsState();
@@ -16,11 +18,19 @@ class BookingsError extends BookingsState {
 }
 
 class BookingsLoaded extends BookingsState {
+  /// Rows per page on the board. The whole set used to render at once, which on
+  /// a busy office meant hundreds of cards laid out to show the twelve the
+  /// operator was actually working through.
+  static const int pageSize = 12;
+
   final List<OperationBooking> bookings;
   final BookingFilters filters;
   final Set<String> selectedIds;
   final OperationBooking? openedBooking;
-  final BookingStatus activeTab;
+  final BookingQueueTab activeTab;
+  final BookingSortField sortField;
+  final bool sortAscending;
+  final int page;
 
   /// A failed action (approve, reject, reassign…). Surfaced as a snack bar over
   /// the still-intact workspace rather than as a full error screen: losing the
@@ -36,7 +46,10 @@ class BookingsLoaded extends BookingsState {
     required this.filters,
     this.selectedIds = const {},
     this.openedBooking,
-    this.activeTab = BookingStatus.reserved,
+    this.activeTab = BookingQueueTab.needsReview,
+    this.sortField = BookingSortField.createdAt,
+    this.sortAscending = false,
+    this.page = 0,
     this.actionError,
     this.isProcessing = false,
   });
@@ -51,7 +64,7 @@ class BookingsLoaded extends BookingsState {
     final route = filters.route.trim();
     final date = filters.date.trim();
     return bookings.where((booking) {
-      if (booking.status != activeTab) return false;
+      if (!activeTab.matches(booking)) return false;
 
       final searchMatch =
           search.isEmpty ||
@@ -68,9 +81,62 @@ class BookingsLoaded extends BookingsState {
       final paymentMatch =
           filters.paymentMethod == null ||
           booking.paymentMethod == filters.paymentMethod;
-      return searchMatch && routeMatch && dateMatch && paymentMatch;
+      final paymentStatusMatch =
+          filters.paymentStatus == null ||
+          booking.paymentStatus == filters.paymentStatus;
+      return searchMatch &&
+          routeMatch &&
+          dateMatch &&
+          paymentMatch &&
+          paymentStatusMatch;
     }).toList();
   }
+
+  /// The filtered set in the operator's chosen order.
+  late final List<OperationBooking> sortedBookings = _sort();
+
+  List<OperationBooking> _sort() {
+    final sorted = [...filteredBookings]
+      ..sort((a, b) {
+        final result = sortField.compare(a, b);
+        return sortAscending ? result : -result;
+      });
+    return sorted;
+  }
+
+  int get resultCount => filteredBookings.length;
+
+  int get pageCount {
+    final pages = (resultCount / pageSize).ceil();
+    return pages < 1 ? 1 : pages;
+  }
+
+  /// [page] can outlive the result set it was chosen for — approving the last
+  /// row on page 4, or typing into search, can shrink the list under it. Reading
+  /// the page through this clamp keeps the board on a real page instead of
+  /// rendering an empty one.
+  int get currentPage => page < 0
+      ? 0
+      : page > pageCount - 1
+      ? pageCount - 1
+      : page;
+
+  late final List<OperationBooking> pageBookings = sortedBookings
+      .skip(currentPage * pageSize)
+      .take(pageSize)
+      .toList();
+
+  /// Rows on the current page that a bulk review can actually act on. Bulk
+  /// approve/reject run the per-booking payment RPCs, which reject a booking
+  /// whose payment is not awaiting a decision — so selecting one is a guaranteed
+  /// failure, and the board never offers it.
+  late final List<OperationBooking> selectablePageBookings = pageBookings
+      .where((booking) => booking.awaitingReview)
+      .toList();
+
+  bool get allPageSelected =>
+      selectablePageBookings.isNotEmpty &&
+      selectablePageBookings.every((b) => selectedIds.contains(b.id));
 
   /// Status/payment tallies for the whole set, built in a single pass instead of
   /// one full scan per counter.
@@ -91,6 +157,38 @@ class BookingsLoaded extends BookingsState {
 
   int countByPaymentStatus(PaymentStatus status) => _paymentCounts[status] ?? 0;
 
+  /// How many bookings each tab would show, so the tab strip can carry its own
+  /// count badge without the board re-filtering once per tab.
+  int countForTab(BookingQueueTab tab) => switch (tab) {
+    BookingQueueTab.needsReview => awaitingReviewCount,
+    BookingQueueTab.all => bookings.length,
+    _ => countByStatus(tab.status!),
+  };
+
+  late final int awaitingReviewCount = bookings
+      .where((booking) => booking.awaitingReview)
+      .length;
+
+  /// Money the office has already accepted, which is the number an operator is
+  /// asked for far more often than a raw count of approved rows.
+  late final double approvedRevenue = bookings
+      .where((booking) => booking.paymentStatus == PaymentStatus.approved)
+      .fold<double>(0, (sum, booking) => sum + booking.paymentAmount);
+
+  late final int settledOutCount =
+      countByPaymentStatus(PaymentStatus.rejected) +
+      countByStatus(BookingStatus.cancelled);
+
+  /// Distinct routes present in the loaded set, for the route filter. Picking
+  /// from what exists beats typing a substring that may match nothing.
+  late final List<String> availableRoutes =
+      (bookings
+              .map((booking) => booking.route.trim())
+              .where((route) => route.isNotEmpty)
+              .toSet()
+              .toList()
+            ..sort());
+
   /// Number of bookings the given client has ever made — a real cross-booking
   /// relationship derived from the loaded dataset (no extra query, no PII join).
   int bookingsForClient(String clientId) {
@@ -104,7 +202,10 @@ class BookingsLoaded extends BookingsState {
     Set<String>? selectedIds,
     OperationBooking? openedBooking,
     bool clearOpenedBooking = false,
-    BookingStatus? activeTab,
+    BookingQueueTab? activeTab,
+    BookingSortField? sortField,
+    bool? sortAscending,
+    int? page,
     String? actionError,
     bool clearActionError = false,
     bool? isProcessing,
@@ -117,6 +218,9 @@ class BookingsLoaded extends BookingsState {
           ? null
           : openedBooking ?? this.openedBooking,
       activeTab: activeTab ?? this.activeTab,
+      sortField: sortField ?? this.sortField,
+      sortAscending: sortAscending ?? this.sortAscending,
+      page: page ?? this.page,
       actionError: clearActionError ? null : actionError ?? this.actionError,
       isProcessing: isProcessing ?? this.isProcessing,
     );
