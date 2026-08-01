@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 
-/// The bordered surface the route-limits and terms blocks sit on.
+/// The bordered surface the My Subscription blocks sit on.
 class PackageInfoPanel extends StatelessWidget {
   const PackageInfoPanel({super.key, required this.child});
 

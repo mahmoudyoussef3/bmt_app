@@ -129,7 +129,11 @@ void main() {
     await tester.tap(find.byType(PackageCard));
     await tester.pumpAndSettle();
 
-    // Detail pane names the seller and offers the way in.
+    // Detail pane names the seller and offers the way in. The provider block
+    // sits below the plan header and the pricing note, so it is scrolled to
+    // rather than assumed on-screen.
+    await tester.scrollUntilVisible(find.text('View office'), 120);
+    await tester.pumpAndSettle();
     expect(find.text('View office'), findsOneWidget);
 
     await tester.tap(find.text('View office'));

@@ -23,6 +23,12 @@ class PackagePlan {
   final String packageType;
   final int durationDays;
   final int rideCount;
+
+  /// The catalogue's flat price, kept only as the booking wizard's fallback
+  /// when a corridor has no dedicated package tier (see
+  /// `BookingWizardSession.resolvedPackagePrice`). It is never shown while
+  /// browsing: the same plan is priced per pickup→dropoff pair, so this figure
+  /// is not what most riders would actually pay.
   final double price;
 
   /// The office selling this package. Packages are per-office (offices compete
@@ -55,13 +61,4 @@ class PackagePlan {
   /// The name to show riders: English when the Dashboard has set one, and the
   /// Arabic name otherwise — never a blank plan on a checkout screen.
   String get displayName => nameEn.trim().isEmpty ? nameAr : nameEn;
-
-  /// Whole-pound price. The Dashboard publishes packages at pound precision,
-  /// so the fractional part is always zero in practice.
-  int get priceInPounds => price.round();
-
-  /// What one ride inside the package costs — the figure that actually shows a
-  /// rider the package is worth buying. Guards a malformed zero-ride package.
-  int get pricePerRide =>
-      rideCount <= 0 ? priceInPounds : priceInPounds ~/ rideCount;
 }

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 
-/// The small muted heading above each block on the detail pane.
+/// The small muted heading above a block on the My Subscription pane.
 class PackageSectionTitle extends StatelessWidget {
   const PackageSectionTitle({super.key, required this.title});
 

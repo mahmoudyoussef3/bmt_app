@@ -5,13 +5,17 @@ import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/packages/domain/entities/package_plan.dart';
-import 'package:bmt_app/core/localization/format_util.dart';
+import 'package:bmt_app/apps/client/features/packages/presentation/widgets/package_shape_chips.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
+import 'package:bmt_app/core/widgets/directional_icon.dart';
 
 /// One of the office's commute packages, as it appears on the office profile:
-/// name, the duration/ride shape, and price. Tapping opens this exact
-/// package's detail pane in the marketplace, the same way `PackageCard` does
-/// from the listing.
+/// what it is and what it bundles, never what it costs.
+///
+/// A package has no single price — the same plan is priced per corridor, so the
+/// catalogue figure would be a number the rider never actually pays. The tile
+/// says so plainly instead, and the real amount is quoted in the booking flow
+/// once a route exists to price against.
 class OfficePackageTile extends StatelessWidget {
   const OfficePackageTile({
     super.key,
@@ -25,25 +29,27 @@ class OfficePackageTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    final scheme = Theme.of(context).colorScheme;
+    const accent = ClientColors.journeyPurple;
 
     return ClientCard(
       onTap: onTap,
+      padding: const EdgeInsets.all(ClientSpacing.sm),
       child: Row(
         children: [
           Container(
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: scheme.primary.withAlpha(22),
+              color: accent.withAlpha(24),
               borderRadius: BorderRadius.circular(ClientRadius.md),
             ),
-            child: Icon(
-              Icons.confirmation_number_rounded,
-              color: scheme.primary,
+            child: const Icon(
+              Icons.card_membership_rounded,
+              color: accent,
+              size: 22,
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: ClientSpacing.sm),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -52,40 +58,36 @@ class OfficePackageTile extends StatelessWidget {
                   package.displayName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: ClientTypography.bodyLarge(
+                  style: ClientTypography.bodyMedium(
                     context,
                   ).copyWith(fontWeight: FontWeight.w800),
                 ),
-                const SizedBox(height: 3),
+                const SizedBox(height: 6),
+                PackageShapeChips(package: package, accent: accent),
+                const SizedBox(height: 6),
                 Text(
-                  '${l10n.packages_daysCount(package.durationDays)} · '
-                  '${l10n.packages_ridesCount(package.rideCount)}',
+                  l10n.packages_priceAtBooking,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: ClientTypography.labelSmall(
                     context,
-                  ).copyWith(color: ClientColors.textSecondaryFor(context)),
+                  ).copyWith(color: ClientColors.textTertiaryFor(context)),
                 ),
               ],
             ),
           ),
-          const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                FormatUtil.currency(context, package.priceInPounds),
-                style: ClientTypography.priceSmall(
-                  context,
-                ).copyWith(color: scheme.primary, fontWeight: FontWeight.w900),
-              ),
-              Text(
-                l10n.packages_startingPrice,
-                style: ClientTypography.labelSmall(
-                  context,
-                ).copyWith(color: ClientColors.textTertiaryFor(context)),
-              ),
-            ],
+          const SizedBox(width: ClientSpacing.xs),
+          Container(
+            padding: const EdgeInsets.all(7),
+            decoration: BoxDecoration(
+              color: accent.withAlpha(20),
+              shape: BoxShape.circle,
+            ),
+            child: const DirectionalIcon(
+              Icons.arrow_forward_rounded,
+              size: 15,
+              color: accent,
+            ),
           ),
         ],
       ),

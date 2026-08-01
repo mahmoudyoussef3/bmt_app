@@ -3,13 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/widgets/pressable_scale.dart';
 import 'package:bmt_app/apps/client/features/offices/domain/entities/office_summary.dart';
 import 'package:bmt_app/apps/client/features/offices/presentation/routes/offices_routes.dart';
 import 'package:bmt_app/apps/client/features/offices/presentation/widgets/office_logo_avatar.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
+import 'package:bmt_app/core/widgets/directional_icon.dart';
 
 import '../../../domain/entities/package_plan.dart';
-import 'package_section_title.dart';
+import 'package_detail_section.dart';
 
 /// The "who provides this" card on the package detail pane: seller logo, name
 /// and rating, tapping through to the office's full marketplace profile — the
@@ -46,52 +48,44 @@ class PackageProviderOfficeCard extends StatelessWidget {
 
     final l10n = context.l10n;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        PackageSectionTitle(title: l10n.packages_providedBy),
-        const SizedBox(height: 10),
-        Material(
-          color: ClientColors.surfaceSubtleFor(context),
-          borderRadius: BorderRadius.circular(ClientRadius.lg),
-          child: InkWell(
-            onTap: () => _openOffice(context),
-            borderRadius: BorderRadius.circular(ClientRadius.lg),
-            child: Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(ClientRadius.lg),
-                border: Border.all(color: ClientColors.borderFor(context)),
-              ),
-              child: Row(
+    return PressableScale(
+      onTap: () => _openOffice(context),
+      scale: 0.98,
+      child: PackageDetailSection(
+        icon: Icons.storefront_outlined,
+        title: l10n.packages_providedBy,
+        padding: const EdgeInsets.all(ClientSpacing.sm),
+        child: Row(
+          children: [
+            OfficeLogoAvatar(logoUrl: package.officeLogoUrl, size: 46),
+            const SizedBox(width: ClientSpacing.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  OfficeLogoAvatar(logoUrl: package.officeLogoUrl, size: 46),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          package.officeName,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: ClientTypography.bodyLarge(
-                            context,
-                          ).copyWith(fontWeight: FontWeight.w800),
-                        ),
-                        const SizedBox(height: 3),
-                        _Rating(package: package),
-                      ],
-                    ),
+                  Text(
+                    package.officeName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: ClientTypography.bodyMedium(
+                      context,
+                    ).copyWith(fontWeight: FontWeight.w800),
                   ),
-                  const SizedBox(width: 8),
-                  _ViewOfficeAction(label: l10n.packages_viewOffice),
+                  const SizedBox(height: 3),
+                  _Rating(package: package),
                 ],
               ),
             ),
-          ),
+            const SizedBox(width: ClientSpacing.xs),
+            // Capped so a long localized label (or a large text scale) cannot
+            // starve the office name and rating beside it.
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 120),
+              child: _ViewOfficeAction(label: l10n.packages_viewOffice),
+            ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }
@@ -117,11 +111,17 @@ class _Rating extends StatelessWidget {
       children: [
         const Icon(Icons.star_rounded, size: 15, color: Colors.amber),
         const SizedBox(width: 3),
-        Text(
-          package.officeRating.toStringAsFixed(1),
-          style: ClientTypography.labelMedium(
-            context,
-          ).copyWith(fontWeight: FontWeight.w800),
+        // Both figures give way rather than overflow: on a narrow phone the
+        // provider row can be squeezed to a few dozen pixels.
+        Flexible(
+          child: Text(
+            package.officeRating.toStringAsFixed(1),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: ClientTypography.labelMedium(
+              context,
+            ).copyWith(fontWeight: FontWeight.w800),
+          ),
         ),
         const SizedBox(width: 4),
         Flexible(
@@ -146,27 +146,29 @@ class _ViewOfficeAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final accent = ClientColors.primaryFor(context);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: scheme.primary.withAlpha(22),
+        color: accent.withAlpha(22),
         borderRadius: BorderRadius.circular(ClientRadius.pill),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            label,
-            style: ClientTypography.labelSmall(
-              context,
-            ).copyWith(fontWeight: FontWeight.w800, color: scheme.primary),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: ClientTypography.labelSmall(
+                context,
+              ).copyWith(fontWeight: FontWeight.w800, color: accent),
+            ),
           ),
-          const SizedBox(width: 2),
-          // chevron_right already declares matchTextDirection, so Flutter mirrors
-          // it to point leftward — "forward" — under the app's RTL layout.
-          Icon(Icons.chevron_right_rounded, size: 16, color: scheme.primary),
+          const SizedBox(width: 3),
+          DirectionalIcon(Icons.arrow_forward_rounded, size: 13, color: accent),
         ],
       ),
     );

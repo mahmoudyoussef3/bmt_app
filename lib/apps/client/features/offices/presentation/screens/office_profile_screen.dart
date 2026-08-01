@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
-import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_search_query.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_routes.dart';
@@ -14,18 +14,27 @@ import '../../domain/entities/office_summary.dart';
 import '../../domain/entities/office_trip.dart';
 import '../cubit/office_profile_cubit.dart';
 import '../cubit/office_profile_state.dart';
+import '../widgets/office_departures_section.dart';
+import '../widgets/office_empty_note.dart';
 import '../widgets/office_nothing_listed_view.dart';
 import '../widgets/office_package_tile.dart';
 import '../widgets/office_profile_header.dart';
 import '../widgets/office_route_tile.dart';
-import '../widgets/office_trip_tile.dart';
+import '../widgets/office_section_header.dart';
 
 /// One office's marketplace profile: identity + rating, the departures it is
-/// selling right now, then the corridors it runs.
+/// selling right now, the corridors it runs, and the commute packages it sells.
 ///
 /// Departures come first because they are what a rider can act on today; the
 /// route list is the fallback for a date the board does not reach. Both hand
 /// off to the existing booking search — this screen owns no booking logic.
+///
+/// The whole screen is one scroll under a single masthead rather than a tab
+/// bar: the three lists answer different questions ("can I travel today?",
+/// "does this company go where I go?", "is a plan worth it?") and a rider
+/// usually asks them in that order, so hiding two behind tabs would cost a tap
+/// each without shortening anything. The masthead's count band and the section
+/// glyphs do the wayfinding instead.
 class OfficeProfileScreen extends StatelessWidget {
   const OfficeProfileScreen({super.key, required this.office});
 
@@ -71,22 +80,27 @@ class OfficeProfileScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final l10n = context.l10n;
 
     return Scaffold(
-      backgroundColor: scheme.surface,
+      backgroundColor: ClientColors.backgroundFor(context),
       appBar: ClientAppBar(
         title: office.name,
         subtitle: l10n.offices_directoryTitle,
       ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
-        children: [
-          OfficeProfileHeader(office: office),
-          const SizedBox(height: ClientSpacing.lg),
-          BlocBuilder<OfficeProfileCubit, OfficeProfileState>(
-            builder: (context, state) => switch (state) {
+      body: BlocBuilder<OfficeProfileCubit, OfficeProfileState>(
+        builder: (context, state) => ListView(
+          padding: const EdgeInsets.fromLTRB(
+            ClientSpacing.md,
+            ClientSpacing.sm,
+            ClientSpacing.md,
+            ClientSpacing.xl,
+          ),
+          physics: const BouncingScrollPhysics(),
+          children: [
+            OfficeProfileHeader(office: office, counts: _countsOf(state)),
+            const SizedBox(height: ClientSpacing.lg),
+            switch (state) {
               OfficeProfileLoading() => const _ProfileSkeleton(),
               OfficeProfileError(:final message) => ClientErrorCard(
                 message: message,
@@ -96,8 +110,8 @@ class OfficeProfileScreen extends StatelessWidget {
               ),
               // An office with nothing published is a dead end unless it ends
               // somewhere: two "none" notes and no action was the whole screen.
-              OfficeProfileLoaded(:final routes, :final trips) when
-                  routes.isEmpty && trips.isEmpty =>
+              OfficeProfileLoaded(:final routes, :final trips)
+                  when routes.isEmpty && trips.isEmpty =>
                 const OfficeNothingListedView(),
               OfficeProfileLoaded(
                 :final routes,
@@ -108,26 +122,28 @@ class OfficeProfileScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _Section(
+                      icon: Icons.departure_board_rounded,
                       title: l10n.offices_departuresHeader,
+                      count: trips.length,
                       child: trips.isEmpty
-                          ? _EmptyNote(message: l10n.offices_noDepartures)
-                          : Column(
-                              children: [
-                                for (final trip in trips) ...[
-                                  OfficeTripTile(
-                                    trip: trip,
-                                    onTap: () => _openTrip(context, trip),
-                                  ),
-                                  const SizedBox(height: ClientSpacing.sm),
-                                ],
-                              ],
+                          ? OfficeEmptyNote(
+                              icon: Icons.event_busy_rounded,
+                              message: l10n.offices_noDepartures,
+                            )
+                          : OfficeDeparturesSection(
+                              trips: trips,
+                              onOpenTrip: (trip) => _openTrip(context, trip),
                             ),
                     ),
-                    const SizedBox(height: ClientSpacing.md),
                     _Section(
+                      icon: Icons.alt_route_rounded,
                       title: l10n.offices_routesHeader,
+                      count: routes.length,
                       child: routes.isEmpty
-                          ? _EmptyNote(message: l10n.offices_noRoutes)
+                          ? OfficeEmptyNote(
+                              icon: Icons.wrong_location_outlined,
+                              message: l10n.offices_noRoutes,
+                            )
                           : Column(
                               children: [
                                 for (final route in routes) ...[
@@ -135,17 +151,18 @@ class OfficeProfileScreen extends StatelessWidget {
                                     route: route,
                                     onTap: () => _openRoute(context, route.id),
                                   ),
-                                  const SizedBox(height: ClientSpacing.sm),
+                                  const SizedBox(height: ClientSpacing.xs),
                                 ],
                               ],
                             ),
                     ),
                     // Packages are supplementary, so the section only appears
                     // when this office actually sells any — no empty note.
-                    if (packages.isNotEmpty) ...[
-                      const SizedBox(height: ClientSpacing.md),
+                    if (packages.isNotEmpty)
                       _Section(
+                        icon: Icons.card_membership_rounded,
                         title: l10n.packages_commutePackages,
+                        count: packages.length,
                         child: Column(
                           children: [
                             for (final package in packages) ...[
@@ -153,51 +170,56 @@ class OfficeProfileScreen extends StatelessWidget {
                                 package: package,
                                 onTap: () => _openPackage(context, package),
                               ),
-                              const SizedBox(height: ClientSpacing.sm),
+                              const SizedBox(height: ClientSpacing.xs),
                             ],
                           ],
                         ),
                       ),
-                    ],
                   ],
                 ),
             },
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
+
+  /// The masthead's count band, once there is something to count.
+  OfficeProfileCounts? _countsOf(OfficeProfileState state) => switch (state) {
+    OfficeProfileLoaded(:final routes, :final trips, :final packages) => (
+      departures: trips.length,
+      routes: routes.length,
+      packages: packages.length,
+    ),
+    _ => null,
+  };
 }
 
 class _Section extends StatelessWidget {
-  const _Section({required this.title, required this.child});
+  const _Section({
+    required this.icon,
+    required this.title,
+    required this.count,
+    required this.child,
+  });
 
+  final IconData icon;
   final String title;
+  final int count;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        ClientSectionHeader(title: title),
-        const SizedBox(height: ClientSpacing.xs),
-        child,
-      ],
-    );
-  }
-}
-
-class _EmptyNote extends StatelessWidget {
-  const _EmptyNote({required this.message});
-
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: ClientSpacing.md),
-      child: Text(message, style: ClientTypography.bodyMedium(context)),
+      padding: const EdgeInsets.only(bottom: ClientSpacing.lg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          OfficeSectionHeader(icon: icon, title: title, count: count),
+          const SizedBox(height: ClientSpacing.sm),
+          child,
+        ],
+      ),
     );
   }
 }
@@ -208,13 +230,38 @@ class _ProfileSkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        ClientSkeleton(height: 68, borderRadius: 16),
+        _SkeletonHeading(width: 160),
         SizedBox(height: ClientSpacing.sm),
-        ClientSkeleton(height: 68, borderRadius: 16),
+        ClientSkeleton(height: 76, borderRadius: ClientRadius.lg),
+        SizedBox(height: ClientSpacing.xs),
+        ClientSkeleton(height: 76, borderRadius: ClientRadius.lg),
+        SizedBox(height: ClientSpacing.lg),
+        _SkeletonHeading(width: 120),
         SizedBox(height: ClientSpacing.sm),
-        ClientSkeleton(height: 68, borderRadius: 16),
+        ClientSkeleton(height: 76, borderRadius: ClientRadius.lg),
       ],
+    );
+  }
+}
+
+/// A section title's placeholder — start-aligned so the stretched column does
+/// not blow it out to the full width and lose the "this is a heading" shape.
+class _SkeletonHeading extends StatelessWidget {
+  const _SkeletonHeading({required this.width});
+
+  final double width;
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: AlignmentDirectional.centerStart,
+      child: ClientSkeleton(
+        height: 20,
+        width: width,
+        borderRadius: ClientRadius.xs,
+      ),
     );
   }
 }

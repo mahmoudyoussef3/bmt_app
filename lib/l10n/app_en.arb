@@ -269,9 +269,9 @@
     }
   },
   "packages_termsCancellation": "Terms & Cancellation",
-  "packages_termsText1": "1. Packages cannot be refunded once activated.",
-  "packages_termsText2": "2. Seats must be confirmed at least 2 hours before trip.",
-  "packages_termsText3": "3. Package holds up to {count} reservations for the selected route.",
+  "packages_termsText1": "Packages cannot be refunded once activated.",
+  "packages_termsText2": "Seats must be confirmed at least 2 hours before trip.",
+  "packages_termsText3": "Package holds up to {count} reservations for the selected route.",
   "@packages_termsText3": {
     "placeholders": {
       "count": {
@@ -2539,5 +2539,19 @@
   "offices_nothingListedTitle": "This office has nothing listed right now",
   "offices_nothingListedBody": "No departures and no routes are published yet. Try another office, or search every route on the platform.",
   "offices_browseOtherOffices": "Browse other offices",
-  "offices_searchAllRoutes": "Search all routes"
+  "offices_searchAllRoutes": "Search all routes",
+  "offices_new": "New",
+  "offices_statDepartures": "Departures",
+  "offices_statRoutes": "Routes",
+  "offices_statPackages": "Packages",
+  "packages_priceAtBooking": "Price shown when you pick a trip",
+  "packages_priceDependsTitle": "Priced on the route you pick",
+  "packages_priceDependsBody": "Every route has its own fare, so this package is priced once you choose a trip.",
+  "packages_howItWorks": "How it works",
+  "packages_step1Title": "Pick your route",
+  "packages_step1Body": "Choose the trip you commute on — the package binds to that route.",
+  "packages_step2Title": "See your price",
+  "packages_step2Body": "The package is priced for that exact route, then you pay once.",
+  "packages_step3Title": "Ride your seats",
+  "packages_step3Body": "Book any departure on the route until your rides or days run out."
 }

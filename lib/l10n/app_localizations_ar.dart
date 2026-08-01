@@ -594,15 +594,15 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get packages_termsText1 =>
-      '1. لا يمكن استرداد قيمة الباقات بمجرد تفعيلها.';
+      'لا يمكن استرداد قيمة الباقات بمجرد تفعيلها.';
 
   @override
   String get packages_termsText2 =>
-      '2. يجب تأكيد المقاعد قبل ساعتين على الأقل من موعد الرحلة.';
+      'يجب تأكيد المقاعد قبل ساعتين على الأقل من موعد الرحلة.';
 
   @override
   String packages_termsText3(int count) {
-    return '3. الباقة تمنحك حتى $count حجز للمسار المختار.';
+    return 'الباقة تمنحك حتى $count حجز للمسار المختار.';
   }
 
   @override
@@ -4858,4 +4858,50 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get offices_searchAllRoutes => 'ابحث في كل الخطوط';
+
+  @override
+  String get offices_new => 'جديد';
+
+  @override
+  String get offices_statDepartures => 'مواعيد';
+
+  @override
+  String get offices_statRoutes => 'خطوط';
+
+  @override
+  String get offices_statPackages => 'باقات';
+
+  @override
+  String get packages_priceAtBooking => 'يظهر السعر عند اختيار الرحلة';
+
+  @override
+  String get packages_priceDependsTitle => 'السعر يُحسب على الخط الذي تختاره';
+
+  @override
+  String get packages_priceDependsBody =>
+      'لكل خط سير سعره الخاص، لذلك تُسعَّر الباقة بعد اختيارك للرحلة.';
+
+  @override
+  String get packages_howItWorks => 'كيف تعمل الباقة';
+
+  @override
+  String get packages_step1Title => 'اختر خط سيرك';
+
+  @override
+  String get packages_step1Body =>
+      'حدّد الرحلة التي تستقلّها يومياً، فترتبط الباقة بهذا الخط.';
+
+  @override
+  String get packages_step2Title => 'اطّلع على سعرك';
+
+  @override
+  String get packages_step2Body =>
+      'تُحسب قيمة الباقة على هذا الخط تحديداً، ثم تدفع مرة واحدة.';
+
+  @override
+  String get packages_step3Title => 'استخدم رحلاتك';
+
+  @override
+  String get packages_step3Body =>
+      'احجز أي موعد على الخط حتى تنتهي رحلاتك أو تنتهي مدة الباقة.';
 }

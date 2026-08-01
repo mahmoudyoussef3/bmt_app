@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
 import '../../../domain/entities/my_subscription.dart';
-import '../details/package_info_panel.dart';
-import '../details/package_section_title.dart';
+import '../package_info_panel.dart';
+import '../package_section_title.dart';
 
 /// Trips used against the package's ride allowance, or an unlimited notice
 /// when the Dashboard left the package with no ride cap.
@@ -33,9 +33,7 @@ class MySubscriptionTripsCard extends StatelessWidget {
                         subscription.tripsUsed,
                         subscription.tripsTotal,
                       ),
-                      style: Theme.of(
-                        context,
-                      ).textTheme.titleSmall?.copyWith(
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w800,
                       ),
                     ),

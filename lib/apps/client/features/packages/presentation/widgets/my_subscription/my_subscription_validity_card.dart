@@ -5,8 +5,8 @@ import 'package:bmt_app/core/localization/format_util.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
 import '../../../domain/entities/my_subscription.dart';
-import '../details/package_info_panel.dart';
-import '../details/package_section_title.dart';
+import '../package_info_panel.dart';
+import '../package_section_title.dart';
 import '../package_detail_row.dart';
 
 /// Start/expiry dates plus a days-remaining progress bar.

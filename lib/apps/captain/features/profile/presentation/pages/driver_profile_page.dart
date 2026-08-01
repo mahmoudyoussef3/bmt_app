@@ -50,9 +50,7 @@ class _ProfileBody extends StatelessWidget {
         slivers: [
           DriverProfileHeader(profile: profile),
           SliverPadding(
-            // Groups sit closer to the screen edge than the old framed cards
-            // did: they read as full-width list sections, not as objects
-            // floating on a page.
+ 
             padding: EdgeInsetsDirectional.fromSTEB(
               CaptainDesignTokens.s20,
               CaptainDesignTokens.s24,
@@ -62,8 +60,7 @@ class _ProfileBody extends StatelessWidget {
             ),
             sliver: SliverList.list(
               children: [
-                // The vehicle leads: it is the one thing a captain opens this
-                // screen mid-shift to check.
+   
                 if (profile.hasVehicle) ...[
                   DriverProfileVehicleCard(profile: profile),
                   const SizedBox(height: CaptainDesignTokens.s24),
@@ -72,7 +69,6 @@ class _ProfileBody extends StatelessWidget {
                 const SizedBox(height: CaptainDesignTokens.s24),
                 DriverProfileInfoCard(profile: profile),
                 const SizedBox(height: CaptainDesignTokens.s24),
-                // Sign-out is the last row of this group.
                 const DriverProfileSettingsCard(),
               ],
             ),
@@ -83,9 +79,6 @@ class _ProfileBody extends StatelessWidget {
   }
 }
 
-/// Sign-out stays reachable here on purpose: if the profile can't load, the
-/// captain would otherwise be stranded on this tab with no way out of a bad
-/// session.
 class _ErrorBody extends StatelessWidget {
   const _ErrorBody({required this.message});
 

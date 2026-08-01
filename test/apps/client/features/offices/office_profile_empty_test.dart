@@ -73,6 +73,10 @@ void main() {
     );
 
     expect(find.byType(OfficeNothingListedView), findsNothing);
-    expect(find.text('Banha → Smart Village'), findsWidgets);
+    // The tile draws the corridor as an origin→destination spine, so the two
+    // endpoints are what a rider reads — the route's own name only appears
+    // when it says something the cities do not.
+    expect(find.text('Banha'), findsWidgets);
+    expect(find.text('Smart Village'), findsWidgets);
   });
 }

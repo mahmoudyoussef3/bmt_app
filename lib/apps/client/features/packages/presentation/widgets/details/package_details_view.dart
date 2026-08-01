@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_search_query.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_routes.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
@@ -9,13 +10,19 @@ import '../../routes/subscription_arguments.dart';
 import '../subscription_sticky_cta.dart';
 import 'package_benefits_section.dart';
 import 'package_detail_header_card.dart';
+import 'package_how_it_works_card.dart';
+import 'package_price_note_card.dart';
 import 'package_provider_office_card.dart';
 import 'package_route_limits_card.dart';
 import 'package_terms_card.dart';
 
-/// Step two: what the chosen package includes and who provides it, ending at a
-/// route picker — a subscription is always bound to a route, so the rider
-/// chooses one before they can buy.
+/// Step two: what the chosen package is, how buying it works, and who provides
+/// it — ending at a route picker, because a subscription is always bound to a
+/// route and priced on it.
+///
+/// The blocks run in the order a rider's questions arrive: which plan is this,
+/// what does it cost, how do I get it, what do I actually get, whose is it, and
+/// what am I agreeing to.
 class PackageDetailsView extends StatelessWidget {
   const PackageDetailsView({
     super.key,
@@ -46,33 +53,52 @@ class PackageDetailsView extends StatelessWidget {
     final package = state.selectedPackage;
     if (package == null) return const SizedBox.shrink();
 
-    final ctaLabel = context.l10n.packages_chooseTripToSubscribe;
+    final l10n = context.l10n;
 
     return Column(
       children: [
         Expanded(
           child: ListView(
             physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.fromLTRB(
+              ClientSpacing.md,
+              ClientSpacing.sm,
+              ClientSpacing.md,
+              ClientSpacing.lg,
+            ),
             children: [
-              PackageDetailHeaderCard(package: package),
-              const SizedBox(height: 18),
-              PackageProviderOfficeCard(package: package),
-              const SizedBox(height: 20),
-              const PackageBenefitsSection(),
-              const SizedBox(height: 20),
-              PackageRouteLimitsCard(package: package),
-              const SizedBox(height: 20),
-              PackageTermsCard(package: package),
-              const SizedBox(height: 40),
+              _Block(child: PackageDetailHeaderCard(package: package)),
+              const _Block(child: PackagePriceNoteCard()),
+              _Block(child: PackageProviderOfficeCard(package: package)),
+              const _Block(child: PackageHowItWorksCard()),
+              const _Block(child: PackageBenefitsSection()),
+              _Block(child: PackageRouteLimitsCard(package: package)),
+              _Block(child: PackageTermsCard(package: package)),
             ],
           ),
         ),
         SubscriptionStickyCta(
-          label: ctaLabel,
+          label: l10n.packages_chooseTripToSubscribe,
+          note: l10n.packages_priceAtBooking,
           onPressed: () => _onSubscribe(context),
         ),
       ],
+    );
+  }
+}
+
+/// Uniform spacing between blocks, so a block never has to know what follows
+/// it.
+class _Block extends StatelessWidget {
+  const _Block({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: ClientSpacing.md),
+      child: child,
     );
   }
 }

@@ -33,6 +33,8 @@ class TripHistoryDetailPage extends StatelessWidget {
     return BlocProvider<TripHistoryDetailCubit>(
       create: (_) => captainGetIt<TripHistoryDetailCubit>()..load(trip.id),
       child: Scaffold(
+         //     backgroundColor: CaptainColors.backgroundFor(context),
+
         backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
         body: CustomScrollView(
           slivers: [

@@ -598,15 +598,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get packages_termsText1 =>
-      '1. Packages cannot be refunded once activated.';
+      'Packages cannot be refunded once activated.';
 
   @override
   String get packages_termsText2 =>
-      '2. Seats must be confirmed at least 2 hours before trip.';
+      'Seats must be confirmed at least 2 hours before trip.';
 
   @override
   String packages_termsText3(int count) {
-    return '3. Package holds up to $count reservations for the selected route.';
+    return 'Package holds up to $count reservations for the selected route.';
   }
 
   @override
@@ -4892,4 +4892,50 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get offices_searchAllRoutes => 'Search all routes';
+
+  @override
+  String get offices_new => 'New';
+
+  @override
+  String get offices_statDepartures => 'Departures';
+
+  @override
+  String get offices_statRoutes => 'Routes';
+
+  @override
+  String get offices_statPackages => 'Packages';
+
+  @override
+  String get packages_priceAtBooking => 'Price shown when you pick a trip';
+
+  @override
+  String get packages_priceDependsTitle => 'Priced on the route you pick';
+
+  @override
+  String get packages_priceDependsBody =>
+      'Every route has its own fare, so this package is priced once you choose a trip.';
+
+  @override
+  String get packages_howItWorks => 'How it works';
+
+  @override
+  String get packages_step1Title => 'Pick your route';
+
+  @override
+  String get packages_step1Body =>
+      'Choose the trip you commute on — the package binds to that route.';
+
+  @override
+  String get packages_step2Title => 'See your price';
+
+  @override
+  String get packages_step2Body =>
+      'The package is priced for that exact route, then you pay once.';
+
+  @override
+  String get packages_step3Title => 'Ride your seats';
+
+  @override
+  String get packages_step3Body =>
+      'Book any departure on the route until your rides or days run out.';
 }

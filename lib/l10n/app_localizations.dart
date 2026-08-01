@@ -1199,19 +1199,19 @@ abstract class AppLocalizations {
   /// No description provided for @packages_termsText1.
   ///
   /// In en, this message translates to:
-  /// **'1. Packages cannot be refunded once activated.'**
+  /// **'Packages cannot be refunded once activated.'**
   String get packages_termsText1;
 
   /// No description provided for @packages_termsText2.
   ///
   /// In en, this message translates to:
-  /// **'2. Seats must be confirmed at least 2 hours before trip.'**
+  /// **'Seats must be confirmed at least 2 hours before trip.'**
   String get packages_termsText2;
 
   /// No description provided for @packages_termsText3.
   ///
   /// In en, this message translates to:
-  /// **'3. Package holds up to {count} reservations for the selected route.'**
+  /// **'Package holds up to {count} reservations for the selected route.'**
   String packages_termsText3(int count);
 
   /// No description provided for @packages_subscriptionCost.
@@ -8737,6 +8737,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Search all routes'**
   String get offices_searchAllRoutes;
+
+  /// No description provided for @offices_new.
+  ///
+  /// In en, this message translates to:
+  /// **'New'**
+  String get offices_new;
+
+  /// No description provided for @offices_statDepartures.
+  ///
+  /// In en, this message translates to:
+  /// **'Departures'**
+  String get offices_statDepartures;
+
+  /// No description provided for @offices_statRoutes.
+  ///
+  /// In en, this message translates to:
+  /// **'Routes'**
+  String get offices_statRoutes;
+
+  /// No description provided for @offices_statPackages.
+  ///
+  /// In en, this message translates to:
+  /// **'Packages'**
+  String get offices_statPackages;
+
+  /// No description provided for @packages_priceAtBooking.
+  ///
+  /// In en, this message translates to:
+  /// **'Price shown when you pick a trip'**
+  String get packages_priceAtBooking;
+
+  /// No description provided for @packages_priceDependsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Priced on the route you pick'**
+  String get packages_priceDependsTitle;
+
+  /// No description provided for @packages_priceDependsBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Every route has its own fare, so this package is priced once you choose a trip.'**
+  String get packages_priceDependsBody;
+
+  /// No description provided for @packages_howItWorks.
+  ///
+  /// In en, this message translates to:
+  /// **'How it works'**
+  String get packages_howItWorks;
+
+  /// No description provided for @packages_step1Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick your route'**
+  String get packages_step1Title;
+
+  /// No description provided for @packages_step1Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose the trip you commute on — the package binds to that route.'**
+  String get packages_step1Body;
+
+  /// No description provided for @packages_step2Title.
+  ///
+  /// In en, this message translates to:
+  /// **'See your price'**
+  String get packages_step2Title;
+
+  /// No description provided for @packages_step2Body.
+  ///
+  /// In en, this message translates to:
+  /// **'The package is priced for that exact route, then you pay once.'**
+  String get packages_step2Body;
+
+  /// No description provided for @packages_step3Title.
+  ///
+  /// In en, this message translates to:
+  /// **'Ride your seats'**
+  String get packages_step3Title;
+
+  /// No description provided for @packages_step3Body.
+  ///
+  /// In en, this message translates to:
+  /// **'Book any departure on the route until your rides or days run out.'**
+  String get packages_step3Body;
 }
 
 class _AppLocalizationsDelegate
