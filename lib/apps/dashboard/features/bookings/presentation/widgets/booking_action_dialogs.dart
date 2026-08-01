@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
 /// Confirms approval of a submitted payment. The note is optional and recorded
 /// on the booking's audit notes by `approve_payment`.
@@ -66,7 +67,7 @@ class _ApprovalDialogState extends State<_ApprovalDialog> {
     return ActionDialogShell(
       title: 'تأكيد قبول الدفع',
       icon: Icons.check_circle_outline,
-      color: AppStatusColors.onSuccessContainer,
+      color: context.status(AppStatusTone.success).ink,
       message: widget.message,
       confirmLabel: 'قبول الدفع',
       content: TextField(
@@ -198,7 +199,7 @@ class _ReuploadDialogState extends State<_ReuploadDialog> {
     return ActionDialogShell(
       title: 'طلب إعادة رفع الإيصال',
       icon: Icons.refresh_rounded,
-      color: AppStatusColors.onWarningContainer,
+      color: context.status(AppStatusTone.warning).ink,
       message: widget.message,
       confirmLabel: 'طلب إعادة رفع',
       content: Column(

@@ -96,30 +96,34 @@ class BookingsAnalytics extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final palette = DashboardChartPalette.of(context);
 
     final status = DashboardPanel(
       icon: Icons.donut_large_rounded,
       title: 'الحجوزات حسب الحالة',
       subtitle: 'توزيع الحجوزات على حالات سير العمل',
-      child: DashboardDonutChart(data: _statusData()),
+      child: DashboardDonutChart(data: _statusData(context)),
     );
     final payment = DashboardPanel(
       icon: Icons.pie_chart_outline_rounded,
       title: 'مدفوع مقابل قيد التحصيل',
       subtitle: 'الحجوزات حسب حالة الدفع',
-      child: DashboardDonutChart(data: _paymentData()),
+      child: DashboardDonutChart(data: _paymentData(palette)),
     );
     final trend = DashboardPanel(
       icon: Icons.show_chart_rounded,
       title: 'اتجاه الحجوزات اليومي',
       subtitle: 'عدد الحجوزات حسب اليوم',
-      child: DashboardLineChart(data: _trendData(), lineColor: scheme.primary),
+      child: DashboardLineChart(
+        data: _trendData(palette),
+        lineColor: scheme.primary,
+      ),
     );
     final routes = DashboardPanel(
       icon: Icons.leaderboard_rounded,
       title: 'أكثر المسارات حجزاً',
       subtitle: 'أعلى ٦ مسارات حسب عدد الحجوزات',
-      child: DashboardRankedBars(data: _routeData(scheme)),
+      child: DashboardRankedBars(data: _routeData(palette)),
     );
 
     return LayoutBuilder(
@@ -162,7 +166,7 @@ class BookingsAnalytics extends StatelessWidget {
     );
   }
 
-  List<ChartDatum> _statusData() {
+  List<ChartDatum> _statusData(BuildContext context) {
     final counts = <BookingStatus, int>{};
     for (final b in bookings) {
       counts[b.status] = (counts[b.status] ?? 0) + 1;
@@ -175,12 +179,12 @@ class BookingsAnalytics extends StatelessWidget {
             value: counts[status]!.toDouble(),
             // Same colour the status wears on every chip and KPI tile, instead
             // of a second private palette that disagreed with them.
-            color: bookingStatusStyle(status).onContainer,
+            color: bookingStatusStyle(status).resolve(context).accent,
           ),
     ];
   }
 
-  List<ChartDatum> _paymentData() {
+  List<ChartDatum> _paymentData(DashboardChartPalette palette) {
     var paid = 0, pending = 0, cancelled = 0;
     for (final b in bookings) {
       switch (b.paymentStatus) {
@@ -198,22 +202,22 @@ class BookingsAnalytics extends StatelessWidget {
       ChartDatum(
         label: 'مدفوع',
         value: paid.toDouble(),
-        color: DashboardChartPalette.positive,
+        color: palette.positive,
       ),
       ChartDatum(
         label: 'قيد التحصيل',
         value: pending.toDouble(),
-        color: DashboardChartPalette.warning,
+        color: palette.warning,
       ),
       ChartDatum(
         label: 'ملغي/مرفوض',
         value: cancelled.toDouble(),
-        color: DashboardChartPalette.negative,
+        color: palette.negative,
       ),
     ];
   }
 
-  List<ChartDatum> _trendData() {
+  List<ChartDatum> _trendData(DashboardChartPalette palette) {
     final byDay = <DateTime, int>{};
     for (final b in bookings) {
       final d = DateTime(b.createdAt.year, b.createdAt.month, b.createdAt.day);
@@ -225,12 +229,12 @@ class BookingsAnalytics extends StatelessWidget {
         ChartDatum(
           label: '${day.day}/${day.month}',
           value: byDay[day]!.toDouble(),
-          color: DashboardChartPalette.active,
+          color: palette.active,
         ),
     ];
   }
 
-  List<ChartDatum> _routeData(ColorScheme scheme) {
+  List<ChartDatum> _routeData(DashboardChartPalette palette) {
     final counts = <String, int>{};
     for (final b in bookings) {
       final route = b.route.isEmpty ? 'غير محدد' : b.route;
@@ -243,7 +247,7 @@ class BookingsAnalytics extends StatelessWidget {
         ChartDatum(
           label: entry.key,
           value: entry.value.toDouble(),
-          color: DashboardChartPalette.categoryAt(index),
+          color: palette.categoryAt(index),
         ),
     ];
   }

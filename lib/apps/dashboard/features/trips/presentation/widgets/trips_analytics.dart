@@ -19,23 +19,24 @@ class TripsAnalytics extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = DashboardChartPalette.of(context);
     final donut = DashboardPanel(
       icon: Icons.donut_large_rounded,
       title: 'توزيع حالات الرحلات',
       subtitle: 'كل الرحلات حسب الحالة التشغيلية',
-      child: DashboardDonutChart(data: _statusData()),
+      child: DashboardDonutChart(data: _statusData(context)),
     );
     final bars = DashboardPanel(
       icon: Icons.bar_chart_rounded,
       title: 'إشغال الرحلات',
       subtitle: 'عدد الرحلات حسب نسبة الإشغال',
-      child: DashboardBarChart(data: _occupancyData()),
+      child: DashboardBarChart(data: _occupancyData(palette)),
     );
     final routes = DashboardPanel(
       icon: Icons.leaderboard_rounded,
       title: 'أكثر المسارات تشغيلاً',
       subtitle: 'أعلى ٥ مسارات بعدد الرحلات',
-      child: DashboardRankedBars(data: _topRoutes()),
+      child: DashboardRankedBars(data: _topRoutes(palette)),
     );
 
     return LayoutBuilder(
@@ -69,7 +70,7 @@ class TripsAnalytics extends StatelessWidget {
     );
   }
 
-  List<ChartDatum> _statusData() {
+  List<ChartDatum> _statusData(BuildContext context) {
     final counts = <OperationTripStatus, int>{};
     for (final trip in state.trips) {
       counts[trip.status] = (counts[trip.status] ?? 0) + 1;
@@ -80,12 +81,12 @@ class TripsAnalytics extends StatelessWidget {
           ChartDatum(
             label: status.label,
             value: counts[status]!.toDouble(),
-            color: _statusColor(status),
+            color: _statusColor(context, status),
           ),
     ];
   }
 
-  List<ChartDatum> _occupancyData() {
+  List<ChartDatum> _occupancyData(DashboardChartPalette palette) {
     var empty = 0, low = 0, mid = 0, high = 0, full = 0;
     for (final trip in state.trips) {
       if (trip.capacity == 0) continue;
@@ -108,32 +109,20 @@ class TripsAnalytics extends StatelessWidget {
       ChartDatum(
         label: 'فارغة',
         value: empty.toDouble(),
-        color: DashboardChartPalette.negative,
+        color: palette.negative,
       ),
-      ChartDatum(
-        label: 'منخفض',
-        value: low.toDouble(),
-        color: DashboardChartPalette.warning,
-      ),
-      ChartDatum(
-        label: 'متوسط',
-        value: mid.toDouble(),
-        color: DashboardChartPalette.accent,
-      ),
-      ChartDatum(
-        label: 'مرتفع',
-        value: high.toDouble(),
-        color: DashboardChartPalette.active,
-      ),
+      ChartDatum(label: 'منخفض', value: low.toDouble(), color: palette.warning),
+      ChartDatum(label: 'متوسط', value: mid.toDouble(), color: palette.accent),
+      ChartDatum(label: 'مرتفع', value: high.toDouble(), color: palette.active),
       ChartDatum(
         label: 'ممتلئة',
         value: full.toDouble(),
-        color: DashboardChartPalette.positive,
+        color: palette.positive,
       ),
     ];
   }
 
-  List<ChartDatum> _topRoutes() {
+  List<ChartDatum> _topRoutes(DashboardChartPalette palette) {
     final counts = <String, int>{};
     for (final trip in state.trips) {
       counts[trip.route] = (counts[trip.route] ?? 0) + 1;
@@ -145,19 +134,20 @@ class TripsAnalytics extends StatelessWidget {
         ChartDatum(
           label: entry.key,
           value: entry.value.toDouble(),
-          color: DashboardChartPalette.categoryAt(index),
+          color: palette.categoryAt(index),
         ),
     ];
   }
 }
 
-Color _statusColor(OperationTripStatus status) {
+Color _statusColor(BuildContext context, OperationTripStatus status) {
+  final palette = DashboardChartPalette.of(context);
   return switch (status) {
-    OperationTripStatus.scheduled => DashboardChartPalette.neutral,
-    OperationTripStatus.openForBooking => DashboardChartPalette.active,
-    OperationTripStatus.boarding => DashboardChartPalette.warning,
-    OperationTripStatus.inProgress => DashboardChartPalette.accent,
-    OperationTripStatus.completed => DashboardChartPalette.positive,
-    OperationTripStatus.cancelled => DashboardChartPalette.negative,
+    OperationTripStatus.scheduled => palette.neutral,
+    OperationTripStatus.openForBooking => palette.active,
+    OperationTripStatus.boarding => palette.warning,
+    OperationTripStatus.inProgress => palette.accent,
+    OperationTripStatus.completed => palette.positive,
+    OperationTripStatus.cancelled => palette.negative,
   };
 }

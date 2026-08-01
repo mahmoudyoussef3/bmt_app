@@ -56,9 +56,9 @@ class _CaptainRequestRejectDialogState
         children: [
           Text(
             'سيظهر هذا السبب للكابتن في التطبيق.',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: scheme.onSurfaceVariant,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
           ),
           const SizedBox(height: AppSpacing.medium),
           TextField(

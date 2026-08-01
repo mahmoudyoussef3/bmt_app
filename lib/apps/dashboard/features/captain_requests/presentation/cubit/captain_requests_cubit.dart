@@ -69,9 +69,11 @@ class CaptainRequestsCubit extends Cubit<CaptainRequestsState> {
     } catch (e) {
       final current = state;
       if (current is CaptainRequestsLoaded) {
-        emit(current.copyWith(
-          actionError: e.toString().replaceAll('Exception: ', ''),
-        ));
+        emit(
+          current.copyWith(
+            actionError: e.toString().replaceAll('Exception: ', ''),
+          ),
+        );
       }
     }
   }

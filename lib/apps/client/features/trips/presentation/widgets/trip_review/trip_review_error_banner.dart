@@ -16,15 +16,15 @@ class TripReviewErrorBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: ClientColors.journeyRedLight,
+        color: ClientColors.journeyRedLightFor(context),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
         children: [
-          const Icon(
+          Icon(
             Icons.error_outline_rounded,
             size: 18,
-            color: ClientColors.journeyRed,
+            color: ClientColors.onJourneyRedFor(context),
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -32,7 +32,7 @@ class TripReviewErrorBanner extends StatelessWidget {
               tripReviewFailureLabel(context, failure),
               style: ClientTypography.bodySmall(
                 context,
-              ).copyWith(color: ClientColors.onJourneyRed),
+              ).copyWith(color: ClientColors.onJourneyRedFor(context)),
             ),
           ),
         ],

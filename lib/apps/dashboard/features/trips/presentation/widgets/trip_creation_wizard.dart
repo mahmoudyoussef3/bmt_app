@@ -13,6 +13,7 @@ import '../../shared/presentation/widgets/trip_fare_controllers.dart';
 import '../../shared/presentation/widgets/trip_fare_fields.dart';
 import '../../trip_creation/domain/entities/trip_driver_option.dart';
 import '../../trip_creation/presentation/cubit/trip_creation_cubit.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
 class TripCreationWizardDialog extends StatelessWidget {
   const TripCreationWizardDialog({
@@ -41,9 +42,9 @@ class TripCreationWizardDialog extends StatelessWidget {
         } else if (state is TripCreationSuccess) {
           Navigator.of(context).pop();
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('تم إنشاء الرحلة بنجاح'),
-              backgroundColor: AppStatusColors.onSuccessContainer,
+            SnackBar(
+              content: const Text('تم إنشاء الرحلة بنجاح'),
+              backgroundColor: context.status(AppStatusTone.success).ink,
               duration: Duration(seconds: 4),
             ),
           );

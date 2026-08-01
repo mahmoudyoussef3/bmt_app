@@ -1,129 +1,361 @@
 import 'package:flutter/material.dart';
 
+import 'app_dark_colors.dart';
+import 'app_light_colors.dart';
+
 /// Centralized, semantic color palette used across the app.
-/// Client app light: `#FAFAF5` background, `#2563EB` primary.
-/// Client app dark: `#1F1F1F` background, `#00D9FF` primary.
+///
+/// **Neither half of this class is defined here any more.** Every light
+/// constant forwards to [AppLightColors] and every `*Dark` constant to
+/// [AppDarkColors] — the two palettes all three apps are drawn in. The aliases
+/// stay so existing call sites keep compiling, but new code should read those
+/// classes (or, better, the [ColorScheme]) directly.
+///
+/// The light half used to carry its own values, and they were the odd ones out:
+/// a warm cream page (`#FAFAF5`) under cards that the client and captain apps
+/// painted on cool slate, an orange `accent` that appeared in no other app, and
+/// a `secondary` cyan a shade off the one the journey palette uses. Forwarding
+/// is what stops that drifting back.
 class AppColors {
   AppColors._();
 
-  // Light theme
-  static const Color primary = Color(0xFF2563EB);
-  static const Color primaryForeground = Color(0xFFFFFFFF);
+  // Light theme — all forwarded to [AppLightColors].
+  static const Color primary = AppLightColors.primary;
+  static const Color primaryForeground = AppLightColors.onPrimary;
 
-  static const Color secondary = Color(0xFF06B6D4);
-  static const Color secondaryForeground = Color(0xFFFFFFFF);
+  /// The positive/"confirmed" role. Cyan, not the old `#06B6D4`: the whole
+  /// system keeps success inside the brand's blue family.
+  static const Color secondary = AppLightColors.success;
+  static const Color secondaryForeground = AppLightColors.onFilled;
 
-  static const Color accent = Color(0xFFFB923C);
-  static const Color accentForeground = Color(0xFFFFFFFF);
+  /// Was an orange (`#FB923C`) that existed nowhere else in the product. The
+  /// tertiary accent is the violet the client app reserves for packages and
+  /// subscriptions.
+  static const Color accent = AppLightColors.special;
+  static const Color accentForeground = AppLightColors.onFilled;
 
-  static const Color background = Color(0xFFFAFAF5);
-  static const Color card = Color(0xFFFFFFFF);
-  static const Color popover = Color(0xFFFFFFFF);
+  static const Color background = AppLightColors.background;
+  static const Color card = AppLightColors.surface;
+  static const Color popover = AppLightColors.surface;
 
-  static const Color foreground = Color(0xFF1F2937);
-  static const Color cardForeground = Color(0xFF1F2937);
-  static const Color popoverForeground = Color(0xFF1F2937);
+  static const Color foreground = AppLightColors.onSurface;
+  static const Color cardForeground = AppLightColors.onSurface;
+  static const Color popoverForeground = AppLightColors.onSurface;
 
-  static const Color muted = Color(0xFFF0F0EB);
-  static const Color mutedForeground = Color(0xFF6B7280);
-  static const Color border = Color(0xFFE5E7EB);
-  static const Color input = Color(0xFFFFFFFF);
+  static const Color muted = AppLightColors.surfaceHighest;
+  static const Color mutedForeground = AppLightColors.onSurfaceMuted;
+  static const Color border = AppLightColors.border;
+  static const Color input = AppLightColors.surface;
 
-  static const Color destructive = Color(0xFFDC2626);
-  static const Color destructiveForeground = Color(0xFFFFFFFF);
+  static const Color destructive = AppLightColors.danger;
+  static const Color destructiveForeground = AppLightColors.onDanger;
 
-  static const Color ring = Color(0xFF2563EB);
+  static const Color ring = AppLightColors.primaryAccent;
 
-  // Dark theme
-  static const Color primaryDark = Color(0xFF00D9FF);
-  static const Color primaryForegroundDark = Color(0xFF1F1F1F);
+  // Dark theme — aliases onto the unified palette in [AppDarkColors].
+  static const Color primaryDark = AppDarkColors.primary;
+  static const Color primaryForegroundDark = AppDarkColors.onPrimary;
 
-  static const Color secondaryDark = Color(0xFF06B6D4);
-  static const Color secondaryForegroundDark = Color(0xFFF2F2F2);
+  static const Color secondaryDark = AppDarkColors.successInk;
+  static const Color secondaryForegroundDark = AppDarkColors.background;
 
-  static const Color accentDark = Color(0xFFFB923C);
-  static const Color accentForegroundDark = Color(0xFF1F1F1F);
+  static const Color accentDark = AppDarkColors.primaryAccent;
+  static const Color accentForegroundDark = AppDarkColors.background;
 
-  static const Color backgroundDark = Color(0xFF1F1F1F);
-  static const Color cardDark = Color(0xFF2D2D3D);
-  static const Color popoverDark = Color(0xFF2D2D3D);
+  static const Color backgroundDark = AppDarkColors.background;
+  static const Color cardDark = AppDarkColors.surface;
+  static const Color popoverDark = AppDarkColors.surface;
 
-  static const Color foregroundDark = Color(0xFFF2F2F2);
-  static const Color mutedDark = Color(0xFF4A4A5A);
-  static const Color mutedForegroundDark = Color(0xFFA6A6A6);
-  static const Color borderDark = Color(0xFF454555);
-  static const Color inputDark = Color(0xFF383848);
+  static const Color foregroundDark = AppDarkColors.onSurface;
+  static const Color mutedDark = AppDarkColors.surfaceHighest;
+  static const Color mutedForegroundDark = AppDarkColors.onSurfaceMuted;
+  static const Color borderDark = AppDarkColors.border;
+  static const Color inputDark = AppDarkColors.surfaceHighest;
 
-  static const Color destructiveDark = Color(0xFFDC2626);
-  static const Color ringDark = Color(0xFF00D9FF);
+  static const Color destructiveDark = AppDarkColors.danger;
+  static const Color ringDark = AppDarkColors.primaryAccent;
 }
 
-/// Semantic status color pairs — all WCAG AA 4.5:1 compliant on their own container.
-/// Use [container] as chip background, [onContainer] as chip text/icon color.
+/// Semantic status color pairs — all WCAG AA 4.5:1 compliant on their own
+/// container. Use [container] as chip background, [onContainer] as chip
+/// text/icon color.
+///
+/// These are the **light-mode** halves of the six roles and now forward to
+/// [AppLightColors], so a status chip in the dashboard is the same colour as
+/// the same status in the client and captain apps. The dark halves live in
+/// [AppDarkColors]; [AppStatusStyle] resolves between them.
+///
+/// Success was green here (`#DCFCE7` / `#166534`) while both mobile apps had
+/// already moved the positive role to cyan. That is a semantic split, not just
+/// a visual one — the same "approved" badge rendered green on the dashboard and
+/// cyan in the app it was approving something for.
 class AppStatusColors {
   AppStatusColors._();
 
-  // Success (green)
-  static const Color successContainer = Color(0xFFDCFCE7); // green-100
-  static const Color onSuccessContainer = Color(0xFF166534); // green-800
+  // Success (cyan — the brand-family positive, not green)
+  static const Color successContainer = AppLightColors.successContainer;
+  static const Color onSuccessContainer = AppLightColors.onSuccessContainer;
 
   // Warning (amber)
-  static const Color warningContainer = Color(0xFFFEF9C3); // yellow-100
-  static const Color onWarningContainer = Color(0xFF854D0E); // yellow-800
+  static const Color warningContainer = AppLightColors.warningContainer;
+  static const Color onWarningContainer = AppLightColors.onWarningContainer;
 
   // Error / danger (red)
-  static const Color errorContainer = Color(0xFFFEE2E2); // red-100
-  static const Color onErrorContainer = Color(0xFF991B1B); // red-800
+  static const Color errorContainer = AppLightColors.dangerContainer;
+  static const Color onErrorContainer = AppLightColors.onDangerContainer;
 
   // Info (blue)
-  static const Color infoContainer = Color(0xFFDBEAFE); // blue-100
-  static const Color onInfoContainer = Color(0xFF1E40AF); // blue-800
+  static const Color infoContainer = AppLightColors.infoContainer;
+  static const Color onInfoContainer = AppLightColors.onInfoContainer;
 
-  // Neutral (gray)
-  static const Color neutralContainer = Color(0xFFF3F4F6); // gray-100
-  static const Color onNeutralContainer = Color(0xFF374151); // gray-700
+  // Neutral (slate)
+  static const Color neutralContainer = AppLightColors.neutralContainer;
+  static const Color onNeutralContainer = AppLightColors.onNeutralContainer;
 
-  // Special / accent (purple — used for "contacted" state)
-  static const Color specialContainer = Color(0xFFF3E8FF); // purple-100
-  static const Color onSpecialContainer = Color(0xFF6B21A8); // purple-800
+  // Special / accent (violet — packages, subscriptions, "contacted")
+  static const Color specialContainer = AppLightColors.specialContainer;
+  static const Color onSpecialContainer = AppLightColors.onSpecialContainer;
 }
 
+/// The six status roles, so a caller can ask for one instead of naming a colour.
+enum AppStatusTone { success, warning, error, info, neutral, special }
+
+/// A status colour set resolved for the current brightness.
+///
+/// The constants in [AppStatusColors] are light-mode tints — a `#DCFCE7` chip
+/// on a `#0F172A` page is a lit panel in a dark room. This resolves the same six
+/// roles against the theme, so a status chip is legible in both modes without
+/// every call site writing its own `isDark` branch.
+///
+/// [tint] is the chip/container fill, [ink] the text and icon on it, and
+/// [accent] the standalone mark — a dot, a border, a bare status label with no
+/// container behind it.
+@immutable
+class AppStatusStyle {
+  const AppStatusStyle({
+    required this.tint,
+    required this.ink,
+    required this.accent,
+  });
+
+  final Color tint;
+  final Color ink;
+  final Color accent;
+
+  static AppStatusStyle of(BuildContext context, AppStatusTone tone) {
+    return resolve(Theme.of(context).brightness, tone);
+  }
+
+  static AppStatusStyle resolve(Brightness brightness, AppStatusTone tone) {
+    return brightness == Brightness.dark ? _dark(tone) : _light(tone);
+  }
+
+  static AppStatusStyle _dark(AppStatusTone tone) => switch (tone) {
+    AppStatusTone.success => const AppStatusStyle(
+      tint: AppDarkColors.successContainer,
+      ink: AppDarkColors.onSuccessContainer,
+      accent: AppDarkColors.successInk,
+    ),
+    AppStatusTone.warning => const AppStatusStyle(
+      tint: AppDarkColors.warningContainer,
+      ink: AppDarkColors.onWarningContainer,
+      accent: AppDarkColors.warningInk,
+    ),
+    AppStatusTone.error => const AppStatusStyle(
+      tint: AppDarkColors.dangerContainer,
+      ink: AppDarkColors.onDangerContainer,
+      accent: AppDarkColors.dangerInk,
+    ),
+    AppStatusTone.info => const AppStatusStyle(
+      tint: AppDarkColors.infoContainer,
+      ink: AppDarkColors.onInfoContainer,
+      accent: AppDarkColors.primaryAccent,
+    ),
+    AppStatusTone.neutral => const AppStatusStyle(
+      tint: AppDarkColors.neutralContainer,
+      ink: AppDarkColors.onNeutralContainer,
+      accent: AppDarkColors.onSurfaceMuted,
+    ),
+    AppStatusTone.special => const AppStatusStyle(
+      tint: AppDarkColors.specialContainer,
+      ink: AppDarkColors.onSpecialContainer,
+      accent: AppDarkColors.special,
+    ),
+  };
+
+  /// The light halves. [accent] is the mid-weight `*Ink` tone rather than the
+  /// container's own ink: a standalone dot or bare label has the page behind
+  /// it, not the container, so `#164E63`-on-white reads as near-black text
+  /// rather than as a status.
+  static AppStatusStyle _light(AppStatusTone tone) => switch (tone) {
+    AppStatusTone.success => const AppStatusStyle(
+      tint: AppLightColors.successContainer,
+      ink: AppLightColors.onSuccessContainer,
+      accent: AppLightColors.successInk,
+    ),
+    AppStatusTone.warning => const AppStatusStyle(
+      tint: AppLightColors.warningContainer,
+      ink: AppLightColors.onWarningContainer,
+      accent: AppLightColors.warningInk,
+    ),
+    AppStatusTone.error => const AppStatusStyle(
+      tint: AppLightColors.dangerContainer,
+      ink: AppLightColors.onDangerContainer,
+      accent: AppLightColors.dangerInk,
+    ),
+    AppStatusTone.info => const AppStatusStyle(
+      tint: AppLightColors.infoContainer,
+      ink: AppLightColors.onInfoContainer,
+      accent: AppLightColors.primaryAccent,
+    ),
+    AppStatusTone.neutral => const AppStatusStyle(
+      tint: AppLightColors.neutralContainer,
+      ink: AppLightColors.onNeutralContainer,
+      accent: AppLightColors.onSurfaceMuted,
+    ),
+    AppStatusTone.special => const AppStatusStyle(
+      tint: AppLightColors.specialContainer,
+      ink: AppLightColors.onSpecialContainer,
+      accent: AppLightColors.special,
+    ),
+  };
+}
+
+/// The unified light scheme, built from [AppLightColors].
+///
+/// Stated role for role against [darkColorSchemeFromPalette] so the two themes
+/// are the same structure at two brightnesses. The old version declared only
+/// fourteen roles and let the rest fall back, which is where light mode picked
+/// up its Material defaults: an unset `onSurfaceVariant` resolved to
+/// `onSurface`, collapsing secondary text to full black, and an unset
+/// `errorContainer` resolved to `error`, so every "container" surface came back
+/// saturated red. The dark theme had already been fixed for exactly this; this
+/// is the same fix on the other half.
 ColorScheme lightColorSchemeFromPalette() {
   return const ColorScheme(
     brightness: Brightness.light,
-    primary: AppColors.primary,
-    onPrimary: AppColors.primaryForeground,
-    secondary: AppColors.secondary,
-    onSecondary: AppColors.secondaryForeground,
-    tertiary: AppColors.accent,
-    onTertiary: AppColors.accentForeground,
-    error: AppColors.destructive,
-    onError: AppColors.destructiveForeground,
-    surface: AppColors.card,
-    onSurface: AppColors.foreground,
-    surfaceContainerHighest: AppColors.muted,
-    surfaceContainerLow: AppColors.background,
-    surfaceContainerLowest: AppColors.background,
-    outline: AppColors.border,
+
+    // Brand. [AppLightColors.primary] is the fill tone (white on it clears AA);
+    // ink-weight brand blue is [AppLightColors.primaryAccent].
+    primary: AppLightColors.primary,
+    onPrimary: AppLightColors.onPrimary,
+    primaryContainer: AppLightColors.primaryContainer,
+    onPrimaryContainer: AppLightColors.onPrimaryContainer,
+
+    // Positive states — cyan, not green: all three apps keep "confirmed /
+    // on-time / done" inside the brand's own family.
+    secondary: AppLightColors.success,
+    onSecondary: AppLightColors.onFilled,
+    secondaryContainer: AppLightColors.successContainer,
+    onSecondaryContainer: AppLightColors.onSuccessContainer,
+
+    tertiary: AppLightColors.special,
+    onTertiary: AppLightColors.onFilled,
+    tertiaryContainer: AppLightColors.specialContainer,
+    onTertiaryContainer: AppLightColors.onSpecialContainer,
+
+    error: AppLightColors.danger,
+    onError: AppLightColors.onDanger,
+    errorContainer: AppLightColors.dangerContainer,
+    onErrorContainer: AppLightColors.onDangerContainer,
+
+    // Surfaces. The ladder runs the opposite direction to dark — see
+    // [AppLightColors] — but the role each tier plays is identical, so a widget
+    // that reads `surfaceContainerHighest` for an input fill gets the right
+    // answer in both themes.
+    surface: AppLightColors.surface,
+    onSurface: AppLightColors.onSurface,
+    onSurfaceVariant: AppLightColors.onSurfaceMuted,
+    surfaceDim: AppLightColors.canvas,
+    surfaceBright: AppLightColors.surface,
+    surfaceContainerLowest: AppLightColors.background,
+    surfaceContainerLow: AppLightColors.surfaceLow,
+    surfaceContainer: AppLightColors.surface,
+    surfaceContainerHigh: AppLightColors.surfaceRaised,
+    surfaceContainerHighest: AppLightColors.surfaceHighest,
+
+    outline: AppLightColors.border,
+    outlineVariant: AppLightColors.borderSubtle,
+
+    shadow: AppLightColors.shadow,
+    scrim: AppLightColors.scrim,
+
+    // Surfaces here are explicit tones, so M3's automatic primary-hue tint on
+    // elevated surfaces is switched off — it would push every card faintly
+    // blue on top of a palette that is already deliberately slate-tinted.
+    surfaceTint: Colors.transparent,
+
+    inverseSurface: AppLightColors.onSurface,
+    onInverseSurface: AppLightColors.surface,
+    inversePrimary: AppDarkColors.primaryAccent,
   );
 }
 
+/// The unified dark scheme, built from [AppDarkColors].
+///
+/// Every Material 3 role is stated rather than left to fall back. That matters
+/// more than it sounds: an unset `onSurfaceVariant` resolves to `onSurface`, so
+/// the ~320 call sites using it for secondary text were rendering at full white
+/// and the type hierarchy collapsed; an unset `errorContainer` resolves to
+/// `error`, so "container" surfaces came back as solid saturated red. Both are
+/// now real tones.
+///
+/// `surfaceContainerLowest` is the page background because that is what the
+/// codebase already uses it for (`scaffoldBackgroundColor`, and the pages that
+/// set their own). The ladder climbs from there — see [AppDarkColors].
 ColorScheme darkColorSchemeFromPalette() {
   return const ColorScheme(
     brightness: Brightness.dark,
-    primary: AppColors.primaryDark,
-    onPrimary: AppColors.primaryForegroundDark,
-    secondary: AppColors.secondaryDark,
-    onSecondary: AppColors.secondaryForegroundDark,
-    tertiary: AppColors.accentDark,
-    onTertiary: AppColors.accentForegroundDark,
-    error: AppColors.destructiveDark,
-    onError: AppColors.foregroundDark,
-    surface: AppColors.cardDark,
-    onSurface: AppColors.foregroundDark,
-    surfaceContainerHighest: AppColors.backgroundDark,
-    surfaceContainerLow: AppColors.cardDark,
-    surfaceContainerLowest: AppColors.cardDark,
-    outline: AppColors.borderDark,
+
+    // Brand. [AppDarkColors.primary] is the fill tone (white on it clears AA);
+    // ink-weight brand blue is [AppDarkColors.primaryAccent].
+    primary: AppDarkColors.primary,
+    onPrimary: AppDarkColors.onPrimary,
+    primaryContainer: AppDarkColors.primaryContainer,
+    onPrimaryContainer: AppDarkColors.onPrimaryContainer,
+
+    // Positive states — cyan, not green: both apps keep "confirmed / on-time"
+    // inside the brand's own family.
+    secondary: AppDarkColors.successInk,
+    onSecondary: AppDarkColors.background,
+    secondaryContainer: AppDarkColors.successContainer,
+    onSecondaryContainer: AppDarkColors.onSuccessContainer,
+
+    tertiary: AppDarkColors.special,
+    onTertiary: AppDarkColors.background,
+    tertiaryContainer: AppDarkColors.specialContainer,
+    onTertiaryContainer: AppDarkColors.onSpecialContainer,
+
+    error: AppDarkColors.danger,
+    onError: AppDarkColors.onDanger,
+    errorContainer: AppDarkColors.dangerContainer,
+    onErrorContainer: AppDarkColors.onDangerContainer,
+
+    // Surfaces, lowest tier to highest.
+    surface: AppDarkColors.surface,
+    onSurface: AppDarkColors.onSurface,
+    onSurfaceVariant: AppDarkColors.onSurfaceMuted,
+    surfaceDim: AppDarkColors.canvas,
+    surfaceBright: AppDarkColors.surfaceHighest,
+    surfaceContainerLowest: AppDarkColors.background,
+    surfaceContainerLow: AppDarkColors.surfaceLow,
+    surfaceContainer: AppDarkColors.surface,
+    surfaceContainerHigh: AppDarkColors.surfaceRaised,
+    surfaceContainerHighest: AppDarkColors.surfaceHighest,
+
+    outline: AppDarkColors.border,
+    outlineVariant: AppDarkColors.borderSubtle,
+
+    shadow: AppDarkColors.shadow,
+    scrim: AppDarkColors.scrim,
+
+    // M3 tints every elevated surface with the primary hue by default, which on
+    // this palette turns cards faintly violet. Surfaces here are explicit tones,
+    // so the tint is switched off.
+    surfaceTint: Colors.transparent,
+
+    inverseSurface: AppDarkColors.onSurface,
+    onInverseSurface: AppDarkColors.background,
+    inversePrimary: AppDarkColors.primary,
   );
 }

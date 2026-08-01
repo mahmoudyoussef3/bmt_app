@@ -5,6 +5,7 @@ import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_kpi_card.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_panel.dart';
 
 import '../../domain/entities/dashboard_home_summary.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
 
 /// Fleet health at a glance, from the same [FleetWorkspace] the Fleet module
 /// itself loads — `documentsNeedFollowUpCount` doubles as the "needs
@@ -21,6 +22,7 @@ class FleetSnapshotCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = DashboardChartPalette.of(context);
     final fleet = summary.fleetSummary;
     return DashboardPanel(
       icon: Icons.local_shipping_rounded,
@@ -37,21 +39,21 @@ class FleetSnapshotCard extends StatelessWidget {
             label: 'إجمالي المركبات',
             value: '${fleet.vehiclesCount}',
             icon: Icons.local_shipping_outlined,
-            color: const Color(0xFF0F2747),
+            color: palette.active,
           ),
           DashboardKpiCard(
             label: 'مركبات في مهام نشطة',
             value: '${fleet.activeAssignmentsCount}',
             icon: Icons.route_outlined,
-            color: const Color(0xFF2F80ED),
+            color: palette.active,
           ),
           DashboardKpiCard(
             label: 'مستندات تحتاج متابعة',
             value: '${fleet.documentsNeedFollowUpCount}',
             icon: Icons.description_outlined,
             color: fleet.documentsNeedFollowUpCount > 0
-                ? const Color(0xFFF5A623)
-                : const Color(0xFF22A06B),
+                ? palette.warning
+                : palette.positive,
           ),
         ],
       ),

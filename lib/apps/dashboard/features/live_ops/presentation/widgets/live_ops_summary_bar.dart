@@ -4,6 +4,7 @@ import 'package:bmt_app/core/theme/colors.dart';
 
 import '../../../../core/widgets/dashboard_kpi_card.dart';
 import '../../domain/entities/live_ops_snapshot.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
 /// The at-a-glance headline of the operations center: how many trips are
 /// running, how many are late leaving, how many have lost their tracking feed,
@@ -35,7 +36,7 @@ class LiveOpsSummaryBar extends StatelessWidget {
           label: 'على الطريق',
           value: '${snapshot.inProgressCount}',
           icon: Icons.directions_bus_filled_rounded,
-          color: AppStatusColors.onSuccessContainer,
+          color: context.status(AppStatusTone.success).ink,
           detail: 'رحلات جارية الآن',
         ),
         DashboardKpiCard(
@@ -43,8 +44,8 @@ class LiveOpsSummaryBar extends StatelessWidget {
           value: '$overdue',
           icon: Icons.running_with_errors_rounded,
           color: overdue > 0
-              ? AppStatusColors.onErrorContainer
-              : AppStatusColors.onNeutralContainer,
+              ? context.status(AppStatusTone.error).ink
+              : context.status(AppStatusTone.neutral).ink,
           detail: overdue > 0
               ? 'لم تنطلق بعد موعدها'
               : 'من ${snapshot.boardingCount} في الصعود',
@@ -54,8 +55,8 @@ class LiveOpsSummaryBar extends StatelessWidget {
           value: '$atRisk',
           icon: Icons.location_off_rounded,
           color: atRisk > 0
-              ? AppStatusColors.onWarningContainer
-              : AppStatusColors.onNeutralContainer,
+              ? context.status(AppStatusTone.warning).ink
+              : context.status(AppStatusTone.neutral).ink,
           detail: 'إشارة متأخرة أو مفقودة',
         ),
         DashboardKpiCard(
@@ -63,10 +64,10 @@ class LiveOpsSummaryBar extends StatelessWidget {
           value: '$openIncidents',
           icon: Icons.report_rounded,
           color: snapshot.hasCriticalIncident
-              ? AppStatusColors.onErrorContainer
+              ? context.status(AppStatusTone.error).ink
               : (openIncidents > 0
-                    ? AppStatusColors.onWarningContainer
-                    : AppStatusColors.onNeutralContainer),
+                    ? context.status(AppStatusTone.warning).ink
+                    : context.status(AppStatusTone.neutral).ink),
           // "Open" and "nobody has touched it" are different operational facts;
           // the detail line reports the one that should move an operator.
           detail: snapshot.hasCriticalIncident

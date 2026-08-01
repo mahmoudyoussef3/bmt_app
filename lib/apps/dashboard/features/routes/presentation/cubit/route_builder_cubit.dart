@@ -36,9 +36,14 @@ class RouteBuilderCubit extends Cubit<RouteBuilderState> {
 
   /// Opens the builder on a new route, or on [route] to edit it. [existingCodes]
   /// are the codes already in use so a new route can reserve the next free one.
-  void start({OperationRoute? route, Iterable<String> existingCodes = const []}) {
+  void start({
+    OperationRoute? route,
+    Iterable<String> existingCodes = const [],
+  }) {
     final draft = route == null
-        ? RouteDraft.blank(suggestedCode: RouteIdentity.suggestCode(existingCodes))
+        ? RouteDraft.blank(
+            suggestedCode: RouteIdentity.suggestCode(existingCodes),
+          )
         : RouteDraft.fromRoute(route);
     emit(
       RouteBuilderState(
@@ -121,13 +126,21 @@ class RouteBuilderCubit extends Cubit<RouteBuilderState> {
   void renameStop(int index, String value) {
     final stop = _stopAt(index);
     if (stop == null || stop.name == value) return;
-    emit(state.copyWith(draft: state.draft.replaceStop(index, stop.copyWith(name: value))));
+    emit(
+      state.copyWith(
+        draft: state.draft.replaceStop(index, stop.copyWith(name: value)),
+      ),
+    );
   }
 
   void setStopArea(int index, String value) {
     final stop = _stopAt(index);
     if (stop == null) return;
-    emit(state.copyWith(draft: state.draft.replaceStop(index, stop.copyWith(area: value))));
+    emit(
+      state.copyWith(
+        draft: state.draft.replaceStop(index, stop.copyWith(area: value)),
+      ),
+    );
   }
 
   void setDwellMinutes(int index, int minutes) {
@@ -151,7 +164,10 @@ class RouteBuilderCubit extends Cubit<RouteBuilderState> {
     if (stop == null) return;
     emit(
       state.copyWith(
-        draft: state.draft.replaceStop(index, stop.copyWith(boarding: boarding)),
+        draft: state.draft.replaceStop(
+          index,
+          stop.copyWith(boarding: boarding),
+        ),
       ),
     );
   }
@@ -172,13 +188,7 @@ class RouteBuilderCubit extends Cubit<RouteBuilderState> {
   void removeStop(int index) {
     final draft = state.draft.removeStop(index);
     if (identical(draft, state.draft)) return;
-    emit(
-      state.copyWith(
-        draft: draft,
-        activeIndex: -1,
-        picking: false,
-      ),
-    );
+    emit(state.copyWith(draft: draft, activeIndex: -1, picking: false));
     _scheduleRecalculate();
   }
 
@@ -189,9 +199,7 @@ class RouteBuilderCubit extends Cubit<RouteBuilderState> {
     if (state.draft.stops.length < 2) return;
     emit(
       state.copyWith(
-        draft: state.draft.copyWith(
-          stops: state.draft.stops.reversed.toList(),
-        ),
+        draft: state.draft.copyWith(stops: state.draft.stops.reversed.toList()),
         activeIndex: -1,
         picking: false,
       ),
@@ -250,7 +258,9 @@ class RouteBuilderCubit extends Cubit<RouteBuilderState> {
 
       final schedule = RouteScheduleCalculator.computeStopOffsets(
         legs: geometry.legs,
-        dwellMinutes: state.draft.stops.map((stop) => stop.dwellMinutes).toList(),
+        dwellMinutes: state.draft.stops
+            .map((stop) => stop.dwellMinutes)
+            .toList(),
       );
       emit(
         state.copyWith(

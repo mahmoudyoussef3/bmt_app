@@ -4,6 +4,7 @@ import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_kpi_card.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/operation_trip.dart';
 
 import '../../domain/entities/dashboard_home_summary.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
 
 /// The four numbers an operator needs within five seconds of landing: today's
 /// trips, today's bookings, today's revenue, and how full those trips are.
@@ -18,6 +19,7 @@ class HomeKpiGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = DashboardChartPalette.of(context);
     final scheme = Theme.of(context).colorScheme;
     final cancelledToday = summary.tripsCountByStatus(
       OperationTripStatus.cancelled,
@@ -29,16 +31,18 @@ class HomeKpiGrid extends StatelessWidget {
         DashboardKpiCard(
           label: 'رحلات اليوم',
           value: '${summary.todayTripsCount}',
-          detail: cancelledToday > 0 ? '$cancelledToday ملغاة' : 'لا رحلات ملغاة',
+          detail: cancelledToday > 0
+              ? '$cancelledToday ملغاة'
+              : 'لا رحلات ملغاة',
           icon: Icons.directions_bus_filled_rounded,
-          color: const Color(0xFF0F2747),
+          color: palette.active,
         ),
         DashboardKpiCard(
           label: 'الحجوزات اليوم',
           value: '${summary.todayBookingsCount}',
           detail: 'من إجمالي ${summary.bookings.length} حجز',
           icon: Icons.event_seat_rounded,
-          color: const Color(0xFF2F80ED),
+          color: palette.active,
         ),
         DashboardKpiCard(
           label: 'إيرادات اليوم',
@@ -46,7 +50,7 @@ class HomeKpiGrid extends StatelessWidget {
           detail:
               'إجمالي محصّل: ${summary.revenue.grandTotalRevenue.toStringAsFixed(0)} ج.م',
           icon: Icons.payments_rounded,
-          color: const Color(0xFF22A06B),
+          color: palette.positive,
         ),
         DashboardKpiCard(
           label: 'نسبة الإشغال',
@@ -55,9 +59,7 @@ class HomeKpiGrid extends StatelessWidget {
               ? 'لا رحلات اليوم'
               : 'عبر ${summary.todayTripsCount} رحلة',
           icon: Icons.pie_chart_rounded,
-          color: occupancyPercent >= 70
-              ? const Color(0xFF22A06B)
-              : scheme.primary,
+          color: occupancyPercent >= 70 ? palette.positive : scheme.primary,
         ),
       ],
     );

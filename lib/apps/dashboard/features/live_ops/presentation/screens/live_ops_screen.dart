@@ -15,6 +15,7 @@ import '../widgets/incident_queue_section.dart';
 import '../widgets/live_ops_map.dart';
 import '../widgets/live_ops_summary_bar.dart';
 import '../widgets/live_trip_card.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
 /// The Live Operations Center — the dashboard's answer to "what is happening on
 /// the road right now?". It renders the office's active trips with an honest
@@ -287,17 +288,17 @@ class _CriticalBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.medium),
       decoration: BoxDecoration(
-        color: AppStatusColors.errorContainer,
+        color: context.status(AppStatusTone.error).tint,
         borderRadius: BorderRadius.circular(AppTokens.radius),
         border: Border.all(
-          color: AppStatusColors.onErrorContainer.withAlpha(60),
+          color: context.status(AppStatusTone.error).ink.withAlpha(60),
         ),
       ),
       child: Row(
         children: [
-          const Icon(
+          Icon(
             Icons.sos_rounded,
-            color: AppStatusColors.onErrorContainer,
+            color: context.status(AppStatusTone.error).ink,
           ),
           const SizedBox(width: AppSpacing.medium),
           Expanded(
@@ -308,13 +309,13 @@ class _CriticalBanner extends StatelessWidget {
                   'بلاغ طوارئ نشط',
                   style: text.titleSmall?.copyWith(
                     fontWeight: FontWeight.bold,
-                    color: AppStatusColors.onErrorContainer,
+                    color: context.status(AppStatusTone.error).ink,
                   ),
                 ),
                 Text(
                   'أحد الكباتن أرسل بلاغ نجدة — يتطلب تدخلاً فورياً من فريق العمليات.',
                   style: text.bodySmall?.copyWith(
-                    color: AppStatusColors.onErrorContainer,
+                    color: context.status(AppStatusTone.error).ink,
                   ),
                 ),
               ],

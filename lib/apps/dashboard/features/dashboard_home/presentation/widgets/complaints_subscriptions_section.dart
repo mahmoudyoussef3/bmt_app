@@ -9,6 +9,7 @@ import 'package:bmt_app/core/widgets/empty_state.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
 
 import '../../domain/entities/dashboard_home_summary.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
 
 /// Two curated "needs follow-up" queues, same visual family as the trips
 /// panel: open complaints (most urgent first) and subscriptions either
@@ -98,6 +99,7 @@ class _ComplaintRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = DashboardChartPalette.of(context);
     final text = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
     final urgent =
@@ -134,8 +136,8 @@ class _ComplaintRow extends StatelessWidget {
           const SizedBox(width: AppSpacing.small),
           StatusChip(
             label: ticket.status.label,
-            color: urgent ? const Color(0x1AD64545) : null,
-            textColor: urgent ? const Color(0xFFD64545) : null,
+            color: urgent ? palette.negative.withAlpha(26) : null,
+            textColor: urgent ? palette.negative : null,
           ),
         ],
       ),
@@ -150,6 +152,7 @@ class _SubscriptionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = DashboardChartPalette.of(context);
     final text = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
     final pendingPayment =
@@ -189,8 +192,8 @@ class _SubscriptionRow extends StatelessWidget {
             label: pendingPayment
                 ? subscription.status.label
                 : '${subscription.remainingDays} يوم متبقي',
-            color: pendingPayment ? const Color(0x1AF5A623) : null,
-            textColor: pendingPayment ? const Color(0xFFF5A623) : null,
+            color: pendingPayment ? palette.warning.withAlpha(26) : null,
+            textColor: pendingPayment ? palette.warning : null,
           ),
         ],
       ),

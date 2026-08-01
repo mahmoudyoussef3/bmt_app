@@ -125,7 +125,11 @@ class _RatingPill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.star_rounded, size: 13, color: Colors.amber),
+          Icon(
+            Icons.star_rounded,
+            size: 13,
+            color: ClientColors.ratingFor(context),
+          ),
           const SizedBox(width: 3),
           Text(
             office.rating.toStringAsFixed(1),

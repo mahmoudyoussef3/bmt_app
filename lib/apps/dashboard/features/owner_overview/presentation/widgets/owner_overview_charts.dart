@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_panel.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_models.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/dashboard_donut_chart.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/dashboard_line_chart.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/dashboard_ranked_bars.dart';
@@ -17,18 +18,22 @@ class OwnerOverviewCharts extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final palette = DashboardChartPalette.of(context);
 
     final trend = DashboardPanel(
       icon: Icons.show_chart_rounded,
       title: 'اتجاه الإيرادات',
       subtitle: 'إجمالي إيرادات الحجوزات حسب اليوم',
-      child: DashboardLineChart(data: _trendData(), lineColor: scheme.primary),
+      child: DashboardLineChart(
+        data: _trendData(palette),
+        lineColor: scheme.primary,
+      ),
     );
     final clients = DashboardPanel(
       icon: Icons.donut_large_rounded,
       title: 'حالة العملاء المشتركين',
       subtitle: 'نشط مقابل منتهٍ وملغي',
-      child: DashboardDonutChart(data: _clientsData()),
+      child: DashboardDonutChart(data: _clientsData(palette)),
     );
     final plans = DashboardPanel(
       icon: Icons.leaderboard_rounded,
@@ -68,36 +73,36 @@ class OwnerOverviewCharts extends StatelessWidget {
     );
   }
 
-  List<ChartDatum> _trendData() {
+  List<ChartDatum> _trendData(DashboardChartPalette palette) {
     return [
       for (final p in overview.revenueTrend)
         ChartDatum(
           label: '${p.date.day}/${p.date.month}',
           value: p.amount,
-          color: const Color(0xFF2563EB),
+          color: palette.active,
         ),
     ];
   }
 
-  List<ChartDatum> _clientsData() {
+  List<ChartDatum> _clientsData(DashboardChartPalette palette) {
     return [
       if (overview.activeClients > 0)
         ChartDatum(
           label: 'نشط',
           value: overview.activeClients.toDouble(),
-          color: const Color(0xFF16A34A),
+          color: palette.positive,
         ),
       if (overview.expiredClients > 0)
         ChartDatum(
           label: 'منتهٍ',
           value: overview.expiredClients.toDouble(),
-          color: const Color(0xFF64748B),
+          color: palette.neutral,
         ),
       if (overview.cancelledClients > 0)
         ChartDatum(
           label: 'ملغي',
           value: overview.cancelledClients.toDouble(),
-          color: const Color(0xFFDC2626),
+          color: palette.negative,
         ),
     ];
   }

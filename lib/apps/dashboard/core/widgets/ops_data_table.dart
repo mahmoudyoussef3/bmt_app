@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 
@@ -96,7 +97,7 @@ class OpsDataTable extends StatelessWidget {
                           if (entry.key > 0) {
                             yield Divider(
                               height: 1,
-                              color: Theme.of(context).colorScheme.outlineVariant.withAlpha(50),
+                              color: DashboardColors.tableDivider(context),
                             );
                           }
                           yield _HoverableOpsBodyRow(
@@ -169,8 +170,11 @@ class _OpsHeaderRow extends StatelessWidget {
       context,
     ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold);
     return Container(
-      color: scheme.surfaceContainerHighest.withAlpha(90),
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.large, vertical: AppSpacing.medium),
+      color: DashboardColors.tableHeader(context),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.large,
+        vertical: AppSpacing.medium,
+      ),
       child: Row(
         children: columns.asMap().entries.map((e) {
           final col = e.value;
@@ -222,24 +226,38 @@ class _HoverableOpsBodyRowState extends State<_HoverableOpsBodyRow> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return MouseRegion(
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
-        color: _isHovered ? scheme.surfaceContainerHighest.withAlpha(50) : Colors.transparent,
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.large, vertical: AppSpacing.medium),
+        color: _isHovered
+            ? DashboardColors.tableRowHover(context)
+            : Colors.transparent,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.large,
+          vertical: AppSpacing.medium,
+        ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
-          children: widget.cells.asMap().entries.map((e) => _OpsCell(
-            flex: e.key < widget.columns.length ? widget.columns[e.key].flex : 1,
-            trailingGap: e.key < widget.cells.length - 1,
-            alignment: e.key < widget.columns.length && widget.columns[e.key].numeric
-                ? AlignmentDirectional.centerEnd
-                : AlignmentDirectional.centerStart,
-            child: e.value,
-          )).toList(),
+          children: widget.cells
+              .asMap()
+              .entries
+              .map(
+                (e) => _OpsCell(
+                  flex: e.key < widget.columns.length
+                      ? widget.columns[e.key].flex
+                      : 1,
+                  trailingGap: e.key < widget.cells.length - 1,
+                  alignment:
+                      e.key < widget.columns.length &&
+                          widget.columns[e.key].numeric
+                      ? AlignmentDirectional.centerEnd
+                      : AlignmentDirectional.centerStart,
+                  child: e.value,
+                ),
+              )
+              .toList(),
         ),
       ),
     );

@@ -18,7 +18,9 @@ class CaptainRequestModel extends CaptainRequest {
       id: json['id'] as String,
       fullName: json['full_name'] as String? ?? '',
       phone: json['phone'] as String? ?? '',
-      status: CaptainRequestStatus.fromDb(json['status'] as String? ?? 'pending'),
+      status: CaptainRequestStatus.fromDb(
+        json['status'] as String? ?? 'pending',
+      ),
       note: json['note'] as String?,
       rejectionReason: json['rejection_reason'] as String?,
       driverId: json['driver_id'] as String?,

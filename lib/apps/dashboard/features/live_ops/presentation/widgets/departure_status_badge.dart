@@ -4,6 +4,7 @@ import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 
 import '../../domain/entities/live_ops_snapshot.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
 /// Names how late a trip is against its schedule.
 ///
@@ -28,19 +29,28 @@ class DepartureStatusBadge extends StatelessWidget {
     final (label, colors, icon) = switch (status) {
       DepartureStatus.overdue => (
         'تأخّر الانطلاق ${_delayText(delay)}',
-        (AppStatusColors.errorContainer, AppStatusColors.onErrorContainer),
+        (
+          context.status(AppStatusTone.error).tint,
+          context.status(AppStatusTone.error).ink,
+        ),
         Icons.running_with_errors_rounded,
       ),
       DepartureStatus.due => (
         'موعد الانطلاق الآن',
-        (AppStatusColors.warningContainer, AppStatusColors.onWarningContainer),
+        (
+          context.status(AppStatusTone.warning).tint,
+          context.status(AppStatusTone.warning).ink,
+        ),
         Icons.schedule_rounded,
       ),
       // A trip already on the road only earns a badge if it left late — that is
       // context for the delay a passenger is feeling, not an action item.
       DepartureStatus.departed when delay != null => (
         'انطلقت متأخرة ${_delayText(delay)}',
-        (AppStatusColors.neutralContainer, AppStatusColors.onNeutralContainer),
+        (
+          context.status(AppStatusTone.neutral).tint,
+          context.status(AppStatusTone.neutral).ink,
+        ),
         Icons.history_rounded,
       ),
       _ => (null, null, null),

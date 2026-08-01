@@ -10,6 +10,7 @@ import 'package:bmt_app/core/widgets/progress_bar.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
 
 import '../../domain/entities/dashboard_home_summary.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
 
 /// Merges the spec's "today's trips" and "upcoming trips" into one ranked
 /// list (soonest departure, then highest occupancy): once both are backed by
@@ -46,7 +47,8 @@ class TripsSnapshotSection extends StatelessWidget {
               children: [
                 for (final trip in trips) ...[
                   _TripRow(trip: trip),
-                  if (trip != trips.last) const Divider(height: AppSpacing.large),
+                  if (trip != trips.last)
+                    const Divider(height: AppSpacing.large),
                 ],
               ],
             ),
@@ -63,10 +65,11 @@ class _TripRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
     final scheme = Theme.of(context).colorScheme;
+    final palette = DashboardChartPalette.of(context);
     final occupancy = trip.capacity == 0
         ? 0.0
         : trip.bookedSeats / trip.capacity;
-    final (statusColor, statusBg) = _statusColors(trip.status, scheme);
+    final (statusColor, statusBg) = _statusColors(trip.status, scheme, palette);
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.xSmall),
@@ -84,7 +87,11 @@ class _TripRow extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppSpacing.small),
-              StatusChip(label: trip.status.label, color: statusBg, textColor: statusColor),
+              StatusChip(
+                label: trip.status.label,
+                color: statusBg,
+                textColor: statusColor,
+              ),
             ],
           ),
           const SizedBox(height: AppTokens.radiusSmall / 2),
@@ -93,8 +100,14 @@ class _TripRow extends StatelessWidget {
             runSpacing: 4,
             children: [
               _MetaChip(icon: Icons.access_time_rounded, label: trip.departure),
-              _MetaChip(icon: Icons.person_rounded, label: trip.driver.isEmpty ? 'بدون سائق' : trip.driver),
-              _MetaChip(icon: Icons.local_shipping_outlined, label: trip.vehicle.isEmpty ? 'بدون مركبة' : trip.vehicle),
+              _MetaChip(
+                icon: Icons.person_rounded,
+                label: trip.driver.isEmpty ? 'بدون سائق' : trip.driver,
+              ),
+              _MetaChip(
+                icon: Icons.local_shipping_outlined,
+                label: trip.vehicle.isEmpty ? 'بدون مركبة' : trip.vehicle,
+              ),
             ],
           ),
           const SizedBox(height: AppSpacing.small),
@@ -104,7 +117,9 @@ class _TripRow extends StatelessWidget {
               const SizedBox(width: AppSpacing.small),
               Text(
                 '${trip.bookedSeats}/${trip.capacity}',
-                style: text.labelMedium?.copyWith(color: scheme.onSurfaceVariant),
+                style: text.labelMedium?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
               ),
             ],
           ),
@@ -113,14 +128,28 @@ class _TripRow extends StatelessWidget {
     );
   }
 
-  (Color, Color) _statusColors(OperationTripStatus status, ColorScheme scheme) {
+  (Color, Color) _statusColors(
+    OperationTripStatus status,
+    ColorScheme scheme,
+    DashboardChartPalette palette,
+  ) {
     return switch (status) {
-      OperationTripStatus.inProgress ||
-      OperationTripStatus.boarding => (const Color(0xFF22A06B), const Color(0x1A22A06B)),
-      OperationTripStatus.completed => (scheme.onSurfaceVariant, scheme.surfaceContainerHighest),
-      OperationTripStatus.cancelled => (const Color(0xFFD64545), const Color(0x1AD64545)),
-      OperationTripStatus.scheduled ||
-      OperationTripStatus.openForBooking => (const Color(0xFF2F80ED), const Color(0x1A2F80ED)),
+      OperationTripStatus.inProgress || OperationTripStatus.boarding => (
+        palette.positive,
+        palette.positive.withAlpha(26),
+      ),
+      OperationTripStatus.completed => (
+        scheme.onSurfaceVariant,
+        scheme.surfaceContainerHighest,
+      ),
+      OperationTripStatus.cancelled => (
+        palette.negative,
+        palette.negative.withAlpha(26),
+      ),
+      OperationTripStatus.scheduled || OperationTripStatus.openForBooking => (
+        palette.active,
+        palette.active.withAlpha(26),
+      ),
     };
   }
 }

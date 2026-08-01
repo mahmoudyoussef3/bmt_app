@@ -6,6 +6,7 @@ import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
 
 import '../../domain/entities/subscription_plan.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
 class PlanCard extends StatelessWidget {
   final SubscriptionPlan plan;
@@ -34,7 +35,7 @@ class PlanCard extends StatelessWidget {
               Expanded(
                 child: Text(plan.title, style: theme.textTheme.titleLarge),
               ),
-              _statusChip(),
+              _statusChip(context),
             ],
           ),
           if (plan.subtitle.isNotEmpty) ...[
@@ -77,7 +78,7 @@ class PlanCard extends StatelessWidget {
                   icon: const Icon(Icons.delete_outline, size: 18),
                   label: const Text('حذف'),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppStatusColors.onErrorContainer,
+                    foregroundColor: context.status(AppStatusTone.error).ink,
                   ),
                 ),
               ],
@@ -88,11 +89,11 @@ class PlanCard extends StatelessWidget {
     );
   }
 
-  Widget _statusChip() {
+  Widget _statusChip(BuildContext context) {
     final color = switch (plan.status) {
-      PlanStatus.active => AppStatusColors.onSuccessContainer,
-      PlanStatus.paused => AppStatusColors.onWarningContainer,
-      PlanStatus.archived => AppStatusColors.onNeutralContainer,
+      PlanStatus.active => context.status(AppStatusTone.success).ink,
+      PlanStatus.paused => context.status(AppStatusTone.warning).ink,
+      PlanStatus.archived => context.status(AppStatusTone.neutral).ink,
     };
     return StatusChip(
       label: plan.status.label,

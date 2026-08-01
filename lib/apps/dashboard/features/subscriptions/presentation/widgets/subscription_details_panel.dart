@@ -11,6 +11,7 @@ import '../cubit/subscriptions_cubit.dart';
 import '../cubit/subscriptions_state.dart';
 import 'subscription_formatting.dart';
 import 'subscription_rides_widget.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
 /// Everything known about one subscriber, plus every operation the office can
 /// run on them. Lives beside the list on desktop (MasterDetailLayout), and
@@ -165,7 +166,7 @@ class _MoneyPanel extends StatelessWidget {
             child: _Amount(
               label: 'المدفوع',
               value: subscriptionMoney(subscription.paidAmount),
-              color: AppStatusColors.onSuccessContainer,
+              color: context.status(AppStatusTone.success).ink,
             ),
           ),
           Expanded(
@@ -173,8 +174,8 @@ class _MoneyPanel extends StatelessWidget {
               label: 'المتبقي',
               value: subscriptionMoney(outstanding),
               color: outstanding > 0
-                  ? AppStatusColors.onErrorContainer
-                  : AppStatusColors.onNeutralContainer,
+                  ? context.status(AppStatusTone.error).ink
+                  : context.status(AppStatusTone.neutral).ink,
             ),
           ),
         ],
@@ -397,7 +398,7 @@ class _ActionsPanel extends StatelessWidget {
             style: OutlinedButton.styleFrom(
               foregroundColor: cancelled
                   ? null
-                  : AppStatusColors.onErrorContainer,
+                  : context.status(AppStatusTone.error).ink,
             ),
           ),
         ],
@@ -453,7 +454,7 @@ class _ActionsPanel extends StatelessWidget {
             onPressed: () => Navigator.pop(dialogContext, true),
             style: destructive
                 ? FilledButton.styleFrom(
-                    backgroundColor: AppStatusColors.onErrorContainer,
+                    backgroundColor: context.status(AppStatusTone.error).ink,
                   )
                 : null,
             child: const Text('تأكيد'),

@@ -49,30 +49,40 @@ abstract final class ClientMotion {
   static const Curve curve = Curves.easeOutCubic;
 }
 
+/// The three lift levels a client surface can sit at.
+///
+/// The alphas below are light-mode values and are scaled by
+/// [ClientColors.shadowAlphaScaleFor] before use. A shadow works by darkening
+/// what is behind it, so an 8/255 near-black over a white page is a visible
+/// edge while the same shadow over a slate page is nothing at all — dark mode
+/// needs several times the opacity to produce the same separation.
 abstract final class ClientElevation {
   const ClientElevation._();
 
-  static List<BoxShadow> sm(BuildContext context) => [
-    BoxShadow(
-      color: ClientColors.shadowFor(context).withAlpha(8),
-      blurRadius: 16,
-      offset: const Offset(0, 4),
-    ),
-  ];
+  static List<BoxShadow> sm(BuildContext context) =>
+      _shadow(context, alpha: 8, blur: 16, dy: 4);
 
-  static List<BoxShadow> md(BuildContext context) => [
-    BoxShadow(
-      color: ClientColors.shadowFor(context).withAlpha(12),
-      blurRadius: 24,
-      offset: const Offset(0, 8),
-    ),
-  ];
+  static List<BoxShadow> md(BuildContext context) =>
+      _shadow(context, alpha: 12, blur: 24, dy: 8);
 
-  static List<BoxShadow> lg(BuildContext context) => [
-    BoxShadow(
-      color: ClientColors.shadowFor(context).withAlpha(16),
-      blurRadius: 40,
-      offset: const Offset(0, 16),
-    ),
-  ];
+  static List<BoxShadow> lg(BuildContext context) =>
+      _shadow(context, alpha: 16, blur: 40, dy: 16);
+
+  static List<BoxShadow> _shadow(
+    BuildContext context, {
+    required int alpha,
+    required double blur,
+    required double dy,
+  }) {
+    final scaled = (alpha * ClientColors.shadowAlphaScaleFor(context))
+        .round()
+        .clamp(0, 255);
+    return [
+      BoxShadow(
+        color: ClientColors.shadowFor(context).withAlpha(scaled),
+        blurRadius: blur,
+        offset: Offset(0, dy),
+      ),
+    ];
+  }
 }

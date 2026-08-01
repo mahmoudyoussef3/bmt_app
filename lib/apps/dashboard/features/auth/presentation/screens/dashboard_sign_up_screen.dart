@@ -70,12 +70,14 @@ class _DashboardSignUpScreenState extends State<DashboardSignUpScreen> {
         body: BlocConsumer<DashboardAuthCubit, DashboardAuthState>(
           listener: (context, state) {
             if (state is DashboardAuthError) {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: Text(state.message),
-                backgroundColor: scheme.error,
-                behavior: SnackBarBehavior.floating,
-                duration: const Duration(seconds: 6),
-              ));
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.message),
+                  backgroundColor: scheme.error,
+                  behavior: SnackBarBehavior.floating,
+                  duration: const Duration(seconds: 6),
+                ),
+              );
               context.read<DashboardAuthCubit>().resetError();
             }
           },
@@ -86,7 +88,8 @@ class _DashboardSignUpScreenState extends State<DashboardSignUpScreen> {
                 constraints: const BoxConstraints(maxWidth: 440),
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 40, vertical: 32,
+                    horizontal: 40,
+                    vertical: 32,
                   ),
                   child: Form(
                     key: _formKey,
@@ -102,7 +105,9 @@ class _DashboardSignUpScreenState extends State<DashboardSignUpScreen> {
                               height: 52,
                               decoration: BoxDecoration(
                                 color: scheme.primary,
-                                borderRadius: BorderRadius.circular(AppTokens.radius),
+                                borderRadius: BorderRadius.circular(
+                                  AppTokens.radius,
+                                ),
                               ),
                               child: Icon(
                                 Icons.add_business_rounded,
@@ -116,18 +121,14 @@ class _DashboardSignUpScreenState extends State<DashboardSignUpScreen> {
                         Text(
                           'تسجيل مكتب جديد',
                           textAlign: TextAlign.center,
-                          style: Theme.of(context)
-                              .textTheme
-                              .headlineSmall
+                          style: Theme.of(context).textTheme.headlineSmall
                               ?.copyWith(fontWeight: FontWeight.w700),
                         ),
                         const SizedBox(height: 6),
                         Text(
                           'أنشئ حساب المالك ولوحة تحكم مكتبك',
                           textAlign: TextAlign.center,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodySmall
+                          style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(color: scheme.onSurfaceVariant),
                         ),
                         const SizedBox(height: 36),
@@ -141,7 +142,8 @@ class _DashboardSignUpScreenState extends State<DashboardSignUpScreen> {
                           validator: (v) {
                             final name = v?.trim() ?? '';
                             if (name.length < 3) return 'أدخل اسم المكتب';
-                            if (name.length > 120) return 'اسم المكتب طويل جداً';
+                            if (name.length > 120)
+                              return 'اسم المكتب طويل جداً';
                             return null;
                           },
                         ),
@@ -165,12 +167,13 @@ class _DashboardSignUpScreenState extends State<DashboardSignUpScreen> {
                           autofillHints: const [AutofillHints.newPassword],
                           decoration: InputDecoration(
                             labelText: 'كلمة المرور',
-                            prefixIcon:
-                                const Icon(Icons.lock_outline_rounded),
+                            prefixIcon: const Icon(Icons.lock_outline_rounded),
                             suffixIcon: IconButton(
-                              icon: Icon(_obscure
-                                  ? Icons.visibility_off_outlined
-                                  : Icons.visibility_outlined),
+                              icon: Icon(
+                                _obscure
+                                    ? Icons.visibility_off_outlined
+                                    : Icons.visibility_outlined,
+                              ),
                               onPressed: () =>
                                   setState(() => _obscure = !_obscure),
                             ),
@@ -205,13 +208,15 @@ class _DashboardSignUpScreenState extends State<DashboardSignUpScreen> {
                                     width: 20,
                                     height: 20,
                                     child: CircularProgressIndicator(
-                                        strokeWidth: 2.5),
+                                      strokeWidth: 2.5,
+                                    ),
                                   )
                                 : const Text(
                                     'إنشاء المكتب',
                                     style: TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w700),
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w700,
+                                    ),
                                   ),
                           ),
                         ),
@@ -250,17 +255,20 @@ class _DraftNotice extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.info_outline_rounded,
-              size: 18, color: scheme.onSurfaceVariant),
+          Icon(
+            Icons.info_outline_rounded,
+            size: 18,
+            color: scheme.onSurfaceVariant,
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               'ستتمكن من إدارة مكتبك فوراً. يظهر المكتب لعملاء التطبيق بعد '
               'مراجعته واعتماده من إدارة المنصة.',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(color: scheme.onSurfaceVariant, height: 1.5),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: scheme.onSurfaceVariant,
+                height: 1.5,
+              ),
             ),
           ),
         ],

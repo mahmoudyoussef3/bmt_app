@@ -3,6 +3,7 @@ import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import '../../domain/entities/report_entities.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
 class ReportSidebarSelector extends StatelessWidget {
   final ReportType selectedType;
@@ -33,12 +34,12 @@ class ReportSidebarSelector extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const Text(
+          Text(
             'فئات التقارير',
             style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 13,
-              color: AppStatusColors.onNeutralContainer,
+              color: context.status(AppStatusTone.neutral).ink,
             ),
           ),
           const SizedBox(height: AppSpacing.medium),
@@ -59,7 +60,9 @@ class ReportSidebarSelector extends StatelessWidget {
                     selected: isSelected,
                     onTap: () => onSelect(type),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+                      borderRadius: BorderRadius.circular(
+                        AppTokens.radiusSmall,
+                      ),
                     ),
                     leading: Icon(
                       icons[type] ?? Icons.insert_chart_outlined,

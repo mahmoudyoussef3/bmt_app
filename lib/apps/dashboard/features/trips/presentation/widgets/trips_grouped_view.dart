@@ -7,6 +7,7 @@ import 'package:bmt_app/core/widgets/app_card.dart';
 
 import 'trip_row_card.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
 
 /// Always-visible sections (upcoming / active / completed, plus stale /
 /// cancelled when non-empty), each independently respecting search and the
@@ -23,6 +24,7 @@ class TripsGroupedView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = DashboardChartPalette.of(context);
     final scheme = Theme.of(context).colorScheme;
     return Column(
       children: [
@@ -38,7 +40,7 @@ class TripsGroupedView extends StatelessWidget {
         _TripsGroupSection(
           title: 'قيد التشغيل',
           icon: Icons.directions_bus_filled_rounded,
-          color: Colors.green,
+          color: palette.positive,
           trips: state.activeGroupTrips,
           emptyMessage: 'لا توجد رحلات قيد التشغيل الآن.',
           onOpenDetails: onOpenDetails,
@@ -58,7 +60,7 @@ class TripsGroupedView extends StatelessWidget {
         _TripsGroupSection(
           title: 'مكتملة',
           icon: Icons.task_alt_rounded,
-          color: Colors.teal,
+          color: palette.neutral,
           trips: state.completedGroupTrips,
           emptyMessage: 'لا توجد رحلات مكتملة بعد.',
           onOpenDetails: onOpenDetails,

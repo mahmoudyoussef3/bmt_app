@@ -4,6 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/notification_draft.dart';
 import '../cubit/notifications_dispatch_cubit.dart';
 import '../cubit/notifications_dispatch_state.dart';
+import 'package:bmt_app/core/theme/colors.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
 /// Reusable panel that operations staff use to compose and send notifications.
 /// Embed inside any dashboard screen or show as a modal bottom sheet.
@@ -127,7 +129,7 @@ class _NotificationComposerState extends State<NotificationComposer> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('تم الإرسال إلى ${state.recipientCount} مستلم'),
-          backgroundColor: Colors.green,
+          backgroundColor: context.status(AppStatusTone.success).accent,
         ),
       );
       _titleCtrl.clear();
@@ -135,7 +137,10 @@ class _NotificationComposerState extends State<NotificationComposer> {
       context.read<NotificationsDispatchCubit>().reset();
     } else if (state is NotificationsDispatchError) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(state.message), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text(state.message),
+          backgroundColor: context.status(AppStatusTone.error).accent,
+        ),
       );
       context.read<NotificationsDispatchCubit>().reset();
     }

@@ -16,45 +16,25 @@ String liveOpsAgo(Duration d) {
   return 'منذ ${d.inDays} يوم';
 }
 
-/// Container/on-container colour pair for a tracking-health state.
-({Color container, Color on}) trackingHealthColors(TrackingHealth health) {
-  return switch (health) {
-    TrackingHealth.live => (
-      container: AppStatusColors.successContainer,
-      on: AppStatusColors.onSuccessContainer,
-    ),
-    TrackingHealth.stale => (
-      container: AppStatusColors.warningContainer,
-      on: AppStatusColors.onWarningContainer,
-    ),
-    TrackingHealth.offline => (
-      container: AppStatusColors.errorContainer,
-      on: AppStatusColors.onErrorContainer,
-    ),
-    TrackingHealth.unknown => (
-      container: AppStatusColors.neutralContainer,
-      on: AppStatusColors.onNeutralContainer,
-    ),
-  };
-}
+/// The semantic status role a tracking-health state maps to.
+///
+/// Returns a *tone*, not colours: the caller resolves it against the theme in
+/// effect via `context.status(...)`. It used to return a fixed
+/// container/on-container pair off the light constants, so the live-ops board
+/// kept its pale badges on a slate page.
+AppStatusTone trackingHealthTone(TrackingHealth health) => switch (health) {
+  TrackingHealth.live => AppStatusTone.success,
+  TrackingHealth.stale => AppStatusTone.warning,
+  TrackingHealth.offline => AppStatusTone.error,
+  TrackingHealth.unknown => AppStatusTone.neutral,
+};
 
-/// Container/on-container colour pair for an incident severity.
-({Color container, Color on}) incidentSeverityColors(IncidentSeverity s) {
-  return switch (s) {
-    IncidentSeverity.critical => (
-      container: AppStatusColors.errorContainer,
-      on: AppStatusColors.onErrorContainer,
-    ),
-    IncidentSeverity.warning => (
-      container: AppStatusColors.warningContainer,
-      on: AppStatusColors.onWarningContainer,
-    ),
-    IncidentSeverity.info => (
-      container: AppStatusColors.infoContainer,
-      on: AppStatusColors.onInfoContainer,
-    ),
-  };
-}
+/// The semantic status role an incident severity maps to.
+AppStatusTone incidentSeverityTone(IncidentSeverity s) => switch (s) {
+  IncidentSeverity.critical => AppStatusTone.error,
+  IncidentSeverity.warning => AppStatusTone.warning,
+  IncidentSeverity.info => AppStatusTone.info,
+};
 
 IconData incidentTypeIcon(IncidentType type) => switch (type) {
   IncidentType.emergency => Icons.sos_rounded,

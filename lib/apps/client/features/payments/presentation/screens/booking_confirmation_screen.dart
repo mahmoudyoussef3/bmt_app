@@ -236,9 +236,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
               height: 120,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                gradient: const LinearGradient(
-                  colors: [ClientColors.primary, Color(0xFF1554C8)],
-                ),
+                gradient: ClientColors.primaryGradientFor(context),
                 boxShadow: [
                   BoxShadow(
                     color: ClientColors.primary.withAlpha(55),

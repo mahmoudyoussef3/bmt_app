@@ -11,6 +11,7 @@ import '../cubit/subscriptions_cubit.dart';
 import '../models/trip_subscriber.dart';
 import 'subscription_formatting.dart';
 import 'subscription_rides_widget.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
 /// One subscriber row.
 ///
@@ -39,7 +40,7 @@ class SubscriptionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
-    final statusColor = subscriptionStatusColor(subscription.status);
+    final statusColor = subscriptionStatusColor(context, subscription.status);
 
     return Stack(
       children: [
@@ -113,7 +114,7 @@ class SubscriptionCard extends StatelessWidget {
                       label:
                           'متبقٍ ${arabicNumber(subscription.remainingDays)} يوم',
                       tint: subscription.isExpiringSoon
-                          ? AppStatusColors.onWarningContainer
+                          ? context.status(AppStatusTone.warning).ink
                           : null,
                     ),
                 ],
@@ -278,7 +279,7 @@ class _MoneyBlock extends StatelessWidget {
               : 'مدفوع بالكامل',
           style: text.bodySmall?.copyWith(
             color: outstanding > 0
-                ? AppStatusColors.onErrorContainer
+                ? context.status(AppStatusTone.error).ink
                 : scheme.onSurfaceVariant,
             fontWeight: FontWeight.w700,
           ),
@@ -299,9 +300,9 @@ class _TripLinkRow extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final link = subscriber.primaryLink;
     final color = switch (link) {
-      TripSubscriberLink.rode => AppStatusColors.onSuccessContainer,
+      TripSubscriberLink.rode => context.status(AppStatusTone.success).ink,
       TripSubscriberLink.booked => scheme.primary,
-      TripSubscriberLink.eligible => AppStatusColors.onWarningContainer,
+      TripSubscriberLink.eligible => context.status(AppStatusTone.warning).ink,
     };
     final icon = switch (link) {
       TripSubscriberLink.rode => Icons.how_to_reg_rounded,

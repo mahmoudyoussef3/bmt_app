@@ -8,6 +8,7 @@ import 'package:bmt_app/core/vehicles/vehicles.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
 class FleetVehicleDetailsView extends StatelessWidget {
   final FleetVehicle vehicle;
@@ -227,23 +228,24 @@ class FleetVehicleDetailsView extends StatelessWidget {
             ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: AppSpacing.medium),
-          _detailRow('كود المركبة', vehicle.vehicleCode),
-          _detailRow('رقم اللوحة المرورية', vehicle.plateNumber),
-          _detailRow('نوع المركبة', vehicle.vehicleType),
-          _detailRow('الماركة', vehicle.brand),
-          _detailRow('طراز الموديل', vehicle.model),
-          _detailRow('سنة الصنع', '${vehicle.manufactureYear}'),
-          _detailRow('لون المركبة', vehicle.color),
-          _detailRow('السعة الركابية', '${vehicle.capacity} مقعد'),
-          _detailRow('نوع تخطيط المقاعد', vehicle.seatLayoutType),
+          _detailRow(context, 'كود المركبة', vehicle.vehicleCode),
+          _detailRow(context, 'رقم اللوحة المرورية', vehicle.plateNumber),
+          _detailRow(context, 'نوع المركبة', vehicle.vehicleType),
+          _detailRow(context, 'الماركة', vehicle.brand),
+          _detailRow(context, 'طراز الموديل', vehicle.model),
+          _detailRow(context, 'سنة الصنع', '${vehicle.manufactureYear}'),
+          _detailRow(context, 'لون المركبة', vehicle.color),
+          _detailRow(context, 'السعة الركابية', '${vehicle.capacity} مقعد'),
+          _detailRow(context, 'نوع تخطيط المقاعد', vehicle.seatLayoutType),
           _detailRow(
+            context,
             'السائق الحالي',
             driverName.isEmpty ? 'بدون سائق حالياً' : driverName,
           ),
-          _detailRow('حالة المركبة', vehicle.status.label),
-          _detailRow('انتهاء الرخصة', vehicle.licenseExpiry),
-          _detailRow('انتهاء التأمين', vehicle.insuranceExpiry),
-          _detailRow('انتهاء الفحص الفني', vehicle.inspectionExpiry),
+          _detailRow(context, 'حالة المركبة', vehicle.status.label),
+          _detailRow(context, 'انتهاء الرخصة', vehicle.licenseExpiry),
+          _detailRow(context, 'انتهاء التأمين', vehicle.insuranceExpiry),
+          _detailRow(context, 'انتهاء الفحص الفني', vehicle.inspectionExpiry),
           if (vehicle.notes.isNotEmpty) ...[
             const Divider(),
             const SizedBox(height: AppSpacing.small),
@@ -265,7 +267,7 @@ class FleetVehicleDetailsView extends StatelessWidget {
     );
   }
 
-  Widget _detailRow(String label, String value) {
+  Widget _detailRow(BuildContext context, String label, String value) {
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.small),
       child: Row(
@@ -275,9 +277,9 @@ class FleetVehicleDetailsView extends StatelessWidget {
             width: 150,
             child: Text(
               label,
-              style: const TextStyle(
+              style: TextStyle(
                 fontWeight: FontWeight.w500,
-                color: AppStatusColors.onNeutralContainer,
+                color: context.status(AppStatusTone.neutral).ink,
               ),
             ),
           ),
@@ -500,14 +502,18 @@ class _VehicleImageGalleryState extends State<_VehicleImageGallery> {
                   itemBuilder: (context, index) {
                     final isSelected = index == _selectedIndex;
                     return Padding(
-                      padding: const EdgeInsetsDirectional.only(start: AppSpacing.small),
+                      padding: const EdgeInsetsDirectional.only(
+                        start: AppSpacing.small,
+                      ),
                       child: GestureDetector(
                         onTap: () => setState(() => _selectedIndex = index),
                         child: Container(
                           width: 60,
                           height: 60,
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+                            borderRadius: BorderRadius.circular(
+                              AppTokens.radiusSmall,
+                            ),
                             border: Border.all(
                               color: isSelected
                                   ? scheme.primary
@@ -516,7 +522,9 @@ class _VehicleImageGalleryState extends State<_VehicleImageGallery> {
                             ),
                           ),
                           child: ClipRRect(
-                            borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+                            borderRadius: BorderRadius.circular(
+                              AppTokens.radiusSmall,
+                            ),
                             child: Image.network(
                               images[index].url,
                               fit: BoxFit.cover,

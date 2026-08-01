@@ -5,6 +5,8 @@ import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
 
 import '../../domain/entities/captain_request.dart';
+import 'package:bmt_app/core/theme/colors.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
 class CaptainRequestCard extends StatelessWidget {
   final CaptainRequest request;
@@ -124,8 +126,8 @@ class _StatusBadge extends StatelessWidget {
         scheme.tertiary,
       ),
       CaptainRequestStatus.approved => (
-        Colors.green.withAlpha(30),
-        Colors.green.shade700,
+        context.status(AppStatusTone.success).tint,
+        context.status(AppStatusTone.success).ink,
       ),
       CaptainRequestStatus.rejected => (
         scheme.error.withAlpha(28),

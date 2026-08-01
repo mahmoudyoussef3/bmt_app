@@ -6,6 +6,7 @@ import 'package:bmt_app/core/widgets/empty_state.dart';
 
 import '../../domain/entities/report_entities.dart';
 import '../cubit/reports_state.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
 class ReportDataTable extends StatelessWidget {
   final ReportsLoaded state;
@@ -28,9 +29,9 @@ class ReportDataTable extends StatelessWidget {
               ),
               Text(
                 'عدد السجلات: ${rows.length}',
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 11,
-                  color: AppStatusColors.onNeutralContainer,
+                  color: context.status(AppStatusTone.neutral).ink,
                 ),
               ),
             ],
@@ -96,8 +97,8 @@ class ReportDataTable extends StatelessWidget {
                     r.status,
                     style: TextStyle(
                       color: r.status == 'مكتملة'
-                          ? AppStatusColors.onSuccessContainer
-                          : AppStatusColors.onErrorContainer,
+                          ? context.status(AppStatusTone.success).ink
+                          : context.status(AppStatusTone.error).ink,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -134,8 +135,8 @@ class ReportDataTable extends StatelessWidget {
                     r.status,
                     style: TextStyle(
                       color: r.status == 'مؤكدة'
-                          ? AppStatusColors.onSuccessContainer
-                          : AppStatusColors.onErrorContainer,
+                          ? context.status(AppStatusTone.success).ink
+                          : context.status(AppStatusTone.error).ink,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -172,8 +173,8 @@ class ReportDataTable extends StatelessWidget {
                 DataCell(
                   Text(
                     '${r.netRevenue.toStringAsFixed(0)} ج.م',
-                    style: const TextStyle(
-                      color: AppStatusColors.onSuccessContainer,
+                    style: TextStyle(
+                      color: context.status(AppStatusTone.success).ink,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -209,8 +210,8 @@ class ReportDataTable extends StatelessWidget {
                 DataCell(
                   Text(
                     '${r.rating.toStringAsFixed(1)} ★',
-                    style: const TextStyle(
-                      color: AppStatusColors.onWarningContainer,
+                    style: TextStyle(
+                      color: context.status(AppStatusTone.warning).ink,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -221,8 +222,8 @@ class ReportDataTable extends StatelessWidget {
                     r.status,
                     style: TextStyle(
                       color: r.status == 'نشط'
-                          ? AppStatusColors.onSuccessContainer
-                          : AppStatusColors.onWarningContainer,
+                          ? context.status(AppStatusTone.success).ink
+                          : context.status(AppStatusTone.warning).ink,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -261,8 +262,8 @@ class ReportDataTable extends StatelessWidget {
                     r.maintenanceStatus,
                     style: TextStyle(
                       color: r.maintenanceStatus == 'جاهزة'
-                          ? AppStatusColors.onSuccessContainer
-                          : AppStatusColors.onErrorContainer,
+                          ? context.status(AppStatusTone.success).ink
+                          : context.status(AppStatusTone.error).ink,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -324,8 +325,8 @@ class ReportDataTable extends StatelessWidget {
                     '${r.pendingComplaints} شكوى معلقة',
                     style: TextStyle(
                       color: r.pendingComplaints > 0
-                          ? AppStatusColors.onErrorContainer
-                          : AppStatusColors.onNeutralContainer,
+                          ? context.status(AppStatusTone.error).ink
+                          : context.status(AppStatusTone.neutral).ink,
                     ),
                   ),
                 ),

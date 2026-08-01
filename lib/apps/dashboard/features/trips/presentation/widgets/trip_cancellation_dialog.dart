@@ -17,10 +17,8 @@ Future<String?> showTripCancellationDialog(
 }) {
   return showDialog<String>(
     context: context,
-    builder: (_) => _TripCancellationDialog(
-      trip: trip,
-      reasonRequired: reasonRequired,
-    ),
+    builder: (_) =>
+        _TripCancellationDialog(trip: trip, reasonRequired: reasonRequired),
   );
 }
 
@@ -67,9 +65,9 @@ class _TripCancellationDialogState extends State<_TripCancellationDialog> {
           children: [
             Text(
               'رحلة ${widget.trip.route} — ${widget.trip.date} ${widget.trip.departure}',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 12),
             if (_activePassengers > 0 || _heldSeats > 0)

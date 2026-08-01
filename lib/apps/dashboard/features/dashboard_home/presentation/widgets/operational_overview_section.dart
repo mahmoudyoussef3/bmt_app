@@ -7,6 +7,7 @@ import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/ope
 import 'package:bmt_app/core/widgets/empty_state.dart';
 
 import '../../domain/entities/dashboard_home_summary.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
 
 /// "How is my transportation operation performing today?" — today's trips
 /// bucketed into the four states an operator actually thinks in, from the
@@ -18,6 +19,7 @@ class OperationalOverviewSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = DashboardChartPalette.of(context);
     final active =
         summary.tripsCountByStatus(OperationTripStatus.inProgress) +
         summary.tripsCountByStatus(OperationTripStatus.boarding);
@@ -42,22 +44,22 @@ class OperationalOverviewSection extends StatelessWidget {
                 ChartDatum(
                   label: 'الرحلات النشطة',
                   value: active.toDouble(),
-                  color: const Color(0xFF22A06B),
+                  color: palette.positive,
                 ),
                 ChartDatum(
                   label: 'الرحلات القادمة',
                   value: upcoming.toDouble(),
-                  color: const Color(0xFF2F80ED),
+                  color: palette.active,
                 ),
                 ChartDatum(
                   label: 'الرحلات المكتملة',
                   value: completed.toDouble(),
-                  color: const Color(0xFF667085),
+                  color: palette.neutral,
                 ),
                 ChartDatum(
                   label: 'الرحلات الملغاة',
                   value: cancelled.toDouble(),
-                  color: const Color(0xFFD64545),
+                  color: palette.negative,
                 ),
               ],
             ),

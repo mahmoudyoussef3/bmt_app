@@ -8,6 +8,7 @@ import 'package:bmt_app/core/widgets/app_card.dart';
 import '../../domain/entities/trip_incident.dart';
 import 'incident_resolution_dialog.dart';
 import 'live_ops_format.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
 /// Moves an incident to [next], recording [note] when the operator supplied one.
 /// Returns an error message, or `null` on success.
@@ -162,7 +163,7 @@ class _IncidentCardState extends State<_IncidentCard> {
     final incident = widget.incident;
     final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
-    final colors = incidentSeverityColors(incident.severity);
+    final colors = context.status(incidentSeverityTone(incident.severity));
     final age = incident.ageAt(widget.now);
 
     final tripContext = [
@@ -177,7 +178,7 @@ class _IncidentCardState extends State<_IncidentCard> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Container(width: 5, color: colors.on),
+            Container(width: 5, color: colors.ink),
             Expanded(
               child: Padding(
                 padding: const EdgeInsets.all(AppSpacing.medium),
@@ -189,7 +190,7 @@ class _IncidentCardState extends State<_IncidentCard> {
                         Container(
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
-                            color: colors.container,
+                            color: colors.tint,
                             borderRadius: BorderRadius.circular(
                               AppTokens.radiusSmall,
                             ),
@@ -197,7 +198,7 @@ class _IncidentCardState extends State<_IncidentCard> {
                           child: Icon(
                             incidentTypeIcon(incident.type),
                             size: 18,
-                            color: colors.on,
+                            color: colors.ink,
                           ),
                         ),
                         const SizedBox(width: AppSpacing.small),
@@ -265,23 +266,23 @@ class _StatusChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final (container, on, icon) = switch (status) {
       IncidentStatus.pending => (
-        AppStatusColors.errorContainer,
-        AppStatusColors.onErrorContainer,
+        context.status(AppStatusTone.error).tint,
+        context.status(AppStatusTone.error).ink,
         Icons.fiber_new_rounded,
       ),
       IncidentStatus.acknowledged => (
-        AppStatusColors.infoContainer,
-        AppStatusColors.onInfoContainer,
+        context.status(AppStatusTone.info).tint,
+        context.status(AppStatusTone.info).ink,
         Icons.engineering_rounded,
       ),
       IncidentStatus.resolved => (
-        AppStatusColors.successContainer,
-        AppStatusColors.onSuccessContainer,
+        context.status(AppStatusTone.success).tint,
+        context.status(AppStatusTone.success).ink,
         Icons.check_circle_rounded,
       ),
       IncidentStatus.dismissed => (
-        AppStatusColors.neutralContainer,
-        AppStatusColors.onNeutralContainer,
+        context.status(AppStatusTone.neutral).tint,
+        context.status(AppStatusTone.neutral).ink,
         Icons.do_not_disturb_on_rounded,
       ),
     };

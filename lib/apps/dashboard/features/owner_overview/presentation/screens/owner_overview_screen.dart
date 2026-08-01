@@ -11,6 +11,7 @@ import '../../domain/entities/owner_overview.dart';
 import '../cubit/owner_overview_cubit.dart';
 import '../cubit/owner_overview_state.dart';
 import '../widgets/owner_overview_charts.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
 
 class OwnerOverviewScreen extends StatelessWidget {
   const OwnerOverviewScreen({super.key});
@@ -40,6 +41,7 @@ class _LoadedView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = DashboardChartPalette.of(context);
     String money(double v) => '${v.toStringAsFixed(0)} ج.م';
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.large),
@@ -64,19 +66,19 @@ class _LoadedView extends StatelessWidget {
               label: 'إجمالي الإيرادات',
               value: money(overview.totalRevenue),
               icon: Icons.payments_rounded,
-              color: const Color(0xFF2563EB),
+              color: palette.active,
             ),
             DashboardKpiCard(
               label: 'إيراد الاشتراكات',
               value: money(overview.subscriptionsRevenue),
               icon: Icons.workspace_premium_rounded,
-              color: const Color(0xFF8B5CF6),
+              color: palette.accent,
             ),
             DashboardKpiCard(
               label: 'إيراد الحجوزات (الشهر)',
               value: money(overview.bookingsRevenueMonth),
               icon: Icons.event_seat_rounded,
-              color: const Color(0xFF16A34A),
+              color: palette.positive,
             ),
             DashboardKpiCard(
               label: 'إيراد اليوم',
@@ -87,25 +89,25 @@ class _LoadedView extends StatelessWidget {
               label: 'العملاء النشطون',
               value: '${overview.activeClients}',
               icon: Icons.group_rounded,
-              color: const Color(0xFF16A34A),
+              color: palette.positive,
             ),
             DashboardKpiCard(
               label: 'اشتراكات منتهية',
               value: '${overview.expiredClients}',
               icon: Icons.history_toggle_off_rounded,
-              color: const Color(0xFF64748B),
+              color: palette.neutral,
             ),
             DashboardKpiCard(
               label: 'اشتراكات ملغاة',
               value: '${overview.cancelledClients}',
               icon: Icons.cancel_rounded,
-              color: const Color(0xFFDC2626),
+              color: palette.negative,
             ),
             DashboardKpiCard(
               label: 'إجمالي التجديدات',
               value: '${overview.renewalsTotal}',
               icon: Icons.autorenew_rounded,
-              color: const Color(0xFF0EA5E9),
+              color: palette.positive,
             ),
           ],
         ),

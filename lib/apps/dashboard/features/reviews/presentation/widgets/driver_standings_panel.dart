@@ -23,8 +23,7 @@ class DriverStandingsPanel extends StatelessWidget {
       subtitle: 'مرتّب من الأعلى إلى الأقل تقييمًا',
       child: Column(
         children: [
-          for (final standing in standings)
-            _StandingRow(standing: standing),
+          for (final standing in standings) _StandingRow(standing: standing),
         ],
       ),
     );
@@ -39,7 +38,7 @@ class _StandingRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final color = ratingColor(standing.average);
+    final color = ratingColor(context, standing.average);
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: AppSpacing.small),
@@ -53,9 +52,9 @@ class _StandingRow extends StatelessWidget {
                   standing.driverName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
                 ),
                 Text(
                   '${standing.reviewCount} تقييم',

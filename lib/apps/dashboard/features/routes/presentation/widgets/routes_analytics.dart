@@ -8,6 +8,7 @@ import 'package:bmt_app/apps/dashboard/core/widgets/charts/dashboard_ranked_bars
 
 import '../../domain/entities/operation_route.dart';
 import '../cubit/routes_state.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
 
 /// Real-data analytics for the routes workspace, computed from the loaded
 /// routes (no extra fetch, no mock data).
@@ -23,7 +24,7 @@ class RoutesAnalytics extends StatelessWidget {
       icon: Icons.donut_large_rounded,
       title: 'توزيع حالات المسارات',
       subtitle: 'كل المسارات حسب الحالة',
-      child: DashboardDonutChart(data: _statusData()),
+      child: DashboardDonutChart(data: _statusData(context)),
     );
     final ranked = DashboardPanel(
       icon: Icons.leaderboard_rounded,
@@ -55,7 +56,7 @@ class RoutesAnalytics extends StatelessWidget {
     );
   }
 
-  List<ChartDatum> _statusData() {
+  List<ChartDatum> _statusData(BuildContext context) {
     final counts = <OperationRouteStatus, int>{};
     for (final route in state.routes) {
       counts[route.status] = (counts[route.status] ?? 0) + 1;
@@ -66,7 +67,7 @@ class RoutesAnalytics extends StatelessWidget {
           ChartDatum(
             label: status.label,
             value: counts[status]!.toDouble(),
-            color: _routeStatusColor(status),
+            color: _routeStatusColor(context, status),
           ),
     ];
   }
@@ -85,11 +86,12 @@ class RoutesAnalytics extends StatelessWidget {
   }
 }
 
-Color _routeStatusColor(OperationRouteStatus status) {
+Color _routeStatusColor(BuildContext context, OperationRouteStatus status) {
+  final palette = DashboardChartPalette.of(context);
   return switch (status) {
-    OperationRouteStatus.active => const Color(0xFF16A34A),
-    OperationRouteStatus.paused => const Color(0xFFFB923C),
-    OperationRouteStatus.draft => const Color(0xFF2563EB),
-    OperationRouteStatus.archived => const Color(0xFFDC2626),
+    OperationRouteStatus.active => palette.positive,
+    OperationRouteStatus.paused => palette.warning,
+    OperationRouteStatus.draft => palette.active,
+    OperationRouteStatus.archived => palette.negative,
   };
 }

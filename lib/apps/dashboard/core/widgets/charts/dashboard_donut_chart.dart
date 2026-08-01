@@ -100,7 +100,9 @@ class _Legend extends StatelessWidget {
                     height: 10,
                     decoration: BoxDecoration(
                       color: datum.color,
-                      borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+                      borderRadius: BorderRadius.circular(
+                        AppTokens.radiusSmall,
+                      ),
                     ),
                   ),
                   const SizedBox(width: AppSpacing.small),

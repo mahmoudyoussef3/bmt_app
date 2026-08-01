@@ -282,8 +282,12 @@ class _CardActions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final approved = paymentStatusStyle(PaymentStatus.approved);
-    final rejected = paymentStatusStyle(PaymentStatus.rejected);
+    final approved = paymentStatusStyle(
+      PaymentStatus.approved,
+    ).resolve(context);
+    final rejected = paymentStatusStyle(
+      PaymentStatus.rejected,
+    ).resolve(context);
 
     return Wrap(
       spacing: AppSpacing.xSmall,
@@ -296,7 +300,7 @@ class _CardActions extends StatelessWidget {
                 ? null
                 : () => intents.approveBooking(context, cubit, booking),
             style: FilledButton.styleFrom(
-              backgroundColor: approved.onContainer,
+              backgroundColor: approved.ink,
               foregroundColor: Colors.white,
               visualDensity: VisualDensity.compact,
             ),
@@ -308,7 +312,7 @@ class _CardActions extends StatelessWidget {
                 ? null
                 : () => intents.rejectBooking(context, cubit, booking),
             style: OutlinedButton.styleFrom(
-              foregroundColor: rejected.onContainer,
+              foregroundColor: rejected.ink,
               visualDensity: VisualDensity.compact,
             ),
             icon: const Icon(Icons.close_rounded, size: 18),
@@ -318,7 +322,9 @@ class _CardActions extends StatelessWidget {
             onPressed: isProcessing
                 ? null
                 : () => intents.requestReupload(context, cubit, booking),
-            style: OutlinedButton.styleFrom(visualDensity: VisualDensity.compact),
+            style: OutlinedButton.styleFrom(
+              visualDensity: VisualDensity.compact,
+            ),
             icon: const Icon(Icons.refresh_rounded, size: 18),
             label: const Text('إعادة رفع'),
           ),

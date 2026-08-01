@@ -91,7 +91,7 @@ class _ImagePlaceholder extends StatelessWidget {
       [scheme.primary.withAlpha(90), scheme.secondary.withAlpha(50)],
       [scheme.secondary.withAlpha(80), scheme.tertiary.withAlpha(45)],
       [scheme.tertiary.withAlpha(70), scheme.primary.withAlpha(55)],
-      [const Color(0xFF334155), scheme.primary.withAlpha(60)],
+      [scheme.surfaceContainerHighest, scheme.primary.withAlpha(60)],
     ];
     final colors = palettes[gradientIndex % palettes.length];
 

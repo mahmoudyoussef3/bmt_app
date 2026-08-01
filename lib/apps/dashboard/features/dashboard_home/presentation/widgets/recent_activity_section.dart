@@ -20,7 +20,8 @@ class RecentActivitySection extends StatelessWidget {
       builder: (context, state) {
         final items = switch (state) {
           OperationalAlertsLoaded(:final alerts) =>
-            (List.of(alerts)..sort((a, b) => b.createdAt.compareTo(a.createdAt)))
+            (List.of(alerts)
+                  ..sort((a, b) => b.createdAt.compareTo(a.createdAt)))
                 .take(8)
                 .toList(),
           _ => const [],
@@ -44,10 +45,9 @@ class RecentActivitySection extends StatelessWidget {
                 for (final alert in items)
                   AlertTile(
                     alert: alert,
-                    onTap: () =>
-                        context.read<OperationalAlertsCubit>().markAsRead(
-                          alert.id,
-                        ),
+                    onTap: () => context
+                        .read<OperationalAlertsCubit>()
+                        .markAsRead(alert.id),
                     onMarkRead: () => context
                         .read<OperationalAlertsCubit>()
                         .markAsRead(alert.id),

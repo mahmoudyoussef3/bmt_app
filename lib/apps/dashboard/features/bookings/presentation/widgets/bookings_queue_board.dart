@@ -136,7 +136,9 @@ class _BoardHeader extends StatelessWidget {
               ),
             if (showSort) ...[
               const SizedBox(width: AppSpacing.small),
-              Flexible(child: _SortControl(state: state, onSort: cubit.sortBy)),
+              Flexible(
+                child: _SortControl(state: state, onSort: cubit.sortBy),
+              ),
             ],
           ],
         ),
@@ -506,8 +508,8 @@ class _ActionIcon extends StatelessWidget {
       padding: EdgeInsets.zero,
       constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
       style: IconButton.styleFrom(
-        backgroundColor: style.container,
-        foregroundColor: style.onContainer,
+        backgroundColor: style.resolve(context).tint,
+        foregroundColor: style.resolve(context).ink,
         padding: EdgeInsets.zero,
         minimumSize: const Size(32, 32),
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,

@@ -14,6 +14,8 @@ import '../widgets/driver_standings_panel.dart';
 import '../widgets/rating_stars.dart';
 import '../widgets/review_card.dart';
 import '../widgets/reviews_filter_bar.dart';
+import 'package:bmt_app/core/theme/colors.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
 /// التقييمات — every passenger review of every completed trip.
 ///
@@ -125,20 +127,26 @@ class _Kpis extends StatelessWidget {
           label: 'متوسط تقييم السائق',
           value: _avg(summary.driverAverage),
           icon: Icons.person_outline,
-          color: ratingColor(summary.driverAverage),
+          color: ratingColor(context, summary.driverAverage),
         ),
         DashboardKpiCard(
           label: 'متوسط تقييم المركبة',
           value: _avg(summary.vehicleAverage),
           icon: Icons.directions_bus_outlined,
-          color: ratingColor(summary.vehicleAverage),
+          color: ratingColor(context, summary.vehicleAverage),
         ),
         DashboardKpiCard(
           label: 'تحتاج متابعة',
           value: '${summary.needsAttentionCount}',
           detail: 'تقييم بنجمتين أو أقل',
           icon: Icons.report_gmailerrorred_outlined,
-          color: summary.needsAttentionCount > 0 ? kRatingRed : kRatingGreen,
+          color: context
+              .status(
+                summary.needsAttentionCount > 0
+                    ? AppStatusTone.error
+                    : AppStatusTone.success,
+              )
+              .accent,
         ),
       ],
     );

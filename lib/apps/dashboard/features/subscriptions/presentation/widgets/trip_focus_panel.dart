@@ -11,6 +11,7 @@ import '../../domain/entities/subscription_trip.dart';
 import '../cubit/subscriptions_cubit.dart';
 import '../models/trip_subscriber.dart';
 import 'subscription_formatting.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
 /// The header the screen grows when a trip is in focus: which departure, how
 /// many subscribers are expected on it, how many are already on board, what
@@ -66,13 +67,13 @@ class TripFocusPanel extends StatelessWidget {
                       value: arabicNumber(board.checkedInCount),
                       detail: 'من ${arabicNumber(board.expectedCount)}',
                       icon: Icons.how_to_reg_outlined,
-                      color: AppStatusColors.onSuccessContainer,
+                      color: context.status(AppStatusTone.success).ink,
                     ),
                     DashboardKpiCard(
                       label: 'بانتظار التسجيل',
                       value: arabicNumber(board.pendingCheckInCount),
                       icon: Icons.pending_actions_outlined,
-                      color: AppStatusColors.onWarningContainer,
+                      color: context.status(AppStatusTone.warning).ink,
                     ),
                     DashboardKpiCard(
                       label: 'مستحقات غير محصلة',
@@ -80,8 +81,8 @@ class TripFocusPanel extends StatelessWidget {
                       detail: '${arabicNumber(board.unpaidCount)} مشترك',
                       icon: Icons.account_balance_wallet_outlined,
                       color: board.outstandingAmount > 0
-                          ? AppStatusColors.onErrorContainer
-                          : AppStatusColors.onNeutralContainer,
+                          ? context.status(AppStatusTone.error).ink
+                          : context.status(AppStatusTone.neutral).ink,
                     ),
                   ],
                 ),

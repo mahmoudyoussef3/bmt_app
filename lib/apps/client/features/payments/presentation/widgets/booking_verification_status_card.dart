@@ -152,7 +152,10 @@ class BookingVerificationStatusCard extends StatelessWidget {
     }
     if (_isRejected) {
       return _StatusPhase(
-        gradient: const [ClientColors.journeyRed, Color(0xFFB91C1C)],
+        gradient: const [
+          ClientColors.journeyRed,
+          ClientColors.journeyRedStrong,
+        ],
         icon: Icons.cancel_rounded,
         title: l10n.payments_paymentRejectedTitle,
         subtitle: l10n.payments_paymentRejectedSubtitle,
@@ -161,12 +164,19 @@ class BookingVerificationStatusCard extends StatelessWidget {
       );
     }
     return _StatusPhase(
-      gradient: const [Colors.orangeAccent, Colors.deepOrange],
+      // The pending phase used Material's own `orangeAccent`/`deepOrange`/
+      // `orange` — the only place in the client app reaching into the stock
+      // palette, and a visibly different orange from the amber every other
+      // "awaiting action" surface uses.
+      gradient: const [
+        ClientColors.journeyAmber,
+        ClientColors.journeyAmberStrong,
+      ],
       icon: Icons.hourglass_top_rounded,
       title: l10n.payments_paymentReceiptSubmittedTitle,
       subtitle: l10n.payments_paymentReceiptSubmittedSubtitle,
       statusLabel: l10n.payments_statusPendingVerification,
-      statusColor: Colors.orange,
+      statusColor: ClientColors.journeyAmber,
     );
   }
 

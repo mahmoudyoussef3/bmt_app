@@ -21,18 +21,19 @@ class FleetAnalyticsCharts extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = DashboardChartPalette.of(context);
     final drivers = DashboardPanel(
       icon: Icons.people_alt_rounded,
       title: 'جاهزية السائقين',
       subtitle: 'من يمكنه استلام رحلة الآن',
-      child: DashboardDonutChart(data: _driverData()),
+      child: DashboardDonutChart(data: _driverData(palette)),
     );
 
     final vehicles = DashboardPanel(
       icon: Icons.directions_bus_rounded,
       title: 'حالة المركبات',
       subtitle: 'توزيع الأسطول حسب الحالة التشغيلية',
-      child: DashboardDonutChart(data: _vehicleData()),
+      child: DashboardDonutChart(data: _vehicleData(palette)),
     );
 
     return LayoutBuilder(
@@ -59,7 +60,7 @@ class FleetAnalyticsCharts extends StatelessWidget {
     );
   }
 
-  List<ChartDatum> _driverData() {
+  List<ChartDatum> _driverData(DashboardChartPalette palette) {
     var available = 0;
     var assigned = 0;
     var needsAttention = 0;
@@ -81,14 +82,14 @@ class FleetAnalyticsCharts extends StatelessWidget {
     }
 
     return _nonEmpty([
-      ('متاح للإسناد', available, DashboardChartPalette.positive),
-      ('مُعيَّن على مركبة', assigned, DashboardChartPalette.active),
-      ('يحتاج متابعة', needsAttention, DashboardChartPalette.warning),
-      ('موقوف', suspended, DashboardChartPalette.negative),
+      ('متاح للإسناد', available, palette.positive),
+      ('مُعيَّن على مركبة', assigned, palette.active),
+      ('يحتاج متابعة', needsAttention, palette.warning),
+      ('موقوف', suspended, palette.negative),
     ]);
   }
 
-  List<ChartDatum> _vehicleData() {
+  List<ChartDatum> _vehicleData(DashboardChartPalette palette) {
     var active = 0;
     var maintenance = 0;
     var suspended = 0;
@@ -108,10 +109,10 @@ class FleetAnalyticsCharts extends StatelessWidget {
     }
 
     return _nonEmpty([
-      ('في الخدمة', active, DashboardChartPalette.positive),
-      ('في الصيانة', maintenance, DashboardChartPalette.warning),
-      ('موقوفة', suspended, DashboardChartPalette.negative),
-      ('مؤرشفة', archived, DashboardChartPalette.neutral),
+      ('في الخدمة', active, palette.positive),
+      ('في الصيانة', maintenance, palette.warning),
+      ('موقوفة', suspended, palette.negative),
+      ('مؤرشفة', archived, palette.neutral),
     ]);
   }
 

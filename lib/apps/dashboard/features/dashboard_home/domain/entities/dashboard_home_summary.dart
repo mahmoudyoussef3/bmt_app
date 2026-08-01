@@ -64,29 +64,37 @@ class DashboardHomeSummary {
   /// derivable occupancy figure, not a fabricated percentage.
   double get todayOccupancyRate {
     if (todayTrips.isEmpty) return 0;
-    final capacity = todayTrips.fold<int>(0, (sum, trip) => sum + trip.capacity);
+    final capacity = todayTrips.fold<int>(
+      0,
+      (sum, trip) => sum + trip.capacity,
+    );
     if (capacity == 0) return 0;
-    final booked = todayTrips.fold<int>(0, (sum, trip) => sum + trip.bookedSeats);
+    final booked = todayTrips.fold<int>(
+      0,
+      (sum, trip) => sum + trip.bookedSeats,
+    );
     return booked / capacity;
   }
 
   /// Soonest-departure, highest-occupancy trips first — what an operator scanning
   /// the home page actually wants to see, not raw creation order.
   List<OperationTrip> upcomingTrips({int limit = 6}) {
-    final upcoming = trips.where((trip) {
-      final at = trip.scheduledAt;
-      if (at == null) return false;
-      return at.isAfter(DateTime.now().subtract(const Duration(hours: 1))) &&
-          trip.status != OperationTripStatus.cancelled &&
-          trip.status != OperationTripStatus.completed;
-    }).toList()
-      ..sort((a, b) {
-        final byTime = (a.scheduledAt ?? DateTime.now()).compareTo(
-          b.scheduledAt ?? DateTime.now(),
-        );
-        if (byTime != 0) return byTime;
-        return b.bookedSeats.compareTo(a.bookedSeats);
-      });
+    final upcoming =
+        trips.where((trip) {
+          final at = trip.scheduledAt;
+          if (at == null) return false;
+          return at.isAfter(
+                DateTime.now().subtract(const Duration(hours: 1)),
+              ) &&
+              trip.status != OperationTripStatus.cancelled &&
+              trip.status != OperationTripStatus.completed;
+        }).toList()..sort((a, b) {
+          final byTime = (a.scheduledAt ?? DateTime.now()).compareTo(
+            b.scheduledAt ?? DateTime.now(),
+          );
+          if (byTime != 0) return byTime;
+          return b.bookedSeats.compareTo(a.bookedSeats);
+        });
     return upcoming.take(limit).toList();
   }
 
@@ -141,19 +149,20 @@ class DashboardHomeSummary {
 
   /// Open complaints, most urgent and most recently updated first.
   List<SupportTicket> openComplaints({int limit = 5}) {
-    final open = tickets
-        .where(
-          (t) =>
-              t.status != TicketStatus.resolved &&
-              t.status != TicketStatus.closed &&
-              t.status != TicketStatus.rejected,
-        )
-        .toList()
-      ..sort((a, b) {
-        final byPriority = b.priority.index.compareTo(a.priority.index);
-        if (byPriority != 0) return byPriority;
-        return b.updatedAt.compareTo(a.updatedAt);
-      });
+    final open =
+        tickets
+            .where(
+              (t) =>
+                  t.status != TicketStatus.resolved &&
+                  t.status != TicketStatus.closed &&
+                  t.status != TicketStatus.rejected,
+            )
+            .toList()
+          ..sort((a, b) {
+            final byPriority = b.priority.index.compareTo(a.priority.index);
+            if (byPriority != 0) return byPriority;
+            return b.updatedAt.compareTo(a.updatedAt);
+          });
     return open.take(limit).toList();
   }
 
@@ -162,19 +171,20 @@ class DashboardHomeSummary {
   /// Subscriptions worth an operator's attention: awaiting payment first,
   /// then active ones running out soonest.
   List<UserSubscription> subscriptionsNeedingFollowUp({int limit = 5}) {
-    final relevant = subscriptions
-        .where(
-          (s) =>
-              s.status == SubscriptionStatus.pendingPayment ||
-              s.status == SubscriptionStatus.active,
-        )
-        .toList()
-      ..sort((a, b) {
-        if (a.status != b.status) {
-          return a.status == SubscriptionStatus.pendingPayment ? -1 : 1;
-        }
-        return a.remainingDays.compareTo(b.remainingDays);
-      });
+    final relevant =
+        subscriptions
+            .where(
+              (s) =>
+                  s.status == SubscriptionStatus.pendingPayment ||
+                  s.status == SubscriptionStatus.active,
+            )
+            .toList()
+          ..sort((a, b) {
+            if (a.status != b.status) {
+              return a.status == SubscriptionStatus.pendingPayment ? -1 : 1;
+            }
+            return a.remainingDays.compareTo(b.remainingDays);
+          });
     return relevant.take(limit).toList();
   }
 

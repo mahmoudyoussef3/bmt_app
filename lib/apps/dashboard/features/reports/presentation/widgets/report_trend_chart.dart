@@ -3,6 +3,7 @@ import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import '../cubit/reports_state.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
 class ReportTrendChart extends StatelessWidget {
   final ReportsLoaded state;
@@ -80,9 +81,9 @@ class _BarChart extends StatelessWidget {
                     final double val = computedCeiling * (3 - index) / 3;
                     return Text(
                       '${val.toStringAsFixed(0)}$suffix',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 8,
-                        color: AppStatusColors.onNeutralContainer,
+                        color: context.status(AppStatusTone.neutral).ink,
                       ),
                     );
                   }),
@@ -135,9 +136,11 @@ class _BarChart extends StatelessWidget {
                                 e.key.length > 6
                                     ? e.key.substring(0, 6)
                                     : e.key,
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 8,
-                                  color: AppStatusColors.onNeutralContainer,
+                                  color: context
+                                      .status(AppStatusTone.neutral)
+                                      .ink,
                                 ),
                               ),
                             ],

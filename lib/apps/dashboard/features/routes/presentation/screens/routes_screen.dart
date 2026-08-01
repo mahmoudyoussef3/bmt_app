@@ -1328,7 +1328,9 @@ class _RouteStationsMap extends StatelessWidget {
               children: [
                 const EasyWayTileLayer(),
                 if (points.length >= 2)
-                  PolylineLayer(polylines: buildRoutePolylines(context, points)),
+                  PolylineLayer(
+                    polylines: buildRoutePolylines(context, points),
+                  ),
                 MarkerLayer(
                   markers: [
                     for (final entry in stations.indexed)
@@ -1449,7 +1451,11 @@ class _StationsEmptyState extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.add_location_alt_outlined, color: scheme.primary, size: 30),
+          Icon(
+            Icons.add_location_alt_outlined,
+            color: scheme.primary,
+            size: 30,
+          ),
           const SizedBox(height: AppSpacing.small),
           Text(
             'لا توجد محطات بعد',

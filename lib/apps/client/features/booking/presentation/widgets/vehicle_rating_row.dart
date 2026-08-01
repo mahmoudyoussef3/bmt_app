@@ -69,22 +69,22 @@ class _RatingChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
       decoration: BoxDecoration(
-        color: ClientColors.journeyAmberLight,
+        color: ClientColors.journeyAmberLightFor(context),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
+          Icon(
             Icons.star_rounded,
             size: 14,
-            color: ClientColors.journeyAmber,
+            color: ClientColors.journeyAmberFor(context),
           ),
           const SizedBox(width: 4),
           Text(
             '${rating.toStringAsFixed(1)} ($count)',
             style: ClientTypography.labelSmall(context).copyWith(
-              color: ClientColors.onJourneyAmber,
+              color: ClientColors.onJourneyAmberFor(context),
               fontWeight: FontWeight.w900,
             ),
           ),

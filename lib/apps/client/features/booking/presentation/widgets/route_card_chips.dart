@@ -19,11 +19,11 @@ class RouteAvailabilityBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final background = active
-        ? ClientColors.journeyCyanLight
-        : ClientColors.journeySlateLight;
+        ? ClientColors.journeyCyanLightFor(context)
+        : ClientColors.journeySlateLightFor(context);
     final foreground = active
-        ? ClientColors.onJourneyCyan
-        : ClientColors.onJourneySlate;
+        ? ClientColors.onJourneyCyanFor(context)
+        : ClientColors.onJourneySlateFor(context);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),

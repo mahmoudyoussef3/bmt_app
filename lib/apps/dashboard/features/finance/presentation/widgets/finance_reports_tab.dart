@@ -161,6 +161,7 @@ class _IncomeStatement extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = DashboardChartPalette.of(context);
     final scheme = Theme.of(context).colorScheme;
     final statement = analytics.toStatement(generatedAt: DateTime.now());
     final memoLines = statement.summary.where((line) => line.isMemo).toList();
@@ -182,9 +183,9 @@ class _IncomeStatement extends StatelessWidget {
                   : FinanceFormat.moneyPrecise(line.amount),
               emphasised: line.isTotal || line.isSubtotal,
               valueColor: line.isTotal
-                  ? DashboardChartPalette.positive
+                  ? palette.positive
                   : line.label == 'المرتجعات المنفذة'
-                  ? DashboardChartPalette.negative
+                  ? palette.negative
                   : null,
             ),
           ],
@@ -262,6 +263,7 @@ class _RefundRequestsSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = DashboardChartPalette.of(context);
     final scheme = Theme.of(context).colorScheme;
     final pending = state.pendingRefundRequests;
 
@@ -292,7 +294,7 @@ class _RefundRequestsSummary extends StatelessWidget {
               value: FinanceFormat.money(byStatus[status]!.amount),
               trailing: '${FinanceFormat.count(byStatus[status]!.count)} طلب',
               valueColor: status == RefundStatus.pending
-                  ? DashboardChartPalette.warning
+                  ? palette.warning
                   : null,
             ),
         if (pending.isNotEmpty) ...[
@@ -300,18 +302,16 @@ class _RefundRequestsSummary extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(AppSpacing.medium),
             decoration: BoxDecoration(
-              color: DashboardChartPalette.warning.withAlpha(22),
+              color: palette.warning.withAlpha(22),
               borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-              border: Border.all(
-                color: DashboardChartPalette.warning.withAlpha(60),
-              ),
+              border: Border.all(color: palette.warning.withAlpha(60)),
             ),
             child: Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.info_outline_rounded,
                   size: 18,
-                  color: DashboardChartPalette.warning,
+                  color: palette.warning,
                 ),
                 const SizedBox(width: AppSpacing.small),
                 Expanded(
@@ -336,6 +336,7 @@ class _DailyTable extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = DashboardChartPalette.of(context);
     // Newest first: a finance reader opens this to check yesterday, not the
     // first day of the quarter.
     final rows = analytics.daily.reversed.toList();
@@ -360,9 +361,7 @@ class _DailyTable extends StatelessWidget {
             Text(
               point.refunded > 0 ? FinanceFormat.money(point.refunded) : '—',
               style: TextStyle(
-                color: point.refunded > 0
-                    ? DashboardChartPalette.negative
-                    : null,
+                color: point.refunded > 0 ? palette.negative : null,
               ),
             ),
             Text(point.pending > 0 ? FinanceFormat.money(point.pending) : '—'),

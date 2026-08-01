@@ -130,7 +130,10 @@ class RouteStopCard extends StatelessWidget {
                         style: TextButton.styleFrom(
                           foregroundColor: scheme.error,
                         ),
-                        icon: const Icon(Icons.delete_outline_rounded, size: 18),
+                        icon: const Icon(
+                          Icons.delete_outline_rounded,
+                          size: 18,
+                        ),
                         label: const Text('حذف'),
                       ),
                     ],
@@ -231,7 +234,9 @@ class _Header extends StatelessWidget {
             ),
             if (!stop.isLocated)
               Padding(
-                padding: const EdgeInsetsDirectional.only(end: AppSpacing.xSmall),
+                padding: const EdgeInsetsDirectional.only(
+                  end: AppSpacing.xSmall,
+                ),
                 child: Tooltip(
                   message: 'بدون موقع على الخريطة',
                   child: Icon(
@@ -282,7 +287,9 @@ class MapPickButton extends StatelessWidget {
           backgroundColor: active ? scheme.primary : null,
           foregroundColor: active ? scheme.onPrimary : null,
         ),
-        icon: Icon(active ? Icons.my_location_rounded : Icons.add_location_alt_outlined),
+        icon: Icon(
+          active ? Icons.my_location_rounded : Icons.add_location_alt_outlined,
+        ),
       ),
     );
   }
@@ -368,9 +375,9 @@ class DwellStepper extends StatelessWidget {
                 child: Text(
                   '$minutes د',
                   textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ),
               _StepButton(

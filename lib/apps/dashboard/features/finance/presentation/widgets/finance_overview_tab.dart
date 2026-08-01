@@ -24,6 +24,7 @@ class FinanceOverviewTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = DashboardChartPalette.of(context);
     final analytics = state.analytics;
 
     return ListView(
@@ -44,10 +45,10 @@ class FinanceOverviewTab extends StatelessWidget {
                 ChartDatum(
                   label: FinanceFormat.shortDate(point.date),
                   value: point.net,
-                  color: DashboardChartPalette.active,
+                  color: palette.active,
                 ),
             ],
-            lineColor: DashboardChartPalette.active,
+            lineColor: palette.active,
           ),
         ),
         const SizedBox(height: AppSpacing.medium),
@@ -56,13 +57,13 @@ class FinanceOverviewTab extends StatelessWidget {
             icon: Icons.pie_chart_outline_rounded,
             title: 'مصادر الإيراد',
             subtitle: 'حجوزات الرحلات مقابل باقات الاشتراك',
-            child: DashboardDonutChart(data: _sourceData(analytics)),
+            child: DashboardDonutChart(data: _sourceData(analytics, palette)),
           ),
           second: DashboardPanel(
             icon: Icons.donut_large_rounded,
             title: 'طرق التحصيل',
             subtitle: 'الإيراد المحصّل حسب وسيلة الدفع',
-            child: DashboardDonutChart(data: _methodData(analytics)),
+            child: DashboardDonutChart(data: _methodData(analytics, palette)),
           ),
         ),
         const SizedBox(height: AppSpacing.medium),
@@ -90,28 +91,34 @@ class FinanceOverviewTab extends StatelessWidget {
     );
   }
 
-  List<ChartDatum> _sourceData(FinanceAnalytics analytics) => [
+  List<ChartDatum> _sourceData(
+    FinanceAnalytics analytics,
+    DashboardChartPalette palette,
+  ) => [
     if (analytics.bookingsRevenue > 0)
       ChartDatum(
         label: 'الحجوزات',
         value: analytics.bookingsRevenue,
-        color: DashboardChartPalette.active,
+        color: palette.active,
       ),
     if (analytics.subscriptionsRevenue > 0)
       ChartDatum(
         label: 'الاشتراكات',
         value: analytics.subscriptionsRevenue,
-        color: DashboardChartPalette.accent,
+        color: palette.accent,
       ),
   ];
 
-  List<ChartDatum> _methodData(FinanceAnalytics analytics) => [
+  List<ChartDatum> _methodData(
+    FinanceAnalytics analytics,
+    DashboardChartPalette palette,
+  ) => [
     for (final (index, row) in analytics.byMethod.indexed)
       if (row.amount > 0)
         ChartDatum(
           label: row.label,
           value: row.amount,
-          color: DashboardChartPalette.categoryAt(index),
+          color: palette.categoryAt(index),
         ),
   ];
 }
@@ -126,6 +133,7 @@ class _NetRevenueHero extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = DashboardChartPalette.of(context);
     final analytics = state.analytics;
     final scheme = Theme.of(context).colorScheme;
     final previous = analytics.previous;
@@ -173,14 +181,14 @@ class _NetRevenueHero extends StatelessWidget {
         FinanceFigureRow(
           label: 'المرتجعات المنفذة',
           value: '− ${FinanceFormat.money(analytics.refunded)}',
-          valueColor: DashboardChartPalette.negative,
+          valueColor: palette.negative,
         ),
         Divider(color: scheme.outlineVariant.withAlpha(120)),
         FinanceFigureRow(
           label: 'صافي الإيراد',
           value: FinanceFormat.money(analytics.netRevenue),
           emphasised: true,
-          valueColor: DashboardChartPalette.positive,
+          valueColor: palette.positive,
         ),
       ],
     );
@@ -242,6 +250,7 @@ class _KpiBand extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = DashboardChartPalette.of(context);
     final analytics = state.analytics;
 
     return DashboardKpiGrid(
@@ -253,7 +262,7 @@ class _KpiBand extends StatelessWidget {
           value: FinanceFormat.count(analytics.transactionCount),
           detail:
               '${FinanceFormat.count(analytics.paidCount)} محصّلة • ${FinanceFormat.count(analytics.pendingCount)} معلقة',
-          color: DashboardChartPalette.active,
+          color: palette.active,
         ),
         DashboardKpiCard(
           icon: Icons.confirmation_number_outlined,
@@ -262,21 +271,21 @@ class _KpiBand extends StatelessWidget {
           detail: analytics.hasComparison
               ? 'التغير ${FinanceFormat.changeLabel(analytics.averageTicketChange)}'
               : 'متوسط العملية المحصّلة',
-          color: DashboardChartPalette.accent,
+          color: palette.accent,
         ),
         DashboardKpiCard(
           icon: Icons.hourglass_bottom_rounded,
           label: 'قيد التحصيل',
           value: FinanceFormat.money(analytics.pending),
           detail: '${FinanceFormat.count(analytics.pendingCount)} عملية معلقة',
-          color: DashboardChartPalette.warning,
+          color: palette.warning,
         ),
         DashboardKpiCard(
           icon: Icons.verified_outlined,
           label: 'معدل التحصيل',
           value: FinanceFormat.percent(analytics.collectionRate),
           detail: 'من إجمالي ${FinanceFormat.money(analytics.billed)} مفوترة',
-          color: DashboardChartPalette.positive,
+          color: palette.positive,
         ),
         DashboardKpiCard(
           icon: Icons.directions_bus_filled_outlined,
@@ -287,7 +296,7 @@ class _KpiBand extends StatelessWidget {
                 ? 0
                 : analytics.bookingsRevenue / analytics.netRevenue,
           ),
-          color: DashboardChartPalette.active,
+          color: palette.active,
         ),
         DashboardKpiCard(
           icon: Icons.workspace_premium_outlined,
@@ -295,7 +304,7 @@ class _KpiBand extends StatelessWidget {
           value: FinanceFormat.money(analytics.subscriptionsRevenue),
           detail:
               '${FinanceFormat.count(state.activeSubscriptions)} اشتراك نشط حالياً',
-          color: DashboardChartPalette.accent,
+          color: palette.accent,
         ),
         DashboardKpiCard(
           icon: Icons.undo_rounded,
@@ -303,7 +312,7 @@ class _KpiBand extends StatelessWidget {
           value: FinanceFormat.money(analytics.refunded),
           detail:
               'نسبة ${FinanceFormat.percent(analytics.refundRate)} من المتحصلات',
-          color: DashboardChartPalette.negative,
+          color: palette.negative,
         ),
         DashboardKpiCard(
           icon: Icons.pending_actions_outlined,
@@ -311,7 +320,7 @@ class _KpiBand extends StatelessWidget {
           value: FinanceFormat.money(state.pendingRefundAmount),
           detail:
               '${FinanceFormat.count(state.pendingRefundRequests.length)} طلب بانتظار القرار',
-          color: DashboardChartPalette.warning,
+          color: palette.warning,
         ),
       ],
     );

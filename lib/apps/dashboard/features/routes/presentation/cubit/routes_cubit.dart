@@ -256,17 +256,14 @@ class RoutesCubit extends Cubit<RoutesState> {
   Future<void> deleteStation(RouteStation station) async {
     final current = state;
     if (current is! RoutesLoaded) return;
-    await _mutate(
-      () async {
-        await _deleteStation(current.selectedRoute.id, station.id);
-        final routes = await _getRoutes();
-        return routes.firstWhere(
-          (route) => route.id == current.selectedRoute.id,
-          orElse: () => current.selectedRoute,
-        );
-      },
-      flashMessage: 'تم حذف المحطة',
-    );
+    await _mutate(() async {
+      await _deleteStation(current.selectedRoute.id, station.id);
+      final routes = await _getRoutes();
+      return routes.firstWhere(
+        (route) => route.id == current.selectedRoute.id,
+        orElse: () => current.selectedRoute,
+      );
+    }, flashMessage: 'تم حذف المحطة');
   }
 
   Future<void> reorderStations(int oldIndex, int newIndex) async {
@@ -318,7 +315,8 @@ class RoutesCubit extends Cubit<RoutesState> {
     if (raw.contains('violates foreign key') && raw.contains('route')) {
       return 'لا يمكن حذف هذا المسار لارتباطه برحلات محفوظة. أرشفه بدلاً من حذفه.';
     }
-    if (raw.contains('row-level security') || raw.contains('permission denied')) {
+    if (raw.contains('row-level security') ||
+        raw.contains('permission denied')) {
       return 'ليس لديك صلاحية تعديل مسارات هذا المكتب.';
     }
     return raw.replaceFirst('Exception: ', '');

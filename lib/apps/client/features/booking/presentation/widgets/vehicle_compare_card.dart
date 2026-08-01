@@ -237,7 +237,7 @@ class _SeatsBadge extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
         color: lowSeats
-            ? ClientColors.journeyAmberLight
+            ? ClientColors.journeyAmberLightFor(context)
             : ClientColors.primaryContainerFor(context),
         borderRadius: BorderRadius.circular(999),
       ),
@@ -245,8 +245,8 @@ class _SeatsBadge extends StatelessWidget {
         context.l10n.booking_seatsCountLabel(availableSeats),
         style: ClientTypography.labelMedium(context).copyWith(
           color: lowSeats
-              ? ClientColors.onJourneyAmber
-              : ClientColors.primaryFor(context),
+              ? ClientColors.onJourneyAmberFor(context)
+              : ClientColors.onPrimaryContainerFor(context),
           fontWeight: FontWeight.w900,
         ),
       ),

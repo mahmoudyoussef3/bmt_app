@@ -12,6 +12,7 @@ import '../cubit/subscription_plans_cubit.dart';
 import '../cubit/subscription_plans_state.dart';
 import '../widgets/plan_card.dart';
 import '../widgets/plan_form_sheet.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
 
 class SubscriptionPlansScreen extends StatelessWidget {
   const SubscriptionPlansScreen({super.key});
@@ -48,6 +49,7 @@ class _LoadedView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = DashboardChartPalette.of(context);
     final cubit = context.read<SubscriptionPlansCubit>();
     final active = state.plans
         .where((p) => p.status == PlanStatus.active)
@@ -79,13 +81,13 @@ class _LoadedView extends StatelessWidget {
               label: 'الباقات النشطة',
               value: '$active',
               icon: Icons.check_circle_outline,
-              color: const Color(0xFF16A34A),
+              color: palette.positive,
             ),
             DashboardKpiCard(
               label: 'الإيراد الشهري المتكرر التقديري',
               value: '${state.monthlyRecurringRevenue.toStringAsFixed(0)} ج.م',
               icon: Icons.trending_up_rounded,
-              color: const Color(0xFF2563EB),
+              color: palette.active,
             ),
           ],
         ),

@@ -109,7 +109,11 @@ class _Rating extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Icon(Icons.star_rounded, size: 15, color: Colors.amber),
+        Icon(
+          Icons.star_rounded,
+          size: 15,
+          color: ClientColors.ratingFor(context),
+        ),
         const SizedBox(width: 3),
         // Both figures give way rather than overflow: on a narrow phone the
         // provider row can be squeezed to a few dozen pixels.

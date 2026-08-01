@@ -11,6 +11,7 @@ import '../cubit/tickets_state.dart';
 import 'tickets_shared_widgets.dart';
 import 'ticket_details_dialog.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
 class TicketsTable extends StatelessWidget {
   final TicketsLoaded state;
@@ -118,7 +119,7 @@ class TicketsTable extends StatelessWidget {
                       return DataRow(
                         color: t.slaBreached
                             ? WidgetStateProperty.all(
-                                AppStatusColors.errorContainer,
+                                context.status(AppStatusTone.error).tint,
                               )
                             : null,
                         onSelectChanged: (_) {
@@ -207,8 +208,8 @@ class _SlaBadgeState extends State<_SlaBadge> {
     if (ticket.slaBreached) {
       return _badge(
         'BREACHED',
-        AppStatusColors.errorContainer,
-        AppStatusColors.onErrorContainer,
+        context.status(AppStatusTone.error).tint,
+        context.status(AppStatusTone.error).ink,
         bold: true,
       );
     }
@@ -217,8 +218,8 @@ class _SlaBadgeState extends State<_SlaBadge> {
     if (remaining.isNegative) {
       return _badge(
         'Overdue',
-        AppStatusColors.errorContainer,
-        AppStatusColors.onErrorContainer,
+        context.status(AppStatusTone.error).tint,
+        context.status(AppStatusTone.error).ink,
         bold: true,
       );
     }
@@ -227,10 +228,13 @@ class _SlaBadgeState extends State<_SlaBadge> {
         ? '${remaining.inHours}h ${remaining.inMinutes.remainder(60)}m left'
         : '${remaining.inMinutes}m left';
     final (bg, fg) = ticket.isSlaNearBreach
-        ? (AppStatusColors.warningContainer, AppStatusColors.onWarningContainer)
+        ? (
+            context.status(AppStatusTone.warning).tint,
+            context.status(AppStatusTone.warning).ink,
+          )
         : (
-            AppStatusColors.successContainer,
-            AppStatusColors.onSuccessContainer,
+            context.status(AppStatusTone.success).tint,
+            context.status(AppStatusTone.success).ink,
           );
     return _badge(label, bg, fg);
   }

@@ -274,7 +274,10 @@ class SupabaseRoutesDatasource implements RoutesDatasource {
   /// Rows that did not change are skipped, so status-only writes (pause,
   /// archive) — which pass the route's full station list along — don't rewrite
   /// every stop.
-  Future<void> _syncStations(String routeId, List<RouteStation> stations) async {
+  Future<void> _syncStations(
+    String routeId,
+    List<RouteStation> stations,
+  ) async {
     final existing = await _fetchStationsForRoute(routeId);
     final keptIds = stations
         .map((station) => station.id)

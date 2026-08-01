@@ -6,6 +6,7 @@ import 'package:bmt_app/core/theme/tokens.dart';
 
 import '../../domain/entities/booking_lifecycle.dart';
 import '../../domain/entities/operation_booking.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
 /// States in one sentence, plus any contradiction between them.
 ///
@@ -53,11 +54,11 @@ class BookingNextActionBanner extends StatelessWidget {
               ? 'حالة الحجز وحالة الدفع غير متوافقتين — راجع التفاصيل أدناه قبل أي إجراء آخر.'
               : action.reason,
           container: action.isActionable
-              ? AppStatusColors.infoContainer
-              : AppStatusColors.neutralContainer,
+              ? context.status(AppStatusTone.info).tint
+              : context.status(AppStatusTone.neutral).tint,
           onContainer: action.isActionable
-              ? AppStatusColors.onInfoContainer
-              : AppStatusColors.onNeutralContainer,
+              ? context.status(AppStatusTone.info).ink
+              : context.status(AppStatusTone.neutral).ink,
         ),
         // Contradictions are listed in full rather than summarised: each one is a
         // different remedy (refund, collect, document), so collapsing them would
@@ -73,11 +74,11 @@ class BookingNextActionBanner extends StatelessWidget {
                 : 'حالة تستدعي المراجعة',
             body: issue.message,
             container: issue.severity == BookingIssueSeverity.critical
-                ? AppStatusColors.errorContainer
-                : AppStatusColors.warningContainer,
+                ? context.status(AppStatusTone.error).tint
+                : context.status(AppStatusTone.warning).tint,
             onContainer: issue.severity == BookingIssueSeverity.critical
-                ? AppStatusColors.onErrorContainer
-                : AppStatusColors.onWarningContainer,
+                ? context.status(AppStatusTone.error).ink
+                : context.status(AppStatusTone.warning).ink,
           ),
         ],
       ],

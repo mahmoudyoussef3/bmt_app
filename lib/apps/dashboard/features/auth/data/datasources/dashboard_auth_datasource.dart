@@ -38,7 +38,9 @@ class DashboardAuthDatasource {
     } on AuthException {
       // Deliberately the same message as an unknown name: distinguishing them would
       // turn this screen into a directory of who works here.
-      throw const DashboardAuthFailure('اسم المستخدم أو كلمة المرور غير صحيحة.');
+      throw const DashboardAuthFailure(
+        'اسم المستخدم أو كلمة المرور غير صحيحة.',
+      );
     } catch (_) {
       throw const DashboardAuthFailure('تعذر تسجيل الدخول. حاول مرة أخرى.');
     }
@@ -178,7 +180,9 @@ class DashboardAuthDatasource {
 
     final map = result is Map ? Map<String, dynamic>.from(result) : null;
     if (map == null || map['outcome'] != 'ready') {
-      throw const DashboardAuthFailure('اسم المستخدم أو كلمة المرور غير صحيحة.');
+      throw const DashboardAuthFailure(
+        'اسم المستخدم أو كلمة المرور غير صحيحة.',
+      );
     }
     return map['login_email'] as String;
   }

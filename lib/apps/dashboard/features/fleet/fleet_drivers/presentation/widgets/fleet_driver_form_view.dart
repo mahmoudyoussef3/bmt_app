@@ -212,17 +212,29 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
           child: Column(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 16,
+                ),
                 decoration: BoxDecoration(
                   color: scheme.primary.withAlpha(10),
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-                  border: Border(bottom: BorderSide(color: scheme.outlineVariant.withAlpha(50))),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(24),
+                  ),
+                  border: Border(
+                    bottom: BorderSide(
+                      color: scheme.outlineVariant.withAlpha(50),
+                    ),
+                  ),
                 ),
                 child: Row(
                   children: [
                     Container(
                       padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(color: scheme.primary, shape: BoxShape.circle),
+                      decoration: BoxDecoration(
+                        color: scheme.primary,
+                        shape: BoxShape.circle,
+                      ),
                       child: Icon(
                         isEdit ? Icons.edit_rounded : Icons.person_add_rounded,
                         color: scheme.onPrimary,
@@ -232,14 +244,20 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
                     const SizedBox(width: 16),
                     Expanded(
                       child: Text(
-                        isEdit ? 'تعديل السائق: ${widget.driver!.name}' : 'إضافة سائق جديد',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                        isEdit
+                            ? 'تعديل السائق: ${widget.driver!.name}'
+                            : 'إضافة سائق جديد',
+                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                     ),
                     IconButton(
                       onPressed: _handleBack,
                       icon: const Icon(Icons.close_rounded),
-                      style: IconButton.styleFrom(backgroundColor: scheme.surfaceContainerHighest),
+                      style: IconButton.styleFrom(
+                        backgroundColor: scheme.surfaceContainerHighest,
+                      ),
                     ),
                   ],
                 ),
@@ -257,145 +275,156 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _section(
-              icon: Icons.person_outline_rounded,
-              title: 'البيانات الشخصية',
-              subtitle: 'الاسم والهوية وكود الموظف.',
-              child: _responsiveGrid([
-                _textFormField(
-                  controller: name,
-                  label: 'الاسم الكامل للسائق ثنائياً أو أكثر',
-                  icon: Icons.person_outline_rounded,
-                  validator: FleetValidators.validateName,
-                ),
-                _textFormField(
-                  controller: nationalId,
-                  label: 'الرقم القومي (14 رقماً مصرياً)',
-                  icon: Icons.badge_outlined,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: FleetInputFormatters.nationalId,
-                  validator: FleetValidators.validateNationalId,
-                ),
-                _textFormField(
-                  controller: employeeCode,
-                  label: 'كود الموظف (EMP-XXX)',
-                  icon: Icons.vpn_key_outlined,
-                  validator: FleetValidators.validateEmployeeCode,
-                ),
-              ]),
-            ),
-            _section(
-              icon: Icons.contact_phone_outlined,
-              title: 'بيانات الاتصال والعنوان',
-              subtitle: 'أرقام التواصل والعنوان السكني.',
-              child: _responsiveGrid([
-                _textFormField(
-                  controller: phone,
-                  label: 'رقم الهاتف الأساسي',
-                  icon: Icons.phone_android_rounded,
-                  keyboardType: TextInputType.phone,
-                  inputFormatters: FleetInputFormatters.egyptianPhone,
-                  validator: (v) =>
-                      FleetValidators.validatePhone(v ?? '', 'رقم الهاتف'),
-                ),
-                _textFormField(
-                  controller: emergency,
-                  label: 'رقم هاتف الطوارئ البديل',
-                  icon: Icons.contact_phone_outlined,
-                  keyboardType: TextInputType.phone,
-                  inputFormatters: FleetInputFormatters.egyptianPhone,
-                  validator: (v) {
-                    final err = FleetValidators.validatePhone(
-                      v ?? '',
-                      'رقم هاتف الطوارئ',
-                    );
-                    if (err == null &&
-                        phone.text.trim() == emergency.text.trim()) {
-                      return 'رقم هاتف الطوارئ لا يمكن أن يكون نفس الرقم الأساسي';
-                    }
-                    return err;
-                  },
-                ),
-                _textFormField(
-                  controller: address,
-                  label: 'العنوان السكني التفصيلي',
-                  icon: Icons.home_outlined,
-                  validator: (v) => (v == null || v.trim().isEmpty)
-                      ? 'العنوان السكني مطلوب'
-                      : null,
-                ),
-              ]),
-            ),
-            _section(
-              icon: Icons.card_membership_rounded,
-              title: 'الرخصة وصلاحية العمل',
-              subtitle: 'بيانات الرخصة والتعيين والمركبة.',
-              child: _responsiveGrid([
-                _textFormField(
-                  controller: license,
-                  label: 'رقم رخصة القيادة',
-                  icon: Icons.card_membership_rounded,
-                  validator: FleetValidators.validateLicenseNumber,
-                ),
-                _dateFormField(
-                  controller: expiry,
-                  label: 'تاريخ انتهاء صلاحية الرخصة (YYYY-MM-DD)',
-                  firstDate: DateTime.now(),
-                  validator: (v) => FleetValidators.validateDate(
-                    v ?? '',
-                    'تاريخ انتهاء الرخصة',
-                  ),
-                ),
-                _dateFormField(
-                  controller: hireDate,
-                  label: 'تاريخ تعيين الموظف بالشركة (YYYY-MM-DD)',
-                  validator: (v) =>
-                      FleetValidators.validateDate(v ?? '', 'تاريخ التعيين'),
-                ),
-                DropdownButtonFormField<String>(
-                  initialValue: selectedVehicleId,
-                  decoration: const InputDecoration(
-                    labelText: 'المركبة المعينة (اختياري)',
-                    prefixIcon: Icon(Icons.directions_car_rounded),
-                    border: OutlineInputBorder(),
-                  ),
-                  items: [
-                    const DropdownMenuItem<String>(
-                      value: null,
-                      child: Text('غير معين (بدون مركبة)'),
-                    ),
-                    ...vehicles.map(
-                      (v) => DropdownMenuItem<String>(
-                        value: v.id,
-                        child: Text('${v.vehicleCode} (${v.plateNumber})'),
-                      ),
-                    ),
-                  ],
-                  onChanged: (val) => setState(() => selectedVehicleId = val),
-                ),
-                _textFormField(
-                  controller: notes,
-                  label: 'ملاحظات إضافية عن السائق',
-                  icon: Icons.notes_rounded,
-                  maxLines: 2,
-                ),
-              ]),
-            ),
-            FleetDocumentsInlineSection(
-              isDriver: true,
-              existingDocuments: widget.driver?.documents ?? const [],
-              onChanged: (docs) => _pendingDocs = docs,
-            ),
-            const SizedBox(height: AppSpacing.large),
-            if (_globalError.isNotEmpty) ...[
-              Text(
-                _globalError,
-                style: TextStyle(
-                  color: scheme.error,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: AppSpacing.medium),
-            ],
+                          icon: Icons.person_outline_rounded,
+                          title: 'البيانات الشخصية',
+                          subtitle: 'الاسم والهوية وكود الموظف.',
+                          child: _responsiveGrid([
+                            _textFormField(
+                              controller: name,
+                              label: 'الاسم الكامل للسائق ثنائياً أو أكثر',
+                              icon: Icons.person_outline_rounded,
+                              validator: FleetValidators.validateName,
+                            ),
+                            _textFormField(
+                              controller: nationalId,
+                              label: 'الرقم القومي (14 رقماً مصرياً)',
+                              icon: Icons.badge_outlined,
+                              keyboardType: TextInputType.number,
+                              inputFormatters: FleetInputFormatters.nationalId,
+                              validator: FleetValidators.validateNationalId,
+                            ),
+                            _textFormField(
+                              controller: employeeCode,
+                              label: 'كود الموظف (EMP-XXX)',
+                              icon: Icons.vpn_key_outlined,
+                              validator: FleetValidators.validateEmployeeCode,
+                            ),
+                          ]),
+                        ),
+                        _section(
+                          icon: Icons.contact_phone_outlined,
+                          title: 'بيانات الاتصال والعنوان',
+                          subtitle: 'أرقام التواصل والعنوان السكني.',
+                          child: _responsiveGrid([
+                            _textFormField(
+                              controller: phone,
+                              label: 'رقم الهاتف الأساسي',
+                              icon: Icons.phone_android_rounded,
+                              keyboardType: TextInputType.phone,
+                              inputFormatters:
+                                  FleetInputFormatters.egyptianPhone,
+                              validator: (v) => FleetValidators.validatePhone(
+                                v ?? '',
+                                'رقم الهاتف',
+                              ),
+                            ),
+                            _textFormField(
+                              controller: emergency,
+                              label: 'رقم هاتف الطوارئ البديل',
+                              icon: Icons.contact_phone_outlined,
+                              keyboardType: TextInputType.phone,
+                              inputFormatters:
+                                  FleetInputFormatters.egyptianPhone,
+                              validator: (v) {
+                                final err = FleetValidators.validatePhone(
+                                  v ?? '',
+                                  'رقم هاتف الطوارئ',
+                                );
+                                if (err == null &&
+                                    phone.text.trim() ==
+                                        emergency.text.trim()) {
+                                  return 'رقم هاتف الطوارئ لا يمكن أن يكون نفس الرقم الأساسي';
+                                }
+                                return err;
+                              },
+                            ),
+                            _textFormField(
+                              controller: address,
+                              label: 'العنوان السكني التفصيلي',
+                              icon: Icons.home_outlined,
+                              validator: (v) => (v == null || v.trim().isEmpty)
+                                  ? 'العنوان السكني مطلوب'
+                                  : null,
+                            ),
+                          ]),
+                        ),
+                        _section(
+                          icon: Icons.card_membership_rounded,
+                          title: 'الرخصة وصلاحية العمل',
+                          subtitle: 'بيانات الرخصة والتعيين والمركبة.',
+                          child: _responsiveGrid([
+                            _textFormField(
+                              controller: license,
+                              label: 'رقم رخصة القيادة',
+                              icon: Icons.card_membership_rounded,
+                              validator: FleetValidators.validateLicenseNumber,
+                            ),
+                            _dateFormField(
+                              controller: expiry,
+                              label: 'تاريخ انتهاء صلاحية الرخصة (YYYY-MM-DD)',
+                              firstDate: DateTime.now(),
+                              validator: (v) => FleetValidators.validateDate(
+                                v ?? '',
+                                'تاريخ انتهاء الرخصة',
+                              ),
+                            ),
+                            _dateFormField(
+                              controller: hireDate,
+                              label: 'تاريخ تعيين الموظف بالشركة (YYYY-MM-DD)',
+                              validator: (v) => FleetValidators.validateDate(
+                                v ?? '',
+                                'تاريخ التعيين',
+                              ),
+                            ),
+                            DropdownButtonFormField<String>(
+                              initialValue: selectedVehicleId,
+                              decoration: const InputDecoration(
+                                labelText: 'المركبة المعينة (اختياري)',
+                                prefixIcon: Icon(Icons.directions_car_rounded),
+                                border: OutlineInputBorder(),
+                              ),
+                              items: [
+                                const DropdownMenuItem<String>(
+                                  value: null,
+                                  child: Text('غير معين (بدون مركبة)'),
+                                ),
+                                ...vehicles.map(
+                                  (v) => DropdownMenuItem<String>(
+                                    value: v.id,
+                                    child: Text(
+                                      '${v.vehicleCode} (${v.plateNumber})',
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              onChanged: (val) =>
+                                  setState(() => selectedVehicleId = val),
+                            ),
+                            _textFormField(
+                              controller: notes,
+                              label: 'ملاحظات إضافية عن السائق',
+                              icon: Icons.notes_rounded,
+                              maxLines: 2,
+                            ),
+                          ]),
+                        ),
+                        FleetDocumentsInlineSection(
+                          isDriver: true,
+                          existingDocuments:
+                              widget.driver?.documents ?? const [],
+                          onChanged: (docs) => _pendingDocs = docs,
+                        ),
+                        const SizedBox(height: AppSpacing.large),
+                        if (_globalError.isNotEmpty) ...[
+                          Text(
+                            _globalError,
+                            style: TextStyle(
+                              color: scheme.error,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.medium),
+                        ],
                       ],
                     ),
                   ),

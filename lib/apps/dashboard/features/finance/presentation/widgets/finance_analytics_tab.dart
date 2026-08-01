@@ -23,6 +23,7 @@ class FinanceAnalyticsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = DashboardChartPalette.of(context);
     final analytics = state.analytics;
 
     return ListView(
@@ -40,10 +41,10 @@ class FinanceAnalyticsTab extends StatelessWidget {
                 ChartDatum(
                   label: FinanceFormat.shortDate(point.date),
                   value: point.net,
-                  color: DashboardChartPalette.positive,
+                  color: palette.positive,
                 ),
             ],
-            lineColor: DashboardChartPalette.positive,
+            lineColor: palette.positive,
           ),
         ),
         const SizedBox(height: AppSpacing.medium),
@@ -57,7 +58,7 @@ class FinanceAnalyticsTab extends StatelessWidget {
                 ChartDatum(
                   label: row.label,
                   value: row.amount,
-                  color: DashboardChartPalette.active,
+                  color: palette.active,
                 ),
             ],
           ),
@@ -73,7 +74,7 @@ class FinanceAnalyticsTab extends StatelessWidget {
                 ChartDatum(
                   label: FinanceFormat.shortDate(point.date),
                   value: point.transactions.toDouble(),
-                  color: DashboardChartPalette.accent,
+                  color: palette.accent,
                 ),
             ],
           ),
@@ -120,6 +121,7 @@ class _SignalsPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = DashboardChartPalette.of(context);
     final best = analytics.bestDay;
     final busiest = analytics.busiestDay;
     final topRoute = analytics.byRoute.isEmpty ? null : analytics.byRoute.first;
@@ -143,7 +145,7 @@ class _SignalsPanel extends StatelessWidget {
               value: FinanceFormat.money(analytics.averageDailyRevenue),
               detail:
                   '${FinanceFormat.count(analytics.activeDays)} يوم فيه تحصيل من ${FinanceFormat.count(analytics.daily.length)}',
-              color: DashboardChartPalette.active,
+              color: palette.active,
             ),
             _SignalTile(
               icon: Icons.emoji_events_outlined,
@@ -152,7 +154,7 @@ class _SignalsPanel extends StatelessWidget {
               detail: best == null
                   ? 'لا توجد بيانات'
                   : FinanceFormat.date(best.date),
-              color: DashboardChartPalette.positive,
+              color: palette.positive,
             ),
             _SignalTile(
               icon: Icons.local_fire_department_outlined,
@@ -163,7 +165,7 @@ class _SignalsPanel extends StatelessWidget {
               detail: busiest == null
                   ? 'لا توجد بيانات'
                   : FinanceFormat.date(busiest.date),
-              color: DashboardChartPalette.warning,
+              color: palette.warning,
             ),
             _SignalTile(
               icon: Icons.hub_outlined,
@@ -172,7 +174,7 @@ class _SignalsPanel extends StatelessWidget {
               detail: topRoute == null
                   ? 'لا توجد مسارات في الفترة'
                   : 'من مسار ${topRoute.label} وحده',
-              color: DashboardChartPalette.accent,
+              color: palette.accent,
             ),
             _SignalTile(
               icon: Icons.undo_rounded,
@@ -180,7 +182,7 @@ class _SignalsPanel extends StatelessWidget {
               value: FinanceFormat.percent(analytics.refundRate),
               detail:
                   '${FinanceFormat.count(analytics.refundedCount)} عملية مستردة',
-              color: DashboardChartPalette.negative,
+              color: palette.negative,
             ),
             _SignalTile(
               icon: Icons.savings_outlined,
@@ -188,7 +190,7 @@ class _SignalsPanel extends StatelessWidget {
               value: FinanceFormat.percent(analytics.collectionRate),
               detail:
                   'متبقٍ ${FinanceFormat.money(analytics.pending)} قيد التحصيل',
-              color: DashboardChartPalette.positive,
+              color: palette.positive,
             ),
           ];
 

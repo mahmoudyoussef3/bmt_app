@@ -5,6 +5,7 @@ import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
 class FleetAvatar extends StatelessWidget {
   final String label;
@@ -421,28 +422,28 @@ class FleetOperationalChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final (background, foreground) = switch (status) {
       FleetOperationalStatus.available => (
-        AppStatusColors.successContainer,
-        AppStatusColors.onSuccessContainer,
+        context.status(AppStatusTone.success).tint,
+        context.status(AppStatusTone.success).ink,
       ),
       FleetOperationalStatus.assigned => (
-        AppStatusColors.infoContainer,
-        AppStatusColors.onInfoContainer,
+        context.status(AppStatusTone.info).tint,
+        context.status(AppStatusTone.info).ink,
       ),
       FleetOperationalStatus.onTrip => (
-        AppStatusColors.specialContainer,
-        AppStatusColors.onSpecialContainer,
+        context.status(AppStatusTone.special).tint,
+        context.status(AppStatusTone.special).ink,
       ),
       FleetOperationalStatus.maintenance => (
-        AppStatusColors.warningContainer,
-        AppStatusColors.onWarningContainer,
+        context.status(AppStatusTone.warning).tint,
+        context.status(AppStatusTone.warning).ink,
       ),
       FleetOperationalStatus.unavailable => (
-        AppStatusColors.errorContainer,
-        AppStatusColors.onErrorContainer,
+        context.status(AppStatusTone.error).tint,
+        context.status(AppStatusTone.error).ink,
       ),
       FleetOperationalStatus.retired => (
-        AppStatusColors.neutralContainer,
-        AppStatusColors.onNeutralContainer,
+        context.status(AppStatusTone.neutral).tint,
+        context.status(AppStatusTone.neutral).ink,
       ),
     };
 

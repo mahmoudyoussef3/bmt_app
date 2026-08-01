@@ -6,6 +6,7 @@ import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
 class FleetVehiclesCardList extends StatelessWidget {
   final List<FleetVehicle> vehicles;
@@ -72,9 +73,9 @@ class FleetVehiclesCardList extends StatelessWidget {
               children: paged.map((vehicle) {
                 final driverName = _driverName(vehicle.currentDriverId);
                 final documentColor = vehicle.hasExpiredDocument
-                    ? AppStatusColors.onErrorContainer
+                    ? context.status(AppStatusTone.error).ink
                     : vehicle.hasDocumentExpiringSoon
-                    ? AppStatusColors.onWarningContainer
+                    ? context.status(AppStatusTone.warning).ink
                     : scheme.primary;
 
                 return SizedBox(
@@ -363,11 +364,11 @@ class _VehicleAlertBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final isCritical = severity == _VehicleAlertSeverity.critical;
     final bg = isCritical
-        ? AppStatusColors.errorContainer
-        : AppStatusColors.warningContainer;
+        ? context.status(AppStatusTone.error).tint
+        : context.status(AppStatusTone.warning).tint;
     final fg = isCritical
-        ? AppStatusColors.onErrorContainer
-        : AppStatusColors.onWarningContainer;
+        ? context.status(AppStatusTone.error).ink
+        : context.status(AppStatusTone.warning).ink;
 
     return Container(
       width: double.infinity,

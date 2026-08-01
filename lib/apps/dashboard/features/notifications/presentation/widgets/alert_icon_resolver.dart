@@ -1,39 +1,41 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/core/theme/colors.dart';
+
 import '../../domain/entities/operational_alert.dart';
 
+/// The semantic status role and icon each operational alert type is drawn with.
+///
+/// Returns a tone rather than an `(iconColor, iconBg)` pair of light-mode
+/// hexes: the bell and the inbox render on a card that follows the theme, and
+/// the old pale backgrounds (`#FEF3C7`, `#E0F2FE`, …) stayed pale on a slate
+/// page. The caller resolves via `AppStatusStyle.of(context, tone)`.
 abstract final class AlertIconResolver {
-  static (Color iconColor, Color iconBg, IconData icon) resolve(
+  static (AppStatusTone tone, IconData icon) resolve(
     OperationalAlertType type,
   ) => switch (type) {
     OperationalAlertType.paymentReview => (
-      const Color(0xFFD97706),
-      const Color(0xFFFEF3C7),
+      AppStatusTone.warning,
       Icons.receipt_long_outlined,
     ),
     OperationalAlertType.captainRequest => (
-      const Color(0xFF7C3AED),
-      const Color(0xFFF5F3FF),
+      AppStatusTone.special,
       Icons.how_to_reg_outlined,
     ),
     OperationalAlertType.supportTicket => (
-      const Color(0xFF0891B2),
-      const Color(0xFFE0F2FE),
+      AppStatusTone.success,
       Icons.support_agent_outlined,
     ),
     OperationalAlertType.refundRequest => (
-      const Color(0xFFDC2626),
-      const Color(0xFFFEE2E2),
+      AppStatusTone.error,
       Icons.currency_exchange_outlined,
     ),
     OperationalAlertType.tripCancelled => (
-      const Color(0xFFDC2626),
-      const Color(0xFFFEE2E2),
+      AppStatusTone.error,
       Icons.cancel_outlined,
     ),
     OperationalAlertType.general => (
-      const Color(0xFF1769E8),
-      const Color(0xFFEAF2FF),
+      AppStatusTone.info,
       Icons.notifications_outlined,
     ),
   };

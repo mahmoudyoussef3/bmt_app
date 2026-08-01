@@ -8,6 +8,7 @@ import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
 class FleetDriverDetailsView extends StatelessWidget {
   final FleetDriver driver;
@@ -527,26 +528,22 @@ class _ReadinessPanel extends StatelessWidget {
   final DriverOperationsSnapshot snapshot;
   final String vehicleLabel;
 
-  static (Color bg, Color fg) _healthColors(DriverHealthLevel health) =>
+  /// The semantic status role a driver's health level maps to. Returning a
+  /// tone rather than a colour pair is what lets the caller resolve it against
+  /// the theme in effect — these used to be light-only constants.
+  static AppStatusTone _healthTone(DriverHealthLevel health) =>
       switch (health) {
-        DriverHealthLevel.healthy => (
-          AppStatusColors.successContainer,
-          AppStatusColors.onSuccessContainer,
-        ),
-        DriverHealthLevel.warning => (
-          AppStatusColors.warningContainer,
-          AppStatusColors.onWarningContainer,
-        ),
-        DriverHealthLevel.critical => (
-          AppStatusColors.errorContainer,
-          AppStatusColors.onErrorContainer,
-        ),
+        DriverHealthLevel.healthy => AppStatusTone.success,
+        DriverHealthLevel.warning => AppStatusTone.warning,
+        DriverHealthLevel.critical => AppStatusTone.error,
       };
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final (healthBg, healthFg) = _healthColors(snapshot.health);
+    final health = context.status(_healthTone(snapshot.health));
+    final healthBg = health.tint;
+    final healthFg = health.ink;
 
     return AppCard(
       padding: const EdgeInsets.all(AppSpacing.large),

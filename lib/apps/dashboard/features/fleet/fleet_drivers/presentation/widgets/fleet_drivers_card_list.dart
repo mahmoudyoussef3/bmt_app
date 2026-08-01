@@ -7,6 +7,7 @@ import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
 class FleetDriversCardList extends StatelessWidget {
   final List<FleetDriver> drivers;
@@ -442,10 +443,10 @@ class _DriverAssignmentBanner extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(AppSpacing.small),
         decoration: BoxDecoration(
-          color: AppStatusColors.warningContainer,
+          color: context.status(AppStatusTone.warning).tint,
           borderRadius: BorderRadius.circular(AppTokens.radius),
           border: Border.all(
-            color: AppStatusColors.onWarningContainer.withAlpha(90),
+            color: context.status(AppStatusTone.warning).ink.withAlpha(90),
           ),
         ),
         child: Wrap(
@@ -456,16 +457,16 @@ class _DriverAssignmentBanner extends StatelessWidget {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(
+                Icon(
                   Icons.warning_amber_rounded,
                   size: 18,
-                  color: AppStatusColors.onWarningContainer,
+                  color: context.status(AppStatusTone.warning).ink,
                 ),
                 const SizedBox(width: AppSpacing.xSmall),
                 Text(
                   'لا توجد سيارة مخصصة — لا يمكن جدولة رحلات لهذا السائق',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppStatusColors.onWarningContainer,
+                    color: context.status(AppStatusTone.warning).ink,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
@@ -484,7 +485,7 @@ class _DriverAssignmentBanner extends StatelessWidget {
     final available = assigned.status == FleetVehicleStatus.active;
     final tint = available
         ? scheme.primary
-        : AppStatusColors.onWarningContainer;
+        : context.status(AppStatusTone.warning).ink;
 
     return Container(
       width: double.infinity,
@@ -544,11 +545,11 @@ class _DriverAlertBanner extends StatelessWidget {
   Widget build(BuildContext context) {
     final isCritical = severity == _DriverAlertSeverity.critical;
     final bg = isCritical
-        ? AppStatusColors.errorContainer
-        : AppStatusColors.warningContainer;
+        ? context.status(AppStatusTone.error).tint
+        : context.status(AppStatusTone.warning).tint;
     final fg = isCritical
-        ? AppStatusColors.onErrorContainer
-        : AppStatusColors.onWarningContainer;
+        ? context.status(AppStatusTone.error).ink
+        : context.status(AppStatusTone.warning).ink;
 
     return Container(
       width: double.infinity,

@@ -109,7 +109,11 @@ class TrackingRatingRow extends StatelessWidget {
     }
     return Row(
       children: [
-        const Icon(Icons.star_rounded, size: 15, color: Color(0xFFF59E0B)),
+        Icon(
+          Icons.star_rounded,
+          size: 15,
+          color: ClientColors.ratingFor(context),
+        ),
         const SizedBox(width: 3),
         Text(
           text,

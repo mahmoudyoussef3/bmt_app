@@ -239,7 +239,9 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
       value,
       style: ClientTypography.bodySmall(context).copyWith(
         fontWeight: isBold || showCopy ? FontWeight.w900 : FontWeight.w700,
-        color: isBold ? ClientColors.primary : ClientColors.textPrimaryFor(context),
+        color: isBold
+            ? ClientColors.primary
+            : ClientColors.textPrimaryFor(context),
       ),
     );
     return Row(
@@ -397,15 +399,15 @@ class _ReceiptUploadScreenState extends State<ReceiptUploadScreen> {
   Widget _buildReceiptReadyBox(BuildContext context) {
     return ClientCard(
       padding: const EdgeInsets.all(16),
-      backgroundColor: ClientColors.journeyCyanLight,
-      borderColor: ClientColors.journeyCyan.withAlpha(80),
+      backgroundColor: ClientColors.journeyCyanLightFor(context),
+      borderColor: ClientColors.journeyCyanFor(context).withAlpha(80),
       useShadow: false,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(
+          Icon(
             Icons.check_circle_rounded,
-            color: ClientColors.journeyCyan,
+            color: ClientColors.onJourneyCyanFor(context),
             size: 22,
           ),
           const SizedBox(width: 12),

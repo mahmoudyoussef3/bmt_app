@@ -4,6 +4,7 @@ import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
 
 import '../../domain/entities/user_subscription.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
 /// One place for the module's number/date rendering, so a price on a card and
 /// the same price in the detail pane can never drift apart.
@@ -54,11 +55,15 @@ String arabicDigits(String text) {
 }
 
 /// The module's status palette, shared by chips, borders and KPI tiles.
-Color subscriptionStatusColor(SubscriptionStatus status) => switch (status) {
-  SubscriptionStatus.active => AppStatusColors.onSuccessContainer,
-  SubscriptionStatus.pendingPayment => AppStatusColors.onWarningContainer,
-  SubscriptionStatus.expired => AppStatusColors.onNeutralContainer,
-  SubscriptionStatus.cancelled => AppStatusColors.onErrorContainer,
+Color subscriptionStatusColor(
+  BuildContext context,
+  SubscriptionStatus status,
+) => switch (status) {
+  SubscriptionStatus.active => context.status(AppStatusTone.success).ink,
+  SubscriptionStatus.pendingPayment =>
+    context.status(AppStatusTone.warning).ink,
+  SubscriptionStatus.expired => context.status(AppStatusTone.neutral).ink,
+  SubscriptionStatus.cancelled => context.status(AppStatusTone.error).ink,
 };
 
 class SubscriptionStatusChip extends StatelessWidget {
@@ -68,7 +73,7 @@ class SubscriptionStatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = subscriptionStatusColor(status);
+    final color = subscriptionStatusColor(context, status);
     return StatusChip(
       label: status.label,
       color: color.withAlpha(28),

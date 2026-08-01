@@ -38,7 +38,10 @@ class BookingsToolbar extends StatelessWidget {
               AppSpacing.medium,
               0,
             ),
-            child: BookingQueueTabBar(state: state, onSelected: cubit.switchTab),
+            child: BookingQueueTabBar(
+              state: state,
+              onSelected: cubit.switchTab,
+            ),
           ),
           const SizedBox(height: AppSpacing.medium),
           Divider(height: 1, color: scheme.outline.withAlpha(60)),
@@ -340,7 +343,10 @@ class _RouteFilter extends StatelessWidget {
         isDense: true,
       ),
       items: [
-        const DropdownMenuItem<String?>(value: null, child: Text('كل المسارات')),
+        const DropdownMenuItem<String?>(
+          value: null,
+          child: Text('كل المسارات'),
+        ),
         ...items.map(
           (route) => DropdownMenuItem(
             value: route,

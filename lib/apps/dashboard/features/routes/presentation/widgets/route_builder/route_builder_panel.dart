@@ -151,9 +151,9 @@ class _EndpointRow extends StatelessWidget {
                     else if (stop.arrivalOffset.isNotEmpty)
                       'الوصول بعد ${stop.arrivalOffset}',
                   ].join(' · '),
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ],

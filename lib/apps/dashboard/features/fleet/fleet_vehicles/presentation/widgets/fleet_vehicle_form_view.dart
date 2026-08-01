@@ -209,16 +209,27 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               decoration: BoxDecoration(
                 color: scheme.primary.withAlpha(10),
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-                border: Border(bottom: BorderSide(color: scheme.outlineVariant.withAlpha(50))),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(24),
+                ),
+                border: Border(
+                  bottom: BorderSide(
+                    color: scheme.outlineVariant.withAlpha(50),
+                  ),
+                ),
               ),
               child: Row(
                 children: [
                   Container(
                     padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(color: scheme.primary, shape: BoxShape.circle),
+                    decoration: BoxDecoration(
+                      color: scheme.primary,
+                      shape: BoxShape.circle,
+                    ),
                     child: Icon(
-                      isEdit ? Icons.edit_rounded : Icons.directions_bus_rounded,
+                      isEdit
+                          ? Icons.edit_rounded
+                          : Icons.directions_bus_rounded,
                       color: scheme.onPrimary,
                       size: 20,
                     ),
@@ -226,14 +237,20 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
                   const SizedBox(width: 16),
                   Expanded(
                     child: Text(
-                      isEdit ? 'تعديل المركبة: ${widget.vehicle!.vehicleNumber}' : 'إضافة مركبة جديدة',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                      isEdit
+                          ? 'تعديل المركبة: ${widget.vehicle!.vehicleNumber}'
+                          : 'إضافة مركبة جديدة',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ),
                   IconButton(
                     onPressed: _saving ? null : widget.onBack,
                     icon: const Icon(Icons.close_rounded),
-                    style: IconButton.styleFrom(backgroundColor: scheme.surfaceContainerHighest),
+                    style: IconButton.styleFrom(
+                      backgroundColor: scheme.surfaceContainerHighest,
+                    ),
                   ),
                 ],
               ),
@@ -247,135 +264,147 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-          const SizedBox(height: AppSpacing.large),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final isDesktop = constraints.maxWidth >= 980;
+                      const SizedBox(height: AppSpacing.large),
+                      LayoutBuilder(
+                        builder: (context, constraints) {
+                          final isDesktop = constraints.maxWidth >= 980;
 
-              if (isDesktop) {
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      flex: 5,
-                      child: _VehicleMainInfoCard(
-                        child: _buildMainFields(columns: 2),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.large),
-                    Expanded(
-                      flex: 3,
-                      child: Column(
-                        children: [
-                          _VehicleImagePickerCard(
-                            existingUrls: _existingImageUrls,
-                            newFiles: _newPickedFiles,
-                            newBytes: _newPickedBytes,
-                            onPick: _pickVehicleImages,
-                            onRemoveExisting: _removeExistingImage,
-                            onRemoveNew: _removeNewImage,
-                          ),
-                          const SizedBox(height: AppSpacing.medium),
-                          _VehicleDriverCard(
-                            selectedDriverId: selectedDriverId,
-                            drivers: _getAvailableDrivers(),
-                            onChanged: (val) {
-                              setState(() => selectedDriverId = val);
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                );
-              }
+                          if (isDesktop) {
+                            return Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Expanded(
+                                  flex: 5,
+                                  child: _VehicleMainInfoCard(
+                                    child: _buildMainFields(columns: 2),
+                                  ),
+                                ),
+                                const SizedBox(width: AppSpacing.large),
+                                Expanded(
+                                  flex: 3,
+                                  child: Column(
+                                    children: [
+                                      _VehicleImagePickerCard(
+                                        existingUrls: _existingImageUrls,
+                                        newFiles: _newPickedFiles,
+                                        newBytes: _newPickedBytes,
+                                        onPick: _pickVehicleImages,
+                                        onRemoveExisting: _removeExistingImage,
+                                        onRemoveNew: _removeNewImage,
+                                      ),
+                                      const SizedBox(height: AppSpacing.medium),
+                                      _VehicleDriverCard(
+                                        selectedDriverId: selectedDriverId,
+                                        drivers: _getAvailableDrivers(),
+                                        onChanged: (val) {
+                                          setState(
+                                            () => selectedDriverId = val,
+                                          );
+                                        },
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            );
+                          }
 
-              return Column(
-                children: [
-                  _VehicleImagePickerCard(
-                    existingUrls: _existingImageUrls,
-                    newFiles: _newPickedFiles,
-                    newBytes: _newPickedBytes,
-                    onPick: _pickVehicleImages,
-                    onRemoveExisting: _removeExistingImage,
-                    onRemoveNew: _removeNewImage,
-                  ),
-                  const SizedBox(height: AppSpacing.medium),
-                  _VehicleMainInfoCard(child: _buildMainFields(columns: 1)),
-                  const SizedBox(height: AppSpacing.medium),
-                  _VehicleDriverCard(
-                    selectedDriverId: selectedDriverId,
-                    drivers: _getAvailableDrivers(),
-                    onChanged: (val) => setState(() => selectedDriverId = val),
-                  ),
-                ],
-              );
-            },
-          ),
-          const SizedBox(height: AppSpacing.large),
-          // Live preview of what will actually be saved: change the vehicle
-          // type above and the cabin below becomes that type's cabin.
-          FleetSeatLayoutVisualizer(
-            seatConfig: _previewSeatConfiguration(),
-            vehicleType: vehicleType,
-          ),
-          const SizedBox(height: AppSpacing.large),
-          FleetDocumentsInlineSection(
-            isDriver: false,
-            existingDocuments: _vehicleDocuments(),
-            onChanged: (docs) => _pendingDocs = docs,
-          ),
-          if (_globalError.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.medium),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(AppSpacing.medium),
-              decoration: BoxDecoration(
-                color: scheme.error.withAlpha(18),
-                borderRadius: BorderRadius.circular(AppTokens.radius),
-                border: Border.all(color: scheme.error.withAlpha(55)),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.error_outline_rounded, color: scheme.error),
-                  const SizedBox(width: AppSpacing.small),
-                  Expanded(
-                    child: Text(
-                      _globalError,
-                      style: TextStyle(
-                        color: scheme.error,
-                        fontWeight: FontWeight.w800,
+                          return Column(
+                            children: [
+                              _VehicleImagePickerCard(
+                                existingUrls: _existingImageUrls,
+                                newFiles: _newPickedFiles,
+                                newBytes: _newPickedBytes,
+                                onPick: _pickVehicleImages,
+                                onRemoveExisting: _removeExistingImage,
+                                onRemoveNew: _removeNewImage,
+                              ),
+                              const SizedBox(height: AppSpacing.medium),
+                              _VehicleMainInfoCard(
+                                child: _buildMainFields(columns: 1),
+                              ),
+                              const SizedBox(height: AppSpacing.medium),
+                              _VehicleDriverCard(
+                                selectedDriverId: selectedDriverId,
+                                drivers: _getAvailableDrivers(),
+                                onChanged: (val) =>
+                                    setState(() => selectedDriverId = val),
+                              ),
+                            ],
+                          );
+                        },
                       ),
-                    ),
+                      const SizedBox(height: AppSpacing.large),
+                      // Live preview of what will actually be saved: change the vehicle
+                      // type above and the cabin below becomes that type's cabin.
+                      FleetSeatLayoutVisualizer(
+                        seatConfig: _previewSeatConfiguration(),
+                        vehicleType: vehicleType,
+                      ),
+                      const SizedBox(height: AppSpacing.large),
+                      FleetDocumentsInlineSection(
+                        isDriver: false,
+                        existingDocuments: _vehicleDocuments(),
+                        onChanged: (docs) => _pendingDocs = docs,
+                      ),
+                      if (_globalError.isNotEmpty) ...[
+                        const SizedBox(height: AppSpacing.medium),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(AppSpacing.medium),
+                          decoration: BoxDecoration(
+                            color: scheme.error.withAlpha(18),
+                            borderRadius: BorderRadius.circular(
+                              AppTokens.radius,
+                            ),
+                            border: Border.all(
+                              color: scheme.error.withAlpha(55),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.error_outline_rounded,
+                                color: scheme.error,
+                              ),
+                              const SizedBox(width: AppSpacing.small),
+                              Expanded(
+                                child: Text(
+                                  _globalError,
+                                  style: TextStyle(
+                                    color: scheme.error,
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
-                ],
-              ),
-            ),
-          ],
-                  ],
                 ),
               ),
             ),
-          ),
-          // Docked, not scrolled. This form is ~2400px tall once the seat map and
-          // the document section are laid out, so an action bar at the end of the
-          // scroll view put "حفظ" below the fold on every real window — the
-          // operator had to scroll past the whole document uploader to save an
-          // edit they made at the top.
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-            child: FleetFormActionsBar(
-              saving: _saving,
-              onCancel: widget.onBack,
-              onSave: _onSave,
-              saveLabel: isEdit ? 'حفظ التعديلات' : 'إضافة المركبة',
+            // Docked, not scrolled. This form is ~2400px tall once the seat map and
+            // the document section are laid out, so an action bar at the end of the
+            // scroll view put "حفظ" below the fold on every real window — the
+            // operator had to scroll past the whole document uploader to save an
+            // edit they made at the top.
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+              child: FleetFormActionsBar(
+                saving: _saving,
+                onCancel: widget.onBack,
+                onSave: _onSave,
+                saveLabel: isEdit ? 'حفظ التعديلات' : 'إضافة المركبة',
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildMainFields({required int columns}) {
     final hasFixedCapacity =
@@ -756,7 +785,9 @@ class _VehicleImagePickerCard extends StatelessWidget {
                 // clipped them rather than letting the drop zone grow.
                 constraints: const BoxConstraints(minHeight: 140),
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: AppSpacing.medium),
+                padding: const EdgeInsets.symmetric(
+                  vertical: AppSpacing.medium,
+                ),
                 decoration: BoxDecoration(
                   color: scheme.surfaceContainerHighest.withAlpha(80),
                   borderRadius: BorderRadius.circular(AppTokens.radiusLarge),

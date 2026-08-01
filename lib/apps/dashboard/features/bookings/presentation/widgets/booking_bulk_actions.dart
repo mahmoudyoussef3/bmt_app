@@ -27,8 +27,12 @@ class BookingBulkActions extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     final cubit = context.read<BookingsCubit>();
     final busy = state.isProcessing;
-    final approved = paymentStatusStyle(PaymentStatus.approved);
-    final rejected = paymentStatusStyle(PaymentStatus.rejected);
+    final approved = paymentStatusStyle(
+      PaymentStatus.approved,
+    ).resolve(context);
+    final rejected = paymentStatusStyle(
+      PaymentStatus.rejected,
+    ).resolve(context);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.medium),
@@ -88,7 +92,7 @@ class BookingBulkActions extends StatelessWidget {
             FilledButton.icon(
               onPressed: busy ? null : () => _bulkApprove(context, cubit),
               style: FilledButton.styleFrom(
-                backgroundColor: approved.onContainer,
+                backgroundColor: approved.ink,
                 foregroundColor: Colors.white,
               ),
               icon: const Icon(Icons.check_rounded, size: 18),
@@ -96,9 +100,7 @@ class BookingBulkActions extends StatelessWidget {
             ),
             OutlinedButton.icon(
               onPressed: busy ? null : () => _bulkReject(context, cubit),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: rejected.onContainer,
-              ),
+              style: OutlinedButton.styleFrom(foregroundColor: rejected.ink),
               icon: const Icon(Icons.close_rounded, size: 18),
               label: Text('رفض الدفع ($selectedCount)'),
             ),

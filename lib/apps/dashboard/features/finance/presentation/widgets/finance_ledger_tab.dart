@@ -113,7 +113,7 @@ class FinanceLedgerTab extends StatelessWidget {
           decoration: entry.status == PaymentStatus.refunded
               ? TextDecoration.lineThrough
               : null,
-          color: FinanceStatusBadge.colorOf(entry.status),
+          color: FinanceStatusBadge.colorOf(context, entry.status),
         ),
       ),
     ];
@@ -238,6 +238,7 @@ class _LedgerTotals extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = DashboardChartPalette.of(context);
     final scheme = Theme.of(context).colorScheme;
     final analytics = state.analytics;
 
@@ -250,7 +251,7 @@ class _LedgerTotals extends StatelessWidget {
           _Total(
             label: state.hasAnyFilter ? 'المعروض حالياً' : 'حركات الفترة',
             value: '${FinanceFormat.count(shownCount)} حركة',
-            color: DashboardChartPalette.active,
+            color: palette.active,
             icon: Icons.list_alt_rounded,
           ),
           _Total(
@@ -258,19 +259,19 @@ class _LedgerTotals extends StatelessWidget {
             value: FinanceFormat.money(
               state.hasAnyFilter ? state.filteredNet : analytics.netRevenue,
             ),
-            color: DashboardChartPalette.positive,
+            color: palette.positive,
             icon: Icons.payments_outlined,
           ),
           _Total(
             label: 'قيد التحصيل',
             value: FinanceFormat.money(analytics.pending),
-            color: DashboardChartPalette.warning,
+            color: palette.warning,
             icon: Icons.hourglass_bottom_rounded,
           ),
           _Total(
             label: 'مرتجعات',
             value: FinanceFormat.money(analytics.refunded),
-            color: DashboardChartPalette.negative,
+            color: palette.negative,
             icon: Icons.undo_rounded,
           ),
           if (state.hasAnyFilter)
@@ -344,9 +345,10 @@ class _TypeChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = DashboardChartPalette.of(context);
     final color = switch (type) {
-      FinanceEntryType.booking => DashboardChartPalette.active,
-      FinanceEntryType.subscription => DashboardChartPalette.accent,
+      FinanceEntryType.booking => palette.active,
+      FinanceEntryType.subscription => palette.accent,
     };
     final icon = switch (type) {
       FinanceEntryType.booking => Icons.event_seat_outlined,

@@ -87,7 +87,10 @@ class SeatConfiguration {
 
     // Fall back to the geometry the seats themselves describe, which is the only
     // honest answer when the stored envelope is missing or disagrees with them.
-    final derivedRows = seats.fold<int>(0, (max, s) => s.row > max ? s.row : max);
+    final derivedRows = seats.fold<int>(
+      0,
+      (max, s) => s.row > max ? s.row : max,
+    );
     final derivedColumns = seats.fold<int>(
       0,
       (max, s) => s.column > max ? s.column : max,

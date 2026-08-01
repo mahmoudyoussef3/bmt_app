@@ -8,6 +8,7 @@ import 'package:bmt_app/apps/dashboard/core/widgets/charts/dashboard_line_chart.
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/dashboard_ranked_bars.dart';
 
 import '../../domain/entities/user_subscription.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
 
 /// Real-data subscription analytics computed from the loaded subscriptions
 /// list (status mix, revenue trend by month, subscribers per plan).
@@ -19,19 +20,20 @@ class SubscriptionsAnalytics extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final palette = DashboardChartPalette.of(context);
 
     final status = DashboardPanel(
       icon: Icons.donut_large_rounded,
       title: 'حالة الاشتراكات',
       subtitle: 'نشط مقابل منتهٍ وملغي',
-      child: DashboardDonutChart(data: _statusData()),
+      child: DashboardDonutChart(data: _statusData(palette)),
     );
     final trend = DashboardPanel(
       icon: Icons.show_chart_rounded,
       title: 'اتجاه إيراد الاشتراكات',
       subtitle: 'إجمالي قيمة الاشتراكات حسب الشهر',
       child: DashboardLineChart(
-        data: _revenueTrend(),
+        data: _revenueTrend(palette),
         lineColor: scheme.primary,
       ),
     );
@@ -88,12 +90,12 @@ class SubscriptionsAnalytics extends StatelessWidget {
     );
   }
 
-  List<ChartDatum> _statusData() {
-    const colors = {
-      SubscriptionStatus.active: Color(0xFF16A34A),
-      SubscriptionStatus.pendingPayment: Color(0xFFF59E0B),
-      SubscriptionStatus.expired: Color(0xFF64748B),
-      SubscriptionStatus.cancelled: Color(0xFFDC2626),
+  List<ChartDatum> _statusData(DashboardChartPalette palette) {
+    final colors = {
+      SubscriptionStatus.active: palette.positive,
+      SubscriptionStatus.pendingPayment: palette.warning,
+      SubscriptionStatus.expired: palette.neutral,
+      SubscriptionStatus.cancelled: palette.negative,
     };
     final counts = <SubscriptionStatus, int>{};
     for (final s in subscriptions) {
@@ -104,12 +106,12 @@ class SubscriptionsAnalytics extends StatelessWidget {
         ChartDatum(
           label: entry.key.label,
           value: entry.value.toDouble(),
-          color: colors[entry.key] ?? const Color(0xFF64748B),
+          color: colors[entry.key] ?? palette.neutral,
         ),
     ];
   }
 
-  List<ChartDatum> _revenueTrend() {
+  List<ChartDatum> _revenueTrend(DashboardChartPalette palette) {
     final byMonth = <String, double>{};
     final sorted = [...subscriptions]
       ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
@@ -119,11 +121,7 @@ class SubscriptionsAnalytics extends StatelessWidget {
     }
     return [
       for (final entry in byMonth.entries)
-        ChartDatum(
-          label: entry.key,
-          value: entry.value,
-          color: const Color(0xFF2563EB),
-        ),
+        ChartDatum(label: entry.key, value: entry.value, color: palette.active),
     ];
   }
 

@@ -37,9 +37,7 @@ class TripsTimelineView extends StatelessWidget {
       children: dates.indexed.map((entry) {
         final date = entry.$2;
         return Padding(
-          padding: EdgeInsets.only(
-            top: entry.$1 == 0 ? 0 : AppSpacing.large,
-          ),
+          padding: EdgeInsets.only(top: entry.$1 == 0 ? 0 : AppSpacing.large),
           child: _TimelineDayGroup(
             date: date,
             trips: groups[date]!,

@@ -4,41 +4,26 @@ import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import '../../domain/entities/complaint.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
 class StatusBadge extends StatelessWidget {
   final TicketStatus status;
   const StatusBadge({super.key, required this.status});
 
-  (Color bg, Color fg) get _colors => switch (status) {
-    TicketStatus.submitted => (
-      AppStatusColors.infoContainer,
-      AppStatusColors.onInfoContainer,
-    ),
-    TicketStatus.underReview => (
-      AppStatusColors.warningContainer,
-      AppStatusColors.onWarningContainer,
-    ),
-    TicketStatus.contacted => (
-      AppStatusColors.specialContainer,
-      AppStatusColors.onSpecialContainer,
-    ),
-    TicketStatus.resolved => (
-      AppStatusColors.successContainer,
-      AppStatusColors.onSuccessContainer,
-    ),
-    TicketStatus.closed => (
-      AppStatusColors.neutralContainer,
-      AppStatusColors.onNeutralContainer,
-    ),
-    TicketStatus.rejected => (
-      AppStatusColors.errorContainer,
-      AppStatusColors.onErrorContainer,
-    ),
+  AppStatusTone get _tone => switch (status) {
+    TicketStatus.submitted => AppStatusTone.info,
+    TicketStatus.underReview => AppStatusTone.warning,
+    TicketStatus.contacted => AppStatusTone.special,
+    TicketStatus.resolved => AppStatusTone.success,
+    TicketStatus.closed => AppStatusTone.neutral,
+    TicketStatus.rejected => AppStatusTone.error,
   };
 
   @override
   Widget build(BuildContext context) {
-    final (bg, fg) = _colors;
+    final tone = context.status(_tone);
+    final bg = tone.tint;
+    final fg = tone.ink;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
@@ -58,28 +43,18 @@ class PriorityBadge extends StatelessWidget {
   final TicketPriority priority;
   const PriorityBadge({super.key, required this.priority});
 
-  (Color bg, Color fg) get _colors => switch (priority) {
-    TicketPriority.low => (
-      AppStatusColors.neutralContainer,
-      AppStatusColors.onNeutralContainer,
-    ),
-    TicketPriority.medium => (
-      AppStatusColors.infoContainer,
-      AppStatusColors.onInfoContainer,
-    ),
-    TicketPriority.high => (
-      AppStatusColors.warningContainer,
-      AppStatusColors.onWarningContainer,
-    ),
-    TicketPriority.urgent => (
-      AppStatusColors.errorContainer,
-      AppStatusColors.onErrorContainer,
-    ),
+  AppStatusTone get _tone => switch (priority) {
+    TicketPriority.low => AppStatusTone.neutral,
+    TicketPriority.medium => AppStatusTone.info,
+    TicketPriority.high => AppStatusTone.warning,
+    TicketPriority.urgent => AppStatusTone.error,
   };
 
   @override
   Widget build(BuildContext context) {
-    final (bg, fg) = _colors;
+    final tone = context.status(_tone);
+    final bg = tone.tint;
+    final fg = tone.ink;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
@@ -154,9 +129,10 @@ class StatCard extends StatelessWidget {
         decoration: isAlert
             ? BoxDecoration(
                 border: Border.all(
-                  color: AppStatusColors.onErrorContainer.withValues(
-                    alpha: 0.4,
-                  ),
+                  color: context
+                      .status(AppStatusTone.error)
+                      .ink
+                      .withValues(alpha: 0.4),
                   width: 1.5,
                 ),
                 borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
@@ -179,7 +155,7 @@ class StatCard extends StatelessWidget {
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
                     fontWeight: FontWeight.w900,
                     color: isAlert
-                        ? AppStatusColors.onErrorContainer
+                        ? context.status(AppStatusTone.error).ink
                         : scheme.onSurface,
                   ),
                 ),

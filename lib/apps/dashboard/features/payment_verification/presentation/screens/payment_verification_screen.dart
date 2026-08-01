@@ -14,6 +14,7 @@ import '../../../../core/widgets/dashboard_state_views.dart';
 import '../../domain/entities/booking_payment_verification.dart';
 import '../cubit/payment_verification_cubit.dart';
 import '../cubit/payment_verification_state.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
 
 class PaymentVerificationScreen extends StatelessWidget {
   const PaymentVerificationScreen({super.key});
@@ -1038,10 +1039,11 @@ Color _verificationStatusColor(
   BuildContext context,
   BookingVerificationStatus status,
 ) {
+  final palette = DashboardChartPalette.of(context);
   final scheme = Theme.of(context).colorScheme;
   return switch (status) {
-    BookingVerificationStatus.pending => const Color(0xFFB45309),
-    BookingVerificationStatus.approved => const Color(0xFF0F766E),
+    BookingVerificationStatus.pending => palette.warning,
+    BookingVerificationStatus.approved => palette.positive,
     BookingVerificationStatus.rejected => scheme.error,
     BookingVerificationStatus.reviewRequested => scheme.tertiary,
   };

@@ -157,10 +157,14 @@ class _RankBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Podium metals are one of the few places a colour carries meaning the
+    // status palette cannot express — gold/silver/bronze are the data, not a
+    // state. Kept literal and local rather than promoted into the design
+    // system, which has no role for them.
     final medal = switch (rank) {
-      1 => const Color(0xFFD4AF37),
-      2 => const Color(0xFF9CA3AF),
-      3 => const Color(0xFFB45309),
+      1 => const Color(0xFFD4AF37), // gold
+      2 => const Color(0xFF9CA3AF), // silver
+      3 => const Color(0xFFB45309), // bronze
       _ => Theme.of(context).colorScheme.surfaceContainerHighest,
     };
     final isMedal = rank <= 3;

@@ -112,7 +112,10 @@ class SupabaseOfficeProfileDatasource implements OfficeProfileDatasource {
     }
   }
 
-  OfficeProfile _mapProfile(Map<String, dynamic> row, {required String joinCode}) {
+  OfficeProfile _mapProfile(
+    Map<String, dynamic> row, {
+    required String joinCode,
+  }) {
     return OfficeProfile(
       id: row['id']?.toString() ?? '',
       name: row['name']?.toString() ?? '',

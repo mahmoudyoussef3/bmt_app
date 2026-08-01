@@ -6,6 +6,7 @@ import 'package:bmt_app/apps/dashboard/features/bookings/domain/entities/operati
 import 'package:bmt_app/core/theme/spacing.dart';
 
 import '../../domain/entities/dashboard_home_summary.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
 
 /// Bookings and payments side by side — the payments panel deliberately leads
 /// with what needs a decision (pending review), not the totals, per the
@@ -49,6 +50,7 @@ class BookingsPaymentsSection extends StatelessWidget {
   }
 
   Widget _bookingsPanel(BuildContext context) {
+    final palette = DashboardChartPalette.of(context);
     final scheme = Theme.of(context).colorScheme;
     return DashboardPanel(
       icon: Icons.event_seat_rounded,
@@ -67,17 +69,17 @@ class BookingsPaymentsSection extends StatelessWidget {
           _StatRow(
             label: 'حجوزات مؤكدة',
             value: summary.bookingCountByStatus(BookingStatus.confirmed),
-            color: const Color(0xFF22A06B),
+            color: palette.positive,
           ),
           _StatRow(
             label: 'حجوزات قيد الانتظار',
             value: summary.bookingCountByStatus(BookingStatus.reserved),
-            color: const Color(0xFFF5A623),
+            color: palette.warning,
           ),
           _StatRow(
             label: 'حجوزات ملغاة',
             value: summary.bookingCountByStatus(BookingStatus.cancelled),
-            color: const Color(0xFFD64545),
+            color: palette.negative,
           ),
         ],
       ),
@@ -85,6 +87,7 @@ class BookingsPaymentsSection extends StatelessWidget {
   }
 
   Widget _paymentsPanel(BuildContext context) {
+    final palette = DashboardChartPalette.of(context);
     final pendingReview = summary.pendingPaymentReviewsCount;
     return DashboardPanel(
       icon: Icons.account_balance_wallet_rounded,
@@ -101,7 +104,7 @@ class BookingsPaymentsSection extends StatelessWidget {
           _StatRow(
             label: 'مدفوعات مكتملة',
             value: summary.paymentCountByStatus(PaymentStatus.approved),
-            color: const Color(0xFF22A06B),
+            color: palette.positive,
           ),
           _StatRow(
             label: 'مدفوعات معلقة',
@@ -109,19 +112,19 @@ class BookingsPaymentsSection extends StatelessWidget {
                 summary.paymentCountByStatus(PaymentStatus.pending) +
                 summary.paymentCountByStatus(PaymentStatus.submitted) +
                 summary.paymentCountByStatus(PaymentStatus.underReview),
-            color: const Color(0xFFF5A623),
+            color: palette.warning,
           ),
           _StatRow(
             label: 'مدفوعات مرفوضة',
             value: summary.paymentCountByStatus(PaymentStatus.rejected),
-            color: const Color(0xFFD64545),
+            color: palette.negative,
           ),
           const Divider(height: AppSpacing.large),
           _StatRow(
             label: 'إجمالي المبلغ المحصل',
             valueLabel:
                 '${summary.revenue.grandTotalRevenue.toStringAsFixed(0)} ج.م',
-            color: const Color(0xFF2F80ED),
+            color: palette.active,
             emphasize: true,
           ),
         ],
@@ -167,10 +170,9 @@ class _StatRow extends StatelessWidget {
           ),
           Text(
             valueLabel ?? '$value',
-            style:
-                (emphasize ? text.titleMedium : text.titleSmall)?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+            style: (emphasize ? text.titleMedium : text.titleSmall)?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
       ),

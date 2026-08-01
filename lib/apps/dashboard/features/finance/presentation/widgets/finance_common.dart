@@ -40,13 +40,14 @@ class FinanceDeltaBadge extends StatelessWidget {
       );
     }
 
+    final palette = DashboardChartPalette.of(context);
     final isUp = value >= 0;
     final isGood = inverted ? !isUp : isUp;
     final color = value == 0
-        ? DashboardChartPalette.neutral
+        ? palette.neutral
         : isGood
-        ? DashboardChartPalette.positive
-        : DashboardChartPalette.negative;
+        ? palette.positive
+        : palette.negative;
 
     return Row(
       mainAxisSize: MainAxisSize.min,
@@ -161,7 +162,9 @@ class FinanceRankedList extends StatelessWidget {
                           : (row.amount / peak).clamp(0, 1).toDouble(),
                       minHeight: 10,
                       backgroundColor: scheme.surfaceContainerHighest,
-                      color: DashboardChartPalette.categoryAt(index),
+                      color: DashboardChartPalette.of(
+                        context,
+                      ).categoryAt(index),
                     ),
                   ),
                 ),
@@ -259,16 +262,21 @@ class FinanceStatusBadge extends StatelessWidget {
 
   const FinanceStatusBadge({super.key, required this.status});
 
-  static Color colorOf(PaymentStatus status) => switch (status) {
-    PaymentStatus.success => DashboardChartPalette.positive,
-    PaymentStatus.pending => DashboardChartPalette.warning,
-    PaymentStatus.cancelled => DashboardChartPalette.negative,
-    PaymentStatus.refunded => DashboardChartPalette.accent,
-  };
+  /// Takes a [context] because the chart palette resolves per brightness —
+  /// the payment colours have to match the chart segments on the same screen.
+  static Color colorOf(BuildContext context, PaymentStatus status) {
+    final palette = DashboardChartPalette.of(context);
+    return switch (status) {
+      PaymentStatus.success => palette.positive,
+      PaymentStatus.pending => palette.warning,
+      PaymentStatus.cancelled => palette.negative,
+      PaymentStatus.refunded => palette.accent,
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
-    final color = colorOf(status);
+    final color = colorOf(context, status);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(

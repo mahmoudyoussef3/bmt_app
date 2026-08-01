@@ -42,7 +42,11 @@ class PackageOfficeBadge extends StatelessWidget {
         ),
         if (package.hasOfficeRating) ...[
           const SizedBox(width: 8),
-          const Icon(Icons.star_rounded, size: 14, color: Colors.amber),
+          Icon(
+            Icons.star_rounded,
+            size: 14,
+            color: ClientColors.ratingFor(context),
+          ),
           const SizedBox(width: 2),
           Text(
             package.officeRating.toStringAsFixed(1),

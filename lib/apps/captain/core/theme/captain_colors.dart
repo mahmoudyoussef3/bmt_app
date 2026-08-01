@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/core/theme/app_dark_colors.dart';
+
 /// The captain app's colours.
 ///
 /// Everything that isn't a caution or a failure comes from **one blue family**
@@ -7,6 +9,11 @@ import 'package:flutter/material.dart';
 /// the usual green: two accent hues fighting on one screen is what made the app
 /// look assembled instead of designed. Amber and red survive because a warning
 /// that shares the brand hue stops reading as a warning.
+///
+/// The dark values here forward to [AppDarkColors] — the shared palette lifted
+/// from this app's own profile screen, which the client app is now drawn in
+/// too. They already agreed by hand (`#0F172A`, `#1E293B`, `#334155`); routing
+/// them through the shared tokens is what stops them drifting apart later.
 class CaptainColors {
   // Brand palette — [primary] is the anchor; the others are its shades, so an
   // accent can never introduce a competing hue.
@@ -40,12 +47,12 @@ class CaptainColors {
   // Backgrounds & Surfaces
   static const Color backgroundLight = Color(0xFFF8FAFC);
   static const Color surfaceLight = Colors.white;
-  static const Color backgroundDark = Color(0xFF0F172A);
-  static const Color surfaceDark = Color(0xFF1E293B);
+  static const Color backgroundDark = AppDarkColors.background;
+  static const Color surfaceDark = AppDarkColors.surface;
 
   // Borders & Dividers
   static const Color dividerLight = Color(0xFFE2E8F0);
-  static const Color dividerDark = Color(0xFF334155);
+  static const Color dividerDark = AppDarkColors.border;
 
   // Helper Methods
   static Color backgroundFor(BuildContext context) {
@@ -62,13 +69,13 @@ class CaptainColors {
 
   static Color textPrimaryFor(BuildContext context) {
     return Theme.of(context).brightness == Brightness.dark
-        ? Colors.white
+        ? AppDarkColors.onSurface
         : const Color(0xFF0F172A);
   }
 
   static Color textSecondaryFor(BuildContext context) {
     return Theme.of(context).brightness == Brightness.dark
-        ? const Color(0xFF94A3B8)
+        ? AppDarkColors.onSurfaceMuted
         : const Color(0xFF64748B);
   }
 

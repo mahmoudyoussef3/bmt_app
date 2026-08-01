@@ -7,6 +7,8 @@ import 'package:bmt_app/core/widgets/status_chip.dart';
 
 import '../../domain/entities/trip_review_entry.dart';
 import 'rating_stars.dart';
+import 'package:bmt_app/core/theme/colors.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
 /// One passenger review. Reviews needing attention carry a red edge so they
 /// are findable by eye in a long, otherwise-uniform list.
@@ -25,7 +27,9 @@ class ReviewCard extends StatelessWidget {
         decoration: BoxDecoration(
           border: BorderDirectional(
             start: BorderSide(
-              color: flagged ? kRatingRed : Colors.transparent,
+              color: flagged
+                  ? context.status(AppStatusTone.error).accent
+                  : Colors.transparent,
               width: 3,
             ),
           ),
@@ -111,15 +115,15 @@ class _Header extends StatelessWidget {
             if (flagged)
               StatusChip(
                 label: 'تحتاج متابعة',
-                color: kRatingRed.withAlpha(28),
-                textColor: kRatingRed,
+                color: context.status(AppStatusTone.error).tint,
+                textColor: context.status(AppStatusTone.error).ink,
               )
             else
               Text(
                 review.averageRating.toStringAsFixed(1),
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.w900,
-                  color: ratingColor(review.averageRating),
+                  color: ratingColor(context, review.averageRating),
                 ),
               ),
             const SizedBox(height: 2),

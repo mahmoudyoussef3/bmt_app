@@ -4,6 +4,7 @@ import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
 
 import '../../domain/entities/referral_record.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
 String referralStatusLabel(ReferralStatus status) => switch (status) {
   ReferralStatus.pendingRegistration => 'بانتظار التسجيل',
@@ -21,11 +22,13 @@ class ReferralStatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = switch (status) {
-      ReferralStatus.pendingRegistration => AppStatusColors.onNeutralContainer,
-      ReferralStatus.registered => AppStatusColors.onInfoContainer,
-      ReferralStatus.firstOrderCompleted => AppStatusColors.onWarningContainer,
-      ReferralStatus.rewardGranted => AppStatusColors.onSuccessContainer,
-      ReferralStatus.unknown => AppStatusColors.onNeutralContainer,
+      ReferralStatus.pendingRegistration =>
+        context.status(AppStatusTone.neutral).ink,
+      ReferralStatus.registered => context.status(AppStatusTone.info).ink,
+      ReferralStatus.firstOrderCompleted =>
+        context.status(AppStatusTone.warning).ink,
+      ReferralStatus.rewardGranted => context.status(AppStatusTone.success).ink,
+      ReferralStatus.unknown => context.status(AppStatusTone.neutral).ink,
     };
     return StatusChip(
       label: referralStatusLabel(status),
@@ -43,9 +46,9 @@ class ReferralRewardStatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = switch (status) {
-      'granted' => AppStatusColors.onSuccessContainer,
-      'pending' => AppStatusColors.onWarningContainer,
-      _ => AppStatusColors.onNeutralContainer,
+      'granted' => context.status(AppStatusTone.success).ink,
+      'pending' => context.status(AppStatusTone.warning).ink,
+      _ => context.status(AppStatusTone.neutral).ink,
     };
     final label = switch (status) {
       'granted' => 'ممنوحة',

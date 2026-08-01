@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/dashboard/core/session/office_context.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
+import 'package:bmt_app/core/theme/app_light_colors.dart';
 
 /// Who is signed in, which office they manage, and — quietly, not as the
 /// headline — whether that office is currently visible to passengers.
@@ -17,8 +19,6 @@ class HomeHeaderBanner extends StatelessWidget {
   final OfficeContext office;
   final VoidCallback? onRefresh;
 
-  static const _navy = Color(0xFF0F2747);
-
   @override
   Widget build(BuildContext context) {
     final name = office.officeName.trim().isEmpty
@@ -28,7 +28,7 @@ class HomeHeaderBanner extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppSpacing.large),
       decoration: BoxDecoration(
-        color: _navy,
+        gradient: DashboardColors.heroGradient(context),
         borderRadius: BorderRadius.circular(AppTokens.radius),
       ),
       child: LayoutBuilder(
@@ -212,12 +212,12 @@ class _MarketplaceMiniBadge extends StatelessWidget {
     final (label, color, icon) = switch (listingStatus) {
       'listed' => (
         'المكتب معروض في السوق',
-        const Color(0xFF22A06B),
+        AppLightColors.successContainer,
         Icons.storefront_rounded,
       ),
       'draft' => (
         'المكتب قيد التجهيز',
-        const Color(0xFFF5A623),
+        AppLightColors.warningContainer,
         Icons.hourglass_top_rounded,
       ),
       _ => (

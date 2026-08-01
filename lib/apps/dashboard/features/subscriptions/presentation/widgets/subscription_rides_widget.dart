@@ -7,6 +7,7 @@ import 'package:bmt_app/core/theme/spacing.dart';
 import '../../domain/entities/user_subscription.dart';
 import '../cubit/subscriptions_cubit.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
 /// Compact rides-balance indicator used inside list cards.
 class SubscriptionRidesBalancePill extends StatelessWidget {
@@ -25,9 +26,9 @@ class SubscriptionRidesBalancePill extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
 
     final barColor = switch (fraction) {
-      > 0.85 => AppStatusColors.onErrorContainer,
-      > 0.60 => AppStatusColors.onWarningContainer,
-      _ => AppStatusColors.onSuccessContainer,
+      > 0.85 => context.status(AppStatusTone.error).ink,
+      > 0.60 => context.status(AppStatusTone.warning).ink,
+      _ => context.status(AppStatusTone.success).ink,
     };
 
     return Column(
@@ -39,10 +40,9 @@ class SubscriptionRidesBalancePill extends StatelessWidget {
             const SizedBox(width: 4),
             Text(
               'رصيد الرحلات: $remaining / $total',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodySmall
-                  ?.copyWith(fontWeight: FontWeight.w600),
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
             ),
           ],
         ),
@@ -76,12 +76,13 @@ class SubscriptionRidesSection extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
 
     final barColor = switch (fraction) {
-      > 0.85 => AppStatusColors.onErrorContainer,
-      > 0.60 => AppStatusColors.onWarningContainer,
-      _ => AppStatusColors.onSuccessContainer,
+      > 0.85 => context.status(AppStatusTone.error).ink,
+      > 0.60 => context.status(AppStatusTone.warning).ink,
+      _ => context.status(AppStatusTone.success).ink,
     };
 
-    final canUse = subscription.status == SubscriptionStatus.active &&
+    final canUse =
+        subscription.status == SubscriptionStatus.active &&
         (total == 0 || remaining > 0);
 
     return Column(
@@ -118,10 +119,9 @@ class SubscriptionRidesSection extends StatelessWidget {
         const SizedBox(height: AppSpacing.small),
         Text(
           '${(fraction * 100).toStringAsFixed(0)}٪ مستخدم',
-          style: Theme.of(context)
-              .textTheme
-              .bodySmall
-              ?.copyWith(color: scheme.onSurfaceVariant),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
         ),
         const SizedBox(height: AppSpacing.medium),
         _MarkRideUsedButton(
@@ -156,18 +156,17 @@ class _Stat extends StatelessWidget {
       children: [
         Text(
           label,
-          style: Theme.of(context)
-              .textTheme
-              .bodySmall
-              ?.copyWith(color: scheme.onSurfaceVariant),
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
         ),
         const SizedBox(height: 2),
         Text(
           value,
           style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: highlight ? color : null,
-              ),
+            fontWeight: FontWeight.bold,
+            color: highlight ? color : null,
+          ),
         ),
       ],
     );
@@ -193,31 +192,27 @@ class _MarkRideUsedButton extends StatelessWidget {
       return Container(
         padding: const EdgeInsets.all(AppSpacing.small),
         decoration: BoxDecoration(
-          color: AppStatusColors.neutralContainer,
+          color: context.status(AppStatusTone.neutral).tint,
           borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
         ),
-        child: const Text(
+        child: Text(
           'هذا الاشتراك غير مرتبط بباقة برصيد رحلات (اشتراك قديم).',
           style: TextStyle(
             fontSize: 12,
-            color: AppStatusColors.onNeutralContainer,
+            color: context.status(AppStatusTone.neutral).ink,
           ),
         ),
       );
     }
 
     return FilledButton.icon(
-      onPressed: canUse
-          ? () => _confirm(context)
-          : null,
+      onPressed: canUse ? () => _confirm(context) : null,
       icon: const Icon(Icons.confirmation_num_outlined),
-      label: Text(
-        remaining > 0 ? 'تسجيل رحلة مستخدمة' : 'الرصيد منتهٍ',
-      ),
+      label: Text(remaining > 0 ? 'تسجيل رحلة مستخدمة' : 'الرصيد منتهٍ'),
       style: FilledButton.styleFrom(
         minimumSize: const Size.fromHeight(42),
         backgroundColor: canUse
-            ? AppStatusColors.onSuccessContainer
+            ? context.status(AppStatusTone.success).ink
             : null,
         foregroundColor: canUse ? Colors.white : null,
       ),

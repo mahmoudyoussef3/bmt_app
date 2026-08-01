@@ -233,7 +233,8 @@ class RouteDraft {
   RouteStopDraft get destination => stops.last;
 
   /// Stops between the endpoints, paired with their index in [stops].
-  List<({int index, RouteStopDraft stop})> get intermediateStops => stops.indexed
+  List<({int index, RouteStopDraft stop})> get intermediateStops => stops
+      .indexed
       .where((entry) => entry.$1 != 0 && entry.$1 != stops.length - 1)
       .map((entry) => (index: entry.$1, stop: entry.$2))
       .toList();
@@ -257,7 +258,8 @@ class RouteDraft {
 
   bool get allStopsLocated => locatedStops == stops.length;
 
-  bool get hasMetrics => distance.trim().isNotEmpty && duration.trim().isNotEmpty;
+  bool get hasMetrics =>
+      distance.trim().isNotEmpty && duration.trim().isNotEmpty;
 
   /// Ordered coordinates, used to draw the line and to ask the geo provider for
   /// distance/duration. Empty when any point is still missing.
@@ -272,7 +274,10 @@ class RouteDraft {
       result.add(const RouteDraftIssue('حدد نقطة الانطلاق', stopIndex: 0));
     } else if (!origin.isLocated) {
       result.add(
-        const RouteDraftIssue('حدد موقع نقطة الانطلاق على الخريطة', stopIndex: 0),
+        const RouteDraftIssue(
+          'حدد موقع نقطة الانطلاق على الخريطة',
+          stopIndex: 0,
+        ),
       );
     }
     if (!destination.isNamed) {

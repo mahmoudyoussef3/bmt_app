@@ -10,6 +10,8 @@ import 'package:bmt_app/core/widgets/maps/map_style.dart';
 
 import '../../domain/entities/live_ops_snapshot.dart';
 import 'live_ops_format.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
 
 /// The operations desk's fleet map: every active trip that has reported a
 /// position, drawn at once, coloured by tracking health.
@@ -252,21 +254,22 @@ class _VehicleMarker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = trackingHealthColors(health);
+    final palette = DashboardChartPalette.of(context);
+    final colors = context.status(trackingHealthTone(health));
 
     final dot = Container(
       width: 34,
       height: 34,
       decoration: BoxDecoration(
-        color: colors.container,
+        color: colors.tint,
         shape: BoxShape.circle,
         border: Border.all(
-          color: selected ? MapStyle.onSurface(context) : colors.on,
+          color: selected ? MapStyle.onSurface(context) : colors.ink,
           width: selected ? 3 : 2,
         ),
         boxShadow: MapStyle.shadow(context),
       ),
-      child: Icon(Icons.directions_bus_rounded, size: 18, color: colors.on),
+      child: Icon(Icons.directions_bus_rounded, size: 18, color: colors.ink),
     );
 
     return Semantics(
@@ -297,10 +300,10 @@ class _VehicleMarker extends StatelessWidget {
                         color: Colors.white,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.schedule_rounded,
                         size: 12,
-                        color: Color(0xFF991B1B),
+                        color: palette.negative,
                       ),
                     ),
                   ),
@@ -386,7 +389,7 @@ class _LegendEntry extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = trackingHealthColors(health);
+    final colors = context.status(trackingHealthTone(health));
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -394,9 +397,9 @@ class _LegendEntry extends StatelessWidget {
           width: 9,
           height: 9,
           decoration: BoxDecoration(
-            color: colors.container,
+            color: colors.tint,
             shape: BoxShape.circle,
-            border: Border.all(color: colors.on, width: 1.5),
+            border: Border.all(color: colors.ink, width: 1.5),
           ),
         ),
         const SizedBox(width: 4),

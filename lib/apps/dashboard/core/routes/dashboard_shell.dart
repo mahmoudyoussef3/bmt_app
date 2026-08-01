@@ -50,6 +50,7 @@ import '../di/dashboard_di.dart';
 import '../permissions/dashboard_permission.dart';
 import '../permissions/dashboard_role.dart';
 import '../session/office_context.dart';
+import '../theme/dashboard_colors.dart';
 import '../theme/dashboard_theme_cubit.dart';
 import 'dashboard_routes.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
@@ -557,15 +558,13 @@ class _DashboardSidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     return SizedBox(
       width: 280,
       child: DecoratedBox(
         decoration: BoxDecoration(
-          color: scheme.surfaceContainerHighest.withAlpha(80),
+          color: DashboardColors.sidebar(context),
           border: BorderDirectional(
-            end: BorderSide(color: scheme.outline.withAlpha(80)),
+            end: BorderSide(color: DashboardColors.border(context)),
           ),
         ),
         child: Padding(
@@ -621,7 +620,6 @@ class _NavSectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.fromLTRB(
         AppSpacing.medium,
@@ -632,7 +630,7 @@ class _NavSectionHeader extends StatelessWidget {
       child: Text(
         label,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: scheme.onSurfaceVariant,
+          color: DashboardColors.sidebarSectionInk(context),
           fontWeight: FontWeight.w800,
           letterSpacing: 0.4,
         ),
@@ -747,7 +745,6 @@ class _DashboardTopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final themeMode = context.select(
       (DashboardThemeCubit cubit) => cubit.state.themeMode,
     );
@@ -757,8 +754,10 @@ class _DashboardTopBar extends StatelessWidget {
       height: 72,
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.large),
       decoration: BoxDecoration(
-        color: scheme.surface,
-        border: Border(bottom: BorderSide(color: scheme.outline.withAlpha(80))),
+        color: DashboardColors.topBar(context),
+        border: Border(
+          bottom: BorderSide(color: DashboardColors.border(context)),
+        ),
       ),
       child: Row(
         children: [
@@ -864,12 +863,10 @@ class _NavButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     return Material(
       color: selected
-          ? scheme.primaryContainer.withAlpha(180)
-          : scheme.surface.withAlpha(0),
+          ? DashboardColors.sidebarSelected(context)
+          : Colors.transparent,
       borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
       child: InkWell(
         onTap: onTap,
@@ -884,7 +881,9 @@ class _NavButton extends StatelessWidget {
               Icon(
                 selected ? item.selectedIcon : item.icon,
                 size: 20,
-                color: selected ? scheme.onPrimaryContainer : scheme.onSurface,
+                color: selected
+                    ? DashboardColors.sidebarSelectedInk(context)
+                    : DashboardColors.sidebarInk(context),
               ),
               const SizedBox(width: AppSpacing.small),
               Expanded(
@@ -892,8 +891,8 @@ class _NavButton extends StatelessWidget {
                   item.label,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: selected
-                        ? scheme.onPrimaryContainer
-                        : scheme.onSurface,
+                        ? DashboardColors.sidebarSelectedInk(context)
+                        : DashboardColors.sidebarInk(context),
                     fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                   ),
                 ),

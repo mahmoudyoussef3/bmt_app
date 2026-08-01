@@ -17,34 +17,33 @@ class SummaryStats extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = DashboardChartPalette.of(context);
     return DashboardKpiGrid(
       children: [
         DashboardKpiCard(
           label: 'تذاكر جديدة',
           value: '${state.newCount}',
           icon: Icons.mark_email_unread_outlined,
-          color: DashboardChartPalette.active,
+          color: palette.active,
         ),
         DashboardKpiCard(
           label: 'قيد المراجعة',
           value: '${state.underReviewCount}',
           icon: Icons.pending_actions_outlined,
-          color: DashboardChartPalette.warning,
+          color: palette.warning,
         ),
         DashboardKpiCard(
           label: 'تم الحل',
           value: '${state.resolvedCount}',
           icon: Icons.check_circle_outline_rounded,
-          color: DashboardChartPalette.positive,
+          color: palette.positive,
         ),
         DashboardKpiCard(
           label: 'متأخرة',
           detail: 'أكثر من ٢٤ ساعة بلا حل',
           value: '${state.delayedCount}',
           icon: Icons.running_with_errors_outlined,
-          color: state.delayedCount > 0
-              ? DashboardChartPalette.negative
-              : DashboardChartPalette.neutral,
+          color: state.delayedCount > 0 ? palette.negative : palette.neutral,
         ),
       ],
     );

@@ -1,17 +1,21 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/operation_trip.dart';
 
 /// Status → accent color shared by every trip surface (list rows, grouped
 /// sections, timeline nodes, and the details dialog header).
 Color tripStatusColor(BuildContext context, OperationTripStatus status) {
   final scheme = Theme.of(context).colorScheme;
+  final palette = DashboardChartPalette.of(context);
   return switch (status) {
     OperationTripStatus.scheduled => scheme.secondary,
     OperationTripStatus.openForBooking => scheme.primary,
     OperationTripStatus.boarding => scheme.tertiary,
-    OperationTripStatus.inProgress => Colors.green,
-    OperationTripStatus.completed => Colors.teal,
+    // Material's own green and teal were the last two colours on a trip screen
+    // that came from outside the product's palette.
+    OperationTripStatus.inProgress => palette.positive,
+    OperationTripStatus.completed => palette.neutral,
     OperationTripStatus.cancelled => scheme.error,
   };
 }
@@ -23,7 +27,9 @@ Color tripSeatColor(BuildContext context, TripSeatState state) {
   return switch (state) {
     TripSeatState.available => scheme.primaryContainer,
     TripSeatState.reserved => scheme.secondaryContainer,
-    TripSeatState.paid => Colors.green.withAlpha(60),
+    TripSeatState.paid => DashboardChartPalette.of(
+      context,
+    ).positive.withAlpha(60),
     TripSeatState.subscription => scheme.tertiaryContainer,
     TripSeatState.blocked => scheme.errorContainer,
   };
@@ -35,7 +41,7 @@ Color tripSeatOnColor(BuildContext context, TripSeatState state) {
   return switch (state) {
     TripSeatState.available => scheme.onPrimaryContainer,
     TripSeatState.reserved => scheme.onSecondaryContainer,
-    // A translucent green over the card surface, so the surface's own
+    // A translucent positive tint over the card surface, so the surface's own
     // foreground is the one that contrasts in both themes.
     TripSeatState.paid => scheme.onSurface,
     TripSeatState.subscription => scheme.onTertiaryContainer,
@@ -49,7 +55,7 @@ Color tripSeatAccent(BuildContext context, TripSeatState state) {
   return switch (state) {
     TripSeatState.available => scheme.primary,
     TripSeatState.reserved => scheme.secondary,
-    TripSeatState.paid => Colors.green,
+    TripSeatState.paid => DashboardChartPalette.of(context).positive,
     TripSeatState.subscription => scheme.tertiary,
     TripSeatState.blocked => scheme.error,
   };

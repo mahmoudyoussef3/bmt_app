@@ -102,7 +102,10 @@ class SettingsScreen extends StatelessWidget {
                 leading: Icon(Icons.logout_rounded, color: scheme.error),
                 title: Text(
                   'تسجيل الخروج',
-                  style: TextStyle(color: scheme.error, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    color: scheme.error,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
                 subtitle: const Text('إنهاء الجلسة الحالية'),
                 onTap: () async {

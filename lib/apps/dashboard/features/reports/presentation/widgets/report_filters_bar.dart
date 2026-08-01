@@ -7,6 +7,7 @@ import 'package:bmt_app/core/widgets/app_card.dart';
 import '../../domain/entities/report_entities.dart';
 import '../cubit/reports_cubit.dart';
 import '../cubit/reports_state.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
 class ReportFiltersBar extends StatelessWidget {
   final ReportsLoaded state;
@@ -41,10 +42,10 @@ class ReportFiltersBar extends StatelessWidget {
                       children: [
                         Row(
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.date_range_outlined,
                               size: 20,
-                              color: AppStatusColors.onNeutralContainer,
+                              color: context.status(AppStatusTone.neutral).ink,
                             ),
                             const SizedBox(width: AppSpacing.small),
                             Expanded(
@@ -83,10 +84,10 @@ class ReportFiltersBar extends StatelessWidget {
                   else
                     Row(
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.date_range_outlined,
                           size: 20,
-                          color: AppStatusColors.onNeutralContainer,
+                          color: context.status(AppStatusTone.neutral).ink,
                         ),
                         const SizedBox(width: AppSpacing.small),
                         OutlinedButton(

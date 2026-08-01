@@ -9,6 +9,7 @@ import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_snackbar.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
 class FleetVehiclesTable extends StatelessWidget {
   final List<FleetVehicle> vehicles;
@@ -73,10 +74,10 @@ class FleetVehiclesTable extends StatelessWidget {
           // A bus with no driver cannot be dispatched: trips are scheduled onto the
           // driver, and this vehicle is not on the end of any driver's assignment.
           driverName.isEmpty
-              ? const StatusChip(
+              ? StatusChip(
                   label: 'غير مخصص',
-                  color: AppStatusColors.warningContainer,
-                  textColor: AppStatusColors.onWarningContainer,
+                  color: context.status(AppStatusTone.warning).tint,
+                  textColor: context.status(AppStatusTone.warning).ink,
                 )
               : Text(
                   'مخصص للسائق: $driverName',

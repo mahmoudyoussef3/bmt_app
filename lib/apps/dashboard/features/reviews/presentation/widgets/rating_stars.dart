@@ -1,20 +1,26 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 
-const Color kRatingAmber = Color(0xFFD97706);
-const Color kRatingRed = Color(0xFFDC2626);
-const Color kRatingGreen = Color(0xFF16A34A);
-
-/// Colours a rating by what it means operationally: 1–2 is a problem, 3 is a
+/// The semantic role a rating carries operationally: 1–2 is a problem, 3 is a
 /// warning, 4–5 is fine. Operations should be able to read the board without
 /// reading the numbers.
-Color ratingColor(num rating) {
-  if (rating <= 0) return kRatingAmber;
-  if (rating <= 2) return kRatingRed;
-  if (rating < 4) return kRatingAmber;
-  return kRatingGreen;
+///
+/// A tone rather than a colour, so the board's rating column matches the status
+/// badges beside it in both themes. "Good" is the palette's positive cyan, not
+/// the `#16A34A` green this file used to carry — the only green left in the
+/// product.
+AppStatusTone ratingTone(num rating) {
+  if (rating <= 0) return AppStatusTone.warning;
+  if (rating <= 2) return AppStatusTone.error;
+  if (rating < 4) return AppStatusTone.warning;
+  return AppStatusTone.success;
 }
+
+/// The ink for [ratingTone], resolved against the current theme.
+Color ratingColor(BuildContext context, num rating) =>
+    AppStatusStyle.of(context, ratingTone(rating)).accent;
 
 /// A labelled star row, e.g. "السائق ★★★★☆ 4".
 class RatingStars extends StatelessWidget {
@@ -32,7 +38,7 @@ class RatingStars extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final color = ratingColor(rating);
+    final color = ratingColor(context, rating);
 
     return Row(
       mainAxisSize: MainAxisSize.min,

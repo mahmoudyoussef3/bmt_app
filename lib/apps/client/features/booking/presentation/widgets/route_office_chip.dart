@@ -10,7 +10,11 @@ import 'package:bmt_app/apps/client/features/booking/domain/entities/transport_o
 /// providers' departures from reading as one timetable. It renders nothing for a route
 /// with no attributed office rather than showing an empty chip.
 class RouteOfficeChip extends StatelessWidget {
-  const RouteOfficeChip({super.key, required this.office, this.compact = false});
+  const RouteOfficeChip({
+    super.key,
+    required this.office,
+    this.compact = false,
+  });
 
   final TransportOffice office;
 
@@ -47,7 +51,11 @@ class RouteOfficeChip extends StatelessWidget {
         ),
         if (office.hasRating) ...[
           const SizedBox(width: 8),
-          Icon(Icons.star_rounded, size: compact ? 13 : 15, color: Colors.amber),
+          Icon(
+            Icons.star_rounded,
+            size: compact ? 13 : 15,
+            color: ClientColors.ratingFor(context),
+          ),
           const SizedBox(width: 2),
           Text(
             office.rating.toStringAsFixed(1),

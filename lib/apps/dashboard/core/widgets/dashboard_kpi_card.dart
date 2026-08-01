@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 
@@ -31,10 +32,14 @@ class DashboardKpiCard extends StatelessWidget {
     final tint = color ?? scheme.primary;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.medium),
+      // The fill and border alphas come from the token layer rather than being
+      // fixed: 16/255 of a mid-tone reads as a tint over a white card and as
+      // nothing at all over a slate one, so the tile lost its identity in dark
+      // mode. [DashboardColors] scales them per brightness.
       decoration: BoxDecoration(
-        color: tint.withAlpha(16),
+        color: DashboardColors.kpiTint(context, tint),
         borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-        border: Border.all(color: tint.withAlpha(45)),
+        border: Border.all(color: DashboardColors.kpiBorder(context, tint)),
       ),
       child: Row(
         children: [

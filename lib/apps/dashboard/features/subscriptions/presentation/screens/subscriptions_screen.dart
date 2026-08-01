@@ -22,6 +22,7 @@ import '../widgets/subscription_formatting.dart';
 import '../widgets/subscriptions_analytics.dart';
 import '../widgets/subscriptions_toolbar.dart';
 import '../widgets/trip_focus_panel.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
 /// Dashboard → الاشتراكات.
 ///
@@ -49,7 +50,7 @@ class SubscriptionsScreen extends StatelessWidget {
           messenger.showSnackBar(
             SnackBar(
               content: Text(error),
-              backgroundColor: AppStatusColors.onErrorContainer,
+              backgroundColor: context.status(AppStatusTone.error).ink,
             ),
           );
         } else if (message != null) {
@@ -232,20 +233,20 @@ class _OfficeKpis extends StatelessWidget {
           value: arabicNumber(state.activeCount),
           detail: 'من ${arabicNumber(state.subscriptions.length)} إجمالي',
           icon: Icons.workspace_premium_outlined,
-          color: AppStatusColors.onSuccessContainer,
+          color: context.status(AppStatusTone.success).ink,
         ),
         DashboardKpiCard(
           label: 'بانتظار الدفع',
           value: arabicNumber(state.pendingPaymentCount),
           icon: Icons.hourglass_top_outlined,
-          color: AppStatusColors.onWarningContainer,
+          color: context.status(AppStatusTone.warning).ink,
         ),
         DashboardKpiCard(
           label: 'ينتهي خلال أسبوع',
           value: arabicNumber(state.expiringSoonCount),
           detail: 'يحتاج تجديدًا',
           icon: Icons.event_repeat_outlined,
-          color: AppStatusColors.onWarningContainer,
+          color: context.status(AppStatusTone.warning).ink,
         ),
         DashboardKpiCard(
           label: 'محصّل',

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../domain/entities/operational_alert.dart';
 import 'alert_icon_resolver.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
+import 'package:bmt_app/core/theme/colors.dart';
 
 class AlertTile extends StatelessWidget {
   const AlertTile({
@@ -20,7 +21,10 @@ class AlertTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final (iconColor, iconBg, icon) = AlertIconResolver.resolve(alert.type);
+    final (tone, icon) = AlertIconResolver.resolve(alert.type);
+    final status = AppStatusStyle.of(context, tone);
+    final iconColor = status.ink;
+    final iconBg = status.tint;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),

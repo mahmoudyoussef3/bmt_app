@@ -4,6 +4,7 @@ import 'package:bmt_app/core/theme/tokens.dart';
 
 import '../../domain/entities/live_ops_snapshot.dart';
 import 'live_ops_format.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
 /// A pill that names a trip's tracking health and, for a live feed, pulses a
 /// dot so the operator can tell at a glance which vehicles they can actually
@@ -16,23 +17,23 @@ class TrackingHealthBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = trackingHealthColors(health);
+    final colors = context.status(trackingHealthTone(health));
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: colors.container,
+        color: colors.tint,
         borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _HealthDot(color: colors.on, pulsing: health == TrackingHealth.live),
+          _HealthDot(color: colors.ink, pulsing: health == TrackingHealth.live),
           const SizedBox(width: 6),
           Text(
             health.label,
             style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: colors.on,
+              color: colors.ink,
               fontWeight: FontWeight.w800,
             ),
           ),
@@ -120,17 +121,17 @@ class TrackingHealthTag extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = trackingHealthColors(health);
+    final colors = context.status(trackingHealthTone(health));
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: colors.container,
+        color: colors.tint,
         borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
       ),
       child: Text(
         health.label,
         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: colors.on,
+          color: colors.ink,
           fontWeight: FontWeight.w800,
         ),
       ),

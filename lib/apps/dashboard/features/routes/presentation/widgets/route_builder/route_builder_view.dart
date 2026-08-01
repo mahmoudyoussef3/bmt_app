@@ -44,8 +44,9 @@ class RouteBuilderView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider<RouteBuilderCubit>(
-      create: (_) => dashboardDi<RouteBuilderCubit>()
-        ..start(route: route, existingCodes: existingCodes),
+      create: (_) =>
+          dashboardDi<RouteBuilderCubit>()
+            ..start(route: route, existingCodes: existingCodes),
       child: _RouteBuilderBody(
         saving: saving,
         saveError: saveError,
@@ -104,7 +105,13 @@ class _RouteBuilderBody extends StatelessWidget {
                     if (constraints.maxWidth >= 1080) {
                       return Row(
                         children: [
-                          SizedBox(width: 440, child: AppCard(padding: EdgeInsets.zero, child: panel)),
+                          SizedBox(
+                            width: 440,
+                            child: AppCard(
+                              padding: EdgeInsets.zero,
+                              child: panel,
+                            ),
+                          ),
                           const SizedBox(width: AppSpacing.medium),
                           Expanded(child: map),
                         ],
@@ -178,9 +185,9 @@ class _BuilderHeader extends StatelessWidget {
                       : draft.name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -224,7 +231,10 @@ class _RouteMetricsPill extends StatelessWidget {
             child: CircularProgressIndicator(strokeWidth: 2),
           ),
           const SizedBox(width: AppSpacing.small),
-          Text('جارٍ حساب المسار', style: Theme.of(context).textTheme.labelLarge),
+          Text(
+            'جارٍ حساب المسار',
+            style: Theme.of(context).textTheme.labelLarge,
+          ),
         ],
       );
     } else if (hasError) {

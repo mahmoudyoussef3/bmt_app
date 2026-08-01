@@ -99,7 +99,10 @@ class _RouteBuilderMapState extends State<RouteBuilderMap>
   }
 
   static String _shapeSignature(List<RouteStopDraft> stops) => stops
-      .map((stop) => stop.point == null ? '-' : '${stop.point!.lat},${stop.point!.lng}')
+      .map(
+        (stop) =>
+            stop.point == null ? '-' : '${stop.point!.lat},${stop.point!.lng}',
+      )
       .join('|');
 
   List<LatLng> get _locatedPoints => widget.stops
@@ -305,4 +308,3 @@ class _MapBanner extends StatelessWidget {
     );
   }
 }
-

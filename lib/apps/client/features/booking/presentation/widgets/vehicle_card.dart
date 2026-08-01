@@ -63,16 +63,16 @@ class VehicleCard extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: isFull
-                      ? ClientColors.journeyRedLight
-                      : ClientColors.journeyCyanLight,
+                      ? ClientColors.journeyRedLightFor(context)
+                      : ClientColors.journeyCyanLightFor(context),
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
                   isFull ? l10n.booking_full : l10n.booking_available,
                   style: ClientTypography.labelSmall(context).copyWith(
                     color: isFull
-                        ? ClientColors.onJourneyRed
-                        : ClientColors.onJourneyCyan,
+                        ? ClientColors.onJourneyRedFor(context)
+                        : ClientColors.onJourneyCyanFor(context),
                     fontWeight: FontWeight.w700,
                   ),
                 ),

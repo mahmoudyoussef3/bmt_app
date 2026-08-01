@@ -18,6 +18,7 @@ import '../widgets/booking_details_panel.dart';
 import '../widgets/booking_filters_bar.dart';
 import '../widgets/bookings_analytics.dart';
 import '../widgets/bookings_queue_board.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
 /// Bookings operations centre: review the payment queue, act on receipts, and
 /// inspect the real booking / customer / trip data behind each request.
@@ -252,35 +253,35 @@ class _SummaryCards extends StatelessWidget {
           value: '${state.awaitingReviewCount}',
           detail: 'إيصالات تنتظر قراراً',
           icon: Icons.hourglass_top_rounded,
-          color: AppStatusColors.onWarningContainer,
+          color: context.status(AppStatusTone.warning).ink,
         ),
         DashboardKpiCard(
           label: 'محجوزة',
           value: '${state.countByStatus(BookingStatus.reserved)}',
           detail: 'مقاعد محجوزة لم تُؤكد',
           icon: Icons.event_seat_rounded,
-          color: AppStatusColors.onInfoContainer,
+          color: context.status(AppStatusTone.info).ink,
         ),
         DashboardKpiCard(
           label: 'مؤكدة',
           value: '${state.countByStatus(BookingStatus.confirmed)}',
           detail: 'دفع معتمد وحجز مؤكد',
           icon: Icons.verified_rounded,
-          color: AppStatusColors.onSuccessContainer,
+          color: context.status(AppStatusTone.success).ink,
         ),
         DashboardKpiCard(
           label: 'إيرادات معتمدة',
           value: '${state.approvedRevenue.toStringAsFixed(0)} ج.م',
           detail: 'مجموع المدفوعات المقبولة',
           icon: Icons.payments_rounded,
-          color: AppStatusColors.onSuccessContainer,
+          color: context.status(AppStatusTone.success).ink,
         ),
         DashboardKpiCard(
           label: 'مرفوضة أو ملغاة',
           value: '${state.settledOutCount}',
           detail: 'دفع مرفوض أو حجز ملغى',
           icon: Icons.block_rounded,
-          color: AppStatusColors.onErrorContainer,
+          color: context.status(AppStatusTone.error).ink,
         ),
       ],
     );

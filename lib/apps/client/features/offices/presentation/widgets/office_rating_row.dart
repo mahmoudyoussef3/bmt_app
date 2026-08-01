@@ -27,7 +27,11 @@ class OfficeRatingRow extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const Icon(Icons.star_rounded, size: 15, color: Colors.amber),
+        Icon(
+          Icons.star_rounded,
+          size: 15,
+          color: ClientColors.ratingFor(context),
+        ),
         const SizedBox(width: 3),
         Text(
           office.rating.toStringAsFixed(1),

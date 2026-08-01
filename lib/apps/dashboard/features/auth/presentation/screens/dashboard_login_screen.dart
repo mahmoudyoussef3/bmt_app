@@ -46,12 +46,14 @@ class _DashboardLoginScreenState extends State<DashboardLoginScreen> {
         body: BlocConsumer<DashboardAuthCubit, DashboardAuthState>(
           listener: (context, state) {
             if (state is DashboardAuthError) {
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: Text(state.message),
-                backgroundColor: scheme.error,
-                behavior: SnackBarBehavior.floating,
-                duration: const Duration(seconds: 5),
-              ));
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.message),
+                  backgroundColor: scheme.error,
+                  behavior: SnackBarBehavior.floating,
+                  duration: const Duration(seconds: 5),
+                ),
+              );
               context.read<DashboardAuthCubit>().resetError();
             }
           },
@@ -62,7 +64,8 @@ class _DashboardLoginScreenState extends State<DashboardLoginScreen> {
                 constraints: const BoxConstraints(maxWidth: 440),
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 40, vertical: 32,
+                    horizontal: 40,
+                    vertical: 32,
                   ),
                   child: Form(
                     key: _formKey,
@@ -78,7 +81,9 @@ class _DashboardLoginScreenState extends State<DashboardLoginScreen> {
                               height: 52,
                               decoration: BoxDecoration(
                                 color: scheme.primary,
-                                borderRadius: BorderRadius.circular(AppTokens.radius),
+                                borderRadius: BorderRadius.circular(
+                                  AppTokens.radius,
+                                ),
                               ),
                               child: Icon(
                                 Icons.dashboard_rounded,
@@ -92,18 +97,14 @@ class _DashboardLoginScreenState extends State<DashboardLoginScreen> {
                         Text(
                           'لوحة التحكم',
                           textAlign: TextAlign.center,
-                          style: Theme.of(context)
-                              .textTheme
-                              .headlineSmall
+                          style: Theme.of(context).textTheme.headlineSmall
                               ?.copyWith(fontWeight: FontWeight.w700),
                         ),
                         const SizedBox(height: 6),
                         Text(
                           'مخصص للمسؤولين وخدمة العملاء فقط',
                           textAlign: TextAlign.center,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodySmall
+                          style: Theme.of(context).textTheme.bodySmall
                               ?.copyWith(color: scheme.onSurfaceVariant),
                         ),
                         const SizedBox(height: 36),
@@ -131,12 +132,13 @@ class _DashboardLoginScreenState extends State<DashboardLoginScreen> {
                           onFieldSubmitted: (_) => _submit(),
                           decoration: InputDecoration(
                             labelText: 'كلمة المرور',
-                            prefixIcon:
-                                const Icon(Icons.lock_outline_rounded),
+                            prefixIcon: const Icon(Icons.lock_outline_rounded),
                             suffixIcon: IconButton(
-                              icon: Icon(_obscure
-                                  ? Icons.visibility_off_outlined
-                                  : Icons.visibility_outlined),
+                              icon: Icon(
+                                _obscure
+                                    ? Icons.visibility_off_outlined
+                                    : Icons.visibility_outlined,
+                              ),
                               onPressed: () =>
                                   setState(() => _obscure = !_obscure),
                             ),
@@ -154,20 +156,24 @@ class _DashboardLoginScreenState extends State<DashboardLoginScreen> {
                                     width: 20,
                                     height: 20,
                                     child: CircularProgressIndicator(
-                                        strokeWidth: 2.5),
+                                      strokeWidth: 2.5,
+                                    ),
                                   )
                                 : const Text(
                                     'دخول',
                                     style: TextStyle(
-                                        fontSize: 15,
-                                        fontWeight: FontWeight.w700),
+                                      fontSize: 15,
+                                      fontWeight: FontWeight.w700,
+                                    ),
                                   ),
                           ),
                         ),
                         const SizedBox(height: 8),
                         TextButton(
                           onPressed: loading ? null : widget.onCreateOffice,
-                          child: const Text('ليس لديك مكتب؟ سجّل مكتباً جديداً'),
+                          child: const Text(
+                            'ليس لديك مكتب؟ سجّل مكتباً جديداً',
+                          ),
                         ),
                       ],
                     ),

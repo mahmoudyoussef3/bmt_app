@@ -18,6 +18,7 @@ class FleetSummaryCards extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = DashboardChartPalette.of(context);
     final followUp = summary.documentsNeedFollowUpCount;
 
     return DashboardKpiGrid(
@@ -27,21 +28,21 @@ class FleetSummaryCards extends StatelessWidget {
           detail: 'نشط وموقوف',
           value: '${summary.driversCount}',
           icon: Icons.badge_rounded,
-          color: DashboardChartPalette.active,
+          color: palette.active,
         ),
         DashboardKpiCard(
           label: 'إجمالي المركبات',
           detail: 'في الخدمة والصيانة',
           value: '${summary.vehiclesCount}',
           icon: Icons.directions_bus_rounded,
-          color: DashboardChartPalette.accent,
+          color: palette.accent,
         ),
         DashboardKpiCard(
           label: 'تعيينات نشطة',
           detail: 'مركبات مرتبطة بسائقين',
           value: '${summary.activeAssignmentsCount}',
           icon: Icons.link_rounded,
-          color: DashboardChartPalette.positive,
+          color: palette.positive,
         ),
         DashboardKpiCard(
           label: 'وثائق للمراجعة',
@@ -49,9 +50,7 @@ class FleetSummaryCards extends StatelessWidget {
           value: '$followUp',
           icon: Icons.fact_check_rounded,
           // Only reads as an alert when there is actually something to chase.
-          color: followUp > 0
-              ? DashboardChartPalette.negative
-              : DashboardChartPalette.neutral,
+          color: followUp > 0 ? palette.negative : palette.neutral,
         ),
       ],
     );

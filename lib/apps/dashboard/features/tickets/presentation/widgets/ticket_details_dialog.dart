@@ -10,6 +10,7 @@ import '../../domain/entities/complaint.dart';
 import '../cubit/tickets_cubit.dart';
 import '../cubit/tickets_state.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
 class _Template {
   const _Template(this.title, this.body);
@@ -153,12 +154,12 @@ class _TicketDialogHeader extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: _statusColor(ticket.status).withAlpha(24),
+              color: _statusColor(context, ticket.status).withAlpha(24),
               borderRadius: BorderRadius.circular(AppTokens.radius),
             ),
             child: Icon(
               Icons.confirmation_number_outlined,
-              color: _statusColor(ticket.status),
+              color: _statusColor(context, ticket.status),
             ),
           ),
           const SizedBox(width: AppSpacing.medium),
@@ -297,10 +298,16 @@ class _TicketActionPane extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(AppSpacing.medium),
                   decoration: BoxDecoration(
-                    color: AppStatusColors.warningContainer.withAlpha(170),
+                    color: context
+                        .status(AppStatusTone.warning)
+                        .tint
+                        .withAlpha(170),
                     borderRadius: BorderRadius.circular(AppTokens.radius),
                     border: Border.all(
-                      color: AppStatusColors.onWarningContainer.withAlpha(90),
+                      color: context
+                          .status(AppStatusTone.warning)
+                          .ink
+                          .withAlpha(90),
                     ),
                   ),
                   child: Text(ticket.internalNote!),
@@ -723,7 +730,7 @@ class _TicketStatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = _statusColor(status);
+    final color = _statusColor(context, status);
     return StatusChip(
       label: _statusLabel(status),
       color: color.withAlpha(24),
@@ -738,7 +745,7 @@ class _TicketPriorityBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = _priorityColor(priority);
+    final color = _priorityColor(context, priority);
     return StatusChip(
       label: _priorityLabel(priority),
       color: color.withAlpha(24),
@@ -777,23 +784,23 @@ String _categoryLabel(String category) {
   };
 }
 
-Color _statusColor(TicketStatus status) {
+Color _statusColor(BuildContext context, TicketStatus status) {
   return switch (status) {
-    TicketStatus.submitted => AppStatusColors.onInfoContainer,
-    TicketStatus.underReview => AppStatusColors.onWarningContainer,
-    TicketStatus.contacted => AppStatusColors.onSpecialContainer,
-    TicketStatus.resolved => AppStatusColors.onSuccessContainer,
-    TicketStatus.closed => AppStatusColors.onNeutralContainer,
-    TicketStatus.rejected => AppStatusColors.onErrorContainer,
+    TicketStatus.submitted => context.status(AppStatusTone.info).ink,
+    TicketStatus.underReview => context.status(AppStatusTone.warning).ink,
+    TicketStatus.contacted => context.status(AppStatusTone.special).ink,
+    TicketStatus.resolved => context.status(AppStatusTone.success).ink,
+    TicketStatus.closed => context.status(AppStatusTone.neutral).ink,
+    TicketStatus.rejected => context.status(AppStatusTone.error).ink,
   };
 }
 
-Color _priorityColor(TicketPriority priority) {
+Color _priorityColor(BuildContext context, TicketPriority priority) {
   return switch (priority) {
-    TicketPriority.low => AppStatusColors.onNeutralContainer,
-    TicketPriority.medium => AppStatusColors.onInfoContainer,
-    TicketPriority.high => AppStatusColors.onWarningContainer,
-    TicketPriority.urgent => AppStatusColors.onErrorContainer,
+    TicketPriority.low => context.status(AppStatusTone.neutral).ink,
+    TicketPriority.medium => context.status(AppStatusTone.info).ink,
+    TicketPriority.high => context.status(AppStatusTone.warning).ink,
+    TicketPriority.urgent => context.status(AppStatusTone.error).ink,
   };
 }
 

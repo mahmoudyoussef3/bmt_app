@@ -33,9 +33,7 @@ class WizardStopStep extends StatelessWidget {
                     title: context.l10n.booking_whereGetOnOff,
                     subtitle: context.l10n.booking_choosePickupThenStop,
                     trailing: BookingCountPill(
-                      label: context.l10n.booking_stopsCountLabel(
-                        stops.length,
-                      ),
+                      label: context.l10n.booking_stopsCountLabel(stops.length),
                     ),
                   ),
                   const SizedBox(height: 18),
@@ -116,8 +114,8 @@ class _StopModeHeader extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: session.stopsValid
-            ? ClientColors.journeyCyanLight
-            : ClientColors.primaryLight,
+            ? ClientColors.journeyCyanLightFor(context)
+            : ClientColors.primaryContainerFor(context),
         borderRadius: BorderRadius.circular(14),
       ),
       child: Row(
@@ -128,16 +126,16 @@ class _StopModeHeader extends StatelessWidget {
                 : Icons.touch_app_rounded,
             size: 18,
             color: session.stopsValid
-                ? ClientColors.journeyCyan
-                : ClientColors.primary,
+                ? ClientColors.onJourneyCyanFor(context)
+                : ClientColors.onPrimaryContainerFor(context),
           ),
           const SizedBox(width: 9),
           Text(
             label,
             style: ClientTypography.bodySmall(context).copyWith(
               color: session.stopsValid
-                  ? ClientColors.journeyCyan
-                  : ClientColors.primary,
+                  ? ClientColors.onJourneyCyanFor(context)
+                  : ClientColors.onPrimaryContainerFor(context),
               fontWeight: FontWeight.w700,
             ),
           ),
@@ -221,7 +219,7 @@ class _StopTile extends StatelessWidget {
               height: 28,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: color ?? ClientColors.journeySlateLight,
+                color: color ?? ClientColors.journeySlateLightFor(context),
               ),
               child: Center(
                 child: isPickup

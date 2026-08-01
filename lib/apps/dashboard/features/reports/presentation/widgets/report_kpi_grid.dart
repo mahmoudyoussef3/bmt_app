@@ -5,6 +5,7 @@ import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import '../cubit/reports_state.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
 class ReportKpiGrid extends StatelessWidget {
   final ReportsLoaded state;
@@ -30,7 +31,7 @@ class ReportKpiGrid extends StatelessWidget {
                       child: _KpiCard(
                         label: keys[0],
                         value: kpis[keys[0]]!,
-                        color: AppStatusColors.onInfoContainer,
+                        color: context.status(AppStatusTone.info).ink,
                       ),
                     ),
                   SizedBox(width: spacing),
@@ -39,7 +40,7 @@ class ReportKpiGrid extends StatelessWidget {
                       child: _KpiCard(
                         label: keys[1],
                         value: kpis[keys[1]]!,
-                        color: AppStatusColors.onWarningContainer,
+                        color: context.status(AppStatusTone.warning).ink,
                       ),
                     ),
                 ],
@@ -52,7 +53,7 @@ class ReportKpiGrid extends StatelessWidget {
                       child: _KpiCard(
                         label: keys[2],
                         value: kpis[keys[2]]!,
-                        color: AppStatusColors.onSuccessContainer,
+                        color: context.status(AppStatusTone.success).ink,
                       ),
                     ),
                   SizedBox(width: spacing),
@@ -61,7 +62,7 @@ class ReportKpiGrid extends StatelessWidget {
                       child: _KpiCard(
                         label: keys[3],
                         value: kpis[keys[3]]!,
-                        color: AppStatusColors.onSpecialContainer,
+                        color: context.status(AppStatusTone.special).ink,
                       ),
                     ),
                 ],
@@ -74,10 +75,10 @@ class ReportKpiGrid extends StatelessWidget {
           children: List.generate(keys.length, (index) {
             final key = keys[index];
             final color = [
-              AppStatusColors.onInfoContainer,
-              AppStatusColors.onWarningContainer,
-              AppStatusColors.onSuccessContainer,
-              AppStatusColors.onSpecialContainer,
+              context.status(AppStatusTone.info).ink,
+              context.status(AppStatusTone.warning).ink,
+              context.status(AppStatusTone.success).ink,
+              context.status(AppStatusTone.special).ink,
             ][index % 4];
             return Expanded(
               child: Padding(

@@ -6,6 +6,7 @@ import 'package:bmt_app/core/widgets/app_card.dart';
 
 import '../cubit/reports_cubit.dart';
 import '../cubit/reports_state.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
 class ReportExportToolbar extends StatelessWidget {
   final ReportsLoaded state;
@@ -18,9 +19,9 @@ class ReportExportToolbar extends StatelessWidget {
     return AppCard(
       child: Row(
         children: [
-          const Icon(Icons.ios_share, color: AppStatusColors.onInfoContainer),
+          Icon(Icons.ios_share, color: context.status(AppStatusTone.info).ink),
           const SizedBox(width: AppSpacing.small),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -32,7 +33,7 @@ class ReportExportToolbar extends StatelessWidget {
                   'توليد وتنزيل نسخ التقارير بتنسيقات مختلفة لحفظها ومشاركتها.',
                   style: TextStyle(
                     fontSize: 10,
-                    color: AppStatusColors.onNeutralContainer,
+                    color: context.status(AppStatusTone.neutral).ink,
                   ),
                 ),
               ],
@@ -43,27 +44,27 @@ class ReportExportToolbar extends StatelessWidget {
           else ...[
             OutlinedButton.icon(
               onPressed: () => cubit.triggerExport('pdf'),
-              icon: const Icon(
+              icon: Icon(
                 Icons.picture_as_pdf,
-                color: AppStatusColors.onErrorContainer,
+                color: context.status(AppStatusTone.error).ink,
               ),
               label: const Text('PDF'),
             ),
             const SizedBox(width: AppSpacing.small),
             OutlinedButton.icon(
               onPressed: () => cubit.triggerExport('excel'),
-              icon: const Icon(
+              icon: Icon(
                 Icons.grid_on,
-                color: AppStatusColors.onSuccessContainer,
+                color: context.status(AppStatusTone.success).ink,
               ),
               label: const Text('Excel'),
             ),
             const SizedBox(width: AppSpacing.small),
             OutlinedButton.icon(
               onPressed: () => cubit.triggerExport('csv'),
-              icon: const Icon(
+              icon: Icon(
                 Icons.description,
-                color: AppStatusColors.onWarningContainer,
+                color: context.status(AppStatusTone.warning).ink,
               ),
               label: const Text('CSV'),
             ),

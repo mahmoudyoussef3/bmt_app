@@ -9,6 +9,7 @@ import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_snackbar.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
 /// Sortable column indices exposed by the drivers table header. Kept in one
 /// place so the screen and the table agree on the column→field mapping.
@@ -52,20 +53,14 @@ class FleetDriversTable extends StatelessWidget {
     return match.first.vehicleNumber;
   }
 
-  static (Color bg, Color fg) _healthColors(DriverHealthLevel health) =>
+  /// The semantic status role a driver's health level maps to. Returning a
+  /// tone rather than a colour pair is what lets the caller resolve it against
+  /// the theme in effect — these used to be light-only constants.
+  static AppStatusTone _healthTone(DriverHealthLevel health) =>
       switch (health) {
-        DriverHealthLevel.healthy => (
-          AppStatusColors.successContainer,
-          AppStatusColors.onSuccessContainer,
-        ),
-        DriverHealthLevel.warning => (
-          AppStatusColors.warningContainer,
-          AppStatusColors.onWarningContainer,
-        ),
-        DriverHealthLevel.critical => (
-          AppStatusColors.errorContainer,
-          AppStatusColors.onErrorContainer,
-        ),
+        DriverHealthLevel.healthy => AppStatusTone.success,
+        DriverHealthLevel.warning => AppStatusTone.warning,
+        DriverHealthLevel.critical => AppStatusTone.error,
       };
 
   int? get _sortColumnIndex => switch (sortField) {
@@ -183,7 +178,9 @@ class FleetDriversTable extends StatelessWidget {
       rows: paged.map((driver) {
         final vehicle = _vehicleName(driver.currentVehicleId);
         final snapshot = DriverOperations.snapshot(driver, workspace);
-        final (healthBg, healthFg) = _healthColors(snapshot.health);
+        final health = context.status(_healthTone(snapshot.health));
+        final healthBg = health.tint;
+        final healthFg = health.ink;
         return [
           Checkbox(
             value: selectedIds.contains(driver.id),
@@ -205,10 +202,10 @@ class FleetDriversTable extends StatelessWidget {
           // The pairing decides whether this driver can be scheduled at all, so it
           // reads as a status, not as a value that happens to be blank.
           vehicle.isEmpty
-              ? const StatusChip(
+              ? StatusChip(
                   label: 'بدون سيارة',
-                  color: AppStatusColors.warningContainer,
-                  textColor: AppStatusColors.onWarningContainer,
+                  color: context.status(AppStatusTone.warning).tint,
+                  textColor: context.status(AppStatusTone.warning).ink,
                 )
               : Text(vehicle, maxLines: 1, overflow: TextOverflow.ellipsis),
           Text(

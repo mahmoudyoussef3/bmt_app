@@ -10,6 +10,7 @@ import 'package:bmt_app/apps/dashboard/core/widgets/charts/dashboard_ranked_bars
 import '../../domain/entities/referral_analytics.dart';
 import '../../domain/entities/referral_reward_config.dart';
 import 'referral_format.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
 
 class ReferralOverviewTab extends StatelessWidget {
   const ReferralOverviewTab({
@@ -23,6 +24,7 @@ class ReferralOverviewTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = DashboardChartPalette.of(context);
     final currency = config.currency;
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.large),
@@ -33,19 +35,19 @@ class ReferralOverviewTab extends StatelessWidget {
               label: 'أكواد الإحالة',
               value: referralArNum(analytics.totalCodes),
               icon: Icons.qr_code_2_rounded,
-              color: const Color(0xFF2563EB),
+              color: palette.active,
             ),
             DashboardKpiCard(
               label: 'إجمالي الإحالات',
               value: referralArNum(analytics.totalReferrals),
               icon: Icons.group_add_rounded,
-              color: const Color(0xFF7C3AED),
+              color: palette.accent,
             ),
             DashboardKpiCard(
               label: 'قيد الانتظار',
               value: referralArNum(analytics.pendingReferrals),
               icon: Icons.hourglass_bottom_rounded,
-              color: const Color(0xFFD97706),
+              color: palette.warning,
             ),
             DashboardKpiCard(
               label: 'أتمّوا أول طلب',
@@ -53,37 +55,37 @@ class ReferralOverviewTab extends StatelessWidget {
                 analytics.firstOrderCompleted + analytics.rewardGranted,
               ),
               icon: Icons.shopping_bag_rounded,
-              color: const Color(0xFF0EA5E9),
+              color: palette.positive,
             ),
             DashboardKpiCard(
               label: 'مكافآت مُنحت',
               value: referralArNum(analytics.rewardGranted),
               icon: Icons.card_giftcard_rounded,
-              color: const Color(0xFF16A34A),
+              color: palette.positive,
             ),
             DashboardKpiCard(
               label: 'معدل التحويل',
               value: referralArPercent(analytics.conversionRate),
               icon: Icons.trending_up_rounded,
-              color: const Color(0xFF16A34A),
+              color: palette.positive,
             ),
             DashboardKpiCard(
               label: 'مكافآت المُحيلين',
               value: '${referralArNum(analytics.referrerRewards)} $currency',
               icon: Icons.person_rounded,
-              color: const Color(0xFF2563EB),
+              color: palette.active,
             ),
             DashboardKpiCard(
               label: 'مكافآت المدعوين',
               value: '${referralArNum(analytics.referredRewards)} $currency',
               icon: Icons.person_add_alt_1_rounded,
-              color: const Color(0xFF7C3AED),
+              color: palette.accent,
             ),
             DashboardKpiCard(
               label: 'إجمالي المكافآت الموزعة',
               value: '${referralArNum(analytics.totalRewards)} $currency',
               icon: Icons.payments_rounded,
-              color: const Color(0xFF16A34A),
+              color: palette.positive,
             ),
           ],
         ),
@@ -94,13 +96,13 @@ class ReferralOverviewTab extends StatelessWidget {
               icon: Icons.donut_large_rounded,
               title: 'توزيع حالات الإحالة',
               subtitle: 'قيد الانتظار مقابل المكتملة والممنوحة',
-              child: DashboardDonutChart(data: _statusBreakdown()),
+              child: DashboardDonutChart(data: _statusBreakdown(palette)),
             );
             final rewards = DashboardPanel(
               icon: Icons.leaderboard_rounded,
               title: 'توزيع المكافآت',
               subtitle: 'مكافآت المُحيلين مقابل المدعوين',
-              child: DashboardRankedBars(data: _rewardSplit()),
+              child: DashboardRankedBars(data: _rewardSplit(palette)),
             );
             if (constraints.maxWidth < 980) {
               return Column(
@@ -125,37 +127,37 @@ class ReferralOverviewTab extends StatelessWidget {
     );
   }
 
-  List<ChartDatum> _statusBreakdown() {
+  List<ChartDatum> _statusBreakdown(DashboardChartPalette palette) {
     return [
       ChartDatum(
         label: 'قيد الانتظار',
         value: analytics.pendingReferrals.toDouble(),
-        color: const Color(0xFFD97706),
+        color: palette.warning,
       ),
       ChartDatum(
         label: 'أتمّ أول طلب',
         value: analytics.firstOrderCompleted.toDouble(),
-        color: const Color(0xFF0EA5E9),
+        color: palette.positive,
       ),
       ChartDatum(
         label: 'ممنوحة',
         value: analytics.rewardGranted.toDouble(),
-        color: const Color(0xFF16A34A),
+        color: palette.positive,
       ),
     ];
   }
 
-  List<ChartDatum> _rewardSplit() {
+  List<ChartDatum> _rewardSplit(DashboardChartPalette palette) {
     return [
       ChartDatum(
         label: 'المُحيلون',
         value: analytics.referrerRewards,
-        color: const Color(0xFF2563EB),
+        color: palette.active,
       ),
       ChartDatum(
         label: 'المدعوون',
         value: analytics.referredRewards,
-        color: const Color(0xFF7C3AED),
+        color: palette.accent,
       ),
     ];
   }
