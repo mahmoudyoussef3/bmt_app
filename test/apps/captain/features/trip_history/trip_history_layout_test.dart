@@ -212,6 +212,49 @@ void main() {
     expect(find.text('الوصول'), findsOneWidget);
   });
 
+  testWidgets('a card names its shortfall instead of leaving it to be '
+      'subtracted', (tester) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    // 18 of 20 boarded. The shortfall is the whole reason a captain looks
+    // twice at a finished trip, and it used to exist only as the gap between
+    // two numbers on the same line.
+    await _pump(tester, _loaded(trips: [_trip(boarded: 18)]));
+
+    expect(find.text('لم يصعد راكبان'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('a full trip says nothing about a shortfall it does not have', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await _pump(tester, _loaded(trips: [_trip(boarded: 20)]));
+
+    expect(find.textContaining('لم يصعد'), findsNothing);
+  });
+
+  testWidgets('the card carries both of the bus\'s identifiers', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(390, 844);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    // The plate is what is written on the vehicle; the fleet code is what
+    // operations says on the radio. The card used to show only the second, so
+    // checking a finished trip against a logbook meant opening the detail page.
+    await _pump(tester, _loaded(trips: [_trip()]));
+
+    expect(find.text('BUS-104'), findsOneWidget);
+    expect(find.text('ط ن ج 4821'), findsOneWidget);
+  });
+
   testWidgets('an empty history says so rather than showing an empty list', (
     tester,
   ) async {

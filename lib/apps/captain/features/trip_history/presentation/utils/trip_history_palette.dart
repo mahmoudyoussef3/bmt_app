@@ -51,4 +51,26 @@ class TripHistoryPalette {
     begin: AlignmentDirectional.topStart,
     end: AlignmentDirectional.bottomEnd,
   );
+
+  /// The same mark for a trip that did not board everyone it sold.
+  static const LinearGradient shortfallGradient = LinearGradient(
+    colors: [attention, Color(0xFFB45309)], // Amber 500 → Amber 700
+    begin: AlignmentDirectional.topStart,
+    end: AlignmentDirectional.bottomEnd,
+  );
+
+  /// The mark a trip earns.
+  ///
+  /// The mark used to be the same gradient on every row — a decoration that
+  /// took the card's most prominent spot to say nothing, since every trip in
+  /// the history has one. Tying it to the boarding outcome spends that spot on
+  /// the one thing that separates these rows, so a captain scrolling the tab
+  /// sees which trips came up short before reading any of them.
+  ///
+  /// A trip that sold nothing is not a shortfall — there was nobody to board —
+  /// so it keeps the brand mark.
+  static LinearGradient mark({required int boarded, required int total}) {
+    if (total == 0 || boarded >= total) return markGradient;
+    return shortfallGradient;
+  }
 }

@@ -212,7 +212,8 @@ class FinanceAnalytics {
         byRoute.putIfAbsent(entry.reference, () => _Bucket()).add(entry.amount);
       }
       byClient.putIfAbsent(entry.party, () => _Bucket()).add(entry.amount);
-      byWeekday.putIfAbsent(entry.date.weekday, () => _Bucket())
+      byWeekday
+          .putIfAbsent(entry.date.weekday, () => _Bucket())
           .add(entry.amount);
     }
 
@@ -340,7 +341,11 @@ class FinanceAnalytics {
           isSubtotal: true,
         ),
         FinanceStatementLine('صافي الإيراد', netRevenue, isTotal: true),
-        FinanceStatementLine('قيد التحصيل (خارج الصافي)', pending, isMemo: true),
+        FinanceStatementLine(
+          'قيد التحصيل (خارج الصافي)',
+          pending,
+          isMemo: true,
+        ),
         FinanceStatementLine(
           'مبالغ ملغاة (خارج الصافي)',
           cancelled,

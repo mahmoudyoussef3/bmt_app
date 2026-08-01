@@ -38,13 +38,14 @@ class FinanceCubit extends Cubit<FinanceState> {
 
     emit(const FinanceLoading());
     try {
-      final paymentsFuture = _getPayments();
-      final refundsFuture = _getRefundRequests();
-      final subscriptionsFuture = _getSubscriptions();
-
-      final payments = await paymentsFuture;
-      final refunds = await refundsFuture;
-      final subscriptions = await subscriptionsFuture;
+      // Future.wait, not three sequential awaits: the three reads are
+      // independent, and awaiting them one at a time both triples the wait and
+      // leaves the others' errors unobserved when the first one throws.
+      final (payments, refunds, subscriptions) = await (
+        _getPayments(),
+        _getRefundRequests(),
+        _getSubscriptions(),
+      ).wait;
 
       emit(
         FinanceLoaded(

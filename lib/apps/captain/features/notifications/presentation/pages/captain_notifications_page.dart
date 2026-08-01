@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/captain/core/di/captain_di.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_sliver_header.dart';
 
 import '../../domain/entities/captain_notification.dart';
 import '../cubit/captain_notifications_cubit.dart';
@@ -26,73 +27,87 @@ class _CaptainNotificationsView extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('الإشعارات'),
-        backgroundColor: cs.surface,
-        elevation: 0,
-        scrolledUnderElevation: 0,
-        actions: [
+      body: CustomScrollView(
+        slivers: [
+          CaptainSliverHeader(
+            title: 'الإشعارات',
+            actions: [
+              BlocBuilder<CaptainNotificationsCubit, CaptainNotificationsState>(
+                builder: (context, state) {
+                  if (state is CaptainNotificationsLoaded &&
+                      state.unreadCount > 0) {
+                    return TextButton(
+                      onPressed: () => context
+                          .read<CaptainNotificationsCubit>()
+                          .markAllAsRead(),
+                      child: const Text('قراءة الكل'),
+                    );
+                  }
+                  return const SizedBox.shrink();
+                },
+              ),
+            ],
+          ),
           BlocBuilder<CaptainNotificationsCubit, CaptainNotificationsState>(
-            builder: (context, state) {
-              if (state is CaptainNotificationsLoaded &&
-                  state.unreadCount > 0) {
-                return TextButton(
-                  onPressed: () =>
-                      context.read<CaptainNotificationsCubit>().markAllAsRead(),
-                  child: const Text('قراءة الكل'),
-                );
-              }
-              return const SizedBox.shrink();
+            builder: (context, state) => switch (state) {
+              CaptainNotificationsLoading() => const SliverFillRemaining(
+                child: Center(child: CircularProgressIndicator()),
+              ),
+              CaptainNotificationsError(:final message) => SliverFillRemaining(
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.error_outline_rounded,
+                        size: 48,
+                        color: cs.error,
+                      ),
+                      const SizedBox(height: 12),
+                      Text(message, textAlign: TextAlign.center),
+                      const SizedBox(height: 16),
+                      FilledButton(
+                        onPressed: () => context
+                            .read<CaptainNotificationsCubit>()
+                            .startWatching(),
+                        child: const Text('إعادة المحاولة'),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              CaptainNotificationsLoaded(:final notifications) =>
+                notifications.isEmpty
+                    ? const SliverFillRemaining(
+                        child: Center(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.notifications_none_rounded, size: 56),
+                              SizedBox(height: 12),
+                              Text('لا توجد إشعارات'),
+                            ],
+                          ),
+                        ),
+                      )
+                    : SliverPadding(
+                        padding: const EdgeInsets.all(16),
+                        sliver: SliverList.separated(
+                          itemCount: notifications.length,
+                          separatorBuilder: (_, index) =>
+                              const SizedBox(height: 8),
+                          itemBuilder: (_, i) => _CaptainNotifTile(
+                            notification: notifications[i],
+                            onMarkRead: () => context
+                                .read<CaptainNotificationsCubit>()
+                                .markAsRead(notifications[i].id),
+                          ),
+                        ),
+                      ),
+              _ => const SliverToBoxAdapter(child: SizedBox.shrink()),
             },
           ),
         ],
-      ),
-      body: BlocBuilder<CaptainNotificationsCubit, CaptainNotificationsState>(
-        builder: (context, state) => switch (state) {
-          CaptainNotificationsLoading() => const Center(
-            child: CircularProgressIndicator(),
-          ),
-          CaptainNotificationsError(:final message) => Center(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.error_outline_rounded, size: 48, color: cs.error),
-                const SizedBox(height: 12),
-                Text(message, textAlign: TextAlign.center),
-                const SizedBox(height: 16),
-                FilledButton(
-                  onPressed: () =>
-                      context.read<CaptainNotificationsCubit>().startWatching(),
-                  child: const Text('إعادة المحاولة'),
-                ),
-              ],
-            ),
-          ),
-          CaptainNotificationsLoaded(:final notifications) =>
-            notifications.isEmpty
-                ? const Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.notifications_none_rounded, size: 56),
-                        SizedBox(height: 12),
-                        Text('لا توجد إشعارات'),
-                      ],
-                    ),
-                  )
-                : ListView.separated(
-                    padding: const EdgeInsets.all(16),
-                    itemCount: notifications.length,
-                    separatorBuilder: (_, index) => const SizedBox(height: 8),
-                    itemBuilder: (_, i) => _CaptainNotifTile(
-                      notification: notifications[i],
-                      onMarkRead: () => context
-                          .read<CaptainNotificationsCubit>()
-                          .markAsRead(notifications[i].id),
-                    ),
-                  ),
-          _ => const SizedBox.shrink(),
-        },
       ),
     );
   }

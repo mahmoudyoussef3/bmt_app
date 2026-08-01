@@ -1,5 +1,6 @@
 import 'package:bmt_app/apps/captain/core/di/captain_di.dart';
 import 'package:bmt_app/apps/captain/core/routes/captain_nav.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_sliver_header.dart';
 import 'package:bmt_app/core/widgets/app_snackbar.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
 import 'package:flutter/material.dart';
@@ -39,96 +40,107 @@ class _ReportIncidentPageState extends State<ReportIncidentPage> {
     return BlocProvider<IncidentCubit>(
       create: (_) => captainGetIt<IncidentCubit>(),
       child: Scaffold(
-        appBar: AppBar(title: const Text('الإبلاغ عن حادثة')),
-        body: BlocConsumer<IncidentCubit, IncidentState>(
-          listener: (context, state) {
-            if (state is IncidentReady && state.submitted) {
-              // The screen used to close in silence, which reads the same as a
-              // tap that did nothing — a poor answer for a captain who has just
-              // reported an emergency and needs to know it reached operations.
-              AppSnackbar.success(context, 'تم إرسال البلاغ إلى العمليات');
-              context.closeScreen();
-            }
-            if (state is IncidentError) {
-              setState(() => _submitting = false);
-              AppSnackbar.error(context, state.message);
-            }
-          },
-          builder: (context, state) {
-            return ListView(
-              padding: const EdgeInsetsDirectional.fromSTEB(16, 14, 16, 20),
-              children: [
-                AppCard(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+        body: CustomScrollView(
+          slivers: [
+            const CaptainSliverHeader(title: 'الإبلاغ عن حادثة'),
+            BlocConsumer<IncidentCubit, IncidentState>(
+              listener: (context, state) {
+                if (state is IncidentReady && state.submitted) {
+                  // The screen used to close in silence, which reads the same
+                  // as a tap that did nothing — a poor answer for a captain
+                  // who has just reported an emergency and needs to know it
+                  // reached operations.
+                  AppSnackbar.success(context, 'تم إرسال البلاغ إلى العمليات');
+                  context.closeScreen();
+                }
+                if (state is IncidentError) {
+                  setState(() => _submitting = false);
+                  AppSnackbar.error(context, state.message);
+                }
+              },
+              builder: (context, state) {
+                return SliverPadding(
+                  padding: const EdgeInsetsDirectional.fromSTEB(
+                    16,
+                    14,
+                    16,
+                    20,
+                  ),
+                  sliver: SliverList.list(
                     children: [
-                      Text(
-                        'تفاصيل البلاغ',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
+                      AppCard(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'تفاصيل البلاغ',
+                              style: Theme.of(context).textTheme.titleLarge
+                                  ?.copyWith(fontWeight: FontWeight.w800),
+                            ),
+                            const SizedBox(height: 14),
+                            DropdownButtonFormField<IncidentType>(
+                              initialValue: _type,
+                              items: IncidentType.values
+                                  .map(
+                                    (type) => DropdownMenuItem(
+                                      value: type,
+                                      child: Text(_label(type)),
+                                    ),
+                                  )
+                                  .toList(),
+                              onChanged: _submitting
+                                  ? null
+                                  : (value) => setState(
+                                      () => _type = value ?? IncidentType.delay,
+                                    ),
+                              decoration: const InputDecoration(
+                                labelText: 'نوع الحادثة',
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            TextField(
+                              minLines: 4,
+                              maxLines: 6,
+                              enabled: !_submitting,
+                              decoration: const InputDecoration(
+                                labelText: 'الوصف',
+                                hintText: 'اكتب ما حدث بوضوح لفريق العمليات',
+                              ),
+                              onChanged: (value) => _description = value,
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 14),
-                      DropdownButtonFormField<IncidentType>(
-                        initialValue: _type,
-                        items: IncidentType.values
-                            .map(
-                              (type) => DropdownMenuItem(
-                                value: type,
-                                child: Text(_label(type)),
-                              ),
-                            )
-                            .toList(),
-                        onChanged: _submitting
-                            ? null
-                            : (value) => setState(
-                                () => _type = value ?? IncidentType.delay,
-                              ),
-                        decoration: const InputDecoration(
-                          labelText: 'نوع الحادثة',
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      TextField(
-                        minLines: 4,
-                        maxLines: 6,
-                        enabled: !_submitting,
-                        decoration: const InputDecoration(
-                          labelText: 'الوصف',
-                          hintText: 'اكتب ما حدث بوضوح لفريق العمليات',
-                        ),
-                        onChanged: (value) => _description = value,
+                      const SizedBox(height: 16),
+                      AppButton(
+                        label: 'إرسال البلاغ',
+                        isLoading: state is IncidentSubmitting || _submitting,
+                        onPressed: () {
+                          final description = _description.trim();
+                          if (description.length < 8) {
+                            AppSnackbar.warning(
+                              context,
+                              'اكتب وصفاً واضحاً قبل إرسال البلاغ',
+                            );
+                            return;
+                          }
+                          setState(() => _submitting = true);
+                          context.read<IncidentCubit>().submit(
+                            IncidentReport(
+                              tripId: widget.tripId,
+                              type: _type,
+                              description: description,
+                            ),
+                          );
+                        },
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: 16),
-                AppButton(
-                  label: 'إرسال البلاغ',
-                  isLoading: state is IncidentSubmitting || _submitting,
-                  onPressed: () {
-                    final description = _description.trim();
-                    if (description.length < 8) {
-                      AppSnackbar.warning(
-                        context,
-                        'اكتب وصفاً واضحاً قبل إرسال البلاغ',
-                      );
-                      return;
-                    }
-                    setState(() => _submitting = true);
-                    context.read<IncidentCubit>().submit(
-                      IncidentReport(
-                        tripId: widget.tripId,
-                        type: _type,
-                        description: description,
-                      ),
-                    );
-                  },
-                ),
-              ],
-            );
-          },
+                );
+              },
+            ),
+          ],
         ),
       ),
     );

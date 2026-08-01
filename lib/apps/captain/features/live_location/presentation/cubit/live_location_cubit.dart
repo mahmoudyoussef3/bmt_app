@@ -27,7 +27,7 @@ export '../../domain/entities/location_sharing_health.dart'
 ///    property of the app, not of whichever widget happened to build first.
 ///
 ///  * **Reporting outlives the screen.** The trip-execution page is not the
-///    trip. A captain mid-journey opens the map, answers the office in chat,
+///    trip. A captain mid-journey opens the map, files an incident report,
 ///    checks the manifest, backs out to the trip list — and with the timer
 ///    owned by a widget, every one of those either risked or guaranteed the
 ///    client's map going dark, silently, while the bus kept driving. Publishing

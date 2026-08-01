@@ -82,15 +82,13 @@ class FinanceLoaded extends FinanceState {
   static const ledgerPageSize = 25;
 
   /// Packages that are currently earning — a live count, not a period figure.
-  int get activeSubscriptions => subscriptions
-      .where((s) => s.status == SubscriptionStatus.active)
-      .length;
+  int get activeSubscriptions =>
+      subscriptions.where((s) => s.status == SubscriptionStatus.active).length;
 
   /// Refund requests still awaiting a decision elsewhere in the dashboard:
   /// money the office may still have to give back.
-  List<RefundRequest> get pendingRefundRequests => refundRequests
-      .where((r) => r.status == RefundStatus.pending)
-      .toList();
+  List<RefundRequest> get pendingRefundRequests =>
+      refundRequests.where((r) => r.status == RefundStatus.pending).toList();
 
   double get pendingRefundAmount =>
       pendingRefundRequests.fold(0.0, (sum, r) => sum + r.amount);
@@ -105,8 +103,10 @@ class FinanceLoaded extends FinanceState {
           entry.reference.toLowerCase().contains(query) ||
           entry.id.toLowerCase().contains(query);
       final matchesType = typeFilter == null || entry.type == typeFilter;
-      final matchesMethod = methodFilter == null || entry.method == methodFilter;
-      final matchesStatus = statusFilter == null || entry.status == statusFilter;
+      final matchesMethod =
+          methodFilter == null || entry.method == methodFilter;
+      final matchesStatus =
+          statusFilter == null || entry.status == statusFilter;
       return matchesQuery && matchesType && matchesMethod && matchesStatus;
     }).toList();
   }

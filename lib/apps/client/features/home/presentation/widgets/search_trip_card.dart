@@ -53,7 +53,7 @@ class SearchTripCard extends StatelessWidget {
               ? scheme.outline.withAlpha(40)
               : scheme.outline.withAlpha(60),
         ),
-        boxShadow: ClientElevation.md(context),
+        boxShadow: ClientElevation.lg(context),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -120,7 +120,7 @@ class SearchTripCard extends StatelessWidget {
               ),
               if (onSwap != null)
                 PositionedDirectional(
-                  end: 8,
+                  end: 16,
                   top: 0,
                   bottom: 0,
                   child: Center(child: _SwapButton(onTap: onSwap!)),
@@ -177,21 +177,28 @@ class _SwapButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: ClientColors.surfaceFor(context),
-      shape: CircleBorder(
-        side: BorderSide(color: ClientColors.borderFor(context)),
+    return Container(
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceFor(context),
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: ClientColors.borderFor(context),
+          width: 1.5,
+        ),
+        boxShadow: ClientElevation.md(context),
       ),
-      elevation: 2,
-      child: InkWell(
-        onTap: onTap,
-        customBorder: const CircleBorder(),
-        child: Padding(
-          padding: const EdgeInsets.all(8),
-          child: Icon(
-            Icons.swap_vert_rounded,
-            size: 20,
-            color: ClientColors.primaryFor(context),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          customBorder: const CircleBorder(),
+          child: Padding(
+            padding: const EdgeInsets.all(8),
+            child: Icon(
+              Icons.swap_vert_rounded,
+              size: 20,
+              color: ClientColors.primaryFor(context),
+            ),
           ),
         ),
       ),

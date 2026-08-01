@@ -6,7 +6,9 @@ class MarkSubscriptionRideUsedUseCase {
 
   const MarkSubscriptionRideUsedUseCase(this._repository);
 
-  Future<UserSubscription> call(String id) {
-    return _repository.markRideUsed(id);
+  /// [tripId] attributes the ride to a specific departure. Passing it is what
+  /// turns "rides used: 3" into an auditable list of which trips they were.
+  Future<UserSubscription> call(String id, {String? tripId}) {
+    return _repository.markRideUsed(id, tripId: tripId);
   }
 }

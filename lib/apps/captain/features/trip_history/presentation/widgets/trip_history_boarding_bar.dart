@@ -16,18 +16,14 @@ class TripHistoryBoardingBar extends StatelessWidget {
     super.key,
     required this.boarded,
     required this.total,
-    this.trailing,
   });
 
   final int boarded;
   final int total;
 
-  /// Sits at the line's trailing edge — the vehicle chip, on a card.
-  final Widget? trailing;
-
   @override
   Widget build(BuildContext context) {
-    if (total == 0) return _NoPassengers(trailing: trailing);
+    if (total == 0) return const _NoPassengers();
 
     final rate = (boarded / total).clamp(0.0, 1.0);
     final color = TripHistoryPalette.boarding(rate);
@@ -49,10 +45,6 @@ class TripHistoryBoardingBar extends StatelessWidget {
                 ).copyWith(color: color, fontWeight: FontWeight.w800),
               ),
             ),
-            if (trailing != null) ...[
-              const SizedBox(width: CaptainDesignTokens.s8),
-              trailing!,
-            ],
           ],
         ),
         const SizedBox(height: CaptainDesignTokens.s8),
@@ -71,9 +63,7 @@ class TripHistoryBoardingBar extends StatelessWidget {
 }
 
 class _NoPassengers extends StatelessWidget {
-  const _NoPassengers({this.trailing});
-
-  final Widget? trailing;
+  const _NoPassengers();
 
   @override
   Widget build(BuildContext context) {
@@ -93,10 +83,6 @@ class _NoPassengers extends StatelessWidget {
             ).copyWith(color: muted),
           ),
         ),
-        if (trailing != null) ...[
-          const SizedBox(width: CaptainDesignTokens.s8),
-          trailing!,
-        ],
       ],
     );
   }

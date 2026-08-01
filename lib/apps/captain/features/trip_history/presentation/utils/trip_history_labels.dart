@@ -1,3 +1,5 @@
+import 'package:bmt_app/apps/captain/core/utils/captain_counts.dart';
+
 /// Arabic counts for the history tab.
 ///
 /// Dropping a number in front of a noun is an English habit that reads as
@@ -38,11 +40,33 @@ class TripHistoryLabels {
     };
   }
 
-  /// The stations section's count, e.g. `5 محطات`.
-  static String stops(int count) => switch (count) {
-    1 => 'محطة واحدة',
-    2 => 'محطتان',
-    <= 10 => '$count محطات',
-    _ => '$count محطة',
+  /// The seats a trip sold and never boarded, e.g. `لم يصعد راكبان`.
+  ///
+  /// Stated outright rather than left as `20 − 18`: the shortfall is the whole
+  /// reason a captain looks twice at a finished trip, and making them subtract
+  /// two numbers to find it is the card withholding its own point.
+  static String notBoarded(int count) => switch (count) {
+    1 => 'لم يصعد راكب واحد',
+    2 => 'لم يصعد راكبان',
+    <= 10 => 'لم يصعد $count ركاب',
+    _ => 'لم يصعد $count راكبًا',
   };
+
+  /// How the trip ended, in one sentence.
+  ///
+  /// The detail page could state the booked count, the boarded count and a
+  /// progress bar and still leave the captain to work out whether the trip went
+  /// well. This is the conclusion those figures add up to.
+  static String outcome({required int boarded, required int total}) {
+    if (total == 0) return 'اكتملت الرحلة دون ركاب مسجلين';
+    final missing = total - boarded;
+    if (missing <= 0) return 'اكتملت الرحلة وصعد جميع الركاب';
+    return 'اكتملت الرحلة — ${notBoarded(missing)}';
+  }
+
+  /// The stations section's count, e.g. `5 محطات`.
+  ///
+  /// Delegated so the history tab and the day list count the same noun the same
+  /// way — the assigned-trip card states a route's stop count too.
+  static String stops(int count) => CaptainCounts.stops(count);
 }

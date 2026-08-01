@@ -130,7 +130,7 @@ class SubscriptionsAnalytics extends StatelessWidget {
   List<ChartDatum> _byPlan(ColorScheme scheme) {
     final counts = <String, int>{};
     for (final s in subscriptions) {
-      counts[s.routeName] = (counts[s.routeName] ?? 0) + 1;
+      counts[s.packageName] = (counts[s.packageName] ?? 0) + 1;
     }
     final sorted = counts.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));

@@ -24,8 +24,8 @@ import '../cubit/live_location_state.dart';
 /// nothing else. It starts on departure and stops when the trip stops or the
 /// captain signs out; it explicitly does **not** stop because this card was
 /// scrolled past, rebuilt, or left behind when the captain opened the map or
-/// the chat. The publisher is an app-lifetime singleton, so this widget is a
-/// view onto it rather than its owner.
+/// the manifest. The publisher is an app-lifetime singleton, so this widget is
+/// a view onto it rather than its owner.
 ///
 /// Still foreground only: a minimised app stops reporting, and the card's
 /// health line is derived from when a fix last landed so it says so.

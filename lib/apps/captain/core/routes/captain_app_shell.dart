@@ -19,7 +19,16 @@ class CaptainAppShell extends StatefulWidget {
 }
 
 class _CaptainAppShellState extends State<CaptainAppShell> {
-  int _currentIndex = 0;
+  // Named rather than passed around as bare integers: the day view hands the
+  // captain shortcuts into the other two tabs when their schedule is empty, and
+  // "go to 1" at that call site would break silently the day a tab is inserted.
+  static const _todayTab = 0;
+  static const _historyTab = 1;
+  static const _profileTab = 2;
+
+  int _currentIndex = _todayTab;
+
+  void _openTab(int index) => setState(() => _currentIndex = index);
 
   static const _tabs = [
     CaptainNavTab(
@@ -67,16 +76,19 @@ class _CaptainAppShellState extends State<CaptainAppShell> {
         extendBody: true,
         body: IndexedStack(
           index: _currentIndex,
-          children: const [
-            AssignedTripsPage(),
-            TripHistoryPage(),
-            DriverProfilePage(),
+          children: [
+            AssignedTripsPage(
+              onOpenHistory: () => _openTab(_historyTab),
+              onOpenProfile: () => _openTab(_profileTab),
+            ),
+            const TripHistoryPage(),
+            const DriverProfilePage(),
           ],
         ),
         bottomNavigationBar: CaptainBottomNav(
           currentIndex: _currentIndex,
           tabs: _tabs,
-          onTabChanged: (i) => setState(() => _currentIndex = i),
+          onTabChanged: _openTab,
         ),
       ),
     );

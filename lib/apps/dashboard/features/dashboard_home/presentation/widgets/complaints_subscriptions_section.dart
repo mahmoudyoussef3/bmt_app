@@ -64,8 +64,7 @@ class ComplaintsSubscriptionsSection extends StatelessWidget {
           ? const EmptyState(emoji: '🎉', title: 'لا شكاوى مفتوحة حالياً')
           : Column(
               children: [
-                for (final ticket in complaints)
-                  _ComplaintRow(ticket: ticket),
+                for (final ticket in complaints) _ComplaintRow(ticket: ticket),
               ],
             ),
     );
@@ -81,10 +80,7 @@ class ComplaintsSubscriptionsSection extends StatelessWidget {
         child: const Text('عرض الكل'),
       ),
       child: subscriptions.isEmpty
-          ? const EmptyState(
-              emoji: '👍',
-              title: 'لا اشتراكات بحاجة لمتابعة',
-            )
+          ? const EmptyState(emoji: '👍', title: 'لا اشتراكات بحاجة لمتابعة')
           : Column(
               children: [
                 for (final subscription in subscriptions)
@@ -128,7 +124,9 @@ class _ComplaintRow extends StatelessWidget {
                   ticket.clientName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: text.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
+                  style: text.labelSmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -175,11 +173,13 @@ class _SubscriptionRow extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   subscription.routeLabel.isEmpty
-                      ? subscription.routeName
+                      ? subscription.packageName
                       : subscription.routeLabel,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: text.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
+                  style: text.labelSmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),

@@ -53,6 +53,12 @@ class TripHistoryDetailPage extends StatelessWidget {
               ),
               sliver: SliverList.list(
                 children: [
+                  // Named from the background like the two blocks under it. It
+                  // used to be the one section on the page with no heading at
+                  // all, which read as a stray card rather than as the first of
+                  // three parts.
+                  const _SectionTitle(title: 'ملخص الرحلة'),
+                  const SizedBox(height: CaptainDesignTokens.s12),
                   _JourneyCard(trip: trip),
                   const SizedBox(height: CaptainDesignTokens.s24),
                   _VehicleSection(trip: trip),
@@ -68,7 +74,8 @@ class TripHistoryDetailPage extends StatelessWidget {
   }
 }
 
-/// When the trip ran, how long it took, and who was actually on it.
+/// When the trip ran, how long it took, who was actually on it — and, at its
+/// foot, what all of that adds up to.
 class _JourneyCard extends StatelessWidget {
   const _JourneyCard({required this.trip});
 
@@ -96,9 +103,76 @@ class _JourneyCard extends StatelessWidget {
           ),
           Padding(
             padding: const EdgeInsets.all(CaptainDesignTokens.s16),
-            child: TripHistoryBoardingBar(
-              boarded: trip.boardedCount,
-              total: trip.passengerCount,
+            child: Column(
+              children: [
+                TripHistoryBoardingBar(
+                  boarded: trip.boardedCount,
+                  total: trip.passengerCount,
+                ),
+                const SizedBox(height: CaptainDesignTokens.s16),
+                _OutcomeLine(trip: trip),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The trip's result, said outright.
+///
+/// The card above it states a booked count, a boarded count and a bar, and
+/// leaves the captain to work out whether that was a good trip. This is the
+/// answer those three were circling, in the tinted-panel shape the focus card
+/// already uses for "here is where this stands".
+class _OutcomeLine extends StatelessWidget {
+  const _OutcomeLine({required this.trip});
+
+  final TripHistoryItem trip;
+
+  @override
+  Widget build(BuildContext context) {
+    final missing = trip.passengerCount - trip.boardedCount;
+    // Nobody booked means nobody failed to board — a quiet fact, not a
+    // shortfall, so it must not take the attention colour.
+    final Color color;
+    final IconData icon;
+    if (trip.passengerCount == 0) {
+      color = TripHistoryPalette.neutral(context);
+      icon = Icons.person_off_rounded;
+    } else if (missing > 0) {
+      color = TripHistoryPalette.attention;
+      icon = Icons.error_outline_rounded;
+    } else {
+      color = TripHistoryPalette.accent;
+      icon = Icons.check_circle_rounded;
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(CaptainDesignTokens.s12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.08),
+        borderRadius: CaptainDesignTokens.br16,
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: color),
+          const SizedBox(width: CaptainDesignTokens.s8),
+          Expanded(
+            child: Text(
+              TripHistoryLabels.outcome(
+                boarded: trip.boardedCount,
+                total: trip.passengerCount,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: CaptainTypography.bodySmall(context).copyWith(
+                color: CaptainColors.textPrimaryFor(context),
+                fontWeight: FontWeight.w700,
+                height: 1.4,
+              ),
             ),
           ),
         ],

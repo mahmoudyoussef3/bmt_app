@@ -58,14 +58,15 @@ class FinanceStatementExportService {
     void write(List<dynamic> values) {
       for (var column = 0; column < values.length; column++) {
         sheet
-                .cell(
-                  CellIndex.indexByColumnRow(
-                    columnIndex: column,
-                    rowIndex: rowIndex,
-                  ),
-                )
-                .value =
-            TextCellValue(values[column].toString());
+            .cell(
+              CellIndex.indexByColumnRow(
+                columnIndex: column,
+                rowIndex: rowIndex,
+              ),
+            )
+            .value = TextCellValue(
+          values[column].toString(),
+        );
       }
       rowIndex++;
     }

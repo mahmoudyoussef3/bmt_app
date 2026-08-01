@@ -243,13 +243,27 @@ List<String> _visibleIds(TripHistoryState state) => [
     for (final trip in group.trips) trip.id,
 ];
 
+/// Today, at a fixed hour.
+///
+/// A trip with no date of its own has to land in the "اليوم" bucket for the
+/// recency assertions to mean anything, and `groupTripHistoryByPeriod` buckets
+/// against `DateTime.now()`. This used to be the literal `2026-07-16`, which
+/// worked until the calendar moved past it — at which point the default trip
+/// quietly fell into "أقدم" and `clearFilters()` started reporting its two
+/// trips in the wrong order for a reason that had nothing to do with the code
+/// under test.
+DateTime _today() {
+  final now = DateTime.now();
+  return DateTime(now.year, now.month, now.day, 8);
+}
+
 TripHistoryItem _trip(
   String id, {
   String route = 'القاهرة - الإسكندرية',
   DateTime? date,
   int boarded = 20,
 }) {
-  final departure = date ?? DateTime(2026, 7, 16, 8);
+  final departure = date ?? _today();
   return TripHistoryItem(
     id: id,
     route: route,

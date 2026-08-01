@@ -128,6 +128,8 @@ import '../../features/subscriptions/domain/usecases/confirm_payment_usecase.dar
 import '../../features/subscriptions/domain/usecases/create_subscription_usecase.dart';
 import '../../features/subscriptions/domain/usecases/get_subscription_creation_options_usecase.dart';
 import '../../features/subscriptions/domain/usecases/get_subscription_details_usecase.dart';
+import '../../features/subscriptions/domain/usecases/get_subscription_ride_usage_usecase.dart';
+import '../../features/subscriptions/domain/usecases/get_subscription_trips_usecase.dart';
 import '../../features/subscriptions/domain/usecases/get_subscriptions_usecase.dart';
 import '../../features/subscriptions/domain/usecases/mark_subscription_ride_used_usecase.dart';
 import '../../features/subscriptions/domain/usecases/renew_subscription_usecase.dart';
@@ -153,15 +155,11 @@ import '../../features/tickets/domain/usecases/get_ticket_attachments_usecase.da
 import '../../features/tickets/presentation/cubit/tickets_cubit.dart';
 import '../../features/finance/data/repositories/finance_repository_impl.dart';
 import '../../features/finance/domain/repositories/finance_repository.dart';
-import '../../features/finance/domain/usecases/cancel_subscription_usecase.dart';
+import '../../features/finance/domain/usecases/export_finance_statement_usecase.dart';
 import '../../features/finance/domain/usecases/get_payments_usecase.dart';
-import '../../features/finance/domain/usecases/get_receipt_reviews_usecase.dart';
 import '../../features/finance/domain/usecases/get_refund_requests_usecase.dart';
 import '../../features/finance/domain/usecases/get_revenue_metrics_usecase.dart';
-import '../../features/finance/domain/usecases/get_revenue_trend_usecase.dart';
 import '../../features/finance/domain/usecases/get_subscriptions_usecase.dart';
-import '../../features/finance/domain/usecases/process_refund_usecase.dart';
-import '../../features/finance/domain/usecases/review_receipt_usecase.dart';
 import '../../features/finance/data/datasources/finance_datasource.dart';
 import '../../features/finance/data/datasources/supabase_finance_datasource.dart';
 import '../../features/finance/presentation/cubit/finance_cubit.dart';
@@ -825,6 +823,20 @@ void registerDashboardDependencies() {
     );
   }
 
+  if (!dashboardDi.isRegistered<GetSubscriptionTripsUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => GetSubscriptionTripsUseCase(dashboardDi<SubscriptionsRepository>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<GetSubscriptionRideUsageUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => GetSubscriptionRideUsageUseCase(
+        dashboardDi<SubscriptionsRepository>(),
+      ),
+    );
+  }
+
   if (!dashboardDi.isRegistered<SubscriptionsCubit>()) {
     dashboardDi.registerFactory(
       () => SubscriptionsCubit(
@@ -837,6 +849,8 @@ void registerDashboardDependencies() {
         confirmPayment: dashboardDi<ConfirmPaymentUseCase>(),
         getCreationOptions:
             dashboardDi<GetSubscriptionCreationOptionsUseCase>(),
+        getTrips: dashboardDi<GetSubscriptionTripsUseCase>(),
+        getRideUsage: dashboardDi<GetSubscriptionRideUsageUseCase>(),
       ),
     );
   }
@@ -994,12 +1008,6 @@ void registerDashboardDependencies() {
     );
   }
 
-  if (!dashboardDi.isRegistered<GetReceiptReviewsUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () => GetReceiptReviewsUseCase(dashboardDi<FinanceRepository>()),
-    );
-  }
-
   if (!dashboardDi.isRegistered<GetRefundRequestsUseCase>()) {
     dashboardDi.registerLazySingleton(
       () => GetRefundRequestsUseCase(dashboardDi<FinanceRepository>()),
@@ -1018,27 +1026,9 @@ void registerDashboardDependencies() {
     );
   }
 
-  if (!dashboardDi.isRegistered<GetRevenueTrendUseCase>()) {
+  if (!dashboardDi.isRegistered<ExportFinanceStatementUseCase>()) {
     dashboardDi.registerLazySingleton(
-      () => GetRevenueTrendUseCase(dashboardDi<FinanceRepository>()),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<ReviewReceiptUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () => ReviewReceiptUseCase(dashboardDi<FinanceRepository>()),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<ProcessRefundUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () => ProcessRefundUseCase(dashboardDi<FinanceRepository>()),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<CancelFinanceSubscriptionUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () => CancelFinanceSubscriptionUseCase(dashboardDi<FinanceRepository>()),
+      () => ExportFinanceStatementUseCase(dashboardDi<FinanceRepository>()),
     );
   }
 
@@ -1046,14 +1036,9 @@ void registerDashboardDependencies() {
     dashboardDi.registerFactory(
       () => FinanceCubit(
         getPayments: dashboardDi<GetPaymentsUseCase>(),
-        getReceiptReviews: dashboardDi<GetReceiptReviewsUseCase>(),
         getRefundRequests: dashboardDi<GetRefundRequestsUseCase>(),
         getSubscriptions: dashboardDi<GetFinanceSubscriptionsUseCase>(),
-        getRevenueMetrics: dashboardDi<GetRevenueMetricsUseCase>(),
-        getRevenueTrend: dashboardDi<GetRevenueTrendUseCase>(),
-        reviewReceipt: dashboardDi<ReviewReceiptUseCase>(),
-        processRefund: dashboardDi<ProcessRefundUseCase>(),
-        cancelSubscription: dashboardDi<CancelFinanceSubscriptionUseCase>(),
+        exportStatement: dashboardDi<ExportFinanceStatementUseCase>(),
       ),
     );
   }

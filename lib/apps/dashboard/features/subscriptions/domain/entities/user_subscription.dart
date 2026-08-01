@@ -28,20 +28,36 @@ class UserSubscription {
   final String userName;
   final String userPhone;
 
-  final String tripId;
+  /// The package (`packages` catalogue) the subscriber bought.
+  ///
+  /// Empty for subscriptions mirrored from a booking: the booking flow sells
+  /// from `transport_packages`, a different catalogue, so only the title
+  /// survives into [packageName]. See the two-worlds note in
+  /// `20260706130000_subscription_from_approved_booking.sql`.
+  final String packageId;
+  final String packageName;
+
+  /// The office route (`operation_routes`) this subscription is sold on.
+  ///
+  /// This is what makes the trip filter real: a subscriber attached to a route
+  /// is eligible for every trip that runs on it inside their plan window.
+  /// Empty for subscriptions that predate the link or were created without a
+  /// route.
   final String routeId;
-  final String routeName;
 
   /// The route/line the subscriber actually rides (e.g. "بنها - مدينة نصر").
-  /// Sourced from the `route_name` column and kept distinct from the package
-  /// title held in [routeName], so the dashboard can show each subscriber the
-  /// exact route they signed up for.
+  /// Taken from the joined `operation_routes` row when [routeId] is set, and
+  /// from the historical `route_name` text otherwise. Kept distinct from the
+  /// package title in [packageName], so the dashboard can show each subscriber
+  /// both the package they bought and the line they ride.
   final String routeLabel;
 
-  final String fromPointId;
-  final String fromPointName;
-  final String toPointId;
-  final String toPointName;
+  /// The trip whose approved booking created this subscription, when it came
+  /// from the booking flow. Empty for subscriptions the office created by hand.
+  final String originTripId;
+
+  /// The approved `operation_bookings` row this subscription was mirrored from.
+  final String originBookingId;
 
   final SubscriptionType type;
 
@@ -75,19 +91,48 @@ class UserSubscription {
     return diff < 0 ? 0 : diff + 1;
   }
 
+  /// Active but inside its last week — the set an office renews before it
+  /// lapses, and the reason the list carries a dedicated tab for it.
+  bool get isExpiringSoon =>
+      status == SubscriptionStatus.active &&
+      remainingDays > 0 &&
+      remainingDays <= 7;
+
+  /// Money still owed on this subscription. `remaining_amount` is the column
+  /// the database maintains; the price/paid difference is only a fallback for
+  /// old rows written before it was populated.
+  double get outstandingAmount {
+    if (remainingAmount > 0) return remainingAmount;
+    final difference = price - paidAmount;
+    return difference > 0 ? difference : 0;
+  }
+
+  bool get hasOutstandingBalance => outstandingAmount > 0.009;
+
+  /// Whether this subscription can still be used for a ride today: the ride
+  /// RPC applies exactly these conditions, so the UI must not offer the action
+  /// when they do not hold.
+  bool get canConsumeRide {
+    if (status != SubscriptionStatus.active) return false;
+    if (totalRides > 0 && remainingRides <= 0) return false;
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final start = DateTime(startDate.year, startDate.month, startDate.day);
+    final end = DateTime(endDate.year, endDate.month, endDate.day);
+    return !start.isAfter(today) && !end.isBefore(today);
+  }
+
   const UserSubscription({
     required this.id,
     required this.userId,
     required this.userName,
     required this.userPhone,
-    required this.tripId,
-    required this.routeId,
-    required this.routeName,
+    required this.packageId,
+    required this.packageName,
+    this.routeId = '',
     this.routeLabel = '',
-    required this.fromPointId,
-    required this.fromPointName,
-    required this.toPointId,
-    required this.toPointName,
+    this.originTripId = '',
+    this.originBookingId = '',
     required this.type,
     required this.price,
     required this.currency,
@@ -109,14 +154,12 @@ class UserSubscription {
     String? userId,
     String? userName,
     String? userPhone,
-    String? tripId,
+    String? packageId,
+    String? packageName,
     String? routeId,
-    String? routeName,
     String? routeLabel,
-    String? fromPointId,
-    String? fromPointName,
-    String? toPointId,
-    String? toPointName,
+    String? originTripId,
+    String? originBookingId,
     SubscriptionType? type,
     double? price,
     String? currency,
@@ -137,14 +180,12 @@ class UserSubscription {
       userId: userId ?? this.userId,
       userName: userName ?? this.userName,
       userPhone: userPhone ?? this.userPhone,
-      tripId: tripId ?? this.tripId,
+      packageId: packageId ?? this.packageId,
+      packageName: packageName ?? this.packageName,
       routeId: routeId ?? this.routeId,
-      routeName: routeName ?? this.routeName,
       routeLabel: routeLabel ?? this.routeLabel,
-      fromPointId: fromPointId ?? this.fromPointId,
-      fromPointName: fromPointName ?? this.fromPointName,
-      toPointId: toPointId ?? this.toPointId,
-      toPointName: toPointName ?? this.toPointName,
+      originTripId: originTripId ?? this.originTripId,
+      originBookingId: originBookingId ?? this.originBookingId,
       type: type ?? this.type,
       price: price ?? this.price,
       currency: currency ?? this.currency,
@@ -194,13 +235,22 @@ class SubscriptionPlanOption {
   });
 }
 
-/// A route the subscriber can be attached to, sourced from the `routes` table
-/// (rendered as "pickup - destination").
+/// A route the subscriber can be attached to, sourced from `operation_routes`
+/// — the office-scoped route table the rest of the dashboard runs on.
+///
+/// It used to come from the legacy global `routes` table, which carries no
+/// `office_id`, so the picker offered every office's routes and the chosen id
+/// could not be stored against the subscription at all.
 class SubscriptionRouteOption {
   final String id;
   final String label;
+  final String status;
 
-  const SubscriptionRouteOption({required this.id, required this.label});
+  const SubscriptionRouteOption({
+    required this.id,
+    required this.label,
+    this.status = 'active',
+  });
 }
 
 class SubscriptionCreationOptions {

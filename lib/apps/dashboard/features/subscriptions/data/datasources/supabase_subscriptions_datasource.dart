@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/session/dashboard_session.dart';
+import '../../domain/entities/subscription_trip.dart';
 import '../../domain/entities/user_subscription.dart';
 import '../models/user_subscription_model.dart';
 import 'subscriptions_datasource.dart';
@@ -10,11 +11,14 @@ class SupabaseSubscriptionsDatasource implements SubscriptionsDatasource {
 
   const SupabaseSubscriptionsDatasource(this._client, this._session);
 
-  // Join packages to recover title + days for renewals, even on old rows.
+  // Join packages to recover title + days for renewals, even on old rows, and
+  // the route so a subscriber's line is shown from the linked route rather than
+  // the free text copied off the booking at sale time.
   static const _select = '''
     *,
     client:clients(full_name, phone),
-    package:packages(id, title, days, trips_count)
+    package:packages(id, title, days, trips_count),
+    route:operation_routes!subscriptions_route_fk(id, name, start_city, end_city)
   ''';
 
   @override
@@ -47,14 +51,15 @@ class SupabaseSubscriptionsDatasource implements SubscriptionsDatasource {
       if (subscription.userId.isNotEmpty) 'client_id': subscription.userId,
       'customer_name': subscription.userName,
       'customer_phone': subscription.userPhone,
-      // routeId is repurposed to carry the package_id from the cubit.
-      if (subscription.routeId.isNotEmpty) 'package_id': subscription.routeId,
-      'package_name': subscription.routeName,
+      if (subscription.packageId.isNotEmpty)
+        'package_id': subscription.packageId,
+      'package_name': subscription.packageName,
+      if (subscription.routeId.isNotEmpty) 'route_id': subscription.routeId,
       // Persist the route the subscriber signed up for; fall back to the
       // package name only if no route was chosen.
       'route_name': subscription.routeLabel.isNotEmpty
           ? subscription.routeLabel
-          : subscription.routeName,
+          : subscription.packageName,
       'start_date': subscription.startDate.toIso8601String(),
       'end_date': subscription.endDate.toIso8601String(),
       'status': 'pending_payment',
@@ -99,10 +104,10 @@ class SupabaseSubscriptionsDatasource implements SubscriptionsDatasource {
   }
 
   @override
-  Future<UserSubscription> markRideUsed(String id) async {
+  Future<UserSubscription> markRideUsed(String id, {String? tripId}) async {
     await _client.rpc(
       'office_consume_subscription_ride',
-      params: {'p_subscription_id': id},
+      params: {'p_subscription_id': id, 'p_trip_id': tripId},
     );
     final updated = await _client
         .from('subscriptions')
@@ -127,6 +132,54 @@ class SupabaseSubscriptionsDatasource implements SubscriptionsDatasource {
   }
 
   @override
+  Future<List<SubscriptionTrip>> fetchTrips() async {
+    final rows = await _client
+        .from('operation_trips')
+        .select('''
+          id, trip_code, trip_date, departure_time, status, route_id,
+          route:operation_routes(id, name, start_city, end_city)
+        ''')
+        .eq('office_id', _session.officeId)
+        .order('trip_date', ascending: false)
+        .order('departure_time', ascending: false);
+
+    return (rows as List).map((row) {
+      final map = row as Map<String, dynamic>;
+      final route = map['route'] as Map<String, dynamic>?;
+      return SubscriptionTrip(
+        id: map['id'].toString(),
+        code: map['trip_code']?.toString() ?? '',
+        routeId: map['route_id']?.toString() ?? '',
+        routeName: _routeLabel(route),
+        date: DateTime.tryParse(map['trip_date']?.toString() ?? ''),
+        departureTime: map['departure_time']?.toString() ?? '',
+        status: map['status']?.toString() ?? '',
+      );
+    }).toList();
+  }
+
+  @override
+  Future<List<SubscriptionRideUsage>> fetchRideUsage() async {
+    final rows = await _client
+        .from('subscription_ride_usage')
+        .select('id, subscription_id, trip_id, used_at')
+        .eq('office_id', _session.officeId)
+        .order('used_at', ascending: false);
+
+    return (rows as List).map((row) {
+      final map = row as Map<String, dynamic>;
+      return SubscriptionRideUsage(
+        id: map['id'].toString(),
+        subscriptionId: map['subscription_id'].toString(),
+        tripId: map['trip_id']?.toString(),
+        usedAt:
+            DateTime.tryParse(map['used_at']?.toString() ?? '') ??
+            DateTime.now(),
+      );
+    }).toList();
+  }
+
+  @override
   Future<SubscriptionCreationOptions> fetchCreationOptions() async {
     final clients = await _client
         .from('clients')
@@ -138,11 +191,14 @@ class SupabaseSubscriptionsDatasource implements SubscriptionsDatasource {
         .select('id, title, price, days, trips_count, status')
         .neq('status', 'archived')
         .order('price');
+    // operation_routes, not the legacy global `routes` table: only this one is
+    // office-scoped, and only its ids can be stored on subscriptions.route_id.
     final routes = await _client
-        .from('routes')
-        .select('id, pickup, destination, status')
+        .from('operation_routes')
+        .select('id, name, start_city, end_city, status')
+        .eq('office_id', _session.officeId)
         .neq('status', 'archived')
-        .order('pickup');
+        .order('name');
 
     final users = (clients as List).map((c) {
       final m = c as Map<String, dynamic>;
@@ -167,12 +223,10 @@ class SupabaseSubscriptionsDatasource implements SubscriptionsDatasource {
 
     final routeOptions = (routes as List).map((r) {
       final m = r as Map<String, dynamic>;
-      final pickup = m['pickup']?.toString() ?? '';
-      final destination = m['destination']?.toString() ?? '';
-      final label = [pickup, destination].where((s) => s.isNotEmpty).join(' - ');
       return SubscriptionRouteOption(
         id: m['id'].toString(),
-        label: label.isEmpty ? 'مسار' : label,
+        label: _routeLabel(m),
+        status: m['status']?.toString() ?? 'active',
       );
     }).toList();
 
@@ -183,9 +237,21 @@ class SupabaseSubscriptionsDatasource implements SubscriptionsDatasource {
     );
   }
 
+  /// A route's display name, falling back to its city pair when unnamed.
+  static String _routeLabel(Map<String, dynamic>? route) {
+    if (route == null) return '';
+    final name = route['name']?.toString().trim() ?? '';
+    if (name.isNotEmpty) return name;
+    final start = route['start_city']?.toString().trim() ?? '';
+    final end = route['end_city']?.toString().trim() ?? '';
+    final pair = [start, end].where((part) => part.isNotEmpty).join(' → ');
+    return pair.isEmpty ? 'مسار' : pair;
+  }
+
   UserSubscriptionModel _fromRow(Map<String, dynamic> json) {
     final client = json['client'] as Map<String, dynamic>? ?? {};
     final pkg = json['package'] as Map<String, dynamic>?;
+    final route = json['route'] as Map<String, dynamic>?;
 
     final statusStr = json['status']?.toString();
     final mappedStatus = switch (statusStr) {
@@ -199,6 +265,10 @@ class SupabaseSubscriptionsDatasource implements SubscriptionsDatasource {
     final tripsCount = _toInt(json['trips_count'] ?? pkg?['trips_count']);
     final tripsUsed = _toInt(json['trips_used']);
 
+    // The linked route is authoritative — it is a live row the office still
+    // maintains, where route_name is a copy frozen at sale time.
+    final linkedRouteLabel = _routeLabel(route);
+
     final now = DateTime.now();
     return UserSubscriptionModel(
       id: json['id'].toString(),
@@ -211,20 +281,17 @@ class SupabaseSubscriptionsDatasource implements SubscriptionsDatasource {
           json['customer_phone']?.toString() ??
           client['phone']?.toString() ??
           '',
-      tripId: '',
-      // routeId carries the package_id so the cubit can reference it.
-      routeId: json['package_id']?.toString() ?? '',
-      routeName:
+      packageId: json['package_id']?.toString() ?? '',
+      packageName:
           pkg?['title']?.toString() ??
           json['package_name']?.toString() ??
           'باقة',
-      // The actual route/line the subscriber rides — kept separate from the
-      // package title so both can be shown in the dashboard.
-      routeLabel: json['route_name']?.toString() ?? '',
-      fromPointId: '',
-      fromPointName: '',
-      toPointId: '',
-      toPointName: '',
+      routeId: json['route_id']?.toString() ?? '',
+      routeLabel: linkedRouteLabel.isNotEmpty
+          ? linkedRouteLabel
+          : json['route_name']?.toString() ?? '',
+      originTripId: json['origin_trip_id']?.toString() ?? '',
+      originBookingId: json['origin_booking_id']?.toString() ?? '',
       type: _typeForDays(_toInt(pkg?['days'])),
       price: _toDouble(json['total_price']),
       currency: 'ج.م',

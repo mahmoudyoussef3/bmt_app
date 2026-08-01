@@ -1,3 +1,4 @@
+import '../entities/subscription_trip.dart';
 import '../entities/user_subscription.dart';
 
 abstract class SubscriptionsRepository {
@@ -11,9 +12,13 @@ abstract class SubscriptionsRepository {
 
   Future<UserSubscription> renewSubscription(String id);
 
-  Future<UserSubscription> markRideUsed(String id);
+  Future<UserSubscription> markRideUsed(String id, {String? tripId});
 
   Future<UserSubscription> confirmPayment(String id);
 
   Future<SubscriptionCreationOptions> getCreationOptions();
+
+  Future<List<SubscriptionTrip>> getTrips();
+
+  Future<List<SubscriptionRideUsage>> getRideUsage();
 }

@@ -121,6 +121,60 @@ void main() {
       expect(find.text('تحديث الآن'), findsOneWidget);
     });
   }
+
+  group('the day-list card', () {
+    testWidgets('states how long the trip runs and how many stations it makes', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(1170, 2532);
+      tester.view.devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+
+      // Both facts were already on the entity and neither reached the card: a
+      // captain could not tell a two-stop hop from a nine-stop run, or see how
+      // long either kept them out, without opening the trip.
+      await tester.pumpWidget(
+        _host(
+          AssignedTripCard(
+            trip: _trip('a', 8, stops: _stops),
+            onOpen: () {},
+            onManifest: () {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('3س 0د'), findsOneWidget);
+      expect(find.text('3 محطات'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('opens the trip from anywhere on it, not only its button', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(1170, 2532);
+      tester.view.devicePixelRatio = 3;
+      addTearDown(tester.view.reset);
+
+      var opened = 0;
+      await tester.pumpWidget(
+        _host(
+          AssignedTripCard(
+            trip: _trip('a', 8),
+            onOpen: () => opened++,
+            onManifest: () {},
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // The route name is card body, not a control — it used to be dead space.
+      await tester.tap(find.text('محطة مصر - سيدي جابر'));
+      await tester.pump();
+
+      expect(opened, 1);
+    });
+  });
 }
 
 AssignedTrip _trip(
@@ -128,6 +182,7 @@ AssignedTrip _trip(
   int hour, {
   AssignedTripStatus status = AssignedTripStatus.scheduled,
   int boarded = 0,
+  List<AssignedTripStop> stops = const [],
 }) {
   final departure = DateTime(2026, 7, 14, hour);
   return AssignedTrip(
@@ -137,9 +192,26 @@ AssignedTrip _trip(
     plateNumber: 'أ ب ج 123',
     departureTime: departure,
     expectedArrivalTime: departure.add(const Duration(hours: 3)),
-    stops: const [],
+    stops: stops,
     passengerCount: 20,
     boardedCount: boarded,
     status: status,
+  );
+}
+
+const _stops = [
+  AssignedTripStop(id: 's1', name: 'موقف عبود'),
+  AssignedTripStop(id: 's2', name: 'محطة مسطرد'),
+  AssignedTripStop(id: 's3', name: 'موقف المنشية'),
+];
+
+Widget _host(Widget child) {
+  return MaterialApp(
+    home: Directionality(
+      textDirection: TextDirection.rtl,
+      child: Scaffold(
+        body: ListView(padding: const EdgeInsets.all(20), children: [child]),
+      ),
+    ),
   );
 }

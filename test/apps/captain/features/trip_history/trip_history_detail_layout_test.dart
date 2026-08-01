@@ -213,6 +213,30 @@ void main() {
     );
   });
 
+  /// The card states a booked count, a boarded count and a bar, and used to
+  /// leave the captain to work out whether that added up to a good trip.
+  group('the trip states its own outcome', () {
+    testWidgets('a shortfall is named', (tester) async {
+      await _pump(
+        tester,
+        repository: _FakeTripHistoryRepository(stops: _stops),
+        trip: _trip(boarded: 18),
+      );
+
+      expect(find.text('اكتملت الرحلة — لم يصعد راكبان'), findsOneWidget);
+    });
+
+    testWidgets('a full trip is stated as one', (tester) async {
+      await _pump(
+        tester,
+        repository: _FakeTripHistoryRepository(stops: _stops),
+        trip: _trip(boarded: 20),
+      );
+
+      expect(find.text('اكتملت الرحلة وصعد جميع الركاب'), findsOneWidget);
+    });
+  });
+
   testWidgets('a trip with no recorded stops says so', (tester) async {
     await _pump(tester, repository: _FakeTripHistoryRepository());
 

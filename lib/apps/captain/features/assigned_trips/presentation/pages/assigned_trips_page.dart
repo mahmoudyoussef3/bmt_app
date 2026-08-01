@@ -6,10 +6,12 @@ import 'package:bmt_app/core/widgets/app_snackbar.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
 
 import 'package:bmt_app/apps/captain/core/routes/captain_nav.dart';
+import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_awaiting_trips_view.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_bottom_nav.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_dev_mode_sheet.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_list_group.dart';
 
 import '../../domain/entities/assigned_trip.dart';
 import '../../domain/entities/captain_day_summary.dart';
@@ -25,7 +27,17 @@ import '../widgets/captain_focus_card.dart';
 import '../widgets/new_assignments_banner.dart';
 
 class AssignedTripsPage extends StatelessWidget {
-  const AssignedTripsPage({super.key});
+  const AssignedTripsPage({
+    super.key,
+    required this.onOpenHistory,
+    required this.onOpenProfile,
+  });
+
+  /// The shell's other two tabs. An empty schedule offers them as somewhere to
+  /// go — the page cannot switch tabs itself, and a captain with no trip today
+  /// should not be left with "تحديث الآن" as the only thing on screen to press.
+  final VoidCallback onOpenHistory;
+  final VoidCallback onOpenProfile;
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +47,11 @@ class AssignedTripsPage extends StatelessWidget {
         builder: (context, state) => switch (state) {
           AssignedTripsLoading() => const AssignedTripsSkeleton(),
           AssignedTripsError(:final message) => _ErrorBody(message: message),
-          AssignedTripsLoaded() => _Content(state: state),
+          AssignedTripsLoaded() => _Content(
+            state: state,
+            onOpenHistory: onOpenHistory,
+            onOpenProfile: onOpenProfile,
+          ),
         },
       ),
     );
@@ -61,9 +77,49 @@ class _ErrorBody extends StatelessWidget {
 }
 
 class _Content extends StatelessWidget {
-  const _Content({required this.state});
+  const _Content({
+    required this.state,
+    required this.onOpenHistory,
+    required this.onOpenProfile,
+  });
 
   final AssignedTripsLoaded state;
+  final VoidCallback onOpenHistory;
+  final VoidCallback onOpenProfile;
+
+  /// Where a captain with nothing scheduled can usefully go.
+  ///
+  /// All three are places the app already had; the empty day simply stopped
+  /// being the one screen that hid them behind the nav bar. Notifications is a
+  /// push, the other two are the shell's own tabs — hence the callbacks.
+  List<Widget> _idleShortcuts(BuildContext context) {
+    return [
+      CaptainListRow(
+        icon: Icons.history_rounded,
+        label: 'سجل رحلاتك',
+        detail: 'الرحلات التي أنهيتها سابقاً',
+        iconColor: CaptainColors.primary,
+        showChevron: true,
+        onTap: onOpenHistory,
+      ),
+      CaptainListRow(
+        icon: Icons.notifications_none_rounded,
+        label: 'الإشعارات',
+        detail: 'آخر ما وصلك من العمليات',
+        iconColor: CaptainColors.primary,
+        showChevron: true,
+        onTap: () => context.openNotifications(),
+      ),
+      CaptainListRow(
+        icon: Icons.badge_outlined,
+        label: 'ملفي وحالة التوثيق',
+        detail: 'بياناتك والمركبة المخصصة لك',
+        iconColor: CaptainColors.primary,
+        showChevron: true,
+        onTap: onOpenProfile,
+      ),
+    ];
+  }
 
   /// Refreshes and reports a failure. A silent no-op would be indistinguishable
   /// from a successful refresh that found nothing new.
@@ -118,9 +174,14 @@ class _Content extends StatelessWidget {
                       onRefresh: () => _refresh(context),
                       isRefreshing: state.isRefreshing,
                       title: 'لا توجد رحلات اليوم',
+                      // Shorter than it was: the step list underneath already
+                      // states that operations assigns the trip and that it
+                      // arrives on its own, so the paragraph above it does not
+                      // need to say the same thing a second time.
                       message:
-                          'لم تُسند إليك أي رحلة حتى الآن. فور إسناد رحلة من قِبل '
-                          'العمليات ستظهر هنا تلقائياً — لا حاجة لإعادة تسجيل الدخول.',
+                          'فور إسناد رحلة من العمليات ستظهر هنا تلقائياً — '
+                          'لا حاجة لإعادة تسجيل الدخول.',
+                      shortcuts: _idleShortcuts(context),
                     ),
                   )
                 : _DaySlivers(

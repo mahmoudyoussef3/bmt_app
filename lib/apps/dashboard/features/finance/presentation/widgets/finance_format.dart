@@ -11,7 +11,6 @@ class FinanceFormat {
 
   static final NumberFormat _whole = NumberFormat('#,##0', 'en_US');
   static final NumberFormat _precise = NumberFormat('#,##0.00', 'en_US');
-  static final NumberFormat _compactNumber = NumberFormat('#,##0', 'en_US');
 
   /// `12,340 ج.م` — the default for KPIs, tables and charts.
   static String money(double value) => '${_whole.format(value.round())} ج.م';
@@ -20,17 +19,7 @@ class FinanceFormat {
   /// are the point.
   static String moneyPrecise(double value) => '${_precise.format(value)} ج.م';
 
-  /// `12.3 ألف` — axis labels and tight tiles only, never a reported total.
-  static String moneyCompact(double value) {
-    final abs = value.abs();
-    if (abs >= 1000000) {
-      return '${(value / 1000000).toStringAsFixed(1)} مليون';
-    }
-    if (abs >= 1000) return '${(value / 1000).toStringAsFixed(1)} ألف';
-    return _whole.format(value.round());
-  }
-
-  static String count(num value) => _compactNumber.format(value);
+  static String count(num value) => _whole.format(value);
 
   /// `12.4%`
   static String percent(double fraction, {int decimals = 1}) =>

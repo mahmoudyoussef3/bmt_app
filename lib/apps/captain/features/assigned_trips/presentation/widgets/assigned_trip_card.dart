@@ -5,6 +5,7 @@ import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 import 'package:bmt_app/apps/captain/core/trips/captain_trip_stage_labels.dart';
 import 'package:bmt_app/apps/captain/core/trips/captain_trip_stage_palette.dart';
+import 'package:bmt_app/apps/captain/core/utils/captain_counts.dart';
 import 'package:bmt_app/apps/captain/core/utils/captain_formats.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_button.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_ticker.dart';
@@ -15,14 +16,21 @@ import 'assigned_trip_card_parts.dart';
 /// One of the day's remaining trips.
 ///
 /// Laid out around a leading time rail — departure over arrival, joined by a
-/// short track — which is how a timetable is read: the captain scans the column
-/// of clock times for the one that is next, then reads across. The card used to
-/// bury both times inside a row of small grey facts, so finding "the 13:00" in
-/// a list meant reading every card in full.
+/// track that carries how long the trip runs — which is how a timetable is
+/// read: the captain scans the column of clock times for the one that is next,
+/// then reads across. The card used to bury both times inside a row of small
+/// grey facts, so finding "the 13:00" in a list meant reading every card in
+/// full.
 ///
-/// It is also a plain surface: no outline. Six outlined-and-shadowed rectangles
-/// down a page is a dashboard's widget grid; a phone list separates its rows
-/// with space and a soft lift.
+/// A stage spine runs down its leading edge in the same colour the focus card
+/// and the execution canopy give this trip (`CaptainTripStagePalette`), so a
+/// captain scrolling the day can tell a released trip from one operations has
+/// not opened yet without reading a word — and the trip cannot change colour
+/// when they open it.
+///
+/// It is otherwise a plain surface: no outline. Six outlined-and-shadowed
+/// rectangles down a page is a dashboard's widget grid; a phone list separates
+/// its rows with space and a soft lift.
 class AssignedTripCard extends StatelessWidget {
   const AssignedTripCard({
     super.key,
@@ -55,34 +63,61 @@ class AssignedTripCard extends StatelessWidget {
             // A finished trip stays legible but stops competing with the ones
             // the captain still has to drive.
             opacity: isDone ? 0.72 : 1,
-            child: Padding(
-              padding: const EdgeInsets.all(CaptainDesignTokens.s16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  IntrinsicHeight(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _TimeRail(trip: trip, accent: accent),
-                        const SizedBox(width: CaptainDesignTokens.s16),
-                        Expanded(child: _Summary(trip: trip)),
-                      ],
+            child: Material(
+              color: Colors.transparent,
+              // The whole card opens the trip. The row's own buttons still win
+              // their taps; this only gives the ~80% of the card that was dead
+              // space the same destination its primary button already had.
+              child: InkWell(
+                onTap: onOpen,
+                child: Stack(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsetsDirectional.fromSTEB(
+                        CaptainDesignTokens.s20,
+                        CaptainDesignTokens.s16,
+                        CaptainDesignTokens.s16,
+                        CaptainDesignTokens.s16,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          IntrinsicHeight(
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                _TimeRail(trip: trip, accent: accent),
+                                const SizedBox(width: CaptainDesignTokens.s16),
+                                Expanded(child: _Summary(trip: trip)),
+                              ],
+                            ),
+                          ),
+                          if (trip.passengerCount > 0) ...[
+                            const SizedBox(height: CaptainDesignTokens.s16),
+                            _BoardingBar(trip: trip, accent: accent),
+                          ],
+                          const SizedBox(height: CaptainDesignTokens.s16),
+                          _Actions(
+                            isDone: isDone,
+                            openLabel: CaptainTripStageLabels.openAction(stage),
+                            isRunning: trip.status.isRunning,
+                            onOpen: onOpen,
+                            onManifest: onManifest,
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
-                  if (trip.passengerCount > 0) ...[
-                    const SizedBox(height: CaptainDesignTokens.s16),
-                    _BoardingBar(trip: trip, accent: accent),
+                    // Painted over the content rather than laid out beside it:
+                    // a Stack keeps the card off the intrinsic-height pass a
+                    // full-height sibling would otherwise force on every row.
+                    PositionedDirectional(
+                      start: 0,
+                      top: 0,
+                      bottom: 0,
+                      child: Container(width: 4, color: accent),
+                    ),
                   ],
-                  const SizedBox(height: CaptainDesignTokens.s16),
-                  _Actions(
-                    isDone: isDone,
-                    openLabel: CaptainTripStageLabels.openAction(stage),
-                    isRunning: trip.status.isRunning,
-                    onOpen: onOpen,
-                    onManifest: onManifest,
-                  ),
-                ],
+                ),
               ),
             ),
           ),
@@ -94,6 +129,10 @@ class AssignedTripCard extends StatelessWidget {
 
 /// Departure over arrival, joined by a track — the timetable column a captain
 /// scans down to find the trip they are looking for.
+///
+/// The run between them carries the trip's length. That is the fact a captain
+/// actually needs off a schedule ("how long am I out on this one"), and it was
+/// the only place on the card with nothing in it.
 class _TimeRail extends StatelessWidget {
   const _TimeRail({required this.trip, required this.accent});
 
@@ -102,6 +141,8 @@ class _TimeRail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final duration = trip.expectedArrivalTime.difference(trip.departureTime);
+
     return Row(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -119,6 +160,18 @@ class _TimeRail extends StatelessWidget {
                 height: 1.1,
               ),
             ),
+            if (duration.inMinutes > 0)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 2),
+                child: Text(
+                  CaptainFormats.duration(duration),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: CaptainTypography.labelSmall(
+                    context,
+                  ).copyWith(color: accent, fontWeight: FontWeight.w800),
+                ),
+              ),
             Text(
               CaptainFormats.clock(trip.expectedArrivalTime),
               style: CaptainTypography.labelMedium(context).copyWith(
@@ -200,11 +253,25 @@ class _Summary extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 6),
-        TripFact(
-          icon: Icons.directions_bus_rounded,
-          text: trip.vehicleNumber.isEmpty
-              ? 'مركبة غير محددة'
-              : trip.vehicleNumber,
+        Row(
+          children: [
+            TripFact(
+              icon: Icons.directions_bus_rounded,
+              text: trip.vehicleNumber.isEmpty
+                  ? 'مركبة غير محددة'
+                  : trip.vehicleNumber,
+            ),
+            // How many stations the route makes. The entity has carried them
+            // all along to drive the execution timeline, and the card never
+            // said whether the captain was signing up for two stops or nine.
+            if (trip.stops.isNotEmpty) ...[
+              const SizedBox(width: CaptainDesignTokens.s12),
+              TripFact(
+                icon: Icons.alt_route_rounded,
+                text: CaptainCounts.stops(trip.stops.length),
+              ),
+            ],
+          ],
         ),
       ],
     );

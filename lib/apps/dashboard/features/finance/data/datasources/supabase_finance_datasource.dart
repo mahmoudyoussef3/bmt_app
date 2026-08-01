@@ -173,7 +173,8 @@ class SupabaseFinanceDatasource implements FinanceDatasource {
       paymentMethod: _method(r['payment_method']?.toString() ?? ''),
       status: _paymentStatus(r['payment_status']?.toString() ?? ''),
       date:
-          DateTime.tryParse(r['created_at']?.toString() ?? '') ?? DateTime.now(),
+          DateTime.tryParse(r['created_at']?.toString() ?? '') ??
+          DateTime.now(),
     );
   }
 

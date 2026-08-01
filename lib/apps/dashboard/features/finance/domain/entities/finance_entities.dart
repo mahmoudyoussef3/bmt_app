@@ -282,10 +282,6 @@ class FinanceLedgerEntry {
   /// Money the office received *and kept* — the only figure that may be added
   /// into net revenue. Everything else is a promise, a dead row, or a reversal.
   bool get isRealised => status == PaymentStatus.success;
-
-  /// Received at some point, whether or not it was later returned.
-  bool get wasReceived =>
-      status == PaymentStatus.success || status == PaymentStatus.refunded;
 }
 
 /// Flattens the money-in sources into one chronological ledger.
@@ -338,8 +334,8 @@ class FinanceLedger {
   /// outstanding. Everything else (active or expired) was paid for.
   static PaymentStatus subscriptionMoneyStatus(SubscriptionStatus status) {
     return switch (status) {
-      SubscriptionStatus.active || SubscriptionStatus.expired =>
-        PaymentStatus.success,
+      SubscriptionStatus.active ||
+      SubscriptionStatus.expired => PaymentStatus.success,
       SubscriptionStatus.pendingPayment => PaymentStatus.pending,
       SubscriptionStatus.cancelled => PaymentStatus.cancelled,
     };

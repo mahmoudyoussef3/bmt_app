@@ -29,28 +29,42 @@ class SearchTripScreen extends StatelessWidget {
               onPressed: context.read<BookingSearchCubit>().loadOptions,
             ),
           ],
-          body: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-            children: [
-              SearchTripForm(state: state),
-              const SizedBox(height: 20),
-              ClientSectionHeader(
-                title: context.l10n.booking_otherWaysToSearch,
-                subtitle: context.l10n.booking_browseOrPickMap,
-              ),
-              const SizedBox(height: 12),
-              SearchOptionTile(
-                icon: Icons.trending_up_rounded,
-                iconColor: ClientColors.primary,
-                title: context.l10n.booking_popularRoutes,
-                subtitle: context.l10n.booking_popularRoutesSubtitle,
-                onTap: () => Navigator.pushNamed(
-                  context,
-                  BookingRoutes.popularRoutes,
-                  arguments: state.query.toArguments(),
+          body: TweenAnimationBuilder<double>(
+            tween: Tween<double>(begin: 0.0, end: 1.0),
+            duration: const Duration(milliseconds: 400),
+            curve: Curves.easeOutCubic,
+            builder: (context, value, child) {
+              return Opacity(
+                opacity: value,
+                child: Transform.translate(
+                  offset: Offset(0, 20 * (1 - value)),
+                  child: child,
                 ),
-              ),
-            ],
+              );
+            },
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+              children: [
+                SearchTripForm(state: state),
+                const SizedBox(height: 20),
+                ClientSectionHeader(
+                  title: context.l10n.booking_otherWaysToSearch,
+                  subtitle: context.l10n.booking_browseOrPickMap,
+                ),
+                const SizedBox(height: 12),
+                SearchOptionTile(
+                  icon: Icons.trending_up_rounded,
+                  iconColor: ClientColors.primary,
+                  title: context.l10n.booking_popularRoutes,
+                  subtitle: context.l10n.booking_popularRoutesSubtitle,
+                  onTap: () => Navigator.pushNamed(
+                    context,
+                    BookingRoutes.popularRoutes,
+                    arguments: state.query.toArguments(),
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
