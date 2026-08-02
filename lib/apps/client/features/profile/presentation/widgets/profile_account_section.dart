@@ -34,7 +34,7 @@ class ProfileAccountSection extends StatelessWidget {
           icon: Icons.card_membership_outlined,
           title: l10n.profile_subscription,
           subtitle: l10n.profile_subscriptionSubtitle,
-          onTap: () => onOpenRoute(PackagesRoutes.subscription),
+          onTap: () => onOpenRoute(PackagesRoutes.mySubscription),
         ),
         ProfileHubTile(
           icon: Icons.confirmation_number_outlined,

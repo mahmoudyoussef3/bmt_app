@@ -7,7 +7,6 @@ import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/packages/domain/entities/package_plan.dart';
 import 'package:bmt_app/apps/client/features/packages/presentation/widgets/package_shape_chips.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
-import 'package:bmt_app/core/widgets/directional_icon.dart';
 
 /// One of the office's commute packages, as it appears on the office profile:
 /// what it is and what it bundles, never what it costs.
@@ -16,15 +15,14 @@ import 'package:bmt_app/core/widgets/directional_icon.dart';
 /// catalogue figure would be a number the rider never actually pays. The tile
 /// says so plainly instead, and the real amount is quoted in the booking flow
 /// once a route exists to price against.
+///
+/// Read-only for the same reason: there is nowhere to send a tap that could
+/// price the plan. The rider chooses one in the booking wizard's package step,
+/// after picking the route it will be priced against.
 class OfficePackageTile extends StatelessWidget {
-  const OfficePackageTile({
-    super.key,
-    required this.package,
-    required this.onTap,
-  });
+  const OfficePackageTile({super.key, required this.package});
 
   final PackagePlan package;
-  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +30,6 @@ class OfficePackageTile extends StatelessWidget {
     const accent = ClientColors.journeyPurple;
 
     return ClientCard(
-      onTap: onTap,
       padding: const EdgeInsets.all(ClientSpacing.sm),
       child: Row(
         children: [
@@ -74,19 +71,6 @@ class OfficePackageTile extends StatelessWidget {
                   ).copyWith(color: ClientColors.textTertiaryFor(context)),
                 ),
               ],
-            ),
-          ),
-          const SizedBox(width: ClientSpacing.xs),
-          Container(
-            padding: const EdgeInsets.all(7),
-            decoration: BoxDecoration(
-              color: accent.withAlpha(20),
-              shape: BoxShape.circle,
-            ),
-            child: const DirectionalIcon(
-              Icons.arrow_forward_rounded,
-              size: 15,
-              color: accent,
             ),
           ),
         ],

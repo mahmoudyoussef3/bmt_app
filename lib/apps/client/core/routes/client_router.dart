@@ -42,9 +42,7 @@ import 'package:bmt_app/apps/client/features/offices/presentation/routes/offices
 import 'package:bmt_app/apps/client/features/offices/presentation/screens/office_profile_screen.dart';
 import 'package:bmt_app/apps/client/features/offices/presentation/screens/offices_directory_screen.dart';
 import 'package:bmt_app/apps/client/features/packages/presentation/routes/packages_routes.dart';
-import 'package:bmt_app/apps/client/features/packages/presentation/routes/subscription_arguments.dart';
 import 'package:bmt_app/apps/client/features/packages/presentation/screens/my_subscription_screen.dart';
-import 'package:bmt_app/apps/client/features/packages/presentation/screens/subscription_screen.dart';
 import 'package:bmt_app/apps/client/features/profile/domain/entities/legal_document_data.dart';
 import 'package:bmt_app/apps/client/features/profile/presentation/routes/profile_routes.dart';
 import 'package:bmt_app/apps/client/features/profile/presentation/screens/legal_document_screen.dart';
@@ -247,20 +245,14 @@ abstract final class ClientRouter {
 
   // `PaymentRoutes.checkout` is deliberately absent — see the note on [_seats].
   // It was the second half of the dead funnel, and the only caller left
-  // (`PackageDetailsView`) reached it with no trip and no seat, so its pay bar
+  // (the package catalogue) reached it with no trip and no seat, so its pay bar
   // could never unblock: a screen a rider could open but never finish.
   //
-  // Packages are paid for inside the wizard's package + payment steps, which is
-  // also the only place a subscription can be bound to the route it is sold for.
+  // The plan catalogue itself is gone too: it re-listed what an office profile
+  // already shows, and packages are paid for inside the wizard's package +
+  // payment steps, which is also the only place a subscription can be bound to
+  // the route it is sold for.
   static Map<String, WidgetBuilder> get _payments => <String, WidgetBuilder>{
-    PackagesRoutes.subscription: (context) {
-      final arguments = SubscriptionArguments.fromArguments(_args(context));
-      return ClientCubitScopes.packages(
-        SubscriptionScreen(arguments: arguments),
-        initialOfficeId: arguments.initialOfficeId,
-        initialPackageId: arguments.initialPackageId,
-      );
-    },
     PackagesRoutes.mySubscription: (_) =>
         ClientCubitScopes.mySubscription(const MySubscriptionScreen()),
   };

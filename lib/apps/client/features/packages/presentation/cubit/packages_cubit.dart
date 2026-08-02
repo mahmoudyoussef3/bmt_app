@@ -1,160 +1,23 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import '../../domain/entities/package_filter.dart';
-import '../../domain/entities/package_plan.dart';
-import '../../domain/usecases/filter_packages_usecase.dart';
 import '../../domain/usecases/get_packages_usecase.dart';
 import 'packages_state.dart';
 
+/// The plans on offer, for the booking wizard's package step — the only screen
+/// that shows them now that the standalone catalogue is gone.
 class PackagesCubit extends Cubit<PackagesState> {
-  PackagesCubit({
-    required GetPackagesUseCase getPackages,
-    required FilterPackagesUseCase filterPackages,
-  }) : _getPackages = getPackages,
-       _filterPackages = filterPackages,
-       super(const PackagesLoading());
+  PackagesCubit({required GetPackagesUseCase getPackages})
+    : _getPackages = getPackages,
+      super(const PackagesLoading());
 
   final GetPackagesUseCase _getPackages;
-  final FilterPackagesUseCase _filterPackages;
 
-  /// Loads the marketplace catalogue fresh: always the listing, with no
-  /// filter carried over. [initialOfficeId] pre-selects the office lens — an
-  /// office profile opens the marketplace already narrowed to itself.
-  /// [initialPackageId] instead jumps straight to that package's detail pane,
-  /// the way an office profile's package tile opens one exact plan.
-  Future<void> load({String? initialOfficeId, String? initialPackageId}) async {
+  Future<void> load() async {
     emit(const PackagesLoading());
     try {
-      final packages = await _getPackages();
-      final officeId = (initialOfficeId != null && initialOfficeId.isNotEmpty)
-          ? initialOfficeId
-          : null;
-      final selected = (initialPackageId != null && initialPackageId.isNotEmpty)
-          ? _findPackage(packages, initialPackageId)
-          : null;
-      emit(
-        PackagesLoaded(
-          packages: packages,
-          officeFilter: officeId,
-          selectedPackage: selected,
-          step: selected != null
-              ? SubscriptionStep.details
-              : SubscriptionStep.listing,
-          visiblePackages: _applyFilters(
-            packages,
-            filter: PackageFilter.all,
-            officeId: officeId,
-          ),
-        ),
-      );
+      emit(PackagesLoaded(packages: await _getPackages()));
     } catch (error) {
       emit(PackagesError(error.toString()));
     }
-  }
-
-  /// Refetches without disturbing whatever the rider is doing: same pane,
-  /// same duration/office filter. Used by the refresh action, which is
-  /// reachable from both the listing and the detail pane, so — unlike
-  /// [load] — it must never blink a detail pane back to the listing or
-  /// silently clear an active filter. A failed refresh keeps the last usable
-  /// catalogue rather than replacing it with an error.
-  Future<void> refresh() async {
-    final current = state;
-    if (current is! PackagesLoaded) return load();
-    try {
-      final packages = await _getPackages();
-      emit(
-        PackagesLoaded(
-          packages: packages,
-          visiblePackages: _applyFilters(
-            packages,
-            filter: current.filter,
-            officeId: current.officeFilter,
-          ),
-          filter: current.filter,
-          officeFilter: current.officeFilter,
-          selectedPackage: current.selectedPackage,
-          step: current.step,
-        ),
-      );
-    } catch (_) {
-      if (!isClosed) emit(current);
-    }
-  }
-
-  PackagePlan? _findPackage(List<PackagePlan> packages, String id) {
-    for (final package in packages) {
-      if (package.id == id) return package;
-    }
-    return null;
-  }
-
-  /// Narrows the catalogue by trip duration, keeping any office filter in place.
-  void selectFilter(PackageFilter filter) {
-    final current = state;
-    if (current is! PackagesLoaded) return;
-    emit(
-      current.copyWith(
-        filter: filter,
-        visiblePackages: _applyFilters(
-          current.packages,
-          filter: filter,
-          officeId: current.officeFilter,
-        ),
-      ),
-    );
-  }
-
-  /// Narrows the catalogue to one selling office, or clears the office lens when
-  /// [officeId] is `null` ("all offices"). Duration stays as the rider left it.
-  void selectOffice(String? officeId) {
-    final current = state;
-    if (current is! PackagesLoaded) return;
-    // copyWith cannot set a nullable field back to null, so a clear rebuilds the
-    // state explicitly.
-    emit(
-      PackagesLoaded(
-        packages: current.packages,
-        visiblePackages: _applyFilters(
-          current.packages,
-          filter: current.filter,
-          officeId: officeId,
-        ),
-        filter: current.filter,
-        officeFilter: officeId,
-        selectedPackage: current.selectedPackage,
-        step: current.step,
-      ),
-    );
-  }
-
-  List<PackagePlan> _applyFilters(
-    List<PackagePlan> packages, {
-    required PackageFilter filter,
-    String? officeId,
-  }) => _filterPackages(packages: packages, filter: filter, officeId: officeId);
-
-  /// Opens the detail pane for [package]. Reachable from the marketplace with or
-  /// without a trip in hand — details are pure discovery; only the final
-  /// subscribe step needs a trip, which the detail CTA handles.
-  void openDetails(PackagePlan package) {
-    final current = state;
-    if (current is! PackagesLoaded) return;
-    emit(
-      current.copyWith(
-        selectedPackage: package,
-        step: SubscriptionStep.details,
-      ),
-    );
-  }
-
-  /// Steps back to the listing. Returns false when already at the first pane,
-  /// which tells the screen to pop the route instead.
-  bool goBack() {
-    final current = state;
-    if (current is! PackagesLoaded) return false;
-    if (current.step == SubscriptionStep.listing) return false;
-    emit(current.copyWith(step: SubscriptionStep.listing));
-    return true;
   }
 }

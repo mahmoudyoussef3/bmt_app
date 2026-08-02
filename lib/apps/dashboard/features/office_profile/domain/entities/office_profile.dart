@@ -72,6 +72,7 @@ class OfficeProfile {
   final String? logoUrl;
   final String? phone;
   final String? email;
+
   /// Always null for now: the column sits behind the same column-privilege
   /// revoke as `join_code` itself, and `office_join_code()` returns only the
   /// code. Kept so a future RPC can surface it without a signature change.

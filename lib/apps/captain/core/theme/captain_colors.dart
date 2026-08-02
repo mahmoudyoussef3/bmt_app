@@ -26,11 +26,11 @@ class CaptainColors {
 
   /// The pale end of the palette (Blue 400) — for the earliest step of a
   /// progression, before it reaches full [primary].
-  static const Color primaryLight = Color(0xFF60A5FA);
+  static const Color primaryLight = Color(0xFF2563EB);
 
   /// The bright end of the palette (Sky 500). Reads as "done / good" while
   /// staying inside the blue family — this is what replaced the old green.
-  static const Color primaryBright = Color(0xFF0EA5E9);
+  static const Color primaryBright = Color(0xFF4338CA);
 
   // Semantic
   static const Color online = primaryBright;

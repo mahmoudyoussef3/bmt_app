@@ -18,15 +18,28 @@ class OfficeProfileError extends OfficeProfileState {
 }
 
 class OfficeProfileLoaded extends OfficeProfileState {
-  const OfficeProfileLoaded(this.profile, {this.isSaving = false});
+  const OfficeProfileLoaded(
+    this.profile, {
+    this.isSaving = false,
+    this.isUploadingLogo = false,
+  });
   final OfficeProfile profile;
   final bool isSaving;
 
-  OfficeProfileLoaded copyWith({OfficeProfile? profile, bool? isSaving}) =>
-      OfficeProfileLoaded(
-        profile ?? this.profile,
-        isSaving: isSaving ?? this.isSaving,
-      );
+  /// A logo file is being uploaded to storage. Tracked apart from [isSaving]
+  /// because it is not a save: the upload only produces a URL for the form, and
+  /// the profile is unchanged until the operator presses save.
+  final bool isUploadingLogo;
+
+  OfficeProfileLoaded copyWith({
+    OfficeProfile? profile,
+    bool? isSaving,
+    bool? isUploadingLogo,
+  }) => OfficeProfileLoaded(
+    profile ?? this.profile,
+    isSaving: isSaving ?? this.isSaving,
+    isUploadingLogo: isUploadingLogo ?? this.isUploadingLogo,
+  );
 }
 
 /// Emitted for one frame after a successful write so the screen can show a

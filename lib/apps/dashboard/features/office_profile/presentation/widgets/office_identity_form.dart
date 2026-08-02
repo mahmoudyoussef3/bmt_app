@@ -1,3 +1,8 @@
+import 'dart:io' as io;
+import 'dart:typed_data';
+
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/core/theme/spacing.dart';
@@ -19,14 +24,21 @@ class OfficeIdentityForm extends StatefulWidget {
     super.key,
     required this.profile,
     required this.isSaving,
+    required this.isUploadingLogo,
     required this.canEdit,
     required this.onSave,
+    required this.onUploadLogo,
   });
 
   final OfficeProfile profile;
   final bool isSaving;
+  final bool isUploadingLogo;
   final bool canEdit;
   final ValueChanged<OfficeProfileEdit> onSave;
+
+  /// Uploads the picked bytes and resolves to the stored public URL, or null if
+  /// the upload failed (the cubit surfaces the reason as a snack bar).
+  final Future<String?> Function(Uint8List bytes, String fileName) onUploadLogo;
 
   @override
   State<OfficeIdentityForm> createState() => _OfficeIdentityFormState();
@@ -41,6 +53,11 @@ class _OfficeIdentityFormState extends State<OfficeIdentityForm> {
   late final TextEditingController _emailCtrl;
   final _areaCtrl = TextEditingController();
   late List<String> _serviceAreas;
+
+  /// Picker/upload failures that belong beside the logo field rather than in a
+  /// snack bar — "this file is too big" is about the control the operator just
+  /// used, and stays visible while they pick another.
+  String? _logoError;
 
   @override
   void initState() {
@@ -77,6 +94,56 @@ class _OfficeIdentityFormState extends State<OfficeIdentityForm> {
       if (!exists) _serviceAreas.add(value);
       _areaCtrl.clear();
     });
+  }
+
+  /// Max upload size, mirroring `office-logos`'s `file_size_limit`. Checked here
+  /// so an oversized file is refused before it is sent, with a message that says
+  /// what the limit is — the bucket's own rejection does not.
+  static const _maxLogoBytes = 2 * 1024 * 1024;
+
+  Future<void> _pickLogo() async {
+    setState(() => _logoError = null);
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: const ['png', 'jpg', 'jpeg', 'webp'],
+        allowMultiple: false,
+        // On web there is no path to read from, so the bytes have to come back
+        // with the pick itself.
+        withData: kIsWeb,
+      );
+      if (result == null || result.files.isEmpty) return;
+
+      final file = result.files.single;
+      final bytes = await _readBytes(file);
+      if (bytes == null || bytes.isEmpty) {
+        setState(() => _logoError = 'تعذر قراءة الملف. جرّب صورة أخرى.');
+        return;
+      }
+      if (bytes.length > _maxLogoBytes) {
+        setState(() => _logoError = 'حجم الصورة كبير. الحد الأقصى 2 ميجابايت.');
+        return;
+      }
+
+      final url = await widget.onUploadLogo(bytes, file.name);
+      if (!mounted || url == null) return;
+
+      // Straight into the same controller the URL field edits, so an uploaded
+      // logo and a pasted link are the same value from here on — and both are
+      // only persisted by the save button below.
+      setState(() => _logoCtrl.text = url);
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _logoError = 'تعذر رفع الصورة: $error');
+    }
+  }
+
+  Future<Uint8List?> _readBytes(PlatformFile file) async {
+    if (file.bytes != null) return file.bytes;
+    if (!kIsWeb && file.path != null) {
+      return io.File(file.path!).readAsBytes();
+    }
+    return null;
   }
 
   void _save() {
@@ -165,8 +232,15 @@ class _OfficeIdentityFormState extends State<OfficeIdentityForm> {
             const SizedBox(height: AppSpacing.medium),
             _LogoField(
               controller: _logoCtrl,
-              enabled: enabled,
+              enabled: enabled && !widget.isUploadingLogo,
+              isUploading: widget.isUploadingLogo,
+              errorText: _logoError,
               onChanged: () => setState(() {}),
+              onPick: _pickLogo,
+              onClear: () => setState(() {
+                _logoCtrl.clear();
+                _logoError = null;
+              }),
             ),
             const SizedBox(height: AppSpacing.medium),
             TextFormField(
@@ -297,55 +371,129 @@ class _ReadOnlyNotice extends StatelessWidget {
   }
 }
 
-/// Logo URL plus a live preview.
+/// The office logo: upload a file, or paste a link.
 ///
-/// A URL field rather than an upload: the client renders office logos with a
-/// plain `Image.network`, and there is no provisioned public bucket for office
-/// branding the way `documents` exists for fleet paperwork. The preview is what
-/// makes a URL field usable — a broken link is visible before saving, not after
-/// a client reports a blank card.
+/// Uploading is the primary path — it puts the image in the platform's own
+/// `office-logos` bucket, so the marketplace card cannot go blank because some
+/// third-party host expired. The URL field stays because offices onboarded
+/// before the bucket existed already hold external links, and because it is
+/// where an uploaded file's resulting URL lands: one value, two ways to fill it.
+///
+/// The preview renders whatever the field currently holds, so a broken link is
+/// visible before saving rather than after a client reports an empty card.
 class _LogoField extends StatelessWidget {
   const _LogoField({
     required this.controller,
     required this.enabled,
+    required this.isUploading,
+    required this.errorText,
     required this.onChanged,
+    required this.onPick,
+    required this.onClear,
   });
 
   final TextEditingController controller;
   final bool enabled;
+  final bool isUploading;
+  final String? errorText;
   final VoidCallback onChanged;
+  final Future<void> Function() onPick;
+  final VoidCallback onClear;
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     final url = controller.text.trim();
-    return Row(
+
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _LogoPreview(url: url),
-        const SizedBox(width: AppSpacing.medium),
-        Expanded(
-          child: TextFormField(
-            controller: controller,
-            enabled: enabled,
-            keyboardType: TextInputType.url,
-            onChanged: (_) => onChanged(),
-            decoration: const InputDecoration(
-              labelText: 'رابط شعار المكتب',
-              helperText: 'رابط مباشر لصورة الشعار (PNG أو JPG).',
-              border: OutlineInputBorder(),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _LogoPreview(url: url, isUploading: isUploading),
+            const SizedBox(width: AppSpacing.medium),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Wrap(
+                    spacing: AppSpacing.small,
+                    runSpacing: AppSpacing.small,
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    children: [
+                      FilledButton.tonalIcon(
+                        onPressed: enabled ? onPick : null,
+                        icon: isUploading
+                            ? const SizedBox(
+                                width: 18,
+                                height: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
+                            : const Icon(Icons.upload_rounded),
+                        label: Text(
+                          isUploading
+                              ? 'جارٍ الرفع...'
+                              : url.isEmpty
+                              ? 'رفع صورة الشعار'
+                              : 'تغيير الصورة',
+                        ),
+                      ),
+                      if (url.isNotEmpty && enabled)
+                        TextButton.icon(
+                          onPressed: onClear,
+                          icon: const Icon(Icons.delete_outline_rounded),
+                          label: const Text('إزالة'),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.xSmall),
+                  Text(
+                    'PNG أو JPG أو WEBP بحد أقصى 2 ميجابايت. '
+                    'الصورة تُحفظ مع بيانات المكتب عند الضغط على حفظ.',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
             ),
-            validator: (value) {
-              final trimmed = (value ?? '').trim();
-              if (trimmed.isEmpty) return null;
-              final uri = Uri.tryParse(trimmed);
-              final isHttp =
-                  uri != null &&
-                  uri.hasScheme &&
-                  (uri.scheme == 'http' || uri.scheme == 'https') &&
-                  uri.host.isNotEmpty;
-              return isHttp ? null : 'أدخل رابطاً صحيحاً يبدأ بـ https';
-            },
+          ],
+        ),
+        if (errorText != null) ...[
+          const SizedBox(height: AppSpacing.small),
+          Text(
+            errorText!,
+            style: Theme.of(
+              context,
+            ).textTheme.bodySmall?.copyWith(color: scheme.error),
           ),
+        ],
+        const SizedBox(height: AppSpacing.medium),
+        TextFormField(
+          controller: controller,
+          enabled: enabled,
+          keyboardType: TextInputType.url,
+          onChanged: (_) => onChanged(),
+          decoration: const InputDecoration(
+            labelText: 'رابط شعار المكتب',
+            helperText: 'يُملأ تلقائياً بعد الرفع، أو الصق رابطاً مباشراً.',
+            helperMaxLines: 2,
+            border: OutlineInputBorder(),
+          ),
+          validator: (value) {
+            final trimmed = (value ?? '').trim();
+            if (trimmed.isEmpty) return null;
+            final uri = Uri.tryParse(trimmed);
+            final isHttp =
+                uri != null &&
+                uri.hasScheme &&
+                (uri.scheme == 'http' || uri.scheme == 'https') &&
+                uri.host.isNotEmpty;
+            return isHttp ? null : 'أدخل رابطاً صحيحاً يبدأ بـ https';
+          },
         ),
       ],
     );
@@ -353,9 +501,10 @@ class _LogoField extends StatelessWidget {
 }
 
 class _LogoPreview extends StatelessWidget {
-  const _LogoPreview({required this.url});
+  const _LogoPreview({required this.url, this.isUploading = false});
 
   final String url;
+  final bool isUploading;
 
   @override
   Widget build(BuildContext context) {
@@ -369,16 +518,26 @@ class _LogoPreview extends StatelessWidget {
       width: 72,
       height: 72,
       clipBehavior: Clip.antiAlias,
+      alignment: Alignment.center,
       decoration: BoxDecoration(
         color: scheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
         border: Border.all(color: scheme.outline.withAlpha(60)),
       ),
-      child: url.isEmpty
+      child: isUploading
+          ? const SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : url.isEmpty
           ? placeholder
           : Image.network(
               url,
               fit: BoxFit.cover,
+              // Rendered from the stored public URL rather than the picked
+              // bytes: if this shows the logo, the upload is genuinely readable
+              // by the same anonymous request the client app will make.
               errorBuilder: (_, _, _) =>
                   Icon(Icons.broken_image_outlined, color: scheme.error),
             ),

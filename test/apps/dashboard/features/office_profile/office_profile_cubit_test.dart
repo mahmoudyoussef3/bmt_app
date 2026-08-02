@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:bmt_app/apps/dashboard/features/office_profile/domain/entities/office_profile.dart';
 import 'package:bmt_app/apps/dashboard/features/office_profile/domain/repositories/office_profile_repository.dart';
 import 'package:bmt_app/apps/dashboard/features/office_profile/domain/usecases/office_profile_usecases.dart';
@@ -36,6 +38,7 @@ void main() {
     cubit = OfficeProfileCubit(
       getProfile: GetOfficeProfileUseCase(repo),
       updateProfile: UpdateOfficeProfileUseCase(repo),
+      uploadLogo: UploadOfficeLogoUseCase(repo),
     );
   });
 
@@ -159,6 +162,57 @@ void main() {
     expect(cubit.state, isA<OfficeProfileInitial>());
   });
 
+  group('logo upload', () {
+    test('returns the stored URL without writing the profile', () async {
+      await cubit.load();
+
+      final url = await cubit.uploadLogo(
+        bytes: Uint8List.fromList([1, 2, 3]),
+        fileName: 'logo.png',
+      );
+
+      expect(url, contains('office-logos/office-1/logo.png'));
+      expect(repo.uploadedFileName, 'logo.png');
+      // The upload only produces a URL for the form. Persisting it is the save
+      // button's job, so a picked file the operator then abandons must never
+      // have reached `offices.logo_url`.
+      expect(repo.savedEdit, isNull);
+      expect(cubit.state, isA<OfficeProfileLoaded>());
+      expect((cubit.state as OfficeProfileLoaded).isUploadingLogo, isFalse);
+    });
+
+    test('a failed upload keeps the form and its edits on screen', () async {
+      await cubit.load();
+      repo.failUpload = true;
+
+      final seen = <OfficeProfileState>[];
+      final sub = cubit.stream.listen(seen.add);
+
+      final url = await cubit.uploadLogo(
+        bytes: Uint8List.fromList([1]),
+        fileName: 'logo.png',
+      );
+      await Future<void>.delayed(Duration.zero);
+      await sub.cancel();
+
+      expect(url, isNull);
+      expect(seen.whereType<OfficeProfileActionFailure>(), isNotEmpty);
+      expect(seen.whereType<OfficeProfileError>(), isEmpty);
+      expect(cubit.state, isA<OfficeProfileLoaded>());
+    });
+
+    test('upload before load is a no-op', () async {
+      final url = await cubit.uploadLogo(
+        bytes: Uint8List.fromList([1]),
+        fileName: 'logo.png',
+      );
+
+      expect(url, isNull);
+      expect(repo.uploadedFileName, isNull);
+      expect(cubit.state, isA<OfficeProfileInitial>());
+    });
+  });
+
   group('marketplace completeness', () {
     test('is complete when every card field is filled', () {
       expect(profile().missingMarketplaceFields, isEmpty);
@@ -183,8 +237,10 @@ void main() {
 class _FakeRepo implements OfficeProfileRepository {
   late OfficeProfile profile;
   OfficeProfileEdit? savedEdit;
+  String? uploadedFileName;
   bool failRead = false;
   bool failWrite = false;
+  bool failUpload = false;
 
   @override
   Future<OfficeProfile> getProfile() async {
@@ -197,5 +253,15 @@ class _FakeRepo implements OfficeProfileRepository {
     if (failWrite) throw Exception('لا تملك صلاحية تعديل بيانات المكتب.');
     savedEdit = edit;
     return profile;
+  }
+
+  @override
+  Future<String> uploadLogo({
+    required Uint8List bytes,
+    required String fileName,
+  }) async {
+    if (failUpload) throw Exception('تعذر رفع الصورة.');
+    uploadedFileName = fileName;
+    return 'https://cdn.example.com/office-logos/office-1/$fileName';
   }
 }

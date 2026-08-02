@@ -60,19 +60,57 @@ class RoutesCubit extends Cubit<RoutesState> {
   void showBuilder() {
     final current = state;
     if (current is! RoutesLoaded) return;
-    emit(current.copyWith(view: RoutesView.form, clearEditingRoute: true));
+    emit(
+      current.copyWith(
+        view: RoutesView.form,
+        clearEditingRoute: true,
+        clearReverseOf: true,
+      ),
+    );
   }
 
   void showEditRoute(OperationRoute route) {
     final current = state;
     if (current is! RoutesLoaded) return;
-    emit(current.copyWith(view: RoutesView.form, editingRoute: route));
+    emit(
+      current.copyWith(
+        view: RoutesView.form,
+        editingRoute: route,
+        clearReverseOf: true,
+      ),
+    );
+  }
+
+  /// Opens the builder on the *return leg* of [route]: the same places in the
+  /// opposite order, as a brand-new route.
+  ///
+  /// A route row is one directed chain — the rider's app only ever sells
+  /// `pickup.order < dropoff.order` — so the way back has to be its own route.
+  /// Building it used to mean retyping every stop in reverse, which is why
+  /// offices had outbound routes and no return ones. Nothing is written until
+  /// the operator reviews the draft and saves it.
+  void showReturnLeg(OperationRoute route) {
+    final current = state;
+    if (current is! RoutesLoaded) return;
+    emit(
+      current.copyWith(
+        view: RoutesView.form,
+        clearEditingRoute: true,
+        reverseOf: route,
+      ),
+    );
   }
 
   void showOperations() {
     final current = state;
     if (current is! RoutesLoaded) return;
-    emit(current.copyWith(view: RoutesView.list, clearEditingRoute: true));
+    emit(
+      current.copyWith(
+        view: RoutesView.list,
+        clearEditingRoute: true,
+        clearReverseOf: true,
+      ),
+    );
   }
 
   void showDetails(OperationRoute route) {
@@ -83,6 +121,7 @@ class RoutesCubit extends Cubit<RoutesState> {
         selectedRouteId: route.id,
         view: RoutesView.details,
         clearEditingRoute: true,
+        clearReverseOf: true,
       ),
     );
   }
@@ -103,18 +142,6 @@ class RoutesCubit extends Cubit<RoutesState> {
         view: RoutesView.list,
       ),
     );
-  }
-
-  void updateCityFilter(String city) {
-    final current = state;
-    if (current is! RoutesLoaded) return;
-    emit(current.copyWith(cityFilter: city, view: RoutesView.list));
-  }
-
-  void updateStopsFilter(StopsCountFilter filter) {
-    final current = state;
-    if (current is! RoutesLoaded) return;
-    emit(current.copyWith(stopsFilter: filter, view: RoutesView.list));
   }
 
   /// Creates or updates the route the builder produced.
@@ -143,6 +170,7 @@ class RoutesCubit extends Cubit<RoutesState> {
           selectedRouteId: saved.id,
           view: RoutesView.details,
           clearEditingRoute: true,
+          clearReverseOf: true,
           saving: false,
           flashMessage: creating
               ? 'تم إنشاء مسار "${saved.name}"'
@@ -155,6 +183,7 @@ class RoutesCubit extends Cubit<RoutesState> {
           saving: false,
           view: RoutesView.form,
           editingRoute: current.editingRoute,
+          reverseOf: current.reverseOf,
           actionError: _friendlyError(error.toString()),
         ),
       );
@@ -206,6 +235,16 @@ class RoutesCubit extends Cubit<RoutesState> {
     );
   }
 
+  /// Puts a paused or archived route back into service. Reactivating used to
+  /// mean opening the builder and finding the status dropdown inside a folded
+  /// section — the inverse of a one-click "pause".
+  Future<void> activateRoute(OperationRoute route) async {
+    await _mutate(
+      () => _updateRoute(route.copyWith(status: OperationRouteStatus.active)),
+      flashMessage: 'تم تنشيط "${route.name}"',
+    );
+  }
+
   Future<void> deleteRoute(OperationRoute route) async {
     final current = state;
     if (current is! RoutesLoaded) return;
@@ -221,6 +260,7 @@ class RoutesCubit extends Cubit<RoutesState> {
           selectedRouteId: routes.isNotEmpty ? routes.first.id : '',
           view: RoutesView.list,
           clearEditingRoute: true,
+          clearReverseOf: true,
           saving: false,
           flashMessage: 'تم حذف "${route.name}"',
         ),

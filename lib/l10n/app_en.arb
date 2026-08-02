@@ -2503,8 +2503,8 @@
   },
   "mySubscription_unlimitedTrips": "Unlimited trips",
   "mySubscription_emptyTitle": "No active subscription",
-  "mySubscription_emptyBody": "Browse packages to find one that fits your commute.",
-  "mySubscription_browsePackages": "Browse Packages",
+  "mySubscription_emptyBody": "Packages are offered while you book a trip, priced for the route you pick.",
+  "mySubscription_findTrip": "Find a trip",
   "trips_attentionAwaitingReviewTitle": "Waiting for the office to check your payment",
   "trips_attentionAwaitingReviewBody": "Your seat is held while {office} reviews the receipt. We'll notify you as soon as it's approved.",
   "@trips_attentionAwaitingReviewBody": {

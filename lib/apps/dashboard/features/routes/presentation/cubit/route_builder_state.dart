@@ -1,6 +1,7 @@
 import 'package:bmt_app/core/geo/geo_models.dart';
 
 import '../../domain/entities/route_draft.dart';
+import '../../domain/services/route_stop_library.dart';
 
 /// State of the route builder workspace.
 ///
@@ -11,14 +12,12 @@ import '../../domain/entities/route_draft.dart';
 class RouteBuilderState {
   final RouteDraft draft;
 
-  /// The stop currently expanded in the panel and highlighted on the map.
-  /// `-1` when nothing is focused.
-  final int activeIndex;
+  /// The stops the office already uses, offered when a new stop is named.
+  final RouteStopLibrary library;
 
-  /// True while the map is armed to place [activeIndex] on the next tap. The
-  /// old form left every tap live, so a stray click on the map silently moved
-  /// whichever point happened to be selected.
-  final bool picking;
+  /// The stop the operator last touched, highlighted on the preview map so the
+  /// timeline and the map agree on what is being talked about. `-1` for none.
+  final int activeIndex;
 
   final bool calculating;
 
@@ -29,24 +28,35 @@ class RouteBuilderState {
   /// lines between stops when available.
   final List<GeoPoint> path;
 
-  /// False when no geocoding key is configured: search is unavailable and the
-  /// operator types distance and duration by hand.
+  /// False when no geocoding key is configured: place search is unavailable and
+  /// the operator types stop names, distance and duration by hand. Route
+  /// creation itself never depends on it.
   final bool geoEnabled;
 
   const RouteBuilderState({
     required this.draft,
     required this.geoEnabled,
-    this.activeIndex = 0,
-    this.picking = false,
+    this.library = RouteStopLibrary.empty,
+    this.activeIndex = -1,
     this.calculating = false,
     this.geoError = '',
     this.path = const [],
   });
 
+  /// Distance and duration are read off the road network, so they only exist
+  /// once every stop has a pin and the provider has answered. Missing ones are
+  /// a *pending* refinement, not a defect — the route saves and sells without
+  /// them, and the operator may fill them in by hand.
+  bool get metricsPending => !draft.hasMetrics;
+
+  /// True when nothing is going to derive the totals, so the manual fields are
+  /// the only way they will ever be filled.
+  bool get metricsManual => metricsPending && !calculating;
+
   RouteBuilderState copyWith({
     RouteDraft? draft,
+    RouteStopLibrary? library,
     int? activeIndex,
-    bool? picking,
     bool? calculating,
     String? geoError,
     List<GeoPoint>? path,
@@ -55,8 +65,8 @@ class RouteBuilderState {
     return RouteBuilderState(
       draft: draft ?? this.draft,
       geoEnabled: geoEnabled ?? this.geoEnabled,
+      library: library ?? this.library,
       activeIndex: activeIndex ?? this.activeIndex,
-      picking: picking ?? this.picking,
       calculating: calculating ?? this.calculating,
       geoError: geoError ?? this.geoError,
       path: path ?? this.path,

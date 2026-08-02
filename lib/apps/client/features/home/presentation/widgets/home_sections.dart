@@ -40,8 +40,7 @@ class HomeSections extends StatelessWidget {
 
   final void Function(String route, [Object? arguments]) onOpenRoute;
 
-  /// The subscription the rider already holds — its own usage detail, not
-  /// the plan catalogue [PackagesRoutes.subscription] sells.
+  /// The subscription the rider already holds, with its own usage detail.
   void _openMySubscription() => onOpenRoute(PackagesRoutes.mySubscription);
 
   void _trackBooking(HomeBookingData booking) =>

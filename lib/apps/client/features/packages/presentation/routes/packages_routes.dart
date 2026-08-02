@@ -1,10 +1,14 @@
 /// Named routes for the Client App commute-package subscription flow.
+///
+/// There is deliberately no plan-catalogue route. A standalone marketplace
+/// listed the same plans an office profile already lists and the booking wizard
+/// already sells, so it was removed: packages are discovered on an office
+/// profile and bought in the wizard's package step, which is the only place a
+/// route exists to price them against.
 class PackagesRoutes {
   PackagesRoutes._();
 
-  static const subscription = '/subscription';
-
-  /// The rider's own subscription: usage detail, not the plan catalogue.
+  /// The rider's own subscription: usage detail, not a plan catalogue.
   static const mySubscription = '/my-subscription';
 
   /// The path the backend writes into `notifications.action_url` when a package

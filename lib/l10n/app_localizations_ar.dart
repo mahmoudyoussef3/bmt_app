@@ -4780,10 +4780,10 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get mySubscription_emptyBody =>
-      'تصفح الباقات لتجد ما يناسب تنقلك اليومي.';
+      'تُعرض الباقات أثناء حجز رحلتك، بسعر الخط الذي تختاره.';
 
   @override
-  String get mySubscription_browsePackages => 'تصفح الباقات';
+  String get mySubscription_findTrip => 'ابحث عن رحلة';
 
   @override
   String get trips_attentionAwaitingReviewTitle =>

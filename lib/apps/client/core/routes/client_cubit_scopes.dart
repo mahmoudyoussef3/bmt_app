@@ -17,7 +17,6 @@ import 'package:bmt_app/apps/client/features/home/presentation/cubit/home_cubit.
 import 'package:bmt_app/apps/client/features/loyalty/presentation/cubit/loyalty_cubit.dart';
 import 'package:bmt_app/apps/client/features/notifications/presentation/cubit/notifications_cubit.dart';
 import 'package:bmt_app/apps/client/features/packages/presentation/cubit/my_subscription_cubit.dart';
-import 'package:bmt_app/apps/client/features/packages/presentation/cubit/packages_cubit.dart';
 import 'package:bmt_app/apps/client/features/payments/presentation/cubit/payment_cubit.dart';
 import 'package:bmt_app/apps/client/features/profile/presentation/cubit/profile_cubit.dart';
 import 'package:bmt_app/apps/client/features/referrals/presentation/cubit/referral_rewards_cubit.dart';
@@ -49,11 +48,10 @@ abstract final class ClientCubitScopes {
         child: child,
       );
 
-  static Widget resetPassword(Widget child) =>
-      BlocProvider<ResetPasswordCubit>(
-        create: (_) => clientGetIt<ResetPasswordCubit>(),
-        child: child,
-      );
+  static Widget resetPassword(Widget child) => BlocProvider<ResetPasswordCubit>(
+    create: (_) => clientGetIt<ResetPasswordCubit>(),
+    child: child,
+  );
 
   static Widget trips(Widget child) => BlocProvider<TripsCubit>(
     create: (_) => clientGetIt<TripsCubit>()..loadTrips(),
@@ -88,19 +86,6 @@ abstract final class ClientCubitScopes {
 
   static Widget payment(Widget child) => BlocProvider<PaymentCubit>(
     create: (_) => clientGetIt<PaymentCubit>(),
-    child: child,
-  );
-
-  static Widget packages(
-    Widget child, {
-    String? initialOfficeId,
-    String? initialPackageId,
-  }) => BlocProvider<PackagesCubit>(
-    create: (_) => clientGetIt<PackagesCubit>()
-      ..load(
-        initialOfficeId: initialOfficeId,
-        initialPackageId: initialPackageId,
-      ),
     child: child,
   );
 
@@ -209,18 +194,18 @@ abstract final class ClientCubitScopes {
     required RouteOptionData route,
     String? initialPackageId,
   }) => MultiBlocProvider(
-        providers: [
-          BlocProvider<BookingWizardCubit>(
-            create: (_) =>
-                BookingWizardCubit(route, initialPackageId: initialPackageId),
-          ),
-          BlocProvider<BookingWizardStepCubit>(
-            create: (_) => BookingWizardStepCubit(),
-          ),
-          BlocProvider<BookingWizardConfirmCubit>(
-            create: (_) => clientGetIt<BookingWizardConfirmCubit>(),
-          ),
-        ],
-        child: child,
-      );
+    providers: [
+      BlocProvider<BookingWizardCubit>(
+        create: (_) =>
+            BookingWizardCubit(route, initialPackageId: initialPackageId),
+      ),
+      BlocProvider<BookingWizardStepCubit>(
+        create: (_) => BookingWizardStepCubit(),
+      ),
+      BlocProvider<BookingWizardConfirmCubit>(
+        create: (_) => clientGetIt<BookingWizardConfirmCubit>(),
+      ),
+    ],
+    child: child,
+  );
 }

@@ -162,7 +162,27 @@ void main() {
 
       expect(state.selectedRoute, isNotNull);
       expect(state.selectedRoute.id, isEmpty);
-      expect(state.cityOptions, contains('الكل'));
+      expect(state.filteredRoutes, isEmpty);
+      expect(state.stopLibrary.isEmpty, isTrue);
+    });
+
+    test('search reaches the stops, not just the route name', () async {
+      final repository = RoutesRepositoryImpl(_MockRoutesDatasource());
+      final routes = await GetOperationRoutesUseCase(repository)();
+      final stopName = routes.first.stations[1].name;
+
+      final state = RoutesLoaded(
+        routes: routes,
+        selectedRouteId: routes.first.id,
+        searchQuery: stopName,
+      );
+
+      // An operator looking for "the line through Mostorod" is looking for a
+      // stop; the old filter only matched name, code and the two endpoints.
+      expect(
+        state.filteredRoutes.map((route) => route.id),
+        contains(routes.first.id),
+      );
     });
   });
 }

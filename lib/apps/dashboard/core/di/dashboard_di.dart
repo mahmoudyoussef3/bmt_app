@@ -1306,11 +1306,17 @@ void _registerOfficeProfileDependencies() {
       () => UpdateOfficeProfileUseCase(dashboardDi<OfficeProfileRepository>()),
     );
   }
+  if (!dashboardDi.isRegistered<UploadOfficeLogoUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => UploadOfficeLogoUseCase(dashboardDi<OfficeProfileRepository>()),
+    );
+  }
   if (!dashboardDi.isRegistered<OfficeProfileCubit>()) {
     dashboardDi.registerFactory(
       () => OfficeProfileCubit(
         getProfile: dashboardDi<GetOfficeProfileUseCase>(),
         updateProfile: dashboardDi<UpdateOfficeProfileUseCase>(),
+        uploadLogo: dashboardDi<UploadOfficeLogoUseCase>(),
       ),
     );
   }

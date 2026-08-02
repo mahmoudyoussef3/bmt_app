@@ -52,15 +52,24 @@ class OfficeProfileScreen extends StatelessWidget {
             message: message,
             onRetry: () => context.read<OfficeProfileCubit>().load(),
           ),
-          OfficeProfileLoaded(:final profile, :final isSaving) => _Body(
+          OfficeProfileLoaded(
+            :final profile,
+            :final isSaving,
+            :final isUploadingLogo,
+          ) =>
+            _Body(
+              profile: profile,
+              isSaving: isSaving,
+              isUploadingLogo: isUploadingLogo,
+              canEdit: canEdit,
+            ),
+          OfficeProfileActionSuccess(:final profile) ||
+          OfficeProfileActionFailure(:final profile) => _Body(
             profile: profile,
-            isSaving: isSaving,
+            isSaving: false,
+            isUploadingLogo: false,
             canEdit: canEdit,
           ),
-          OfficeProfileActionSuccess(:final profile) ||
-          OfficeProfileActionFailure(
-            :final profile,
-          ) => _Body(profile: profile, isSaving: false, canEdit: canEdit),
         };
       },
     );
@@ -71,11 +80,13 @@ class _Body extends StatelessWidget {
   const _Body({
     required this.profile,
     required this.isSaving,
+    required this.isUploadingLogo,
     required this.canEdit,
   });
 
   final OfficeProfile profile;
   final bool isSaving;
+  final bool isUploadingLogo;
   final bool canEdit;
 
   @override
@@ -108,8 +119,11 @@ class _Body extends StatelessWidget {
           key: ValueKey(profile.updatedAt),
           profile: profile,
           isSaving: isSaving,
+          isUploadingLogo: isUploadingLogo,
           canEdit: canEdit,
           onSave: cubit.save,
+          onUploadLogo: (bytes, fileName) =>
+              cubit.uploadLogo(bytes: bytes, fileName: fileName),
         ),
       ],
     );

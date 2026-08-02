@@ -13,13 +13,17 @@ class HomeQuickActions extends StatelessWidget {
     super.key,
     required this.onRoutes,
     required this.onTrips,
-    required this.onPackages,
+    required this.onSubscription,
     required this.onSupport,
   });
 
   final VoidCallback onRoutes;
   final VoidCallback onTrips;
-  final VoidCallback onPackages;
+
+  /// Opens the rider's own subscription. There is no plan catalogue to send
+  /// them to: plans live on the office profiles that sell them and are bought
+  /// in the booking wizard.
+  final VoidCallback onSubscription;
   final VoidCallback onSupport;
 
   /// Fixed height so the hero overlap in the home layout stays stable.
@@ -43,9 +47,9 @@ class HomeQuickActions extends StatelessWidget {
       ),
       (
         icon: Icons.card_membership_rounded,
-        label: l10n.home_packagesTitle,
+        label: l10n.mySubscription_title,
         color: ClientColors.journeyPurple,
-        onTap: onPackages,
+        onTap: onSubscription,
       ),
       (
         icon: Icons.support_agent_rounded,

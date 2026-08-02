@@ -101,7 +101,6 @@ import '../../features/packages/data/datasources/packages_datasource.dart';
 import '../../features/packages/data/datasources/supabase_packages_datasource.dart';
 import '../../features/packages/data/repositories/packages_repository_impl.dart';
 import '../../features/packages/domain/repositories/packages_repository.dart';
-import '../../features/packages/domain/usecases/filter_packages_usecase.dart';
 import '../../features/packages/domain/usecases/get_my_subscription_usecase.dart';
 import '../../features/packages/domain/usecases/get_office_packages_usecase.dart';
 import '../../features/packages/domain/usecases/get_packages_usecase.dart';
@@ -808,18 +807,9 @@ void _registerPackagesDependencies() {
     );
   }
 
-  if (!clientGetIt.isRegistered<FilterPackagesUseCase>()) {
-    clientGetIt.registerLazySingleton<FilterPackagesUseCase>(
-      () => const FilterPackagesUseCase(),
-    );
-  }
-
   if (!clientGetIt.isRegistered<PackagesCubit>()) {
     clientGetIt.registerFactory<PackagesCubit>(
-      () => PackagesCubit(
-        getPackages: clientGetIt<GetPackagesUseCase>(),
-        filterPackages: clientGetIt<FilterPackagesUseCase>(),
-      ),
+      () => PackagesCubit(getPackages: clientGetIt<GetPackagesUseCase>()),
     );
   }
 

@@ -4813,10 +4813,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mySubscription_emptyBody =>
-      'Browse packages to find one that fits your commute.';
+      'Packages are offered while you book a trip, priced for the route you pick.';
 
   @override
-  String get mySubscription_browsePackages => 'Browse Packages';
+  String get mySubscription_findTrip => 'Find a trip';
 
   @override
   String get trips_attentionAwaitingReviewTitle =>

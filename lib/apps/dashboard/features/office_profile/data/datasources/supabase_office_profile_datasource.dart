@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/session/dashboard_session.dart';
@@ -111,6 +113,78 @@ class SupabaseOfficeProfileDatasource implements OfficeProfileDatasource {
       throw Exception(error.message);
     }
   }
+
+  /// The bucket provisioned by migration 20260801090000: public to read, and
+  /// writable only by the office's own owner inside a folder named for the
+  /// office id.
+  static const _logoBucket = 'office-logos';
+
+  @override
+  Future<String> uploadLogo({
+    required Uint8List bytes,
+    required String fileName,
+  }) async {
+    // The leading segment is the office id because the storage policy compares
+    // it against `current_office_id()` — this is not a naming convention, it is
+    // the condition that makes the upload succeed at all.
+    //
+    // The timestamp gives every upload a fresh name rather than overwriting a
+    // fixed `logo.png`. A stable name would be served stale for as long as the
+    // CDN and every client's image cache held the old bytes, and the operator
+    // would see the logo they just replaced.
+    final path =
+        '${_session.officeId}/'
+        '${DateTime.now().millisecondsSinceEpoch}-${_safeFileName(fileName)}';
+
+    try {
+      await _client.storage
+          .from(_logoBucket)
+          .uploadBinary(
+            path,
+            bytes,
+            fileOptions: FileOptions(contentType: _contentType(fileName)),
+          );
+
+      return _client.storage.from(_logoBucket).getPublicUrl(path);
+    } on StorageException catch (error) {
+      throw Exception(error.message);
+    }
+  }
+
+  /// Storage object keys are URL path segments, so Arabic filenames and spaces —
+  /// both routine on an operator's machine — have to be reduced to a safe slug
+  /// before they become part of a public URL.
+  String _safeFileName(String input) {
+    final extension = _extension(input);
+    final base = extension.isEmpty
+        ? input
+        : input.substring(0, input.length - extension.length - 1);
+
+    final slug = base
+        .trim()
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^a-z0-9_\-]+'), '-')
+        .replaceAll(RegExp(r'-+'), '-')
+        .replaceAll(RegExp(r'^-|-$'), '');
+
+    return '${slug.isEmpty ? 'logo' : slug}'
+        '${extension.isEmpty ? '' : '.$extension'}';
+  }
+
+  String _extension(String fileName) {
+    final dot = fileName.lastIndexOf('.');
+    if (dot <= 0 || dot == fileName.length - 1) return '';
+    return fileName.substring(dot + 1).toLowerCase();
+  }
+
+  /// Sent explicitly: the bucket restricts `allowed_mime_types` to the three
+  /// image types, and a default of `application/octet-stream` is rejected by
+  /// that check rather than by anything the operator could act on.
+  String _contentType(String fileName) => switch (_extension(fileName)) {
+    'png' => 'image/png',
+    'webp' => 'image/webp',
+    _ => 'image/jpeg',
+  };
 
   OfficeProfile _mapProfile(
     Map<String, dynamic> row, {

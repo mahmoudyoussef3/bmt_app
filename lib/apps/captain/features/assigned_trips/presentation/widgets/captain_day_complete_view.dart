@@ -55,14 +55,14 @@ class _CompletionHero extends StatelessWidget {
         // Runs from the "done" end of the palette into the brand anchor: still
         // one blue family, but visibly not the focus card's live-trip blue.
         gradient: const LinearGradient(
-          colors: [CaptainColors.primaryBright, CaptainColors.primary],
+          colors: [CaptainColors.primaryDeep, CaptainColors.primary],
           begin: AlignmentDirectional.topStart,
           end: AlignmentDirectional.bottomEnd,
         ),
         borderRadius: CaptainDesignTokens.br24,
         boxShadow: [
           BoxShadow(
-            color: CaptainColors.primaryBright.withValues(alpha: 0.3),
+            color: CaptainColors.primary.withValues(alpha: 0.3),
             blurRadius: 24,
             offset: const Offset(0, 10),
           ),

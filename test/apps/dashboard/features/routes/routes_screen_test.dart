@@ -1,0 +1,214 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_test/flutter_test.dart';
+
+import 'package:bmt_app/apps/dashboard/features/routes/domain/entities/operation_route.dart';
+import 'package:bmt_app/apps/dashboard/features/routes/domain/repositories/routes_repository.dart';
+import 'package:bmt_app/apps/dashboard/features/routes/domain/usecases/add_route_station_usecase.dart';
+import 'package:bmt_app/apps/dashboard/features/routes/domain/usecases/create_route_usecase.dart';
+import 'package:bmt_app/apps/dashboard/features/routes/domain/usecases/delete_route_station_usecase.dart';
+import 'package:bmt_app/apps/dashboard/features/routes/domain/usecases/delete_route_usecase.dart';
+import 'package:bmt_app/apps/dashboard/features/routes/domain/usecases/get_operation_routes_usecase.dart';
+import 'package:bmt_app/apps/dashboard/features/routes/domain/usecases/reorder_route_stations_usecase.dart';
+import 'package:bmt_app/apps/dashboard/features/routes/domain/usecases/update_route_station_usecase.dart';
+import 'package:bmt_app/apps/dashboard/features/routes/domain/usecases/update_route_usecase.dart';
+import 'package:bmt_app/apps/dashboard/features/routes/presentation/cubit/routes_cubit.dart';
+import 'package:bmt_app/apps/dashboard/features/routes/presentation/cubit/routes_state.dart';
+import 'package:bmt_app/apps/dashboard/features/routes/presentation/widgets/route_details_view.dart';
+import 'package:bmt_app/apps/dashboard/features/routes/presentation/widgets/routes_list_view.dart';
+
+const _banhaCairo = OperationRoute(
+  id: 'route-1',
+  routeCode: 'RT-01',
+  name: 'بنها - القاهرة',
+  startCity: 'بنها',
+  endCity: 'القاهرة',
+  duration: '1 س 10 د',
+  distance: '62 كم',
+  status: OperationRouteStatus.active,
+  stations: [
+    RouteStation(id: 'a', name: 'بنها', area: '', arrivalOffset: '', order: 1),
+    RouteStation(
+      id: 'b',
+      name: 'شبين القناطر',
+      area: '',
+      arrivalOffset: '',
+      order: 2,
+    ),
+    RouteStation(
+      id: 'c',
+      name: 'مسطرد',
+      area: '',
+      arrivalOffset: '',
+      order: 3,
+    ),
+    RouteStation(
+      id: 'd',
+      name: 'القاهرة',
+      area: '',
+      arrivalOffset: '',
+      order: 4,
+    ),
+  ],
+  notes: [],
+);
+
+/// Nothing here calls the repository — these screens render state — but
+/// [RoutesCubit] needs its use cases, so they are wired to a repository that
+/// throws if anyone actually reaches it.
+class _UnusedRepository implements RoutesRepository {
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      throw UnimplementedError('the screen tests never hit the repository');
+}
+
+RoutesCubit _cubit() {
+  final repository = _UnusedRepository();
+  return RoutesCubit(
+    getRoutes: GetOperationRoutesUseCase(repository),
+    createRoute: CreateRouteUseCase(repository),
+    updateRoute: UpdateRouteUseCase(repository),
+    deleteRoute: DeleteRouteUseCase(repository),
+    addStation: AddRouteStationUseCase(repository),
+    updateStation: UpdateRouteStationUseCase(repository),
+    deleteStation: DeleteRouteStationUseCase(repository),
+    reorderStations: ReorderRouteStationsUseCase(repository),
+  );
+}
+
+void main() {
+  late RoutesCubit cubit;
+
+  setUp(() => cubit = _cubit());
+  tearDown(() => cubit.close());
+
+  Future<void> pump(WidgetTester tester, Widget child) async {
+    tester.view.physicalSize = const Size(1400, 1200);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Directionality(
+            textDirection: TextDirection.rtl,
+            child: BlocProvider.value(value: cubit, child: child),
+          ),
+        ),
+      ),
+    );
+    await tester.pump();
+  }
+
+  group('routes list', () {
+    testWidgets('a card leads with the direction and the chain of places', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        const RoutesListView(
+          state: RoutesLoaded(routes: [_banhaCairo], selectedRouteId: 'route-1'),
+        ),
+      );
+
+      expect(find.text('بنها'), findsWidgets);
+      expect(find.text('القاهرة'), findsWidgets);
+      expect(find.text('RT-01'), findsOneWidget);
+      expect(find.text('4 نقاط'), findsOneWidget);
+      expect(find.text('التفاصيل'), findsOneWidget);
+      expect(find.text('تعديل'), findsOneWidget);
+      // The whole journey is on the card, not just its endpoints.
+      expect(find.textContaining('شبين القناطر'), findsOneWidget);
+    });
+
+    testWidgets('the empty state explains what a route is and how little it needs', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        const RoutesListView(
+          state: RoutesLoaded(routes: [], selectedRouteId: ''),
+        ),
+      );
+
+      expect(find.text('ابدأ بإضافة أول مسار'), findsOneWidget);
+      expect(find.textContaining('اختياري'), findsOneWidget);
+      expect(find.text('إضافة مسار جديد'), findsWidgets);
+    });
+
+    testWidgets('filtering to nothing offers a different message', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        const RoutesListView(
+          state: RoutesLoaded(
+            routes: [_banhaCairo],
+            selectedRouteId: 'route-1',
+            searchQuery: 'طنطا',
+          ),
+        ),
+      );
+
+      expect(find.text('لا توجد مسارات مطابقة'), findsOneWidget);
+    });
+  });
+
+  group('route details', () {
+    testWidgets('leads with the direction and the point count', (tester) async {
+      await pump(
+        tester,
+        const RouteDetailsView(
+          state: RoutesLoaded(routes: [_banhaCairo], selectedRouteId: 'route-1'),
+        ),
+      );
+
+      expect(find.text('بنها ← القاهرة'), findsOneWidget);
+      expect(find.textContaining('مسار نقل'), findsOneWidget);
+      expect(find.text('نقاط المسار'), findsOneWidget);
+      expect(find.text('إنشاء مسار العودة'), findsOneWidget);
+    });
+
+    testWidgets('an unpinned stop reads as unset, never as an error', (
+      tester,
+    ) async {
+      await pump(
+        tester,
+        const RouteDetailsView(
+          state: RoutesLoaded(routes: [_banhaCairo], selectedRouteId: 'route-1'),
+        ),
+      );
+
+      // Four stops, none of them located: four neutral chips and no warning.
+      expect(find.text('الموقع غير محدد'), findsNWidgets(4));
+      expect(find.text('لا توجد مواقع محددة'), findsOneWidget);
+      expect(find.textContaining('الحجز عليه متاح'), findsOneWidget);
+    });
+
+    testWidgets('the return leg opens the builder on the reversed route', (
+      tester,
+    ) async {
+      cubit.emit(
+        const RoutesLoaded(routes: [_banhaCairo], selectedRouteId: 'route-1'),
+      );
+      await pump(
+        tester,
+        const RouteDetailsView(
+          state: RoutesLoaded(routes: [_banhaCairo], selectedRouteId: 'route-1'),
+        ),
+      );
+
+      await tester.tap(find.text('إنشاء مسار العودة'));
+      await tester.pump();
+
+      final state = cubit.state as RoutesLoaded;
+      expect(state.view, RoutesView.form);
+      expect(state.reverseOf, _banhaCairo);
+      expect(
+        state.editingRoute,
+        isNull,
+        reason: 'the return leg is a new route, never an edit of the outbound',
+      );
+    });
+  });
+}

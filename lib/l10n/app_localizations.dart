@@ -8603,14 +8603,14 @@ abstract class AppLocalizations {
   /// No description provided for @mySubscription_emptyBody.
   ///
   /// In en, this message translates to:
-  /// **'Browse packages to find one that fits your commute.'**
+  /// **'Packages are offered while you book a trip, priced for the route you pick.'**
   String get mySubscription_emptyBody;
 
-  /// No description provided for @mySubscription_browsePackages.
+  /// No description provided for @mySubscription_findTrip.
   ///
   /// In en, this message translates to:
-  /// **'Browse Packages'**
-  String get mySubscription_browsePackages;
+  /// **'Find a trip'**
+  String get mySubscription_findTrip;
 
   /// No description provided for @trips_attentionAwaitingReviewTitle.
   ///

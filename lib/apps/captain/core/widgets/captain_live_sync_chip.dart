@@ -14,7 +14,7 @@ class CaptainLiveSyncChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isRefreshing ? CaptainColors.primary : CaptainColors.success;
+    final color = isRefreshing ? CaptainColors.primary : CaptainColors.primary;
 
     return Container(
       padding: const EdgeInsets.symmetric(

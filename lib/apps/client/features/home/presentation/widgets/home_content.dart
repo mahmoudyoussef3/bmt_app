@@ -154,7 +154,8 @@ class HomeContent extends StatelessWidget {
                   child: HomeQuickActions(
                     onRoutes: () => onOpenRoute(BookingRoutes.popularRoutes),
                     onTrips: () => onOpenRoute(TripsRoutes.myTrips),
-                    onPackages: () => onOpenRoute(PackagesRoutes.subscription),
+                    onSubscription: () =>
+                        onOpenRoute(PackagesRoutes.mySubscription),
                     onSupport: () => onOpenRoute(SupportRoutes.center),
                   ),
                 ),

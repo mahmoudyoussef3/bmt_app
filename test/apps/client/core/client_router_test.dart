@@ -45,7 +45,6 @@ const Map<String, String> _declaredRoutes = <String, String>{
   'BookingRoutes.wizard': BookingRoutes.wizard,
   'BookingRoutes.routeOverview': BookingRoutes.routeOverview,
   'SeatReleaseRoutes.seatRelease': SeatReleaseRoutes.seatRelease,
-  'PackagesRoutes.subscription': PackagesRoutes.subscription,
   'PackagesRoutes.mySubscription': PackagesRoutes.mySubscription,
   'PackagesRoutes.legacyExpiryAlias': PackagesRoutes.legacyExpiryAlias,
   'TripsRoutes.myTrips': TripsRoutes.myTrips,
@@ -63,20 +62,28 @@ const Map<String, String> _declaredRoutes = <String, String>{
   'ProfileRoutes.profile': ProfileRoutes.profile,
 };
 
-/// Paths whose constants still exist but which the router must NOT register.
+/// Paths the router must NOT register.
 ///
-/// Both fronted a second, older booking funnel (seat map -> PaymentCheckout ->
-/// PaymentProcessing). Nothing navigates to them, and the funnel no longer works
-/// against the live database: its confirm call omits `p_package_id` and
-/// `p_plan_start_date`, which `confirm_seat_booking_v2` requires, and it called
-/// confirm without first taking a seat lock. Registering them left a broken
-/// money path one server-supplied `action_url` away from a rider.
+/// The first two fronted a second, older booking funnel (seat map ->
+/// PaymentCheckout -> PaymentProcessing). Nothing navigates to them, and the
+/// funnel no longer works against the live database: its confirm call omits
+/// `p_package_id` and `p_plan_start_date`, which `confirm_seat_booking_v2`
+/// requires, and it called confirm without first taking a seat lock.
+/// Registering them left a broken money path one server-supplied `action_url`
+/// away from a rider.
+///
+/// `/subscription` was the standalone package catalogue, deleted because it
+/// re-listed plans an office profile already shows and the booking wizard
+/// already sells. Its constant is gone, so it is spelled out here — the retired
+/// seat-map screen still pushes the raw string, and re-registering the path
+/// would quietly resurrect the catalogue behind it.
 ///
 /// They are asserted absent rather than merely deleted from [_declaredRoutes] so
-/// re-adding either one fails loudly instead of quietly reopening the funnel.
+/// re-adding one fails loudly instead of quietly reopening the flow.
 const Map<String, String> _retiredRoutes = <String, String>{
   'SeatSelectionRoutes.seatSelection': SeatSelectionRoutes.seatSelection,
   'PaymentRoutes.checkout': PaymentRoutes.checkout,
+  'the deleted package catalogue': '/subscription',
 };
 
 void main() {

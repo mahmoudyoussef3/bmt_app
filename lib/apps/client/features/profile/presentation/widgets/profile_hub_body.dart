@@ -101,7 +101,7 @@ class ProfileHubBody extends StatelessWidget {
             package.daysRemaining ?? 0,
           ),
           actionLabel: l10n.profile_packageRenew,
-          onAction: () => onOpenRoute(PackagesRoutes.subscription),
+          onAction: () => onOpenRoute(PackagesRoutes.mySubscription),
         ),
       ],
     ];

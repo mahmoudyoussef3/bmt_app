@@ -69,11 +69,21 @@ class RouteStopDraft {
     this.notes = '',
   });
 
+  /// A local identity for a stop that has never been saved. Unique per call, so
+  /// two stops added in the same second still reorder independently.
+  static String freshKey() =>
+      'stop-${DateTime.now().microsecondsSinceEpoch}-${_counter++}';
+
+  static int _counter = 0;
+
   bool get isLocated => point != null;
 
   bool get isNamed => name.trim().isNotEmpty;
 
-  bool get isComplete => isNamed && isLocated;
+  /// A stop is valid as soon as it has a name. Coordinates are an optional
+  /// refinement that improves what riders and captains see — never a
+  /// precondition for saving the route.
+  bool get isComplete => isNamed;
 
   RouteStopDraft copyWith({
     String? id,
@@ -81,6 +91,7 @@ class RouteStopDraft {
     String? area,
     String? description,
     GeoPoint? point,
+    bool clearPoint = false,
     int? dwellMinutes,
     RouteStopBoarding? boarding,
     String? arrivalOffset,
@@ -93,7 +104,7 @@ class RouteStopDraft {
       name: name ?? this.name,
       area: area ?? this.area,
       description: description ?? this.description,
-      point: point ?? this.point,
+      point: clearPoint ? null : point ?? this.point,
       dwellMinutes: dwellMinutes ?? this.dwellMinutes,
       boarding: boarding ?? this.boarding,
       arrivalOffset: arrivalOffset ?? this.arrivalOffset,
@@ -114,14 +125,11 @@ class RouteStopDraft {
   }
 
   /// Applies a coordinate chosen on the map, keeping any name already typed.
-  RouteStopDraft withPoint(GeoPoint value) {
-    return copyWith(
-      point: value,
-      description: description.trim().isEmpty
-          ? '${value.lat.toStringAsFixed(5)}, ${value.lng.toStringAsFixed(5)}'
-          : description,
-    );
-  }
+  RouteStopDraft withPoint(GeoPoint value) => copyWith(point: value);
+
+  /// Drops the coordinate. The stop stays valid and bookable — it simply loses
+  /// its pin on the rider's and captain's maps.
+  RouteStopDraft withoutPoint() => copyWith(clearPoint: true);
 }
 
 /// A blocking gap between the current draft and a saveable route. [stopIndex]
@@ -173,8 +181,8 @@ class RouteDraft {
       id: '',
       suggestedCode: suggestedCode,
       stops: [
-        RouteStopDraft(key: _freshKey(0)),
-        RouteStopDraft(key: _freshKey(1)),
+        RouteStopDraft(key: RouteStopDraft.freshKey()),
+        RouteStopDraft(key: RouteStopDraft.freshKey()),
       ],
     );
   }
@@ -183,7 +191,7 @@ class RouteDraft {
     final stops = route.stations.indexed.map((entry) {
       final (index, station) = entry;
       return RouteStopDraft(
-        key: station.id.isNotEmpty ? station.id : _freshKey(index),
+        key: station.id.isNotEmpty ? station.id : RouteStopDraft.freshKey(),
         id: station.id,
         name: station.name,
         area: station.area,
@@ -208,7 +216,7 @@ class RouteDraft {
     // A saved route with fewer than two stations can still be opened; pad it so
     // the builder always has an origin and a destination to show.
     while (stops.length < 2) {
-      stops.add(RouteStopDraft(key: _freshKey(stops.length)));
+      stops.add(RouteStopDraft(key: RouteStopDraft.freshKey()));
     }
 
     return RouteDraft(
@@ -266,28 +274,42 @@ class RouteDraft {
   List<GeoPoint> get orderedPoints =>
       allStopsLocated ? stops.map((stop) => stop.point!).toList() : const [];
 
+  /// The route direction as one readable sentence: `بنها ← شبين القناطر ← القاهرة`.
+  /// Unnamed points are skipped, so it reads sensibly while still being filled in.
+  String get directionLabel => stops
+      .map((stop) => stop.name.trim())
+      .where((name) => name.isNotEmpty)
+      .join(' ← ');
+
+  /// True when the two endpoints name the same place — a "route" that goes
+  /// nowhere, and the one endpoint combination the operator must fix.
+  bool get endpointsCollide {
+    final from = origin.name.trim();
+    final to = destination.name.trim();
+    return from.isNotEmpty && from == to;
+  }
+
   /// Everything still standing between this draft and a saved route, in the
   /// order the operator should deal with it.
+  ///
+  /// Coordinates are deliberately absent from this list. A stop is a *place the
+  /// bus stops at*, and an operator knows those by name long before anyone has
+  /// put them on a map; requiring a pin for each one is what made creating a
+  /// route a mapping exercise instead of a two-field one.
   List<RouteDraftIssue> get issues {
     final result = <RouteDraftIssue>[];
     if (!origin.isNamed) {
       result.add(const RouteDraftIssue('حدد نقطة الانطلاق', stopIndex: 0));
-    } else if (!origin.isLocated) {
-      result.add(
-        const RouteDraftIssue(
-          'حدد موقع نقطة الانطلاق على الخريطة',
-          stopIndex: 0,
-        ),
-      );
     }
     if (!destination.isNamed) {
       result.add(
         RouteDraftIssue('حدد الوجهة النهائية', stopIndex: stops.length - 1),
       );
-    } else if (!destination.isLocated) {
+    }
+    if (endpointsCollide) {
       result.add(
         RouteDraftIssue(
-          'حدد موقع الوجهة على الخريطة',
+          'نقطة الانطلاق والوجهة نفس المكان — غيّر إحداهما',
           stopIndex: stops.length - 1,
         ),
       );
@@ -296,14 +318,7 @@ class RouteDraft {
       if (!entry.stop.isNamed) {
         result.add(
           RouteDraftIssue(
-            'محطة ${entry.index} بدون اسم',
-            stopIndex: entry.index,
-          ),
-        );
-      } else if (!entry.stop.isLocated) {
-        result.add(
-          RouteDraftIssue(
-            'محطة "${entry.stop.name}" بدون موقع',
+            'النقطة رقم ${entry.index + 1} بدون اسم',
             stopIndex: entry.index,
           ),
         );
@@ -314,9 +329,6 @@ class RouteDraft {
     }
     if (code.trim().isEmpty) {
       result.add(const RouteDraftIssue('أدخل كود المسار'));
-    }
-    if (!hasMetrics) {
-      result.add(const RouteDraftIssue('المسافة والمدة غير محسوبة'));
     }
     return result;
   }
@@ -356,9 +368,20 @@ class RouteDraft {
   /// Adds an intermediate stop just before the destination — the position that
   /// keeps the route's endpoints stable, which is what "add a stop on the way"
   /// means.
-  RouteDraft addStop() {
-    final next = [...stops]
-      ..insert(stops.length - 1, RouteStopDraft(key: _freshKey(stops.length)));
+  RouteDraft addStop() => addStopAt(stops.length - 1);
+
+  /// Inserts a new stop *at* [index], pushing everything from there onwards
+  /// down. The timeline offers one "+ إضافة نقطة" per gap, so the operator says
+  /// where the bus stops by pointing at the place in the journey it happens —
+  /// no adding at the end and dragging it up.
+  ///
+  /// Index 0 and anything past the destination are clamped inside the
+  /// endpoints, which can only be replaced, never displaced.
+  RouteDraft addStopAt(int index, {RouteStopDraft? stop}) {
+    final position = index.clamp(1, stops.length - 1);
+    final next = [
+      ...stops,
+    ]..insert(position, stop ?? RouteStopDraft(key: RouteStopDraft.freshKey()));
     return copyWith(stops: next);
   }
 
@@ -379,6 +402,27 @@ class RouteDraft {
     final moved = next.removeAt(oldIndex);
     next.insert(newIndex > oldIndex ? newIndex - 1 : newIndex, moved);
     return copyWith(stops: next);
+  }
+
+  /// The same places in the opposite order.
+  ///
+  /// A route row is one *directed* chain — the client sells `pickup.order <
+  /// dropoff.order` and nothing else — so the way back is a second route, not a
+  /// flag on this one. This produces the draft for it: the stops reversed, the
+  /// saved-row identity dropped so nothing overwrites the outbound route, and
+  /// the schedule cleared because the offsets no longer describe this order.
+  RouteDraft reversedLeg({required String suggestedCode}) {
+    return RouteDraft(
+      id: '',
+      suggestedCode: suggestedCode,
+      status: status,
+      stops: [
+        for (final stop in stops.reversed)
+          stop.copyWith(id: '', arrivalOffset: '', departureOffset: ''),
+      ],
+      distance: distance,
+      duration: duration,
+    );
   }
 
   /// Writes the computed schedule back onto the stops, pairing by position.
@@ -435,9 +479,6 @@ class RouteDraft {
       notes: notes,
     );
   }
-
-  static String _freshKey(int seed) =>
-      'stop-${DateTime.now().microsecondsSinceEpoch}-$seed';
 
   /// Rebuilds dwell minutes from stored `HH:MM` offsets (departure − arrival).
   static int _dwellBetween(String arrival, String departure) {

@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
-/// Shown only if the rider's subscription lapses between Home loading and
-/// this screen opening — Home never offers this route otherwise.
+/// Shown when the rider holds no package — either they never bought one, or
+/// theirs lapsed between Home loading and this screen opening.
 class MySubscriptionEmptyView extends StatelessWidget {
-  const MySubscriptionEmptyView({super.key, required this.onBrowsePackages});
+  const MySubscriptionEmptyView({super.key, required this.onFindTrip});
 
-  final VoidCallback onBrowsePackages;
+  /// Sends the rider to pick a trip: a plan is priced against the route it is
+  /// bought on, so the booking wizard is where packages are offered.
+  final VoidCallback onFindTrip;
 
   @override
   Widget build(BuildContext context) {
@@ -41,8 +43,8 @@ class MySubscriptionEmptyView extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             FilledButton(
-              onPressed: onBrowsePackages,
-              child: Text(l10n.mySubscription_browsePackages),
+              onPressed: onFindTrip,
+              child: Text(l10n.mySubscription_findTrip),
             ),
           ],
         ),

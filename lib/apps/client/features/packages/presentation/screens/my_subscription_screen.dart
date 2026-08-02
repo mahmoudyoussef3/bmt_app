@@ -4,9 +4,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
+import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_routes.dart';
+
 import '../cubit/my_subscription_cubit.dart';
 import '../cubit/my_subscription_state.dart';
-import '../routes/packages_routes.dart';
 import '../widgets/my_subscription/my_subscription_empty_view.dart';
 import '../widgets/my_subscription/my_subscription_header_card.dart';
 import '../widgets/my_subscription/my_subscription_trips_card.dart';
@@ -14,8 +15,11 @@ import '../widgets/my_subscription/my_subscription_validity_card.dart';
 
 /// The rider's own subscription: what they hold, how much of the window is
 /// left, and how many trips they have used. Reached from Home's active-package
-/// card — buying a *new* package is [PackagesRoutes.subscription], a separate
-/// flow this screen never opens except as a fallback when the rider has none.
+/// card and quick actions.
+///
+/// Buying a *new* package happens in the booking wizard's package step, which
+/// is where a route exists to price a plan against, so the empty state sends
+/// the rider to pick a trip rather than to a catalogue.
 class MySubscriptionScreen extends StatelessWidget {
   const MySubscriptionScreen({super.key});
 
@@ -43,9 +47,9 @@ class MySubscriptionScreen extends StatelessWidget {
               onRetry: () => context.read<MySubscriptionCubit>().load(),
             ),
             MySubscriptionEmpty() => MySubscriptionEmptyView(
-              onBrowsePackages: () => Navigator.of(
+              onFindTrip: () => Navigator.of(
                 context,
-              ).pushReplacementNamed(PackagesRoutes.subscription),
+              ).pushReplacementNamed(BookingRoutes.popularRoutes),
             ),
             MySubscriptionLoaded(:final subscription) => ListView(
               physics: const BouncingScrollPhysics(),

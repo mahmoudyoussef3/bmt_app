@@ -4,10 +4,7 @@ import 'package:bmt_app/apps/client/features/packages/data/datasources/packages_
 import 'package:bmt_app/apps/client/features/packages/data/mappers/package_plan_mapper.dart';
 import 'package:bmt_app/apps/client/features/packages/data/models/package_plan_model.dart';
 import 'package:bmt_app/apps/client/features/packages/data/repositories/packages_repository_impl.dart';
-import 'package:bmt_app/apps/client/features/packages/domain/entities/package_filter.dart';
-import 'package:bmt_app/apps/client/features/packages/domain/entities/package_office.dart';
 import 'package:bmt_app/apps/client/features/packages/domain/entities/package_plan.dart';
-import 'package:bmt_app/apps/client/features/packages/domain/usecases/filter_packages_usecase.dart';
 
 PackagePlan _plan({
   required String id,
@@ -109,90 +106,6 @@ void main() {
       expect(_plan(id: 'p').hasOfficeRating, isTrue);
       expect(_plan(id: 'p', officeRatingsCount: 0).hasOfficeRating, isFalse);
       expect(_plan(id: 'p', officeRating: 0).hasOfficeRating, isFalse);
-    });
-  });
-
-  group('PackageOffice.from', () {
-    test('collapses the catalogue to distinct sellers with their counts', () {
-      final offices = PackageOffice.from([
-        _plan(id: 'p1', officeId: 'o1', officeName: 'Nile Express'),
-        _plan(id: 'p2', officeId: 'o1', officeName: 'Nile Express'),
-        _plan(id: 'p3', officeId: 'o2', officeName: 'Delta Lines'),
-      ]);
-
-      expect(offices, hasLength(2));
-      final nile = offices.firstWhere((o) => o.id == 'o1');
-      expect(nile.packageCount, 2);
-      expect(offices.firstWhere((o) => o.id == 'o2').packageCount, 1);
-    });
-
-    test(
-      'orders best-rated first, then alphabetically — the directory order',
-      () {
-        final offices = PackageOffice.from([
-          _plan(
-            id: 'p1',
-            officeId: 'o1',
-            officeName: 'Zeta',
-            officeRating: 4.0,
-          ),
-          _plan(
-            id: 'p2',
-            officeId: 'o2',
-            officeName: 'Alpha',
-            officeRating: 4.8,
-          ),
-          _plan(
-            id: 'p3',
-            officeId: 'o3',
-            officeName: 'Beta',
-            officeRating: 4.8,
-          ),
-        ]);
-
-        expect(offices.map((o) => o.name), ['Alpha', 'Beta', 'Zeta']);
-      },
-    );
-
-    test('ignores office-less packages', () {
-      final offices = PackageOffice.from([
-        _plan(id: 'p1'),
-        _plan(id: 'p2', officeId: '', officeName: ''),
-      ]);
-
-      expect(offices, hasLength(1));
-    });
-  });
-
-  group('FilterPackagesUseCase', () {
-    const filter = FilterPackagesUseCase();
-    final packages = [
-      _plan(id: 'weekly-o1', officeId: 'o1', durationDays: 7),
-      _plan(id: 'monthly-o1', officeId: 'o1', durationDays: 30),
-      _plan(id: 'monthly-o2', officeId: 'o2', durationDays: 30),
-    ];
-
-    test('office id narrows to one seller', () {
-      final result = filter(
-        packages: packages,
-        filter: PackageFilter.all,
-        officeId: 'o2',
-      );
-      expect(result.map((p) => p.id), ['monthly-o2']);
-    });
-
-    test('duration and office compose into one lens', () {
-      final result = filter(
-        packages: packages,
-        filter: PackageFilter.monthly,
-        officeId: 'o1',
-      );
-      expect(result.map((p) => p.id), ['monthly-o1']);
-    });
-
-    test('a null office id keeps the whole marketplace', () {
-      final result = filter(packages: packages, filter: PackageFilter.all);
-      expect(result, hasLength(3));
     });
   });
 
