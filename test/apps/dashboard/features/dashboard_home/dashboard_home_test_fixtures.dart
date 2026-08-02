@@ -64,6 +64,8 @@ OperationBooking buildBooking({
   BookingStatus status = BookingStatus.reserved,
   PaymentStatus paymentStatus = PaymentStatus.pending,
   DateTime? date,
+  double amount = 100,
+  String? passengerName,
 }) {
   final d = date ?? DateTime.now();
   String two(int n) => n.toString().padLeft(2, '0');
@@ -71,7 +73,7 @@ OperationBooking buildBooking({
     id: id,
     bookingNumber: id,
     clientId: '$id-client',
-    passengerName: 'راكب $id',
+    passengerName: passengerName ?? 'راكب $id',
     phone: '0100000000',
     route: 'القاهرة - الإسكندرية',
     tripTime: '10:00',
@@ -80,7 +82,7 @@ OperationBooking buildBooking({
     paymentMethod: BookingPaymentMethod.cash,
     status: status,
     paymentStatus: paymentStatus,
-    paymentAmount: 100,
+    paymentAmount: amount,
     packageName: '',
     createdAt: d,
     tripDetails: BookingTripDetails.empty,

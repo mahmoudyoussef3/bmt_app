@@ -16,6 +16,7 @@ import '../widgets/review_card.dart';
 import '../widgets/reviews_filter_bar.dart';
 import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 
 /// التقييمات — every passenger review of every completed trip.
 ///
@@ -63,7 +64,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
       padding: const EdgeInsets.all(AppSpacing.large),
       children: [
         DashboardModuleHeader(
-          icon: Icons.star_rate_rounded,
+          icon: DashboardIcons.reviewsActive,
           title: 'التقييمات',
           subtitle:
               'آراء الركاب في السائقين والمركبات والمسارات — مرئية للإدارة فقط',

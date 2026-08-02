@@ -17,6 +17,7 @@ import '../widgets/platform_office_card.dart';
 import '../widgets/platform_office_details_panel.dart';
 import '../widgets/platform_office_filters.dart';
 import '../widgets/platform_overview_panel.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 
 /// Platform administration: onboard an office, and decide which offices the
 /// client marketplace shows.
@@ -203,7 +204,7 @@ class _OfficeList extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.large),
       children: [
         DashboardModuleHeader(
-          icon: Icons.apartment_outlined,
+          icon: DashboardIcons.platformOfficesActive,
           title: 'مكاتب المنصة',
           subtitle:
               'أداء كل مكتب على المنصة، وإنشاء مكتب نقل جديد بحساب مسؤوله '

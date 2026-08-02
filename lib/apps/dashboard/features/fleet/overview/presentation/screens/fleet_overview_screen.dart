@@ -21,6 +21,7 @@ import 'package:bmt_app/apps/dashboard/features/fleet/fleet_assignments/presenta
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 
 class FleetOverviewScreen extends StatefulWidget {
   final FleetTab? initialTab;
@@ -148,7 +149,7 @@ class _FleetOverviewScreenState extends State<FleetOverviewScreen> {
 
   Widget _buildHeader(BuildContext context) {
     return DashboardModuleHeader(
-      icon: Icons.local_shipping_rounded,
+      icon: DashboardIcons.fleetActive,
       title: 'إدارة الأسطول',
       subtitle: 'تحكم في السائقين والمركبات والتعيينات والوثائق من مكان واحد.',
       actions: [

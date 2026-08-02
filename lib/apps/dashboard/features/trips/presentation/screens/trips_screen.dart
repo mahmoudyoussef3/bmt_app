@@ -29,15 +29,26 @@ import '../widgets/trips_grouped_view.dart';
 import '../widgets/trips_timeline_view.dart';
 import '../widgets/trips_view_mode_switch.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 
 class TripsScreen extends StatelessWidget {
-  const TripsScreen({super.key, this.onOpenModule});
+  const TripsScreen({
+    super.key,
+    this.onOpenModule,
+    this.openPlannerOnStart = false,
+  });
 
   /// Switches the shell to another module. Used by the trip planner to send an
   /// operator to Fleet when the driver they picked has no vehicle assigned — the fix
   /// is one screen away and the planner cannot make it from here. Same prop-drilled
   /// shape the home screen's module cards use.
   final ValueChanged<String>? onOpenModule;
+
+  /// Open the trip planner immediately instead of waiting for the operator to
+  /// find "رحلة جديدة". Set by the home screen's primary action, so "create a
+  /// trip" from the landing page is one click rather than navigate-then-hunt.
+  /// Honoured once per mount — see [_TripsViewState._plannerOpened].
+  final bool openPlannerOnStart;
 
   @override
   Widget build(BuildContext context) {
@@ -49,18 +60,45 @@ class TripsScreen extends StatelessWidget {
         BlocProvider(create: (_) => dashboardDi<TripPricingCubit>()),
         BlocProvider(create: (_) => dashboardDi<TripPassengersCubit>()),
       ],
-      child: _TripsView(onOpenModule: onOpenModule),
+      child: _TripsView(
+        onOpenModule: onOpenModule,
+        openPlannerOnStart: openPlannerOnStart,
+      ),
     );
   }
 }
 
-class _TripsView extends StatelessWidget {
-  const _TripsView({this.onOpenModule});
+class _TripsView extends StatefulWidget {
+  const _TripsView({this.onOpenModule, this.openPlannerOnStart = false});
 
   final ValueChanged<String>? onOpenModule;
+  final bool openPlannerOnStart;
+
+  @override
+  State<_TripsView> createState() => _TripsViewState();
+}
+
+class _TripsViewState extends State<_TripsView> {
+  /// Guards the one-shot: the flag stays `true` on the widget for as long as
+  /// the shell keeps Trips open, so without this the planner would reopen on
+  /// every rebuild of the screen behind it.
+  bool _plannerOpened = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.openPlannerOnStart) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || _plannerOpened) return;
+        _plannerOpened = true;
+        openTripCreationWizard(context, onOpenModule: widget.onOpenModule);
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    final onOpenModule = widget.onOpenModule;
     return MultiBlocListener(
       listeners: [
         BlocListener<TripSeatsCubit, TripSeatsState>(
@@ -112,7 +150,7 @@ class _LoadedTrips extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.large),
       children: [
         DashboardModuleHeader(
-          icon: Icons.route_rounded,
+          icon: DashboardIcons.tripsActive,
           title: 'إدارة الرحلات',
           subtitle: 'تابع حركة الرحلات، الإشغال، والطاقم من مساحة عمل واحدة.',
           actions: [
@@ -147,17 +185,29 @@ class _LoadedTrips extends StatelessWidget {
     );
   }
 
-  void _createTrip(BuildContext context) {
-    final listCubit = context.read<TripsListCubit>();
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => BlocProvider(
-        create: (_) => dashboardDi<TripCreationCubit>()..loadWizardData(),
-        child: TripCreationWizardDialog(onOpenModule: onOpenModule),
-      ),
-    ).then((_) => listCubit.load());
-  }
+  void _createTrip(BuildContext context) =>
+      openTripCreationWizard(context, onOpenModule: onOpenModule);
+}
+
+/// Opens the trip planner over whatever is on screen and refreshes the list
+/// when it closes.
+///
+/// Library-level rather than a method on the screen because two callers need
+/// it: the header's "رحلة جديدة" button, and the shell handing off the home
+/// screen's primary action. [context] must sit below the trips providers.
+void openTripCreationWizard(
+  BuildContext context, {
+  ValueChanged<String>? onOpenModule,
+}) {
+  final listCubit = context.read<TripsListCubit>();
+  showDialog<void>(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) => BlocProvider(
+      create: (_) => dashboardDi<TripCreationCubit>()..loadWizardData(),
+      child: TripCreationWizardDialog(onOpenModule: onOpenModule),
+    ),
+  ).then((_) => listCubit.load());
 }
 
 class _SummaryStrip extends StatelessWidget {

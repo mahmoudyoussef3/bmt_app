@@ -10,6 +10,7 @@ import '../cubit/reports_state.dart';
 
 import '../widgets/report_sidebar_selector.dart';
 import '../widgets/report_workspace.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 
 class ReportsScreen extends StatefulWidget {
   const ReportsScreen({super.key});
@@ -53,7 +54,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
             child: Column(
               children: [
                 DashboardModuleHeader(
-                  icon: Icons.analytics_outlined,
+                  icon: DashboardIcons.reportsActive,
                   title: 'التقارير التحليلية والإحصائيات',
                   subtitle: 'تابع الأداء المالي والتشغيلي وصدّر التقارير.',
                   actions: [

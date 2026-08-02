@@ -5,6 +5,7 @@ import 'package:bmt_app/core/theme/spacing.dart';
 
 import '../widgets/notification_composer.dart';
 import 'operational_alerts_view.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 
 /// Dashboard notifications center: a live inbox of operational alerts plus a
 /// composer for broadcasting announcements to the Client/Captain apps.
@@ -33,7 +34,7 @@ class NotificationsCenterScreen extends StatelessWidget {
               AppSpacing.small,
             ),
             child: DashboardModuleHeader(
-              icon: Icons.notifications_active_rounded,
+              icon: DashboardIcons.notificationsActive,
               title: 'مركز الإشعارات',
               subtitle:
                   'تابع تنبيهات التشغيل الواردة وأرسل إشعارات للعملاء والكباتن.',

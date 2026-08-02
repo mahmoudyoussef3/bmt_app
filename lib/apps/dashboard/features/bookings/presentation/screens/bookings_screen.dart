@@ -19,6 +19,7 @@ import '../widgets/booking_filters_bar.dart';
 import '../widgets/bookings_analytics.dart';
 import '../widgets/bookings_queue_board.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 
 /// Bookings operations centre: review the payment queue, act on receipts, and
 /// inspect the real booking / customer / trip data behind each request.
@@ -209,7 +210,7 @@ class _Header extends StatelessWidget {
     final cubit = context.read<BookingsCubit>();
 
     return DashboardModuleHeader(
-      icon: Icons.event_seat_rounded,
+      icon: DashboardIcons.bookingsActive,
       title: 'مركز عمليات الحجوزات',
       subtitle: 'راجع الطلبات، تحقق من الدفع، وافتح تفاصيل الحجز من مكان واحد.',
       actions: [

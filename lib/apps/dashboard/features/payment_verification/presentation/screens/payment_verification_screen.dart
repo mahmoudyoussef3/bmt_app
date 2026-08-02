@@ -15,6 +15,7 @@ import '../../domain/entities/booking_payment_verification.dart';
 import '../cubit/payment_verification_cubit.dart';
 import '../cubit/payment_verification_state.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 
 class PaymentVerificationScreen extends StatelessWidget {
   const PaymentVerificationScreen({super.key});
@@ -75,7 +76,7 @@ class _VerificationLoadedView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           DashboardModuleHeader(
-            icon: Icons.fact_check_outlined,
+            icon: DashboardIcons.paymentReviewActive,
             title: 'تحقق مدفوعات الحجوزات',
             subtitle:
                 'راجع الإيصالات، ثبّت المقاعد، اطلب إعادة الرفع، واترك سجل مراجعة واضح لكل حجز.',

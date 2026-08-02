@@ -13,6 +13,7 @@ import '../cubit/office_profile_state.dart';
 import '../widgets/office_identity_form.dart';
 import '../widgets/office_join_code_card.dart';
 import '../widgets/office_marketplace_summary.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 
 /// The office's own record: the marketplace card clients browse, the reputation
 /// the platform maintains, and the join code captains need to apply.
@@ -97,7 +98,7 @@ class _Body extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.large),
       children: [
         DashboardModuleHeader(
-          icon: Icons.storefront_outlined,
+          icon: DashboardIcons.officeProfileActive,
           title: 'ملف المكتب',
           subtitle:
               'بيانات مكتبك كما تظهر للعملاء في دليل المكاتب، وكود انضمام الكباتن.',

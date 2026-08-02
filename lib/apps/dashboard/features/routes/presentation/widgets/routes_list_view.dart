@@ -12,6 +12,7 @@ import '../../domain/entities/operation_route.dart';
 import '../cubit/routes_cubit.dart';
 import '../cubit/routes_state.dart';
 import 'route_timeline_node.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 
 /// The board of routes.
 ///
@@ -50,7 +51,7 @@ class _RoutesToolbar extends StatelessWidget {
     final cubit = context.read<RoutesCubit>();
 
     return DashboardModuleHeader(
-      icon: Icons.alt_route_rounded,
+      icon: DashboardIcons.routesActive,
       title: 'المسارات',
       subtitle:
           'خطوط السير التي تُبنى عليها الرحلات والحجوزات — من أين إلى أين، وما بينهما.',
@@ -245,10 +246,7 @@ class RouteCard extends StatelessWidget {
                 ),
               ),
               if (route.duration.isNotEmpty) ...[
-                Text(
-                  ' · ',
-                  style: TextStyle(color: scheme.onSurfaceVariant),
-                ),
+                Text(' · ', style: TextStyle(color: scheme.onSurfaceVariant)),
                 Text(
                   route.duration,
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(
@@ -257,10 +255,7 @@ class RouteCard extends StatelessWidget {
                 ),
               ],
               if (route.distance.isNotEmpty) ...[
-                Text(
-                  ' · ',
-                  style: TextStyle(color: scheme.onSurfaceVariant),
-                ),
+                Text(' · ', style: TextStyle(color: scheme.onSurfaceVariant)),
                 Text(
                   route.distance,
                   style: Theme.of(context).textTheme.labelMedium?.copyWith(

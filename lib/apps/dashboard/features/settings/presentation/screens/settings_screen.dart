@@ -8,6 +8,7 @@ import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 
 import '../../../../core/theme/dashboard_theme_cubit.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -18,7 +19,7 @@ class SettingsScreen extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.large),
       children: [
         const DashboardModuleHeader(
-          icon: Icons.settings_outlined,
+          icon: DashboardIcons.settingsActive,
           title: 'الإعدادات',
           subtitle: 'إعدادات عامة للوحة التشغيل وتجربة المستخدم.',
         ),

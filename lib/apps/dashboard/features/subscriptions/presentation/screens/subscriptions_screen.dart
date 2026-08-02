@@ -23,6 +23,7 @@ import '../widgets/subscriptions_analytics.dart';
 import '../widgets/subscriptions_toolbar.dart';
 import '../widgets/trip_focus_panel.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 
 /// Dashboard → الاشتراكات.
 ///
@@ -96,7 +97,7 @@ class _SubscriptionsWorkspace extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.large),
       children: [
         DashboardModuleHeader(
-          icon: Icons.workspace_premium_outlined,
+          icon: DashboardIcons.subscriptionsActive,
           title: 'الاشتراكات',
           subtitle:
               'كل مشتركي المكتب — اختر رحلة لمعرفة من يركبها باشتراك وبأي باقة.',

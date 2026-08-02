@@ -12,6 +12,7 @@ import '../cubit/tickets_state.dart';
 
 import '../widgets/tickets_summary.dart';
 import '../widgets/tickets_table.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 
 /// Customer support desk: triage the complaint queue and work a ticket to
 /// resolution.
@@ -62,7 +63,7 @@ class _LoadedView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           DashboardModuleHeader(
-            icon: Icons.support_agent_rounded,
+            icon: DashboardIcons.ticketsActive,
             title: 'مركز الشكاوى والدعم',
             subtitle: 'راجع شكاوى العملاء، أسندها لموظف، وتابعها حتى الإغلاق.',
             actions: [

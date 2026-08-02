@@ -16,6 +16,7 @@ import '../widgets/live_ops_map.dart';
 import '../widgets/live_ops_summary_bar.dart';
 import '../widgets/live_trip_card.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 
 /// The Live Operations Center — the dashboard's answer to "what is happening on
 /// the road right now?". It renders the office's active trips with an honest
@@ -75,7 +76,7 @@ class _LiveOpsBody extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.large),
       children: [
         DashboardModuleHeader(
-          icon: Icons.monitor_heart_rounded,
+          icon: DashboardIcons.liveOpsActive,
           title: 'مركز العمليات المباشر',
           subtitle:
               'الرحلات الجارية الآن، صحة تتبّع كل مركبة، والبلاغات المفتوحة من الكباتن.',

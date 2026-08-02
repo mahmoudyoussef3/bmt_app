@@ -12,6 +12,7 @@ import '../cubit/owner_overview_cubit.dart';
 import '../cubit/owner_overview_state.dart';
 import '../widgets/owner_overview_charts.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 
 class OwnerOverviewScreen extends StatelessWidget {
   const OwnerOverviewScreen({super.key});
@@ -47,7 +48,7 @@ class _LoadedView extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.large),
       children: [
         DashboardModuleHeader(
-          icon: Icons.insights_rounded,
+          icon: DashboardIcons.ownerOverviewActive,
           title: 'نظرة المالك على الإيرادات',
           subtitle:
               'ملخص تنفيذي للإيرادات والعملاء والاشتراكات من بيانات حقيقية.',

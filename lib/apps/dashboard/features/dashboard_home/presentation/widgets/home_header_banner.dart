@@ -1,29 +1,49 @@
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/dashboard/core/session/office_context.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
-import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
-import 'package:bmt_app/core/theme/app_light_colors.dart';
 
-/// Who is signed in, which office they manage, and — quietly, not as the
-/// headline — whether that office is currently visible to passengers.
+/// Who is signed in, which office they are looking at, what day it is — and
+/// the one action an operator starts the morning with.
 ///
 /// Reads entirely off [OfficeContext], which the shell already resolves at
-/// sign-in: no query of its own. Deliberately does not repeat the bell icon
-/// or a profile menu — the shell's top bar already renders both, and this is
-/// the screen body, not another copy of the chrome around it.
+/// sign-in: no query of its own. Deliberately does not repeat the bell or a
+/// profile menu — the shell's top bar and sidebar carry both, and this is the
+/// screen body, not another copy of the chrome around it. The office's
+/// marketplace listing state moved to the sidebar for the same reason: it is
+/// standing context, not today's news.
 class HomeHeaderBanner extends StatelessWidget {
-  const HomeHeaderBanner({super.key, required this.office, this.onRefresh});
+  const HomeHeaderBanner({
+    super.key,
+    required this.office,
+    this.onRefresh,
+    this.onCreateTrip,
+    this.onOpenBookings,
+    this.now,
+  });
 
   final OfficeContext office;
   final VoidCallback? onRefresh;
 
+  /// Primary action. Opens the trip planner itself, not the trips list — the
+  /// difference between one click and "navigate, then find the button".
+  final VoidCallback? onCreateTrip;
+
+  final VoidCallback? onOpenBookings;
+
+  /// Injectable clock, so the greeting and the date are testable.
+  final DateTime? now;
+
   @override
   Widget build(BuildContext context) {
-    final name = office.officeName.trim().isEmpty
+    final at = now ?? DateTime.now();
+    final officeName = office.officeName.trim().isEmpty
         ? 'مكتبك'
         : office.officeName.trim();
+    final onHero = DashboardColors.onHero(context);
 
     return Container(
       padding: const EdgeInsets.all(AppSpacing.large),
@@ -33,24 +53,35 @@ class HomeHeaderBanner extends StatelessWidget {
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final identity = _Identity(office: office, name: name);
-          final trailing = _Trailing(office: office, onRefresh: onRefresh);
-          if (constraints.maxWidth < 620) {
+          final identity = _Identity(
+            greeting: _greetingFor(at),
+            name: office.displayName,
+            officeName: officeName,
+            date: _formatArabicDate(at),
+            onHero: onHero,
+          );
+          final actions = _Actions(
+            onCreateTrip: onCreateTrip,
+            onOpenBookings: onOpenBookings,
+            onRefresh: onRefresh,
+            onHero: onHero,
+          );
+
+          if (constraints.maxWidth < 720) {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 identity,
                 const SizedBox(height: AppSpacing.medium),
-                trailing,
+                actions,
               ],
             );
           }
           return Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(child: identity),
               const SizedBox(width: AppSpacing.medium),
-              trailing,
+              actions,
             ],
           );
         },
@@ -60,197 +91,111 @@ class HomeHeaderBanner extends StatelessWidget {
 }
 
 class _Identity extends StatelessWidget {
-  const _Identity({required this.office, required this.name});
+  const _Identity({
+    required this.greeting,
+    required this.name,
+    required this.officeName,
+    required this.date,
+    required this.onHero,
+  });
 
-  final OfficeContext office;
+  final String greeting;
   final String name;
+  final String officeName;
+  final String date;
+  final Color onHero;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.center,
-      children: [
-        _OfficeLogo(logoUrl: office.logoUrl, name: name),
-        const SizedBox(width: AppSpacing.medium),
-        Flexible(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'مرحباً، ${office.displayName} 👋',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                name,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _OfficeLogo extends StatelessWidget {
-  const _OfficeLogo({required this.logoUrl, required this.name});
-
-  final String? logoUrl;
-  final String name;
-
-  @override
-  Widget build(BuildContext context) {
-    final url = logoUrl?.trim() ?? '';
-    final initial = name.characters.isEmpty ? '؟' : name.characters.first;
-    final fallback = Center(
-      child: Text(
-        initial,
-        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-    );
-
-    return Container(
-      width: 52,
-      height: 52,
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: Colors.white.withAlpha(30),
-        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-      ),
-      child: url.isEmpty
-          ? fallback
-          : Image.network(
-              url,
-              fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => fallback,
-            ),
-    );
-  }
-}
-
-class _Trailing extends StatelessWidget {
-  const _Trailing({required this.office, this.onRefresh});
-
-  final OfficeContext office;
-  final VoidCallback? onRefresh;
-
-  @override
-  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              _formatArabicDate(DateTime.now()),
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: Colors.white70),
-            ),
-            if (onRefresh != null) ...[
-              const SizedBox(width: AppSpacing.small),
-              _RefreshButton(onRefresh: onRefresh!),
-            ],
-          ],
+        Text(
+          '$greeting، $name',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: text.headlineSmall?.copyWith(
+            color: onHero,
+            fontWeight: FontWeight.w800,
+          ),
         ),
-        const SizedBox(height: AppSpacing.small),
-        _MarketplaceMiniBadge(listingStatus: office.listingStatus),
+        const SizedBox(height: 4),
+        Text(
+          '$officeName · $date',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: text.bodyMedium?.copyWith(color: onHero.withAlpha(200)),
+        ),
       ],
     );
   }
 }
 
-class _RefreshButton extends StatelessWidget {
-  const _RefreshButton({required this.onRefresh});
+/// One primary action, one secondary, one utility — in that order and no more.
+/// A header with five buttons makes the operator choose before they have read
+/// a single number.
+class _Actions extends StatelessWidget {
+  const _Actions({
+    required this.onHero,
+    this.onCreateTrip,
+    this.onOpenBookings,
+    this.onRefresh,
+  });
 
-  final VoidCallback onRefresh;
+  final Color onHero;
+  final VoidCallback? onCreateTrip;
+  final VoidCallback? onOpenBookings;
+  final VoidCallback? onRefresh;
 
   @override
   Widget build(BuildContext context) {
-    return Tooltip(
-      message: 'تحديث البيانات',
-      child: Material(
-        color: Colors.white.withAlpha(28),
-        shape: const CircleBorder(),
-        child: InkWell(
-          onTap: onRefresh,
-          customBorder: const CircleBorder(),
-          child: const Padding(
-            padding: EdgeInsets.all(6),
-            child: Icon(Icons.refresh_rounded, size: 16, color: Colors.white),
+    final scheme = Theme.of(context).colorScheme;
+    return Wrap(
+      spacing: AppSpacing.small,
+      runSpacing: AppSpacing.small,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      children: [
+        if (onCreateTrip != null)
+          FilledButton.icon(
+            onPressed: onCreateTrip,
+            style: FilledButton.styleFrom(
+              backgroundColor: scheme.surface,
+              foregroundColor: scheme.primary,
+            ),
+            icon: const Icon(DashboardIcons.add, size: 18),
+            label: const Text('رحلة جديدة'),
           ),
-        ),
-      ),
-    );
-  }
-}
-
-class _MarketplaceMiniBadge extends StatelessWidget {
-  const _MarketplaceMiniBadge({required this.listingStatus});
-
-  final String listingStatus;
-
-  @override
-  Widget build(BuildContext context) {
-    final (label, color, icon) = switch (listingStatus) {
-      'listed' => (
-        'المكتب معروض في السوق',
-        AppLightColors.successContainer,
-        Icons.storefront_rounded,
-      ),
-      'draft' => (
-        'المكتب قيد التجهيز',
-        AppLightColors.warningContainer,
-        Icons.hourglass_top_rounded,
-      ),
-      _ => (
-        'المكتب غير معروض في السوق',
-        Colors.white54,
-        Icons.visibility_off_outlined,
-      ),
-    };
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.white.withAlpha(24),
-        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-        border: Border.all(color: color.withAlpha(140)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w700,
+        if (onOpenBookings != null)
+          OutlinedButton.icon(
+            onPressed: onOpenBookings,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: onHero,
+              side: BorderSide(color: onHero.withAlpha(110)),
+            ),
+            icon: const Icon(DashboardIcons.bookings, size: 18),
+            label: const Text('الحجوزات'),
+          ),
+        if (onRefresh != null)
+          IconButton(
+            tooltip: 'تحديث البيانات',
+            onPressed: onRefresh,
+            icon: const Icon(DashboardIcons.refresh, size: 20),
+            style: IconButton.styleFrom(
+              foregroundColor: onHero,
+              backgroundColor: onHero.withAlpha(28),
             ),
           ),
-        ],
-      ),
+      ],
     );
   }
 }
+
+/// Arabic only distinguishes morning from the rest of the day in everyday
+/// greetings, so this is two windows, not the four an English console would
+/// use — a literal "طاب مساؤك" at 6pm reads as machine-translated.
+String _greetingFor(DateTime at) => at.hour < 12 ? 'صباح الخير' : 'مساء الخير';
 
 const _arabicWeekdays = [
   'الاثنين',

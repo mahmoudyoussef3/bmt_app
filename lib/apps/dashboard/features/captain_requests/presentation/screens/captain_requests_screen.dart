@@ -14,6 +14,7 @@ import '../cubit/captain_requests_state.dart';
 import '../widgets/captain_request_approve_flow.dart';
 import '../widgets/captain_request_card.dart';
 import '../widgets/captain_request_reject_dialog.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 
 class CaptainRequestsScreen extends StatefulWidget {
   const CaptainRequestsScreen({super.key});
@@ -86,7 +87,7 @@ class _CaptainRequestsScreenState extends State<CaptainRequestsScreen> {
             AppSpacing.small,
           ),
           child: DashboardModuleHeader(
-            icon: Icons.how_to_reg_rounded,
+            icon: DashboardIcons.captainRequestsActive,
             title: 'طلبات انضمام الكباتن',
             subtitle:
                 'راجع طلبات الكباتن الجدد ووافق عليها أو ارفضها مع بيان السبب.',

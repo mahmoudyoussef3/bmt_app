@@ -17,6 +17,15 @@ class DashboardKpiCard extends StatelessWidget {
   final IconData icon;
   final Color? color;
 
+  /// Opens the module this number came from. A KPI that can be drilled into is
+  /// the shortest path from "that figure looks wrong" to the screen that
+  /// explains it — so when a caller passes this, the tile becomes a real
+  /// target: pointer cursor, hover wash and ripple, not just a decorated box.
+  final VoidCallback? onTap;
+
+  /// Tooltip for the tappable tile, e.g. "افتح الحجوزات".
+  final String? tapHint;
+
   const DashboardKpiCard({
     super.key,
     required this.label,
@@ -24,10 +33,26 @@ class DashboardKpiCard extends StatelessWidget {
     required this.icon,
     this.detail,
     this.color,
+    this.onTap,
+    this.tapHint,
   });
 
   @override
   Widget build(BuildContext context) {
+    final tile = _buildTile(context);
+    if (onTap == null) return tile;
+
+    final radius = BorderRadius.circular(AppTokens.radiusSmall);
+    final tappable = Material(
+      color: Colors.transparent,
+      borderRadius: radius,
+      child: InkWell(onTap: onTap, borderRadius: radius, child: tile),
+    );
+    final hint = tapHint;
+    return hint == null ? tappable : Tooltip(message: hint, child: tappable);
+  }
+
+  Widget _buildTile(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final tint = color ?? scheme.primary;
     return Container(

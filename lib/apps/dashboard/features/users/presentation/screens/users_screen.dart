@@ -13,6 +13,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/app_user.dart';
 import '../cubit/users_cubit.dart';
 import '../cubit/users_state.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 
 class UsersScreen extends StatelessWidget {
   const UsersScreen({super.key});
@@ -56,7 +57,7 @@ class _UsersViewState extends State<_UsersView> {
           padding: const EdgeInsets.all(AppSpacing.large),
           children: [
             DashboardModuleHeader(
-              icon: Icons.manage_accounts_outlined,
+              icon: DashboardIcons.usersActive,
               title: 'المستخدمون والصلاحيات',
               subtitle: 'إدارة مستخدمي لوحة التحكم وأدوار خدمة العملاء.',
               actions: [

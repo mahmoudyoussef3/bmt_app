@@ -14,6 +14,7 @@ import '../widgets/finance_ledger_tab.dart';
 import '../widgets/finance_overview_tab.dart';
 import '../widgets/finance_period_bar.dart';
 import '../widgets/finance_reports_tab.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 
 /// The money module: what was earned, what is still owed, what went back, and
 /// what that means. It reads — payment verification, refund decisions and
@@ -68,7 +69,7 @@ class _FinanceWorkspace extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           DashboardModuleHeader(
-            icon: Icons.account_balance_wallet_outlined,
+            icon: DashboardIcons.paymentsActive,
             title: 'المركز المالي',
             subtitle:
                 'كل أرقام المال في مكان واحد: الإيراد، التحصيل، المرتجعات، التحليلات والتقارير.',

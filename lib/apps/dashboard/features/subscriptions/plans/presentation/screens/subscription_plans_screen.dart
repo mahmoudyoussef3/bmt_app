@@ -13,6 +13,7 @@ import '../cubit/subscription_plans_state.dart';
 import '../widgets/plan_card.dart';
 import '../widgets/plan_form_sheet.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 
 class SubscriptionPlansScreen extends StatelessWidget {
   const SubscriptionPlansScreen({super.key});
@@ -58,7 +59,7 @@ class _LoadedView extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.large),
       children: [
         DashboardModuleHeader(
-          icon: Icons.workspace_premium_outlined,
+          icon: DashboardIcons.subscriptionsActive,
           title: 'إدارة باقات الاشتراك',
           subtitle: 'أنشئ وعدّل وفعّل أو أوقف باقات الاشتراك.',
           actions: [

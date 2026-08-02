@@ -13,6 +13,7 @@ import '../widgets/referral_leaderboard_tab.dart';
 import '../widgets/referral_overview_tab.dart';
 import '../widgets/referral_settings_tab.dart';
 import '../widgets/referral_transactions_tab.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 
 class ReferralManagementScreen extends StatelessWidget {
   const ReferralManagementScreen({super.key});
@@ -69,7 +70,7 @@ class _ReferralTabs extends StatelessWidget {
               0,
             ),
             child: DashboardModuleHeader(
-              icon: Icons.card_giftcard_rounded,
+              icon: DashboardIcons.referralsActive,
               title: 'برنامج الإحالات',
               subtitle:
                   'تابع أداء الإحالات وأدر إعدادات المكافآت والمتصدّرين والسجل.',

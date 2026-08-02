@@ -11,8 +11,16 @@ import 'package:bmt_app/apps/dashboard/features/dashboard_home/presentation/scre
 import 'package:bmt_app/apps/dashboard/features/notifications/domain/entities/operational_alert.dart';
 import 'package:bmt_app/apps/dashboard/features/notifications/presentation/cubit/operational_alerts_cubit.dart';
 import 'package:bmt_app/apps/dashboard/features/notifications/presentation/cubit/operational_alerts_state.dart';
+import 'package:bmt_app/apps/dashboard/features/bookings/domain/entities/operation_booking.dart'
+    show PaymentStatus;
+import 'package:bmt_app/apps/dashboard/features/tickets/domain/entities/complaint.dart'
+    show TicketPriority;
 import 'package:bmt_app/apps/dashboard/features/dashboard_home/presentation/widgets/action_required_section.dart';
 import 'package:bmt_app/apps/dashboard/features/dashboard_home/presentation/widgets/home_kpi_grid.dart';
+import 'package:bmt_app/apps/dashboard/features/dashboard_home/presentation/widgets/recent_bookings_section.dart';
+import 'package:bmt_app/apps/dashboard/features/dashboard_home/presentation/widgets/revenue_trend_section.dart';
+import 'package:bmt_app/apps/dashboard/features/dashboard_home/presentation/widgets/today_trips_section.dart';
+import 'package:bmt_app/apps/dashboard/features/dashboard_home/presentation/widgets/top_routes_section.dart';
 
 import 'dashboard_home_test_fixtures.dart';
 
@@ -63,6 +71,7 @@ Widget _wrap({
   required DashboardHomeState homeState,
   OperationalAlertsState alertsState = const OperationalAlertsInitial(),
   ValueChanged<String>? onOpenModule,
+  VoidCallback? onCreateTrip,
 }) {
   return MaterialApp(
     home: Scaffold(
@@ -80,6 +89,7 @@ Widget _wrap({
           child: DashboardHomeScreen(
             office: _office,
             onOpenModule: onOpenModule,
+            onCreateTrip: onCreateTrip,
           ),
         ),
       ),
@@ -146,13 +156,18 @@ void main() {
       await tester.pumpWidget(_wrap(homeState: DashboardHomeLoaded(summary)));
       await tester.pumpAndSettle();
 
-      expect(find.text('رحلات اليوم'), findsOneWidget);
+      // Scoped to the KPI grid: "رحلات اليوم" is also the title of the
+      // today's-trips panel, and that is the point — the label and the section
+      // it drills into are named the same thing.
+      final inKpis = find.descendant(
+        of: find.byType(HomeKpiGrid),
+        matching: find.text('رحلات اليوم'),
+      );
+      expect(inKpis, findsOneWidget);
       expect(
         find.text('1'),
         findsWidgets,
       ); // today's trip count / booking count
-      // Scoped to the KPI grid: other panels (e.g. marketplace profile
-      // completeness) can legitimately show the same "50%" by coincidence.
       expect(
         find.descendant(
           of: find.byType(HomeKpiGrid),
@@ -165,17 +180,274 @@ void main() {
     },
   );
 
-  testWidgets('marketplace card reflects a draft (unlisted) office honestly', (
+  testWidgets('a KPI tile opens the module its number came from', (
+    tester,
+  ) async {
+    final openedRoutes = <String>[];
+    await tester.pumpWidget(
+      _wrap(
+        homeState: DashboardHomeLoaded(buildSummary()),
+        onOpenModule: openedRoutes.add,
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await tester.tap(
+      find.descendant(
+        of: find.byType(HomeKpiGrid),
+        matching: find.text('الحجوزات اليوم'),
+      ),
+    );
+    await tester.pump();
+
+    expect(openedRoutes, [DashboardRoutes.bookings]);
+  });
+
+  testWidgets(
+    'greets by name and offers creating a trip as the primary action',
+    (tester) async {
+      var createTripCalls = 0;
+      await tester.pumpWidget(
+        _wrap(
+          homeState: DashboardHomeLoaded(buildSummary()),
+          onCreateTrip: () => createTripCalls++,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('محمود'), findsWidgets);
+      expect(find.textContaining('مكتب تجريبي'), findsOneWidget);
+
+      await tester.tap(find.widgetWithText(FilledButton, 'رحلة جديدة'));
+      await tester.pump();
+
+      expect(createTripCalls, 1);
+    },
+  );
+
+  testWidgets('an empty trip board offers the way out of being empty', (
     tester,
   ) async {
     _useTallViewport(tester);
-    final summary = buildSummary(officeProfile: officeProfileDraft);
+
+    await tester.pumpWidget(
+      _wrap(
+        homeState: DashboardHomeLoaded(buildSummary()),
+        onCreateTrip: () {},
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.descendant(
+        of: find.byType(TodayTripsSection),
+        matching: find.text('لا رحلات اليوم'),
+      ),
+      findsOneWidget,
+    );
+    expect(find.widgetWithText(FilledButton, 'إنشاء رحلة'), findsOneWidget);
+  });
+
+  testWidgets('today\'s trips read as a departure board', (tester) async {
+    _useTallViewport(tester);
+    final now = DateTime.now();
+
+    await tester.pumpWidget(
+      _wrap(
+        homeState: DashboardHomeLoaded(
+          buildSummary(
+            trips: [
+              buildTrip(
+                id: 't1',
+                at: DateTime(now.year, now.month, now.day, 8, 30),
+                route: 'بنها - القاهرة',
+                driver: 'أحمد',
+                capacity: 25,
+                bookedSeats: 18,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final section = find.byType(TodayTripsSection);
+    expect(
+      find.descendant(of: section, matching: find.text('08:30')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: section, matching: find.text('بنها - القاهرة')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: section, matching: find.text('18/25')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: section, matching: find.text('أحمد')),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('recent bookings list the newest passengers with payment state', (
+    tester,
+  ) async {
+    _useTallViewport(tester);
+    final summary = buildSummary(
+      bookings: [
+        buildBooking(
+          id: 'b1',
+          date: DateTime.now(),
+          passengerName: 'سارة',
+          paymentStatus: PaymentStatus.approved,
+        ),
+      ],
+    );
 
     await tester.pumpWidget(_wrap(homeState: DashboardHomeLoaded(summary)));
     await tester.pumpAndSettle();
 
-    expect(find.text('قيد التجهيز'), findsOneWidget);
-    expect(tester.takeException(), isNull);
+    final section = find.byType(RecentBookingsSection);
+    expect(
+      find.descendant(of: section, matching: find.text('سارة')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(
+        of: section,
+        matching: find.text(PaymentStatus.approved.label),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets(
+    'derived operational queues appear as attention items and route',
+    (tester) async {
+      _useTallViewport(tester);
+      final openedRoutes = <String>[];
+      final summary = buildSummary(
+        trips: [
+          buildTrip(
+            id: 't1',
+            at: DateTime.now().add(const Duration(hours: 3)),
+            driver: '',
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        _wrap(
+          homeState: DashboardHomeLoaded(summary),
+          onOpenModule: openedRoutes.add,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      final section = find.byType(ActionRequiredSection);
+      final row = find.descendant(
+        of: section,
+        matching: find.text('رحلات بدون سائق'),
+      );
+      expect(row, findsOneWidget);
+
+      await tester.tap(row);
+      await tester.pump();
+
+      expect(openedRoutes, [DashboardRoutes.trips]);
+    },
+  );
+
+  testWidgets('says so plainly when nothing needs a decision', (tester) async {
+    _useTallViewport(tester);
+
+    await tester.pumpWidget(
+      _wrap(homeState: DashboardHomeLoaded(buildSummary())),
+    );
+    await tester.pumpAndSettle();
+
+    expect(
+      find.descendant(
+        of: find.byType(ActionRequiredSection),
+        matching: find.text('كل شيء تحت السيطرة'),
+      ),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('revenue trend plots collected bookings and switches window', (
+    tester,
+  ) async {
+    _useTallViewport(tester);
+    final summary = buildSummary(
+      bookings: [
+        buildBooking(
+          id: 'paid',
+          date: DateTime.now(),
+          amount: 300,
+          paymentStatus: PaymentStatus.approved,
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(_wrap(homeState: DashboardHomeLoaded(summary)));
+    await tester.pumpAndSettle();
+
+    final section = find.byType(RevenueTrendSection);
+    const headline = 'إجمالي 300 ج.م من 1 حجز مدفوع';
+    expect(
+      find.descendant(of: section, matching: find.text(headline)),
+      findsOneWidget,
+    );
+
+    await tester.tap(
+      find.descendant(of: section, matching: find.text('٣٠ يوم')),
+    );
+    await tester.pumpAndSettle();
+
+    // Same money, longer window — the panel must not invent extra revenue.
+    expect(
+      find.descendant(of: section, matching: find.text(headline)),
+      findsOneWidget,
+    );
+  });
+
+  testWidgets('top routes rank by real occupancy', (tester) async {
+    _useTallViewport(tester);
+    final now = DateTime.now();
+    final summary = buildSummary(
+      trips: [
+        buildTrip(
+          id: 't1',
+          at: now,
+          route: 'بنها - القاهرة',
+          capacity: 10,
+          bookedSeats: 8,
+        ),
+        buildTrip(
+          id: 't2',
+          at: now,
+          route: 'طنطا - القاهرة',
+          capacity: 10,
+          bookedSeats: 3,
+        ),
+      ],
+    );
+
+    await tester.pumpWidget(_wrap(homeState: DashboardHomeLoaded(summary)));
+    await tester.pumpAndSettle();
+
+    final section = find.byType(TopRoutesSection);
+    expect(
+      find.descendant(of: section, matching: find.text('80%')),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: section, matching: find.text('30%')),
+      findsOneWidget,
+    );
   });
 
   testWidgets(
@@ -262,4 +534,52 @@ void main() {
       expect(tester.takeException(), isNull);
     },
   );
+
+  // Every width an operator actually uses, with a populated office: the page is
+  // a stack of two-column bands, and each one has to fold cleanly rather than
+  // paint a yellow overflow stripe across the console.
+  for (final size in const [
+    Size(1600, 2600), // desktop
+    Size(1280, 2600), // laptop
+    Size(1024, 2800), // tablet landscape
+    Size(820, 3000), // tablet portrait
+  ]) {
+    testWidgets('lays out without overflow at ${size.width.toInt()}px', (
+      tester,
+    ) async {
+      tester.view.physicalSize = size;
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final now = DateTime.now();
+      final summary = buildSummary(
+        trips: [
+          buildTrip(
+            id: 't1',
+            at: now,
+            route: 'بنها - القاهرة - مدينة نصر',
+            capacity: 25,
+            bookedSeats: 18,
+          ),
+          buildTrip(id: 't2', at: now, driver: '', capacity: 14),
+        ],
+        bookings: [
+          buildBooking(
+            id: 'b1',
+            date: now,
+            paymentStatus: PaymentStatus.approved,
+            amount: 250,
+          ),
+        ],
+        tickets: [buildTicket(id: 'k1', priority: TicketPriority.urgent)],
+        paymentVerifications: [buildPaymentVerification(id: 'v1')],
+      );
+
+      await tester.pumpWidget(_wrap(homeState: DashboardHomeLoaded(summary)));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+    });
+  }
 }
