@@ -49,7 +49,20 @@ import '../../features/tickets/presentation/cubit/tickets_cubit.dart';
 import '../../features/trips/presentation/screens/trips_screen.dart';
 import '../../features/users/presentation/screens/users_screen.dart';
 import '../../features/auth/presentation/cubit/dashboard_auth_cubit.dart';
+import '../../features/office_billing/presentation/cubit/office_billing_cubit.dart';
+import '../../features/office_billing/presentation/screens/office_billing_screen.dart';
+import '../../features/platform_licensing/presentation/cubit/platform_licensing_cubit.dart';
+import '../../features/platform_licensing/presentation/screens/platform_audit_screen.dart';
+import '../../features/platform_licensing/presentation/screens/platform_billing_screen.dart';
+import '../../features/platform_licensing/presentation/screens/platform_features_screen.dart';
+import '../../features/platform_licensing/presentation/screens/platform_licenses_screen.dart';
+import '../../features/platform_licensing/presentation/screens/platform_plans_screen.dart';
+import '../../features/platform_licensing/presentation/screens/platform_usage_screen.dart';
 import '../di/dashboard_di.dart';
+import '../entitlements/entitlement_context.dart';
+import '../entitlements/entitlement_service.dart';
+import '../entitlements/licensing_dialogs.dart';
+import '../entitlements/licensing_failure.dart';
 import '../permissions/dashboard_permission.dart';
 import '../permissions/dashboard_role.dart';
 import '../session/office_context.dart';
@@ -76,6 +89,10 @@ const String _navFinance = 'المالية';
 const String _navSupport = 'الدعم';
 const String _navSystem = 'النظام';
 
+/// EWT's own console, not the office's. Visible only to platform admins, and
+/// placed after النظام so an office owner's sidebar never changes shape.
+const String _navPlatform = 'المنصة';
+
 /// Order groups appear in the sidebar.
 const List<String> _navGroupOrder = [
   _navOperations,
@@ -84,6 +101,7 @@ const List<String> _navGroupOrder = [
   _navFinance,
   _navSupport,
   _navSystem,
+  _navPlatform,
 ];
 
 /// The open module's name, and the section it belongs to, in the top bar.
@@ -126,6 +144,57 @@ class _DashboardShellState extends State<DashboardShell> {
   /// so the shell adapts until the operator overrides it, and then it obeys.
   bool? _navCollapsed;
 
+  /// The office's resolved entitlements, kept live for the sidebar.
+  ///
+  /// A HINT for the shell, nothing more — the same sentence
+  /// [OfficeContext.isPlatformAdmin] carries. Every module it reveals is
+  /// re-checked server-side, so a forged `true` here reaches a screen whose
+  /// every write is refused by a trigger.
+  /// Resolved only if registered. A test that mounts the shell with a minimal
+  /// DI graph gets no service and therefore [EntitlementContext.unknown], which
+  /// allows everything — the licensing axis must never be what decides whether
+  /// the console can be built at all.
+  final EntitlementService? _entitlements =
+      dashboardDi.isRegistered<EntitlementService>()
+      ? dashboardDi<EntitlementService>()
+      : null;
+
+  EntitlementContext get _entitlementContext =>
+      _entitlements?.context ?? EntitlementContext.unknown;
+
+  /// One instance across all seven licensing routes.
+  ///
+  /// Held here rather than created per route because the sections read each
+  /// other constantly, and a `BlocProvider(create:)` in the route switch would
+  /// refetch the whole catalog on every tab change.
+  PlatformLicensingCubit? _licensingCubit;
+
+  PlatformLicensingCubit get _licensing =>
+      _licensingCubit ??= dashboardDi<PlatformLicensingCubit>()..load();
+
+  @override
+  void initState() {
+    super.initState();
+    _entitlements?.addListener(_onEntitlementsChanged);
+  }
+
+  @override
+  void dispose() {
+    _entitlements?.removeListener(_onEntitlementsChanged);
+    _licensingCubit?.close();
+    super.dispose();
+  }
+
+  void _onEntitlementsChanged() {
+    if (!mounted) return;
+    setState(() {
+      // A plan change or a suspension can remove the module the operator is
+      // standing in. Falling back to home is kinder than leaving them on a
+      // screen whose every action now fails.
+      if (!_canOpenRoute(_route)) _route = DashboardRoutes.home;
+    });
+  }
+
   /// One-shot: the home screen's primary action asks for the trip planner, not
   /// just the trips list. Consumed by [TripsScreen], which opens the wizard on
   /// its first frame and then ignores the flag for the rest of its life.
@@ -144,6 +213,7 @@ class _DashboardShellState extends State<DashboardShell> {
       icon: DashboardIcons.liveOps,
       selectedIcon: DashboardIcons.liveOpsActive,
       permission: DashboardPermission.liveOps,
+      feature: FeatureKeys.liveOpsCenter,
       group: _navOperations,
     ),
     _DashboardNavItem(
@@ -152,6 +222,7 @@ class _DashboardShellState extends State<DashboardShell> {
       icon: DashboardIcons.trips,
       selectedIcon: DashboardIcons.tripsActive,
       permission: DashboardPermission.trips,
+      feature: FeatureKeys.trips,
       group: _navOperations,
     ),
     _DashboardNavItem(
@@ -160,6 +231,7 @@ class _DashboardShellState extends State<DashboardShell> {
       icon: DashboardIcons.routes,
       selectedIcon: DashboardIcons.routesActive,
       permission: DashboardPermission.routes,
+      feature: FeatureKeys.routes,
       group: _navOperations,
     ),
     _DashboardNavItem(
@@ -168,6 +240,7 @@ class _DashboardShellState extends State<DashboardShell> {
       icon: DashboardIcons.bookings,
       selectedIcon: DashboardIcons.bookingsActive,
       permission: DashboardPermission.bookings,
+      feature: FeatureKeys.bookings,
       group: _navSales,
     ),
     _DashboardNavItem(
@@ -176,6 +249,7 @@ class _DashboardShellState extends State<DashboardShell> {
       icon: DashboardIcons.subscriptions,
       selectedIcon: DashboardIcons.subscriptionsActive,
       permission: DashboardPermission.subscriptions,
+      feature: FeatureKeys.passengerPackages,
       group: _navSales,
     ),
     _DashboardNavItem(
@@ -186,6 +260,7 @@ class _DashboardShellState extends State<DashboardShell> {
       icon: DashboardIcons.fleet,
       selectedIcon: DashboardIcons.fleetActive,
       permission: DashboardPermission.fleet,
+      feature: FeatureKeys.drivers,
       group: _navFleet,
     ),
     _DashboardNavItem(
@@ -202,6 +277,7 @@ class _DashboardShellState extends State<DashboardShell> {
       icon: DashboardIcons.payments,
       selectedIcon: DashboardIcons.paymentsActive,
       permission: DashboardPermission.payments,
+      feature: FeatureKeys.finance,
       group: _navFinance,
     ),
     _DashboardNavItem(
@@ -213,9 +289,10 @@ class _DashboardShellState extends State<DashboardShell> {
       icon: DashboardIcons.wallet,
       selectedIcon: DashboardIcons.walletActive,
       permission: DashboardPermission.customerWallets,
+      feature: FeatureKeys.wallet,
       group: _navFinance,
     ),
-  /*  _DashboardNavItem(
+    /*  _DashboardNavItem(
       label: 'التقارير',
       route: DashboardRoutes.reports,
       icon: DashboardIcons.reports,
@@ -238,6 +315,7 @@ class _DashboardShellState extends State<DashboardShell> {
       icon: DashboardIcons.referrals,
       selectedIcon: DashboardIcons.referralsActive,
       permission: DashboardPermission.referrals,
+      feature: FeatureKeys.referrals,
       group: _navFinance,
     ),
     _DashboardNavItem(
@@ -246,6 +324,7 @@ class _DashboardShellState extends State<DashboardShell> {
       icon: DashboardIcons.tickets,
       selectedIcon: DashboardIcons.ticketsActive,
       permission: DashboardPermission.tickets,
+      feature: FeatureKeys.supportTickets,
       group: _navSupport,
     ),
     _DashboardNavItem(
@@ -262,6 +341,7 @@ class _DashboardShellState extends State<DashboardShell> {
       icon: DashboardIcons.notifications,
       selectedIcon: DashboardIcons.notificationsActive,
       permission: DashboardPermission.notifications,
+      feature: FeatureKeys.notifications,
       group: _navSystem,
     ),
     _DashboardNavItem(
@@ -273,15 +353,77 @@ class _DashboardShellState extends State<DashboardShell> {
       group: _navSystem,
     ),
     _DashboardNavItem(
+      label: 'الباقة والفوترة',
+      route: DashboardRoutes.officeBilling,
+      icon: DashboardIcons.officeBilling,
+      selectedIcon: DashboardIcons.officeBillingActive,
+      permission: DashboardPermission.officeBilling,
+      group: _navSystem,
+    ),
+    _DashboardNavItem(
       label: 'مكاتب المنصة',
       route: DashboardRoutes.platformOffices,
       icon: DashboardIcons.platformOffices,
       selectedIcon: DashboardIcons.platformOfficesActive,
       permission: DashboardPermission.platformOffices,
-      // The only item in the shell that is not about the signed-in office, so
-      // the office role alone cannot authorise it — see [_DashboardNavItem.platformOnly].
+      // Not about the signed-in office, so the office role alone cannot
+      // authorise it — see [_DashboardNavItem.platformOnly].
       platformOnly: true,
-      group: _navSystem,
+      group: _navPlatform,
+    ),
+    _DashboardNavItem(
+      label: 'الخطط والباقات',
+      route: DashboardRoutes.platformPlans,
+      icon: DashboardIcons.plans,
+      selectedIcon: DashboardIcons.plansActive,
+      permission: DashboardPermission.platformLicensing,
+      platformOnly: true,
+      group: _navPlatform,
+    ),
+    _DashboardNavItem(
+      label: 'كتالوج الميزات',
+      route: DashboardRoutes.platformFeatures,
+      icon: DashboardIcons.featureCatalog,
+      selectedIcon: DashboardIcons.featureCatalogActive,
+      permission: DashboardPermission.platformLicensing,
+      platformOnly: true,
+      group: _navPlatform,
+    ),
+    _DashboardNavItem(
+      label: 'التراخيص',
+      route: DashboardRoutes.platformLicenses,
+      icon: DashboardIcons.licenses,
+      selectedIcon: DashboardIcons.licensesActive,
+      permission: DashboardPermission.platformLicensing,
+      platformOnly: true,
+      group: _navPlatform,
+    ),
+    _DashboardNavItem(
+      label: 'الفوترة',
+      route: DashboardRoutes.platformBilling,
+      icon: DashboardIcons.billing,
+      selectedIcon: DashboardIcons.billingActive,
+      permission: DashboardPermission.platformLicensing,
+      platformOnly: true,
+      group: _navPlatform,
+    ),
+    _DashboardNavItem(
+      label: 'الاستخدام',
+      route: DashboardRoutes.platformUsage,
+      icon: DashboardIcons.usage,
+      selectedIcon: DashboardIcons.usageActive,
+      permission: DashboardPermission.platformLicensing,
+      platformOnly: true,
+      group: _navPlatform,
+    ),
+    _DashboardNavItem(
+      label: 'سجل التغييرات',
+      route: DashboardRoutes.platformAudit,
+      icon: DashboardIcons.audit,
+      selectedIcon: DashboardIcons.auditActive,
+      permission: DashboardPermission.platformLicensing,
+      platformOnly: true,
+      group: _navPlatform,
     ),
     _DashboardNavItem(
       label: 'المستخدمون والصلاحيات',
@@ -304,6 +446,10 @@ class _DashboardShellState extends State<DashboardShell> {
   @override
   Widget build(BuildContext context) {
     final visibleItems = _visibleItems;
+    final lockedRoutes = {
+      for (final item in visibleItems)
+        if (_isItemLocked(item)) item.route,
+    };
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -322,6 +468,7 @@ class _DashboardShellState extends State<DashboardShell> {
                 // no gain in space.
                 child: _DashboardSidebar(
                   items: visibleItems,
+                  lockedRoutes: lockedRoutes,
                   office: widget.office,
                   role: _role,
                   route: _route,
@@ -361,6 +508,7 @@ class _DashboardShellState extends State<DashboardShell> {
               children: [
                 _DashboardSidebar(
                   items: visibleItems,
+                  lockedRoutes: lockedRoutes,
                   office: widget.office,
                   role: _role,
                   route: _route,
@@ -392,15 +540,41 @@ class _DashboardShellState extends State<DashboardShell> {
     );
   }
 
+  /// What the sidebar draws: everything the role permits, minus the modules the
+  /// office cannot buy, plus the ones it can (drawn locked — see [_isItemLocked]).
   List<_DashboardNavItem> get _visibleItems {
-    return _items.where(_isItemAllowed).toList();
+    return _items
+        .where((item) => _isItemAllowed(item) || _isItemLocked(item))
+        .toList();
   }
 
   bool _isItemAllowed(_DashboardNavItem item) {
+    if (!_passesRoleGate(item)) return false;
+    // The only new clause. Role first, entitlement second — and while the
+    // platform is not enforcing, `allows` answers true for everything, so the
+    // sidebar never hides a module the server would happily serve.
+    return _entitlementContext.allows(item.feature);
+  }
+
+  /// Off, but on a plan the office could buy (§10.2).
+  ///
+  /// Hiding these would make them unsellable — the owner cannot ask for a
+  /// module they have never seen — so they stay in the sidebar wearing a lock
+  /// and open the upgrade card instead of the screen. An **unpurchasable** or
+  /// ungated feature is still hidden outright, because that one is noise.
+  ///
+  /// The role gate is checked first and independently: a support agent must not
+  /// learn the shape of the owner's console from a row of locks.
+  bool _isItemLocked(_DashboardNavItem item) {
+    if (!_passesRoleGate(item)) return false;
+    return _entitlementContext.isLocked(item.feature);
+  }
+
+  bool _passesRoleGate(_DashboardNavItem item) {
     if (item.platformOnly && !widget.office.isPlatformAdmin) return false;
     final permission = item.permission;
-    if (permission == null) return true;
-    return DashboardPermissions.canAccess(_role, permission);
+    return permission == null ||
+        DashboardPermissions.canAccess(_role, permission);
   }
 
   _DashboardNavItem get _activeItem => _items.firstWhere(
@@ -426,6 +600,28 @@ class _DashboardShellState extends State<DashboardShell> {
 
   bool _openRoute(String route) {
     if (!_canOpenRoute(route)) {
+      // Which predicate said no decides what the operator is shown. A locked
+      // module is a commercial fact with a named feature and a plan behind it,
+      // so it earns the upgrade card; "ليس لديك صلاحية" would be both wrong and
+      // a dead end. Anything else is a role refusal and keeps the snackbar.
+      final locked = _items.firstWhere(
+        (item) => item.route == route && _isItemLocked(item),
+        orElse: () => _items.first,
+      );
+      if (locked.route == route && _isItemLocked(locked)) {
+        showLicensingRefusal(
+          context,
+          failure: LicensingFailure(
+            code: LicensingFailure.featureNotLicensed,
+            message:
+                LicensingFailure.messages[LicensingFailure.featureNotLicensed]!,
+            featureKey: locked.feature,
+          ),
+          entitlements: _entitlementContext,
+        );
+        return false;
+      }
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppLocalizations.of(context)!.dashboard_unauthorized),
@@ -596,6 +792,34 @@ class _DashboardShellState extends State<DashboardShell> {
         create: (_) => dashboardDi<PlatformAdminCubit>()..load(),
         child: const PlatformOfficesScreen(),
       ),
+      DashboardRoutes.platformPlans => BlocProvider.value(
+        value: _licensing,
+        child: const PlatformPlansScreen(),
+      ),
+      DashboardRoutes.platformFeatures => BlocProvider.value(
+        value: _licensing,
+        child: const PlatformFeaturesScreen(),
+      ),
+      DashboardRoutes.platformLicenses => BlocProvider.value(
+        value: _licensing,
+        child: const PlatformLicensesScreen(),
+      ),
+      DashboardRoutes.platformBilling => BlocProvider.value(
+        value: _licensing,
+        child: const PlatformBillingScreen(),
+      ),
+      DashboardRoutes.platformUsage => BlocProvider.value(
+        value: _licensing,
+        child: const PlatformUsageScreen(),
+      ),
+      DashboardRoutes.platformAudit => BlocProvider.value(
+        value: _licensing,
+        child: const PlatformAuditScreen(),
+      ),
+      DashboardRoutes.officeBilling => BlocProvider(
+        create: (_) => dashboardDi<OfficeBillingCubit>()..load(),
+        child: const OfficeBillingScreen(),
+      ),
       DashboardRoutes.settings => const SettingsScreen(),
       // Access control *is* user administration: one screen listing every
       // dashboard account with its role, rather than a separate matrix page.
@@ -626,6 +850,15 @@ class _DashboardNavItem {
   final IconData selectedIcon;
   final DashboardPermission? permission;
 
+  /// The licensing feature this module needs, if any.
+  ///
+  /// The THIRD predicate of `role ∧ entitlement ∧ quota`, kept separate from
+  /// [permission] rather than merged into it. They change for different reasons
+  /// — a role when staff change, an entitlement when a contract changes — and
+  /// merged, the shell could no longer tell an operator *which* of the two
+  /// refused them, which is the one question a licensing UI must always answer.
+  final String? feature;
+
   /// Section this item belongs to in the grouped sidebar. `null` = top-level
   /// (rendered above all groups, e.g. the command center home).
   final String? group;
@@ -647,6 +880,7 @@ class _DashboardNavItem {
     required this.icon,
     required this.selectedIcon,
     this.permission,
+    this.feature,
     this.group,
     this.platformOnly = false,
   });
@@ -662,6 +896,10 @@ class _DashboardSidebar extends StatelessWidget {
   final ValueChanged<String> onRouteChanged;
   final VoidCallback? onToggleCollapsed;
 
+  /// Routes present but not purchased. Drawn locked; the tap still goes through
+  /// [onRouteChanged], which turns it into the upgrade card.
+  final Set<String> lockedRoutes;
+
   const _DashboardSidebar({
     required this.items,
     required this.office,
@@ -671,6 +909,7 @@ class _DashboardSidebar extends StatelessWidget {
     this.collapsed = false,
     required this.onRoleChanged,
     this.onToggleCollapsed,
+    this.lockedRoutes = const {},
   });
 
   @override
@@ -759,6 +998,7 @@ class _DashboardSidebar extends StatelessWidget {
     item: item,
     selected: item.route == route,
     collapsed: collapsed,
+    locked: lockedRoutes.contains(item.route),
     onTap: () => onRouteChanged(item.route),
   );
 }
@@ -1198,18 +1438,26 @@ class _NavButton extends StatelessWidget {
   final bool collapsed;
   final VoidCallback onTap;
 
+  /// Purchasable but not owned (§10.2). Still tappable on purpose — the tap is
+  /// how the owner finds out what the module is and what it would cost, which
+  /// is the entire reason it is shown rather than hidden.
+  final bool locked;
+
   const _NavButton({
     required this.item,
     required this.selected,
     required this.onTap,
     this.collapsed = false,
+    this.locked = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final ink = selected
+    final baseInk = selected
         ? DashboardColors.sidebarSelectedInk(context)
         : DashboardColors.sidebarInk(context);
+    // Dimmed, not disabled: it reads as "not yours yet" while staying legible.
+    final ink = locked ? baseInk.withValues(alpha: 0.55) : baseInk;
     final radius = BorderRadius.circular(AppTokens.radiusSmall);
 
     final icon = Icon(
@@ -1253,6 +1501,8 @@ class _NavButton extends StatelessWidget {
                         ),
                       ),
                     ),
+                    if (locked)
+                      Icon(DashboardIcons.locked, size: 14, color: ink),
                   ],
                 ),
         ),
@@ -1261,9 +1511,13 @@ class _NavButton extends StatelessWidget {
 
     // Collapsed, the label *is* the tooltip — an icon rail with no tooltips is
     // a guessing game, which is exactly what this redesign set out to remove.
-    if (!collapsed) return button;
+    // Collapsed there is no room for the lock glyph either, so the tooltip is
+    // the only place the rail can say why the row is dimmed.
+    if (!collapsed && !locked) return button;
     return Tooltip(
-      message: item.label,
+      message: locked
+          ? '${item.label} — غير متاحة في باقتك الحالية'
+          : item.label,
       waitDuration: const Duration(milliseconds: 300),
       child: button,
     );

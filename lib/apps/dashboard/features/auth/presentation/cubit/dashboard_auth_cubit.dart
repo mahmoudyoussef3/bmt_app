@@ -1,5 +1,8 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/entitlements/entitlement_service.dart';
 import '../../../../core/session/dashboard_session.dart';
 import '../../../../core/session/office_context.dart';
 import '../../data/datasources/dashboard_auth_datasource.dart';
@@ -36,11 +39,30 @@ class DashboardAuthError extends DashboardAuthState {
 /// the same instance — the previous factory registration meant signing out constructed
 /// a throwaway cubit whose state nobody observed.
 class DashboardAuthCubit extends Cubit<DashboardAuthState> {
-  DashboardAuthCubit(this._datasource, this._session)
+  DashboardAuthCubit(this._datasource, this._session, [this._entitlements])
     : super(const DashboardAuthChecking());
 
   final DashboardAuthDatasource _datasource;
   final DashboardSession _session;
+
+  /// Optional so a test can construct the cubit without a Supabase client.
+  /// Absent, the shell simply falls back to [EntitlementContext.unknown], which
+  /// allows everything — the same failing-open default the service itself uses.
+  final EntitlementService? _entitlements;
+
+  /// Sign-in is the one moment the entitlement document is guaranteed to be
+  /// wanted, so it is loaded here rather than lazily by whoever needs it first.
+  /// Deliberately not awaited: the console must render immediately, and every
+  /// gate reads a permissive default until the answer arrives.
+  void _startSession(OfficeContext context) {
+    _session.start(context);
+    unawaited(_entitlements?.load() ?? Future<void>.value());
+  }
+
+  void _clearSession() {
+    _session.clear();
+    _entitlements?.clear();
+  }
 
   /// Restores a cached Supabase session on app start, so a reload does not force a
   /// re-login. Falls back to signed-out if the office context can no longer be loaded
@@ -53,11 +75,11 @@ class DashboardAuthCubit extends Cubit<DashboardAuthState> {
     emit(const DashboardAuthChecking());
     try {
       final context = await _datasource.loadContext();
-      _session.start(context);
+      _startSession(context);
       emit(DashboardAuthSignedIn(context));
     } catch (_) {
       await _datasource.signOut();
-      _session.clear();
+      _clearSession();
       emit(const DashboardAuthSignedOut());
     }
   }
@@ -72,13 +94,13 @@ class DashboardAuthCubit extends Cubit<DashboardAuthState> {
         username: username,
         password: password,
       );
-      _session.start(context);
+      _startSession(context);
       emit(DashboardAuthSignedIn(context));
     } on DashboardAuthFailure catch (e) {
-      _session.clear();
+      _clearSession();
       emit(DashboardAuthError(e.message));
     } catch (_) {
-      _session.clear();
+      _clearSession();
       emit(const DashboardAuthError('تعذر تسجيل الدخول. حاول مرة أخرى.'));
     }
   }
@@ -100,13 +122,13 @@ class DashboardAuthCubit extends Cubit<DashboardAuthState> {
         password: password,
         officeName: officeName,
       );
-      _session.start(context);
+      _startSession(context);
       emit(DashboardAuthSignedIn(context));
     } on DashboardAuthFailure catch (e) {
-      _session.clear();
+      _clearSession();
       emit(DashboardAuthError(e.message));
     } catch (_) {
-      _session.clear();
+      _clearSession();
       emit(const DashboardAuthError('تعذر إنشاء الحساب. حاول مرة أخرى.'));
     }
   }
@@ -124,7 +146,7 @@ class DashboardAuthCubit extends Cubit<DashboardAuthState> {
     if (state is! DashboardAuthSignedIn) return;
     try {
       final context = await _datasource.loadContext();
-      _session.start(context);
+      _startSession(context);
       emit(DashboardAuthSignedIn(context));
     } catch (_) {
       // Keep the existing context.
@@ -133,7 +155,7 @@ class DashboardAuthCubit extends Cubit<DashboardAuthState> {
 
   Future<void> signOut() async {
     await _datasource.signOut();
-    _session.clear();
+    _clearSession();
     emit(const DashboardAuthSignedOut());
   }
 

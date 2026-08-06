@@ -58,6 +58,14 @@ enum DashboardPermission {
   // `OfficeContext.isPlatformAdmin`, because this is the one permission that
   // reaches outside the signed-in office. See `_DashboardNavItem.platformOnly`.
   platformOffices,
+  // The licensing console: plans, the feature catalog, office licences,
+  // platform billing, usage and the decision trail. Owner-set *and*
+  // `platformOnly`, exactly like [platformOffices] — it reaches across offices,
+  // so an office role alone cannot authorise it.
+  platformLicensing,
+  // The office's own plan, usage and invoices. Owner only: a support agent has
+  // no business seeing the office's commercial terms.
+  officeBilling,
   settings,
   permissions,
 }

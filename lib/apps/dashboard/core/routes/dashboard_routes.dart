@@ -23,6 +23,21 @@ class DashboardRoutes {
   static const ownerOverview = '/owner-overview';
   static const officeProfile = '/office-profile';
   static const platformOffices = '/platform-offices';
+
+  // ── The licensing console (platform admins only) ──────────────────────────
+  // `plans` and `licenses`, never `packages` or `subscriptions`: both of those
+  // already mean passenger fare bundles elsewhere in this app, and
+  // `/subscriptions` above is one of them.
+  static const platformPlans = '/platform-plans';
+  static const platformFeatures = '/platform-features';
+  static const platformLicenses = '/platform-licenses';
+  static const platformBilling = '/platform-billing';
+  static const platformUsage = '/platform-usage';
+  static const platformAudit = '/platform-audit';
+
+  /// The office's own plan and invoices. Owner only.
+  static const officeBilling = '/office-billing';
+
   static const settings = '/settings';
   static const permissions = '/permissions';
   static const notifications = '/notifications';

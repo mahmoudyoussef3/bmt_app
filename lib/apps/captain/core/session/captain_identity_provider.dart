@@ -38,6 +38,17 @@ class CaptainIdentityProvider {
   /// Convenience for the many call sites that only need "which driver am I".
   Future<String?> driverId() async => (await ensure())?.driverId;
 
+  /// Re-resolves from the server, discarding the warm session.
+  ///
+  /// The identity now carries the office's licensing state, which the captain
+  /// cannot change but the platform can — a restored session would otherwise
+  /// keep reporting a block that has since been lifted.
+  Future<CaptainIdentity?> refresh() {
+    _session.clear();
+    _inFlight = null;
+    return ensure();
+  }
+
   /// The driver id if the session is already warm, without a round trip — for
   /// synchronous callers such as opening a realtime channel. Null before the
   /// first [ensure], which for the realtime path is harmless: the load that

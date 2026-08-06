@@ -1,4 +1,12 @@
 import '../../../../core/network/network_di.dart';
+import '../entitlements/entitlement_service.dart';
+import '../../features/office_billing/presentation/cubit/office_billing_cubit.dart';
+import '../../features/platform_licensing/data/datasources/platform_licensing_datasource.dart';
+import '../../features/platform_licensing/data/datasources/supabase_platform_licensing_datasource.dart';
+import '../../features/platform_licensing/data/repositories/platform_licensing_repository_impl.dart';
+import '../../features/platform_licensing/domain/repositories/platform_licensing_repository.dart';
+import '../../features/platform_licensing/domain/usecases/platform_licensing_usecases.dart';
+import '../../features/platform_licensing/presentation/cubit/platform_licensing_cubit.dart';
 import '../session/dashboard_session.dart';
 import '../../features/auth/data/datasources/dashboard_auth_datasource.dart';
 import '../../features/auth/presentation/cubit/dashboard_auth_cubit.dart';
@@ -203,6 +211,19 @@ void registerDashboardDependencies() {
   // anyone signs in, so they hold this and read the office id per query.
   if (!dashboardDi.isRegistered<DashboardSession>()) {
     dashboardDi.registerLazySingleton<DashboardSession>(DashboardSession.new);
+  }
+
+  // The third axis of `role ∧ entitlement ∧ quota`, alongside DashboardSession
+  // and for the same reason: built before sign-in, filled at sign-in, read per
+  // query. It is a hint for the shell — every write it enables is re-checked
+  // server-side.
+  if (!dashboardDi.isRegistered<EntitlementService>()) {
+    dashboardDi.registerLazySingleton<EntitlementService>(
+      () => EntitlementService(
+        dashboardDi<SupabaseClient>(),
+        dashboardDi<DashboardSession>(),
+      ),
+    );
   }
 
   registerNetworkDependencies(dashboardDi);
@@ -1454,6 +1475,7 @@ void _registerNotificationsDispatchDependencies() {
       () => DashboardAuthCubit(
         dashboardDi<DashboardAuthDatasource>(),
         dashboardDi<DashboardSession>(),
+        dashboardDi<EntitlementService>(),
       ),
     );
   }
@@ -1510,6 +1532,66 @@ void _registerOperationalAlertsDependencies() {
         watchAlerts: dashboardDi<WatchOperationalAlertsUseCase>(),
         markAsRead: dashboardDi<MarkAlertReadUseCase>(),
         markAllAsRead: dashboardDi<MarkAllAlertsReadUseCase>(),
+      ),
+    );
+  }
+
+  // ── Platform licensing (platform admins only) ────────────────────────────
+  // Registered unconditionally: the RPCs behind it re-check is_platform_admin()
+  // server-side, so a non-admin resolving the cubit reaches a screen whose
+  // every call is refused rather than a hole.
+  if (!dashboardDi.isRegistered<PlatformLicensingDatasource>()) {
+    dashboardDi.registerLazySingleton<PlatformLicensingDatasource>(
+      () => SupabasePlatformLicensingDatasource(dashboardDi<SupabaseClient>()),
+    );
+  }
+  if (!dashboardDi.isRegistered<PlatformLicensingRepository>()) {
+    dashboardDi.registerLazySingleton<PlatformLicensingRepository>(
+      () => PlatformLicensingRepositoryImpl(
+        dashboardDi<PlatformLicensingDatasource>(),
+      ),
+    );
+  }
+  if (!dashboardDi.isRegistered<PlatformLicensingCubit>()) {
+    dashboardDi.registerFactory<PlatformLicensingCubit>(() {
+      final repo = dashboardDi<PlatformLicensingRepository>();
+      return PlatformLicensingCubit(
+        getCatalog: GetFeatureCatalogUseCase(repo),
+        setFeatureStatus: SetFeatureStatusUseCase(repo),
+        getPlans: GetPlansUseCase(repo),
+        getPlanDetail: GetPlanDetailUseCase(repo),
+        savePlan: SavePlanUseCase(repo),
+        clonePlan: ClonePlanUseCase(repo),
+        previewPlan: PreviewPlanUseCase(repo),
+        getLicenses: GetOfficeLicensesUseCase(repo),
+        getLicense: GetOfficeLicenseUseCase(repo),
+        assignPlan: AssignPlanUseCase(repo),
+        setLicenseStatus: SetLicenseStatusUseCase(repo),
+        extendTrial: ExtendTrialUseCase(repo),
+        setOverride: SetFeatureOverrideUseCase(repo),
+        clearOverride: ClearFeatureOverrideUseCase(repo),
+        getBilling: GetBillingOverviewUseCase(repo),
+        issueInvoice: IssueInvoiceUseCase(repo),
+        recordPayment: RecordInvoicePaymentUseCase(repo),
+        voidInvoice: VoidInvoiceUseCase(repo),
+        getUsage: GetPlatformUsageUseCase(repo),
+        getAudit: GetLicenseAuditUseCase(repo),
+        getHealth: GetLicensingHealthUseCase(repo),
+        getSettings: GetLicensingSettingsUseCase(repo),
+        updateSettings: UpdateLicensingSettingsUseCase(repo),
+        runLifecycle: RunLicensingLifecycleUseCase(repo),
+        runBillingCycle: RunBillingCycleUseCase(repo),
+      );
+    });
+  }
+
+  // The office's own view of what it bought. No datasource of its own: it reads
+  // the resolved document the shell already holds, plus one invoice query.
+  if (!dashboardDi.isRegistered<OfficeBillingCubit>()) {
+    dashboardDi.registerFactory<OfficeBillingCubit>(
+      () => OfficeBillingCubit(
+        dashboardDi<SupabaseClient>(),
+        dashboardDi<EntitlementService>(),
       ),
     );
   }

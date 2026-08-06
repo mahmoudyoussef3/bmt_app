@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:bmt_app/apps/captain/core/di/captain_di.dart';
 import 'package:bmt_app/apps/captain/core/routes/captain_app_router.dart';
 import 'package:bmt_app/apps/captain/core/routes/captain_app_shell.dart';
+import 'package:bmt_app/apps/captain/core/session/captain_licensing_gate.dart';
 import 'package:bmt_app/apps/captain/core/session/captain_session_store.dart';
 import 'package:bmt_app/apps/captain/features/auth/presentation/cubit/captain_auth_cubit.dart';
 import 'package:bmt_app/apps/captain/features/auth/presentation/screens/captain_login_screen.dart';
@@ -170,7 +171,11 @@ class _CaptainAuthGateState extends State<_CaptainAuthGate> {
         final session =
             snapshot.data?.session ??
             Supabase.instance.client.auth.currentSession;
-        if (session != null) return const CaptainAppShell();
+        if (session != null) {
+          // The licence is checked here rather than inside the shell so a
+          // blocked office never mounts the operational tree at all.
+          return const CaptainLicensingGate(child: CaptainAppShell());
+        }
 
         if (_loading) return const CaptainSplashScreen();
         if (_session != null) return _welcomeHome(_session!);

@@ -103,6 +103,42 @@ abstract final class DashboardIcons {
   static const platformOffices = Icons.apartment_outlined;
   static const platformOfficesActive = Icons.apartment_rounded;
 
+  // ── The licensing console (platform admins only) ──────────────────────────
+  // "الخطط" and never "الباقات" in code: `package` and `subscription` are
+  // already taken — twice each — by the passenger fare-bundle domain, and a
+  // third meaning would make them unreadable everywhere.
+
+  /// Plans: named bundles of feature values the platform sells.
+  static const plans = Icons.workspace_premium_outlined;
+  static const plansActive = Icons.workspace_premium_rounded;
+
+  /// The feature catalog: what the platform *can* sell.
+  static const featureCatalog = Icons.toggle_on_outlined;
+  static const featureCatalogActive = Icons.toggle_on_rounded;
+
+  /// Each office's licence, plan and status.
+  static const licenses = Icons.verified_user_outlined;
+  static const licensesActive = Icons.verified_user_rounded;
+
+  /// Platform invoices and renewals.
+  static const billing = Icons.request_quote_outlined;
+  static const billingActive = Icons.request_quote_rounded;
+
+  /// Consumption against limits, across offices.
+  static const usage = Icons.speed_outlined;
+  static const usageActive = Icons.speed_rounded;
+
+  /// The licensing decision trail.
+  static const audit = Icons.fact_check_outlined;
+  static const auditActive = Icons.fact_check_rounded;
+
+  /// The office's own plan and invoices.
+  static const officeBilling = Icons.credit_card_outlined;
+  static const officeBillingActive = Icons.credit_card_rounded;
+
+  /// A module the office could buy but has not — shown locked, not hidden.
+  static const locked = Icons.lock_outline_rounded;
+
   /// Dashboard accounts and what each one may do.
   static const users = Icons.manage_accounts_outlined;
   static const usersActive = Icons.manage_accounts_rounded;

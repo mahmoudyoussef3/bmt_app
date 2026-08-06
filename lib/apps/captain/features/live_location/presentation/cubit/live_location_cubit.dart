@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../../../core/session/captain_office_session.dart';
 import '../../domain/entities/location_sharing_health.dart';
 import '../../domain/usecases/send_location_update_usecase.dart';
 import 'live_location_state.dart';
@@ -43,12 +44,31 @@ export '../../domain/entities/location_sharing_health.dart'
 class LiveLocationCubit extends Cubit<LiveLocationState> {
   LiveLocationCubit({
     required SendLocationUpdateUseCase sendLocation,
+    CaptainOfficeSession? session,
     DateTime Function() now = DateTime.now,
   }) : _sendLocation = sendLocation,
+       _session = session,
        _now = now,
        super(const LiveLocationReady());
 
   final SendLocationUpdateUseCase _sendLocation;
+
+  /// Read only to answer "is this office licensed for live tracking".
+  ///
+  /// Optional so the preview harness and the tests can build a publisher
+  /// without a session; absent, tracking is permitted, which is the same
+  /// failing-open default the dashboard's entitlement hint uses.
+  final CaptainOfficeSession? _session;
+
+  /// The office's licence covers position publishing.
+  ///
+  /// When it does not, the publisher simply never starts: the trip, the
+  /// manifest and the captain's whole flow are untouched, and the client app
+  /// degrades to schedule and status with no live map. Refusing the write at
+  /// the database instead would turn an unpaid invoice into an error dialog on
+  /// a moving bus, which is why the INSERT policy is deliberately not gated.
+  bool get _trackingLicensed =>
+      _session?.identity?.licensing.liveTracking ?? true;
 
   /// Injected for the same reason `LocationSharingStatus.evaluate` takes a
   /// `now`: [resumeIfStale] compares against a threshold, and a threshold you
@@ -73,7 +93,8 @@ class LiveLocationCubit extends Cubit<LiveLocationState> {
   String? get activeTripId => _tripId;
 
   /// Sends one position now, at the captain's request.
-  Future<void> send(String tripId) => _send(tripId, automatic: false);
+  Future<void> send(String tripId) =>
+      _trackingLicensed ? _send(tripId, automatic: false) : Future.value();
 
   /// Starts reporting position every [kAutoLocationInterval] until
   /// [stopAutoSharing], beginning with an immediate fix so the trip doesn't
@@ -84,6 +105,8 @@ class LiveLocationCubit extends Cubit<LiveLocationState> {
   /// switches cleanly — a captain can only be driving one trip at a time, so
   /// the previous one stops rather than the two overlapping.
   void startAutoSharing(String tripId) {
+    if (!_trackingLicensed) return;
+
     if (_autoTimer != null) {
       if (_tripId == tripId) return;
       _cancelTimer();

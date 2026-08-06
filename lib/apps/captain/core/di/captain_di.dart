@@ -521,6 +521,7 @@ void _registerLiveLocationDependencies() {
     captainGetIt.registerLazySingleton<LiveLocationCubit>(
       () => LiveLocationCubit(
         sendLocation: captainGetIt<SendLocationUpdateUseCase>(),
+        session: captainGetIt<CaptainOfficeSession>(),
       ),
       dispose: (cubit) => cubit.close(),
     );
