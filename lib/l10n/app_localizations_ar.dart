@@ -4031,6 +4031,13 @@ class AppLocalizationsAr extends AppLocalizations {
       'اكسب رصيدًا بدعوة أصدقائك باستخدام كود الإحالة الخاص بك.';
 
   @override
+  String get referral_openWallet => 'عرض محفظتي';
+
+  @override
+  String get referral_walletCreditHint =>
+      'تُضاف مكافآت الإحالة مباشرة إلى محفظتك لدى المكتب الذي منحها.';
+
+  @override
   String get referral_redeemToWallet => 'استبدال إلى المحفظة';
 
   @override

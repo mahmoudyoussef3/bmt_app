@@ -7292,6 +7292,18 @@ abstract class AppLocalizations {
   /// **'Earn balance by inviting friends with your referral code.'**
   String get referral_earnBalanceHint;
 
+  /// No description provided for @referral_openWallet.
+  ///
+  /// In en, this message translates to:
+  /// **'Open my wallet'**
+  String get referral_openWallet;
+
+  /// No description provided for @referral_walletCreditHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Referral rewards are paid straight into your wallet at the office that granted them.'**
+  String get referral_walletCreditHint;
+
   /// No description provided for @referral_redeemToWallet.
   ///
   /// In en, this message translates to:

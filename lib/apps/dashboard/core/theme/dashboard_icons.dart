@@ -66,6 +66,12 @@ abstract final class DashboardIcons {
   static const paymentReview = Icons.receipt_long_outlined;
   static const paymentReviewActive = Icons.receipt_long_rounded;
 
+  /// Customer credit balances and their ledger. A wallet, deliberately *not* the
+  /// banknotes used for [payments]: money the office has taken is not the same
+  /// concept as money the office still owes back.
+  static const wallet = Icons.account_balance_wallet_outlined;
+  static const walletActive = Icons.account_balance_wallet_rounded;
+
   /// Generated reports and statements.
   static const reports = Icons.assessment_outlined;
   static const reportsActive = Icons.assessment_rounded;

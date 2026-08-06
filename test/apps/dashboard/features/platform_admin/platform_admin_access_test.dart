@@ -93,8 +93,37 @@ void main() {
           DashboardPermission.reports,
           DashboardPermission.paymentVerification,
           DashboardPermission.notifications,
+          // Added deliberately with محفظة العملاء: an agent who is asked "where
+          // is my refund?" must be able to see the balance and the ledger. It
+          // is a read-only grant — `walletAdjustments` and `walletApprovals`
+          // are owner-only, and the server checks the same thing again in
+          // `public.office_can`.
+          DashboardPermission.customerWallets,
         },
       );
+    });
+
+    test('a support agent may read wallets but may not move money', () {
+      expect(
+        DashboardPermissions.canAccess(
+          DashboardRole.supportAgent,
+          DashboardPermission.customerWallets,
+        ),
+        isTrue,
+      );
+      for (final permission in const [
+        DashboardPermission.walletAdjustments,
+        DashboardPermission.walletApprovals,
+      ]) {
+        expect(
+          DashboardPermissions.canAccess(
+            DashboardRole.supportAgent,
+            permission,
+          ),
+          isFalse,
+          reason: '$permission moves money and is owner-only',
+        );
+      }
     });
 
     test('a support agent may watch live ops but not close incidents', () {

@@ -141,6 +141,7 @@ import '../../features/subscriptions/plans/domain/usecases/subscription_plans_us
 import '../../features/subscriptions/plans/presentation/cubit/subscription_plans_cubit.dart';
 import '../../features/trips/trips_di.dart';
 import '../../features/live_ops/live_ops_di.dart';
+import '../../features/wallet/wallet_di.dart';
 // Mock vehicles removed
 import '../../features/tickets/data/datasources/supabase_tickets_datasource.dart';
 import '../../features/tickets/data/repositories/tickets_repository_impl.dart';
@@ -158,6 +159,7 @@ import '../../features/finance/domain/repositories/finance_repository.dart';
 import '../../features/finance/domain/usecases/export_finance_statement_usecase.dart';
 import '../../features/finance/domain/usecases/get_payments_usecase.dart';
 import '../../features/finance/domain/usecases/get_refund_requests_usecase.dart';
+import '../../features/finance/domain/usecases/get_wallet_position_usecase.dart';
 import '../../features/finance/domain/usecases/get_revenue_metrics_usecase.dart';
 import '../../features/finance/domain/usecases/get_subscriptions_usecase.dart';
 import '../../features/finance/data/datasources/finance_datasource.dart';
@@ -912,6 +914,7 @@ void registerDashboardDependencies() {
 
   registerTripsDependencies(dashboardDi);
   registerLiveOpsDependencies(dashboardDi);
+  registerWalletDependencies(dashboardDi);
 
   // Mock vehicles registrations removed
 
@@ -1026,6 +1029,12 @@ void registerDashboardDependencies() {
     );
   }
 
+  if (!dashboardDi.isRegistered<GetWalletPositionUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => GetWalletPositionUseCase(dashboardDi<FinanceRepository>()),
+    );
+  }
+
   if (!dashboardDi.isRegistered<ExportFinanceStatementUseCase>()) {
     dashboardDi.registerLazySingleton(
       () => ExportFinanceStatementUseCase(dashboardDi<FinanceRepository>()),
@@ -1038,6 +1047,7 @@ void registerDashboardDependencies() {
         getPayments: dashboardDi<GetPaymentsUseCase>(),
         getRefundRequests: dashboardDi<GetRefundRequestsUseCase>(),
         getSubscriptions: dashboardDi<GetFinanceSubscriptionsUseCase>(),
+        getWalletPosition: dashboardDi<GetWalletPositionUseCase>(),
         exportStatement: dashboardDi<ExportFinanceStatementUseCase>(),
       ),
     );

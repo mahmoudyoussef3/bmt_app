@@ -4,6 +4,7 @@ import 'package:bmt_app/apps/client/features/auth/presentation/routes/auth_route
 import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_routes.dart';
 import 'package:bmt_app/apps/client/features/communication/presentation/routes/communication_routes.dart';
 import 'package:bmt_app/apps/client/features/loyalty/presentation/routes/loyalty_routes.dart';
+import 'package:bmt_app/apps/client/features/wallet/presentation/routes/wallet_routes.dart';
 import 'package:bmt_app/apps/client/features/packages/presentation/routes/packages_routes.dart';
 import 'package:bmt_app/apps/client/features/payments/presentation/routes/payment_routes.dart';
 import 'package:bmt_app/apps/client/features/profile/presentation/routes/profile_routes.dart';
@@ -59,6 +60,7 @@ const Map<String, String> _declaredRoutes = <String, String>{
   'OfficesRoutes.profile': OfficesRoutes.profile,
   'ReferralRoutes.rewards': ReferralRoutes.rewards,
   'LoyaltyRoutes.loyalty': LoyaltyRoutes.loyalty,
+  'WalletRoutes.wallet': WalletRoutes.wallet,
   'ProfileRoutes.profile': ProfileRoutes.profile,
 };
 

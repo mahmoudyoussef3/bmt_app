@@ -57,6 +57,8 @@ import 'package:bmt_app/apps/client/features/support/presentation/screens/create
 import 'package:bmt_app/apps/client/features/support/presentation/screens/support_center_screen.dart';
 import 'package:bmt_app/apps/client/features/support/presentation/screens/support_ticket_details_screen.dart';
 import 'package:bmt_app/apps/client/features/tracking/presentation/routes/tracking_routes.dart';
+import 'package:bmt_app/apps/client/features/wallet/presentation/routes/wallet_routes.dart';
+import 'package:bmt_app/apps/client/features/wallet/presentation/screens/client_wallet_screen.dart';
 import 'package:bmt_app/apps/client/features/tracking/presentation/screens/tracking_screen.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/routes/trips_routes.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/screens/my_trips_screen.dart';
@@ -336,6 +338,11 @@ abstract final class ClientRouter {
         ClientCubitScopes.referralRewards(const ReferralRewardsScreen()),
     LoyaltyRoutes.loyalty: (_) =>
         ClientCubitScopes.loyalty(const LoyaltyScreen()),
+    // Also the destination every wallet and refund notification deep-links to:
+    // the backend stamps `action_url = '/wallet'`, which
+    // `resolveNotificationDestination` passes through unchanged.
+    WalletRoutes.wallet: (_) =>
+        ClientCubitScopes.wallet(const ClientWalletScreen()),
   };
 
   // --- Profile & legal ------------------------------------------------------

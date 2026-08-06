@@ -4060,6 +4060,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Earn balance by inviting friends with your referral code.';
 
   @override
+  String get referral_openWallet => 'Open my wallet';
+
+  @override
+  String get referral_walletCreditHint =>
+      'Referral rewards are paid straight into your wallet at the office that granted them.';
+
+  @override
   String get referral_redeemToWallet => 'Redeem to Wallet';
 
   @override

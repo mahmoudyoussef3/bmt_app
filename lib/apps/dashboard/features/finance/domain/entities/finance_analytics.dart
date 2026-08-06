@@ -1,4 +1,5 @@
 import 'finance_entities.dart';
+import 'finance_money_model.dart';
 
 /// One day of the ledger.
 class FinanceDailyPoint {
@@ -93,6 +94,14 @@ class FinanceAnalytics {
   /// one. `null` for [FinancePeriod.all], which has no "before".
   final FinanceAnalytics? previous;
 
+  /// The three statements (§7) for this window.
+  ///
+  /// Empty — all zeros — when no wallet position was supplied, which is exactly
+  /// what the figures should be for an office that has never issued credit.
+  /// Every legacy figure above ([netRevenue], [refunded], …) is untouched, so
+  /// this is an addition to the module rather than a replacement of it.
+  final FinanceMoneyStatements statements;
+
   const FinanceAnalytics._({
     required this.period,
     required this.range,
@@ -115,18 +124,26 @@ class FinanceAnalytics {
     required this.byClient,
     required this.byWeekday,
     required this.previous,
+    required this.statements,
   });
 
   factory FinanceAnalytics.from({
     required List<FinanceLedgerEntry> ledger,
     required FinancePeriod period,
     required DateTime now,
+    WalletFinancePosition wallet = const WalletFinancePosition.empty(),
   }) {
     return FinanceAnalytics._compute(
       period: period,
       ledger: ledger,
       range: FinanceDateRange(start: period.startFrom(now), end: now),
-      previous: _previousWindow(ledger: ledger, period: period, now: now),
+      wallet: wallet,
+      previous: _previousWindow(
+        ledger: ledger,
+        period: period,
+        now: now,
+        wallet: wallet,
+      ),
     );
   }
 
@@ -134,6 +151,7 @@ class FinanceAnalytics {
     required List<FinanceLedgerEntry> ledger,
     required FinancePeriod period,
     required DateTime now,
+    required WalletFinancePosition wallet,
   }) {
     final previousStart = period.previousStartFrom(now);
     if (previousStart == null) return null;
@@ -146,6 +164,7 @@ class FinanceAnalytics {
       period: period,
       ledger: ledger,
       range: FinanceDateRange(start: previousStart, end: previousEnd),
+      wallet: wallet,
       previous: null,
     );
   }
@@ -154,6 +173,7 @@ class FinanceAnalytics {
     required FinancePeriod period,
     required List<FinanceLedgerEntry> ledger,
     required FinanceDateRange range,
+    required WalletFinancePosition wallet,
     required FinanceAnalytics? previous,
   }) {
     final entries = ledger.where((e) => range.contains(e.date)).toList()
@@ -239,6 +259,18 @@ class FinanceAnalytics {
       byClient: _rank(byClient),
       byWeekday: _weekdayRows(byWeekday),
       previous: previous,
+      // `net + refunded` is every pound the office *sold* in the window: the
+      // ledger is built from `operation_bookings.payment_amount`, so this is the
+      // fare, not the tender. That is what makes a wallet-paid rebooking count
+      // as revenue once V2 lands (§2.2). External tender is the same figure in
+      // V1 — wallet tender is never written to `booking_payments`, so the day it
+      // exists it drops out of here on its own.
+      statements: FinanceMoneyStatements.from(
+        soldFare: net + refunded,
+        externalTender: net + refunded,
+        wallet: wallet,
+        range: range,
+      ),
     );
   }
 
@@ -341,6 +373,24 @@ class FinanceAnalytics {
           isSubtotal: true,
         ),
         FinanceStatementLine('صافي الإيراد', netRevenue, isTotal: true),
+        // The three statements travel with the export for the same reason they
+        // are on the screen: a file that reports revenue without the liability
+        // beside it lets the reader mistake money owed back for money earned.
+        FinanceStatementLine(
+          'النقدية المحصّلة',
+          statements.cash,
+          isSubtotal: true,
+        ),
+        FinanceStatementLine(
+          'التزامات المحفظة (آخر الفترة)',
+          statements.liabilityEnd,
+          isMemo: true,
+        ),
+        FinanceStatementLine(
+          'تكلفة الحوافز (خارج الصافي)',
+          statements.promotionalCost,
+          isMemo: true,
+        ),
         FinanceStatementLine(
           'قيد التحصيل (خارج الصافي)',
           pending,

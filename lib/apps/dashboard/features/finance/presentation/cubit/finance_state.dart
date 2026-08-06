@@ -1,5 +1,6 @@
 import '../../domain/entities/finance_analytics.dart';
 import '../../domain/entities/finance_entities.dart';
+import '../../domain/entities/finance_money_model.dart';
 
 /// The four money views. Nothing here decides anything — the section indexes
 /// map to reports, not to workflows.
@@ -36,6 +37,13 @@ class FinanceLoaded extends FinanceState {
   final List<RefundRequest> refundRequests;
 
   final List<SubscriptionRecord> subscriptions;
+
+  /// The wallet-side facts behind the three statements (§7). Held whole, like
+  /// the ledger, so switching period re-derives the liability position without a
+  /// round trip — and so the KPI band, the identity check and the statement can
+  /// never be computed from three different snapshots.
+  final WalletFinancePosition walletPosition;
+
   final FinancePeriod period;
   final DateTime loadedAt;
 
@@ -63,6 +71,7 @@ class FinanceLoaded extends FinanceState {
     required this.refundRequests,
     required this.subscriptions,
     required this.loadedAt,
+    this.walletPosition = const WalletFinancePosition.empty(),
     this.period = FinancePeriod.month,
     this.ledgerCapReached = false,
     this.section = FinanceSection.overview,
@@ -77,6 +86,7 @@ class FinanceLoaded extends FinanceState {
          ledger: ledger,
          period: period,
          now: loadedAt,
+         wallet: walletPosition,
        );
 
   static const ledgerPageSize = 25;
@@ -127,6 +137,7 @@ class FinanceLoaded extends FinanceState {
     List<FinanceLedgerEntry>? ledger,
     List<RefundRequest>? refundRequests,
     List<SubscriptionRecord>? subscriptions,
+    WalletFinancePosition? walletPosition,
     FinancePeriod? period,
     DateTime? loadedAt,
     bool? ledgerCapReached,
@@ -147,6 +158,7 @@ class FinanceLoaded extends FinanceState {
       ledger: ledger ?? this.ledger,
       refundRequests: refundRequests ?? this.refundRequests,
       subscriptions: subscriptions ?? this.subscriptions,
+      walletPosition: walletPosition ?? this.walletPosition,
       loadedAt: loadedAt ?? this.loadedAt,
       period: period ?? this.period,
       ledgerCapReached: ledgerCapReached ?? this.ledgerCapReached,

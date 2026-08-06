@@ -15,6 +15,7 @@ class DashboardRoutes {
   static const subscriptions = '/subscriptions';
   static const referrals = '/referrals';
   static const payments = '/payments';
+  static const wallet = '/wallet';
   static const paymentVerification = '/payment-verification';
   static const tickets = '/tickets';
   static const reviews = '/reviews';

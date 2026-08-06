@@ -25,6 +25,24 @@ enum DashboardPermission {
   referrals,
   payments,
   paymentVerification,
+  // ── محفظة العملاء ─────────────────────────────────────────────────────────
+  // Three permissions, not eight. Eight capability flags across a two-role
+  // system is administration theatre; the *server* keeps the fine-grained
+  // capability list (`public.office_can`) so more roles can be added later
+  // without touching call sites.
+  //
+  // See the wallet, and every entry in its ledger. Granted to support agents
+  // too: they are the ones who hear "where is my money", so denying visibility
+  // just makes them guess.
+  customerWallets,
+  // Move money — cashback, manual credit, manual debit. Owner only.
+  walletAdjustments,
+  // Decide refund requests, reverse an entry, freeze a wallet, edit policy, and
+  // export history. Owner only. Export is here rather than under
+  // [customerWallets] because a full customer financial history in a
+  // spreadsheet is a data-exfiltration surface, and it is the one read that
+  // leaves the audited system.
+  walletApprovals,
   tickets,
   // Individual passenger reviews (with their written feedback) are for the
   // owner only — deliberately absent from the support-agent set below.
@@ -61,6 +79,11 @@ class DashboardPermissions {
         DashboardPermission.reports,
         DashboardPermission.paymentVerification,
         DashboardPermission.notifications,
+        // Sees every balance and every entry; holds neither
+        // [walletAdjustments] nor [walletApprovals], so the only wallet action
+        // available to them is raising a refund *request* for the owner to
+        // decide. That escalation path already exists in the data model.
+        DashboardPermission.customerWallets,
       },
     };
   }

@@ -9,6 +9,7 @@ import 'package:bmt_app/apps/client/features/referrals/domain/entities/referral_
 import 'package:bmt_app/apps/client/features/referrals/presentation/cubit/referral_rewards_cubit.dart';
 import 'package:bmt_app/apps/client/features/referrals/presentation/cubit/referral_rewards_state.dart';
 import 'package:bmt_app/apps/client/features/referrals/presentation/widgets/referral_share_sheet.dart';
+import 'package:bmt_app/apps/client/features/wallet/presentation/routes/wallet_routes.dart';
 import 'package:bmt_app/core/localization/format_util.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 import 'package:bmt_app/core/widgets/directional_icon.dart';
@@ -136,84 +137,15 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
     ReferralShareSheet.show(context, code);
   }
 
-  // Redeem Available points
-  Future<void> _redeemRewards() async {
-    if (_walletBalance == 0) return;
-    final redeemed = await context.read<ReferralRewardsCubit>().redeem();
-
-    if (!mounted) return;
-
-    // The cubit returns 0 both when the balance was empty and when the
-    // redemption itself failed — either way there is nothing to celebrate.
-    if (redeemed <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(context.l10n.referral_redeemFailed),
-          backgroundColor: ClientColors.journeyRed,
-        ),
-      );
-      return;
-    }
-
-    _confetti.fire();
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        final scheme = Theme.of(context).colorScheme;
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(24),
-          ),
-          title: Center(
-            child: Text(context.l10n.referral_redemptionSuccessTitle),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
-                Icons.check_circle_outline_rounded,
-                color: ClientColors.journeyCyan,
-                size: 60,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                context.l10n.referral_redemptionSuccessBody,
-                textAlign: TextAlign.center,
-                style: ClientTypography.bodySmall(
-                  context,
-                ).copyWith(fontSize: 13, height: 1.4),
-              ),
-              const SizedBox(height: 10),
-              Text(
-                context.l10n.referral_successfullyTransferred,
-                style: ClientTypography.labelSmall(context).copyWith(
-                  fontSize: 11,
-                  fontWeight: FontWeight.normal,
-                  color: scheme.onSurface.withAlpha(150),
-                ),
-              ),
-              Text(
-                context.l10n.referral_egpTotal(redeemed),
-                style: ClientTypography.priceMedium(context).copyWith(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w900,
-                  color: scheme.primary,
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            Center(
-              child: AppButton(
-                label: context.l10n.referral_awesome,
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-            ),
-          ],
-        );
-      },
-    );
+  /// Opens the real wallet.
+  ///
+  /// This used to be `_redeemRewards()`, which called a datasource that zeroed
+  /// `loyalty_accounts.wallet_balance` client-side and celebrated a payout the
+  /// database had silently refused (RLS denied the write without throwing).
+  /// Referral rewards now land as a real wallet entry granted by the office
+  /// that owes them, so the only honest action here is to go and look at it.
+  void _openWallet() {
+    Navigator.of(context).pushNamed(WalletRoutes.wallet);
   }
 
   // Scratch card interaction
@@ -1552,7 +1484,7 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
           const SizedBox(height: 16),
           Text(
             hasBalance
-                ? context.l10n.referral_transferHint
+                ? context.l10n.referral_walletCreditHint
                 : context.l10n.referral_earnBalanceHint,
             style: ClientTypography.bodySmall(context).copyWith(
               fontSize: 11,
@@ -1564,7 +1496,7 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: hasBalance ? _redeemRewards : null,
+              onPressed: _openWallet,
               style: ElevatedButton.styleFrom(
                 backgroundColor: scheme.primary,
                 padding: const EdgeInsets.symmetric(vertical: 12),
@@ -1574,9 +1506,7 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
                 ),
               ),
               child: Text(
-                hasBalance
-                    ? context.l10n.referral_redeemToWallet
-                    : context.l10n.referral_noBalanceToRedeem,
+                context.l10n.referral_openWallet,
                 style: ClientTypography.bodyMedium(context).copyWith(
                   fontSize: 13,
                   fontWeight: FontWeight.bold,

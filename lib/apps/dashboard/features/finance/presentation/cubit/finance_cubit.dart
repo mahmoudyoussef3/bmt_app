@@ -5,6 +5,7 @@ import '../../domain/usecases/export_finance_statement_usecase.dart';
 import '../../domain/usecases/get_payments_usecase.dart';
 import '../../domain/usecases/get_refund_requests_usecase.dart';
 import '../../domain/usecases/get_subscriptions_usecase.dart';
+import '../../domain/usecases/get_wallet_position_usecase.dart';
 import 'finance_state.dart';
 
 /// Finance reads money and explains it. There is no approve, reject, cancel or
@@ -15,16 +16,19 @@ class FinanceCubit extends Cubit<FinanceState> {
   final GetPaymentsUseCase _getPayments;
   final GetRefundRequestsUseCase _getRefundRequests;
   final GetFinanceSubscriptionsUseCase _getSubscriptions;
+  final GetWalletPositionUseCase _getWalletPosition;
   final ExportFinanceStatementUseCase _exportStatement;
 
   FinanceCubit({
     required GetPaymentsUseCase getPayments,
     required GetRefundRequestsUseCase getRefundRequests,
     required GetFinanceSubscriptionsUseCase getSubscriptions,
+    required GetWalletPositionUseCase getWalletPosition,
     required ExportFinanceStatementUseCase exportStatement,
   }) : _getPayments = getPayments,
        _getRefundRequests = getRefundRequests,
        _getSubscriptions = getSubscriptions,
+       _getWalletPosition = getWalletPosition,
        _exportStatement = exportStatement,
        super(const FinanceLoading());
 
@@ -38,13 +42,14 @@ class FinanceCubit extends Cubit<FinanceState> {
 
     emit(const FinanceLoading());
     try {
-      // Future.wait, not three sequential awaits: the three reads are
-      // independent, and awaiting them one at a time both triples the wait and
-      // leaves the others' errors unobserved when the first one throws.
-      final (payments, refunds, subscriptions) = await (
+      // Future.wait, not sequential awaits: the reads are independent, and
+      // awaiting them one at a time both multiplies the wait and leaves the
+      // others' errors unobserved when the first one throws.
+      final (payments, refunds, subscriptions, wallet) = await (
         _getPayments(),
         _getRefundRequests(),
         _getSubscriptions(),
+        _getWalletPosition(),
       ).wait;
 
       emit(
@@ -55,6 +60,7 @@ class FinanceCubit extends Cubit<FinanceState> {
           ),
           refundRequests: refunds,
           subscriptions: subscriptions,
+          walletPosition: wallet,
           loadedAt: DateTime.now(),
           period: period,
           ledgerCapReached: payments.length >= FinanceLedger.rowCap,

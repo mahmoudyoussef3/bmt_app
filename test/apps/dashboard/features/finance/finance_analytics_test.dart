@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bmt_app/apps/dashboard/features/finance/domain/entities/finance_analytics.dart';
 import 'package:bmt_app/apps/dashboard/features/finance/domain/entities/finance_entities.dart';
+import 'package:bmt_app/apps/dashboard/features/finance/domain/entities/finance_money_model.dart';
 
 /// A fixed clock: every window boundary in these tests is measured from it.
 final _now = DateTime(2026, 7, 31, 12);
@@ -301,6 +302,155 @@ void main() {
       expect(ledger.map((e) => e.id), ['new', 'old']);
     });
   });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // The three-statement model (§7).
+  //
+  // Every case below is a worked example from the design's control-identity
+  // table. They exist because the previous single-number model got the third
+  // one wrong: it reported zero revenue for an office that had earned 300.
+  // ═══════════════════════════════════════════════════════════════════════════
+  group('FinanceMoneyStatements — the §7.2 control identity', () {
+    test('1. book 300 cash: revenue 300, cash 300, liability unchanged', () {
+      final statements = _statementsFor(
+        ledger: [_booking('a', 300, PaymentStatus.success, daysAgo: 0)],
+      );
+
+      expect(statements.revenue, 300);
+      expect(statements.cash, 300);
+      expect(statements.deltaLiability, 0);
+      expect(statements.identityHolds, isTrue);
+    });
+
+    test('2. …refunded 300 to wallet: revenue 0, cash still 300, ΔL +300', () {
+      final statements = _statementsFor(
+        ledger: [_booking('a', 300, PaymentStatus.success, daysAgo: 2)],
+        refunds: [_refund(300, toWallet: true, daysAgo: 1)],
+        movements: [_movement(WalletMovementKind.refund, 300, daysAgo: 1)],
+      );
+
+      // The office still holds the cash; it now owes 300 back as service.
+      expect(statements.revenue, 0);
+      expect(statements.cash, 300);
+      expect(statements.deltaLiability, 300);
+      expect(statements.identityHolds, isTrue);
+    });
+
+    test('3. …customer rebooks with the wallet: revenue is 300, not 0', () {
+      // THE case revision 1 got wrong. Two fares were sold (300 + 300), one
+      // refund was granted (300), and the second fare was tendered from the
+      // wallet — so no second pound of cash arrived.
+      final statements = _statementsFor(
+        ledger: [
+          _booking('a', 300, PaymentStatus.success, daysAgo: 3),
+          _booking('b', 300, PaymentStatus.success, daysAgo: 1),
+        ],
+        refunds: [_refund(300, toWallet: true, daysAgo: 2)],
+        movements: [
+          _movement(WalletMovementKind.refund, 300, daysAgo: 2),
+          _movement(WalletMovementKind.walletSpend, -300, daysAgo: 1),
+        ],
+        // V2 shape: the wallet-paid fare is in the fare total but not in the
+        // external tender, because a wallet leg is never written to
+        // `booking_payments`.
+        externalTender: 300,
+      );
+
+      expect(statements.revenue, 300);
+      expect(statements.cash, 300);
+      expect(statements.deltaLiability, 0);
+      expect(statements.identityHolds, isTrue);
+    });
+
+    test('4. …refunded 300 to InstaPay instead: cash out, no liability', () {
+      final statements = _statementsFor(
+        ledger: [_booking('a', 300, PaymentStatus.success, daysAgo: 2)],
+        refunds: [_refund(300, toWallet: false, daysAgo: 1)],
+      );
+
+      expect(statements.revenue, 0);
+      expect(statements.cash, 0);
+      expect(statements.cashOut, 300);
+      expect(statements.deltaLiability, 0);
+      expect(statements.identityHolds, isTrue);
+    });
+
+    test('5. cashback 100, unspent: promotional cost 100, liability +100', () {
+      final statements = _statementsFor(
+        ledger: const [],
+        movements: [_movement(WalletMovementKind.cashback, 100, daysAgo: 1)],
+      );
+
+      expect(statements.revenue, 0);
+      expect(statements.cash, 0);
+      expect(statements.promotionalCost, 100);
+      expect(statements.deltaLiability, 100);
+      expect(statements.identityHolds, isTrue);
+    });
+
+    test('6. cashback 100 spent on a 100 ride: revenue 100, no cash', () {
+      final statements = _statementsFor(
+        ledger: [_booking('a', 100, PaymentStatus.success, daysAgo: 1)],
+        movements: [
+          _movement(WalletMovementKind.cashback, 100, daysAgo: 2),
+          _movement(WalletMovementKind.walletSpend, -100, daysAgo: 1),
+        ],
+        externalTender: 0,
+      );
+
+      expect(statements.revenue, 100);
+      expect(statements.cash, 0);
+      expect(statements.promotionalCost, 100);
+      expect(statements.deltaLiability, 0);
+      expect(statements.identityHolds, isTrue);
+    });
+
+    test('promotional cost is net of clawbacks', () {
+      // A wrongly granted cashback that is debited back is not an incentive the
+      // office paid for; counting the grant without the clawback would both
+      // overstate the expense and break the identity.
+      final statements = _statementsFor(
+        ledger: const [],
+        movements: [
+          _movement(WalletMovementKind.cashback, 100, daysAgo: 2),
+          _movement(WalletMovementKind.manualDebit, -100, daysAgo: 1),
+        ],
+      );
+
+      expect(statements.promotionalCost, 0);
+      expect(statements.deltaLiability, 0);
+      expect(statements.identityHolds, isTrue);
+    });
+
+    test('liability at the window open is back-computed from the ledger', () {
+      // Law L2: only the *current* balance is fetched. Every historical position
+      // is recovered by unwinding the movements that came after the window.
+      final statements = _statementsFor(
+        ledger: const [],
+        movements: [
+          _movement(WalletMovementKind.cashback, 40, daysAgo: 3),
+          // Outside the window: must be unwound out of the closing balance.
+          _movement(WalletMovementKind.cashback, 25, daysAgo: -1),
+        ],
+        currentLiability: 65,
+      );
+
+      expect(statements.liabilityEnd, 40);
+      expect(statements.liabilityStart, 0);
+      expect(statements.deltaLiability, 40);
+    });
+
+    test('an office that has never issued credit reports zeros, not nulls', () {
+      final analytics = _analyticsFor([
+        _booking('a', 100, PaymentStatus.success, daysAgo: 0),
+      ]);
+
+      expect(analytics.statements.liabilityEnd, 0);
+      expect(analytics.statements.promotionalCost, 0);
+      expect(analytics.statements.revenue, 100);
+      expect(analytics.statements.identityHolds, isTrue);
+    });
+  });
 }
 
 FinanceAnalytics _analyticsFor(
@@ -345,3 +495,54 @@ FinanceLedgerEntry _subscription(
     date: _now.subtract(Duration(days: daysAgo)),
   );
 }
+
+/// Builds the three statements over the default month window.
+///
+/// `soldFare` is taken from the ledger (which is built from booking fares);
+/// `externalTender` defaults to the same figure because V1 has no wallet
+/// tender, and is overridable so the V2 split-tender cases can be expressed.
+FinanceMoneyStatements _statementsFor({
+  required List<FinanceLedgerEntry> ledger,
+  List<SettledRefund> refunds = const [],
+  List<WalletMovement> movements = const [],
+  double? externalTender,
+  double? currentLiability,
+}) {
+  final analytics = _analyticsFor(ledger);
+  final fare = analytics.grossReceived;
+
+  return FinanceMoneyStatements.from(
+    soldFare: fare,
+    externalTender: externalTender ?? fare,
+    wallet: WalletFinancePosition(
+      currentLiability:
+          currentLiability ??
+          movements.fold<double>(0, (sum, m) => sum + m.amount),
+      movements: movements,
+      refunds: refunds,
+    ),
+    range: analytics.range,
+  );
+}
+
+SettledRefund _refund(
+  double amount, {
+  required bool toWallet,
+  required int daysAgo,
+}) => SettledRefund(
+  settledAt: _now.subtract(Duration(days: daysAgo)),
+  amount: amount,
+  toWallet: toWallet,
+);
+
+/// [daysAgo] may be negative to place a movement *after* the window closes,
+/// which is how the back-computation of the opening balance is exercised.
+WalletMovement _movement(
+  WalletMovementKind kind,
+  double amount, {
+  required int daysAgo,
+}) => WalletMovement(
+  date: _now.subtract(Duration(days: daysAgo)),
+  kind: kind,
+  amount: amount,
+);

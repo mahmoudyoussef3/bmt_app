@@ -2055,6 +2055,8 @@
   "referral_noBalanceYet": "No balance yet",
   "referral_transferHint": "You can transfer this balance to your main wallet.",
   "referral_earnBalanceHint": "Earn balance by inviting friends with your referral code.",
+  "referral_openWallet": "Open my wallet",
+  "referral_walletCreditHint": "Referral rewards are paid straight into your wallet at the office that granted them.",
   "referral_redeemToWallet": "Redeem to Wallet",
   "referral_noBalanceToRedeem": "No balance to redeem",
   "referral_redeemFailed": "Redemption failed. Please try again.",

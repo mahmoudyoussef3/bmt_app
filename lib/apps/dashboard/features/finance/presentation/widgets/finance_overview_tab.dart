@@ -14,6 +14,7 @@ import '../../domain/entities/finance_analytics.dart';
 import '../cubit/finance_state.dart';
 import 'finance_common.dart';
 import 'finance_format.dart';
+import 'finance_money_statements_panel.dart';
 
 /// The answer to "how did we do?" in one screen: the headline number, what it
 /// is made of, and where it came from.
@@ -33,6 +34,11 @@ class FinanceOverviewTab extends StatelessWidget {
         _NetRevenueHero(state: state),
         const SizedBox(height: AppSpacing.medium),
         _KpiBand(state: state),
+        const SizedBox(height: AppSpacing.medium),
+        FinanceMoneyStatementsPanel(
+          statements: analytics.statements,
+          periodLabel: analytics.period.label,
+        ),
         const SizedBox(height: AppSpacing.medium),
         DashboardPanel(
           icon: Icons.show_chart_rounded,

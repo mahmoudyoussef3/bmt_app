@@ -2,6 +2,7 @@ import 'package:file_saver/file_saver.dart';
 
 import '../../domain/entities/finance_analytics.dart';
 import '../../domain/entities/finance_entities.dart';
+import '../../domain/entities/finance_money_model.dart';
 import '../../domain/repositories/finance_repository.dart';
 import '../datasources/finance_datasource.dart';
 import '../services/finance_statement_export_service.dart';
@@ -28,6 +29,10 @@ class FinanceRepositoryImpl implements FinanceRepository {
 
   @override
   Future<RevenueMetrics> getRevenueMetrics() => _datasource.getRevenueMetrics();
+
+  @override
+  Future<WalletFinancePosition> getWalletPosition() =>
+      _datasource.getWalletPosition();
 
   @override
   Future<String> exportStatement(

@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../domain/entities/finance_entities.dart';
+import '../../domain/entities/finance_money_model.dart';
 import 'finance_datasource.dart';
 
 class SupabaseFinanceDatasource implements FinanceDatasource {
@@ -162,6 +163,59 @@ class SupabaseFinanceDatasource implements FinanceDatasource {
     }).toList();
   }
 
+  @override
+  Future<WalletFinancePosition> getWalletPosition() async {
+    // Three reads, run together. Office scoping is a server property on all
+    // three: `office_wallet_overview` resolves the office itself, and both table
+    // reads are covered by their office SELECT policies — there is no office id
+    // to pass and none to get wrong.
+    final (overview, movementRows, refundRows) = await (
+      _client.rpc('office_wallet_overview'),
+      _client
+          .from('wallet_transactions')
+          .select('created_at, kind, amount')
+          .eq('status', 'posted')
+          .order('created_at', ascending: false)
+          .limit(FinanceLedger.rowCap),
+      // Settled refunds come from `refund_requests`, not from the wallet ledger:
+      // a refund to InstaPay or in cash never posts a wallet row, so a
+      // ledger-derived total would silently omit exactly the amounts most likely
+      // to be disputed.
+      _client
+          .from('refund_requests')
+          .select('settled_at, approved_amount, settlement_method')
+          .eq('status', 'settled')
+          .order('settled_at', ascending: false)
+          .limit(FinanceLedger.rowCap),
+    ).wait;
+
+    final summary = overview as Map<String, dynamic>;
+
+    return WalletFinancePosition(
+      currentLiability: _toDouble(summary['outstanding_balance']),
+      movements: [
+        for (final row in (movementRows as List).cast<Map<String, dynamic>>())
+          if (DateTime.tryParse(row['created_at']?.toString() ?? '')
+              case final date?)
+            WalletMovement(
+              date: date.toLocal(),
+              kind: WalletMovementKind.fromDb(row['kind']?.toString() ?? ''),
+              amount: _toDouble(row['amount']),
+            ),
+      ],
+      refunds: [
+        for (final row in (refundRows as List).cast<Map<String, dynamic>>())
+          if (DateTime.tryParse(row['settled_at']?.toString() ?? '')
+              case final date?)
+            SettledRefund(
+              settledAt: date.toLocal(),
+              amount: _toDouble(row['approved_amount']),
+              toWallet: row['settlement_method'] == 'wallet',
+            ),
+      ],
+    );
+  }
+
   // ── Mapping helpers ──────────────────────────────────────────────────────────
 
   PaymentRecord _paymentFromRow(Map<String, dynamic> r) {
@@ -197,9 +251,14 @@ class SupabaseFinanceDatasource implements FinanceDatasource {
     _ => PaymentStatus.pending, // pending / submitted / underReview
   };
 
+  // `refund_requests.status` gained three values with the wallet subsystem
+  // (settled / failed / cancelled). Without them, a *settled* refund would fall
+  // through to `pending` and be counted as outstanding liability forever — the
+  // module's pending-refund KPI would grow with every refund the office
+  // successfully paid.
   RefundStatus _refundStatus(String? s) => switch (s) {
-    'approved' => RefundStatus.approved,
-    'rejected' => RefundStatus.rejected,
+    'approved' || 'settled' => RefundStatus.approved,
+    'rejected' || 'failed' || 'cancelled' => RefundStatus.rejected,
     _ => RefundStatus.pending,
   };
 

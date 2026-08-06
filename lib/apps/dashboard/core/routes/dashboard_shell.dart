@@ -17,6 +17,8 @@ import '../../features/fleet/overview/presentation/screens/fleet_overview_screen
 import '../../features/fleet/shared/domain/entities/fleet_common.dart';
 import '../../features/live_ops/presentation/cubit/live_ops_cubit.dart';
 import '../../features/live_ops/presentation/screens/live_ops_screen.dart';
+import '../../features/wallet/presentation/cubit/wallet_cubit.dart';
+import '../../features/wallet/presentation/screens/wallet_screen.dart';
 import '../../features/notifications/presentation/cubit/notifications_dispatch_cubit.dart';
 import '../../features/notifications/presentation/cubit/operational_alerts_badge_cubit.dart';
 import '../../features/notifications/presentation/cubit/operational_alerts_cubit.dart';
@@ -200,6 +202,17 @@ class _DashboardShellState extends State<DashboardShell> {
       icon: DashboardIcons.payments,
       selectedIcon: DashboardIcons.paymentsActive,
       permission: DashboardPermission.payments,
+      group: _navFinance,
+    ),
+    _DashboardNavItem(
+      // "محفظة العملاء" and not "المحفظة": the code name is generic (§3A.8)
+      // because the schema is owner-agnostic, but in V1 every wallet does
+      // belong to a customer and the operator's label should say so.
+      label: 'محفظة العملاء',
+      route: DashboardRoutes.wallet,
+      icon: DashboardIcons.wallet,
+      selectedIcon: DashboardIcons.walletActive,
+      permission: DashboardPermission.customerWallets,
       group: _navFinance,
     ),
   /*  _DashboardNavItem(
@@ -527,6 +540,24 @@ class _DashboardShellState extends State<DashboardShell> {
       DashboardRoutes.payments => BlocProvider(
         create: (_) => dashboardDi<FinanceCubit>()..load(),
         child: const FinanceScreen(),
+      ),
+      DashboardRoutes.wallet => BlocProvider(
+        create: (_) => dashboardDi<WalletCubit>()..load(),
+        // The signed-in role, not the locally switched `_role`: every one of
+        // these actions writes a permanent, attributed ledger entry, so the
+        // capability must follow the real account rather than a debug selector.
+        // The server checks the same thing again in `office_can` — this only
+        // decides what is worth rendering.
+        child: WalletScreen(
+          canAdjust: DashboardPermissions.canAccess(
+            widget.office.role,
+            DashboardPermission.walletAdjustments,
+          ),
+          canApprove: DashboardPermissions.canAccess(
+            widget.office.role,
+            DashboardPermission.walletApprovals,
+          ),
+        ),
       ),
       DashboardRoutes.paymentVerification => BlocProvider(
         create: (_) => dashboardDi<PaymentVerificationCubit>()..load(),

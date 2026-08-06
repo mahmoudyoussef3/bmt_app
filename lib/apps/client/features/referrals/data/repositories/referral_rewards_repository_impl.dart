@@ -11,9 +11,4 @@ class ReferralRewardsRepositoryImpl implements ReferralRewardsRepository {
   Future<ReferralRewardsData> getReferralRewardsData() {
     return _datasource.getReferralRewardsData();
   }
-
-  @override
-  Future<int> redeemWalletBalance() {
-    return _datasource.redeemWalletBalance();
-  }
 }

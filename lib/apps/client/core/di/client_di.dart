@@ -76,6 +76,11 @@ import '../../features/loyalty/domain/repositories/loyalty_repository.dart';
 import '../../features/loyalty/domain/usecases/get_loyalty_data_usecase.dart';
 import '../../features/loyalty/domain/usecases/redeem_loyalty_reward_usecase.dart';
 import '../../features/loyalty/presentation/cubit/loyalty_cubit.dart';
+import '../../features/wallet/data/datasources/supabase_client_wallet_datasource.dart';
+import '../../features/wallet/data/repositories/client_wallet_repository_impl.dart';
+import '../../features/wallet/domain/repositories/client_wallet_repository.dart';
+import '../../features/wallet/domain/usecases/get_client_wallet_summary_usecase.dart';
+import '../../features/wallet/presentation/cubit/client_wallet_cubit.dart';
 import '../../features/notifications/data/datasources/supabase_notifications_datasource.dart';
 import '../../features/notifications/data/repositories/notifications_repository_impl.dart';
 import '../../features/notifications/domain/repositories/notifications_repository.dart';
@@ -212,6 +217,7 @@ void registerClientDependencies() {
   _registerCommunicationDependencies();
   _registerReferralRewardsDependencies();
   _registerLoyaltyDependencies();
+  _registerWalletDependencies();
 }
 
 void _registerCoreDependencies() {
@@ -1184,12 +1190,6 @@ void _registerReferralRewardsDependencies() {
     );
   }
 
-  if (!clientGetIt.isRegistered<RedeemRewardsUseCase>()) {
-    clientGetIt.registerLazySingleton<RedeemRewardsUseCase>(
-      () => RedeemRewardsUseCase(clientGetIt<ReferralRewardsRepository>()),
-    );
-  }
-
   if (!clientGetIt.isRegistered<RevealVoucherUseCase>()) {
     clientGetIt.registerLazySingleton<RevealVoucherUseCase>(
       () => const RevealVoucherUseCase(),
@@ -1201,9 +1201,41 @@ void _registerReferralRewardsDependencies() {
       () => ReferralRewardsCubit(
         getData: clientGetIt<GetReferralRewardsDataUseCase>(),
         inviteContact: clientGetIt<InviteContactUseCase>(),
-        redeemRewards: clientGetIt<RedeemRewardsUseCase>(),
         revealVoucher: clientGetIt<RevealVoucherUseCase>(),
       ),
+    );
+  }
+}
+
+/// The rider's read-only wallet.
+///
+/// Registered as its own graph rather than folded into referrals: referral
+/// rewards are only one of the things that can land in a wallet, and the wallet
+/// outlives that feature.
+void _registerWalletDependencies() {
+  if (!clientGetIt.isRegistered<SupabaseClientWalletDatasource>()) {
+    clientGetIt.registerLazySingleton<SupabaseClientWalletDatasource>(
+      () => SupabaseClientWalletDatasource(Supabase.instance.client),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<ClientWalletRepository>()) {
+    clientGetIt.registerLazySingleton<ClientWalletRepository>(
+      () => ClientWalletRepositoryImpl(
+        clientGetIt<SupabaseClientWalletDatasource>(),
+      ),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<GetClientWalletSummaryUseCase>()) {
+    clientGetIt.registerLazySingleton<GetClientWalletSummaryUseCase>(
+      () => GetClientWalletSummaryUseCase(clientGetIt<ClientWalletRepository>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<ClientWalletCubit>()) {
+    clientGetIt.registerFactory<ClientWalletCubit>(
+      () => ClientWalletCubit(clientGetIt<GetClientWalletSummaryUseCase>()),
     );
   }
 }

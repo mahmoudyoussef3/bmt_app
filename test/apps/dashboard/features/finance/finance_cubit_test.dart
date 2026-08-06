@@ -2,11 +2,13 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bmt_app/apps/dashboard/features/finance/domain/entities/finance_analytics.dart';
 import 'package:bmt_app/apps/dashboard/features/finance/domain/entities/finance_entities.dart';
+import 'package:bmt_app/apps/dashboard/features/finance/domain/entities/finance_money_model.dart';
 import 'package:bmt_app/apps/dashboard/features/finance/domain/repositories/finance_repository.dart';
 import 'package:bmt_app/apps/dashboard/features/finance/domain/usecases/export_finance_statement_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/finance/domain/usecases/get_payments_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/finance/domain/usecases/get_refund_requests_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/finance/domain/usecases/get_subscriptions_usecase.dart';
+import 'package:bmt_app/apps/dashboard/features/finance/domain/usecases/get_wallet_position_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/finance/presentation/cubit/finance_cubit.dart';
 import 'package:bmt_app/apps/dashboard/features/finance/presentation/cubit/finance_state.dart';
 
@@ -21,6 +23,7 @@ void main() {
         getPayments: GetPaymentsUseCase(repository),
         getRefundRequests: GetRefundRequestsUseCase(repository),
         getSubscriptions: GetFinanceSubscriptionsUseCase(repository),
+        getWalletPosition: GetWalletPositionUseCase(repository),
         exportStatement: ExportFinanceStatementUseCase(repository),
       );
     });
@@ -145,6 +148,15 @@ class _MockFinanceRepository implements FinanceRepository {
   bool throwOnRead = false;
   bool throwOnExport = false;
   final List<String> exportedFormats = [];
+
+  /// This office has never issued wallet credit, so the three statements
+  /// reduce to the legacy figures — which is exactly the regression this fake
+  /// protects: adding the wallet reads must not move any existing number.
+  @override
+  Future<WalletFinancePosition> getWalletPosition() async {
+    if (throwOnRead) throw Exception('فشل تحميل أرصدة المحافظ');
+    return const WalletFinancePosition.empty();
+  }
 
   @override
   Future<List<PaymentRecord>> getPayments() async {

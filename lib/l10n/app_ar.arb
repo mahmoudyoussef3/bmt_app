@@ -1291,6 +1291,8 @@
   "referral_noBalanceYet": "لا يوجد رصيد بعد",
   "referral_transferHint": "يمكنك تحويل هذا الرصيد إلى محفظتك الرئيسية.",
   "referral_earnBalanceHint": "اكسب رصيدًا بدعوة أصدقائك باستخدام كود الإحالة الخاص بك.",
+  "referral_openWallet": "عرض محفظتي",
+  "referral_walletCreditHint": "تُضاف مكافآت الإحالة مباشرة إلى محفظتك لدى المكتب الذي منحها.",
   "referral_redeemToWallet": "استبدال إلى المحفظة",
   "referral_noBalanceToRedeem": "لا يوجد رصيد للاستبدال",
   "referral_redeemFailed": "فشل الاستبدال. حاول مرة أخرى.",
