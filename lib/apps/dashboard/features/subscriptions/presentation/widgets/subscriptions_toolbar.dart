@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_collapsible_section.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
@@ -42,13 +44,33 @@ class SubscriptionsToolbar extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.medium),
           Divider(height: 1, color: scheme.outline.withAlpha(60)),
-          Padding(
-            padding: const EdgeInsets.all(AppSpacing.medium),
+          // Matches the Bookings board: tabs stay, filters fold.
+          DashboardCollapsibleSection.bare(
+            sectionId: DashboardSectionIds.subscriptionsFilters,
+            icon: Icons.filter_alt_outlined,
+            title: 'التصفية',
+            collapsedSummary: DashboardSectionSummary(
+              items: _filterSummary(state),
+            ),
             child: _FiltersBar(state: state, cubit: cubit),
           ),
         ],
       ),
     );
+  }
+
+  /// Trip and route filters hold ids, so the summary resolves them back to the
+  /// names the operator picked — an id in a chip would tell them nothing.
+  static List<String> _filterSummary(SubscriptionsLoaded state) {
+    final filters = state.filters;
+    if (!filters.isActive) return const ['بدون تصفية'];
+    return [
+      if (filters.search.trim().isNotEmpty) 'بحث: ${filters.search.trim()}',
+      if (filters.tripId.isNotEmpty) 'رحلة محددة',
+      if (filters.routeId.isNotEmpty) 'خط سير محدد',
+      if (filters.packageName.isNotEmpty) 'باقة: ${filters.packageName}',
+      if (filters.unpaidOnly) 'غير المسددين فقط',
+    ];
   }
 }
 

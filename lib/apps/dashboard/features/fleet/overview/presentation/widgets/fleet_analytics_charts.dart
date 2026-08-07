@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_models.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/dashboard_donut_chart.dart';
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_panel.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/driver_operations.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_workspace.dart';
@@ -23,6 +24,7 @@ class FleetAnalyticsCharts extends StatelessWidget {
   Widget build(BuildContext context) {
     final palette = DashboardChartPalette.of(context);
     final drivers = DashboardPanel(
+      sectionId: DashboardSectionIds.fleetDriverReadiness,
       icon: Icons.people_alt_rounded,
       title: 'جاهزية السائقين',
       subtitle: 'من يمكنه استلام رحلة الآن',
@@ -30,6 +32,7 @@ class FleetAnalyticsCharts extends StatelessWidget {
     );
 
     final vehicles = DashboardPanel(
+      sectionId: DashboardSectionIds.fleetVehicleStatus,
       icon: Icons.directions_bus_rounded,
       title: 'حالة المركبات',
       subtitle: 'توزيع الأسطول حسب الحالة التشغيلية',

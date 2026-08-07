@@ -4,6 +4,7 @@ import 'package:bmt_app/apps/dashboard/core/routes/dashboard_routes.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_empty_state.dart';
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_panel.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/operation_trip.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
@@ -41,6 +42,7 @@ class TodayTripsSection extends StatelessWidget {
     final hidden = trips.length - shown.length;
 
     return DashboardPanel(
+      sectionId: DashboardSectionIds.homeTodayTrips,
       icon: DashboardIcons.tripsActive,
       title: 'رحلات اليوم',
       subtitle: trips.isEmpty ? null : 'مرتبة حسب موعد القيام',

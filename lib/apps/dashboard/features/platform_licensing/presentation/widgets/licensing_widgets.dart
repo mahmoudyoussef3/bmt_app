@@ -402,6 +402,7 @@ class HealthList extends StatelessWidget {
     required this.describe,
     this.emptyLabel = 'لا يوجد',
     this.onTapOffice,
+    this.maxRows = 5,
   });
 
   final IconData icon;
@@ -410,6 +411,11 @@ class HealthList extends StatelessWidget {
   final String Function(Map<String, dynamic>) describe;
   final String emptyLabel;
   final ValueChanged<String>? onTapOffice;
+
+  /// How many offices are listed before the card summarises the rest. The card
+  /// lives in a header strip, so it stays short by design and the full list is
+  /// reached from the screen the signal belongs to.
+  final int maxRows;
 
   @override
   Widget build(BuildContext context) {
@@ -453,21 +459,26 @@ class HealthList extends StatelessWidget {
               ),
             )
           else
-            for (final row in rows.take(8))
+            for (final row in rows.take(maxRows))
               InkWell(
                 onTap: onTapOffice == null || row['office_id'] == null
                     ? null
                     : () => onTapOffice!(row['office_id'] as String),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 3),
-                  child: Text(describe(row), style: text.bodySmall),
+                  child: Text(
+                    describe(row),
+                    style: text.bodySmall,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ),
               ),
-          if (rows.length > 8)
+          if (rows.length > maxRows)
             Padding(
               padding: const EdgeInsets.only(top: 4),
               child: Text(
-                'و${rows.length - 8} أخرى',
+                'و${rows.length - maxRows} أخرى',
                 style: text.labelSmall?.copyWith(
                   color: DashboardColors.mutedInk(context),
                 ),

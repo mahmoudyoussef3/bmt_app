@@ -5,6 +5,7 @@ import 'package:bmt_app/apps/dashboard/core/routes/dashboard_routes.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_empty_state.dart';
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_panel.dart';
 import 'package:bmt_app/apps/dashboard/features/notifications/domain/entities/operational_alert.dart';
 import 'package:bmt_app/apps/dashboard/features/notifications/presentation/cubit/operational_alerts_cubit.dart';
@@ -56,6 +57,7 @@ class ActionRequiredSection extends StatelessWidget {
         final total = queues.length + alerts.length;
 
         return DashboardPanel(
+          sectionId: DashboardSectionIds.homeActionRequired,
           icon: total == 0 ? DashboardIcons.allClear : DashboardIcons.attention,
           title: 'يحتاج إلى إجراء',
           subtitle: total == 0 ? null : '$total بند بانتظارك',

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_panel.dart';
 import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
@@ -38,6 +39,7 @@ class SubscriptionDetailsPanel extends StatelessWidget {
         _MoneyPanel(subscription: subscription),
         const SizedBox(height: AppSpacing.medium),
         DashboardPanel(
+          sectionId: DashboardSectionIds.subscriptionDetailInfo,
           icon: Icons.badge_outlined,
           title: 'بيانات الاشتراك',
           subtitle: 'الباقة وخط السير ومدة السريان',
@@ -73,6 +75,7 @@ class SubscriptionDetailsPanel extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.medium),
         DashboardPanel(
+          sectionId: DashboardSectionIds.subscriptionDetailRides,
           icon: Icons.confirmation_number_outlined,
           title: 'رصيد الرحلات',
           subtitle: 'ما استُهلك من الباقة وما تبقى',
@@ -149,6 +152,7 @@ class _MoneyPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final outstanding = subscription.outstandingAmount;
     return DashboardPanel(
+      sectionId: DashboardSectionIds.subscriptionDetailAccount,
       icon: Icons.payments_outlined,
       title: 'الحساب',
       subtitle: outstanding > 0
@@ -234,6 +238,7 @@ class _RideHistoryPanel extends StatelessWidget {
           ..sort((a, b) => b.usedAt.compareTo(a.usedAt));
 
     return DashboardPanel(
+      sectionId: DashboardSectionIds.subscriptionDetailLedger,
       icon: Icons.history_rounded,
       title: 'سجل الرحلات المستهلكة',
       subtitle: 'كل رحلة خُصمت من هذا الاشتراك',
@@ -331,6 +336,7 @@ class _OriginPanel extends StatelessWidget {
     }
 
     return DashboardPanel(
+      sectionId: DashboardSectionIds.subscriptionDetailOrigin,
       icon: Icons.route_rounded,
       title: 'مصدر الاشتراك',
       subtitle: 'الرحلة التي اشترى العميل الباقة أثناء حجزها',
@@ -367,6 +373,7 @@ class _ActionsPanel extends StatelessWidget {
     final cancelled = subscription.status == SubscriptionStatus.cancelled;
 
     return DashboardPanel(
+      sectionId: DashboardSectionIds.subscriptionDetailActions,
       icon: Icons.bolt_rounded,
       title: 'العمليات',
       subtitle: 'إجراءات المكتب على هذا الاشتراك',

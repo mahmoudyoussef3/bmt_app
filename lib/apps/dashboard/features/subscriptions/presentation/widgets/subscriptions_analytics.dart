@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/core/theme/spacing.dart';
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_panel.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_models.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/dashboard_donut_chart.dart';
@@ -23,12 +24,14 @@ class SubscriptionsAnalytics extends StatelessWidget {
     final palette = DashboardChartPalette.of(context);
 
     final status = DashboardPanel(
+      sectionId: DashboardSectionIds.subscriptionsStatus,
       icon: Icons.donut_large_rounded,
       title: 'حالة الاشتراكات',
       subtitle: 'نشط مقابل منتهٍ وملغي',
       child: DashboardDonutChart(data: _statusData(palette)),
     );
     final trend = DashboardPanel(
+      sectionId: DashboardSectionIds.subscriptionsRevenueTrend,
       icon: Icons.show_chart_rounded,
       title: 'اتجاه إيراد الاشتراكات',
       subtitle: 'إجمالي قيمة الاشتراكات حسب الشهر',
@@ -38,12 +41,14 @@ class SubscriptionsAnalytics extends StatelessWidget {
       ),
     );
     final plans = DashboardPanel(
+      sectionId: DashboardSectionIds.subscriptionsByPlan,
       icon: Icons.leaderboard_rounded,
       title: 'المشتركون حسب الباقة',
       subtitle: 'أعلى الباقات حسب عدد المشتركين',
       child: DashboardRankedBars(data: _byPlan(scheme)),
     );
     final routes = DashboardPanel(
+      sectionId: DashboardSectionIds.subscriptionsByRoute,
       icon: Icons.alt_route_rounded,
       title: 'المشتركون حسب خط السير',
       subtitle: 'أكثر خطوط السير طلبًا للاشتراك',

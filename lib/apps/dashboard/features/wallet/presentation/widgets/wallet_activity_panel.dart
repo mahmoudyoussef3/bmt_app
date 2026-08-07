@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_empty_state.dart';
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_panel.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
@@ -48,6 +49,7 @@ class WalletActivityPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DashboardPanel(
+      sectionId: DashboardSectionIds.walletActivity,
       icon: Icons.query_stats_rounded,
       title: 'الحركات المالية',
       subtitle: loading
@@ -152,10 +154,8 @@ class _FilterBar extends StatelessWidget {
                   selected: filters.kinds.contains(kind),
                   onSelected: (selected) => onChanged(
                     filters.copyWith(
-                      kinds: {
-                        ...filters.kinds,
-                        if (selected) kind,
-                      }..removeWhere((k) => !selected && k == kind),
+                      kinds: {...filters.kinds, if (selected) kind}
+                        ..removeWhere((k) => !selected && k == kind),
                     ),
                   ),
                 ),
@@ -204,10 +204,8 @@ class _FilterBar extends StatelessWidget {
                   selected: filters.sources.contains(source),
                   onSelected: (selected) => onChanged(
                     filters.copyWith(
-                      sources: {
-                        ...filters.sources,
-                        if (selected) source,
-                      }..removeWhere((s) => !selected && s == source),
+                      sources: {...filters.sources, if (selected) source}
+                        ..removeWhere((s) => !selected && s == source),
                     ),
                   ),
                 ),

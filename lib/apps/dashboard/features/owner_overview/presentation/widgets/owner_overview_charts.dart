@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/core/theme/spacing.dart';
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_panel.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_models.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
@@ -21,6 +22,7 @@ class OwnerOverviewCharts extends StatelessWidget {
     final palette = DashboardChartPalette.of(context);
 
     final trend = DashboardPanel(
+      sectionId: DashboardSectionIds.ownerRevenueTrend,
       icon: Icons.show_chart_rounded,
       title: 'اتجاه الإيرادات',
       subtitle: 'إجمالي إيرادات الحجوزات حسب اليوم',
@@ -30,12 +32,14 @@ class OwnerOverviewCharts extends StatelessWidget {
       ),
     );
     final clients = DashboardPanel(
+      sectionId: DashboardSectionIds.ownerClientStatus,
       icon: Icons.donut_large_rounded,
       title: 'حالة العملاء المشتركين',
       subtitle: 'نشط مقابل منتهٍ وملغي',
       child: DashboardDonutChart(data: _clientsData(palette)),
     );
     final plans = DashboardPanel(
+      sectionId: DashboardSectionIds.ownerClientsByPlan,
       icon: Icons.leaderboard_rounded,
       title: 'العملاء حسب الباقة',
       subtitle: 'أعلى الباقات حسب عدد المشتركين',

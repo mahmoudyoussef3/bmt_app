@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -9,6 +11,7 @@ import '../../../../core/theme/dashboard_colors.dart';
 import '../../../../core/theme/dashboard_icons.dart';
 import '../../../../core/widgets/dashboard_empty_state.dart';
 import '../../../../core/widgets/dashboard_module_header.dart';
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import '../../../../core/widgets/dashboard_panel.dart';
 import '../../../../core/widgets/master_detail_layout.dart';
 import '../../domain/entities/licensing_catalog.dart';
@@ -30,23 +33,25 @@ class PlatformLicensesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return LicensingScreenFrame(
-      builder: (context, state) => Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      // The page scrolls as one — the same shape the offices and wallet
+      // screens use. A viewport-height column cannot hold a health strip, a
+      // full office list and a licence panel at once, and squeezing them into
+      // it is what clipped all three.
+      builder: (context, state) => ListView(
+        padding: EdgeInsets.zero,
         children: [
           _LicensesHeader(state: state),
           const SizedBox(height: AppSpacing.medium),
-          Expanded(
-            child: MasterDetailLayout(
-              masterFlex: 2,
-              detailFlex: 3,
-              placeholderTitle: 'اختر مكتبًا لعرض ترخيصه',
-              placeholderSubtitle:
-                  'كل قيمة تظهر ومعها مصدرها: باقة، استثناء، أو حالة ترخيص.',
-              master: _LicenseList(state: state),
-              detail: state.selectedOffice == null
-                  ? null
-                  : _OfficeLicensePanel(state: state),
-            ),
+          MasterDetailLayout(
+            masterFlex: 2,
+            detailFlex: 3,
+            placeholderTitle: 'اختر مكتبًا لعرض ترخيصه',
+            placeholderSubtitle:
+                'كل قيمة تظهر ومعها مصدرها: باقة، استثناء، أو حالة ترخيص.',
+            master: _LicenseList(state: state),
+            detail: state.selectedOffice == null
+                ? null
+                : _OfficeLicensePanel(state: state),
           ),
         ],
       ),
@@ -83,65 +88,53 @@ class _LicensesHeader extends StatelessWidget {
           children: [
             _EnforcementModeBar(state: state),
             const SizedBox(height: AppSpacing.medium),
-            LayoutBuilder(
-              builder: (context, constraints) {
-                final columns = constraints.maxWidth > 1100 ? 3 : 2;
-                return GridView.count(
-                  crossAxisCount: columns,
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  mainAxisSpacing: AppSpacing.small,
-                  crossAxisSpacing: AppSpacing.small,
-                  childAspectRatio: 2.6,
-                  children: [
-                    HealthList(
-                      icon: DashboardIcons.time,
-                      title: 'تجارب تنتهي قريبًا',
-                      rows: health.trialsEnding,
-                      onTapOffice: cubit.selectOffice,
-                      describe: (r) =>
-                          '${r['office_name']} — ${licensingDate(DateTime.tryParse('${r['trial_ends_at']}'))}',
-                    ),
-                    HealthList(
-                      icon: DashboardIcons.attention,
-                      title: 'متأخرة أو موقوفة',
-                      rows: health.pastDue,
-                      onTapOffice: cubit.selectOffice,
-                      describe: (r) => '${r['office_name']} — ${r['status']}',
-                    ),
-                    HealthList(
-                      icon: DashboardIcons.usage,
-                      title: 'تجاوزت حدًّا',
-                      rows: health.overLimit,
-                      onTapOffice: cubit.selectOffice,
-                      describe: (r) =>
-                          '${r['office_name']} — ${r['name_ar']}: ${r['used']} / ${r['limit']}',
-                    ),
-                    HealthList(
-                      icon: DashboardIcons.featureCatalog,
-                      title: 'مُباعة بلا كود',
-                      rows: health.soldButDeclared,
-                      describe: (r) => '${r['plan_key']} — ${r['name_ar']}',
-                      emptyLabel: 'لا توجد باقة تَعِد بما لا يفعله الكود.',
-                    ),
-                    HealthList(
-                      icon: DashboardIcons.locked,
-                      title: 'استثناءات تنتهي قريبًا',
-                      rows: health.overridesExpiring,
-                      onTapOffice: cubit.selectOffice,
-                      describe: (r) =>
-                          '${r['office_name']} — ${r['feature_key']}',
-                    ),
-                    HealthList(
-                      icon: DashboardIcons.platformOffices,
-                      title: 'مكاتب بلا ترخيص',
-                      rows: health.officesWithoutLicense,
-                      onTapOffice: cubit.selectOffice,
-                      describe: (r) => '${r['office_name']}',
-                    ),
-                  ],
-                );
-              },
+            _HealthGrid(
+              cards: [
+                HealthList(
+                  icon: DashboardIcons.time,
+                  title: 'تجارب تنتهي قريبًا',
+                  rows: health.trialsEnding,
+                  onTapOffice: cubit.selectOffice,
+                  describe: (r) =>
+                      '${r['office_name']} — ${licensingDate(DateTime.tryParse('${r['trial_ends_at']}'))}',
+                ),
+                HealthList(
+                  icon: DashboardIcons.attention,
+                  title: 'متأخرة أو موقوفة',
+                  rows: health.pastDue,
+                  onTapOffice: cubit.selectOffice,
+                  describe: (r) => '${r['office_name']} — ${r['status']}',
+                ),
+                HealthList(
+                  icon: DashboardIcons.usage,
+                  title: 'تجاوزت حدًّا',
+                  rows: health.overLimit,
+                  onTapOffice: cubit.selectOffice,
+                  describe: (r) =>
+                      '${r['office_name']} — ${r['name_ar']}: ${r['used']} / ${r['limit']}',
+                ),
+                HealthList(
+                  icon: DashboardIcons.featureCatalog,
+                  title: 'مُباعة بلا كود',
+                  rows: health.soldButDeclared,
+                  describe: (r) => '${r['plan_key']} — ${r['name_ar']}',
+                  emptyLabel: 'لا توجد باقة تَعِد بما لا يفعله الكود.',
+                ),
+                HealthList(
+                  icon: DashboardIcons.locked,
+                  title: 'استثناءات تنتهي قريبًا',
+                  rows: health.overridesExpiring,
+                  onTapOffice: cubit.selectOffice,
+                  describe: (r) => '${r['office_name']} — ${r['feature_key']}',
+                ),
+                HealthList(
+                  icon: DashboardIcons.platformOffices,
+                  title: 'مكاتب بلا ترخيص',
+                  rows: health.officesWithoutLicense,
+                  onTapOffice: cubit.selectOffice,
+                  describe: (r) => '${r['office_name']}',
+                ),
+              ],
             ),
             const SizedBox(height: AppSpacing.small),
             Text(
@@ -155,6 +148,62 @@ class _LicensesHeader extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// The health strip: cards whose height follows what they have to say.
+///
+/// A fixed aspect ratio was clipping the fullest card — and the card listing
+/// eleven offices is precisely the one the operator opened the screen for. Rows
+/// are laid out by hand so the cards on one line still share a height.
+class _HealthGrid extends StatelessWidget {
+  const _HealthGrid({required this.cards});
+
+  final List<Widget> cards;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = constraints.maxWidth > 1100
+            ? 3
+            : constraints.maxWidth > 620
+            ? 2
+            : 1;
+
+        final lines = <List<Widget>>[
+          for (var i = 0; i < cards.length; i += columns)
+            cards.sublist(i, math.min(i + columns, cards.length)),
+        ];
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (final (index, line) in lines.indexed)
+              Padding(
+                padding: EdgeInsets.only(
+                  top: index == 0 ? 0 : AppSpacing.small,
+                ),
+                child: IntrinsicHeight(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      for (var column = 0; column < columns; column++) ...[
+                        if (column > 0) const SizedBox(width: AppSpacing.small),
+                        Expanded(
+                          child: column < line.length
+                              ? line[column]
+                              : const SizedBox.shrink(),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 }
@@ -245,6 +294,7 @@ class _LicenseList extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
 
     return DashboardPanel(
+      sectionId: DashboardSectionIds.platformLicenseOffices,
       icon: DashboardIcons.licenses,
       title: 'المكاتب',
       subtitle:
@@ -382,7 +432,8 @@ class _OfficeLicensePanel extends StatelessWidget {
     final license = detail.license;
     final cubit = context.read<PlatformLicensingCubit>();
 
-    return ListView(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         AppCard(
           padding: const EdgeInsets.all(AppSpacing.medium),
@@ -444,6 +495,7 @@ class _LicenseSection extends StatelessWidget {
     final license = detail.license;
 
     return DashboardPanel(
+      sectionId: DashboardSectionIds.platformLicenseSummary,
       icon: DashboardIcons.licenses,
       title: 'الترخيص',
       trailing: PopupMenuButton<String>(
@@ -593,6 +645,7 @@ class _LimitsSection extends StatelessWidget {
   Widget build(BuildContext context) {
     final limits = detail.entitlements.limits;
     return DashboardPanel(
+      sectionId: DashboardSectionIds.platformLicenseLimits,
       icon: DashboardIcons.usage,
       title: 'الحدود والاستخدام',
       subtitle: detail.overLimits.isEmpty
@@ -635,6 +688,7 @@ class _EffectiveFeaturesSection extends StatelessWidget {
       });
 
     return DashboardPanel(
+      sectionId: DashboardSectionIds.platformLicenseFeatures,
       icon: DashboardIcons.featureCatalog,
       title: 'الميزات الفعّالة',
       subtitle: 'كل قيمة ومصدرها — أي رتبة في السلم أنتجتها.',
@@ -686,6 +740,7 @@ class _OverridesSection extends StatelessWidget {
     final cubit = context.read<PlatformLicensingCubit>();
 
     return DashboardPanel(
+      sectionId: DashboardSectionIds.platformLicenseOverrides,
       icon: DashboardIcons.locked,
       title: 'التجاوزات',
       subtitle:
@@ -921,6 +976,7 @@ class _InvoicesSection extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DashboardPanel(
+      sectionId: DashboardSectionIds.platformLicenseBilling,
       icon: DashboardIcons.billing,
       title: 'الفوترة',
       child: detail.invoices.isEmpty
@@ -963,6 +1019,7 @@ class _ActivitySection extends StatelessWidget {
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
     return DashboardPanel(
+      sectionId: DashboardSectionIds.platformLicenseActivity,
       icon: DashboardIcons.audit,
       title: 'النشاط',
       subtitle: 'شريحة هذا المكتب من سجل التغييرات.',

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_panel.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/ops_data_table.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
@@ -34,6 +35,7 @@ class FinanceReportsTab extends StatelessWidget {
         _IncomeStatement(analytics: analytics),
         const SizedBox(height: AppSpacing.medium),
         DashboardPanel(
+          sectionId: DashboardSectionIds.financeCollectionByMethod,
           icon: Icons.account_balance_rounded,
           title: 'التحصيل حسب طريقة الدفع',
           subtitle: 'أين يدخل المال فعلياً خلال ${analytics.period.label}',
@@ -41,6 +43,7 @@ class FinanceReportsTab extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.medium),
         DashboardPanel(
+          sectionId: DashboardSectionIds.financeRefundRequests,
           icon: Icons.pending_actions_outlined,
           title: 'طلبات الاسترداد',
           subtitle:
@@ -168,6 +171,7 @@ class _IncomeStatement extends StatelessWidget {
     final mainLines = statement.summary.where((line) => !line.isMemo).toList();
 
     return DashboardPanel(
+      sectionId: DashboardSectionIds.financeIncomeStatement,
       icon: Icons.request_quote_outlined,
       title: 'قائمة الدخل — ${analytics.period.label}',
       subtitle:

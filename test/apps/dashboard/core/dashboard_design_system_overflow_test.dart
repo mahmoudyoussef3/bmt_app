@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_app_theme.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_collapsible_section.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_kpi_card.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_panel.dart';
@@ -140,6 +141,51 @@ void main() {
               icon: const Icon(Icons.more_horiz_rounded),
             ),
             child: const SizedBox(height: 80),
+          ),
+          width: width,
+        );
+      });
+
+      testWidgets('collapsible section with long title and actions @ $width', (
+        tester,
+      ) async {
+        await _expectNoOverflow(
+          tester,
+          DashboardCollapsibleSection(
+            icon: Icons.insights_rounded,
+            title: 'توزيع حالات الرحلات على مدار الشهر الحالي والشهر السابق',
+            subtitle:
+                'كل الرحلات حسب الحالة التشغيلية الحالية، مع مقارنة بالفترة '
+                'السابقة ونسب الإشغال.',
+            actions: [
+              IconButton(
+                onPressed: () {},
+                icon: const Icon(Icons.more_horiz_rounded),
+              ),
+            ],
+            child: const SizedBox(height: 80),
+          ),
+          width: width,
+        );
+      });
+
+      testWidgets('collapsed section summary wraps @ $width', (tester) async {
+        await _expectNoOverflow(
+          tester,
+          const DashboardCollapsibleSection(
+            icon: Icons.filter_alt_outlined,
+            title: 'البحث والتصفية',
+            initiallyExpanded: false,
+            collapsedSummary: DashboardSectionSummary(
+              items: [
+                'بحث: محمد عبد الرحمن السيد',
+                'مسار: القاهرة — الإسكندرية الصحراوي',
+                'تاريخ: ٢٠٢٦-٠٨-٠٧',
+                'محفظة إلكترونية',
+                'بانتظار المراجعة',
+              ],
+            ),
+            child: SizedBox(height: 80),
           ),
           width: width,
         );

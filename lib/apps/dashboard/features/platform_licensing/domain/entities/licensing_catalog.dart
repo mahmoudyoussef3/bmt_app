@@ -155,13 +155,18 @@ class CatalogFeature {
   bool get isLimit => valueType == 'limit';
   bool get isStock => meterKind == 'stock';
 
-  String get statusLabelAr => switch (status) {
+  /// The label for a status the caller holds as a bare string — a filter chip
+  /// exists before any feature is selected, so it cannot go through the
+  /// instance getter below.
+  static String statusLabel(String status) => switch (status) {
     'active' => 'نشطة',
     'hidden' => 'مخفية',
     'deprecated' => 'مهجورة',
     'disabled' => 'موقوفة على مستوى المنصة',
     _ => status,
   };
+
+  String get statusLabelAr => statusLabel(status);
 
   String get valueTypeLabelAr => switch (valueType) {
     'boolean' => 'تشغيل/إيقاف',

@@ -12,6 +12,13 @@ sealed class PlatformLicensingState {
   const PlatformLicensingState();
 }
 
+/// One catalog category and the features of it that survived the filters.
+typedef FeatureGroup = ({
+  String key,
+  String nameAr,
+  List<CatalogFeature> features,
+});
+
 class PlatformLicensingInitial extends PlatformLicensingState {
   const PlatformLicensingInitial();
 }
@@ -43,6 +50,10 @@ class PlatformLicensingLoaded extends PlatformLicensingState {
     this.actionError,
     this.actionMessage,
     this.featureSearch = '',
+    this.featureCategoryFilter,
+    this.featureEnforcementFilter,
+    this.featureStatusFilter,
+    this.selectedFeatureKey,
     this.licenseStatusFilter,
     this.auditFilters = const {},
   });
@@ -72,6 +83,24 @@ class PlatformLicensingLoaded extends PlatformLicensingState {
   final String? actionMessage;
 
   final String featureSearch;
+
+  /// The catalog's four narrowing axes. Search alone was the whole interaction
+  /// and it only answers "where is the one I already know the name of" — these
+  /// answer the questions the screen is actually opened with: what is in this
+  /// category, what did we list but never build, what is switched off.
+  final String? featureCategoryFilter;
+
+  /// `enforced` | `declared`. The same split the KPI tiles count, so tapping a
+  /// tile narrows the list to the rows it was counting.
+  final String? featureEnforcementFilter;
+
+  final String? featureStatusFilter;
+
+  /// The row open in the detail pane. A key rather than the feature itself, so
+  /// a catalog reload after a status change keeps the operator's place instead
+  /// of pointing at a stale copy.
+  final String? selectedFeatureKey;
+
   final String? licenseStatusFilter;
   final Map<String, dynamic> auditFilters;
 
@@ -81,21 +110,90 @@ class PlatformLicensingLoaded extends PlatformLicensingState {
   /// and growing, browsing is not the access pattern.
   List<CatalogFeature> get visibleFeatures {
     final q = featureSearch.trim().toLowerCase();
-    final list = q.isEmpty
-        ? catalog.features
-        : catalog.features
-              .where(
-                (f) =>
-                    f.key.toLowerCase().contains(q) ||
-                    f.nameAr.contains(q) ||
-                    f.nameEn.toLowerCase().contains(q) ||
-                    f.categoryKey.toLowerCase().contains(q),
-              )
-              .toList();
+    final list = catalog.features.where((f) {
+      if (featureCategoryFilter != null &&
+          f.categoryKey != featureCategoryFilter) {
+        return false;
+      }
+      if (featureEnforcementFilter == 'enforced' && !f.isEnforced) return false;
+      if (featureEnforcementFilter == 'declared' && f.isEnforced) return false;
+      if (featureStatusFilter != null && f.status != featureStatusFilter) {
+        return false;
+      }
+      if (q.isEmpty) return true;
+      return f.key.toLowerCase().contains(q) ||
+          f.nameAr.contains(q) ||
+          f.nameEn.toLowerCase().contains(q) ||
+          f.categoryKey.toLowerCase().contains(q) ||
+          f.descriptionAr.contains(q);
+    }).toList();
     return list..sort((a, b) {
       final byCategory = a.categoryKey.compareTo(b.categoryKey);
       return byCategory != 0 ? byCategory : a.sortOrder.compareTo(b.sortOrder);
     });
+  }
+
+  /// [visibleFeatures] grouped by category, in the catalog's own order.
+  ///
+  /// Grouping is what removes the screen's biggest source of noise: in a flat
+  /// list every row repeated its own category, four and five times running, in
+  /// a column that was never labelled.
+  List<FeatureGroup> get visibleFeatureGroups {
+    final byCategory = <String, List<CatalogFeature>>{};
+    for (final feature in visibleFeatures) {
+      byCategory.putIfAbsent(feature.categoryKey, () => []).add(feature);
+    }
+
+    final groups = <FeatureGroup>[];
+    for (final category in catalog.categories) {
+      final rows = byCategory.remove(category.key);
+      if (rows != null) {
+        groups.add((
+          key: category.key,
+          nameAr: category.nameAr,
+          features: rows,
+        ));
+      }
+    }
+    // A feature whose category row is missing still has to appear. Dropping it
+    // silently would be the worst failure this screen has: a flag nobody can
+    // find is a flag nobody can turn off.
+    for (final key in byCategory.keys.toList()..sort()) {
+      groups.add((
+        key: key,
+        nameAr: catalog.categoryName(key),
+        features: byCategory[key]!,
+      ));
+    }
+    return groups;
+  }
+
+  bool get hasFeatureFilters =>
+      featureSearch.trim().isNotEmpty ||
+      featureCategoryFilter != null ||
+      featureEnforcementFilter != null ||
+      featureStatusFilter != null;
+
+  /// Spelled out, never counted: "٣ عوامل تصفية" makes the operator reopen the
+  /// panel to find out which three, and a hidden filter is how a feature looks
+  /// like it was deleted.
+  List<String> get featureFilterLabels => [
+    if (featureSearch.trim().isNotEmpty) 'بحث: «${featureSearch.trim()}»',
+    if (featureCategoryFilter != null)
+      catalog.categoryName(featureCategoryFilter!),
+    if (featureEnforcementFilter == 'enforced') 'مطبَّقة بكود',
+    if (featureEnforcementFilter == 'declared') 'معلنة فقط',
+    if (featureStatusFilter != null)
+      CatalogFeature.statusLabel(featureStatusFilter!),
+  ];
+
+  CatalogFeature? get selectedFeature {
+    final key = selectedFeatureKey;
+    if (key == null) return null;
+    for (final feature in catalog.features) {
+      if (feature.key == key) return feature;
+    }
+    return null;
   }
 
   List<OfficeLicenseRow> get visibleLicenses {
@@ -127,6 +225,14 @@ class PlatformLicensingLoaded extends PlatformLicensingState {
     String? actionError,
     String? actionMessage,
     String? featureSearch,
+    String? featureCategoryFilter,
+    bool clearFeatureCategoryFilter = false,
+    String? featureEnforcementFilter,
+    bool clearFeatureEnforcementFilter = false,
+    String? featureStatusFilter,
+    bool clearFeatureStatusFilter = false,
+    String? selectedFeatureKey,
+    bool clearSelectedFeature = false,
     String? licenseStatusFilter,
     bool clearLicenseStatusFilter = false,
     Map<String, dynamic>? auditFilters,
@@ -153,6 +259,18 @@ class PlatformLicensingLoaded extends PlatformLicensingState {
       actionError: actionError,
       actionMessage: actionMessage,
       featureSearch: featureSearch ?? this.featureSearch,
+      featureCategoryFilter: clearFeatureCategoryFilter
+          ? null
+          : (featureCategoryFilter ?? this.featureCategoryFilter),
+      featureEnforcementFilter: clearFeatureEnforcementFilter
+          ? null
+          : (featureEnforcementFilter ?? this.featureEnforcementFilter),
+      featureStatusFilter: clearFeatureStatusFilter
+          ? null
+          : (featureStatusFilter ?? this.featureStatusFilter),
+      selectedFeatureKey: clearSelectedFeature
+          ? null
+          : (selectedFeatureKey ?? this.selectedFeatureKey),
       licenseStatusFilter: clearLicenseStatusFilter
           ? null
           : (licenseStatusFilter ?? this.licenseStatusFilter),

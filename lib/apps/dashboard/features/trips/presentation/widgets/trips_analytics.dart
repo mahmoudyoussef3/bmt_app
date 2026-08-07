@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/core/theme/spacing.dart';
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_panel.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_models.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
@@ -21,18 +22,21 @@ class TripsAnalytics extends StatelessWidget {
   Widget build(BuildContext context) {
     final palette = DashboardChartPalette.of(context);
     final donut = DashboardPanel(
+      sectionId: DashboardSectionIds.tripsStatusMix,
       icon: Icons.donut_large_rounded,
       title: 'توزيع حالات الرحلات',
       subtitle: 'كل الرحلات حسب الحالة التشغيلية',
       child: DashboardDonutChart(data: _statusData(context)),
     );
     final bars = DashboardPanel(
+      sectionId: DashboardSectionIds.tripsOccupancy,
       icon: Icons.bar_chart_rounded,
       title: 'إشغال الرحلات',
       subtitle: 'عدد الرحلات حسب نسبة الإشغال',
       child: DashboardBarChart(data: _occupancyData(palette)),
     );
     final routes = DashboardPanel(
+      sectionId: DashboardSectionIds.tripsTopRoutes,
       icon: Icons.leaderboard_rounded,
       title: 'أكثر المسارات تشغيلاً',
       subtitle: 'أعلى ٥ مسارات بعدد الرحلات',

@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/entitlements/entitlement_service.dart';
 import '../../../../core/session/dashboard_session.dart';
 import '../../../../core/session/office_context.dart';
+import '../../../../core/ui_state/dashboard_section_state_store.dart';
 import '../../data/datasources/dashboard_auth_datasource.dart';
 
 sealed class DashboardAuthState {
@@ -62,6 +63,10 @@ class DashboardAuthCubit extends Cubit<DashboardAuthState> {
   void _clearSession() {
     _session.clear();
     _entitlements?.clear();
+    // Collapsed-section layout is per-session by design: the next operator on
+    // this machine starts from the designed defaults instead of inheriting
+    // panels someone else folded away.
+    DashboardSectionStateStore.instance.clear();
   }
 
   /// Restores a cached Supabase session on app start, so a reload does not force a

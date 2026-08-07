@@ -4,6 +4,7 @@ import 'package:bmt_app/apps/dashboard/core/routes/dashboard_routes.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_empty_state.dart';
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_panel.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/domain/entities/operation_booking.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
@@ -36,6 +37,7 @@ class RecentBookingsSection extends StatelessWidget {
     final bookings = summary.recentBookings(limit: limit);
 
     return DashboardPanel(
+      sectionId: DashboardSectionIds.homeRecentBookings,
       icon: DashboardIcons.bookingsActive,
       title: 'أحدث الحجوزات',
       subtitle: bookings.isEmpty ? null : 'آخر ما وصل من العملاء',

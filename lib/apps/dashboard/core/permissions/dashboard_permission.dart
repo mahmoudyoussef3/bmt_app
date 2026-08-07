@@ -48,6 +48,12 @@ enum DashboardPermission {
   // owner only — deliberately absent from the support-agent set below.
   reviews,
   reports,
+  // The executive overview: revenue, wallet liability, customer base and the
+  // owner's decision queue on one page. Owner only — and deliberately its own
+  // permission rather than a reuse of [ownerOverview], because the two grant
+  // different things and a future role that should see one but not the other
+  // must be expressible without editing every call site.
+  businessOverview,
   ownerOverview,
   notifications,
   // The office's own marketplace record. Owner-only to match the

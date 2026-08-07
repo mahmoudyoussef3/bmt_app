@@ -4,6 +4,7 @@ import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_empty_state.dart';
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_panel.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
@@ -42,6 +43,7 @@ class WalletDirectoryPanel extends StatelessWidget {
     final now = DateTime.now();
 
     return DashboardPanel(
+      sectionId: DashboardSectionIds.walletDirectory,
       icon: DashboardIcons.users,
       title: 'العملاء',
       subtitle: directory.total == directory.rows.length

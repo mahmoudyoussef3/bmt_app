@@ -2,6 +2,12 @@ class DashboardRoutes {
   const DashboardRoutes._();
 
   static const home = '/';
+
+  /// The executive tab: how the business is performing, and what needs the
+  /// owner. Distinct from [home], which is the operator's working console, and
+  /// from [ownerOverview], which is a revenue aggregate.
+  static const businessOverview = '/business-overview';
+
   static const liveOps = '/live-ops';
   static const bookings = '/bookings';
   static const trips = '/trips';

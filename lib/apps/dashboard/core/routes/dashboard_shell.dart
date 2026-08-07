@@ -10,6 +10,8 @@ import '../../features/bookings/presentation/cubit/bookings_cubit.dart';
 import '../../features/bookings/presentation/screens/bookings_screen.dart';
 import '../../features/captain_requests/presentation/cubit/captain_requests_cubit.dart';
 import '../../features/captain_requests/presentation/screens/captain_requests_screen.dart';
+import '../../features/business_overview/presentation/cubit/business_overview_cubit.dart';
+import '../../features/business_overview/presentation/screens/business_overview_screen.dart';
 import '../../features/dashboard_home/presentation/cubit/dashboard_home_cubit.dart';
 import '../../features/dashboard_home/presentation/screens/dashboard_home_screen.dart';
 import '../../features/fleet/overview/presentation/cubit/fleet_overview_cubit.dart';
@@ -232,6 +234,21 @@ class _DashboardShellState extends State<DashboardShell> {
       route: DashboardRoutes.home,
       icon: DashboardIcons.home,
       selectedIcon: DashboardIcons.homeActive,
+    ),
+    // Top-level beside الرئيسية rather than inside a group: the two are the
+    // console's two landing pages — one for the operator working the day, one
+    // for the owner reading the business — and burying either under a section
+    // heading would make the sidebar imply a hierarchy that does not exist.
+    //
+    // No `feature`: this is a lens over modules that are each licensed on their
+    // own, so an office on a smaller plan sees the page with the sections it
+    // has and a note naming the ones it does not, rather than a locked tab.
+    _DashboardNavItem(
+      label: 'نظرة تنفيذية',
+      route: DashboardRoutes.businessOverview,
+      icon: DashboardIcons.businessOverview,
+      selectedIcon: DashboardIcons.businessOverviewActive,
+      permission: DashboardPermission.businessOverview,
     ),
     _DashboardNavItem(
       label: 'العمليات المباشرة',
@@ -712,6 +729,20 @@ class _DashboardShellState extends State<DashboardShell> {
         ],
         child: DashboardHomeScreen(
           office: widget.office,
+          onOpenModule: _openRoute,
+          onCreateTrip: _startTripPlanner,
+        ),
+      ),
+      DashboardRoutes.businessOverview => BlocProvider(
+        create: (_) => dashboardDi<BusinessOverviewCubit>()..load(),
+        child: BusinessOverviewScreen(
+          office: widget.office,
+          // The live licence, not a copy taken at load: a plan change while the
+          // tab is open must move the plan-limit warnings with it.
+          entitlements: _entitlementContext,
+          // The shell's own gate, handed over rather than reimplemented, so a
+          // quick action can never offer a module the sidebar refuses.
+          canOpenRoute: _canOpenRoute,
           onOpenModule: _openRoute,
           onCreateTrip: _startTripPlanner,
         ),

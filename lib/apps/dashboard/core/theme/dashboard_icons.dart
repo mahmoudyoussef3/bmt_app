@@ -25,6 +25,12 @@ abstract final class DashboardIcons {
   static const home = Icons.space_dashboard_outlined;
   static const homeActive = Icons.space_dashboard_rounded;
 
+  /// The executive overview. An upward business trend, deliberately *not* the
+  /// [trend] chart glyph: that one marks a chart inside a page, this one marks
+  /// the page whose whole subject is how the business is doing.
+  static const businessOverview = Icons.insights_outlined;
+  static const businessOverviewActive = Icons.insights_rounded;
+
   /// Live operations — trips moving right now and their tracking health.
   static const liveOps = Icons.sensors_outlined;
   static const liveOpsActive = Icons.sensors_rounded;
@@ -189,6 +195,38 @@ abstract final class DashboardIcons {
 
   /// A ranking (top routes, busiest days).
   static const ranking = Icons.leaderboard_outlined;
+
+  /// A graded health reading — the business is fine / needs a look / is broken.
+  static const health = Icons.monitor_heart_outlined;
+
+  /// An interpreted finding: what a number *means*, not the number itself.
+  static const insight = Icons.lightbulb_outline_rounded;
+
+  /// A shortcut to a common action.
+  static const quickAction = Icons.bolt_rounded;
+
+  /// The customer base as a group, as opposed to [passenger] (one traveller)
+  /// or `users` (an operator account).
+  static const customers = Icons.groups_2_outlined;
+
+  /// A summarised financial position.
+  static const financial = Icons.account_balance_outlined;
+
+  /// Today's operations, summarised.
+  static const operations = Icons.dashboard_customize_outlined;
+
+  /// A captain's incident report.
+  static const incident = Icons.report_gmailerrorred_rounded;
+
+  /// Movement against a previous period.
+  ///
+  /// Up and down are diagonal and carry their meaning in the vertical axis, so
+  /// RTL leaves them alone. "No change" is a dash rather than
+  /// `Icons.trending_flat`, whose horizontal arrow is mirrored under RTL and
+  /// would read as direction where none is meant.
+  static const trendUp = Icons.trending_up_rounded;
+  static const trendDown = Icons.trending_down_rounded;
+  static const trendFlat = Icons.remove_rounded;
 
   static const refresh = Icons.refresh_rounded;
   static const add = Icons.add_rounded;

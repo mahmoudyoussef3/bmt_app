@@ -4,6 +4,7 @@ import 'package:bmt_app/apps/dashboard/core/routes/dashboard_routes.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_kpi_card.dart';
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_panel.dart';
 
 import '../../domain/entities/dashboard_home_summary.dart';
@@ -32,6 +33,7 @@ class FleetTeamSection extends StatelessWidget {
     final fleet = summary.fleetSummary;
 
     return DashboardPanel(
+      sectionId: DashboardSectionIds.homeFleetTeam,
       icon: DashboardIcons.fleetActive,
       title: 'الأسطول والفريق',
       subtitle: 'الطاقة المتاحة للتشغيل',

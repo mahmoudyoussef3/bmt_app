@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_collapsible_section.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
@@ -45,13 +47,33 @@ class BookingsToolbar extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.medium),
           Divider(height: 1, color: scheme.outline.withAlpha(60)),
-          Padding(
-            padding: const EdgeInsets.all(AppSpacing.medium),
+          // Only the filter row folds — the queue tabs above are navigation and
+          // stay put, because collapsing them would hide which queue is open.
+          DashboardCollapsibleSection.bare(
+            sectionId: DashboardSectionIds.bookingsFilters,
+            icon: Icons.filter_alt_outlined,
+            title: 'التصفية',
+            collapsedSummary: DashboardSectionSummary(
+              items: _filterSummary(state.filters),
+            ),
             child: _FiltersBar(state: state, cubit: cubit),
           ),
         ],
       ),
     );
+  }
+
+  /// Spells the active filters out rather than only counting them: "٢ فلتر" makes
+  /// an operator reopen the panel to find out *which* two.
+  static List<String> _filterSummary(BookingFilters filters) {
+    if (!filters.isActive) return const ['بدون تصفية'];
+    return [
+      if (filters.search.trim().isNotEmpty) 'بحث: ${filters.search.trim()}',
+      if (filters.route.trim().isNotEmpty) 'مسار: ${filters.route.trim()}',
+      if (filters.date.trim().isNotEmpty) 'تاريخ: ${filters.date.trim()}',
+      if (filters.paymentMethod != null) filters.paymentMethod!.label,
+      if (filters.paymentStatus != null) filters.paymentStatus!.label,
+    ];
   }
 }
 

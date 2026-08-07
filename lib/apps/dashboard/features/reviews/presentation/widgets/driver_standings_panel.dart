@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_panel.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 
@@ -18,6 +19,7 @@ class DriverStandingsPanel extends StatelessWidget {
     if (standings.isEmpty) return const SizedBox.shrink();
 
     return DashboardPanel(
+      sectionId: DashboardSectionIds.reviewsDriverStandings,
       icon: Icons.military_tech_outlined,
       title: 'تقييم الكباتن',
       subtitle: 'مرتّب من الأعلى إلى الأقل تقييمًا',

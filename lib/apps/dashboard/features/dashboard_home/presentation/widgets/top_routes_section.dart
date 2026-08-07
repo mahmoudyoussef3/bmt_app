@@ -4,6 +4,7 @@ import 'package:bmt_app/apps/dashboard/core/routes/dashboard_routes.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_empty_state.dart';
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_panel.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 
@@ -31,6 +32,7 @@ class TopRoutesSection extends StatelessWidget {
     final routes = summary.topRoutes();
 
     return DashboardPanel(
+      sectionId: DashboardSectionIds.homeTopRoutes,
       icon: DashboardIcons.ranking,
       title: 'أداء المسارات',
       subtitle: routes.isEmpty ? null : 'نسبة الإشغال خلال آخر ٣٠ يوماً',

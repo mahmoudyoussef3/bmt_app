@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_empty_state.dart';
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_panel.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
@@ -42,6 +43,7 @@ class WalletRefundQueuePanel extends StatelessWidget {
     final pending = refunds.where((r) => r.isOpen).toList();
 
     return DashboardPanel(
+      sectionId: DashboardSectionIds.walletRefundQueue,
       icon: Icons.assignment_return_rounded,
       title: 'طلبات الاسترداد',
       subtitle: loading
@@ -117,10 +119,7 @@ class _RefundTile extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 3,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: tint.withAlpha(30),
                   borderRadius: BorderRadius.circular(999),
@@ -188,10 +187,7 @@ class _RefundTile extends StatelessWidget {
             spacing: AppSpacing.medium,
             runSpacing: 4,
             children: [
-              _Meta(
-                icon: Icons.sell_outlined,
-                label: refund.categoryLabel,
-              ),
+              _Meta(icon: Icons.sell_outlined, label: refund.categoryLabel),
               _Meta(
                 icon: refund.fromClient
                     ? Icons.phone_iphone_rounded
@@ -217,10 +213,7 @@ class _RefundTile extends StatelessWidget {
               // A batch refund is auditable and reversible as a unit, so its
               // membership is worth showing on the row.
               if (refund.batchId != null)
-                _Meta(
-                  icon: Icons.layers_outlined,
-                  label: 'ضمن استرداد جماعي',
-                ),
+                _Meta(icon: Icons.layers_outlined, label: 'ضمن استرداد جماعي'),
             ],
           ),
           if (canDecide && refund.isOpen) ...[
@@ -262,9 +255,7 @@ class _Meta extends StatelessWidget {
         const SizedBox(width: 3),
         Text(
           label,
-          style: Theme.of(
-            context,
-          ).textTheme.labelSmall?.copyWith(color: color),
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(color: color),
         ),
       ],
     );

@@ -157,6 +157,67 @@ class PlatformLicensingCubit extends Cubit<PlatformLicensingState> {
     emit(loaded.copyWith(featureSearch: query));
   }
 
+  /// Null clears the axis. Every catalog filter is a pure narrowing of data the
+  /// console already holds, so none of them refetch.
+  void filterFeaturesByCategory(String? categoryKey) {
+    final loaded = _loaded;
+    if (loaded == null) return;
+    emit(
+      loaded.copyWith(
+        featureCategoryFilter: categoryKey,
+        clearFeatureCategoryFilter: categoryKey == null,
+      ),
+    );
+  }
+
+  /// `enforced` | `declared` | null.
+  void filterFeaturesByEnforcement(String? enforcement) {
+    final loaded = _loaded;
+    if (loaded == null) return;
+    emit(
+      loaded.copyWith(
+        featureEnforcementFilter: enforcement,
+        clearFeatureEnforcementFilter: enforcement == null,
+      ),
+    );
+  }
+
+  void filterFeaturesByStatus(String? status) {
+    final loaded = _loaded;
+    if (loaded == null) return;
+    emit(
+      loaded.copyWith(
+        featureStatusFilter: status,
+        clearFeatureStatusFilter: status == null,
+      ),
+    );
+  }
+
+  void clearFeatureFilters() {
+    final loaded = _loaded;
+    if (loaded == null) return;
+    emit(
+      loaded.copyWith(
+        featureSearch: '',
+        clearFeatureCategoryFilter: true,
+        clearFeatureEnforcementFilter: true,
+        clearFeatureStatusFilter: true,
+      ),
+    );
+  }
+
+  void selectFeature(String key) {
+    final loaded = _loaded;
+    if (loaded == null) return;
+    emit(loaded.copyWith(selectedFeatureKey: key));
+  }
+
+  void clearFeatureSelection() {
+    final loaded = _loaded;
+    if (loaded == null) return;
+    emit(loaded.copyWith(clearSelectedFeature: true));
+  }
+
   /// The platform-wide kill switch, among others. Reloads the catalog *and* the
   /// health screen, because disabling a feature can instantly create a
   /// "sold but not delivered" row on an active plan.
@@ -230,6 +291,15 @@ class PlatformLicensingCubit extends Cubit<PlatformLicensingState> {
   Future<void> previewPlan(String planId) => _action(() async {
     return _loaded?.copyWith(planPreview: await _previewPlan(planId));
   });
+
+  /// Dismisses the resolver preview without touching the selection — the panel
+  /// it renders in is a read-out the operator asked for, so they must be able to
+  /// put it away again.
+  void clearPlanPreview() {
+    final loaded = _loaded;
+    if (loaded == null) return;
+    emit(loaded.copyWith(clearPlanPreview: true));
+  }
 
   // ── Licences ───────────────────────────────────────────────────────────────
 

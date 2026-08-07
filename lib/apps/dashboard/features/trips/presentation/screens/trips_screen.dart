@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/dashboard/core/di/dashboard_di.dart';
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_collapsible_section.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/operation_trip.dart';
@@ -363,6 +365,39 @@ class _SimpleToolbar extends StatelessWidget {
 
   final TripsListLoaded state;
 
+  /// What the collapsed toolbar reports: the search term, the active quick
+  /// chip, how many advanced filters are on, and the resulting row count.
+  List<String> _summaryItems() {
+    final items = <String>[];
+
+    final query = state.searchQuery.trim();
+    if (query.isNotEmpty) items.add('بحث: $query');
+
+    const quickLabels = {
+      'today': 'اليوم',
+      'active': 'قيد التشغيل',
+      'upcoming': 'قادمة',
+      'completed': 'مكتملة',
+      'stale': 'فات موعدها',
+    };
+    final quick = quickLabels[state.quickFilter];
+    if (quick != null) items.add(quick);
+
+    final advanced = [
+      state.statusFilter != null,
+      state.routeFilter != 'الكل',
+      state.driverFilter != 'الكل',
+      state.vehicleFilter != 'الكل',
+      state.occupancyFilter != 'الكل',
+      state.dateFilter != 'الكل',
+    ].where((active) => active).length;
+    if (advanced > 0) items.add('$advanced فلتر متقدم');
+
+    if (items.isEmpty) return const ['بدون تصفية'];
+    items.add('${state.filteredTrips.length} رحلة ظاهرة');
+    return items;
+  }
+
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<TripsListCubit>();
@@ -374,8 +409,14 @@ class _SimpleToolbar extends StatelessWidget {
       ('completed', 'مكتملة'),
       if (state.staleTrips > 0) ('stale', 'فات موعدها'),
     ];
-    return AppCard(
-      padding: const EdgeInsets.all(AppSpacing.medium),
+    return DashboardCollapsibleSection(
+      sectionId: DashboardSectionIds.tripsFilters,
+      icon: Icons.tune_rounded,
+      title: 'البحث والتصفية',
+      // Folding the toolbar away must never hide *that* the list is filtered,
+      // or an operator wonders where their trips went. The summary carries the
+      // active filters forward.
+      collapsedSummary: DashboardSectionSummary(items: _summaryItems()),
       child: LayoutBuilder(
         builder: (context, constraints) {
           final search = DebouncedSearchField(

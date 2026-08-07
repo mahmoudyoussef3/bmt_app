@@ -5,6 +5,7 @@ import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/dashboard_donut_chart.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/dashboard_line_chart.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_kpi_card.dart';
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_panel.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
@@ -41,6 +42,7 @@ class FinanceOverviewTab extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.medium),
         DashboardPanel(
+          sectionId: DashboardSectionIds.financeRevenueTrend,
           icon: Icons.show_chart_rounded,
           title: 'اتجاه الإيراد اليومي',
           subtitle:
@@ -60,12 +62,14 @@ class FinanceOverviewTab extends StatelessWidget {
         const SizedBox(height: AppSpacing.medium),
         _ResponsivePair(
           first: DashboardPanel(
+            sectionId: DashboardSectionIds.financeRevenueSources,
             icon: Icons.pie_chart_outline_rounded,
             title: 'مصادر الإيراد',
             subtitle: 'حجوزات الرحلات مقابل باقات الاشتراك',
             child: DashboardDonutChart(data: _sourceData(analytics, palette)),
           ),
           second: DashboardPanel(
+            sectionId: DashboardSectionIds.financePaymentMethods,
             icon: Icons.donut_large_rounded,
             title: 'طرق التحصيل',
             subtitle: 'الإيراد المحصّل حسب وسيلة الدفع',
@@ -75,6 +79,7 @@ class FinanceOverviewTab extends StatelessWidget {
         const SizedBox(height: AppSpacing.medium),
         _ResponsivePair(
           first: DashboardPanel(
+            sectionId: DashboardSectionIds.financeTopRoutes,
             icon: Icons.alt_route_rounded,
             title: 'أعلى المسارات إيراداً',
             subtitle: 'ترتيب المسارات حسب الإيراد المحصّل',
@@ -84,6 +89,7 @@ class FinanceOverviewTab extends StatelessWidget {
             ),
           ),
           second: DashboardPanel(
+            sectionId: DashboardSectionIds.financeTopCustomers,
             icon: Icons.emoji_events_outlined,
             title: 'أعلى العملاء إنفاقاً',
             subtitle: 'العملاء الأكثر مساهمة في إيراد الفترة',

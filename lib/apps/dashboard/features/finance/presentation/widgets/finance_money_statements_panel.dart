@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_kpi_card.dart';
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_panel.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
@@ -36,6 +37,7 @@ class FinanceMoneyStatementsPanel extends StatelessWidget {
     final palette = DashboardChartPalette.of(context);
 
     return DashboardPanel(
+      sectionId: DashboardSectionIds.financeStatements,
       icon: Icons.account_balance_rounded,
       title: 'القوائم الثلاث',
       subtitle:

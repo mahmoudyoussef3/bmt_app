@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_empty_state.dart';
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_panel.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
@@ -117,6 +118,7 @@ class WalletDetailPane extends StatelessWidget {
         ],
         const SizedBox(height: AppSpacing.medium),
         DashboardPanel(
+          sectionId: DashboardSectionIds.walletDetailLedger,
           icon: Icons.receipt_long_rounded,
           title: 'سجل الحركات',
           subtitle: 'غير قابل للتعديل — كل تصحيح يُسجَّل كحركة عكسية جديدة',
@@ -534,9 +536,7 @@ class _ChainBanner extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(
-            result.verified
-                ? Icons.verified_rounded
-                : Icons.gpp_maybe_rounded,
+            result.verified ? Icons.verified_rounded : Icons.gpp_maybe_rounded,
             color: tint,
             size: 20,
           ),

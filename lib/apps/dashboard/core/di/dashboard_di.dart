@@ -70,6 +70,8 @@ import '../../features/referrals/domain/repositories/referral_repository.dart';
 import '../../features/referrals/domain/usecases/referral_usecases.dart';
 import '../../features/referrals/presentation/cubit/referral_cubit.dart';
 import '../../features/dashboard_home/presentation/cubit/dashboard_home_cubit.dart';
+import '../../features/business_overview/presentation/cubit/business_overview_cubit.dart';
+import '../../features/live_ops/domain/usecases/live_ops_usecases.dart';
 import '../../features/trips/trip_management/domain/usecases/trip_management_usecases.dart';
 
 // ── Fleet Sub-modules ────────────────────────────────────────────────
@@ -259,6 +261,32 @@ void registerDashboardDependencies() {
         getOfficeProfile: dashboardDi<GetOfficeProfileUseCase>(),
         getTickets: dashboardDi<GetTicketsUseCase>(),
         getSubscriptions: dashboardDi<GetSubscriptionsUseCase>(),
+      ),
+    );
+  }
+
+  // The executive tab. Same composition-root pattern as Home above, over
+  // twelve use cases instead of ten — the two extra money feeds (refund queue,
+  // wallet position) and the live-ops snapshot. Also a factory, and for the
+  // same reason: `registerLiveOpsDependencies` and the finance block are called
+  // further down this function, so resolution has to be deferred to mount time
+  // rather than evaluated here.
+  if (!dashboardDi.isRegistered<BusinessOverviewCubit>()) {
+    dashboardDi.registerFactory(
+      () => BusinessOverviewCubit(
+        getTrips: dashboardDi<GetOperationTripsUseCase>(),
+        getBookings: dashboardDi<GetOperationBookingsUseCase>(),
+        getPaymentVerifications:
+            dashboardDi<GetBookingPaymentVerificationsUseCase>(),
+        getRevenueMetrics: dashboardDi<GetRevenueMetricsUseCase>(),
+        getFleetWorkspace: dashboardDi<GetFleetWorkspaceUseCase>(),
+        getCaptainRequests: dashboardDi<GetCaptainRequestsUseCase>(),
+        getReviews: dashboardDi<GetReviewsUseCase>(),
+        getTickets: dashboardDi<GetTicketsUseCase>(),
+        getSubscriptions: dashboardDi<GetSubscriptionsUseCase>(),
+        getRefundRequests: dashboardDi<GetRefundRequestsUseCase>(),
+        getWalletPosition: dashboardDi<GetWalletPositionUseCase>(),
+        getLiveOps: dashboardDi<GetLiveOpsSnapshotUseCase>(),
       ),
     );
   }

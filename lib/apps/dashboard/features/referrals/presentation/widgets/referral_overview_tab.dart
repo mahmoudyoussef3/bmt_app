@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_kpi_card.dart';
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_panel.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_models.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/dashboard_donut_chart.dart';
@@ -93,12 +94,14 @@ class ReferralOverviewTab extends StatelessWidget {
         LayoutBuilder(
           builder: (context, constraints) {
             final breakdown = DashboardPanel(
+              sectionId: DashboardSectionIds.referralsStatusMix,
               icon: Icons.donut_large_rounded,
               title: 'توزيع حالات الإحالة',
               subtitle: 'قيد الانتظار مقابل المكتملة والممنوحة',
               child: DashboardDonutChart(data: _statusBreakdown(palette)),
             );
             final rewards = DashboardPanel(
+              sectionId: DashboardSectionIds.referralsRewardMix,
               icon: Icons.leaderboard_rounded,
               title: 'توزيع المكافآت',
               subtitle: 'مكافآت المُحيلين مقابل المدعوين',

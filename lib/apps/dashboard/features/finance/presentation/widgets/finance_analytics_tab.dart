@@ -4,6 +4,7 @@ import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_models.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/dashboard_bar_chart.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/dashboard_line_chart.dart';
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_panel.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
@@ -32,6 +33,7 @@ class FinanceAnalyticsTab extends StatelessWidget {
         _SignalsPanel(analytics: analytics),
         const SizedBox(height: AppSpacing.medium),
         DashboardPanel(
+          sectionId: DashboardSectionIds.financeCumulativeRevenue,
           icon: Icons.stacked_line_chart_rounded,
           title: 'الإيراد التراكمي',
           subtitle: 'كيف تراكم صافي الإيراد يوماً بعد يوم خلال الفترة',
@@ -49,6 +51,7 @@ class FinanceAnalyticsTab extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.medium),
         DashboardPanel(
+          sectionId: DashboardSectionIds.financeWeekdayPerformance,
           icon: Icons.calendar_view_week_rounded,
           title: 'أداء أيام الأسبوع',
           subtitle: 'أي أيام الأسبوع تحقق أعلى تحصيل خلال هذه الفترة',
@@ -65,6 +68,7 @@ class FinanceAnalyticsTab extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.medium),
         DashboardPanel(
+          sectionId: DashboardSectionIds.financeDailyVolume,
           icon: Icons.bar_chart_rounded,
           title: 'عدد المعاملات اليومي',
           subtitle: 'حجم الحركة اليومي — عدد العمليات وليس قيمتها',
@@ -81,6 +85,7 @@ class FinanceAnalyticsTab extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.medium),
         DashboardPanel(
+          sectionId: DashboardSectionIds.financePeriodComparison,
           icon: Icons.compare_arrows_rounded,
           title: 'مقارنة بالفترة السابقة',
           subtitle: analytics.hasComparison
@@ -90,6 +95,7 @@ class FinanceAnalyticsTab extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.medium),
         DashboardPanel(
+          sectionId: DashboardSectionIds.financeStatusMix,
           icon: Icons.query_stats_rounded,
           title: 'توزيع الحركات حسب الحالة',
           subtitle: 'أين تقف أموال الفترة: محصّلة، معلقة، ملغاة أو مستردة',
@@ -127,6 +133,7 @@ class _SignalsPanel extends StatelessWidget {
     final topRoute = analytics.byRoute.isEmpty ? null : analytics.byRoute.first;
 
     return DashboardPanel(
+      sectionId: DashboardSectionIds.financeKpis,
       icon: Icons.insights_rounded,
       title: 'مؤشرات الأداء',
       subtitle: 'قراءة سريعة لسلوك الإيراد خلال ${analytics.period.label}',

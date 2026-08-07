@@ -9,6 +9,8 @@ import 'package:bmt_app/core/widgets/empty_state.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
 import 'package:bmt_app/core/widgets/debounced_search_field.dart';
 
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_collapsible_section.dart';
 import '../../../../core/widgets/dashboard_module_header.dart';
 import '../../../../core/widgets/dashboard_state_views.dart';
 import '../../domain/entities/booking_payment_verification.dart';
@@ -92,10 +94,24 @@ class _VerificationLoadedView extends StatelessWidget {
                 label: const Text('تحديث'),
               ),
             ],
-            child: _VerificationToolbar(
-              state: state,
-              onQueryChanged: cubit.setQuery,
-              onFilterChanged: cubit.setFilter,
+            child: DashboardCollapsibleSection.bare(
+              sectionId: DashboardSectionIds.paymentVerificationFilters,
+              icon: Icons.filter_alt_outlined,
+              title: 'البحث والتصفية',
+              headerPadding: EdgeInsets.zero,
+              bodyPadding: const EdgeInsets.only(top: AppSpacing.medium),
+              collapsedSummary: DashboardSectionSummary(
+                items: [
+                  state.filter.label,
+                  if (state.query.trim().isNotEmpty)
+                    'بحث: ${state.query.trim()}',
+                ],
+              ),
+              child: _VerificationToolbar(
+                state: state,
+                onQueryChanged: cubit.setQuery,
+                onFilterChanged: cubit.setFilter,
+              ),
             ),
           ),
           const SizedBox(height: AppSpacing.large),

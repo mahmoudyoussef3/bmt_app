@@ -6,6 +6,7 @@ import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 
 import '../../../../core/widgets/dashboard_module_header.dart';
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import '../../../../core/widgets/dashboard_panel.dart';
 import '../../../../core/widgets/dashboard_state_views.dart';
 import '../../domain/entities/live_ops_snapshot.dart';
@@ -99,6 +100,7 @@ class _LiveOpsBody extends StatelessWidget {
         if (snapshot.activeTrips.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.medium),
           DashboardPanel(
+            sectionId: DashboardSectionIds.liveOpsMap,
             icon: Icons.map_rounded,
             title: 'خريطة الأسطول المباشرة',
             subtitle: '${snapshot.mappableTrips.length} مركبة ترسل موقعها',
@@ -177,6 +179,7 @@ class _TripsPanel extends StatelessWidget {
       });
 
     return DashboardPanel(
+      sectionId: DashboardSectionIds.liveOpsTrips,
       icon: Icons.route_rounded,
       title: 'الرحلات على الطريق',
       subtitle: trips.isEmpty ? null : '${trips.length} رحلة نشطة',
@@ -228,6 +231,7 @@ class _IncidentsPanel extends StatelessWidget {
     final open = snapshot.openIncidents;
     final unacknowledged = snapshot.unacknowledgedCount;
     return DashboardPanel(
+      sectionId: DashboardSectionIds.liveOpsIncidents,
       icon: Icons.report_rounded,
       title: 'البلاغات المفتوحة',
       subtitle: open.isEmpty

@@ -11,6 +11,7 @@ import '../../../../core/theme/dashboard_icons.dart';
 import '../../../../core/widgets/dashboard_empty_state.dart';
 import '../../../../core/widgets/dashboard_kpi_card.dart';
 import '../../../../core/widgets/dashboard_module_header.dart';
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import '../../../../core/widgets/dashboard_panel.dart';
 import '../../../../core/widgets/dashboard_state_views.dart';
 import '../../../platform_licensing/presentation/widgets/licensing_widgets.dart';
@@ -106,6 +107,7 @@ class _Loaded extends StatelessWidget {
           const SizedBox(height: AppSpacing.medium),
           if (limits.isNotEmpty) ...[
             DashboardPanel(
+              sectionId: DashboardSectionIds.officeBillingUsage,
               icon: DashboardIcons.usage,
               title: 'الاستخدام',
               subtitle: 'ما استهلكته من حدود باقتك.',
@@ -162,6 +164,7 @@ class _IncludedFeatures extends StatelessWidget {
     final text = Theme.of(context).textTheme;
 
     return DashboardPanel(
+      sectionId: DashboardSectionIds.officeBillingPlan,
       icon: DashboardIcons.featureCatalog,
       title: 'ما تشمله باقتك',
       subtitle: 'المتاح، وما يمكن إضافته بترقية.',
@@ -266,6 +269,7 @@ class _Invoices extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DashboardPanel(
+      sectionId: DashboardSectionIds.officeBillingInvoices,
       icon: DashboardIcons.billing,
       title: 'الفواتير',
       child: state.invoices.isEmpty

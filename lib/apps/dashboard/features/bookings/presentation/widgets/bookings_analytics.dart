@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_panel.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_models.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
@@ -99,18 +100,21 @@ class BookingsAnalytics extends StatelessWidget {
     final palette = DashboardChartPalette.of(context);
 
     final status = DashboardPanel(
+      sectionId: DashboardSectionIds.bookingsStatusMix,
       icon: Icons.donut_large_rounded,
       title: 'الحجوزات حسب الحالة',
       subtitle: 'توزيع الحجوزات على حالات سير العمل',
       child: DashboardDonutChart(data: _statusData(context)),
     );
     final payment = DashboardPanel(
+      sectionId: DashboardSectionIds.bookingsPaymentMix,
       icon: Icons.pie_chart_outline_rounded,
       title: 'مدفوع مقابل قيد التحصيل',
       subtitle: 'الحجوزات حسب حالة الدفع',
       child: DashboardDonutChart(data: _paymentData(palette)),
     );
     final trend = DashboardPanel(
+      sectionId: DashboardSectionIds.bookingsDailyTrend,
       icon: Icons.show_chart_rounded,
       title: 'اتجاه الحجوزات اليومي',
       subtitle: 'عدد الحجوزات حسب اليوم',
@@ -120,6 +124,7 @@ class BookingsAnalytics extends StatelessWidget {
       ),
     );
     final routes = DashboardPanel(
+      sectionId: DashboardSectionIds.bookingsTopRoutes,
       icon: Icons.leaderboard_rounded,
       title: 'أكثر المسارات حجزاً',
       subtitle: 'أعلى ٦ مسارات حسب عدد الحجوزات',

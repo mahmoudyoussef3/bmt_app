@@ -9,6 +9,7 @@ import '../../../../core/theme/dashboard_icons.dart';
 import '../../../../core/widgets/dashboard_empty_state.dart';
 import '../../../../core/widgets/dashboard_kpi_card.dart';
 import '../../../../core/widgets/dashboard_module_header.dart';
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import '../../../../core/widgets/dashboard_panel.dart';
 import '../../../../core/widgets/ops_data_table.dart';
 import '../../domain/entities/office_license.dart';
@@ -93,6 +94,7 @@ class _PlatformBillingScreenState extends State<PlatformBillingScreen> {
             const SizedBox(height: AppSpacing.medium),
             if (billing.renewals.isNotEmpty) ...[
               DashboardPanel(
+                sectionId: DashboardSectionIds.platformBillingRenewals,
                 icon: DashboardIcons.time,
                 title: 'تجديدات خلال ٣٠ يومًا',
                 child: Column(
@@ -126,6 +128,7 @@ class _PlatformBillingScreenState extends State<PlatformBillingScreen> {
             ],
             Expanded(
               child: DashboardPanel(
+                sectionId: DashboardSectionIds.platformBillingInvoices,
                 icon: DashboardIcons.billing,
                 title: 'الفواتير',
                 subtitle: '${billing.invoiceCount} فاتورة',

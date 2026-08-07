@@ -1,5 +1,7 @@
 import 'package:bmt_app/apps/dashboard/core/di/dashboard_di.dart';
 import 'package:bmt_app/apps/dashboard/core/permissions/dashboard_role.dart';
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_collapsible_section.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
@@ -67,13 +69,29 @@ class _UsersViewState extends State<_UsersView> {
                   label: const Text('تحديث'),
                 ),
               ],
-              child: _UsersToolbar(
-                users: users,
-                filteredCount: filtered.length,
-                query: _query,
-                roleFilter: _roleFilter,
-                onQueryChanged: (value) => setState(() => _query = value),
-                onRoleChanged: (role) => setState(() => _roleFilter = role),
+              // headerPadding is zeroed because the module header already insets
+              // its child slot; the default would read as a double margin.
+              child: DashboardCollapsibleSection.bare(
+                sectionId: DashboardSectionIds.usersFilters,
+                icon: Icons.filter_alt_outlined,
+                title: 'البحث والتصفية',
+                headerPadding: EdgeInsets.zero,
+                bodyPadding: const EdgeInsets.only(top: AppSpacing.medium),
+                collapsedSummary: DashboardSectionSummary(
+                  items: [
+                    if (_query.trim().isNotEmpty) 'بحث: ${_query.trim()}',
+                    if (_roleFilter != null) _roleFilter!.label,
+                    '${filtered.length}/${users.length} مستخدم',
+                  ],
+                ),
+                child: _UsersToolbar(
+                  users: users,
+                  filteredCount: filtered.length,
+                  query: _query,
+                  roleFilter: _roleFilter,
+                  onQueryChanged: (value) => setState(() => _query = value),
+                  onRoleChanged: (role) => setState(() => _roleFilter = role),
+                ),
               ),
             ),
             const SizedBox(height: AppSpacing.medium),

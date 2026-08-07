@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_kpi_card.dart';
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_collapsible_section.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
@@ -79,15 +81,28 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                 'تظهر هنا تقييمات الركاب فور إنهاء رحلاتهم وتقييمها من التطبيق.',
           )
         else ...[
-          ReviewsFilterBar(
-            filter: state.filter,
-            needsAttentionCount: summary.needsAttentionCount,
-            onFilterChanged: cubit.setFilter,
-            onSearch: (query) {
-              cubit.search(query);
-              setState(() {});
-            },
-            searchController: _search,
+          DashboardCollapsibleSection(
+            sectionId: DashboardSectionIds.reviewsFilters,
+            icon: Icons.filter_alt_outlined,
+            title: 'البحث والتصفية',
+            collapsedSummary: DashboardSectionSummary(
+              items: [
+                state.filter.label,
+                if (_search.text.trim().isNotEmpty)
+                  'بحث: ${_search.text.trim()}',
+                '${visible.length} تقييم ظاهر',
+              ],
+            ),
+            child: ReviewsFilterBar(
+              filter: state.filter,
+              needsAttentionCount: summary.needsAttentionCount,
+              onFilterChanged: cubit.setFilter,
+              onSearch: (query) {
+                cubit.search(query);
+                setState(() {});
+              },
+              searchController: _search,
+            ),
           ),
           const SizedBox(height: AppSpacing.large),
           if (state.isFilteredEmpty)
