@@ -8,13 +8,13 @@ import 'package:bmt_app/apps/dashboard/features/platform_licensing/presentation/
 import 'package:bmt_app/apps/dashboard/features/platform_licensing/presentation/cubit/platform_licensing_state.dart';
 import 'package:bmt_app/apps/dashboard/features/platform_licensing/presentation/screens/platform_plans_screen.dart';
 
-/// الخطط والباقات has one layout that has to hold: a plan list taller than the
-/// window beside an open plan whose feature list is longer still. The list used
-/// to be a plain `Column` in a viewport-height row, so it clipped — the console
-/// reported "BOTTOM OVERFLOWED BY 90 PIXELS" over the last plan in the list.
+/// الخطط والباقات is two screens: a gallery of plan cards, and the workspace
+/// one opens into. Both have to hold at a short console window — the gallery
+/// because a grid of cards is taller than the fold, the workspace because a
+/// plan's feature list is longer still.
 ///
 /// The other thing worth locking is the edit buffer: it lives in the screen so
-/// the list can refuse to move to another plan while it is dirty.
+/// leaving a plan with unsaved values has to ask first.
 
 /// Window sizes the console is actually used at, height first.
 const _sizes = <Size>[
@@ -169,8 +169,8 @@ void main() {
         await _expectNoOverflow(tester, _state(), size: size);
       });
 
-      testWidgets('fits ${size.width.toInt()}×${size.height.toInt()} with the '
-          'detail placeholder', (tester) async {
+      testWidgets('fits ${size.width.toInt()}×${size.height.toInt()} on the '
+          'gallery', (tester) async {
         await _expectNoOverflow(
           tester,
           _state(withSelection: false),
@@ -179,42 +179,56 @@ void main() {
       });
     }
 
-    testWidgets('the plan list scrolls to the plans past the fold', (
+    testWidgets('the gallery scrolls to the plans past the fold', (
       tester,
     ) async {
-      await _expectNoOverflow(tester, _state(), size: const Size(1440, 760));
+      await _expectNoOverflow(
+        tester,
+        _state(withSelection: false),
+        size: const Size(1440, 760),
+      );
 
       final last = find.text('الباقة رقم 12');
       expect(last, findsOneWidget);
 
-      // The list is longer than its pane, so the last plan starts under the
-      // fold. Before the fix it stayed there — the column simply clipped.
-      final master = find
+      // The grid is taller than the window, so the last card starts under the
+      // fold. It has to be reachable rather than clipped.
+      final page = find
           .ancestor(of: last, matching: find.byType(Scrollable))
           .first;
-      final viewport = tester.getRect(master);
+      final viewport = tester.getRect(page);
       expect(viewport.contains(tester.getCenter(last)), isFalse);
 
-      await tester.scrollUntilVisible(last, 200, scrollable: master);
+      await tester.scrollUntilVisible(last, 200, scrollable: page);
       await tester.pumpAndSettle();
 
       expect(viewport.contains(tester.getCenter(last)), isTrue);
       expect(tester.takeException(), isNull);
     });
+
+    testWidgets('opening a plan replaces the gallery with its workspace', (
+      tester,
+    ) async {
+      await _pumpScreen(tester, _state());
+
+      // The workspace owns the whole width — the gallery's own controls are
+      // gone, and the way back is a named button rather than a bare arrow.
+      expect(find.text('كل الباقات'), findsOneWidget);
+      expect(find.text('باقة جديدة'), findsNothing);
+    });
   });
 
   group('PlatformPlansScreen editing', () {
-    testWidgets('a clean plan offers no unsaved-changes bar', (tester) async {
+    testWidgets('a clean plan offers no save bar at all', (tester) async {
       await _pumpScreen(tester, _state());
 
+      // Not a disabled save button: nothing is pending, so there is nothing to
+      // put on screen.
       expect(find.textContaining('تعديل غير محفوظ'), findsNothing);
-      final save = tester.widget<FilledButton>(
-        find.widgetWithText(FilledButton, 'حفظ'),
-      );
-      expect(save.onPressed, isNull);
+      expect(find.widgetWithText(FilledButton, 'حفظ'), findsNothing);
     });
 
-    testWidgets('changing a value raises the unsaved bar and enables save', (
+    testWidgets('changing a value raises the save bar with its note field', (
       tester,
     ) async {
       await _pumpScreen(tester, _state());
@@ -223,6 +237,12 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.textContaining('تعديل غير محفوظ'), findsOneWidget);
+      // The note is optional and inline — saving never opens a modal asking
+      // for a reason the RPC does not require.
+      expect(
+        find.widgetWithText(TextField, 'ملاحظة للسجل (اختيارية)'),
+        findsOneWidget,
+      );
       final save = tester.widget<FilledButton>(
         find.widgetWithText(FilledButton, 'حفظ').first,
       );
@@ -241,15 +261,13 @@ void main() {
       expect(find.textContaining('تعديل غير محفوظ'), findsNothing);
     });
 
-    testWidgets('moving to another plan while dirty asks first', (
-      tester,
-    ) async {
+    testWidgets('leaving the workspace while dirty asks first', (tester) async {
       await _pumpScreen(tester, _state());
 
       await tester.tap(find.byType(Switch).first);
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('الباقة رقم 4'));
+      await tester.tap(find.text('كل الباقات'));
       await tester.pumpAndSettle();
 
       expect(find.text('تعديلات غير محفوظة'), findsOneWidget);
@@ -258,21 +276,20 @@ void main() {
   });
 
   group('PlatformPlansScreen filtering', () {
-    testWidgets('a status filter narrows the list and counts what is left', (
+    testWidgets('a status filter narrows the gallery and counts what is left', (
       tester,
     ) async {
-      await _pumpScreen(tester, _state());
+      await _pumpScreen(tester, _state(withSelection: false));
 
       await tester.tap(find.textContaining('مسودات'));
       await tester.pumpAndSettle();
 
-      // 12 plans, every third a draft. The open plan still names itself in the
-      // detail header, so the count is what the filter is judged on.
+      // 12 plans, every third a draft.
       expect(find.text('4 من 12 باقة'), findsOneWidget);
       expect(find.text('الباقة رقم 4'), findsNothing);
     });
 
-    testWidgets('the features tab can show only what the plan sets', (
+    testWidgets('the feature editor can show only what the plan sets', (
       tester,
     ) async {
       await _pumpScreen(tester, _state());
@@ -281,6 +298,19 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('يُعرض 3 من 22'), findsOneWidget);
+    });
+
+    testWidgets('the feature editor can be narrowed to one category', (
+      tester,
+    ) async {
+      await _pumpScreen(tester, _state());
+
+      // 22 features, alternating categories: 11 in التشغيل.
+      await tester.tap(find.text('التشغيل (11)'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('يُعرض 11 من 22'), findsOneWidget);
+      expect(find.text('المالية'), findsNothing);
     });
   });
 }

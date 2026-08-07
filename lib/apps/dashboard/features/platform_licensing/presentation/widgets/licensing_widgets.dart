@@ -321,56 +321,126 @@ class OverrideDirectionIcon extends StatelessWidget {
   }
 }
 
-/// Every mutating action in this console requires a reason.
+/// Asks for the reason the *server* requires.
 ///
-/// Not friction for its own sake: an override or a suspension created without
-/// a stated reason becomes permanent, because in two years nobody will dare
-/// undo something they cannot explain.
+/// Only the actions whose RPC enforces a reason still open this — suspending a
+/// licence, extending a trial, creating or clearing an override. Saving a plan
+/// no longer does: `platform_save_plan` requires nothing, writes the revision
+/// either way, and demanding eight characters before every single save was the
+/// main reason this console felt hostile to touch.
+///
+/// [suggestions] are one-tap fills. The reason still has to be true, but the
+/// true one is usually one of three, and retyping it every time buys nothing.
 Future<String?> promptForReason(
   BuildContext context, {
   required String title,
   String? description,
   String confirmLabel = 'تأكيد',
   int minLength = 8,
+  List<String> suggestions = const [],
 }) {
-  final controller = TextEditingController();
-  final formKey = GlobalKey<FormState>();
-
   return showDialog<String>(
     context: context,
-    builder: (context) => AlertDialog(
-      title: Text(title),
-      content: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 420),
-        child: Form(
-          key: formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (description != null) ...[
-                Text(
-                  description,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: DashboardColors.mutedInk(context),
+    builder: (context) => _ReasonDialog(
+      title: title,
+      description: description,
+      confirmLabel: confirmLabel,
+      minLength: minLength,
+      suggestions: suggestions,
+    ),
+  );
+}
+
+class _ReasonDialog extends StatefulWidget {
+  const _ReasonDialog({
+    required this.title,
+    required this.description,
+    required this.confirmLabel,
+    required this.minLength,
+    required this.suggestions,
+  });
+
+  final String title;
+  final String? description;
+  final String confirmLabel;
+  final int minLength;
+  final List<String> suggestions;
+
+  @override
+  State<_ReasonDialog> createState() => _ReasonDialogState();
+}
+
+class _ReasonDialogState extends State<_ReasonDialog> {
+  final _controller = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    if (_formKey.currentState?.validate() ?? false) {
+      Navigator.of(context).pop(_controller.text.trim());
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: Text(widget.title),
+      content: SizedBox(
+        width: 460,
+        child: SingleChildScrollView(
+          child: Form(
+            key: _formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (widget.description != null) ...[
+                  Text(
+                    widget.description!,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: DashboardColors.mutedInk(context),
+                      height: 1.5,
+                    ),
                   ),
+                  const SizedBox(height: AppSpacing.medium),
+                ],
+                TextFormField(
+                  controller: _controller,
+                  autofocus: true,
+                  maxLines: 2,
+                  onFieldSubmitted: (_) => _submit(),
+                  decoration: const InputDecoration(
+                    labelText: 'السبب',
+                    hintText: 'يظهر في سجل التغييرات',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (v) => (v ?? '').trim().length < widget.minLength
+                      ? 'اكتب سببًا واضحًا (${widget.minLength} أحرف على الأقل)'
+                      : null,
                 ),
-                const SizedBox(height: AppSpacing.medium),
+                if (widget.suggestions.isNotEmpty) ...[
+                  const SizedBox(height: AppSpacing.small),
+                  Wrap(
+                    spacing: AppSpacing.xSmall,
+                    runSpacing: AppSpacing.xSmall,
+                    children: [
+                      for (final suggestion in widget.suggestions)
+                        ActionChip(
+                          label: Text(suggestion),
+                          onPressed: () => setState(() {
+                            _controller.text = suggestion;
+                          }),
+                        ),
+                    ],
+                  ),
+                ],
               ],
-              TextFormField(
-                controller: controller,
-                autofocus: true,
-                maxLines: 2,
-                decoration: const InputDecoration(
-                  labelText: 'السبب',
-                  hintText: 'يظهر في سجل التغييرات، ولا يمكن تركه فارغًا',
-                  border: OutlineInputBorder(),
-                ),
-                validator: (v) => (v ?? '').trim().length < minLength
-                    ? 'اكتب سببًا واضحًا ($minLength أحرف على الأقل)'
-                    : null,
-              ),
-            ],
+            ),
           ),
         ),
       ),
@@ -379,17 +449,10 @@ Future<String?> promptForReason(
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('إلغاء'),
         ),
-        FilledButton(
-          onPressed: () {
-            if (formKey.currentState?.validate() ?? false) {
-              Navigator.of(context).pop(controller.text.trim());
-            }
-          },
-          child: Text(confirmLabel),
-        ),
+        FilledButton(onPressed: _submit, child: Text(widget.confirmLabel)),
       ],
-    ),
-  );
+    );
+  }
 }
 
 /// A compact list of offices for the health screen's sections.

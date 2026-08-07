@@ -162,31 +162,20 @@ class DashboardSectionIds {
   static const platformBillingRenewals = 'platform.billing.renewals';
   static const platformBillingInvoices = 'platform.billing.invoices';
   static const platformLicenseOffices = 'platform.licenses.offices';
-  static const platformLicenseSummary = 'platform.licenses.summary';
   static const platformLicenseLimits = 'platform.licenses.limits';
   static const platformLicenseFeatures = 'platform.licenses.features';
   static const platformLicenseOverrides = 'platform.licenses.overrides';
   static const platformLicenseBilling = 'platform.licenses.billing';
   static const platformLicenseActivity = 'platform.licenses.activity';
-  static const platformPlansKpis = 'platform.plans.kpis';
-  static const platformPlansList = 'platform.plans.list';
-  static const platformPlansPreview = 'platform.plans.preview';
-  static const platformFeatureFilters = 'platform.features.filters';
-  static const platformFeatureDefinition = 'platform.features.definition';
-  static const platformFeatureGates = 'platform.features.gates';
-  static const platformFeatureDependencies = 'platform.features.dependencies';
-  static const platformFeatureImpact = 'platform.features.impact';
-  static const platformFeatureStatus = 'platform.features.status';
 
-  /// Per-row sections need a stable id derived from the row's own identity —
-  /// a shared constant would make every row in the list collapse together.
-  static String platformPlanCategory(String categoryKey) =>
-      'platform.plans.category.$categoryKey';
+  // الخطط والباقات and كتالوج الميزات fold almost nothing by design: they were
+  // rebuilt around a gallery, a workspace and a single toolbar, and a header
+  // that folds is a header that was too big. The revision history is the one
+  // survivor — a stack of diffs genuinely wants to stay shut.
 
   /// One entry in a plan's revision history, keyed by the revision's own id.
+  /// Per-row sections need an id derived from the row's own identity — a shared
+  /// constant would make every row in the list collapse together.
   static String platformPlanRevision(String revisionId) =>
       'platform.plans.revision.$revisionId';
-
-  static String platformFeatureCategory(String categoryKey) =>
-      'platform.features.category.$categoryKey';
 }

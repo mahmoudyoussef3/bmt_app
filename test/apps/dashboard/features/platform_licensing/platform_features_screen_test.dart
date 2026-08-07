@@ -195,12 +195,14 @@ void main() {
     expect(find.text('2'), findsWidgets); // the comms group's count
   });
 
-  testWidgets('the "معلنة فقط" tile filters the list to what it counts', (
+  testWidgets('the "معلنة فقط" segment filters the list to what it counts', (
     tester,
   ) async {
     await _pump(tester);
 
-    await tester.tap(find.text('معلنة فقط').first);
+    // The toolbar's enforcement switch carries its own count, so the control
+    // and the number it filters to are the same thing.
+    await tester.tap(find.text('معلنة فقط (1)'));
     await tester.pumpAndSettle();
 
     expect(find.text('أدوات التسويق'), findsOneWidget);
@@ -251,7 +253,7 @@ void main() {
     await tester.tap(find.text('أدوات التسويق'));
     await tester.pumpAndSettle();
 
-    expect(find.text('أين تُطبَّق'), findsOneWidget);
+    expect(find.text('أين تُطبَّق وما تتطلبه'), findsOneWidget);
     expect(
       find.textContaining('لا يوجد كود يطبّق هذه الميزة بعد'),
       findsOneWidget,

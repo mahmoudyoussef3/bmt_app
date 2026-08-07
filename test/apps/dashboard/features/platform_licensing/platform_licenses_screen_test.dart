@@ -179,15 +179,63 @@ void main() {
       });
     }
 
-    testWidgets('a fuller health card lists its rows and counts the rest', (
+    testWidgets('a signal shows its count, and opens onto every row', (
       tester,
     ) async {
-      await _expectNoOverflow(tester, _state(), size: const Size(1440, 760));
+      await _expectNoOverflow(tester, _state(), size: const Size(1680, 1050));
 
-      // 11 sold-but-declared rows: the card shows the first few and says how
-      // many it did not — the number itself must never be hidden.
+      // The strip is a row of counts: the number is the whole tile, so it is
+      // never the thing that gets clipped.
       expect(find.text('11'), findsWidgets);
-      expect(find.text('و6 أخرى'), findsOneWidget);
+
+      await tester.ensureVisible(find.text('مُباعة بلا كود'));
+      await tester.tap(find.text('مُباعة بلا كود'));
+      await tester.pumpAndSettle();
+
+      // Every row, not the first five and a footnote — the card listing eleven
+      // is precisely the one the operator opened the screen for.
+      expect(
+        find.text('professional — عدد السائقين المسموح به'),
+        findsNWidgets(11),
+      );
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets('a clean platform shows no signal strip at all', (
+      tester,
+    ) async {
+      await _expectNoOverflow(
+        tester,
+        PlatformLicensingLoaded(
+          settings: const LicensingSettings(enforcementMode: 'enforcing'),
+          licenses: _state().licenses,
+        ),
+        size: const Size(1440, 760),
+      );
+
+      // Six cards saying "لا يوجد" is a wall, not a health strip.
+      expect(find.text('تجارب تنتهي قريبًا'), findsNothing);
+      expect(find.textContaining('لا شيء يحتاج انتباهك الآن'), findsOneWidget);
+    });
+  });
+
+  group('PlatformLicensesScreen list', () {
+    testWidgets('the office list can be searched', (tester) async {
+      await _expectNoOverflow(
+        tester,
+        _state(withSelection: false),
+        size: const Size(1680, 1050),
+      );
+
+      await tester.enterText(
+        find.widgetWithText(TextField, 'ابحث باسم المكتب أو باقته'),
+        'رقم 3',
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.pumpAndSettle();
+
+      expect(find.text('مكتب النقل السريع للرحلات رقم 3'), findsOneWidget);
+      expect(find.text('مكتب النقل السريع للرحلات رقم 4'), findsNothing);
     });
   });
 }

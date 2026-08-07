@@ -261,14 +261,15 @@ class _PlanEditorDialogState extends State<_PlanEditorDialog> {
                 TextFormField(
                   controller: _reason,
                   maxLines: 2,
+                  // Optional, deliberately. `platform_save_plan` requires no
+                  // reason and records the actor, the diff and the previous
+                  // snapshot regardless — so a mandatory field here only
+                  // taught operators to type "تعديل" eight times.
                   decoration: const InputDecoration(
-                    labelText: 'السبب',
-                    hintText: 'يظهر في سجل التغييرات، ولا يمكن تركه فارغًا',
+                    labelText: 'ملاحظة للسجل (اختيارية)',
+                    hintText: 'ما الذي تغيّر، ولماذا',
                     border: OutlineInputBorder(),
                   ),
-                  validator: (v) => (v ?? '').trim().length < 8
-                      ? 'اكتب سببًا واضحًا (٨ أحرف على الأقل)'
-                      : null,
                 ),
               ],
             ),
@@ -309,7 +310,9 @@ class _PlanEditorDialogState extends State<_PlanEditorDialog> {
       'price_monthly': _priceMonthly.text.trim(),
       'price_yearly': _priceYearly.text.trim(),
       'trial_days': int.tryParse(_trialDays.text.trim()) ?? 0,
-      'reason': _reason.text.trim(),
+      'reason': _reason.text.trim().isEmpty
+          ? (_isNew ? 'إنشاء باقة من وحدة التحكم' : 'تعديل بيانات بيع الباقة')
+          : _reason.text.trim(),
     });
   }
 }

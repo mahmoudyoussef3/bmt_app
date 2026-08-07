@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
@@ -10,33 +9,31 @@ import 'package:bmt_app/core/widgets/status_chip.dart';
 
 import '../../../../core/theme/dashboard_colors.dart';
 import '../../../../core/theme/dashboard_icons.dart';
-import '../../../../core/widgets/dashboard_collapsible_section.dart';
 import '../../../../core/widgets/dashboard_empty_state.dart';
-import '../../../../core/widgets/dashboard_kpi_card.dart';
 import '../../../../core/widgets/dashboard_module_header.dart';
 import '../../../../core/widgets/dashboard_panel.dart';
 import '../../../../core/widgets/master_detail_layout.dart';
 import '../../domain/entities/licensing_catalog.dart';
 import '../cubit/platform_licensing_cubit.dart';
 import '../cubit/platform_licensing_state.dart';
+import '../widgets/licensing_layout.dart';
 import '../widgets/licensing_scaffold.dart';
 import '../widgets/licensing_widgets.dart';
 
 /// كتالوج الميزات — what the platform can sell, and where each flag is real.
 ///
-/// **List → detail, not a row of unlabelled columns.** The catalog has to answer
-/// six things about a feature — its type, its default, where it is enforced,
-/// what it depends on, who has it, and whether it is switched on — and an
-/// operations list cannot carry six columns legibly. So the list carries only
-/// what you scan by (name, key, type, and the two exceptions worth spotting from
-/// across the room) and the detail pane answers the rest with every value
-/// labelled.
+/// **List → detail.** The catalog has to answer six things about a feature — its
+/// type, its default, where it is enforced, what it depends on, who has it, and
+/// whether it is switched on — and no list carries six columns legibly. The list
+/// carries what you scan by; the detail answers the rest, labelled.
 ///
-/// **Finding, not browsing.** At 47 features and growing nobody scrolls to a
-/// row, so search sits at the top with three narrowing axes beside it —
-/// category, enforcement, status — and the KPI tiles are the shortcut into the
-/// two counts operators actually chase: what is real, and what we listed but
-/// never built.
+/// **One line of chrome, not three hundred pixels of it.** The screen used to
+/// open with four KPI tiles inside a folding header, then a folding filter
+/// panel holding three unlabelled rows of chips — all above the first row of
+/// data. The counts are now a stat line, and the three narrowing axes are one
+/// toolbar: a search field, a segmented enforcement switch, and two named
+/// dropdowns. Nothing about the filter state is hidden, and nothing about it
+/// costs a fold.
 class PlatformFeaturesScreen extends StatelessWidget {
   const PlatformFeaturesScreen({super.key});
 
@@ -50,6 +47,8 @@ class PlatformFeaturesScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _CatalogHeader(state: state),
+            const SizedBox(height: AppSpacing.medium),
+            _CatalogToolbar(state: state),
             const SizedBox(height: AppSpacing.medium),
             Expanded(
               child: MasterDetailLayout(
@@ -72,7 +71,7 @@ class PlatformFeaturesScreen extends StatelessWidget {
   }
 }
 
-// ── Header: the counts, and the way into them ────────────────────────────────
+// ── Header ───────────────────────────────────────────────────────────────────
 
 class _CatalogHeader extends StatelessWidget {
   const _CatalogHeader({required this.state});
@@ -81,93 +80,60 @@ class _CatalogHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cubit = context.read<PlatformLicensingCubit>();
     final scheme = Theme.of(context).colorScheme;
     final catalog = state.catalog;
-    final enforcement = state.featureEnforcementFilter;
 
     return DashboardModuleHeader(
       icon: DashboardIcons.featureCatalog,
       title: 'كتالوج الميزات',
       subtitle: 'كل قدرة تبيعها المنصة، ونوعها، وأين تُطبَّق فعليًا في الكود.',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          DashboardKpiGrid(
-            children: [
-              DashboardKpiCard(
-                label: 'ميزات الكتالوج',
-                value: '${catalog.features.length}',
-                icon: DashboardIcons.featureCatalog,
-                detail: state.hasFeatureFilters
-                    ? 'اضغط لعرض الكل'
-                    : 'كل ما يمكن بيعه',
-                onTap: state.hasFeatureFilters
-                    ? cubit.clearFeatureFilters
-                    : null,
-                tapHint: 'مسح كل عوامل التصفية',
-              ),
-              // The two tiles below are the screen's real entry points: an
-              // operator opens this catalog to ask "what is actually real?", so
-              // the number that answers it is also the control that filters to
-              // it.
-              DashboardKpiCard(
-                label: 'مطبَّقة بكود',
-                value: '${catalog.enforcedCount}',
-                icon: DashboardIcons.allClear,
-                color: scheme.secondary,
-                detail: enforcement == 'enforced'
-                    ? 'التصفية مفعّلة — اضغط للإلغاء'
-                    : 'يوجد مُشغِّل أو حارس أو سياسة',
-                onTap: () => cubit.filterFeaturesByEnforcement(
-                  enforcement == 'enforced' ? null : 'enforced',
-                ),
-                tapHint: 'عرض الميزات المطبَّقة بكود فقط',
-              ),
-              DashboardKpiCard(
-                label: 'معلنة فقط',
-                value: '${catalog.declaredCount}',
-                icon: DashboardIcons.attention,
-                color: scheme.tertiary,
-                detail: enforcement == 'declared'
-                    ? 'التصفية مفعّلة — اضغط للإلغاء'
-                    : 'مُدرجة ولا يوجد كود يطبّقها بعد',
-                onTap: () => cubit.filterFeaturesByEnforcement(
-                  enforcement == 'declared' ? null : 'declared',
-                ),
-                tapHint: 'عرض الميزات المعلنة فقط',
-              ),
-              DashboardKpiCard(
-                label: 'وضع التطبيق',
-                value: switch (state.settings.enforcementMode) {
-                  'off' => 'معطّل',
-                  'shadow' => 'وضع الظل',
-                  _ => 'مفعّل',
-                },
-                icon: DashboardIcons.settings,
-                detail: state.settings.modeLabelAr,
-              ),
-            ],
+      child: LicensingStatStrip(
+        stats: [
+          LicensingStat(
+            icon: DashboardIcons.featureCatalog,
+            value: '${catalog.features.length}',
+            label: 'ميزة في الكتالوج',
           ),
-          const SizedBox(height: AppSpacing.medium),
-          _FeatureFilters(state: state),
+          LicensingStat(
+            icon: DashboardIcons.allClear,
+            value: '${catalog.enforcedCount}',
+            label: 'مطبَّقة بكود',
+            color: scheme.secondary,
+          ),
+          LicensingStat(
+            icon: DashboardIcons.attention,
+            value: '${catalog.declaredCount}',
+            label: 'معلنة ولا كود يطبّقها',
+            color: catalog.declaredCount > 0 ? scheme.tertiary : null,
+          ),
+          LicensingStat(
+            icon: DashboardIcons.settings,
+            value: switch (state.settings.enforcementMode) {
+              'off' => 'معطّل',
+              'shadow' => 'وضع الظل',
+              _ => 'مفعّل',
+            },
+            label: 'وضع التطبيق',
+          ),
         ],
       ),
     );
   }
 }
 
-/// Search + the three narrowing axes.
-class _FeatureFilters extends StatefulWidget {
-  const _FeatureFilters({required this.state});
+// ── Toolbar ──────────────────────────────────────────────────────────────────
+
+/// Search, enforcement, category and status — on one line, each named.
+class _CatalogToolbar extends StatefulWidget {
+  const _CatalogToolbar({required this.state});
 
   final PlatformLicensingLoaded state;
 
   @override
-  State<_FeatureFilters> createState() => _FeatureFiltersState();
+  State<_CatalogToolbar> createState() => _CatalogToolbarState();
 }
 
-class _FeatureFiltersState extends State<_FeatureFilters> {
+class _CatalogToolbarState extends State<_CatalogToolbar> {
   /// Bumped when the operator clears everything, so the search field is rebuilt
   /// around an empty controller. Keying it on "is the query empty" instead would
   /// tear the field down on the first character typed and take focus with it.
@@ -190,140 +156,152 @@ class _FeatureFiltersState extends State<_FeatureFilters> {
       statusCounts.update(feature.status, (n) => n + 1, ifAbsent: () => 1);
     }
 
-    return DashboardCollapsibleSection.bare(
-      sectionId: DashboardSectionIds.platformFeatureFilters,
-      icon: Icons.filter_alt_outlined,
-      title: 'البحث والتصفية',
-      headerPadding: EdgeInsets.zero,
-      bodyPadding: const EdgeInsets.only(top: AppSpacing.medium),
-      collapsedSummary: DashboardSectionSummary(
-        items: state.hasFeatureFilters
-            ? state.featureFilterLabels
-            : const ['كل الميزات'],
+    return LicensingToolbar(
+      search: DebouncedSearchField(
+        key: ValueKey('feature-search-$_searchEpoch'),
+        initialValue: state.featureSearch,
+        hintText: 'ابحث بالاسم أو المفتاح أو الوصف',
+        onChanged: cubit.searchFeatures,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: DebouncedSearchField(
-                  key: ValueKey('feature-search-$_searchEpoch'),
-                  initialValue: state.featureSearch,
-                  hintText: 'ابحث بالاسم أو المفتاح أو الوصف',
-                  onChanged: cubit.searchFeatures,
+      filters: [
+        // The split operators actually chase: what is real, and what we listed
+        // but never built. A segmented switch says outright that these three
+        // are one axis with one answer — three loose chips did not.
+        SegmentedButton<String>(
+          showSelectedIcon: false,
+          style: SegmentedButton.styleFrom(
+            visualDensity: VisualDensity.compact,
+          ),
+          segments: [
+            const ButtonSegment(value: 'all', label: Text('الكل')),
+            ButtonSegment(
+              value: 'enforced',
+              label: Text('مطبَّقة بكود (${catalog.enforcedCount})'),
+            ),
+            ButtonSegment(
+              value: 'declared',
+              label: Text('معلنة فقط (${catalog.declaredCount})'),
+            ),
+          ],
+          selected: {state.featureEnforcementFilter ?? 'all'},
+          onSelectionChanged: (selection) => cubit.filterFeaturesByEnforcement(
+            selection.first == 'all' ? null : selection.first,
+          ),
+        ),
+        _FilterDropdown(
+          label: 'التصنيف',
+          value: state.featureCategoryFilter == null
+              ? 'الكل'
+              : catalog.categoryName(state.featureCategoryFilter!),
+          options: [
+            (value: null, label: 'الكل'),
+            for (final category in catalog.categories)
+              if ((categoryCounts[category.key] ?? 0) > 0)
+                (
+                  value: category.key,
+                  label: '${category.nameAr} (${categoryCounts[category.key]})',
                 ),
-              ),
-              if (state.hasFeatureFilters) ...[
-                const SizedBox(width: AppSpacing.small),
-                TextButton.icon(
-                  onPressed: () {
-                    setState(() => _searchEpoch++);
-                    cubit.clearFeatureFilters();
-                  },
-                  icon: const Icon(Icons.filter_alt_off_outlined, size: 18),
-                  label: const Text('مسح التصفية'),
-                ),
-              ],
-            ],
-          ),
-          const SizedBox(height: AppSpacing.small),
-          _FilterRow(
-            label: 'التصنيف',
-            children: [
-              for (final category in catalog.categories)
-                if ((categoryCounts[category.key] ?? 0) > 0)
-                  FilterChip(
-                    label: Text(
-                      '${category.nameAr} (${categoryCounts[category.key]})',
-                    ),
-                    selected: state.featureCategoryFilter == category.key,
-                    onSelected: (on) => cubit.filterFeaturesByCategory(
-                      on ? category.key : null,
-                    ),
-                  ),
-            ],
-          ),
-          _FilterRow(
-            label: 'التطبيق',
-            children: [
-              FilterChip(
-                label: Text('مطبَّقة بكود (${catalog.enforcedCount})'),
-                selected: state.featureEnforcementFilter == 'enforced',
-                onSelected: (on) =>
-                    cubit.filterFeaturesByEnforcement(on ? 'enforced' : null),
-              ),
-              FilterChip(
-                label: Text('معلنة فقط (${catalog.declaredCount})'),
-                selected: state.featureEnforcementFilter == 'declared',
-                onSelected: (on) =>
-                    cubit.filterFeaturesByEnforcement(on ? 'declared' : null),
-              ),
-            ],
-          ),
-          _FilterRow(
-            label: 'الحالة',
-            children: [
-              for (final status in const [
-                'active',
-                'hidden',
-                'deprecated',
-                'disabled',
-              ])
-                if ((statusCounts[status] ?? 0) > 0)
-                  FilterChip(
-                    label: Text(
+          ],
+          onSelected: cubit.filterFeaturesByCategory,
+        ),
+        _FilterDropdown(
+          label: 'الحالة',
+          value: state.featureStatusFilter == null
+              ? 'الكل'
+              : _shortStatusLabel(state.featureStatusFilter!),
+          options: [
+            (value: null, label: 'الكل'),
+            for (final status in const [
+              'active',
+              'hidden',
+              'deprecated',
+              'disabled',
+            ])
+              if ((statusCounts[status] ?? 0) > 0)
+                (
+                  value: status,
+                  label:
                       '${_shortStatusLabel(status)} (${statusCounts[status]})',
-                    ),
-                    selected: state.featureStatusFilter == status,
-                    onSelected: (on) =>
-                        cubit.filterFeaturesByStatus(on ? status : null),
-                  ),
-            ],
+                ),
+          ],
+          onSelected: cubit.filterFeaturesByStatus,
+        ),
+        if (state.hasFeatureFilters)
+          TextButton.icon(
+            onPressed: () {
+              setState(() => _searchEpoch++);
+              cubit.clearFeatureFilters();
+            },
+            icon: const Icon(Icons.filter_alt_off_outlined, size: 18),
+            label: const Text('مسح التصفية'),
           ),
-        ],
-      ),
+      ],
     );
   }
 }
 
-/// One labelled row of filter chips. The label is the fix for the old screen's
-/// central failure: a control whose meaning you have to infer from its values.
-class _FilterRow extends StatelessWidget {
-  const _FilterRow({required this.label, required this.children});
+/// A named dropdown: the label is always visible, so the control never asks the
+/// operator to infer its axis from whichever value happens to be selected.
+class _FilterDropdown extends StatelessWidget {
+  const _FilterDropdown({
+    required this.label,
+    required this.value,
+    required this.options,
+    required this.onSelected,
+  });
 
   final String label;
-  final List<Widget> children;
+  final String value;
+  final List<({String? value, String label})> options;
+  final ValueChanged<String?> onSelected;
 
   @override
   Widget build(BuildContext context) {
-    if (children.isEmpty) return const SizedBox.shrink();
+    final theme = Theme.of(context);
+    final radius = BorderRadius.circular(AppTokens.radiusSmall);
 
-    return Padding(
-      padding: const EdgeInsets.only(top: AppSpacing.small),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 64,
-            child: Padding(
-              padding: const EdgeInsets.only(top: AppSpacing.small),
-              child: Text(
-                label,
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: DashboardColors.mutedInk(context),
-                ),
+    return PopupMenuButton<String>(
+      tooltip: label,
+      // A sentinel rather than null, because PopupMenuButton cannot carry a
+      // null value through onSelected.
+      onSelected: (picked) => onSelected(picked == '' ? null : picked),
+      itemBuilder: (context) => [
+        for (final option in options)
+          PopupMenuItem(value: option.value ?? '', child: Text(option.label)),
+      ],
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.medium,
+          vertical: 10,
+        ),
+        decoration: BoxDecoration(
+          color: theme.cardColor,
+          borderRadius: radius,
+          border: Border.all(color: DashboardColors.border(context)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '$label: ',
+              style: theme.textTheme.labelMedium?.copyWith(
+                color: DashboardColors.mutedInk(context),
               ),
             ),
-          ),
-          Expanded(
-            child: Wrap(
-              spacing: AppSpacing.small,
-              runSpacing: AppSpacing.xSmall,
-              children: children,
+            Text(
+              value,
+              style: theme.textTheme.labelMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+              ),
             ),
-          ),
-        ],
+            const SizedBox(width: 4),
+            Icon(
+              Icons.expand_more_rounded,
+              size: 18,
+              color: DashboardColors.mutedInk(context),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -405,27 +383,16 @@ class _FeatureList extends StatelessWidget {
                             )
                           : null,
                     )
-                  : ListView.separated(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: AppSpacing.small,
-                      ),
-                      itemCount: groups.length,
-                      separatorBuilder: (context, _) => Divider(
-                        height: 1,
-                        indent: AppSpacing.medium,
-                        endIndent: AppSpacing.medium,
-                        color: DashboardColors.divider(context),
-                      ),
-                      itemBuilder: (context, index) => _CategoryGroup(
-                        group: groups[index],
-                        selectedKey: state.selectedFeatureKey,
-                        // While a filter is on, the groups are forced open:
-                        // a remembered "collapsed" would hide the very rows the
-                        // operator just searched for. The key rebuilds the
-                        // section so it re-reads its initial state.
-                        filtered: state.hasFeatureFilters,
-                        onSelect: cubit.selectFeature,
-                      ),
+                  : ListView(
+                      padding: EdgeInsets.zero,
+                      children: [
+                        for (final group in groups)
+                          _CategoryBlock(
+                            group: group,
+                            selectedKey: state.selectedFeatureKey,
+                            onSelect: cubit.selectFeature,
+                          ),
+                      ],
                     ),
             ),
           ],
@@ -435,55 +402,61 @@ class _FeatureList extends StatelessWidget {
   }
 }
 
-class _CategoryGroup extends StatelessWidget {
-  const _CategoryGroup({
+/// A category heading and its rows.
+///
+/// Flat, not collapsible: the list is already narrowed by a toolbar the
+/// operator can see, and a column of folded headings meant the rows a search
+/// had just found could still be hidden behind a remembered collapse.
+class _CategoryBlock extends StatelessWidget {
+  const _CategoryBlock({
     required this.group,
     required this.selectedKey,
-    required this.filtered,
     required this.onSelect,
   });
 
   final FeatureGroup group;
   final String? selectedKey;
-  final bool filtered;
   final ValueChanged<String> onSelect;
 
   @override
   Widget build(BuildContext context) {
-    return DashboardCollapsibleSection.bare(
-      key: ValueKey('feature-category-${group.key}-$filtered'),
-      sectionId: filtered
-          ? null
-          : DashboardSectionIds.platformFeatureCategory(group.key),
-      title: group.nameAr,
-      headerPadding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.medium,
-        vertical: AppSpacing.small,
-      ),
-      bodyPadding: const EdgeInsets.fromLTRB(
-        AppSpacing.medium,
-        0,
-        AppSpacing.medium,
-        AppSpacing.small,
-      ),
-      actions: [
-        Text(
-          '${group.features.length}',
-          style: Theme.of(context).textTheme.labelMedium?.copyWith(
-            color: DashboardColors.mutedInk(context),
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.medium,
+            vertical: AppSpacing.small,
+          ),
+          color: DashboardColors.well(context),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  group.nameAr,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+              Text(
+                '${group.features.length}',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: DashboardColors.mutedInk(context),
+                ),
+              ),
+            ],
           ),
         ),
+        for (final feature in group.features)
+          _FeatureRow(
+            feature: feature,
+            selected: feature.key == selectedKey,
+            onTap: () => onSelect(feature.key),
+          ),
       ],
-      child: Column(
-        children: [
-          for (final feature in group.features)
-            _FeatureRow(
-              feature: feature,
-              selected: feature.key == selectedKey,
-              onTap: () => onSelect(feature.key),
-            ),
-        ],
-      ),
     );
   }
 }
@@ -503,92 +476,82 @@ class _FeatureRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
-    final radius = BorderRadius.circular(AppTokens.radiusSmall);
     final reach = [
       if (feature.planCount > 0) 'في ${feature.planCount} باقة',
       if (feature.overrideCount > 0) '${feature.overrideCount} استثناء',
     ].join(' · ');
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.xSmall),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: radius,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: radius,
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.small,
-              vertical: AppSpacing.small,
-            ),
-            decoration: BoxDecoration(
-              color: selected
-                  ? scheme.primary.withAlpha(16)
-                  : DashboardColors.well(context),
-              borderRadius: radius,
-              border: Border.all(
-                color: selected
-                    ? scheme.primary.withAlpha(90)
-                    : DashboardColors.border(context),
+    return Material(
+      color: selected ? scheme.primary.withAlpha(16) : Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.medium,
+            vertical: AppSpacing.small,
+          ),
+          decoration: BoxDecoration(
+            border: BorderDirectional(
+              top: BorderSide(color: DashboardColors.divider(context)),
+              // The selected row is marked on its start edge rather than by a
+              // border all round: a boxed row inside a boxed list inside a
+              // boxed card was three frames for one piece of information.
+              start: BorderSide(
+                color: selected ? scheme.primary : Colors.transparent,
+                width: 3,
               ),
             ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _FeatureDot(feature: feature),
-                const SizedBox(width: AppSpacing.small),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              feature.nameAr,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: text.bodyMedium?.copyWith(
-                                fontWeight: FontWeight.w700,
-                              ),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _FeatureDot(feature: feature),
+              const SizedBox(width: AppSpacing.small),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            feature.nameAr,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: text.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w700,
                             ),
                           ),
-                          // Marked by exception only. Half the catalog is
-                          // healthy and a chip on every row would say nothing.
-                          if (feature.isKillSwitched)
-                            _RowMark(label: 'موقوفة', color: scheme.error)
-                          else if (!feature.isEnforced)
-                            _RowMark(
-                              label: 'معلنة فقط',
-                              color: scheme.tertiary,
-                            ),
-                        ],
+                        ),
+                        // Marked by exception only. Half the catalog is
+                        // healthy and a chip on every row would say nothing.
+                        if (feature.isKillSwitched)
+                          _RowMark(label: 'موقوفة', color: scheme.error)
+                        else if (!feature.isEnforced)
+                          _RowMark(label: 'معلنة فقط', color: scheme.tertiary),
+                      ],
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${feature.key} · ${feature.valueTypeLabelAr} · '
+                      'الافتراضي ${FeatureValue.label(feature.defaultValue, unit: feature.unitAr)}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: text.labelSmall?.copyWith(
+                        color: DashboardColors.mutedInk(context),
                       ),
+                    ),
+                    if (reach.isNotEmpty) ...[
                       const SizedBox(height: 2),
                       Text(
-                        '${feature.key} · ${feature.valueTypeLabelAr} · '
-                        'الافتراضي ${FeatureValue.label(feature.defaultValue, unit: feature.unitAr)}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: text.labelSmall?.copyWith(
-                          color: DashboardColors.mutedInk(context),
-                        ),
+                        reach,
+                        style: text.labelSmall?.copyWith(color: scheme.primary),
                       ),
-                      if (reach.isNotEmpty) ...[
-                        const SizedBox(height: 2),
-                        Text(
-                          reach,
-                          style: text.labelSmall?.copyWith(
-                            color: scheme.primary,
-                          ),
-                        ),
-                      ],
                     ],
-                  ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -623,8 +586,8 @@ class _FeatureDot extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.only(top: 4),
         child: Container(
-          width: 14,
-          height: 14,
+          width: 12,
+          height: 12,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
             color: color.withAlpha(60),
@@ -664,8 +627,14 @@ class _RowMark extends StatelessWidget {
   }
 }
 
-// ── Detail: everything the list deliberately left out ────────────────────────
+// ── Detail ───────────────────────────────────────────────────────────────────
 
+/// Three panels, not six.
+///
+/// The old pane split one feature across التعريف / أين تُطبَّق / التبعيات /
+/// الأثر / حالة الميزة, each a folding card — five headers and five chevrons
+/// for a page of facts. They are now three: what it is, where it bites, and
+/// what it is doing to the platform right now.
 class _FeatureDetail extends StatelessWidget {
   const _FeatureDetail({required this.feature, required this.state});
 
@@ -684,13 +653,9 @@ class _FeatureDetail extends StatelessWidget {
         const SizedBox(height: AppSpacing.medium),
         _DefinitionPanel(feature: feature),
         const SizedBox(height: AppSpacing.medium),
-        _GatesPanel(feature: feature),
+        _EnforcementPanel(feature: feature),
         const SizedBox(height: AppSpacing.medium),
-        _DependenciesPanel(feature: feature),
-        const SizedBox(height: AppSpacing.medium),
-        _ImpactPanel(feature: feature),
-        const SizedBox(height: AppSpacing.medium),
-        _StatusPanel(feature: feature),
+        _ReachPanel(feature: feature),
       ],
     );
   }
@@ -807,16 +772,14 @@ class _DefinitionPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DashboardPanel(
-      sectionId: DashboardSectionIds.platformFeatureDefinition,
       icon: DashboardIcons.settings,
       title: 'التعريف',
       subtitle: 'ما الذي تضبطه هذه الميزة، وبأي قيمة تبدأ.',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          LicensingField(label: 'المفتاح', value: feature.key),
-          LicensingField(label: 'النوع', value: feature.valueTypeLabelAr),
-          LicensingField(
+      child: LicensingFieldGrid(
+        fields: [
+          (label: 'المفتاح', value: feature.key),
+          (label: 'النوع', value: feature.valueTypeLabelAr),
+          (
             label: 'القيمة الافتراضية',
             value: FeatureValue.label(
               feature.defaultValue,
@@ -824,12 +787,9 @@ class _DefinitionPanel extends StatelessWidget {
             ),
           ),
           if (feature.allowedValues.isNotEmpty)
-            LicensingField(
-              label: 'القيم المسموحة',
-              value: feature.allowedValues.join('، '),
-            ),
+            (label: 'القيم المسموحة', value: feature.allowedValues.join('، ')),
           if (feature.isLimit)
-            LicensingField(
+            (
               label: 'نوع العدّاد',
               // The distinction that decides whether deleting a row gives the
               // quota back — and the one operators get wrong on the phone.
@@ -838,8 +798,8 @@ class _DefinitionPanel extends StatelessWidget {
                   : 'تدفّق — الحذف لا يعيد الحصة',
             ),
           if (feature.meterPeriod != null && feature.meterPeriod!.isNotEmpty)
-            LicensingField(label: 'دورة العدّاد', value: feature.meterPeriod!),
-          LicensingField(
+            (label: 'دورة العدّاد', value: feature.meterPeriod!),
+          (
             label: 'العرض للعملاء',
             value: feature.isPublic
                 ? 'تظهر في عرض الباقات'
@@ -851,8 +811,13 @@ class _DefinitionPanel extends StatelessWidget {
   }
 }
 
-class _GatesPanel extends StatelessWidget {
-  const _GatesPanel({required this.feature});
+/// Where the code bites, and what has to be on for it to bite at all.
+///
+/// Gates and dependencies were two panels answering halves of one question:
+/// "if I sell this, does anything happen?" A gate with an unmet requirement
+/// still does nothing, so the two belong on the same card.
+class _EnforcementPanel extends StatelessWidget {
+  const _EnforcementPanel({required this.feature});
 
   final CatalogFeature feature;
 
@@ -862,12 +827,14 @@ class _GatesPanel extends StatelessWidget {
     final text = Theme.of(context).textTheme;
 
     return DashboardPanel(
-      sectionId: DashboardSectionIds.platformFeatureGates,
       icon: DashboardIcons.licenses,
-      title: 'أين تُطبَّق',
-      subtitle: 'المواضع التي يفرض فيها الكود هذه الميزة فعليًا.',
-      child: feature.gates.isEmpty
-          ? _Notice(
+      title: 'أين تُطبَّق وما تتطلبه',
+      subtitle: 'المواضع التي يفرض فيها الكود هذه الميزة، وشروط عملها.',
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (feature.gates.isEmpty)
+            LicensingNotice(
               color: scheme.tertiary,
               icon: DashboardIcons.attention,
               // The honest answer, and the reason the badge exists at all.
@@ -875,68 +842,46 @@ class _GatesPanel extends StatelessWidget {
                   'لا يوجد كود يطبّق هذه الميزة بعد. يمكن إدراجها في باقة، '
                   'لكنها لن تغيّر أي سلوك لدى المكاتب.',
             )
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                for (final gate in feature.gates)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.small),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        StatusChip(label: gate.kindLabelAr),
-                        const SizedBox(width: AppSpacing.small),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                gate.ref,
-                                style: text.bodySmall?.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              if (gate.note.isNotEmpty)
-                                Text(
-                                  gate.note,
-                                  style: text.labelSmall?.copyWith(
-                                    color: DashboardColors.mutedInk(context),
-                                  ),
-                                ),
-                            ],
+          else
+            for (final gate in feature.gates)
+              Padding(
+                padding: const EdgeInsets.only(bottom: AppSpacing.small),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    StatusChip(label: gate.kindLabelAr),
+                    const SizedBox(width: AppSpacing.small),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            gate.ref,
+                            style: text.bodySmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
-                        ),
-                      ],
+                          if (gate.note.isNotEmpty)
+                            Text(
+                              gate.note,
+                              style: text.labelSmall?.copyWith(
+                                color: DashboardColors.mutedInk(context),
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
-                  ),
-              ],
-            ),
-    );
-  }
-}
-
-class _DependenciesPanel extends StatelessWidget {
-  const _DependenciesPanel({required this.feature});
-
-  final CatalogFeature feature;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final text = Theme.of(context).textTheme;
-
-    return DashboardPanel(
-      sectionId: DashboardSectionIds.platformFeatureDependencies,
-      icon: DashboardIcons.plans,
-      title: 'التبعيات',
-      subtitle: 'التبعيات تطرح ولا تضيف: ميزة بلا متطلَّبها لا تعمل.',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
+                  ],
+                ),
+              ),
+          const SizedBox(height: AppSpacing.small),
+          Divider(height: 1, color: DashboardColors.divider(context)),
+          const SizedBox(height: AppSpacing.small),
           Text(
             feature.requires.isEmpty
                 ? 'لا تتطلب أي ميزة أخرى.'
-                : 'تتطلب هذه الميزة:',
+                : 'تتطلب هذه الميزة — والتبعيات تطرح ولا تضيف، فميزة بلا '
+                      'متطلَّبها لا تعمل:',
             style: text.bodySmall,
           ),
           if (feature.requires.isNotEmpty) ...[
@@ -950,8 +895,8 @@ class _DependenciesPanel extends StatelessWidget {
             ),
           ],
           if (feature.requiredBy.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.medium),
-            _Notice(
+            const SizedBox(height: AppSpacing.small),
+            LicensingNotice(
               color: scheme.error,
               icon: DashboardIcons.attention,
               // The warning that matters: turning this off collapses these too.
@@ -965,42 +910,43 @@ class _DependenciesPanel extends StatelessWidget {
   }
 }
 
-class _ImpactPanel extends StatelessWidget {
-  const _ImpactPanel({required this.feature});
+/// Who has it now, and the switch that takes it away from all of them.
+class _ReachPanel extends StatelessWidget {
+  const _ReachPanel({required this.feature});
 
   final CatalogFeature feature;
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
     final entries = feature.impact.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
     final offices = entries.fold<int>(0, (sum, e) => sum + e.value);
 
     return DashboardPanel(
-      sectionId: DashboardSectionIds.platformFeatureImpact,
       icon: DashboardIcons.platformOffices,
-      title: 'الأثر',
-      subtitle: 'من يملك هذه الميزة الآن، وبأي قيمة.',
+      title: 'الأثر والحالة',
+      subtitle: 'من يملك هذه الميزة الآن — وحالتها تعلو على الباقة والاستثناء.',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Expanded(
-                child: _MiniStat(
-                  label: 'مُدرجة في',
-                  value: '${feature.planCount} باقة',
-                  icon: DashboardIcons.plans,
-                ),
+          LicensingStatStrip(
+            stats: [
+              LicensingStat(
+                icon: DashboardIcons.plans,
+                value: '${feature.planCount}',
+                label: 'باقة تُدرجها',
               ),
-              const SizedBox(width: AppSpacing.small),
-              Expanded(
-                child: _MiniStat(
-                  label: 'استثناءات مكتبية',
-                  value: '${feature.overrideCount}',
-                  icon: DashboardIcons.licenses,
-                ),
+              LicensingStat(
+                icon: DashboardIcons.locked,
+                value: '${feature.overrideCount}',
+                label: 'استثناء مكتبي',
+              ),
+              LicensingStat(
+                icon: DashboardIcons.platformOffices,
+                value: '$offices',
+                label: 'مكتب يحلّها',
               ),
             ],
           ),
@@ -1019,83 +965,14 @@ class _ImpactPanel extends StatelessWidget {
                 offices: entry.value,
                 total: offices,
               ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ImpactBar extends StatelessWidget {
-  const _ImpactBar({
-    required this.label,
-    required this.offices,
-    required this.total,
-  });
-
-  final String label;
-  final int offices;
-  final int total;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final text = Theme.of(context).textTheme;
-    final share = total == 0 ? 0.0 : offices / total;
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.small),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  label,
-                  style: text.bodySmall,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              Text(
-                '$offices مكتب',
-                style: text.bodySmall?.copyWith(fontWeight: FontWeight.bold),
-              ),
-            ],
+          const SizedBox(height: AppSpacing.small),
+          Divider(height: 1, color: DashboardColors.divider(context)),
+          const SizedBox(height: AppSpacing.medium),
+          Text(
+            'حالة الميزة',
+            style: text.labelLarge?.copyWith(fontWeight: FontWeight.w900),
           ),
-          const SizedBox(height: 4),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(999),
-            child: LinearProgressIndicator(
-              value: share,
-              minHeight: 6,
-              backgroundColor: DashboardColors.well(context),
-              valueColor: AlwaysStoppedAnimation(scheme.primary),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatusPanel extends StatelessWidget {
-  const _StatusPanel({required this.feature});
-
-  final CatalogFeature feature;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final text = Theme.of(context).textTheme;
-
-    return DashboardPanel(
-      sectionId: DashboardSectionIds.platformFeatureStatus,
-      icon: DashboardIcons.settings,
-      title: 'حالة الميزة',
-      subtitle: 'أعلى رتبة في سُلَّم الصلاحيات — تعلو على الباقة والاستثناء.',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
+          const SizedBox(height: AppSpacing.small),
           Wrap(
             spacing: AppSpacing.small,
             runSpacing: AppSpacing.xSmall,
@@ -1126,7 +1003,7 @@ class _StatusPanel extends StatelessWidget {
           ),
           if (feature.isKillSwitched) ...[
             const SizedBox(height: AppSpacing.small),
-            _Notice(
+            LicensingNotice(
               color: scheme.error,
               icon: DashboardIcons.locked,
               message:
@@ -1186,90 +1063,51 @@ class _StatusPanel extends StatelessWidget {
   }
 }
 
-// ── Small shared pieces ──────────────────────────────────────────────────────
-
-class _MiniStat extends StatelessWidget {
-  const _MiniStat({
+class _ImpactBar extends StatelessWidget {
+  const _ImpactBar({
     required this.label,
-    required this.value,
-    required this.icon,
+    required this.offices,
+    required this.total,
   });
 
   final String label;
-  final String value;
-  final IconData icon;
+  final int offices;
+  final int total;
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
+    final share = total == 0 ? 0.0 : offices / total;
 
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.small),
-      decoration: BoxDecoration(
-        color: DashboardColors.well(context),
-        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-        border: Border.all(color: DashboardColors.border(context)),
-      ),
-      child: Row(
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.small),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Icon(icon, size: 18, color: DashboardColors.mutedInk(context)),
-          const SizedBox(width: AppSpacing.small),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
+          Row(
+            children: [
+              Expanded(
+                child: Text(
                   label,
-                  style: text.labelSmall?.copyWith(
-                    color: DashboardColors.mutedInk(context),
-                  ),
+                  style: text.bodySmall,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                Text(
-                  value,
-                  style: text.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
+              ),
+              Text(
+                '$offices مكتب',
+                style: text.bodySmall?.copyWith(fontWeight: FontWeight.bold),
+              ),
+            ],
           ),
-        ],
-      ),
-    );
-  }
-}
-
-/// A tinted, bordered sentence — used where the panel has to say something the
-/// operator must not skim past.
-class _Notice extends StatelessWidget {
-  const _Notice({
-    required this.color,
-    required this.icon,
-    required this.message,
-  });
-
-  final Color color;
-  final IconData icon;
-  final String message;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.small),
-      decoration: BoxDecoration(
-        color: color.withAlpha(20),
-        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-        border: Border.all(color: color.withAlpha(70)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 18, color: color),
-          const SizedBox(width: AppSpacing.small),
-          Expanded(
-            child: Text(
-              message,
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: color, height: 1.5),
+          const SizedBox(height: 4),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              value: share,
+              minHeight: 6,
+              backgroundColor: DashboardColors.well(context),
+              valueColor: AlwaysStoppedAnimation(scheme.primary),
             ),
           ),
         ],

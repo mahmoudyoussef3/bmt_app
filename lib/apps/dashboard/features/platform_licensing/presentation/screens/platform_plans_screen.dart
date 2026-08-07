@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
@@ -11,32 +12,34 @@ import '../../../../core/theme/dashboard_colors.dart';
 import '../../../../core/theme/dashboard_icons.dart';
 import '../../../../core/widgets/dashboard_collapsible_section.dart';
 import '../../../../core/widgets/dashboard_empty_state.dart';
-import '../../../../core/widgets/dashboard_kpi_card.dart';
 import '../../../../core/widgets/dashboard_module_header.dart';
-import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import '../../../../core/widgets/dashboard_panel.dart';
-import '../../../../core/widgets/master_detail_layout.dart';
 import '../../domain/entities/licensing_catalog.dart';
 import '../cubit/platform_licensing_cubit.dart';
 import '../cubit/platform_licensing_state.dart';
+import '../widgets/licensing_layout.dart';
 import '../widgets/licensing_scaffold.dart';
 import '../widgets/licensing_widgets.dart';
 import '../widgets/plan_editor_dialog.dart';
 
-/// الخطط والباقات — the plan builder.
+/// الخطط والباقات — what the platform sells, and the workspace it is built in.
 ///
-/// Master/detail: the plan list on one side, and on the other the catalog
-/// grouped by category with a control per row typed by `value_type`.
+/// **Two screens, not one split pane.** A plan is a product, and the console
+/// reads it the way a pricing page does: a gallery of plan cards, each carrying
+/// its price, its reach and its own actions. Opening one replaces the gallery
+/// with a full-width workspace instead of squeezing a feature editor into two
+/// thirds of a column beside a list. That is the single biggest change here —
+/// the old layout gave the *list* the room and the *work* the leftovers.
 ///
-/// The sentence this screen has to keep saying is that a save takes effect
-/// **immediately for every subscribed office** — the resolver reads plan values
-/// at resolution time and there is no per-office copy to sync — and that the
-/// state it replaced is kept as a revision.
+/// **Saving stopped being a negotiation.** Every save used to open a modal
+/// demanding an eight-character reason. `platform_save_plan` requires none, the
+/// revision snapshot is written either way, and the modal was the reason nobody
+/// wanted to touch a plan. The note now lives inline in the save bar and is
+/// optional.
 ///
-/// The edit buffer lives *here*, not in the detail panel, for one reason: the
-/// plan list has to know the buffer is dirty before it lets the operator move
-/// to another plan. A draft owned by the panel is a draft the list can only
-/// discard silently.
+/// The edit buffer still lives *here* rather than in the workspace, because the
+/// screen has to be able to refuse to leave a plan while the buffer is dirty. A
+/// draft owned by the panel is a draft the navigation can only discard silently.
 class PlatformPlansScreen extends StatefulWidget {
   const PlatformPlansScreen({super.key});
 
@@ -45,86 +48,80 @@ class PlatformPlansScreen extends StatefulWidget {
 }
 
 class _PlatformPlansScreenState extends State<PlatformPlansScreen> {
-  /// The working copy of the selected plan's feature map. A key that is ABSENT
+  /// The working copy of the open plan's feature map. A key that is ABSENT
   /// means "fall through to the catalog default" — a different statement from
   /// setting it false — and the server replaces the map wholesale, so this must
   /// always be the complete picture.
   Map<String, Object?> _draft = {};
   String? _draftPlanId;
 
+  /// The optional line that goes into the revision the save creates.
+  final TextEditingController _note = TextEditingController();
+
+  // Gallery.
   String _planQuery = '';
   String? _planStatusFilter;
 
+  // Workspace.
+  int _tab = 0;
   String _featureQuery = '';
+  String? _featureCategory;
   bool _modifiedOnly = false;
 
-  /// Guards the one-shot "open the first plan" so a later manual close does not
-  /// immediately re-open it.
-  bool _autoSelected = false;
+  @override
+  void dispose() {
+    _note.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return LicensingScreenFrame(
       builder: (context, state) {
         _syncDraft(state);
-        _autoSelectFirstPlan(context, state);
-
         final detail = state.selectedPlan;
-        final changed = detail == null
-            ? const <String>{}
-            : _changedKeys(detail);
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _PlansHeader(state: state, onCreate: () => _createPlan(context)),
-            const SizedBox(height: AppSpacing.medium),
-            Expanded(
-              child: MasterDetailLayout(
-                masterFlex: 2,
-                detailFlex: 4,
-                placeholderTitle: 'اختر باقة لعرض ميزاتها',
-                placeholderSubtitle:
-                    'التعديل يسري فورًا على كل مكتب مشترك في الباقة.',
-                master: _PlanList(
-                  plans: state.plans,
-                  selectedId: detail?.plan.id,
-                  query: _planQuery,
-                  statusFilter: _planStatusFilter,
-                  dirtyCount: changed.length,
-                  onQuery: (q) => setState(() => _planQuery = q),
-                  onStatus: (s) => setState(() => _planStatusFilter = s),
-                  onSelect: (id) => _selectPlan(context, state, id),
-                  onCreate: () => _createPlan(context),
-                ),
-                detail: detail == null
-                    ? null
-                    : _PlanDetailPanel(
-                        state: state,
-                        detail: detail,
-                        draft: _draft,
-                        changedKeys: changed,
-                        featureQuery: _featureQuery,
-                        modifiedOnly: _modifiedOnly,
-                        onFeatureQuery: (q) =>
-                            setState(() => _featureQuery = q),
-                        onModifiedOnly: (v) =>
-                            setState(() => _modifiedOnly = v),
-                        onValueChanged: (key, value) =>
-                            setState(() => _draft[key] = value),
-                        onValueCleared: (key) =>
-                            setState(() => _draft.remove(key)),
-                        onSave: () => _saveValues(context, detail),
-                        onDiscard: () =>
-                            setState(() => _draft = {...detail.values}),
-                        onEdit: () => _editPlan(context, detail.plan),
-                        onClone: () => _clonePlan(context, detail.plan),
-                        onStatusChange: (status) =>
-                            _changeStatus(context, detail.plan, status),
-                      ),
-              ),
-            ),
-          ],
+        if (detail == null) {
+          return _PlanGallery(
+            state: state,
+            query: _planQuery,
+            statusFilter: _planStatusFilter,
+            onQuery: (q) => setState(() => _planQuery = q),
+            onStatus: (s) => setState(() => _planStatusFilter = s),
+            onOpen: (id) =>
+                context.read<PlatformLicensingCubit>().selectPlan(id),
+            onCreate: () => _createPlan(context),
+            onEdit: (plan) => _editPlan(context, plan),
+            onClone: (plan) => _clonePlan(context, plan),
+            onStatusChange: (plan, status) =>
+                _changeStatus(context, plan, status),
+          );
+        }
+
+        final changed = _changedKeys(detail);
+        return _PlanWorkspace(
+          state: state,
+          detail: detail,
+          draft: _draft,
+          changedKeys: changed,
+          note: _note,
+          tab: _tab,
+          featureQuery: _featureQuery,
+          featureCategory: _featureCategory,
+          modifiedOnly: _modifiedOnly,
+          onTab: (i) => setState(() => _tab = i),
+          onFeatureQuery: (q) => setState(() => _featureQuery = q),
+          onFeatureCategory: (c) => setState(() => _featureCategory = c),
+          onModifiedOnly: (v) => setState(() => _modifiedOnly = v),
+          onValueChanged: (key, value) => setState(() => _draft[key] = value),
+          onValueCleared: (key) => setState(() => _draft.remove(key)),
+          onSave: () => _saveValues(context, detail),
+          onDiscard: () => setState(() => _draft = {...detail.values}),
+          onBack: () => _closePlan(context, changed.length),
+          onEdit: () => _editPlan(context, detail.plan),
+          onClone: () => _clonePlan(context, detail.plan),
+          onStatusChange: (status) =>
+              _changeStatus(context, detail.plan, status),
         );
       },
     );
@@ -149,6 +146,11 @@ class _PlatformPlansScreenState extends State<PlatformPlansScreen> {
     if (detail.plan.id != _draftPlanId) {
       _draftPlanId = detail.plan.id;
       _draft = {...detail.values};
+      _tab = 0;
+      _featureQuery = '';
+      _featureCategory = null;
+      _modifiedOnly = false;
+      _note.clear();
     }
   }
 
@@ -167,82 +169,48 @@ class _PlatformPlansScreenState extends State<PlatformPlansScreen> {
         .toSet();
   }
 
-  /// A master/detail screen whose detail is empty on arrival wastes two thirds
-  /// of the console, so the first plan opens itself.
-  void _autoSelectFirstPlan(
-    BuildContext context,
-    PlatformLicensingLoaded state,
-  ) {
-    if (_autoSelected ||
-        state.selectedPlan != null ||
-        state.plans.isEmpty ||
-        state.isBusy) {
-      return;
-    }
-    _autoSelected = true;
-    final first = _sortPlans(state.plans).first;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (!mounted) return;
-      context.read<PlatformLicensingCubit>().selectPlan(first.id);
-    });
-  }
-
   // ── Actions ────────────────────────────────────────────────────────────────
 
-  Future<void> _selectPlan(
-    BuildContext context,
-    PlatformLicensingLoaded state,
-    String planId,
-  ) async {
-    final detail = state.selectedPlan;
-    if (detail != null && detail.plan.id == planId) return;
-
-    if (detail != null) {
-      final changed = _changedKeys(detail);
-      if (changed.isNotEmpty) {
-        final leave = await _confirmDiscard(context, changed.length);
-        if (leave != true || !context.mounted) return;
-      }
-    }
-    await context.read<PlatformLicensingCubit>().selectPlan(planId);
-  }
-
-  Future<bool?> _confirmDiscard(BuildContext context, int count) {
-    return showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('تعديلات غير محفوظة'),
-        content: Text(
-          'على هذه الباقة $count تعديل لم يُحفظ. الانتقال إلى باقة أخرى '
-          'يتخلّى عنها.',
+  Future<void> _closePlan(BuildContext context, int changedCount) async {
+    final cubit = context.read<PlatformLicensingCubit>();
+    if (changedCount > 0) {
+      final leave = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('تعديلات غير محفوظة'),
+          content: Text(
+            'على هذه الباقة $changedCount تعديل لم يُحفظ. الخروج منها يتخلّى '
+            'عنها.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('البقاء هنا'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('تجاهل والخروج'),
+            ),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('البقاء هنا'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('تجاهل والانتقال'),
-          ),
-        ],
-      ),
-    );
+      );
+      if (leave != true) return;
+    }
+    cubit.clearPlanSelection();
   }
 
   Future<void> _saveValues(BuildContext context, PlanDetail detail) async {
     final cubit = context.read<PlatformLicensingCubit>();
-    final reason = await promptForReason(
-      context,
-      title: 'حفظ تعديلات الباقة',
-      description:
-          'سيسري التعديل فورًا على كل مكتب مشترك في هذه الباقة، وستُحفظ الحالة '
-          'السابقة كنسخة في السجل يمكن الرجوع إليها.',
-      confirmLabel: 'حفظ',
-    );
-    if (reason == null) return;
+    final note = _note.text.trim();
 
-    await cubit.savePlanValues(detail.plan.id, _draft, reason);
+    await cubit.savePlanValues(
+      detail.plan.id,
+      _draft,
+      // The RPC stores this on the revision it just wrote. An empty note is
+      // legal — the snapshot, the actor and the diff are recorded regardless,
+      // so demanding prose was friction that bought nothing.
+      note.isEmpty ? 'تعديل قيم الباقة من وحدة التحكم' : note,
+    );
     if (!mounted) return;
 
     // Re-seed the buffer from what the server actually stored, so a value it
@@ -250,7 +218,10 @@ class _PlatformPlansScreenState extends State<PlatformPlansScreen> {
     final next = cubit.state;
     if (next is PlatformLicensingLoaded &&
         next.selectedPlan?.plan.id == detail.plan.id) {
-      setState(() => _draft = {...next.selectedPlan!.values});
+      setState(() {
+        _draft = {...next.selectedPlan!.values};
+        _note.clear();
+      });
     }
   }
 
@@ -275,46 +246,78 @@ class _PlatformPlansScreenState extends State<PlatformPlansScreen> {
     await cubit.clonePlan(plan.id, clone.key, clone.name);
   }
 
+  /// Publishing and archiving change what the platform can sell, so they still
+  /// confirm — but they confirm with the *consequence*, not with a text field.
   Future<void> _changeStatus(
     BuildContext context,
     LicensingPlan plan,
     String status,
   ) async {
     final cubit = context.read<PlatformLicensingCubit>();
-    final (title, description, confirm) = switch (status) {
+    final (title, description, confirm, danger) = switch (status) {
       'archived' => (
-        'أرشفة الباقة',
+        'أرشفة «${plan.nameAr}»',
         // Archiving is not deletion, and the difference is the whole reason an
         // operator hesitates over this button.
-        'المكاتب المشتركة تكمل على هذه الباقة بلا أي تغيير، ولا يمكن تعيينها '
-            'لمكتب جديد بعد الأرشفة.',
+        plan.officeCount == 0
+            ? 'لن تعود قابلة للتعيين لمكتب جديد. لا مكتب عليها الآن، فلا يتأثر أحد.'
+            : 'المكاتب الـ${plan.officeCount} المشتركة تكمل عليها بلا أي تغيير، '
+                  'ولا يمكن تعيينها لمكتب جديد بعد الأرشفة.',
         'أرشفة',
+        true,
       ),
       'active' when plan.status == 'draft' => (
-        'نشر الباقة',
+        'نشر «${plan.nameAr}»',
         'تصبح الباقة قابلة للتعيين للمكاتب'
             '${plan.isPublic ? '، وتظهر ضمن الباقات المعروضة' : ''}.',
         'نشر',
+        false,
       ),
       'active' => (
-        'إعادة تفعيل الباقة',
+        'إعادة تفعيل «${plan.nameAr}»',
         'تعود الباقة قابلة للتعيين لمكاتب جديدة.',
         'تفعيل',
+        false,
       ),
-      _ => ('تغيير حالة الباقة', null, 'تأكيد'),
+      _ => ('تغيير حالة الباقة', '', 'تأكيد', false),
     };
 
-    final reason = await promptForReason(
-      context,
-      title: title,
-      description: description,
-      confirmLabel: confirm,
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(title),
+        content: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 460),
+          child: Text(
+            description,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(height: 1.6),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: const Text('إلغاء'),
+          ),
+          FilledButton(
+            style: danger
+                ? FilledButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.error,
+                  )
+                : null,
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text(confirm),
+          ),
+        ],
+      ),
     );
-    if (reason == null) return;
+    if (confirmed != true) return;
+
     await cubit.savePlanDetails({
       'id': plan.id,
       'status': status,
-      'reason': reason,
+      'reason': '$confirm الباقة من وحدة التحكم',
     });
   }
 }
@@ -335,9 +338,9 @@ List<LicensingPlan> _sortPlans(List<LicensingPlan> plans) {
   });
 }
 
-Color _planStatusColor(BuildContext context, LicensingPlan plan) {
+Color _planStatusColor(BuildContext context, String status) {
   final scheme = Theme.of(context).colorScheme;
-  return switch (plan.status) {
+  return switch (status) {
     'active' => scheme.secondary,
     'draft' => scheme.tertiary,
     _ => scheme.outline,
@@ -355,150 +358,45 @@ String _officeStatusLabelAr(String status) => switch (status) {
   _ => status,
 };
 
-// ═══════════════════════════════════════════════════════════════════════════
-// Header
-// ═══════════════════════════════════════════════════════════════════════════
-
-class _PlansHeader extends StatelessWidget {
-  const _PlansHeader({required this.state, required this.onCreate});
-
-  final PlatformLicensingLoaded state;
-  final VoidCallback onCreate;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final plans = state.plans;
-    final catalog = state.catalog;
-
-    final active = plans.where((p) => p.status == 'active').length;
-    final drafts = plans.where((p) => p.status == 'draft').length;
-    final archived = plans.where((p) => p.isArchived).length;
-    final offices = plans.fold<int>(0, (sum, p) => sum + p.officeCount);
-    final inUse = plans.where((p) => p.officeCount > 0).length;
-
-    // Only offices on a plan with a published price can be counted: a
-    // negotiated contract has no figure here to add, and inventing one would
-    // make this tile a guess wearing a currency symbol.
-    final contracted = plans
-        .where((p) => p.priceMonthly != null)
-        .fold<num>(0, (sum, p) => sum + p.priceMonthly! * p.officeCount);
-    final negotiated = plans
-        .where((p) => p.priceMonthly == null)
-        .fold<int>(0, (sum, p) => sum + p.officeCount);
-
-    return DashboardModuleHeader(
-      icon: DashboardIcons.plans,
-      title: 'الخطط والباقات',
-      subtitle:
-          'ما تبيعه المنصة للمكاتب. الباقة قالب بلا سلوك: كل ما "تفعله" '
-          'قيمة يقرأها المُحلِّل، ولهذا يمكن تعديلها وهي حيّة.',
-      actions: [
-        FilledButton.icon(
-          onPressed: onCreate,
-          icon: const Icon(DashboardIcons.add, size: 18),
-          label: const Text('باقة جديدة'),
-        ),
-      ],
-      // Foldable, and nested bare because the header slot is already a card
-      // with its own inset: on a short console window these four tiles are the
-      // difference between a workable plan editor and a letterbox.
-      child: DashboardCollapsibleSection.bare(
-        sectionId: DashboardSectionIds.platformPlansKpis,
-        title: 'ملخّص الباقات',
-        icon: DashboardIcons.trend,
-        headerPadding: EdgeInsets.zero,
-        bodyPadding: const EdgeInsets.only(top: AppSpacing.small),
-        collapsedSummary: DashboardSectionSummary(
-          items: [
-            '${plans.length} باقة',
-            '$offices مكتب مشترك',
-            licensingMoney(contracted),
-          ],
-        ),
-        child: DashboardKpiGrid(
-          children: [
-            DashboardKpiCard(
-              icon: DashboardIcons.plans,
-              label: 'الباقات',
-              value: '${plans.length}',
-              // Two figures, not four: a KPI tile has one line, and the list's
-              // own filter chips already carry the full status breakdown.
-              detail: archived > 0
-                  ? '$active نشطة · $archived مؤرشفة'
-                  : '$active نشطة · $drafts مسودة',
-            ),
-            DashboardKpiCard(
-              icon: DashboardIcons.platformOffices,
-              label: 'مكاتب مشتركة',
-              value: '$offices',
-              detail: inUse == 0
-                  ? 'لا باقة قيد الاستخدام بعد'
-                  : 'موزّعة على $inUse باقة',
-              color: scheme.secondary,
-            ),
-            DashboardKpiCard(
-              icon: DashboardIcons.payments,
-              label: 'إيراد شهري متعاقد',
-              value: licensingMoney(contracted),
-              detail: negotiated == 0
-                  ? 'من الباقات ذات السعر المعلن'
-                  : 'عدا $negotiated مكتب بسعر تفاوضي',
-              color: scheme.tertiary,
-            ),
-            DashboardKpiCard(
-              icon: DashboardIcons.featureCatalog,
-              label: 'ميزات الكتالوج',
-              value: '${catalog.features.length}',
-              detail:
-                  '${catalog.enforcedCount} مطبَّقة · '
-                  '${catalog.declaredCount} غير مفعّلة',
-              color: catalog.declaredCount > 0 ? scheme.tertiary : null,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
+const Map<String, String> _planStatusLabels = {
+  'active': 'نشطة',
+  'draft': 'مسودات',
+  'archived': 'مؤرشفة',
+};
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Master — the plan list
+// The gallery
 // ═══════════════════════════════════════════════════════════════════════════
 
-class _PlanList extends StatelessWidget {
-  const _PlanList({
-    required this.plans,
-    required this.selectedId,
+class _PlanGallery extends StatelessWidget {
+  const _PlanGallery({
+    required this.state,
     required this.query,
     required this.statusFilter,
-    required this.dirtyCount,
     required this.onQuery,
     required this.onStatus,
-    required this.onSelect,
+    required this.onOpen,
     required this.onCreate,
+    required this.onEdit,
+    required this.onClone,
+    required this.onStatusChange,
   });
 
-  final List<LicensingPlan> plans;
-  final String? selectedId;
+  final PlatformLicensingLoaded state;
   final String query;
   final String? statusFilter;
-  final int dirtyCount;
   final ValueChanged<String> onQuery;
   final ValueChanged<String?> onStatus;
-  final ValueChanged<String> onSelect;
+  final ValueChanged<String> onOpen;
   final VoidCallback onCreate;
-
-  static const _statuses = <String, String>{
-    'active': 'نشطة',
-    'draft': 'مسودات',
-    'archived': 'مؤرشفة',
-  };
+  final ValueChanged<LicensingPlan> onEdit;
+  final ValueChanged<LicensingPlan> onClone;
+  final void Function(LicensingPlan plan, String status) onStatusChange;
 
   List<LicensingPlan> get _visible {
     final q = query.trim().toLowerCase();
     return _sortPlans(
-      plans.where((plan) {
+      state.plans.where((plan) {
         if (statusFilter != null && plan.status != statusFilter) return false;
         if (q.isEmpty) return true;
         return plan.nameAr.contains(q) ||
@@ -511,340 +409,429 @@ class _PlanList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final plans = state.plans;
     final visible = _visible;
 
-    // Scrollable in its own right: the master column is as tall as the console
-    // and the list is not, so anything past the fold has to be reachable
-    // without dragging the page.
-    return SingleChildScrollView(
-      padding: const EdgeInsetsDirectional.only(end: AppSpacing.small),
-      child: DashboardPanel(
-        sectionId: DashboardSectionIds.platformPlansList,
-        icon: DashboardIcons.plans,
-        title: 'الباقات',
-        subtitle: visible.length == plans.length
-            ? '${plans.length} باقة'
-            : '${visible.length} من ${plans.length} باقة',
-        trailing: IconButton(
-          tooltip: 'باقة جديدة',
-          icon: const Icon(DashboardIcons.add),
-          onPressed: onCreate,
-        ),
-        collapsedSummary: DashboardSectionSummary(
-          items: [
-            '${visible.length} باقة',
-            if (statusFilter != null) _statuses[statusFilter] ?? statusFilter!,
-            if (query.trim().isNotEmpty) 'بحث: ${query.trim()}',
-            if (dirtyCount > 0) '$dirtyCount تعديل غير محفوظ',
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            DebouncedSearchField(
-              initialValue: query,
-              hintText: 'ابحث باسم الباقة أو مفتاحها',
-              onChanged: onQuery,
+    return ListView(
+      padding: EdgeInsets.zero,
+      children: [
+        _GalleryHeader(state: state, onCreate: onCreate),
+        const SizedBox(height: AppSpacing.medium),
+        LicensingToolbar(
+          search: DebouncedSearchField(
+            initialValue: query,
+            hintText: 'ابحث باسم الباقة أو مفتاحها',
+            onChanged: onQuery,
+          ),
+          filters: [
+            FilterChip(
+              label: Text('الكل (${plans.length})'),
+              selected: statusFilter == null,
+              onSelected: (_) => onStatus(null),
             ),
-            const SizedBox(height: AppSpacing.small),
-            Wrap(
-              spacing: AppSpacing.xSmall,
-              runSpacing: AppSpacing.xSmall,
-              children: [
+            for (final entry in _planStatusLabels.entries)
+              if (plans.any((p) => p.status == entry.key))
                 FilterChip(
-                  label: Text('الكل (${plans.length})'),
-                  selected: statusFilter == null,
-                  onSelected: (_) => onStatus(null),
-                ),
-                for (final entry in _statuses.entries)
-                  if (plans.any((p) => p.status == entry.key))
-                    FilterChip(
-                      label: Text(
-                        '${entry.value} '
-                        '(${plans.where((p) => p.status == entry.key).length})',
-                      ),
-                      selected: statusFilter == entry.key,
-                      onSelected: (_) => onStatus(entry.key),
-                    ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.medium),
-            if (visible.isEmpty)
-              DashboardEmptyState(
-                icon: DashboardIcons.plans,
-                title: plans.isEmpty ? 'لا توجد باقات' : 'لا باقة تطابق البحث',
-                message: plans.isEmpty
-                    ? 'أنشئ باقة لتبدأ ترخيص المكاتب.'
-                    : 'جرّب مصطلحًا آخر أو أزل عوامل التصفية.',
-                action: plans.isEmpty
-                    ? FilledButton.tonalIcon(
-                        onPressed: onCreate,
-                        icon: const Icon(DashboardIcons.add, size: 18),
-                        label: const Text('باقة جديدة'),
-                      )
-                    : TextButton(
-                        onPressed: () => onStatus(null),
-                        child: const Text('عرض كل الباقات'),
-                      ),
-              )
-            else
-              for (final plan in visible)
-                _PlanTile(
-                  plan: plan,
-                  selected: plan.id == selectedId,
-                  dirtyCount: plan.id == selectedId ? dirtyCount : 0,
-                  onTap: () => onSelect(plan.id),
+                  label: Text(
+                    '${entry.value} '
+                    '(${plans.where((p) => p.status == entry.key).length})',
+                  ),
+                  selected: statusFilter == entry.key,
+                  onSelected: (on) => onStatus(on ? entry.key : null),
                 ),
           ],
+          trailing: Text(
+            visible.length == plans.length
+                ? '${plans.length} باقة'
+                : '${visible.length} من ${plans.length} باقة',
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: DashboardColors.mutedInk(context),
+            ),
+          ),
         ),
+        const SizedBox(height: AppSpacing.medium),
+        if (visible.isEmpty)
+          AppCard(
+            padding: const EdgeInsets.all(AppSpacing.large),
+            child: DashboardEmptyState(
+              icon: DashboardIcons.plans,
+              title: plans.isEmpty ? 'لا توجد باقات' : 'لا باقة تطابق البحث',
+              message: plans.isEmpty
+                  ? 'أنشئ باقة لتبدأ ترخيص المكاتب.'
+                  : 'جرّب مصطلحًا آخر أو أزل عوامل التصفية.',
+              action: plans.isEmpty
+                  ? FilledButton.icon(
+                      onPressed: onCreate,
+                      icon: const Icon(DashboardIcons.add, size: 18),
+                      label: const Text('باقة جديدة'),
+                    )
+                  : TextButton(
+                      onPressed: () => onStatus(null),
+                      child: const Text('عرض كل الباقات'),
+                    ),
+            ),
+          )
+        else
+          LicensingCardGrid(
+            minCardWidth: 340,
+            maxColumns: 3,
+            children: [
+              for (final plan in visible)
+                _PlanCard(
+                  plan: plan,
+                  onOpen: () => onOpen(plan.id),
+                  onEdit: () => onEdit(plan),
+                  onClone: () => onClone(plan),
+                  onStatusChange: (status) => onStatusChange(plan, status),
+                ),
+            ],
+          ),
+      ],
+    );
+  }
+}
+
+class _GalleryHeader extends StatelessWidget {
+  const _GalleryHeader({required this.state, required this.onCreate});
+
+  final PlatformLicensingLoaded state;
+  final VoidCallback onCreate;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final plans = state.plans;
+    final active = plans.where((p) => p.status == 'active').length;
+    final offices = plans.fold<int>(0, (sum, p) => sum + p.officeCount);
+
+    // Only offices on a plan with a published price can be counted: a
+    // negotiated contract has no figure here to add, and inventing one would
+    // make this a guess wearing a currency symbol.
+    final contracted = plans
+        .where((p) => p.priceMonthly != null)
+        .fold<num>(0, (sum, p) => sum + p.priceMonthly! * p.officeCount);
+    final negotiated = plans
+        .where((p) => p.priceMonthly == null)
+        .fold<int>(0, (sum, p) => sum + p.officeCount);
+
+    return DashboardModuleHeader(
+      icon: DashboardIcons.plans,
+      title: 'الخطط والباقات',
+      subtitle:
+          'ما تبيعه المنصة للمكاتب. الباقة قالب بلا سلوك، ولهذا يمكن تعديلها '
+          'وهي حيّة — والتعديل يسري فورًا على كل مكتب مشترك.',
+      actions: [
+        FilledButton.icon(
+          onPressed: onCreate,
+          icon: const Icon(DashboardIcons.add, size: 18),
+          label: const Text('باقة جديدة'),
+        ),
+      ],
+      child: LicensingStatStrip(
+        stats: [
+          LicensingStat(
+            icon: DashboardIcons.plans,
+            value: '${plans.length}',
+            label: '$active نشطة',
+          ),
+          LicensingStat(
+            icon: DashboardIcons.platformOffices,
+            value: '$offices',
+            label: 'مكتب مشترك',
+            color: scheme.secondary,
+          ),
+          LicensingStat(
+            icon: DashboardIcons.payments,
+            value: licensingMoney(contracted),
+            label: negotiated == 0
+                ? 'إيراد شهري متعاقد'
+                : 'متعاقد · عدا $negotiated بسعر تفاوضي',
+          ),
+          LicensingStat(
+            icon: DashboardIcons.featureCatalog,
+            value: '${state.catalog.features.length}',
+            label: '${state.catalog.enforcedCount} مطبَّقة بكود',
+            color: state.catalog.declaredCount > 0 ? scheme.tertiary : null,
+          ),
+        ],
       ),
     );
   }
 }
 
-class _PlanTile extends StatelessWidget {
-  const _PlanTile({
+/// One plan, the way a pricing page shows one.
+class _PlanCard extends StatelessWidget {
+  const _PlanCard({
     required this.plan,
-    required this.selected,
-    required this.dirtyCount,
-    required this.onTap,
+    required this.onOpen,
+    required this.onEdit,
+    required this.onClone,
+    required this.onStatusChange,
   });
 
   final LicensingPlan plan;
-  final bool selected;
-  final int dirtyCount;
-  final VoidCallback onTap;
+  final VoidCallback onOpen;
+  final VoidCallback onEdit;
+  final VoidCallback onClone;
+  final ValueChanged<String> onStatusChange;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final accent = scheme.primary;
-    final statusColor = _planStatusColor(context, plan);
-    final radius = BorderRadius.circular(AppTokens.radiusSmall);
+    final statusColor = _planStatusColor(context, plan.status);
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.small),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: radius,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: radius,
-          child: Container(
-            padding: const EdgeInsets.all(AppSpacing.medium),
+    return AppCard(
+      padding: EdgeInsets.zero,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // A status band rather than a chip: three cards side by side are
+          // scanned by colour, and a pill in a corner is not a scan target.
+          Container(
+            height: 4,
             decoration: BoxDecoration(
-              color: selected
-                  ? accent.withAlpha(20)
-                  : DashboardColors.well(context),
-              borderRadius: radius,
-              border: Border.all(
-                color: selected
-                    ? accent.withAlpha(140)
-                    : DashboardColors.border(context),
-                width: selected ? 1.5 : 1,
+              color: statusColor,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(AppTokens.radius),
+                topRight: Radius.circular(AppTokens.radius),
               ),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Tooltip(
-                      message: plan.statusLabelAr,
-                      child: Container(
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: statusColor,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.small),
-                    Expanded(
-                      child: Text(
-                        plan.nameAr,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
-                    if (dirtyCount > 0)
-                      Padding(
-                        padding: const EdgeInsetsDirectional.only(
-                          start: AppSpacing.xSmall,
-                        ),
-                        child: Tooltip(
-                          message: '$dirtyCount تعديل غير محفوظ',
-                          child: Icon(
-                            Icons.edit_note_rounded,
-                            size: 18,
-                            color: scheme.tertiary,
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.medium),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          plan.nameAr,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w900,
                           ),
                         ),
                       ),
-                    // Only the states worth flagging get a pill: five identical
-                    // "نشطة" chips are noise that hides the one draft.
-                    if (plan.status != 'active')
-                      Padding(
-                        padding: const EdgeInsetsDirectional.only(
-                          start: AppSpacing.xSmall,
-                        ),
-                        child: StatusChip(
+                      // Only the states worth flagging get a pill: five
+                      // identical "نشطة" chips are noise that hides the one
+                      // draft.
+                      if (plan.status != 'active')
+                        StatusChip(
                           label: plan.statusLabelAr,
                           color: statusColor.withAlpha(24),
                           textColor: statusColor,
                         ),
-                      ),
-                  ],
-                ),
-                if (plan.taglineAr.trim().isNotEmpty) ...[
-                  const SizedBox(height: 4),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
                   Text(
-                    plan.taglineAr,
-                    maxLines: 1,
+                    plan.taglineAr.trim().isEmpty
+                        ? plan.key
+                        : plan.taglineAr.trim(),
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodySmall?.copyWith(
                       color: DashboardColors.mutedInk(context),
+                      height: 1.5,
                     ),
                   ),
-                ],
-                const SizedBox(height: AppSpacing.small),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Expanded(
-                      child: Wrap(
-                        spacing: AppSpacing.small,
-                        runSpacing: 4,
-                        children: [
-                          _Meta(
-                            icon: DashboardIcons.platformOffices,
-                            label: plan.officeCount == 0
-                                ? 'بلا مكاتب'
-                                : '${plan.officeCount} مكتب',
-                          ),
-                          if (plan.trialDays > 0)
-                            _Meta(
-                              icon: DashboardIcons.time,
-                              label: 'تجربة ${plan.trialDays} يوم',
+                  const SizedBox(height: AppSpacing.medium),
+                  _PlanPrice(plan: plan),
+                  const SizedBox(height: AppSpacing.medium),
+                  Wrap(
+                    spacing: AppSpacing.xSmall,
+                    runSpacing: AppSpacing.xSmall,
+                    children: [
+                      LicensingFact(
+                        icon: DashboardIcons.platformOffices,
+                        label: plan.officeCount == 0
+                            ? 'بلا مكاتب'
+                            : '${plan.officeCount} مكتب',
+                        color: plan.officeCount > 0 ? scheme.secondary : null,
+                      ),
+                      if (plan.trialDays > 0)
+                        LicensingFact(
+                          icon: DashboardIcons.time,
+                          label: 'تجربة ${plan.trialDays} يوم',
+                        ),
+                      LicensingFact(
+                        icon: plan.isPublic
+                            ? Icons.storefront_outlined
+                            : DashboardIcons.locked,
+                        label: plan.isPublic ? 'معروضة' : 'بالتعيين فقط',
+                      ),
+                    ],
+                  ),
+                  const Spacer(),
+                  const SizedBox(height: AppSpacing.medium),
+                  Divider(height: 1, color: DashboardColors.divider(context)),
+                  const SizedBox(height: AppSpacing.small),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: FilledButton.tonalIcon(
+                          onPressed: onOpen,
+                          icon: const Icon(Icons.tune_rounded, size: 18),
+                          label: const Text('تحرير الميزات'),
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.xSmall),
+                      IconButton(
+                        tooltip: 'تعديل بيانات البيع',
+                        icon: const Icon(Icons.edit_outlined, size: 20),
+                        onPressed: onEdit,
+                      ),
+                      PopupMenuButton<String>(
+                        tooltip: 'المزيد',
+                        icon: const Icon(Icons.more_horiz_rounded, size: 20),
+                        onSelected: (action) => action == 'clone'
+                            ? onClone()
+                            : onStatusChange(action),
+                        itemBuilder: (context) => [
+                          const PopupMenuItem(
+                            value: 'clone',
+                            child: ListTile(
+                              dense: true,
+                              contentPadding: EdgeInsets.zero,
+                              leading: Icon(Icons.copy_rounded),
+                              title: Text('نسخ الباقة'),
                             ),
-                          _Meta(
-                            icon: plan.isPublic
-                                ? Icons.storefront_outlined
-                                : DashboardIcons.locked,
-                            label: plan.isPublic ? 'معروضة' : 'بالتعيين فقط',
                           ),
+                          if (plan.status == 'draft')
+                            const PopupMenuItem(
+                              value: 'active',
+                              child: ListTile(
+                                dense: true,
+                                contentPadding: EdgeInsets.zero,
+                                leading: Icon(Icons.publish_rounded),
+                                title: Text('نشر الباقة'),
+                              ),
+                            ),
+                          if (plan.isArchived)
+                            const PopupMenuItem(
+                              value: 'active',
+                              child: ListTile(
+                                dense: true,
+                                contentPadding: EdgeInsets.zero,
+                                leading: Icon(Icons.unarchive_outlined),
+                                title: Text('إعادة التفعيل'),
+                              ),
+                            )
+                          else
+                            const PopupMenuItem(
+                              value: 'archived',
+                              child: ListTile(
+                                dense: true,
+                                contentPadding: EdgeInsets.zero,
+                                leading: Icon(Icons.archive_outlined),
+                                title: Text('أرشفة'),
+                              ),
+                            ),
                         ],
                       ),
-                    ),
-                    const SizedBox(width: AppSpacing.small),
-                    _PriceLabel(plan: plan),
-                  ],
-                ),
-              ],
+                    ],
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
 }
 
-/// The figure a plan is sold at, given the weight it has in the decision —
-/// rather than buried as the third item in a row of grey metadata.
-class _PriceLabel extends StatelessWidget {
-  const _PriceLabel({required this.plan});
+/// The figure a plan is sold at, given the weight it has in the decision.
+class _PlanPrice extends StatelessWidget {
+  const _PlanPrice({required this.plan});
 
   final LicensingPlan plan;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
     if (plan.priceMonthly == null) {
       return Text(
         'سعر تفاوضي',
-        style: theme.textTheme.labelMedium?.copyWith(
+        style: theme.textTheme.titleMedium?.copyWith(
+          fontWeight: FontWeight.w900,
           color: DashboardColors.mutedInk(context),
-          fontWeight: FontWeight.w700,
         ),
       );
     }
+
     return Row(
-      mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.baseline,
       textBaseline: TextBaseline.alphabetic,
       children: [
-        Text(
-          licensingMoney(plan.priceMonthly, plan.currency),
-          style: theme.textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w900,
-          ),
-        ),
-        const SizedBox(width: 4),
-        Text(
-          '/ شهر',
-          style: theme.textTheme.labelSmall?.copyWith(
-            color: DashboardColors.mutedInk(context),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _Meta extends StatelessWidget {
-  const _Meta({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 13, color: DashboardColors.mutedInk(context)),
-        const SizedBox(width: 4),
-        // Flexible, because a Wrap hands its children the full line width and
-        // then lets them size themselves: an unconstrained label is how a
-        // narrow master column clips its own metadata.
         Flexible(
           child: Text(
-            label,
+            licensingMoney(plan.priceMonthly, plan.currency),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: DashboardColors.mutedInk(context),
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.w900,
             ),
           ),
         ),
+        const SizedBox(width: 6),
+        Text(
+          '/ شهر',
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: DashboardColors.mutedInk(context),
+          ),
+        ),
+        if (plan.priceYearly != null) ...[
+          const SizedBox(width: AppSpacing.small),
+          Text(
+            '· ${licensingMoney(plan.priceYearly, plan.currency)} / سنة',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.labelSmall?.copyWith(
+              color: DashboardColors.mutedInk(context),
+            ),
+          ),
+        ],
       ],
     );
   }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Detail — one plan
+// The workspace
 // ═══════════════════════════════════════════════════════════════════════════
 
-class _PlanDetailPanel extends StatelessWidget {
-  const _PlanDetailPanel({
+/// One plan, full width.
+///
+/// The whole pane scrolls and the save bar floats over it. There is no fixed
+/// header over a flexed body here on purpose: that shape is what clipped this
+/// screen on a short console window, and a sticky action bar is the shape a web
+/// app uses for exactly this job.
+class _PlanWorkspace extends StatelessWidget {
+  const _PlanWorkspace({
     required this.state,
     required this.detail,
     required this.draft,
     required this.changedKeys,
+    required this.note,
+    required this.tab,
     required this.featureQuery,
+    required this.featureCategory,
     required this.modifiedOnly,
+    required this.onTab,
     required this.onFeatureQuery,
+    required this.onFeatureCategory,
     required this.onModifiedOnly,
     required this.onValueChanged,
     required this.onValueCleared,
     required this.onSave,
     required this.onDiscard,
+    required this.onBack,
     required this.onEdit,
     required this.onClone,
     required this.onStatusChange,
@@ -854,14 +841,20 @@ class _PlanDetailPanel extends StatelessWidget {
   final PlanDetail detail;
   final Map<String, Object?> draft;
   final Set<String> changedKeys;
+  final TextEditingController note;
+  final int tab;
   final String featureQuery;
+  final String? featureCategory;
   final bool modifiedOnly;
+  final ValueChanged<int> onTab;
   final ValueChanged<String> onFeatureQuery;
+  final ValueChanged<String?> onFeatureCategory;
   final ValueChanged<bool> onModifiedOnly;
   final void Function(String key, Object? value) onValueChanged;
   final ValueChanged<String> onValueCleared;
   final VoidCallback onSave;
   final VoidCallback onDiscard;
+  final VoidCallback onBack;
   final VoidCallback onEdit;
   final VoidCallback onClone;
   final ValueChanged<String> onStatusChange;
@@ -869,286 +862,315 @@ class _PlanDetailPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<PlatformLicensingCubit>();
+    final isDirty = changedKeys.isNotEmpty;
 
-    final header = _PlanHeaderCard(
-      detail: detail,
-      changedCount: changedKeys.length,
-      onSave: onSave,
-      onDiscard: onDiscard,
-      onPreview: () => cubit.previewPlan(detail.plan.id),
-      onEdit: onEdit,
-      onClone: onClone,
-      onStatusChange: onStatusChange,
-    );
-
-    final tabs = TabBarView(
-      children: [
-        _FeatureValuesTab(
-          catalog: state.catalog,
-          draft: draft,
-          saved: detail.values,
-          changedKeys: changedKeys,
-          preview: state.planPreview,
-          query: featureQuery,
-          modifiedOnly: modifiedOnly,
-          onQuery: onFeatureQuery,
-          onModifiedOnly: onModifiedOnly,
-          onChanged: onValueChanged,
-          onCleared: onValueCleared,
-          onClosePreview: cubit.clearPlanPreview,
-        ),
-        _PlanOfficesTab(detail: detail),
-        _PlanRevisionsTab(detail: detail, catalog: state.catalog),
-      ],
-    );
-
-    return DefaultTabController(
-      // Keyed by plan: moving to another plan starts on its features again
-      // rather than on whichever tab the previous plan was left open at.
-      key: ValueKey(detail.plan.id),
-      length: 3,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          // The plan card plus a usable tab body needs real height. On a short
-          // console window there is not enough of it, and a fixed header over a
-          // flexed body would simply clip — so below the threshold the whole
-          // pane scrolls and the tab body keeps a workable minimum instead.
-          final roomy = constraints.maxHeight >= _detailBreakpoint;
-          final column = Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            mainAxisSize: roomy ? MainAxisSize.max : MainAxisSize.min,
+    return LayoutBuilder(
+      builder: (context, constraints) => Stack(
+        children: [
+          ListView(
+            padding: EdgeInsets.only(
+              // Room for the floating save bar, so the last feature row is
+              // never parked underneath it. The bar stacks its note field under
+              // its heading on a narrow pane, so it needs the taller reserve.
+              bottom: isDirty
+                  ? (constraints.maxWidth < 720 ? 220.0 : 132.0)
+                  : 0.0,
+            ),
             children: [
-              header,
+              _WorkspaceHeader(
+                detail: detail,
+                onBack: onBack,
+                onEdit: onEdit,
+                onClone: onClone,
+                onStatusChange: onStatusChange,
+                onPreview: () => cubit.previewPlan(detail.plan.id),
+              ),
               const SizedBox(height: AppSpacing.medium),
-              if (roomy)
-                Expanded(child: tabs)
-              else
-                SizedBox(height: _compactTabHeight, child: tabs),
+              LicensingTabs(
+                selected: tab,
+                onChanged: onTab,
+                tabs: [
+                  LicensingTab(
+                    label: 'الميزات',
+                    icon: DashboardIcons.featureCatalog,
+                    count: detail.values.length,
+                  ),
+                  LicensingTab(
+                    label: 'المكاتب',
+                    icon: DashboardIcons.platformOffices,
+                    count: detail.offices.length,
+                  ),
+                  LicensingTab(
+                    label: 'السجل',
+                    icon: DashboardIcons.audit,
+                    count: detail.revisions.length,
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.medium),
+              switch (tab) {
+                1 => _PlanOffices(detail: detail),
+                2 => _PlanRevisions(detail: detail, catalog: state.catalog),
+                _ => _FeatureEditor(
+                  catalog: state.catalog,
+                  draft: draft,
+                  saved: detail.values,
+                  changedKeys: changedKeys,
+                  preview: state.planPreview,
+                  query: featureQuery,
+                  category: featureCategory,
+                  modifiedOnly: modifiedOnly,
+                  onQuery: onFeatureQuery,
+                  onCategory: onFeatureCategory,
+                  onModifiedOnly: onModifiedOnly,
+                  onChanged: onValueChanged,
+                  onCleared: onValueCleared,
+                  onClosePreview: cubit.clearPlanPreview,
+                ),
+              },
             ],
-          );
-          return roomy ? column : SingleChildScrollView(child: column);
-        },
+          ),
+          if (isDirty)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: AppSpacing.medium,
+              child: LicensingSaveBar(
+                changedCount: changedKeys.length,
+                noteController: note,
+                onDiscard: onDiscard,
+                onSave: onSave,
+                message:
+                    'الحفظ يسري فورًا على ${detail.offices.length} مكتب مشترك، '
+                    'وتُحفظ الحالة السابقة في السجل.',
+              ),
+            ),
+        ],
       ),
     );
   }
 }
 
-/// Below this the detail pane stops flexing and starts scrolling.
-const double _detailBreakpoint = 620;
-const double _compactTabHeight = 460;
-
-class _PlanHeaderCard extends StatelessWidget {
-  const _PlanHeaderCard({
+class _WorkspaceHeader extends StatelessWidget {
+  const _WorkspaceHeader({
     required this.detail,
-    required this.changedCount,
-    required this.onSave,
-    required this.onDiscard,
-    required this.onPreview,
+    required this.onBack,
     required this.onEdit,
     required this.onClone,
     required this.onStatusChange,
+    required this.onPreview,
   });
 
   final PlanDetail detail;
-  final int changedCount;
-  final VoidCallback onSave;
-  final VoidCallback onDiscard;
-  final VoidCallback onPreview;
+  final VoidCallback onBack;
   final VoidCallback onEdit;
   final VoidCallback onClone;
   final ValueChanged<String> onStatusChange;
+  final VoidCallback onPreview;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final plan = detail.plan;
-    final statusColor = _planStatusColor(context, plan);
-    final isDirty = changedCount > 0;
+    final statusColor = _planStatusColor(context, plan.status);
 
     return AppCard(
-      padding: EdgeInsets.zero,
+      padding: const EdgeInsets.all(AppSpacing.medium),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.all(AppSpacing.medium),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: scheme.primary.withAlpha(20),
-                        borderRadius: BorderRadius.circular(
-                          AppTokens.radiusSmall,
-                        ),
-                      ),
-                      child: Icon(
-                        DashboardIcons.plansActive,
-                        color: scheme.primary,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.small),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              Flexible(
-                                child: Text(
-                                  plan.nameAr,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: theme.textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: AppSpacing.small),
-                              StatusChip(
-                                label: plan.statusLabelAr,
-                                color: statusColor.withAlpha(24),
-                                textColor: statusColor,
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            '${plan.key} · مراجعة ${plan.revision}',
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: DashboardColors.mutedInk(context),
-                            ),
-                          ),
-                        ],
+          // In RTL the start edge is the right one, so a "back" affordance
+          // points right. The label carries the meaning either way.
+          TextButton.icon(
+            onPressed: onBack,
+            icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+            label: const Text('كل الباقات'),
+            style: TextButton.styleFrom(padding: EdgeInsets.zero),
+          ),
+          const SizedBox(height: AppSpacing.small),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final identity = Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: scheme.primary.withAlpha(20),
+                      borderRadius: BorderRadius.circular(
+                        AppTokens.radiusSmall,
                       ),
                     ),
-                    const SizedBox(width: AppSpacing.small),
-                    Wrap(
-                      spacing: AppSpacing.xSmall,
-                      runSpacing: AppSpacing.xSmall,
-                      crossAxisAlignment: WrapCrossAlignment.center,
+                    child: Icon(
+                      DashboardIcons.plansActive,
+                      color: scheme.primary,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.small),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        FilledButton.icon(
-                          onPressed: isDirty ? onSave : null,
-                          icon: const Icon(Icons.save_rounded, size: 18),
-                          label: Text(isDirty ? 'حفظ ($changedCount)' : 'حفظ'),
-                        ),
-                        OutlinedButton.icon(
-                          onPressed: onPreview,
-                          icon: const Icon(Icons.visibility_outlined, size: 18),
-                          label: const Text('معاينة'),
-                        ),
-                        PopupMenuButton<String>(
-                          tooltip: 'إجراءات الباقة',
-                          icon: const Icon(Icons.more_horiz_rounded),
-                          onSelected: (action) => switch (action) {
-                            'edit' => onEdit(),
-                            'clone' => onClone(),
-                            _ => onStatusChange(action),
-                          },
-                          itemBuilder: (context) => [
-                            const PopupMenuItem(
-                              value: 'edit',
-                              child: ListTile(
-                                dense: true,
-                                contentPadding: EdgeInsets.zero,
-                                leading: Icon(Icons.edit_outlined),
-                                title: Text('تعديل البيانات'),
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                plan.nameAr,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.textTheme.titleLarge?.copyWith(
+                                  fontWeight: FontWeight.w900,
+                                ),
                               ),
                             ),
-                            const PopupMenuItem(
-                              value: 'clone',
-                              child: ListTile(
-                                dense: true,
-                                contentPadding: EdgeInsets.zero,
-                                leading: Icon(Icons.copy_rounded),
-                                title: Text('نسخ'),
-                              ),
+                            const SizedBox(width: AppSpacing.small),
+                            StatusChip(
+                              label: plan.statusLabelAr,
+                              color: statusColor.withAlpha(24),
+                              textColor: statusColor,
                             ),
-                            if (plan.status == 'draft')
-                              const PopupMenuItem(
-                                value: 'active',
-                                child: ListTile(
-                                  dense: true,
-                                  contentPadding: EdgeInsets.zero,
-                                  leading: Icon(Icons.publish_rounded),
-                                  title: Text('نشر الباقة'),
-                                ),
-                              ),
-                            if (plan.isArchived)
-                              const PopupMenuItem(
-                                value: 'active',
-                                child: ListTile(
-                                  dense: true,
-                                  contentPadding: EdgeInsets.zero,
-                                  leading: Icon(Icons.unarchive_outlined),
-                                  title: Text('إعادة التفعيل'),
-                                ),
-                              )
-                            else
-                              const PopupMenuItem(
-                                value: 'archived',
-                                child: ListTile(
-                                  dense: true,
-                                  contentPadding: EdgeInsets.zero,
-                                  leading: Icon(Icons.archive_outlined),
-                                  title: Text('أرشفة'),
-                                ),
-                              ),
                           ],
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          '${plan.key} · مراجعة ${plan.revision}',
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: DashboardColors.mutedInk(context),
+                          ),
                         ),
                       ],
                     ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.medium),
-                Wrap(
-                  spacing: AppSpacing.small,
-                  runSpacing: AppSpacing.xSmall,
-                  children: [
-                    _Fact(
-                      icon: DashboardIcons.payments,
-                      label: plan.priceMonthly == null
-                          ? 'سعر تفاوضي'
-                          : '${licensingMoney(plan.priceMonthly, plan.currency)} / شهر',
-                    ),
-                    if (plan.priceYearly != null)
-                      _Fact(
-                        icon: DashboardIcons.billing,
-                        label:
-                            '${licensingMoney(plan.priceYearly, plan.currency)} / سنة',
+                  ),
+                ],
+              );
+
+              final actions = Wrap(
+                spacing: AppSpacing.xSmall,
+                runSpacing: AppSpacing.xSmall,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  OutlinedButton.icon(
+                    onPressed: onPreview,
+                    icon: const Icon(Icons.visibility_outlined, size: 18),
+                    label: const Text('معاينة الصلاحيات'),
+                  ),
+                  OutlinedButton.icon(
+                    onPressed: onEdit,
+                    icon: const Icon(Icons.edit_outlined, size: 18),
+                    label: const Text('بيانات البيع'),
+                  ),
+                  PopupMenuButton<String>(
+                    tooltip: 'إجراءات الباقة',
+                    icon: const Icon(Icons.more_horiz_rounded),
+                    onSelected: (action) =>
+                        action == 'clone' ? onClone() : onStatusChange(action),
+                    itemBuilder: (context) => [
+                      const PopupMenuItem(
+                        value: 'clone',
+                        child: ListTile(
+                          dense: true,
+                          contentPadding: EdgeInsets.zero,
+                          leading: Icon(Icons.copy_rounded),
+                          title: Text('نسخ الباقة'),
+                        ),
                       ),
-                    _Fact(
-                      icon: DashboardIcons.time,
-                      label: plan.trialDays > 0
-                          ? 'تجربة ${plan.trialDays} يوم'
-                          : 'بلا فترة تجريبية',
-                    ),
-                    _Fact(
-                      icon: DashboardIcons.platformOffices,
-                      label: plan.officeCount == 0
-                          ? 'لا مكتب على هذه الباقة'
-                          : '${plan.officeCount} مكتب مشترك',
-                    ),
-                    _Fact(
-                      icon: plan.isPublic
-                          ? Icons.storefront_outlined
-                          : DashboardIcons.locked,
-                      label: plan.isPublic ? 'معروضة للمكاتب' : 'بالتعيين فقط',
-                    ),
+                      if (plan.status == 'draft')
+                        const PopupMenuItem(
+                          value: 'active',
+                          child: ListTile(
+                            dense: true,
+                            contentPadding: EdgeInsets.zero,
+                            leading: Icon(Icons.publish_rounded),
+                            title: Text('نشر الباقة'),
+                          ),
+                        ),
+                      if (plan.isArchived)
+                        const PopupMenuItem(
+                          value: 'active',
+                          child: ListTile(
+                            dense: true,
+                            contentPadding: EdgeInsets.zero,
+                            leading: Icon(Icons.unarchive_outlined),
+                            title: Text('إعادة التفعيل'),
+                          ),
+                        )
+                      else
+                        const PopupMenuItem(
+                          value: 'archived',
+                          child: ListTile(
+                            dense: true,
+                            contentPadding: EdgeInsets.zero,
+                            leading: Icon(Icons.archive_outlined),
+                            title: Text('أرشفة'),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
+              );
+
+              if (constraints.maxWidth < 720) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    identity,
+                    const SizedBox(height: AppSpacing.medium),
+                    actions,
                   ],
-                ),
-              ],
-            ),
+                );
+              }
+              return Row(
+                children: [
+                  Expanded(child: identity),
+                  const SizedBox(width: AppSpacing.medium),
+                  actions,
+                ],
+              );
+            },
           ),
-          if (plan.isArchived)
-            _Banner(
+          const SizedBox(height: AppSpacing.medium),
+          Wrap(
+            spacing: AppSpacing.small,
+            runSpacing: AppSpacing.xSmall,
+            children: [
+              LicensingFact(
+                icon: DashboardIcons.payments,
+                label: plan.priceMonthly == null
+                    ? 'سعر تفاوضي'
+                    : '${licensingMoney(plan.priceMonthly, plan.currency)} / شهر',
+              ),
+              if (plan.priceYearly != null)
+                LicensingFact(
+                  icon: DashboardIcons.billing,
+                  label:
+                      '${licensingMoney(plan.priceYearly, plan.currency)} / سنة',
+                ),
+              LicensingFact(
+                icon: DashboardIcons.time,
+                label: plan.trialDays > 0
+                    ? 'تجربة ${plan.trialDays} يوم'
+                    : 'بلا فترة تجريبية',
+              ),
+              LicensingFact(
+                icon: DashboardIcons.platformOffices,
+                label: plan.officeCount == 0
+                    ? 'لا مكتب على هذه الباقة'
+                    : '${plan.officeCount} مكتب مشترك',
+                color: plan.officeCount > 0 ? scheme.secondary : null,
+              ),
+              LicensingFact(
+                icon: plan.isPublic
+                    ? Icons.storefront_outlined
+                    : DashboardIcons.locked,
+                label: plan.isPublic ? 'معروضة للمكاتب' : 'بالتعيين فقط',
+              ),
+            ],
+          ),
+          if (plan.isArchived) ...[
+            const SizedBox(height: AppSpacing.medium),
+            LicensingNotice(
               icon: Icons.archive_outlined,
               color: scheme.error,
               // Archiving is not deletion: the offices already on it keep
@@ -1157,172 +1179,28 @@ class _PlanHeaderCard extends StatelessWidget {
                   'باقة مؤرشفة — المكاتب المشتركة تعمل كما هي، ولا يمكن '
                   'تعيينها لمكتب جديد.',
             ),
-          if (isDirty)
-            _Banner(
-              icon: Icons.edit_note_rounded,
-              color: scheme.tertiary,
-              message:
-                  '$changedCount تعديل غير محفوظ. لا يسري أي منها على أي مكتب '
-                  'قبل الحفظ.',
-              actions: [
-                TextButton(onPressed: onDiscard, child: const Text('تجاهل')),
-                FilledButton(onPressed: onSave, child: const Text('حفظ')),
-              ],
-            ),
-          Padding(
-            padding: const EdgeInsetsDirectional.only(
-              start: AppSpacing.small,
-              end: AppSpacing.small,
-            ),
-            child: TabBar(
-              isScrollable: true,
-              tabAlignment: TabAlignment.start,
-              tabs: [
-                _CountTab(
-                  label: 'الميزات',
-                  count: detail.values.length,
-                  tooltip: 'قيم مضبوطة في هذه الباقة',
-                ),
-                _CountTab(label: 'المكاتب', count: detail.offices.length),
-                _CountTab(label: 'السجل', count: detail.revisions.length),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CountTab extends StatelessWidget {
-  const _CountTab({required this.label, required this.count, this.tooltip});
-
-  final String label;
-  final int count;
-  final String? tooltip;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final tab = Tab(
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(label),
-          if (count > 0) ...[
-            const SizedBox(width: AppSpacing.xSmall),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-              decoration: BoxDecoration(
-                color: scheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Text(
-                '$count',
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  color: scheme.onSurfaceVariant,
-                ),
-              ),
-            ),
           ],
         ],
       ),
     );
-    return tooltip == null ? tab : Tooltip(message: tooltip!, child: tab);
-  }
-}
-
-/// A full-width strip under the header: the plan is archived, or the buffer is
-/// dirty. Both are facts the operator must not be able to scroll away from.
-class _Banner extends StatelessWidget {
-  const _Banner({
-    required this.icon,
-    required this.color,
-    required this.message,
-    this.actions = const [],
-  });
-
-  final IconData icon;
-  final Color color;
-  final String message;
-  final List<Widget> actions;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.medium,
-        vertical: AppSpacing.small,
-      ),
-      decoration: BoxDecoration(
-        color: color.withAlpha(20),
-        border: Border(top: BorderSide(color: color.withAlpha(60))),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: color),
-          const SizedBox(width: AppSpacing.small),
-          Expanded(
-            child: Text(
-              message,
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: color),
-            ),
-          ),
-          ...actions,
-        ],
-      ),
-    );
-  }
-}
-
-class _Fact extends StatelessWidget {
-  const _Fact({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: DashboardColors.well(context),
-        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-        border: Border.all(color: DashboardColors.border(context)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: DashboardColors.mutedInk(context)),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: Theme.of(
-              context,
-            ).textTheme.labelMedium?.copyWith(fontWeight: FontWeight.w600),
-          ),
-        ],
-      ),
-    );
   }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// Features tab
+// Feature editor
 // ═══════════════════════════════════════════════════════════════════════════
 
-class _FeatureValuesTab extends StatelessWidget {
-  const _FeatureValuesTab({
+class _FeatureEditor extends StatelessWidget {
+  const _FeatureEditor({
     required this.catalog,
     required this.draft,
     required this.saved,
     required this.changedKeys,
     required this.query,
+    required this.category,
     required this.modifiedOnly,
     required this.onQuery,
+    required this.onCategory,
     required this.onModifiedOnly,
     required this.onChanged,
     required this.onCleared,
@@ -1335,8 +1213,10 @@ class _FeatureValuesTab extends StatelessWidget {
   final Map<String, Object?> saved;
   final Set<String> changedKeys;
   final String query;
+  final String? category;
   final bool modifiedOnly;
   final ValueChanged<String> onQuery;
+  final ValueChanged<String?> onCategory;
   final ValueChanged<bool> onModifiedOnly;
   final Map<String, dynamic>? preview;
   final void Function(String key, Object? value) onChanged;
@@ -1345,6 +1225,7 @@ class _FeatureValuesTab extends StatelessWidget {
 
   bool _matches(CatalogFeature feature) {
     if (feature.status == 'hidden') return false;
+    if (category != null && feature.categoryKey != category) return false;
     if (modifiedOnly && !draft.containsKey(feature.key)) return false;
     final q = query.trim().toLowerCase();
     if (q.isEmpty) return true;
@@ -1356,6 +1237,9 @@ class _FeatureValuesTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
+    final selectable = catalog.features
+        .where((f) => f.status != 'hidden')
+        .toList();
     final visible = catalog.features.where(_matches).toList();
 
     // Grouped by the catalog's own category order, with anything whose category
@@ -1368,77 +1252,110 @@ class _FeatureValuesTab extends StatelessWidget {
       list.sort((a, b) => a.sortOrder.compareTo(b.sortOrder));
     }
     final orderedKeys = [
-      for (final category in catalog.categories)
-        if (grouped.containsKey(category.key)) category.key,
+      for (final c in catalog.categories)
+        if (grouped.containsKey(c.key)) c.key,
       ...grouped.keys.where(
         (key) => !catalog.categories.any((c) => c.key == key),
       ),
     ];
 
+    final categoryCounts = <String, int>{};
+    for (final feature in selectable) {
+      categoryCounts.update(
+        feature.categoryKey,
+        (n) => n + 1,
+        ifAbsent: () => 1,
+      );
+    }
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _FeatureToolbar(
-          query: query,
-          modifiedOnly: modifiedOnly,
-          onQuery: onQuery,
-          onModifiedOnly: onModifiedOnly,
-          shown: visible.length,
-          total: catalog.features.where((f) => f.status != 'hidden').length,
-          setCount: draft.length,
+        if (preview != null) ...[
+          _PreviewPanel(preview: preview!, onClose: onClosePreview),
+          const SizedBox(height: AppSpacing.medium),
+        ],
+        LicensingToolbar(
+          search: DebouncedSearchField(
+            initialValue: query,
+            hintText: 'ابحث في الميزات',
+            onChanged: onQuery,
+          ),
+          filters: [
+            FilterChip(
+              label: Text('كل التصنيفات (${selectable.length})'),
+              selected: category == null,
+              onSelected: (_) => onCategory(null),
+            ),
+            for (final c in catalog.categories)
+              if ((categoryCounts[c.key] ?? 0) > 0)
+                FilterChip(
+                  label: Text('${c.nameAr} (${categoryCounts[c.key]})'),
+                  selected: category == c.key,
+                  onSelected: (on) => onCategory(on ? c.key : null),
+                ),
+            FilterChip(
+              avatar: const Icon(Icons.tune_rounded, size: 16),
+              label: Text('المضبوطة في الباقة (${draft.length})'),
+              selected: modifiedOnly,
+              onSelected: onModifiedOnly,
+            ),
+          ],
+          trailing: Text(
+            'يُعرض ${visible.length} من ${selectable.length}',
+            style: text.labelMedium?.copyWith(
+              color: DashboardColors.mutedInk(context),
+            ),
+          ),
         ),
         const SizedBox(height: AppSpacing.medium),
-        Expanded(
-          child: ListView(
-            children: [
-              if (preview != null) ...[
-                _PreviewPanel(preview: preview!, onClose: onClosePreview),
-                const SizedBox(height: AppSpacing.medium),
-              ],
-              if (visible.isEmpty)
-                DashboardPanel(
-                  icon: DashboardIcons.featureCatalog,
-                  title: 'الميزات',
-                  child: DashboardEmptyState(
-                    icon: DashboardIcons.featureCatalog,
-                    title: modifiedOnly
-                        ? 'لا قيمة مضبوطة في هذه الباقة'
-                        : 'لا ميزة تطابق البحث',
-                    message: modifiedOnly
-                        ? 'الباقة تتبع الكتالوج بالكامل — كل ميزة على قيمتها الافتراضية.'
-                        : 'جرّب اسمًا آخر أو مفتاح الميزة.',
-                    action: modifiedOnly
-                        ? TextButton(
-                            onPressed: () => onModifiedOnly(false),
-                            child: const Text('عرض كل الميزات'),
-                          )
-                        : null,
-                  ),
-                )
-              else
-                for (final key in orderedKeys)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.medium),
-                    child: _CategorySection(
-                      categoryKey: key,
-                      categoryName: catalog.categoryName(key),
-                      features: grouped[key]!,
-                      draft: draft,
-                      saved: saved,
-                      changedKeys: changedKeys,
-                      onChanged: onChanged,
-                      onCleared: onCleared,
-                    ),
-                  ),
-              Text(
-                // The distinction that trips everybody up, said once, in place.
-                'ميزة بلا قيمة في الباقة ترجع إلى الافتراضي المسجَّل في الكتالوج — '
-                'وهذا ليس نفس معنى «مُعطَّلة».',
-                style: text.bodySmall?.copyWith(
-                  color: DashboardColors.mutedInk(context),
-                ),
+        if (visible.isEmpty)
+          AppCard(
+            padding: const EdgeInsets.all(AppSpacing.large),
+            child: DashboardEmptyState(
+              icon: DashboardIcons.featureCatalog,
+              title: modifiedOnly
+                  ? 'لا قيمة مضبوطة في هذه الباقة'
+                  : 'لا ميزة تطابق البحث',
+              message: modifiedOnly
+                  ? 'الباقة تتبع الكتالوج بالكامل — كل ميزة على قيمتها الافتراضية.'
+                  : 'جرّب اسمًا آخر أو مفتاح الميزة.',
+              action: TextButton(
+                onPressed: () {
+                  onModifiedOnly(false);
+                  onCategory(null);
+                  onQuery('');
+                },
+                child: const Text('عرض كل الميزات'),
               ),
-            ],
+            ),
+          )
+        else
+          AppCard(
+            padding: EdgeInsets.zero,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (final key in orderedKeys)
+                  _CategoryBlock(
+                    name: catalog.categoryName(key),
+                    features: grouped[key]!,
+                    draft: draft,
+                    saved: saved,
+                    changedKeys: changedKeys,
+                    onChanged: onChanged,
+                    onCleared: onCleared,
+                  ),
+              ],
+            ),
+          ),
+        const SizedBox(height: AppSpacing.small),
+        Text(
+          // The distinction that trips everybody up, said once, in place.
+          'ميزة بلا قيمة في الباقة ترجع إلى الافتراضي المسجَّل في الكتالوج — '
+          'وهذا ليس نفس معنى «مُعطَّلة».',
+          style: text.bodySmall?.copyWith(
+            color: DashboardColors.mutedInk(context),
           ),
         ),
       ],
@@ -1446,57 +1363,216 @@ class _FeatureValuesTab extends StatelessWidget {
   }
 }
 
-class _FeatureToolbar extends StatelessWidget {
-  const _FeatureToolbar({
-    required this.query,
-    required this.modifiedOnly,
-    required this.onQuery,
-    required this.onModifiedOnly,
-    required this.shown,
-    required this.total,
-    required this.setCount,
+/// A category heading and its rows, in the same card as its neighbours.
+///
+/// Not a collapsible section: a plan is edited by sweeping the whole catalog,
+/// and a column of folded headers turns "set the limits" into fifteen clicks
+/// before the first one.
+class _CategoryBlock extends StatelessWidget {
+  const _CategoryBlock({
+    required this.name,
+    required this.features,
+    required this.draft,
+    required this.saved,
+    required this.changedKeys,
+    required this.onChanged,
+    required this.onCleared,
   });
 
-  final String query;
-  final bool modifiedOnly;
-  final ValueChanged<String> onQuery;
-  final ValueChanged<bool> onModifiedOnly;
-  final int shown;
-  final int total;
-  final int setCount;
+  final String name;
+  final List<CatalogFeature> features;
+  final Map<String, Object?> draft;
+  final Map<String, Object?> saved;
+  final Set<String> changedKeys;
+  final void Function(String key, Object? value) onChanged;
+  final ValueChanged<String> onCleared;
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final setHere = features.where((f) => draft.containsKey(f.key)).length;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.medium,
+            vertical: AppSpacing.small,
+          ),
+          color: DashboardColors.well(context),
+          child: Row(
+            children: [
+              Icon(
+                DashboardIcons.featureCatalog,
+                size: 16,
+                color: theme.colorScheme.primary,
+              ),
+              const SizedBox(width: AppSpacing.small),
+              Expanded(
+                child: Text(
+                  name,
+                  style: theme.textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ),
+              Text(
+                setHere == 0
+                    ? '${features.length} ميزة'
+                    : '${features.length} ميزة · $setHere مضبوطة',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: DashboardColors.mutedInk(context),
+                ),
+              ),
+            ],
+          ),
+        ),
+        for (final feature in features)
+          _FeatureEditRow(
+            feature: feature,
+            value: draft[feature.key],
+            isSet: draft.containsKey(feature.key),
+            isChanged: changedKeys.contains(feature.key),
+            savedLabel: saved.containsKey(feature.key)
+                ? FeatureValue.label(saved[feature.key])
+                : null,
+            onChanged: (v) => onChanged(feature.key, v),
+            onCleared: () => onCleared(feature.key),
+          ),
+      ],
+    );
+  }
+}
+
+class _FeatureEditRow extends StatelessWidget {
+  const _FeatureEditRow({
+    required this.feature,
+    required this.value,
+    required this.isSet,
+    required this.isChanged,
+    required this.savedLabel,
+    required this.onChanged,
+    required this.onCleared,
+  });
+
+  final CatalogFeature feature;
+  final Object? value;
+  final bool isSet;
+  final bool isChanged;
+
+  /// What is stored for this key right now, when anything is — shown only while
+  /// the row is dirty, so "what am I about to change it from?" is answerable
+  /// without leaving the screen.
+  final String? savedLabel;
+
+  final ValueChanged<Object?> onChanged;
+  final VoidCallback onCleared;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.small),
-      decoration: BoxDecoration(
-        color: DashboardColors.well(context),
-        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-        border: Border.all(color: DashboardColors.border(context)),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.medium,
+        vertical: AppSpacing.small,
       ),
-      child: Wrap(
-        spacing: AppSpacing.small,
-        runSpacing: AppSpacing.small,
-        crossAxisAlignment: WrapCrossAlignment.center,
+      decoration: BoxDecoration(
+        color: isChanged ? scheme.tertiary.withAlpha(14) : null,
+        border: Border(
+          top: BorderSide(color: DashboardColors.divider(context)),
+        ),
+      ),
+      child: Row(
         children: [
           SizedBox(
-            width: 280,
-            child: DebouncedSearchField(
-              initialValue: query,
-              hintText: 'ابحث في الميزات',
-              onChanged: onQuery,
+            width: 10,
+            child: isChanged
+                ? Tooltip(
+                    message: savedLabel == null
+                        ? 'تعديل غير محفوظ'
+                        : 'تعديل غير محفوظ — المحفوظ الآن: $savedLabel',
+                    child: Container(
+                      width: 7,
+                      height: 7,
+                      decoration: BoxDecoration(
+                        color: scheme.tertiary,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                  )
+                : null,
+          ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        feature.nameAr,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    if (!feature.isEnforced) ...[
+                      const SizedBox(width: AppSpacing.small),
+                      const EnforcementBadge(isEnforced: false),
+                    ],
+                    if (feature.isKillSwitched) ...[
+                      const SizedBox(width: AppSpacing.xSmall),
+                      StatusChip(
+                        label: 'موقوفة على مستوى المنصة',
+                        color: scheme.error.withAlpha(24),
+                        textColor: scheme.error,
+                      ),
+                    ],
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  isSet
+                      ? 'مضبوطة في الباقة · ${feature.key}'
+                      : 'تتبع الافتراضي '
+                            '(${FeatureValue.label(feature.defaultValue, unit: feature.unitAr)}) · '
+                            '${feature.key}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: isSet
+                        ? scheme.primary
+                        : DashboardColors.mutedInk(context),
+                  ),
+                ),
+              ],
             ),
           ),
-          FilterChip(
-            label: Text('المضبوطة في الباقة ($setCount)'),
-            selected: modifiedOnly,
-            onSelected: onModifiedOnly,
-          ),
-          Text(
-            'يُعرض $shown من $total',
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: DashboardColors.mutedInk(context),
+          const SizedBox(width: AppSpacing.small),
+          // A lane for the control, so a column of switches, number fields and
+          // dropdowns lines up instead of stepping in and out with the length
+          // of each feature's name. A minimum rather than a fixed width: the
+          // limit control is wider than the rest, and clamping it would clip.
+          ConstrainedBox(
+            constraints: const BoxConstraints(minWidth: 216),
+            child: Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: FeatureValueField(
+                feature: feature,
+                value: value,
+                onChanged: onChanged,
+              ),
             ),
+          ),
+          IconButton(
+            tooltip: 'إرجاع إلى الافتراضي',
+            icon: const Icon(Icons.settings_backup_restore_rounded, size: 18),
+            onPressed: isSet ? onCleared : null,
           ),
         ],
       ),
@@ -1514,8 +1590,8 @@ class _PreviewPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final entries = preview.entries.toList();
+
     return DashboardPanel(
-      sectionId: DashboardSectionIds.platformPlansPreview,
       icon: Icons.visibility_outlined,
       title: 'معاينة الصلاحيات الفعلية',
       subtitle:
@@ -1564,6 +1640,7 @@ class _PreviewPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
@@ -1593,321 +1670,121 @@ class _PreviewPill extends StatelessWidget {
   }
 }
 
-class _CategorySection extends StatelessWidget {
-  const _CategorySection({
-    required this.categoryKey,
-    required this.categoryName,
-    required this.features,
-    required this.draft,
-    required this.saved,
-    required this.changedKeys,
-    required this.onChanged,
-    required this.onCleared,
-  });
-
-  final String categoryKey;
-  final String categoryName;
-  final List<CatalogFeature> features;
-  final Map<String, Object?> draft;
-  final Map<String, Object?> saved;
-  final Set<String> changedKeys;
-  final void Function(String key, Object? value) onChanged;
-  final ValueChanged<String> onCleared;
-
-  @override
-  Widget build(BuildContext context) {
-    final setHere = features.where((f) => draft.containsKey(f.key)).length;
-    final changedHere = features
-        .where((f) => changedKeys.contains(f.key))
-        .length;
-
-    return DashboardPanel(
-      sectionId: DashboardSectionIds.platformPlanCategory(categoryKey),
-      icon: DashboardIcons.featureCatalog,
-      title: categoryName,
-      subtitle: '${features.length} ميزة · $setHere مضبوطة في هذه الباقة',
-      collapsedSummary: DashboardSectionSummary(
-        items: [
-          '${features.length} ميزة',
-          if (setHere > 0) '$setHere مضبوطة',
-          if (changedHere > 0) '$changedHere غير محفوظة',
-        ],
-      ),
-      child: Column(
-        children: [
-          for (final feature in features) ...[
-            if (feature != features.first)
-              Divider(height: 1, color: DashboardColors.divider(context)),
-            _FeatureRow(
-              feature: feature,
-              value: draft[feature.key],
-              isSet: draft.containsKey(feature.key),
-              isChanged: changedKeys.contains(feature.key),
-              savedLabel: saved.containsKey(feature.key)
-                  ? FeatureValue.label(saved[feature.key])
-                  : null,
-              onChanged: (v) => onChanged(feature.key, v),
-              onCleared: () => onCleared(feature.key),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-class _FeatureRow extends StatelessWidget {
-  const _FeatureRow({
-    required this.feature,
-    required this.value,
-    required this.isSet,
-    required this.isChanged,
-    required this.savedLabel,
-    required this.onChanged,
-    required this.onCleared,
-  });
-
-  final CatalogFeature feature;
-  final Object? value;
-  final bool isSet;
-  final bool isChanged;
-
-  /// What is stored for this key right now, when anything is — shown only while
-  /// the row is dirty, so "what am I about to change it from?" is answerable
-  /// without leaving the screen.
-  final String? savedLabel;
-
-  final ValueChanged<Object?> onChanged;
-  final VoidCallback onCleared;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.small),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 10,
-            child: isChanged
-                ? Tooltip(
-                    message: savedLabel == null
-                        ? 'تعديل غير محفوظ'
-                        : 'تعديل غير محفوظ — المحفوظ الآن: $savedLabel',
-                    child: Container(
-                      width: 7,
-                      height: 7,
-                      decoration: BoxDecoration(
-                        color: scheme.tertiary,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  )
-                : null,
-          ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        feature.nameAr,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    if (!feature.isEnforced) ...[
-                      const SizedBox(width: AppSpacing.small),
-                      const EnforcementBadge(isEnforced: false),
-                    ],
-                    if (feature.isKillSwitched) ...[
-                      const SizedBox(width: AppSpacing.xSmall),
-                      StatusChip(
-                        label: 'موقوفة على مستوى المنصة',
-                        color: scheme.error.withAlpha(24),
-                        textColor: scheme.error,
-                      ),
-                    ],
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  isSet
-                      ? 'مضبوطة في الباقة · ${feature.key}'
-                      : 'تتبع الافتراضي '
-                            '(${FeatureValue.label(feature.defaultValue)}) · '
-                            '${feature.key}',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: isSet
-                        ? scheme.primary
-                        : DashboardColors.mutedInk(context),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: AppSpacing.small),
-          // A lane for the control, so a column of switches, number fields and
-          // dropdowns lines up instead of stepping in and out with the length
-          // of each feature's name. A minimum rather than a fixed width: the
-          // limit control (a number field plus a «بلا حدود» chip) is wider than
-          // the rest, and clamping it would clip the chip.
-          ConstrainedBox(
-            constraints: const BoxConstraints(minWidth: 216),
-            child: Align(
-              alignment: AlignmentDirectional.centerEnd,
-              child: FeatureValueField(
-                feature: feature,
-                value: value,
-                onChanged: onChanged,
-              ),
-            ),
-          ),
-          IconButton(
-            tooltip: 'إرجاع إلى الافتراضي',
-            icon: const Icon(Icons.settings_backup_restore_rounded, size: 18),
-            onPressed: isSet ? onCleared : null,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 // ═══════════════════════════════════════════════════════════════════════════
 // Offices + revisions
 // ═══════════════════════════════════════════════════════════════════════════
 
-class _PlanOfficesTab extends StatelessWidget {
-  const _PlanOfficesTab({required this.detail});
+class _PlanOffices extends StatelessWidget {
+  const _PlanOffices({required this.detail});
 
   final PlanDetail detail;
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      children: [
-        DashboardPanel(
-          icon: DashboardIcons.platformOffices,
-          title: 'المكاتب المشتركة',
-          subtitle: detail.offices.isEmpty
-              ? 'لا مكتب على هذه الباقة'
-              : '${detail.offices.length} مكتب — أي حفظ للميزات يسري عليها فورًا',
-          child: detail.offices.isEmpty
-              ? const DashboardEmptyState(
-                  icon: DashboardIcons.platformOffices,
-                  title: 'لا يوجد مكتب على هذه الباقة',
-                  message:
-                      'تُعيَّن الباقة للمكاتب من شاشة التراخيص، ويمكن تعديلها '
-                      'بأمان حتى ذلك الحين.',
-                )
-              : Column(
-                  children: [
-                    for (final office in detail.offices)
-                      Padding(
-                        padding: const EdgeInsets.only(
-                          bottom: AppSpacing.small,
-                        ),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.medium,
-                            vertical: AppSpacing.small,
-                          ),
-                          decoration: BoxDecoration(
-                            color: DashboardColors.well(context),
-                            borderRadius: BorderRadius.circular(
-                              AppTokens.radiusSmall,
-                            ),
-                            border: Border.all(
-                              color: DashboardColors.border(context),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                DashboardIcons.platformOffices,
-                                size: 18,
-                                color: DashboardColors.mutedInk(context),
-                              ),
-                              const SizedBox(width: AppSpacing.small),
-                              Expanded(
-                                child: Text(
-                                  office.name,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(context).textTheme.bodyMedium
-                                      ?.copyWith(fontWeight: FontWeight.w600),
-                                ),
-                              ),
-                              LicenseStatusChip(
-                                status: office.status,
-                                label: _officeStatusLabelAr(office.status),
-                              ),
-                            ],
-                          ),
-                        ),
+    return DashboardPanel(
+      icon: DashboardIcons.platformOffices,
+      title: 'المكاتب المشتركة',
+      subtitle: detail.offices.isEmpty
+          ? 'لا مكتب على هذه الباقة'
+          : '${detail.offices.length} مكتب — أي حفظ للميزات يسري عليها فورًا',
+      child: detail.offices.isEmpty
+          ? const DashboardEmptyState(
+              icon: DashboardIcons.platformOffices,
+              title: 'لا يوجد مكتب على هذه الباقة',
+              message:
+                  'تُعيَّن الباقة للمكاتب من شاشة التراخيص، ويمكن تعديلها '
+                  'بأمان حتى ذلك الحين.',
+            )
+          : LicensingCardGrid(
+              minCardWidth: 300,
+              spacing: AppSpacing.small,
+              children: [
+                for (final office in detail.offices)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.medium,
+                      vertical: AppSpacing.small,
+                    ),
+                    decoration: BoxDecoration(
+                      color: DashboardColors.well(context),
+                      borderRadius: BorderRadius.circular(
+                        AppTokens.radiusSmall,
                       ),
-                  ],
-                ),
-        ),
-      ],
+                      border: Border.all(
+                        color: DashboardColors.border(context),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          DashboardIcons.platformOffices,
+                          size: 18,
+                          color: DashboardColors.mutedInk(context),
+                        ),
+                        const SizedBox(width: AppSpacing.small),
+                        Expanded(
+                          child: Text(
+                            office.name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                        LicenseStatusChip(
+                          status: office.status,
+                          label: _officeStatusLabelAr(office.status),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
     );
   }
 }
 
-class _PlanRevisionsTab extends StatelessWidget {
-  const _PlanRevisionsTab({required this.detail, required this.catalog});
+class _PlanRevisions extends StatelessWidget {
+  const _PlanRevisions({required this.detail, required this.catalog});
 
   final PlanDetail detail;
   final FeatureCatalog catalog;
 
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      children: [
-        DashboardPanel(
-          icon: DashboardIcons.audit,
-          title: 'السجل',
-          subtitle:
-              'تُحفظ نسخة تلقائيًا قبل كل تعديل، وتُقارَن بالحالة الحالية.',
-          child: detail.revisions.isEmpty
-              ? const DashboardEmptyState(
-                  icon: DashboardIcons.audit,
-                  title: 'لا توجد نسخ سابقة',
-                  message: 'أول تعديل على الباقة ينشئ أول نسخة.',
-                )
-              : Column(
-                  children: [
-                    for (final revision in detail.revisions)
-                      DashboardCollapsibleSection.bare(
-                        sectionId: DashboardSectionIds.platformPlanRevision(
-                          revision.id,
-                        ),
-                        initiallyExpanded: false,
-                        icon: DashboardIcons.activity,
-                        title: 'نسخة ${revision.revision}',
-                        subtitle:
-                            '${licensingDate(revision.createdAt)}'
-                            '${revision.reason.isEmpty ? '' : ' — ${revision.reason}'}',
-                        headerPadding: const EdgeInsets.symmetric(
-                          vertical: AppSpacing.small,
-                        ),
-                        bodyPadding: const EdgeInsets.only(
-                          bottom: AppSpacing.medium,
-                        ),
-                        child: _RevisionDiff(
-                          changes: _changes(revision.features),
-                        ),
-                      ),
-                  ],
-                ),
-        ),
-      ],
+    return DashboardPanel(
+      icon: DashboardIcons.audit,
+      title: 'السجل',
+      subtitle: 'تُحفظ نسخة تلقائيًا قبل كل تعديل، وتُقارَن بالحالة الحالية.',
+      child: detail.revisions.isEmpty
+          ? const DashboardEmptyState(
+              icon: DashboardIcons.audit,
+              title: 'لا توجد نسخ سابقة',
+              message: 'أول تعديل على الباقة ينشئ أول نسخة.',
+            )
+          : Column(
+              children: [
+                for (final revision in detail.revisions)
+                  DashboardCollapsibleSection.bare(
+                    sectionId: DashboardSectionIds.platformPlanRevision(
+                      revision.id,
+                    ),
+                    initiallyExpanded: false,
+                    icon: DashboardIcons.activity,
+                    title: 'نسخة ${revision.revision}',
+                    subtitle:
+                        '${licensingDate(revision.createdAt)}'
+                        '${revision.reason.isEmpty ? '' : ' — ${revision.reason}'}',
+                    headerPadding: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.small,
+                    ),
+                    bodyPadding: const EdgeInsets.only(
+                      bottom: AppSpacing.medium,
+                    ),
+                    child: _RevisionDiff(changes: _changes(revision.features)),
+                  ),
+              ],
+            ),
     );
   }
 

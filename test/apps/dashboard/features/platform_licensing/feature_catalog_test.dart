@@ -47,7 +47,11 @@ PlatformLicensingLoaded _loaded({
             // Deliberately not alphabetical: the screen must follow the
             // catalog's declared order, not the key's.
             FeatureCategory(key: 'money', nameAr: 'المالية', sortOrder: 1),
-            FeatureCategory(key: 'comms', nameAr: 'التواصل والدعم', sortOrder: 2),
+            FeatureCategory(
+              key: 'comms',
+              nameAr: 'التواصل والدعم',
+              sortOrder: 2,
+            ),
           ],
       features:
           features ??
@@ -95,15 +99,24 @@ void main() {
         'push_notifications',
       );
       expect(
-        _loaded(features: features, search: 'المحفظة').visibleFeatures.single.key,
+        _loaded(
+          features: features,
+          search: 'المحفظة',
+        ).visibleFeatures.single.key,
         'wallet',
       );
       expect(
-        _loaded(features: features, search: 'wallet').visibleFeatures.single.key,
+        _loaded(
+          features: features,
+          search: 'wallet',
+        ).visibleFeatures.single.key,
         'wallet',
       );
       expect(
-        _loaded(features: features, search: 'الاستجابة').visibleFeatures.single.key,
+        _loaded(
+          features: features,
+          search: 'الاستجابة',
+        ).visibleFeatures.single.key,
         'sla',
       );
     });
@@ -120,10 +133,7 @@ void main() {
     });
 
     test('category and status narrow independently, and combine', () {
-      expect(
-        _loaded(category: 'money').visibleFeatures.single.key,
-        'finance',
-      );
+      expect(_loaded(category: 'money').visibleFeatures.single.key, 'finance');
 
       final withKilled = [
         _feature(key: 'a'),
@@ -185,11 +195,14 @@ void main() {
       expect(groups.single.features.single.key, 'orphan');
     });
 
-    test('empty groups are dropped so filtering never leaves headers behind', () {
-      final groups = _loaded(category: 'money').visibleFeatureGroups;
-      expect(groups, hasLength(1));
-      expect(groups.single.key, 'money');
-    });
+    test(
+      'empty groups are dropped so filtering never leaves headers behind',
+      () {
+        final groups = _loaded(category: 'money').visibleFeatureGroups;
+        expect(groups, hasLength(1));
+        expect(groups.single.key, 'money');
+      },
+    );
   });
 
   group('selection', () {
@@ -206,7 +219,10 @@ void main() {
       // The detail pane must not blank out the moment the operator types a
       // search that excludes what they are reading.
       final state = _loaded(selected: 'finance', category: 'comms');
-      expect(state.visibleFeatures.map((f) => f.key), isNot(contains('finance')));
+      expect(
+        state.visibleFeatures.map((f) => f.key),
+        isNot(contains('finance')),
+      );
       expect(state.selectedFeature?.key, 'finance');
     });
   });
