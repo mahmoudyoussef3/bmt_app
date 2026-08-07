@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:developer' as developer;
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../../../core/entitlements/licensing_guard.dart';
 import '../../../../../core/session/dashboard_session.dart';
 import '../../../trip_creation/domain/entities/trip_driver_option.dart';
 import '../../../shared/domain/entities/operation_trip.dart';
@@ -793,6 +794,12 @@ class SupabaseTripsDatasource implements TripsDatasource {
   }
 
   Exception _handleError(dynamic error) {
+    // `trips`, `max_trips_per_month` and `max_live_trips` are trigger-gated on
+    // operation_trips, so a licensing refusal lands here alongside every other
+    // server code. It leaves as a LicensingFailure so the operator gets the
+    // limit card (§10.3) instead of "خطأ بقاعدة البيانات: quota_exceeded".
+    LicensingGuard.check(error);
+
     if (error is PostgrestException) {
       final translated = _translateServerError(error.message);
       if (translated != null) return Exception(translated);

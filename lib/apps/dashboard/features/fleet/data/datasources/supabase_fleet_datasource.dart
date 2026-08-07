@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../core/entitlements/licensing_guard.dart';
 import '../../../../core/session/dashboard_session.dart';
 import '../../shared/domain/entities/fleet_workspace.dart';
 import '../models/fleet_models.dart';
@@ -729,6 +730,9 @@ class SupabaseFleetDatasource implements FleetDatasource {
 
       return _client.storage.from(bucket).getPublicUrl(path);
     } on StorageException catch (e) {
+      // `max_storage_mb` is enforced by a trigger on storage.objects, so a
+      // quota refusal arrives here rather than on the Postgrest path.
+      LicensingGuard.check(e);
       throw Exception(e.message);
     } catch (e) {
       throw Exception('Unexpected upload file error: $e');
@@ -937,7 +941,16 @@ class SupabaseFleetDatasource implements FleetDatasource {
     return null;
   }
 
+  /// Every `on PostgrestException` in this class funnels here, which makes it
+  /// the one place the licensing guard has to sit for drivers, vehicles and
+  /// assignments — the three surfaces §1.2 F4 names as trigger-only.
+  ///
+  /// [LicensingGuard.check] throws a [LicensingFailure] for the six refusal
+  /// codes and returns for everything else, so the fleet's own translations
+  /// below are untouched.
   String _formatPostgrestError(PostgrestException e) {
+    LicensingGuard.check(e);
+
     final friendly = _translateFleetError(e.message);
     if (friendly != null) return friendly;
 

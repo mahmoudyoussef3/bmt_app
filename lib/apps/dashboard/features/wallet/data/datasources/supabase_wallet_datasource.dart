@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../core/entitlements/licensing_guard.dart';
 import '../../../../core/session/dashboard_session.dart';
 import '../../domain/entities/refund_request.dart';
 import '../../domain/entities/wallet.dart';
@@ -336,6 +337,12 @@ class SupabaseWalletDatasource implements WalletDatasource {
   /// fired, and an operator who is told "this booking has already been fully
   /// refunded" stops, while one told "database error 23514" calls support.
   Exception _handleError(dynamic error) {
+    // The wallet ledger and the refund table are both trigger-gated (`wallet`,
+    // `cashback`, `refunds`), so a licensing refusal reaches this method exactly
+    // like every other machine code below — but it deserves the upgrade card
+    // rather than a snackbar, so it leaves here as a LicensingFailure.
+    LicensingGuard.check(error);
+
     if (error is PostgrestException) {
       final message = error.message;
       final translated = _messages.entries

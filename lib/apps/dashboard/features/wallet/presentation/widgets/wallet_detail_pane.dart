@@ -72,7 +72,11 @@ class WalletDetailPane extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (loading && summary == null) {
-      return const DashboardLoading(rows: 4, showHeader: false);
+      return const DashboardLoading(
+        rows: 4,
+        showHeader: false,
+        scrollable: false,
+      );
     }
     final data = summary;
     if (data == null) return const SizedBox.shrink();

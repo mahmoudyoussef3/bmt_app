@@ -69,17 +69,37 @@ class LicensingFailure implements Exception {
 
   /// Returns null when [error] is not a licensing refusal, so a caller can fall
   /// through to its own error mapping unchanged.
+  ///
+  /// Handles both wire shapes a refusal can arrive in:
+  ///
+  ///   * [PostgrestException] — a trigger or RPC guard on the REST path. Carries
+  ///     `details`, so the full verdict (limit, used, plan) survives.
+  ///   * [StorageException] — the `max_storage_mb` / `logo_max_kb` trigger on
+  ///     `storage.objects`. The Storage API forwards the message but drops
+  ///     `DETAIL`, so the code arrives and the numbers do not. The refusal is
+  ///     still reported correctly; only the figures in the dialog are missing.
   static LicensingFailure? tryParse(Object error) {
     if (error is LicensingFailure) return error;
-    if (error is! PostgrestException) return null;
+
+    final String message;
+    final Object? details;
+    if (error is PostgrestException) {
+      message = error.message;
+      details = error.details;
+    } else if (error is StorageException) {
+      message = error.message;
+      details = null;
+    } else {
+      return null;
+    }
 
     final code = _codes.firstWhere(
-      (c) => error.message.contains(c),
+      (c) => message.contains(c),
       orElse: () => '',
     );
     if (code.isEmpty) return null;
 
-    final verdict = _verdict(error.details);
+    final verdict = _verdict(details);
 
     final feature =
         verdict?['feature'] as String? ?? verdict?['key'] as String?;

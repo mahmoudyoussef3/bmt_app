@@ -7,6 +7,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
+import '../../../../core/entitlements/licensed_export.dart';
 import '../../domain/entities/finance_analytics.dart';
 
 /// Serialises a [FinanceStatement] to CSV / Excel / PDF.
@@ -20,6 +21,9 @@ class FinanceStatementExportService {
     FinanceStatement statement,
     String format,
   ) async {
+    // Server-side licence + monthly meter, before any bytes exist.
+    await LicensedExport.consume(format);
+
     switch (format.toLowerCase()) {
       case 'csv':
         return _generateCsv(statement);

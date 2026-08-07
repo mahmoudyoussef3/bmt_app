@@ -63,6 +63,7 @@ import '../entitlements/entitlement_context.dart';
 import '../entitlements/entitlement_service.dart';
 import '../entitlements/licensing_dialogs.dart';
 import '../entitlements/licensing_failure.dart';
+import '../entitlements/licensing_guard.dart';
 import '../permissions/dashboard_permission.dart';
 import '../permissions/dashboard_role.dart';
 import '../session/office_context.dart';
@@ -176,13 +177,38 @@ class _DashboardShellState extends State<DashboardShell> {
   void initState() {
     super.initState();
     _entitlements?.addListener(_onEntitlementsChanged);
+    licensingRefusals.addListener(_onLicensingRefusal);
   }
 
   @override
   void dispose() {
     _entitlements?.removeListener(_onEntitlementsChanged);
+    licensingRefusals.removeListener(_onLicensingRefusal);
     _licensingCubit?.close();
     super.dispose();
+  }
+
+  /// The upgrade moment (§10.3), raised once from the shell rather than in every
+  /// screen that can hit a limit.
+  ///
+  /// The data layer announces a refusal on [licensingRefusals] the instant it
+  /// maps one; the feature screen still shows its own snackbar with the Arabic
+  /// sentence, and this puts the card with the real numbers on top of it. One
+  /// wiring point, so a new module cannot forget to have an upgrade path.
+  ///
+  /// It also refreshes the document: the server just disagreed with what we
+  /// hold, so by definition the copy in memory is out of date.
+  void _onLicensingRefusal() {
+    final failure = licensingRefusals.consume();
+    if (failure == null || !mounted) return;
+
+    _entitlements?.refresh();
+
+    showLicensingRefusal(
+      context,
+      failure: failure,
+      entitlements: _entitlementContext,
+    );
   }
 
   void _onEntitlementsChanged() {
@@ -269,6 +295,10 @@ class _DashboardShellState extends State<DashboardShell> {
       icon: DashboardIcons.captainRequests,
       selectedIcon: DashboardIcons.captainRequestsActive,
       permission: DashboardPermission.captainRequests,
+      // Onboarding a captain only means something if the office is licensed for
+      // the captain app at all; approving a request is what binds the account
+      // that `max_captains` then meters.
+      feature: FeatureKeys.driverApp,
       group: _navFleet,
     ),
     _DashboardNavItem(
@@ -307,9 +337,18 @@ class _DashboardShellState extends State<DashboardShell> {
       icon: DashboardIcons.ownerOverview,
       selectedIcon: DashboardIcons.ownerOverviewActive,
       permission: DashboardPermission.ownerOverview,
+      // The analytics surface, so the analytics licence is what gates it. Its
+      // enum value (basic | advanced | ai) additionally decides how much of the
+      // screen is populated; `basic` is truthy, so the module stays visible on
+      // every plan and only its breadth moves.
+      feature: FeatureKeys.analyticsLevel,
       group: _navFinance,
     ),
-    _DashboardNavItem(
+    // "برنامج الإحالات" is hidden from the sidebar for now. Only the nav entry
+    // is commented out — the route, cubit, screen and `FeatureKeys.referrals`
+    // licence gate all stay wired, so restoring the module is uncommenting this
+    // block (same treatment as "التقارير" above).
+    /* _DashboardNavItem(
       label: 'برنامج الإحالات',
       route: DashboardRoutes.referrals,
       icon: DashboardIcons.referrals,
@@ -318,6 +357,7 @@ class _DashboardShellState extends State<DashboardShell> {
       feature: FeatureKeys.referrals,
       group: _navFinance,
     ),
+    */
     _DashboardNavItem(
       label: 'الشكاوى',
       route: DashboardRoutes.tickets,

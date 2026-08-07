@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../core/entitlements/licensing_guard.dart';
 import '../models/captain_request_model.dart';
 
 class SupabaseCaptainRequestsDatasource {
@@ -32,20 +33,25 @@ class SupabaseCaptainRequestsDatasource {
         );
   }
 
+  /// Approving a request binds a captain account to a driver row, which is the
+  /// transition `max_captains` meters (trg_quota_captains). A refusal here is a
+  /// plan limit, not a database error, so it leaves as a [LicensingFailure].
   Future<void> approve({
     required String requestId,
     required String driverId,
   }) async {
-    await _client
-        .from(_table)
-        .update({
-          'status': 'approved',
-          'driver_id': driverId,
-          'reviewed_by': _client.auth.currentUser?.id,
-          'reviewed_at': DateTime.now().toUtc().toIso8601String(),
-          'updated_at': DateTime.now().toUtc().toIso8601String(),
-        })
-        .eq('id', requestId);
+    await LicensingGuard.run(
+      () => _client
+          .from(_table)
+          .update({
+            'status': 'approved',
+            'driver_id': driverId,
+            'reviewed_by': _client.auth.currentUser?.id,
+            'reviewed_at': DateTime.now().toUtc().toIso8601String(),
+            'updated_at': DateTime.now().toUtc().toIso8601String(),
+          })
+          .eq('id', requestId),
+    );
   }
 
   Future<void> reject({

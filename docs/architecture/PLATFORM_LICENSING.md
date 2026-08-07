@@ -1,8 +1,57 @@
 # EWT Entitlement Platform — Licensing, Plans & Feature Management
 
-Status: **implemented**, all six phases, 2026-08-06. `enforcement_mode = 'off'` — the subsystem
-is live, resolves correctly, and enforces nothing until the owner moves the switch (Part 15).
-Audited against the linked database and `main`..`cashback` on 2026-08-06.
+Status: **ENFORCING**, since 2026-08-07 (`20260808100000_licensing_enable_enforcement.sql`).
+All six phases implemented 2026-08-06; the pre-enforcement audit below closed eight gaps and
+the switch was moved. Regression suite: **99 checks, all green**.
+
+> ## Enforcement audit, 2026-08-07 — what the flip actually required
+>
+> Turning the switch was one row. Earning the right to turn it took two migrations, because a
+> pre-flip sweep of every write path found that **the design's claims and the code's behaviour
+> had diverged in eight places**. Each is closed and each is now asserted by the suite.
+>
+> | # | Gap | Where it was closed |
+> |---|---|---|
+> | G1 | **Read-only suspension was never implemented.** §14.3 promises a held office is read-only. Every gate shipped was `BEFORE INSERT`, so a suspended office could still UPDATE and DELETE its entire configuration — re-price fare bundles, delete routes, remove operators. | `20260808090000` §2 — `enforce_license_read_only` on eleven configuration tables, and on trip DELETE only. |
+> | G2 | **Stock quotas were farmable by UPDATE.** `max_drivers` counts `status='active'`. At 5/5: deactivate one, create a sixth (the count reads 4), re-activate the fifth → six drivers on a five-driver plan. | `20260808090000` §3 — the re-activation and office-transfer transitions are metered too. |
+> | G3 | **Fifteen features claimed `enforced` in Part 6 and had no gate at all.** 17 of 34 were real. | `20260808090000` §§4–8 — eleven gained real gates; three are honestly re-marked `declared` (below). |
+> | G4 | **`assert_feature()` was dead code.** Defined in Phase 4, called from nowhere; §7.3's entire RPC-guard ring was absent. | It now guards `office_consume_export` and `office_dispatch_notification`; the refund-decision path it was written for is closed at the table instead. |
+> | G5 | **The kill switch did not reach every gate.** `office_sells_packages()`, `trip_tracking_licensed()` and the `licensing_hold` projection resolved features without consulting `platform_enforcement_mode()`, so a plan value could withdraw a client surface while the subsystem was supposedly off — breaking §15.3's core promise. | `20260808090000` §§1, 9 — one mode-aware primitive (`office_licensed`), plus a trigger that reprojects every hold when the mode moves. |
+> | G6 | **`license_expired` was unreachable.** One of the six documented codes, with its own renewal card in the UI, could never be produced: both paths collapsed all three held states onto `license_suspended`. | `20260808090000` §1 — `license_refusal_code()`. |
+> | G7a | **`TRUNCATE` walked past every gate.** RLS gates SELECT/INSERT/UPDATE/DELETE; it does not gate TRUNCATE, and neither do row triggers. `authenticated` held the privilege on `office_users`, `operation_bookings`, `operation_routes`, `packages` and `transport_packages` — five of the eleven tables the read-only freeze had just been installed on. Enforcement a single statement steps around is not enforcement. | `20260808090200` — swept from every base table in `public`, plus the default privilege so the next table created does not reopen it. Completes the platform-wide sweep [20260729093000](supabase/migrations/20260729093000_tracking_truncate_hygiene.sql) named and deferred. |
+> | G7 | **Notification dispatch had no boundary of any kind.** `notifications_staff_insert` let any office user insert a notification addressed to **any user id on the platform** — a cross-tenant messaging hole that predates licensing and was also `push_notifications`' missing gate. | `20260808090000` §7.2 — the policy is dropped and replaced by `office_dispatch_notification`, scoped to the office's own audience. |
+>
+> **On the Dart side, one systemic gap:** `LicensingFailure.tryParse` existed, was correct, and was
+> called from exactly one place — the sidebar's nav lock. Every *real* server refusal reached the
+> operator through each datasource's own formatter as `quota_exceeded | code: 23514 | details: {…}`.
+> §7.2 and §10.3 both exist to prevent precisely that. Closed by `LicensingGuard`
+> (`core/entitlements/licensing_guard.dart`), one line in each of the eleven datasources that write
+> a protected entity, and a single subscriber in the shell that raises the upgrade card.
+>
+> **Two seed corrections the audit forced:**
+> - `restricted.max_captains` `0` → `"unlimited"`. `captain_session_context` binds a driver row to
+>   its auth user on first sign-in, and `trg_quota_captains` meters that transition — so a captain
+>   who had never signed in could not sign in *at all* while their office was suspended. That
+>   contradicts §4.3's own table and Part 11's absolute mid-trip rule. The plan already makes this
+>   exemption for `max_live_trips`, for the identical reason.
+> - **`referrals`, `promotions` and `loyalty` are `declared`, not `enforced`** — Part 6 marks all
+>   three E and is wrong. `referrals`, `referral_codes` and `referral_rewards` carry no `office_id`,
+>   so the programme is platform-wide and there is nothing to meter an office by; `promo_codes` does
+>   not exist; `loyalty_accounts` has no office dimension. Enforcing any of them needs a product
+>   decision about office scoping first, not a licensing change.
+>
+> **Final count: 47 features — 31 enforced, 16 declared.** Not the 34/13 Part 6 claimed, and the
+> difference is the point: the three that cannot be enforced (`referrals`, `promotions`, `loyalty`)
+> are counted honestly rather than rounded up to match the design. 17 → 31 is what the audit
+> actually delivered.
+>
+> **What replaced the shadow period.** §15.2 step 4 asks for a billing cycle in `shadow` before this
+> flip, to catch seeded limits that are wrong. That risk does not exist here and performing the
+> ritual would have taught nobody anything: all three live offices are on `founder`, which is
+> `"unlimited"` in every enforced limit, so no seeded number applies to them. What shadow mode
+> *would* have caught — gates firing where they should not, and gates missing where the catalog says
+> they exist — was found by this audit instead, and the flip migration refuses to run at all if any
+> office lacks a licence, sits over an enforced limit, or if `restricted_plan_id` is null.
 
 > **Post-implementation verification, 2026-08-06.** Every Dart parser was re-checked against the
 > *live* RPC payloads rather than fixtures, which found two integration defects that no test on
@@ -1009,8 +1058,23 @@ Every feature from the brief, mapped to its real gate in *this* repo. `E` = enfo
 | `logo_max_kb` | config | `512` | office-profile upload | E |
 | `booking_retention_days` | config | `"unlimited"` | — | D |
 
-**47 features: 34 enforced, 13 declared at ship.** The console shows the split. A declared feature can be sold, but the
+**47 features: 31 enforced, 16 declared.** The console shows the split. A declared feature can be sold, but the
 plan builder marks it "غير مفعّل بعد" so nobody promises a customer something the code does not do.
+
+> **Corrected 2026-08-07 by the enforcement audit.** This table marked 34 features `E` at ship;
+> only 17 carried a gate. Eleven were gated by `20260808090000` and the count is now real. Three
+> rows above are wrong and stay wrong-on-purpose until the product changes:
+> **`referrals`, `promotions` and `loyalty` are `D`** — none of the three has an office-scoped
+> surface to gate (no `office_id` on the referral tables, no `promo_codes` table, no office
+> dimension on `loyalty_accounts`).
+>
+> Four features are gated at the **module** rather than at a row, recorded as `gate_kind = 'ui'`:
+> `finance`, `live_ops_center`, `report_level` and `analytics_level`. That is the honest boundary
+> for them and it is deliberately not dressed up as more: each gates a *product surface*, not a
+> secret, because the data behind it is read through tables the office remains licensed for by
+> other modules. There is nothing to defend confidentially, only a surface to withhold. Where a
+> real server boundary was available it was taken instead — `reports` gates three
+> reports-exclusive views, and exports go through `office_consume_export`.
 
 ---
 
@@ -1540,6 +1604,19 @@ corrected before they can hurt anyone.
 then the marketplace predicate. Kill switch stays available throughout: `enforcement_mode = 'off'` is a
 one-row `UPDATE` that disables the entire subsystem without a deploy.
 
+> **Done 2026-08-07**, in one step rather than per ring, because the audit that preceded it closed
+> the gaps ring-by-ring rollout was there to surface. See the enforcement-audit block at the top of
+> this document for the seven gaps and how each was closed. `20260808100000` performs the flip and
+> refuses to run if any office lacks a licence, if any office is already over an enforced stock
+> limit, or if `restricted_plan_id` is null — three conditions that would each turn the flip into an
+> outage for a tenant.
+>
+> The kill switch is now *complete* as well as available: before `20260808090000`, three
+> client-facing predicates resolved features without consulting the mode, so `off` did not fully
+> restore prior behaviour (G5). Every gate is mode-aware, `licensing_hold` is reprojected whenever
+> the mode changes, and section R of the regression suite pulls the switch in both directions and
+> checks that all three predicates follow.
+
 **Step 6 — new offices.** `office_self_signup` and `platform_create_office` assign the default plan
 (`platform_settings.default_signup_plan_id` → `starter`) with its trial. Grandfathered offices are unaffected.
 
@@ -1563,6 +1640,16 @@ Migration timestamps follow the repo convention (`YYYYMMDDHHMMSS_*.sql`).
 | **4 — Enforcement** | Quota triggers, `assert_feature`, shadow mode, violations log | `20260807110000_licensing_enforcement.sql` | Refusal-code mapping, upgrade/limit dialogs, nav gating | Shadow mode logs violations; `enforcing` blocks correctly; **existing suite still green** |
 | **5 — Lifecycle & billing** | Invoices, renewal job, trials, dunning, suspension → `licensing_hold` | `20260807120000_licensing_billing.sql`<br>`20260807130000_licensing_lifecycle.sql` | Billing console + office `الباقة والفوترة` screen | Trial expires → downgrades; suspension delists; invoice issued on renewal |
 | **6 — Passenger surfaces** | `office_is_listed()` term, captain gate, client degradation | `20260807140000_licensing_marketplace.sql` | Client/captain messaging | Suspended office vanishes from marketplace; **in-flight trips unaffected** |
+
+**Phase 7 — enforcement audit and flip (2026-08-07).**
+`20260808090000_licensing_enforcement_completion.sql` (seven gaps),
+`20260808090200_truncate_grant_hygiene.sql` (the TRUNCATE sweep),
+`20260808090100_licensing_realtime_completion.sql` (overrides, plan edits and the catalog join the
+realtime publication, so §7.4's "no refresh required" covers all five ways an entitlement changes
+rather than only two), `20260808100000_licensing_enable_enforcement.sql` (the flip, plus the column
+default so a fresh database comes up enforcing). Flutter: `LicensingGuard`, `LicensedExport`, the
+shell's central refusal subscriber, and the two nav items that had no feature key
+(`ownerOverview` → `analytics_level`, `captainRequests` → `driver_app`). Suite: 62 → 99 checks.
 
 Per-phase, non-negotiable, matching this repo's established practice:
 

@@ -5,6 +5,7 @@ import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
+import '../../../../core/entitlements/licensed_export.dart';
 import '../../domain/entities/report_entities.dart';
 
 class ReportExportService {
@@ -13,6 +14,11 @@ class ReportExportService {
     ReportType type,
     String format,
   ) async {
+    // Before any bytes exist: assert export_pdf / export_excel and consume one
+    // unit of max_exports_per_month, server-side. Throws a LicensingFailure the
+    // toolbar turns into the upgrade card.
+    await LicensedExport.consume(format);
+
     final List<List<dynamic>> rowsAsList = _mapDataToList(data.rows, type);
 
     switch (format.toLowerCase()) {

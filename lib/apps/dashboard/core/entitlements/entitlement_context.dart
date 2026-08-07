@@ -28,6 +28,7 @@ class FeatureKeys {
   static const liveTracking = 'live_tracking';
   static const liveOpsCenter = 'live_ops_center';
   static const drivers = 'drivers';
+  static const driverApp = 'driver_app';
   static const bookings = 'bookings';
   static const passengerPackages = 'passenger_packages';
   static const finance = 'finance';

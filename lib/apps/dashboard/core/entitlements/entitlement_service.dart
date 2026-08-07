@@ -11,12 +11,16 @@ import 'entitlement_context.dart';
 /// signed in, so a constructor-injected document would be captured empty and
 /// stay empty.
 ///
-/// Refreshed on four events, matching the four ways the answer can change:
+/// Refreshed on six events, matching every way the answer can change:
 ///
 ///   * sign-in                        — the document is loaded for the first time
 ///   * a licensing refusal            — the server disagreed with what we hold
-///   * an `office_licenses` realtime  — the platform changed the plan or status
 ///   * an explicit reload             — the operator pressed refresh
+///   * `office_licenses` realtime     — plan assigned, suspended, restored
+///   * `office_feature_overrides`     — an override granted, edited or cleared
+///   * `platform_plan_features` /     — a plan edited or a feature kill-switched,
+///     `platform_features`              both of which §2.5 requires to propagate
+///                                      live to every subscribed office
 ///
 /// Never throws. A failure leaves [context] at [EntitlementContext.unknown],
 /// which allows everything, because this object is a UX hint and the server is
@@ -76,21 +80,47 @@ class EntitlementService extends ChangeNotifier {
     final officeId = _session.officeIdOrNull;
     if (officeId == null || _channel != null) return;
 
+    final officeFilter = PostgresChangeFilter(
+      type: PostgresChangeFilterType.eq,
+      column: 'office_id',
+      value: officeId,
+    );
+
+    // One channel, four tables. Realtime applies RLS per subscriber, so the two
+    // office-scoped tables deliver only this office's rows and the two catalog
+    // tables deliver only what any office may already read (§13.3).
+    //
+    // Plan and catalog changes are unfiltered on purpose: a plan edit does not
+    // name the offices it affects, and working out whether this office is on the
+    // edited plan costs exactly the round trip that [refresh] already makes.
+    // Coalescing is [load]'s job — a burst of row events during a
+    // `platform_save_plan` joins one in-flight fetch instead of starting many.
     _channel = _client
         .channel('dashboard_entitlements_$officeId')
         .onPostgresChanges(
           event: PostgresChangeEvent.all,
           schema: 'public',
           table: 'office_licenses',
-          filter: PostgresChangeFilter(
-            type: PostgresChangeFilterType.eq,
-            column: 'office_id',
-            value: officeId,
-          ),
-          // A plan change or a suspension must reach an already-open console.
-          // Overrides and plan edits are deliberately NOT subscribed to: they
-          // are platform-side edits measured in a handful per month, and the
-          // next sign-in or refresh picks them up without a second channel.
+          filter: officeFilter,
+          callback: (_) => refresh(),
+        )
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'office_feature_overrides',
+          filter: officeFilter,
+          callback: (_) => refresh(),
+        )
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'platform_plan_features',
+          callback: (_) => refresh(),
+        )
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'platform_features',
           callback: (_) => refresh(),
         );
 

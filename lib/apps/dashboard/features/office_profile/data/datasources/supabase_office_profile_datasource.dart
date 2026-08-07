@@ -2,6 +2,7 @@ import 'dart:typed_data';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../core/entitlements/licensing_guard.dart';
 import '../../../../core/session/dashboard_session.dart';
 import '../../domain/entities/office_profile.dart';
 import 'office_profile_datasource.dart';
@@ -147,6 +148,9 @@ class SupabaseOfficeProfileDatasource implements OfficeProfileDatasource {
 
       return _client.storage.from(_logoBucket).getPublicUrl(path);
     } on StorageException catch (error) {
+      // `logo_max_kb` and `max_storage_mb` are enforced by a trigger on
+      // storage.objects, so both refusals arrive as a StorageException here.
+      LicensingGuard.check(error);
       throw Exception(error.message);
     }
   }

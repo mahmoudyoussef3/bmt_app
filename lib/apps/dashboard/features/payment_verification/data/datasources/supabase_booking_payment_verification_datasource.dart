@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../core/entitlements/licensing_guard.dart';
 import '../../domain/entities/booking_payment_verification.dart';
 import '../models/booking_payment_verification_model.dart';
 import 'booking_payment_verification_datasource.dart';
@@ -263,6 +264,10 @@ class SupabaseBookingPaymentVerificationDatasource
   }
 
   Exception _handleError(dynamic error) {
+    // Approving a payment can settle to the wallet, and the ledger is gated on
+    // `wallet`. Refusals reach here rather than the wallet datasource.
+    LicensingGuard.check(error);
+
     if (error is PostgrestException) {
       return Exception('خطأ بقاعدة البيانات: ${error.message}');
     }

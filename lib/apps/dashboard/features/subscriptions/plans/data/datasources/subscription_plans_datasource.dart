@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../../core/entitlements/licensing_guard.dart';
 import '../../../../../core/session/dashboard_session.dart';
 import '../../domain/entities/subscription_plan.dart';
 
@@ -24,30 +25,44 @@ class SubscriptionPlansDatasource {
         .toList();
   }
 
+  // Every write below is wrapped: `transport_packages` is gated on
+  // `passenger_packages` at creation, and frozen entirely while the office's
+  // licence is held (§14.3 read-only). Without the guard those refusals reach
+  // the cubit as a raw PostgrestException and read as "خطأ".
+
   Future<void> createPlan(SubscriptionPlan plan) async {
-    await _client.from('transport_packages').insert({
-      ...plan.toTransportPackage(),
-      'office_id': _session.officeId,
-      'display_order': await _nextDisplayOrder(),
-    });
+    final displayOrder = await _nextDisplayOrder();
+    await LicensingGuard.run(
+      () => _client.from('transport_packages').insert({
+        ...plan.toTransportPackage(),
+        'office_id': _session.officeId,
+        'display_order': displayOrder,
+      }),
+    );
   }
 
   Future<void> updatePlan(SubscriptionPlan plan) async {
-    await _client
-        .from('transport_packages')
-        .update(plan.toTransportPackage())
-        .eq('id', plan.id);
+    await LicensingGuard.run(
+      () => _client
+          .from('transport_packages')
+          .update(plan.toTransportPackage())
+          .eq('id', plan.id),
+    );
   }
 
   Future<void> setPlanStatus(String id, PlanStatus status) async {
-    await _client
-        .from('transport_packages')
-        .update({'active': status == PlanStatus.active})
-        .eq('id', id);
+    await LicensingGuard.run(
+      () => _client
+          .from('transport_packages')
+          .update({'active': status == PlanStatus.active})
+          .eq('id', id),
+    );
   }
 
   Future<void> deletePlan(String id) async {
-    await _client.from('transport_packages').delete().eq('id', id);
+    await LicensingGuard.run(
+      () => _client.from('transport_packages').delete().eq('id', id),
+    );
   }
 
   SubscriptionPlan _fromRow(Map<String, dynamic> r) {

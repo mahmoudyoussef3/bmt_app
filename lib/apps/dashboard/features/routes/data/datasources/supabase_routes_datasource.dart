@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../core/entitlements/licensing_guard.dart';
 import '../../../../core/session/dashboard_session.dart';
 import '../../domain/entities/operation_route.dart';
 import '../models/operation_route_model.dart';
@@ -350,7 +351,12 @@ class SupabaseRoutesDatasource implements RoutesDatasource {
     }).toList();
   }
 
+  /// Every `on PostgrestException` in this class funnels here, so this is the
+  /// single seat for the licensing guard on the routes surface (`routes` and
+  /// `max_routes`, both trigger-enforced per §1.2 F4).
   String _formatPostgrestError(PostgrestException e) {
+    LicensingGuard.check(e);
+
     final buffer = StringBuffer(e.message);
 
     if (e.code != null && e.code!.isNotEmpty) {

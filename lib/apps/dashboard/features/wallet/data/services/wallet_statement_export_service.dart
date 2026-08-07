@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:csv/csv.dart';
 import 'package:file_saver/file_saver.dart';
 
+import '../../../../core/entitlements/licensed_export.dart';
 import '../../domain/entities/wallet.dart';
 import '../../domain/entities/wallet_transaction.dart';
 
@@ -34,6 +35,11 @@ abstract final class WalletStatementExportService {
     required List<WalletTransaction> rows,
     required WalletOverview overview,
   }) async {
+    // The licensing axis, alongside the capability check the doc above
+    // describes: `export_excel` covers CSV, and the monthly export meter is
+    // consumed server-side.
+    await LicensedExport.consume('csv');
+
     final now = DateTime.now();
     final records = <List<dynamic>>[
       ['كشف حركات محافظ العملاء'],

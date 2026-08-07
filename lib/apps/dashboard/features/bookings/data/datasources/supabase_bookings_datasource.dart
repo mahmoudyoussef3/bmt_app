@@ -1,5 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../core/entitlements/licensing_guard.dart';
 import '../../domain/entities/reassignment_target.dart';
 import '../models/operation_booking_model.dart';
 import 'bookings_datasource.dart';
@@ -165,6 +166,10 @@ class SupabaseBookingsDatasource implements BookingsDatasource {
   }
 
   Exception _handleError(dynamic error) {
+    // `bookings` is trigger-gated on operation_bookings, and reassignment runs
+    // through office_reassign_booking, which the same gate covers.
+    LicensingGuard.check(error);
+
     if (error is PostgrestException) {
       return Exception('خطأ بقاعدة البيانات: ${error.message} (${error.code})');
     }

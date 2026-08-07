@@ -1,6 +1,7 @@
 import 'package:bmt_app/apps/dashboard/core/permissions/dashboard_role.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../core/entitlements/licensing_guard.dart';
 import '../../domain/entities/app_user.dart';
 import '../../domain/repositories/users_repository.dart';
 
@@ -21,19 +22,28 @@ class SupabaseUsersDatasource implements UsersRepository {
     return rows.map((r) => _fromRow(r as Map<String, dynamic>)).toList();
   }
 
+  // `office_users` carries three licensing gates: max_admin_users on creation
+  // and on re-activation, and the read-only freeze while the office's licence is
+  // held. Re-roling or removing an operator during a suspension is refused by
+  // the database, so both writes go through the guard.
+
   @override
   Future<AppUser> updateUserRole(String userRoleId, DashboardRole role) async {
-    final rows = await _client
-        .from('office_users')
-        .update({'role': role.dbValue})
-        .eq('id', userRoleId)
-        .select('id, user_id, username, full_name, role, status, created_at');
+    final rows = await LicensingGuard.run(
+      () => _client
+          .from('office_users')
+          .update({'role': role.dbValue})
+          .eq('id', userRoleId)
+          .select('id, user_id, username, full_name, role, status, created_at'),
+    );
     return _fromRow(rows.first);
   }
 
   @override
   Future<void> removeUser(String userRoleId) async {
-    await _client.from('office_users').delete().eq('id', userRoleId);
+    await LicensingGuard.run(
+      () => _client.from('office_users').delete().eq('id', userRoleId),
+    );
   }
 
   @override
