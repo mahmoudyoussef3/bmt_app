@@ -1,10 +1,11 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../../../core/flavors/app_flavor.dart';
+import 'captain_reachability_io.dart'
+    if (dart.library.js_interop) 'captain_reachability_web.dart';
 
 /// A probe that answers "can this phone reach the backend right now?".
 typedef ReachabilityProbe = Future<bool> Function();
@@ -113,24 +114,6 @@ class CaptainConnectivityWatcher extends ValueNotifier<bool> {
     // Nothing to probe means nothing is proven — never accuse the network on
     // a guess.
     if (host.isEmpty) return true;
-
-    try {
-      final socket = await Socket.connect(
-        host,
-        443,
-        timeout: const Duration(seconds: 5),
-      );
-      socket.destroy();
-      return true;
-    } on SocketException {
-      return false;
-    } on TimeoutException {
-      return false;
-    } catch (error) {
-      // Anything else (a platform restriction, a plugin fault) says nothing
-      // about the captain's connection, so it must not read as an outage.
-      if (kDebugMode) debugPrint('🌐 [CAPTAIN REACHABILITY] $error');
-      return true;
-    }
+    return probeHost(host);
   }
 }

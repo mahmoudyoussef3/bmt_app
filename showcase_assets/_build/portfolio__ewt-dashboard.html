@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>EWT dashboard — portfolio</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>
+:root {
+  --primary: #2563EB;
+  --deep: #4338CA;
+  --page: #F4F7FB;
+  --surface: #FFFFFF;
+  --ink: #0F172A;
+  --muted: #64748B;
+  --line: #E2E8F0;
+  --tint: #DBEAFE;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Cairo', -apple-system, system-ui, sans-serif;
+  background: var(--page);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+.stage { position: relative; overflow: hidden; }
+/* One restrained wash behind the product — no full-bleed gradient. */
+.stage::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(1100px 620px at 50% -8%, rgba(37, 99, 235, 0.09), transparent 70%),
+    radial-gradient(760px 520px at 92% 104%, rgba(67, 56, 202, 0.05), transparent 72%);
+}
+.stage > * { position: relative; }
+
+.eyebrow {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: var(--primary);
+  text-transform: uppercase;
+}
+h1 { font-size: 54px; line-height: 1.24; font-weight: 800; letter-spacing: -0.01em; }
+h2 { font-size: 40px; line-height: 1.26; font-weight: 800; }
+.sub { font-size: 21px; line-height: 1.6; color: var(--muted); font-weight: 500; }
+.caption { font-size: 17px; font-weight: 700; }
+.caption span { display: block; font-size: 14px; font-weight: 500; color: var(--muted); margin-top: 3px; }
+
+/* ── Browser frame ── */
+.win {
+  background: var(--surface);
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  box-shadow: 0 40px 90px -30px rgba(15, 23, 42, 0.34),
+              0 12px 28px -12px rgba(15, 23, 42, 0.14);
+  overflow: hidden;
+}
+.win .bar {
+  height: 38px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  background: #F7F9FC;
+  border-bottom: 1px solid var(--line);
+  direction: ltr;
+}
+.win .dot { width: 10px; height: 10px; border-radius: 50%; background: #D3DAE5; }
+.win .url {
+  flex: 1;
+  margin: 0 10px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: -apple-system, system-ui, sans-serif;
+  font-size: 11px;
+  color: #94A3B8;
+  letter-spacing: 0.01em;
+}
+.win img { display: block; width: 100%; }
+.win.sm { border-radius: 11px; }
+.win.sm .bar { height: 28px; padding: 0 10px; gap: 6px; }
+.win.sm .dot { width: 7px; height: 7px; }
+.win.sm .url { height: 17px; font-size: 9px; }
+
+/* ── Phone frame ── */
+.phone {
+  position: relative;
+  background: #0D1526;
+  border-radius: 46px;
+  padding: 9px;
+  box-shadow: 0 34px 70px -22px rgba(15, 23, 42, 0.42),
+              0 8px 20px -8px rgba(15, 23, 42, 0.20);
+}
+.phone .screen {
+  position: relative;
+  border-radius: 38px;
+  overflow: hidden;
+  background: #fff;
+}
+.phone .screen img { display: block; width: 100%; }
+.phone.sm { border-radius: 34px; padding: 7px; }
+.phone.sm .screen { border-radius: 28px; }
+
+    .grid { width: 1560px; height: 2520px; padding: 54px 64px 0; direction: ltr; }
+    .grid header { text-align: center; }
+    .grid h2 { margin-top: 10px; }
+    .grid .eyebrow { margin-bottom: 4px; }
+    .grid .sub { margin-top: 12px; font-size: 18px; }
+    .cells {
+      display: grid; grid-template-columns: repeat(2, 1fr);
+      gap: 46px 40px; margin-top: 48px;
+    }
+    figcaption { margin-top: 16px; text-align: center; font-size: 16px; }
+    </style></head><body><div class="stage grid">
+      <header>
+        <p class="eyebrow">Flutter Web · RTL · Arabic-first</p>
+        <h2>EWT Dashboard</h2>
+        <p class="sub">Operations, fleet, money and business intelligence in one console.</p>
+      </header>
+      <div class="cells">
+        <figure>
+        
+<div class="win sm">
+  <div class="bar"><i class="dot"></i><i class="dot"></i><i class="dot"></i>
+    <div class="url">console.ewt.eg</div></div>
+  <img src="../raw/dashboard/dashboard-executive-overview.png">
+</div>
+        <figcaption class="caption">Executive overview — نظرة تنفيذية</figcaption>
+      </figure><figure>
+        
+<div class="win sm">
+  <div class="bar"><i class="dot"></i><i class="dot"></i><i class="dot"></i>
+    <div class="url">console.ewt.eg</div></div>
+  <img src="../raw/dashboard/dashboard-live-ops.png">
+</div>
+        <figcaption class="caption">Live operations — العمليات المباشرة</figcaption>
+      </figure><figure>
+        
+<div class="win sm">
+  <div class="bar"><i class="dot"></i><i class="dot"></i><i class="dot"></i>
+    <div class="url">console.ewt.eg</div></div>
+  <img src="../raw/dashboard/dashboard-finance-analytics.png">
+</div>
+        <figcaption class="caption">Money analytics — التحليلات</figcaption>
+      </figure><figure>
+        
+<div class="win sm">
+  <div class="bar"><i class="dot"></i><i class="dot"></i><i class="dot"></i>
+    <div class="url">console.ewt.eg</div></div>
+  <img src="../raw/dashboard/dashboard-finance-reports.png">
+</div>
+        <figcaption class="caption">Financial statements — التقارير</figcaption>
+      </figure><figure>
+        
+<div class="win sm">
+  <div class="bar"><i class="dot"></i><i class="dot"></i><i class="dot"></i>
+    <div class="url">console.ewt.eg</div></div>
+  <img src="../raw/dashboard/dashboard-wallet.png">
+</div>
+        <figcaption class="caption">Customer wallets — محفظة العملاء</figcaption>
+      </figure><figure>
+        
+<div class="win sm">
+  <div class="bar"><i class="dot"></i><i class="dot"></i><i class="dot"></i>
+    <div class="url">console.ewt.eg</div></div>
+  <img src="../raw/dashboard/dashboard-licensing-plans.png">
+</div>
+        <figcaption class="caption">SaaS plan catalogue — الخطط والباقات</figcaption>
+      </figure><figure>
+        
+<div class="win sm">
+  <div class="bar"><i class="dot"></i><i class="dot"></i><i class="dot"></i>
+    <div class="url">console.ewt.eg</div></div>
+  <img src="../raw/dashboard/dashboard-routes.png">
+</div>
+        <figcaption class="caption">Route management — المسارات</figcaption>
+      </figure><figure>
+        
+<div class="win sm">
+  <div class="bar"><i class="dot"></i><i class="dot"></i><i class="dot"></i>
+    <div class="url">console.ewt.eg</div></div>
+  <img src="../raw/dashboard/dashboard-bookings.png">
+</div>
+        <figcaption class="caption">Booking operations — الحجوزات</figcaption>
+      </figure>
+      </div>
+    </div></body></html>

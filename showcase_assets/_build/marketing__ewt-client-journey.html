@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>EWT client journey</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>
+:root {
+  --primary: #2563EB;
+  --deep: #4338CA;
+  --page: #F4F7FB;
+  --surface: #FFFFFF;
+  --ink: #0F172A;
+  --muted: #64748B;
+  --line: #E2E8F0;
+  --tint: #DBEAFE;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Cairo', -apple-system, system-ui, sans-serif;
+  background: var(--page);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+.stage { position: relative; overflow: hidden; }
+/* One restrained wash behind the product — no full-bleed gradient. */
+.stage::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(1100px 620px at 50% -8%, rgba(37, 99, 235, 0.09), transparent 70%),
+    radial-gradient(760px 520px at 92% 104%, rgba(67, 56, 202, 0.05), transparent 72%);
+}
+.stage > * { position: relative; }
+
+.eyebrow {
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: var(--primary);
+  text-transform: uppercase;
+}
+h1 { font-size: 54px; line-height: 1.24; font-weight: 800; letter-spacing: -0.01em; }
+h2 { font-size: 40px; line-height: 1.26; font-weight: 800; }
+.sub { font-size: 21px; line-height: 1.6; color: var(--muted); font-weight: 500; }
+.caption { font-size: 17px; font-weight: 700; }
+.caption span { display: block; font-size: 14px; font-weight: 500; color: var(--muted); margin-top: 3px; }
+
+/* ── Browser frame ── */
+.win {
+  background: var(--surface);
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  box-shadow: 0 40px 90px -30px rgba(15, 23, 42, 0.34),
+              0 12px 28px -12px rgba(15, 23, 42, 0.14);
+  overflow: hidden;
+}
+.win .bar {
+  height: 38px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 14px;
+  background: #F7F9FC;
+  border-bottom: 1px solid var(--line);
+  direction: ltr;
+}
+.win .dot { width: 10px; height: 10px; border-radius: 50%; background: #D3DAE5; }
+.win .url {
+  flex: 1;
+  margin: 0 10px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: -apple-system, system-ui, sans-serif;
+  font-size: 11px;
+  color: #94A3B8;
+  letter-spacing: 0.01em;
+}
+.win img { display: block; width: 100%; }
+.win.sm { border-radius: 11px; }
+.win.sm .bar { height: 28px; padding: 0 10px; gap: 6px; }
+.win.sm .dot { width: 7px; height: 7px; }
+.win.sm .url { height: 17px; font-size: 9px; }
+
+/* ── Phone frame ── */
+.phone {
+  position: relative;
+  background: #0D1526;
+  border-radius: 46px;
+  padding: 9px;
+  box-shadow: 0 34px 70px -22px rgba(15, 23, 42, 0.42),
+              0 8px 20px -8px rgba(15, 23, 42, 0.20);
+}
+.phone .screen {
+  position: relative;
+  border-radius: 38px;
+  overflow: hidden;
+  background: #fff;
+}
+.phone .screen img { display: block; width: 100%; }
+.phone.sm { border-radius: 34px; padding: 7px; }
+.phone.sm .screen { border-radius: 28px; }
+
+    .flow { width: 1440px; height: 780px; padding: 44px 0 0; }
+    .flow header { text-align: center; }
+    .flow .eyebrow { margin-bottom: 12px; }
+    .row { display: flex; justify-content: center; gap: 44px; margin-top: 38px; }
+    figure { width: 240px; text-align: center; }
+    figcaption { margin-top: 20px; }
+    </style></head><body><div class="stage flow">
+      <header>
+        <p class="eyebrow">تجربة العميل</p>
+        <h2>من البحث إلى التذكرة في أربع خطوات</h2>
+      </header>
+      <div class="row">
+        <figure>
+          
+<div class="phone sm">
+  <div class="screen"><img src="../raw/client/client-offices.png"></div>
+</div>
+          <figcaption class="caption">يختار المكتب</figcaption>
+        </figure><figure>
+          
+<div class="phone sm">
+  <div class="screen"><img src="../raw/client/client-route-results.png"></div>
+</div>
+          <figcaption class="caption">يختار الخط والموعد</figcaption>
+        </figure><figure>
+          
+<div class="phone sm">
+  <div class="screen"><img src="../raw/client/client-booking-seat.png"></div>
+</div>
+          <figcaption class="caption">يختار مقعده</figcaption>
+        </figure><figure>
+          
+<div class="phone sm">
+  <div class="screen"><img src="../raw/client/client-trip-details.png"></div>
+</div>
+          <figcaption class="caption">يستلم تذكرته</figcaption>
+        </figure>
+      </div>
+    </div></body></html>

@@ -126,11 +126,16 @@ const double _drawerBreakpoint = 920;
 const double _railBreakpoint = 1180;
 
 class DashboardShell extends StatefulWidget {
-  const DashboardShell({super.key, required this.office});
+  const DashboardShell({super.key, required this.office, this.initialRoute});
 
   /// The signed-in operator's office. The shell is only ever mounted behind the auth
   /// gate, so this is always present — there is no "no office" fallback to default to.
   final OfficeContext office;
+
+  /// Which module the console opens on. Null means [DashboardRoutes.home], which
+  /// is what sign-in always wants; it is settable so a harness can mount one
+  /// module directly instead of driving the sidebar to reach it.
+  final String? initialRoute;
 
   @override
   State<DashboardShell> createState() => _DashboardShellState();
@@ -140,7 +145,7 @@ class _DashboardShellState extends State<DashboardShell> {
   // Role comes from the authenticated office context. It is no longer defaulted to
   // admin: with multiple offices, guessing full access is exactly the wrong default.
   late DashboardRole _role = widget.office.role;
-  String _route = DashboardRoutes.home;
+  late String _route = widget.initialRoute ?? DashboardRoutes.home;
 
   /// Operator's explicit choice to collapse the sidebar to icons. `null` means
   /// "follow the window" — wide screens show labels, laptops show the rail —
