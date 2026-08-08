@@ -1731,6 +1731,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get home_yourBookingFallback => 'حجزك';
 
   @override
+  String get home_amountPaid => 'المدفوع';
+
+  @override
   String home_seatLabel(String label) {
     return 'مقعد $label';
   }
@@ -4911,4 +4914,73 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get packages_step3Body =>
       'احجز أي موعد على الخط حتى تنتهي رحلاتك أو تنتهي مدة الباقة.';
+
+  @override
+  String get offices_directoryLead =>
+      'كل شركات النقل التي تبيع مقاعدها على إيزي واي، الأعلى تقييماً أولاً.';
+
+  @override
+  String offices_countLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count شركة',
+      few: '$count شركات',
+      two: 'شركتان',
+      one: 'شركة واحدة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String offices_matchesLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count نتيجة',
+      few: '$count نتائج',
+      two: 'نتيجتان',
+      one: 'نتيجة واحدة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String offices_moreAreasCount(int count) {
+    return '+$count';
+  }
+
+  @override
+  String get offices_openProfile => 'المواعيد وخطوط السير';
+
+  @override
+  String get offices_serves => 'يخدم';
+
+  @override
+  String get offices_statRating => 'التقييم';
+
+  @override
+  String get offices_unrated => 'بلا تقييم';
+
+  @override
+  String get booking_routePackagesTitle => 'باقات التنقل';
+
+  @override
+  String get booking_routePackagesSubtitle =>
+      'تسافر على هذا الخط كثيراً؟ الباقة تخفّض تكلفة المقعد.';
+
+  @override
+  String booking_routePackagesBy(String office) {
+    return 'من $office';
+  }
+
+  @override
+  String get booking_routePackageFrom => 'يبدأ من';
+
+  @override
+  String get booking_routePackageChoose => 'احجز بهذه الباقة';
+
+  @override
+  String get booking_routePackagesNote =>
+      'يتحدّد السعر النهائي بعد اختيار محطتَي الركوب والنزول وموعد الرحلة.';
 }

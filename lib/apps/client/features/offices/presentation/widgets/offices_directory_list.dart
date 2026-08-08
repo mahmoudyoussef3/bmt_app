@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
+
 import '../../domain/entities/office_summary.dart';
 import '../routes/offices_routes.dart';
 import 'office_card.dart';
@@ -16,7 +18,7 @@ class OfficesDirectoryList extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
       physics: const AlwaysScrollableScrollPhysics(),
       itemCount: offices.length,
-      separatorBuilder: (_, _) => const SizedBox(height: 12),
+      separatorBuilder: (_, _) => const SizedBox(height: ClientSpacing.sm),
       itemBuilder: (context, index) => OfficeCard(
         office: offices[index],
         onTap: () => Navigator.pushNamed(

@@ -55,10 +55,11 @@ void main() {
         (tester) async {
       await _pump(tester, [_booking()]);
 
-      expect(find.text('BK-1A2B3C4D'), findsOneWidget);
+      expect(find.text('#BK-1A2B3C4D'), findsOneWidget);
       expect(find.text('Under review'), findsOneWidget);
-      expect(find.text('Today · 8:30 AM'), findsOneWidget);
-      expect(find.text('Seat A3'), findsOneWidget);
+      expect(find.text('8:30 AM'), findsOneWidget);
+      expect(find.text('· Today'), findsOneWidget);
+      expect(find.text('A3'), findsOneWidget);
       expect(find.text('EGP 100'), findsOneWidget);
       expect(
         find.textContaining('We are checking your payment'),
@@ -73,7 +74,7 @@ void main() {
       await _pump(tester, [_booking()], onTrack: (b) => tracked = b);
 
       expect(find.text('Track your bus'), findsNothing);
-      await tester.tap(find.text('BK-1A2B3C4D'));
+      await tester.tap(find.text('#BK-1A2B3C4D'));
       await tester.pump();
 
       expect(tracked, isNull);
@@ -104,8 +105,8 @@ void main() {
         _booking(id: 'b2', seatLabel: 'A4'),
       ]);
 
-      expect(find.text('Seat A3'), findsOneWidget);
-      expect(find.text('Seat A4'), findsOneWidget);
+      expect(find.text('A3'), findsOneWidget);
+      expect(find.text('A4'), findsOneWidget);
     });
 
     testWidgets('renders every booking the rider holds', (tester) async {

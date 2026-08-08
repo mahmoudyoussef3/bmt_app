@@ -50,6 +50,7 @@ import '../../features/booking/presentation/cubit/booking_wizard_confirm_cubit.d
 import '../../features/booking/presentation/cubit/daily_booking_cubit.dart';
 import '../../features/booking/presentation/cubit/map_pins_cubit.dart';
 import '../../features/booking/presentation/cubit/popular_routes_cubit.dart';
+import '../../features/booking/presentation/cubit/route_packages_cubit.dart';
 import '../../features/booking/presentation/cubit/route_results_cubit.dart';
 import '../../features/booking/presentation/cubit/vehicle_details_cubit.dart';
 import '../../features/booking/presentation/cubit/vehicle_listing_cubit.dart';
@@ -576,6 +577,14 @@ void _registerBookingDependencies() {
     );
   }
 
+  // Route Details' commute-plans shelf. Registered here rather than with the
+  // packages feature because it is scoped to the booking route that shows it.
+  if (!clientGetIt.isRegistered<RoutePackagesCubit>()) {
+    clientGetIt.registerFactory<RoutePackagesCubit>(
+      () => RoutePackagesCubit(clientGetIt<GetOfficePackagesUseCase>()),
+    );
+  }
+
   if (!clientGetIt.isRegistered<PopularRoutesCubit>()) {
     clientGetIt.registerFactory<PopularRoutesCubit>(
       () => PopularRoutesCubit(clientGetIt<GetPopularRoutesUseCase>()),
@@ -1080,7 +1089,6 @@ void _registerOfficesDependencies() {
       () => OfficeProfileCubit(
         clientGetIt<GetOfficeRoutesUseCase>(),
         clientGetIt<GetOfficeTripsUseCase>(),
-        clientGetIt<GetOfficePackagesUseCase>(),
       ),
     );
   }
@@ -1229,7 +1237,8 @@ void _registerWalletDependencies() {
 
   if (!clientGetIt.isRegistered<GetClientWalletSummaryUseCase>()) {
     clientGetIt.registerLazySingleton<GetClientWalletSummaryUseCase>(
-      () => GetClientWalletSummaryUseCase(clientGetIt<ClientWalletRepository>()),
+      () =>
+          GetClientWalletSummaryUseCase(clientGetIt<ClientWalletRepository>()),
     );
   }
 

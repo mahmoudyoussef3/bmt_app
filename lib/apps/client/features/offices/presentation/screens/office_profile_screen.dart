@@ -15,28 +15,30 @@ import '../cubit/office_profile_state.dart';
 import '../widgets/office_departures_section.dart';
 import '../widgets/office_empty_note.dart';
 import '../widgets/office_nothing_listed_view.dart';
-import '../widgets/office_package_tile.dart';
 import '../widgets/office_profile_header.dart';
-import '../widgets/office_route_tile.dart';
-import '../widgets/office_section_header.dart';
+import '../widgets/office_profile_section.dart';
+import '../widgets/office_profile_stats.dart';
+import '../widgets/office_routes_section.dart';
 
 /// One office's marketplace profile: identity + rating, the departures it is
-/// selling right now, the corridors it runs, and the commute packages it sells.
+/// selling right now, and the corridors it runs.
 ///
 /// Departures come first because they are what a rider can act on today; the
 /// route list is the fallback for a date the board does not reach. Both hand
 /// off to the existing booking search — this screen owns no booking logic.
 ///
-/// The whole screen is one scroll under a single masthead rather than a tab
-/// bar: the three lists answer different questions ("can I travel today?",
-/// "does this company go where I go?", "is a plan worth it?") and a rider
-/// usually asks them in that order, so hiding two behind tabs would cost a tap
-/// each without shortening anything. The masthead's count band and the section
-/// glyphs do the wayfinding instead.
+/// Packages are deliberately absent. A plan has no price until a route prices
+/// it, so a catalogue here could only ever say "priced later" — the plans now
+/// appear on Route Details, where the corridor exists to quote them against.
 class OfficeProfileScreen extends StatelessWidget {
-  const OfficeProfileScreen({super.key, required this.office});
+  OfficeProfileScreen({super.key, required this.office});
 
   final OfficeSummary office;
+
+  // Stable for the screen's lifetime: the router constructs this widget once
+  // per visit, and BlocBuilder only rebuilds the subtree below it.
+  final _departuresKey = GlobalKey();
+  final _routesKey = GlobalKey();
 
   void _openRoute(BuildContext context, String routeId) {
     Navigator.pushNamed(
@@ -62,6 +64,20 @@ class OfficeProfileScreen extends StatelessWidget {
     );
   }
 
+  Future<void> _scrollToSection(OfficeProfileSection section) async {
+    final key = switch (section) {
+      OfficeProfileSection.departures => _departuresKey,
+      OfficeProfileSection.routes => _routesKey,
+    };
+    final target = key.currentContext;
+    if (target == null) return;
+    await Scrollable.ensureVisible(
+      target,
+      duration: ClientMotion.base,
+      curve: ClientMotion.curve,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
@@ -73,137 +89,88 @@ class OfficeProfileScreen extends StatelessWidget {
         subtitle: l10n.offices_directoryTitle,
       ),
       body: BlocBuilder<OfficeProfileCubit, OfficeProfileState>(
-        builder: (context, state) => ListView(
-          padding: const EdgeInsets.fromLTRB(
-            ClientSpacing.md,
-            ClientSpacing.sm,
-            ClientSpacing.md,
-            ClientSpacing.xl,
-          ),
-          physics: const BouncingScrollPhysics(),
-          children: [
-            OfficeProfileHeader(office: office, counts: _countsOf(state)),
-            const SizedBox(height: ClientSpacing.lg),
-            switch (state) {
-              OfficeProfileLoading() => const _ProfileSkeleton(),
-              OfficeProfileError(:final message) => ClientErrorCard(
-                message: message,
-                retryLabel: l10n.common_retry,
-                onRetry: () =>
-                    context.read<OfficeProfileCubit>().load(office.id),
+        builder: (context, state) {
+          final loaded = state is OfficeProfileLoaded ? state : null;
+
+          return RefreshIndicator(
+            onRefresh: () => context.read<OfficeProfileCubit>().load(office.id),
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(
+                ClientSpacing.md,
+                ClientSpacing.sm,
+                ClientSpacing.md,
+                ClientSpacing.xl,
               ),
-              // An office with nothing published is a dead end unless it ends
-              // somewhere: two "none" notes and no action was the whole screen.
-              OfficeProfileLoaded(:final routes, :final trips)
-                  when routes.isEmpty && trips.isEmpty =>
-                const OfficeNothingListedView(),
-              OfficeProfileLoaded(
-                :final routes,
-                :final trips,
-                :final packages,
-              ) =>
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _Section(
-                      icon: Icons.departure_board_rounded,
-                      title: l10n.offices_departuresHeader,
-                      count: trips.length,
-                      child: trips.isEmpty
-                          ? OfficeEmptyNote(
-                              icon: Icons.event_busy_rounded,
-                              message: l10n.offices_noDepartures,
-                            )
-                          : OfficeDeparturesSection(
-                              trips: trips,
-                              onOpenTrip: (trip) => _openTrip(context, trip),
-                            ),
-                    ),
-                    _Section(
-                      icon: Icons.alt_route_rounded,
-                      title: l10n.offices_routesHeader,
-                      count: routes.length,
-                      child: routes.isEmpty
-                          ? OfficeEmptyNote(
-                              icon: Icons.wrong_location_outlined,
-                              message: l10n.offices_noRoutes,
-                            )
-                          : Column(
-                              children: [
-                                for (final route in routes) ...[
-                                  OfficeRouteTile(
-                                    route: route,
-                                    onTap: () => _openRoute(context, route.id),
-                                  ),
-                                  const SizedBox(height: ClientSpacing.xs),
-                                ],
-                              ],
-                            ),
-                    ),
-                    // Packages are supplementary, so the section only appears
-                    // when this office actually sells any — no empty note.
-                    //
-                    // The tiles are read-only: a package has no price until a
-                    // route prices it, so the rider picks one in the booking
-                    // wizard's package step, not here.
-                    if (packages.isNotEmpty)
-                      _Section(
-                        icon: Icons.card_membership_rounded,
-                        title: l10n.packages_commutePackages,
-                        count: packages.length,
-                        child: Column(
-                          children: [
-                            for (final package in packages) ...[
-                              OfficePackageTile(package: package),
-                              const SizedBox(height: ClientSpacing.xs),
-                            ],
-                          ],
+              physics: const AlwaysScrollableScrollPhysics(),
+              children: [
+                OfficeProfileHeader(
+                  office: office,
+                  stats: loaded == null
+                      ? null
+                      : OfficeProfileStats(
+                          counts: (
+                            departures: loaded.trips.length,
+                            routes: loaded.routes.length,
+                          ),
+                          onSelect: _scrollToSection,
                         ),
-                      ),
-                  ],
                 ),
-            },
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// The masthead's count band, once there is something to count.
-  OfficeProfileCounts? _countsOf(OfficeProfileState state) => switch (state) {
-    OfficeProfileLoaded(:final routes, :final trips, :final packages) => (
-      departures: trips.length,
-      routes: routes.length,
-      packages: packages.length,
-    ),
-    _ => null,
-  };
-}
-
-class _Section extends StatelessWidget {
-  const _Section({
-    required this.icon,
-    required this.title,
-    required this.count,
-    required this.child,
-  });
-
-  final IconData icon;
-  final String title;
-  final int count;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: ClientSpacing.lg),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          OfficeSectionHeader(icon: icon, title: title, count: count),
-          const SizedBox(height: ClientSpacing.sm),
-          child,
-        ],
+                const SizedBox(height: ClientSpacing.lg),
+                switch (state) {
+                  OfficeProfileLoading() => const _ProfileSkeleton(),
+                  OfficeProfileError(:final message) => ClientErrorCard(
+                    message: message,
+                    retryLabel: l10n.common_retry,
+                    onRetry: () =>
+                        context.read<OfficeProfileCubit>().load(office.id),
+                  ),
+                  // An office with nothing published is a dead end unless it
+                  // ends somewhere: two "none" notes and no action was the
+                  // whole screen.
+                  OfficeProfileLoaded(:final routes, :final trips)
+                      when routes.isEmpty && trips.isEmpty =>
+                    const OfficeNothingListedView(),
+                  OfficeProfileLoaded(:final routes, :final trips) => Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      OfficeProfileSectionBlock(
+                        key: _departuresKey,
+                        icon: Icons.departure_board_rounded,
+                        title: l10n.offices_departuresHeader,
+                        count: trips.length,
+                        child: trips.isEmpty
+                            ? OfficeEmptyNote(
+                                icon: Icons.event_busy_rounded,
+                                message: l10n.offices_noDepartures,
+                              )
+                            : OfficeDeparturesSection(
+                                trips: trips,
+                                onOpenTrip: (trip) => _openTrip(context, trip),
+                              ),
+                      ),
+                      OfficeProfileSectionBlock(
+                        key: _routesKey,
+                        icon: Icons.alt_route_rounded,
+                        title: l10n.offices_routesHeader,
+                        count: routes.length,
+                        child: routes.isEmpty
+                            ? OfficeEmptyNote(
+                                icon: Icons.wrong_location_outlined,
+                                message: l10n.offices_noRoutes,
+                              )
+                            : OfficeRoutesSection(
+                                routes: routes,
+                                onOpenRoute: (route) =>
+                                    _openRoute(context, route.id),
+                              ),
+                      ),
+                    ],
+                  ),
+                },
+              ],
+            ),
+          );
+        },
       ),
     );
   }

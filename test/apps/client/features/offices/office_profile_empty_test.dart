@@ -30,7 +30,7 @@ Future<void> _pump(WidgetTester tester, OfficeProfileState state) async {
     clientTestApp(
       BlocProvider<OfficeProfileCubit>(
         create: (_) => _StubOfficeProfileCubit(state),
-        child: const OfficeProfileScreen(office: _office),
+        child: OfficeProfileScreen(office: _office),
       ),
     ),
   );
@@ -41,10 +41,7 @@ void main() {
   testWidgets('an office with nothing published still offers a way onward', (
     tester,
   ) async {
-    await _pump(
-      tester,
-      const OfficeProfileLoaded(routes: [], trips: [], packages: []),
-    );
+    await _pump(tester, const OfficeProfileLoaded(routes: [], trips: []));
 
     // Two "none" notes and no action left the rider at the end of the app.
     // Both ways onward must be present and tappable.
@@ -68,7 +65,6 @@ void main() {
           ),
         ],
         trips: const [],
-        packages: const [],
       ),
     );
 

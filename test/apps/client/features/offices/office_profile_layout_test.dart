@@ -9,12 +9,11 @@ import 'package:bmt_app/apps/client/features/offices/domain/entities/office_trip
 import 'package:bmt_app/apps/client/features/offices/presentation/cubit/office_profile_cubit.dart';
 import 'package:bmt_app/apps/client/features/offices/presentation/cubit/office_profile_state.dart';
 import 'package:bmt_app/apps/client/features/offices/presentation/screens/office_profile_screen.dart';
-import 'package:bmt_app/apps/client/features/packages/domain/entities/package_plan.dart';
 
 import '../../client_test_app.dart';
 
-/// The office profile packs a masthead, a day-grouped departure board, a route
-/// list and a package list into one scroll, and every row of it is built from
+/// The office profile packs a masthead, a day-grouped departure board and a
+/// route list into one scroll, and every row of it is built from
 /// operator-supplied Arabic text. This pins the layout against the two ways it
 /// broke while being built: a fare column starving the middle of a departure
 /// tile, and a chip row overflowing its own pill.
@@ -92,20 +91,6 @@ const _routes = [
   OfficeRoute(id: 'r2', name: 'خط داخلي', startCity: '', endCity: ''),
 ];
 
-PackagePlan _plan(String id) => PackagePlan(
-  id: id,
-  nameAr: 'باقة الشهر الكامل للعاملين بالقرية الذكية',
-  nameEn: 'Full Month Commuter Plan',
-  packageType: 'work_month',
-  durationDays: 30,
-  rideCount: 30,
-  price: 3000,
-  officeId: 'o1',
-  officeName: 'شركة النيل السريع للنقل السياحي',
-  officeRating: 4.6,
-  officeRatingsCount: 128,
-);
-
 Future<void> _atEachSize(
   WidgetTester tester,
   Future<void> Function() body,
@@ -128,13 +113,9 @@ void main() {
             locale: locale,
             BlocProvider<OfficeProfileCubit>(
               create: (_) => _StubOfficeProfileCubit(
-                OfficeProfileLoaded(
-                  routes: _routes,
-                  trips: _trips(),
-                  packages: [_plan('p1'), _plan('p2')],
-                ),
+                OfficeProfileLoaded(routes: _routes, trips: _trips()),
               ),
-              child: const OfficeProfileScreen(office: _office),
+              child: OfficeProfileScreen(office: _office),
             ),
           ),
         );
@@ -186,13 +167,9 @@ void main() {
       clientTestApp(
         BlocProvider<OfficeProfileCubit>(
           create: (_) => _StubOfficeProfileCubit(
-            OfficeProfileLoaded(
-              routes: const [],
-              trips: _trips(),
-              packages: const [],
-            ),
+            OfficeProfileLoaded(routes: const [], trips: _trips()),
           ),
-          child: const OfficeProfileScreen(office: _office),
+          child: OfficeProfileScreen(office: _office),
         ),
       ),
     );

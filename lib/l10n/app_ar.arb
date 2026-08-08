@@ -617,6 +617,7 @@
   "home_statusConfirmedExplanation": "مقعدك محجوز. كن في نقطة الانطلاق قبل 10 دقائق من موعد الرحلة.",
   "home_statusOnBoardExplanation": "أنت على متن الحافلة. رحلة سعيدة.",
   "home_yourBookingFallback": "حجزك",
+  "home_amountPaid": "المدفوع",
   "home_seatLabel": "مقعد {label}",
   "home_daysLeft": "متبقي {days} يوم",
   "home_dayLeft": "متبقي يوم واحد",
@@ -1547,5 +1548,47 @@
   "packages_step2Title": "اطّلع على سعرك",
   "packages_step2Body": "تُحسب قيمة الباقة على هذا الخط تحديداً، ثم تدفع مرة واحدة.",
   "packages_step3Title": "استخدم رحلاتك",
-  "packages_step3Body": "احجز أي موعد على الخط حتى تنتهي رحلاتك أو تنتهي مدة الباقة."
+  "packages_step3Body": "احجز أي موعد على الخط حتى تنتهي رحلاتك أو تنتهي مدة الباقة.",
+  "offices_directoryLead": "كل شركات النقل التي تبيع مقاعدها على إيزي واي، الأعلى تقييماً أولاً.",
+  "offices_countLabel": "{count, plural, =1{شركة واحدة} =2{شركتان} few{{count} شركات} other{{count} شركة}}",
+  "@offices_countLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "offices_matchesLabel": "{count, plural, =1{نتيجة واحدة} =2{نتيجتان} few{{count} نتائج} other{{count} نتيجة}}",
+  "@offices_matchesLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "offices_moreAreasCount": "+{count}",
+  "@offices_moreAreasCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "offices_openProfile": "المواعيد وخطوط السير",
+  "offices_serves": "يخدم",
+  "offices_statRating": "التقييم",
+  "offices_unrated": "بلا تقييم",
+  "booking_routePackagesTitle": "باقات التنقل",
+  "booking_routePackagesSubtitle": "تسافر على هذا الخط كثيراً؟ الباقة تخفّض تكلفة المقعد.",
+  "booking_routePackagesBy": "من {office}",
+  "@booking_routePackagesBy": {
+    "placeholders": {
+      "office": {
+        "type": "String"
+      }
+    }
+  },
+  "booking_routePackageFrom": "يبدأ من",
+  "booking_routePackageChoose": "احجز بهذه الباقة",
+  "booking_routePackagesNote": "يتحدّد السعر النهائي بعد اختيار محطتَي الركوب والنزول وموعد الرحلة."
 }

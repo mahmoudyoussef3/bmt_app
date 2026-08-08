@@ -11,6 +11,10 @@ import '../cubit/offices_directory_cubit.dart';
 /// Search box over the offices directory. Owns only its text controller — the
 /// query itself lives in [OfficesDirectoryCubit], so the list and the field can
 /// never disagree about what is being searched for.
+///
+/// Drawn as a filled pill with the glyph in a tinted plate rather than a
+/// bordered form input: this is a filter over a list the rider is already
+/// looking at, not a field in a form they are filling in.
 class OfficesSearchField extends StatefulWidget {
   const OfficesSearchField({super.key, required this.query});
 
@@ -51,39 +55,64 @@ class _OfficesSearchFieldState extends State<OfficesSearchField> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
-      child: TextField(
-        controller: _controller,
-        onChanged: context.read<OfficesDirectoryCubit>().setQuery,
-        textInputAction: TextInputAction.search,
-        style: ClientTypography.bodyMedium(context),
-        decoration: InputDecoration(
-          hintText: context.l10n.offices_searchHint,
-          prefixIcon: const Icon(Icons.search_rounded, size: 20),
-          filled: true,
-          fillColor: ClientColors.surfaceSubtleFor(context),
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(ClientRadius.md),
-            borderSide: BorderSide.none,
+    final accent = ClientColors.primaryFor(context);
+
+    return Container(
+      height: 52,
+      padding: const EdgeInsetsDirectional.only(start: 8, end: 6),
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceFor(context),
+        borderRadius: BorderRadius.circular(ClientRadius.pill),
+        border: Border.all(color: ClientColors.borderFor(context)),
+        boxShadow: ClientElevation.sm(context),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: accent.withAlpha(22),
+              borderRadius: BorderRadius.circular(ClientRadius.pill),
+            ),
+            child: Icon(Icons.search_rounded, size: 18, color: accent),
           ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(ClientRadius.md),
-            borderSide: BorderSide.none,
+          const SizedBox(width: 10),
+          Expanded(
+            child: TextField(
+              controller: _controller,
+              onChanged: context.read<OfficesDirectoryCubit>().setQuery,
+              textInputAction: TextInputAction.search,
+              style: ClientTypography.bodyMedium(context),
+              decoration: InputDecoration(
+                isCollapsed: true,
+                // Every variant, not just `border`: the app's
+                // InputDecorationTheme supplies enabled/focused outlines, and
+                // those win over `border` — leaving a second bordered box
+                // drawn inside this pill.
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                disabledBorder: InputBorder.none,
+                errorBorder: InputBorder.none,
+                focusedErrorBorder: InputBorder.none,
+                filled: false,
+                hintText: context.l10n.offices_searchHint,
+                hintStyle: ClientTypography.bodyMedium(
+                  context,
+                ).copyWith(color: ClientColors.textTertiaryFor(context)),
+              ),
+            ),
           ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(ClientRadius.md),
-            borderSide: BorderSide(color: ClientColors.primaryFor(context)),
-          ),
-          suffixIcon: widget.query.isNotEmpty
-              ? IconButton(
-                  icon: const Icon(Icons.close_rounded, size: 18),
-                  tooltip: MaterialLocalizations.of(context).deleteButtonTooltip,
-                  onPressed: _clear,
-                )
-              : null,
-        ),
+          if (widget.query.isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.close_rounded, size: 18),
+              visualDensity: VisualDensity.compact,
+              color: ClientColors.textSecondaryFor(context),
+              tooltip: MaterialLocalizations.of(context).deleteButtonTooltip,
+              onPressed: _clear,
+            ),
+        ],
       ),
     );
   }

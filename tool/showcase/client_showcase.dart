@@ -18,6 +18,8 @@ import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_wizard_confirm_state.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_wizard_cubit.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_wizard_step_cubit.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/cubit/route_packages_cubit.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/cubit/route_packages_state.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/route_results_cubit.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/route_results_state.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/screens/booking_wizard_screen.dart';
@@ -74,11 +76,7 @@ class _FakeOfficeProfile extends Cubit<OfficeProfileState>
     implements OfficeProfileCubit {
   _FakeOfficeProfile()
     : super(
-        OfficeProfileLoaded(
-          routes: demo.officeRoutes,
-          trips: demo.officeTrips,
-          packages: demo.packages,
-        ),
+        OfficeProfileLoaded(routes: demo.officeRoutes, trips: demo.officeTrips),
       );
   @override
   Future<void> load(String officeId) async {}
@@ -99,9 +97,7 @@ class _FakeTrips extends Cubit<TripsState> implements TripsCubit {
 /// Trip details opens on one booking, so the selected trip is already resolved.
 class _FakeTripDetails extends Cubit<TripsState> implements TripsCubit {
   _FakeTripDetails()
-    : super(
-        TripsLoaded(trips: demo.trips, selectedTrip: demo.confirmedTrip),
-      );
+    : super(TripsLoaded(trips: demo.trips, selectedTrip: demo.confirmedTrip));
   @override
   Future<void> loadTrips() async {}
   @override
@@ -127,10 +123,7 @@ class _FakeSeats extends Cubit<SeatSelectionState>
     implements SeatSelectionCubit {
   _FakeSeats()
     : super(
-        SeatSelectionLoaded(
-          data: demo.seatSelection,
-          selectedSeatId: 'seat-3',
-        ),
+        SeatSelectionLoaded(data: demo.seatSelection, selectedSeatId: 'seat-3'),
       );
   @override
   Future<void> loadSeatSelection(String tripId) async {}
@@ -140,6 +133,17 @@ class _FakeSeats extends Cubit<SeatSelectionState>
 
 class _FakePackages extends Cubit<PackagesState> implements PackagesCubit {
   _FakePackages() : super(const PackagesLoaded(packages: demo.packages));
+  @override
+  dynamic noSuchMethod(Invocation i) => null;
+}
+
+/// Route Details' plans shelf, already holding the operator's catalogue so the
+/// section is photographed populated rather than mid-fetch.
+class _FakeRoutePackages extends Cubit<RoutePackagesState>
+    implements RoutePackagesCubit {
+  _FakeRoutePackages() : super(const RoutePackagesLoaded(demo.packages));
+  @override
+  Future<void> loadFor(String officeId) async {}
   @override
   dynamic noSuchMethod(Invocation i) => null;
 }
@@ -190,6 +194,7 @@ void registerClientShowcaseFakes() {
     ..registerFactory<OfficeProfileCubit>(_FakeOfficeProfile.new)
     ..registerFactory<TripsCubit>(_FakeTrips.new)
     ..registerFactory<RouteResultsCubit>(_FakeRouteResults.new)
+    ..registerFactory<RoutePackagesCubit>(_FakeRoutePackages.new)
     ..registerFactory<SeatSelectionCubit>(_FakeSeats.new)
     ..registerFactory<PackagesCubit>(_FakePackages.new)
     ..registerFactory<ClientWalletCubit>(_FakeWallet.new)
@@ -226,7 +231,9 @@ BookingWizardCubit _wizardSession({required int step}) {
 Widget _wizardAt(int step) {
   return MultiBlocProvider(
     providers: [
-      BlocProvider<BookingWizardCubit>(create: (_) => _wizardSession(step: step)),
+      BlocProvider<BookingWizardCubit>(
+        create: (_) => _wizardSession(step: step),
+      ),
       BlocProvider<BookingWizardStepCubit>(
         create: (_) => BookingWizardStepCubit()..editStep(step),
       ),
@@ -254,8 +261,15 @@ final Map<String, Widget Function()> clientScreens = {
     create: (_) => clientGetIt<OfficeProfileCubit>(),
     child: OfficeProfileScreen(office: demo.nileOffice),
   ),
-  'client-route-results': () => BlocProvider<RouteResultsCubit>(
-    create: (_) => clientGetIt<RouteResultsCubit>(),
+  'client-route-results': () => MultiBlocProvider(
+    providers: [
+      BlocProvider<RouteResultsCubit>(
+        create: (_) => clientGetIt<RouteResultsCubit>(),
+      ),
+      BlocProvider<RoutePackagesCubit>(
+        create: (_) => clientGetIt<RoutePackagesCubit>(),
+      ),
+    ],
     child: const RouteSelectionScreen(query: demo.searchQuery),
   ),
   'client-booking-trip': () => _wizardAt(1),

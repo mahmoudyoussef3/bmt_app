@@ -29,12 +29,22 @@ class OfficesEmptyView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              isSearch ? Icons.search_off_rounded : Icons.storefront_outlined,
-              size: 52,
-              color: ClientColors.textTertiaryFor(context),
+            Container(
+              width: 88,
+              height: 88,
+              decoration: BoxDecoration(
+                color: ClientColors.primaryFor(context).withAlpha(18),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                isSearch
+                    ? Icons.search_off_rounded
+                    : Icons.storefront_outlined,
+                size: 40,
+                color: ClientColors.primaryFor(context),
+              ),
             ),
-            const SizedBox(height: ClientSpacing.sm),
+            const SizedBox(height: ClientSpacing.md),
             Text(
               isSearch
                   ? l10n.offices_noSearchResults(query)

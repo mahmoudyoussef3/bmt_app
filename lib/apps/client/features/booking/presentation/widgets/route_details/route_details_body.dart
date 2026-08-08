@@ -7,6 +7,7 @@ import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/route_details_sheet_surface.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/route_details_skeleton.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/route_empty_state.dart';
+import 'package:bmt_app/apps/client/features/packages/domain/entities/package_plan.dart';
 
 /// Route Details' body: full-bleed map (with a graceful fallback when no
 /// stop has coordinates — spec FR-007) behind a draggable sheet of section
@@ -23,6 +24,7 @@ class RouteDetailsBody extends StatelessWidget {
     required this.onMap,
     required this.onSelectRoute,
     required this.onSelectTrip,
+    required this.onSelectPackage,
   });
 
   final bool isLoading;
@@ -34,6 +36,9 @@ class RouteDetailsBody extends StatelessWidget {
   final VoidCallback onMap;
   final ValueChanged<RouteOptionData> onSelectRoute;
   final ValueChanged<RouteTripOptionData> onSelectTrip;
+
+  /// Starts the booking with a commute plan already chosen.
+  final ValueChanged<PackagePlan> onSelectPackage;
 
   @override
   Widget build(BuildContext context) {
@@ -88,6 +93,7 @@ class RouteDetailsBody extends StatelessWidget {
                 onMap: onMap,
                 onSelectRoute: onSelectRoute,
                 onSelectTrip: onSelectTrip,
+                onSelectPackage: onSelectPackage,
               ),
             );
           },

@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
+import 'package:bmt_app/core/widgets/directional_icon.dart';
 import 'package:bmt_app/apps/client/features/home/domain/entities/home_data.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_upcoming_trip_card.dart';
 
@@ -45,6 +47,9 @@ class HomeUpcomingTripsList extends StatelessWidget {
   }
 }
 
+/// A calm, centred placeholder rather than a shrunken banner — the departure
+/// board's own header already says "nothing to show", so this panel spends its
+/// space explaining why and handing the rider the one action that fixes it.
 class _NoDepartures extends StatelessWidget {
   const _NoDepartures({required this.onBrowseRoutes});
 
@@ -53,59 +58,54 @@ class _NoDepartures extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(ClientSpacing.md),
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: ClientSpacing.lg,
+        vertical: ClientSpacing.xl,
+      ),
       decoration: BoxDecoration(
         color: ClientColors.surfaceFor(context),
         borderRadius: BorderRadius.circular(ClientRadius.lg),
         border: Border.all(color: ClientColors.borderFor(context)),
+        boxShadow: ClientElevation.sm(context),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: ClientColors.primaryFor(context).withAlpha(22),
-                  borderRadius: BorderRadius.circular(ClientRadius.sm),
-                ),
-                child: Icon(
-                  Icons.event_busy_rounded,
-                  color: ClientColors.primaryFor(context),
-                ),
-              ),
-              const SizedBox(width: ClientSpacing.sm),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      context.l10n.home_noDepartures,
-                      style: ClientTypography.headingSmall(
-                        context,
-                      ).copyWith(fontWeight: FontWeight.w800),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      context.l10n.home_noDeparturesBody,
-                      style: ClientTypography.bodySmall(
-                        context,
-                      ).copyWith(color: ClientColors.textSecondaryFor(context)),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: ClientSpacing.sm),
-          Align(
-            alignment: AlignmentDirectional.centerEnd,
-            child: TextButton(
-              onPressed: onBrowseRoutes,
-              child: Text(context.l10n.home_browseRoutes),
+          Container(
+            width: 72,
+            height: 72,
+            decoration: BoxDecoration(
+              color: ClientColors.primaryFor(context).withAlpha(20),
+              shape: BoxShape.circle,
             ),
+            child: Icon(
+              Icons.event_busy_rounded,
+              size: 32,
+              color: ClientColors.primaryFor(context),
+            ),
+          ),
+          const SizedBox(height: ClientSpacing.md),
+          Text(
+            context.l10n.home_noDepartures,
+            textAlign: TextAlign.center,
+            style: ClientTypography.headingSmall(
+              context,
+            ).copyWith(fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            context.l10n.home_noDeparturesBody,
+            textAlign: TextAlign.center,
+            style: ClientTypography.bodySmall(
+              context,
+            ).copyWith(color: ClientColors.textSecondaryFor(context)),
+          ),
+          const SizedBox(height: ClientSpacing.lg),
+          ClientButton(
+            label: context.l10n.home_browseRoutes,
+            icon: const DirectionalIcon(Icons.arrow_forward_rounded),
+            expand: false,
+            onPressed: onBrowseRoutes,
           ),
         ],
       ),

@@ -1733,6 +1733,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get home_yourBookingFallback => 'Your booking';
 
   @override
+  String get home_amountPaid => 'Paid';
+
+  @override
   String home_seatLabel(String label) {
     return 'Seat $label';
   }
@@ -4945,4 +4948,69 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get packages_step3Body =>
       'Book any departure on the route until your rides or days run out.';
+
+  @override
+  String get offices_directoryLead =>
+      'Every operator selling seats on EWT, best rated first.';
+
+  @override
+  String offices_countLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count operators',
+      one: '1 operator',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String offices_matchesLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count matches',
+      one: '1 match',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String offices_moreAreasCount(int count) {
+    return '+$count';
+  }
+
+  @override
+  String get offices_openProfile => 'Departures & routes';
+
+  @override
+  String get offices_serves => 'Serves';
+
+  @override
+  String get offices_statRating => 'Rating';
+
+  @override
+  String get offices_unrated => 'Unrated';
+
+  @override
+  String get booking_routePackagesTitle => 'Commute packages';
+
+  @override
+  String get booking_routePackagesSubtitle =>
+      'Ride this route often? A plan costs less per seat.';
+
+  @override
+  String booking_routePackagesBy(String office) {
+    return 'Sold by $office';
+  }
+
+  @override
+  String get booking_routePackageFrom => 'From';
+
+  @override
+  String get booking_routePackageChoose => 'Book with this plan';
+
+  @override
+  String get booking_routePackagesNote =>
+      'The exact price is confirmed once you pick your stops and departure.';
 }

@@ -777,6 +777,7 @@
   "home_statusConfirmedExplanation": "Your seat is held. Be at the pickup point 10 minutes before departure.",
   "home_statusOnBoardExplanation": "You are on board. Have a good trip.",
   "home_yourBookingFallback": "Your booking",
+  "home_amountPaid": "Paid",
   "home_seatLabel": "Seat {label}",
   "@home_seatLabel": {
     "placeholders": {
@@ -2555,5 +2556,47 @@
   "packages_step2Title": "See your price",
   "packages_step2Body": "The package is priced for that exact route, then you pay once.",
   "packages_step3Title": "Ride your seats",
-  "packages_step3Body": "Book any departure on the route until your rides or days run out."
+  "packages_step3Body": "Book any departure on the route until your rides or days run out.",
+  "offices_directoryLead": "Every operator selling seats on EWT, best rated first.",
+  "offices_countLabel": "{count, plural, =1{1 operator} other{{count} operators}}",
+  "@offices_countLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "offices_matchesLabel": "{count, plural, =1{1 match} other{{count} matches}}",
+  "@offices_matchesLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "offices_moreAreasCount": "+{count}",
+  "@offices_moreAreasCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "offices_openProfile": "Departures & routes",
+  "offices_serves": "Serves",
+  "offices_statRating": "Rating",
+  "offices_unrated": "Unrated",
+  "booking_routePackagesTitle": "Commute packages",
+  "booking_routePackagesSubtitle": "Ride this route often? A plan costs less per seat.",
+  "booking_routePackagesBy": "Sold by {office}",
+  "@booking_routePackagesBy": {
+    "placeholders": {
+      "office": {
+        "type": "String"
+      }
+    }
+  },
+  "booking_routePackageFrom": "From",
+  "booking_routePackageChoose": "Book with this plan",
+  "booking_routePackagesNote": "The exact price is confirmed once you pick your stops and departure."
 }

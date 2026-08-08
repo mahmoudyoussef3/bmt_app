@@ -51,14 +51,25 @@ class RouteSelectionScreen extends StatelessWidget {
             ),
             onSelectRoute: (route) => cubit.selectRoute(route.id),
             onSelectTrip: (trip) => cubit.selectTrip(trip.id),
+            onSelectPackage: (plan) {
+              final route = loaded?.selectedRoute;
+              if (route != null) _continueToBooking(context, route, plan.id);
+            },
           ),
         );
       },
     );
   }
 
-  void _continueToBooking(BuildContext context, RouteOptionData route) {
-    final initialPackageId = query.initialPackageId;
+  /// [packageId] overrides whatever plan the search arrived carrying: a rider
+  /// who just tapped a plan on this screen has chosen it more recently than the
+  /// one they were reviewing before the search started.
+  void _continueToBooking(
+    BuildContext context,
+    RouteOptionData route, [
+    String? packageId,
+  ]) {
+    final initialPackageId = packageId ?? query.initialPackageId;
     Navigator.pushNamed(
       context,
       BookingRoutes.wizard,

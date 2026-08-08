@@ -1,0 +1,49 @@
+import 'package:flutter/material.dart';
+
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+
+/// The letterhead strip across the top of an operator tile.
+///
+/// It exists to give the card an anchor: without it the tile was a name
+/// floating in white space, which read as an avatar rather than as a company.
+/// The bus glyph is cropped by the band's own edge so the mark feels stamped
+/// into the card instead of dropped on top of it.
+class HomeOfficeBrandBand extends StatelessWidget {
+  const HomeOfficeBrandBand({super.key, required this.height});
+
+  final double height;
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = ClientColors.primaryFor(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      height: height,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: AlignmentDirectional.topStart,
+          end: AlignmentDirectional.bottomEnd,
+          colors: [
+            accent.withAlpha(isDark ? 56 : 32),
+            accent.withAlpha(isDark ? 20 : 10),
+          ],
+        ),
+      ),
+      child: ClipRect(
+        child: OverflowBox(
+          maxHeight: height * 2,
+          alignment: AlignmentDirectional.bottomEnd,
+          child: Padding(
+            padding: const EdgeInsetsDirectional.only(end: 8),
+            child: Icon(
+              Icons.directions_bus_filled_rounded,
+              size: 60,
+              color: accent.withAlpha(isDark ? 30 : 20),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

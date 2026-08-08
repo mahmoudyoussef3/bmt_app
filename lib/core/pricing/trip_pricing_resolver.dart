@@ -55,6 +55,19 @@ class TripPricingResolver {
   ) {
     final row = forPair(pricing, fromPointId, toPointId);
     if (row == null) return null;
+    return tierPriceOf(row, durationDays, rideCount);
+  }
+
+  /// The tier column of one `trip_pricing` row that a package of this shape is
+  /// charged from. Split out of [packageFareFor] so a surface that quotes a
+  /// package before the rider has picked their stops — Route Details' "from"
+  /// price — buckets it by the same rule the booking RPC will, instead of
+  /// re-deriving the thresholds and drifting from them.
+  static double? tierPriceOf(
+    TripStopPairPrice row,
+    int durationDays,
+    int rideCount,
+  ) {
     if (durationDays <= 1 && rideCount == 1) return row.oneTimePrice;
     if (durationDays >= 2 && durationDays <= 6) return row.fiveDaysPrice;
     if (durationDays >= 7 && durationDays <= 15) return row.tenDaysPrice;

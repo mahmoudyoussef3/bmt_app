@@ -3248,6 +3248,12 @@ abstract class AppLocalizations {
   /// **'Your booking'**
   String get home_yourBookingFallback;
 
+  /// No description provided for @home_amountPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid'**
+  String get home_amountPaid;
+
   /// No description provided for @home_seatLabel.
   ///
   /// In en, this message translates to:
@@ -8833,6 +8839,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Book any departure on the route until your rides or days run out.'**
   String get packages_step3Body;
+
+  /// No description provided for @offices_directoryLead.
+  ///
+  /// In en, this message translates to:
+  /// **'Every operator selling seats on EWT, best rated first.'**
+  String get offices_directoryLead;
+
+  /// No description provided for @offices_countLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 operator} other{{count} operators}}'**
+  String offices_countLabel(int count);
+
+  /// No description provided for @offices_matchesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 match} other{{count} matches}}'**
+  String offices_matchesLabel(int count);
+
+  /// No description provided for @offices_moreAreasCount.
+  ///
+  /// In en, this message translates to:
+  /// **'+{count}'**
+  String offices_moreAreasCount(int count);
+
+  /// No description provided for @offices_openProfile.
+  ///
+  /// In en, this message translates to:
+  /// **'Departures & routes'**
+  String get offices_openProfile;
+
+  /// No description provided for @offices_serves.
+  ///
+  /// In en, this message translates to:
+  /// **'Serves'**
+  String get offices_serves;
+
+  /// No description provided for @offices_statRating.
+  ///
+  /// In en, this message translates to:
+  /// **'Rating'**
+  String get offices_statRating;
+
+  /// No description provided for @offices_unrated.
+  ///
+  /// In en, this message translates to:
+  /// **'Unrated'**
+  String get offices_unrated;
+
+  /// No description provided for @booking_routePackagesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Commute packages'**
+  String get booking_routePackagesTitle;
+
+  /// No description provided for @booking_routePackagesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Ride this route often? A plan costs less per seat.'**
+  String get booking_routePackagesSubtitle;
+
+  /// No description provided for @booking_routePackagesBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Sold by {office}'**
+  String booking_routePackagesBy(String office);
+
+  /// No description provided for @booking_routePackageFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'From'**
+  String get booking_routePackageFrom;
+
+  /// No description provided for @booking_routePackageChoose.
+  ///
+  /// In en, this message translates to:
+  /// **'Book with this plan'**
+  String get booking_routePackageChoose;
+
+  /// No description provided for @booking_routePackagesNote.
+  ///
+  /// In en, this message translates to:
+  /// **'The exact price is confirmed once you pick your stops and departure.'**
+  String get booking_routePackagesNote;
 }
 
 class _AppLocalizationsDelegate

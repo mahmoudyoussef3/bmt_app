@@ -5,8 +5,10 @@ import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/route_alternatives_section.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/route_available_trips_section.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/route_overview_header.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/route_packages_section.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/route_pricing_card.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/route_stop_timeline.dart';
+import 'package:bmt_app/apps/client/features/packages/domain/entities/package_plan.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 import 'package:bmt_app/core/theme/app_layout.dart';
 
@@ -23,6 +25,7 @@ class RouteDetailsSheetContent extends StatelessWidget {
     required this.onMap,
     required this.onSelectRoute,
     required this.onSelectTrip,
+    required this.onSelectPackage,
   });
 
   final ScrollController scrollController;
@@ -33,6 +36,7 @@ class RouteDetailsSheetContent extends StatelessWidget {
   final VoidCallback onMap;
   final ValueChanged<RouteOptionData> onSelectRoute;
   final ValueChanged<RouteTripOptionData> onSelectTrip;
+  final ValueChanged<PackagePlan> onSelectPackage;
 
   @override
   Widget build(BuildContext context) {
@@ -105,6 +109,10 @@ class RouteDetailsSheetContent extends StatelessWidget {
           selectedTripId: selectedTripId,
           onSelectTrip: onSelectTrip,
         ),
+        // After the departures, not before: a plan is only worth reading once
+        // the rider has seen that this corridor runs when they need it. The
+        // section brings its own leading gap so it can vanish without one.
+        RoutePackagesSection(route: route, onSelectPackage: onSelectPackage),
         if (routes.length > 1) ...[
           const SizedBox(height: 18),
           RouteAlternativesSection(
