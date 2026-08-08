@@ -142,8 +142,9 @@ class _DashboardSignUpScreenState extends State<DashboardSignUpScreen> {
                           validator: (v) {
                             final name = v?.trim() ?? '';
                             if (name.length < 3) return 'أدخل اسم المكتب';
-                            if (name.length > 120)
+                            if (name.length > 120) {
                               return 'اسم المكتب طويل جداً';
+                            }
                             return null;
                           },
                         ),

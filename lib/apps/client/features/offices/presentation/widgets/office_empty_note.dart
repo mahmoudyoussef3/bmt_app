@@ -17,23 +17,25 @@ class OfficeEmptyNote extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final accent = ClientColors.primaryFor(context);
+
     return Container(
       padding: const EdgeInsets.all(ClientSpacing.md),
       decoration: BoxDecoration(
-        color: ClientColors.surfaceSubtleFor(context),
+        color: accent.withAlpha(12),
         borderRadius: BorderRadius.circular(ClientRadius.md),
-        border: Border.all(color: ClientColors.borderFor(context)),
       ),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: ClientColors.textTertiaryFor(context)),
-          const SizedBox(width: ClientSpacing.sm),
+          Icon(icon, size: 24, color: accent.withAlpha(180)),
+          const SizedBox(width: ClientSpacing.md),
           Expanded(
             child: Text(
               message,
-              style: ClientTypography.bodySmall(
-                context,
-              ).copyWith(color: ClientColors.textSecondaryFor(context)),
+              style: ClientTypography.bodyMedium(context).copyWith(
+                color: ClientColors.textSecondaryFor(context),
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],

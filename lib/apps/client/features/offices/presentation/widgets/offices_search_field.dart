@@ -63,7 +63,6 @@ class _OfficesSearchFieldState extends State<OfficesSearchField> {
       decoration: BoxDecoration(
         color: ClientColors.surfaceFor(context),
         borderRadius: BorderRadius.circular(ClientRadius.pill),
-        border: Border.all(color: ClientColors.borderFor(context)),
         boxShadow: ClientElevation.sm(context),
       ),
       child: Row(

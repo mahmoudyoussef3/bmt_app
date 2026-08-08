@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
+import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
@@ -31,49 +32,133 @@ class OfficesDirectoryScreen extends StatelessWidget {
 
         return Scaffold(
           backgroundColor: ClientColors.backgroundFor(context),
-          appBar: ClientAppBar(
-            title: l10n.offices_directoryTitle,
-            subtitle: loaded == null
-                ? null
-                : l10n.offices_countLabel(loaded.offices.length),
-          ),
-          body: switch (state) {
-            OfficesDirectoryLoading() => const _DirectorySkeleton(),
-            OfficesDirectoryError(:final message) => Center(
-              child: Padding(
-                padding: const EdgeInsets.all(ClientSpacing.md),
-                child: ClientErrorCard(
-                  message: message,
-                  retryLabel: l10n.common_retry,
-                  onRetry: () => context.read<OfficesDirectoryCubit>().load(),
-                ),
+          body: Column(
+            children: [
+              _DirectoryMasthead(
+                title: l10n.offices_directoryTitle,
+                subtitle: loaded == null
+                    ? null
+                    : l10n.offices_countLabel(loaded.offices.length),
+                searchBand: loaded != null ? OfficesSearchBand(state: loaded) : null,
               ),
-            ),
-            // The search box stays mounted whenever there is a directory to
-            // search, including when the query currently matches nothing —
-            // otherwise the field the rider just typed into disappears under
-            // them.
-            OfficesDirectoryLoaded(:final offices) when offices.isEmpty =>
-              const OfficesEmptyView(),
-            final OfficesDirectoryLoaded loaded => Column(
-              children: [
-                OfficesSearchBand(state: loaded),
-                Expanded(
-                  child: loaded.isFilteredEmpty
-                      ? OfficesEmptyView(query: loaded.query)
+              Expanded(
+                child: switch (state) {
+                  OfficesDirectoryLoading() => const _DirectorySkeleton(),
+                  OfficesDirectoryError(:final message) => Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(ClientSpacing.md),
+                      child: ClientErrorCard(
+                        message: message,
+                        retryLabel: l10n.common_retry,
+                        onRetry: () => context.read<OfficesDirectoryCubit>().load(),
+                      ),
+                    ),
+                  ),
+                  OfficesDirectoryLoaded(:final offices) when offices.isEmpty =>
+                    const OfficesEmptyView(),
+                  final OfficesDirectoryLoaded loadedState => loadedState.isFilteredEmpty
+                      ? OfficesEmptyView(query: loadedState.query)
                       : RefreshIndicator(
                           onRefresh: () =>
                               context.read<OfficesDirectoryCubit>().refresh(),
                           child: OfficesDirectoryList(
-                            offices: loaded.visibleOffices,
+                            offices: loadedState.visibleOffices,
                           ),
                         ),
-                ),
-              ],
-            ),
-          },
+                },
+              ),
+            ],
+          ),
         );
       },
+    );
+  }
+}
+
+class _DirectoryMasthead extends StatelessWidget {
+  const _DirectoryMasthead({
+    required this.title,
+    required this.subtitle,
+    required this.searchBand,
+  });
+
+  final String title;
+  final String? subtitle;
+  final Widget? searchBand;
+
+  @override
+  Widget build(BuildContext context) {
+    final topInset = MediaQuery.paddingOf(context).top;
+    final accent = ClientColors.primaryFor(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceFor(context),
+        boxShadow: ClientElevation.sm(context),
+        border: Border(
+          bottom: BorderSide(
+            color: ClientColors.borderFor(context).withAlpha(100),
+          ),
+        ),
+      ),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: accent.withAlpha(isDark ? 20 : 10),
+              ),
+            ),
+          ),
+          Padding(
+            padding: EdgeInsets.only(top: topInset),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(
+                  height: 56,
+                  child: Row(
+                    children: [
+                      const SizedBox(width: 8),
+                      IconButton(
+                        icon: const Icon(Icons.arrow_back_rounded),
+                        onPressed: () => Navigator.of(context).maybePop(),
+                        color: ClientColors.textPrimaryFor(context),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              title,
+                              style: ClientTypography.headingMedium(context).copyWith(
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            if (subtitle != null) ...[
+                              const SizedBox(height: 2),
+                              Text(
+                                subtitle!,
+                                style: ClientTypography.labelSmall(context).copyWith(
+                                  color: ClientColors.textSecondaryFor(context),
+                                ),
+                              ),
+                            ]
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                ?searchBand,
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

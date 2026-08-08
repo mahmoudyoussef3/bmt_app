@@ -29,15 +29,15 @@ class OfficeRouteTile extends StatelessWidget {
 
     return ClientCard(
       onTap: onTap,
-      padding: const EdgeInsets.all(ClientSpacing.sm),
+      padding: const EdgeInsets.all(ClientSpacing.md),
       child: Row(
         children: [
           if (_hasEndpoints) ...[
             _RouteSpine(accent: accent),
-            const SizedBox(width: ClientSpacing.sm),
+            const SizedBox(width: ClientSpacing.md),
           ] else ...[
             Icon(Icons.route_rounded, color: accent),
-            const SizedBox(width: ClientSpacing.sm),
+            const SizedBox(width: ClientSpacing.md),
           ],
           Expanded(
             child: _hasEndpoints
@@ -46,23 +46,16 @@ class OfficeRouteTile extends StatelessWidget {
                     route.name,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: ClientTypography.bodyMedium(
-                      context,
-                    ).copyWith(fontWeight: FontWeight.w800),
+                    style: ClientTypography.bodyMedium(context).copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
                   ),
           ),
           const SizedBox(width: ClientSpacing.xs),
-          Container(
-            padding: const EdgeInsets.all(7),
-            decoration: BoxDecoration(
-              color: accent.withAlpha(20),
-              shape: BoxShape.circle,
-            ),
-            child: DirectionalIcon(
-              Icons.arrow_forward_rounded,
-              size: 15,
-              color: accent,
-            ),
+          DirectionalIcon(
+            Icons.arrow_forward_ios_rounded,
+            size: 14,
+            color: ClientColors.textTertiaryFor(context),
           ),
         ],
       ),
@@ -87,9 +80,10 @@ class _Endpoints extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final titleStyle = ClientTypography.bodyMedium(
-      context,
-    ).copyWith(fontWeight: FontWeight.w800, height: 1.2);
+    final titleStyle = ClientTypography.bodyMedium(context).copyWith(
+      fontWeight: FontWeight.w800, 
+      height: 1.2,
+    );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -99,11 +93,11 @@ class _Endpoints extends StatelessWidget {
             route.name,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: ClientTypography.labelSmall(
-              context,
-            ).copyWith(color: ClientColors.textTertiaryFor(context)),
+            style: ClientTypography.labelMedium(context).copyWith(
+              color: ClientColors.textTertiaryFor(context),
+            ),
           ),
-          const SizedBox(height: 3),
+          const SizedBox(height: 4),
         ],
         Text(
           route.startCity,
@@ -135,7 +129,12 @@ class _RouteSpine extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         _Dot(color: accent, filled: false),
-        Container(width: 2, height: 16, color: accent.withAlpha(70)),
+        Container(
+          width: 2, 
+          height: 18, 
+          color: accent.withAlpha(50),
+          margin: const EdgeInsets.symmetric(vertical: 2),
+        ),
         _Dot(color: accent, filled: true),
       ],
     );
@@ -151,12 +150,15 @@ class _Dot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 9,
-      height: 9,
+      width: 10,
+      height: 10,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: filled ? color : Colors.transparent,
-        border: Border.all(color: color, width: 2),
+        border: Border.all(
+          color: color, 
+          width: filled ? 0 : 2,
+        ),
       ),
     );
   }

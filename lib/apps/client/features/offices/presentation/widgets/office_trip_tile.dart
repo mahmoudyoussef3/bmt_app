@@ -34,18 +34,26 @@ class OfficeTripTile extends StatelessWidget {
 
     return ClientCard(
       onTap: soldOut ? null : onTap,
-      padding: const EdgeInsets.all(ClientSpacing.sm),
+      padding: const EdgeInsets.all(ClientSpacing.md),
       backgroundColor: soldOut
           ? ClientColors.surfaceSubtleFor(context)
           : ClientColors.surfaceFor(context),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          _DepartureStamp(
-            time: formatTripTime(context, trip.departureTime),
-            soldOut: soldOut,
+          SizedBox(
+            width: 72,
+            child: _DepartureStamp(
+              time: formatTripTime(context, trip.departureTime),
+              soldOut: soldOut,
+            ),
           ),
-          const SizedBox(width: ClientSpacing.sm),
+          Container(
+            width: 1,
+            height: 56,
+            color: ClientColors.borderFor(context).withAlpha(150),
+            margin: const EdgeInsets.only(right: ClientSpacing.md),
+          ),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -54,14 +62,14 @@ class OfficeTripTile extends StatelessWidget {
                   trip.routeName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: ClientTypography.bodyMedium(context).copyWith(
+                  style: ClientTypography.labelLarge(context).copyWith(
                     fontWeight: FontWeight.w800,
                     color: soldOut
                         ? ClientColors.textSecondaryFor(context)
                         : ClientColors.textPrimaryFor(context),
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 8),
                 Wrap(
                   spacing: ClientSpacing.xs,
                   runSpacing: 4,
@@ -79,57 +87,54 @@ class OfficeTripTile extends StatelessWidget {
             ),
           ),
           const SizedBox(width: ClientSpacing.xs),
-          // Capped so the fare column cannot starve the route and seat block
-          // beside it: a long Arabic "fare not published" used to squeeze the
-          // middle of the tile down to a few pixels on a 320pt phone.
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 104),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  trip.price.isEmpty ? l10n.home_fareNotPublished : trip.price,
-                  textAlign: TextAlign.end,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: trip.price.isEmpty
-                      ? ClientTypography.labelSmall(
-                          context,
-                        ).copyWith(color: ClientColors.textTertiaryFor(context))
-                      : ClientTypography.priceSmall(context).copyWith(
-                          color: soldOut
-                              ? ClientColors.textTertiaryFor(context)
-                              : accent,
-                        ),
-                ),
-                if (!soldOut) ...[
-                  const SizedBox(height: 3),
-                  Row(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                trip.price.isEmpty ? l10n.home_fareNotPublished : trip.price,
+                textAlign: TextAlign.end,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: trip.price.isEmpty
+                    ? ClientTypography.labelSmall(context).copyWith(
+                        color: ClientColors.textTertiaryFor(context),
+                      )
+                    : ClientTypography.priceMedium(context).copyWith(
+                        color: soldOut
+                            ? ClientColors.textTertiaryFor(context)
+                            : accent,
+                      ),
+              ),
+              if (!soldOut) ...[
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: accent.withAlpha(20),
+                    borderRadius: BorderRadius.circular(ClientRadius.pill),
+                  ),
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Flexible(
-                        child: Text(
-                          l10n.home_bookSeat,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: ClientTypography.labelSmall(context).copyWith(
-                            color: accent,
-                            fontWeight: FontWeight.w800,
-                          ),
+                      Text(
+                        l10n.home_bookSeat,
+                        style: ClientTypography.labelSmall(context).copyWith(
+                          color: accent,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
                       const SizedBox(width: 2),
                       DirectionalIcon(
-                        Icons.arrow_forward_rounded,
-                        size: 12,
+                        Icons.arrow_forward_ios_rounded,
+                        size: 10,
                         color: accent,
                       ),
                     ],
                   ),
-                ],
+                ),
               ],
-            ),
+            ],
           ),
         ],
       ),
@@ -137,7 +142,6 @@ class OfficeTripTile extends StatelessWidget {
   }
 }
 
-/// The departure time as a ticket stamp.
 class _DepartureStamp extends StatelessWidget {
   const _DepartureStamp({required this.time, required this.soldOut});
 
@@ -146,39 +150,29 @@ class _DepartureStamp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accent = soldOut
+    final color = soldOut
         ? ClientColors.textTertiaryFor(context)
-        : ClientColors.primaryFor(context);
+        : ClientColors.textPrimaryFor(context);
 
-    return Container(
-      width: 72,
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
-      decoration: BoxDecoration(
-        color: accent.withAlpha(20),
-        borderRadius: BorderRadius.circular(ClientRadius.sm),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.departure_board_rounded, size: 14, color: accent),
-          const SizedBox(height: 3),
-          Text(
-            time.isEmpty ? '—' : time,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            style: ClientTypography.labelMedium(
-              context,
-            ).copyWith(color: accent, fontWeight: FontWeight.w900),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          time.isEmpty ? '—' : time,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: ClientTypography.headingMedium(context).copyWith(
+            color: color,
+            fontWeight: FontWeight.w900,
+            letterSpacing: -0.5,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
 
-/// Seat availability, coloured by how urgent it is: red once the bus is full,
-/// amber while the last few seats go, cyan while there is room.
 class _SeatsPill extends StatelessWidget {
   const _SeatsPill({required this.trip});
 
@@ -194,10 +188,10 @@ class _SeatsPill extends StatelessWidget {
         : ClientColors.journeyCyan;
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withAlpha(24),
-        borderRadius: BorderRadius.circular(ClientRadius.pill),
+        color: color.withAlpha(20),
+        borderRadius: BorderRadius.circular(ClientRadius.xs),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -211,9 +205,10 @@ class _SeatsPill extends StatelessWidget {
                   : l10n.home_seatsAvailable(trip.seatsLeft),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: ClientTypography.labelSmall(
-                context,
-              ).copyWith(color: color, fontWeight: FontWeight.w800),
+              style: ClientTypography.labelSmall(context).copyWith(
+                color: color, 
+                fontWeight: FontWeight.w800,
+              ),
             ),
           ),
         ],
@@ -230,22 +225,32 @@ class _MetaChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final muted = ClientColors.textTertiaryFor(context);
+    final muted = ClientColors.textSecondaryFor(context);
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 12, color: muted),
-        const SizedBox(width: 4),
-        Flexible(
-          child: Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: ClientTypography.labelSmall(context).copyWith(color: muted),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: ClientColors.surfaceMutedFor(context),
+        borderRadius: BorderRadius.circular(ClientRadius.xs),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: muted),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: ClientTypography.labelSmall(context).copyWith(
+                color: muted,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

@@ -24,27 +24,28 @@ class OfficesSearchBand extends StatelessWidget {
     final l10n = context.l10n;
     final searching = state.query.trim().isNotEmpty;
 
+    final accent = ClientColors.primaryFor(context);
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 2, 20, ClientSpacing.md),
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            l10n.offices_directoryLead,
-            style: ClientTypography.labelSmall(context).copyWith(
-              color: ClientColors.textTertiaryFor(context),
-              height: 1.4,
-            ),
-          ),
-          const SizedBox(height: ClientSpacing.sm),
           OfficesSearchField(query: state.query),
           if (searching) ...[
-            const SizedBox(height: ClientSpacing.sm),
-            Text(
-              l10n.offices_matchesLabel(state.visibleOffices.length),
-              style: ClientTypography.labelSmall(context).copyWith(
-                color: ClientColors.textSecondaryFor(context),
-                fontWeight: FontWeight.w700,
+            const SizedBox(height: ClientSpacing.md),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: accent.withAlpha(20),
+                borderRadius: BorderRadius.circular(ClientRadius.pill),
+              ),
+              child: Text(
+                l10n.offices_matchesLabel(state.visibleOffices.length),
+                style: ClientTypography.labelSmall(context).copyWith(
+                  color: accent,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
           ],

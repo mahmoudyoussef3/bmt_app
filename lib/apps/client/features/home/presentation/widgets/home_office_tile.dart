@@ -23,14 +23,10 @@ class HomeOfficeTile extends StatelessWidget {
   final OfficeSummary office;
   final VoidCallback onTap;
 
-  static const double width = 206;
-
-  /// The rail's cross-axis extent, card border included. Sized so a two-line
-  /// operator name still clears the footnote rather than for the shortest one.
-  static const double height = 176;
-
-  static const double _bandHeight = 62;
-  static const double _logoSize = 54;
+  static const double width = 220;
+  static const double height = 190;
+  static const double _bandHeight = 72;
+  static const double _logoSize = 56;
 
   @override
   Widget build(BuildContext context) {
@@ -40,30 +36,24 @@ class HomeOfficeTile extends StatelessWidget {
         onTap: onTap,
         padding: EdgeInsets.zero,
         child: ClipRRect(
-          // One pixel inside the card's own radius so the band cannot paint
-          // over the border it sits behind.
           borderRadius: BorderRadius.circular(ClientRadius.lg - 1),
-          // No height of its own: the rail's SizedBox already bounds the tile,
-          // and re-declaring it here would overflow by the card's own border.
           child: Stack(
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const HomeOfficeBrandBand(height: _bandHeight),
-                  // Top padding clears the crest, which crosses the band's
-                  // lower edge by 26 of its 54 points.
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(14, 30, 14, 12),
+                      padding: const EdgeInsets.fromLTRB(16, 28, 16, 12),
                       child: _Identity(office: office),
                     ),
                   ),
                 ],
               ),
               PositionedDirectional(
-                top: _bandHeight - 26,
-                start: 14,
+                top: _bandHeight - (_logoSize / 2),
+                start: 16,
                 child: OfficeLogoTile(logoUrl: office.logoUrl, size: _logoSize),
               ),
               PositionedDirectional(
@@ -93,15 +83,16 @@ class _Identity extends StatelessWidget {
           office.name,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
-          style: ClientTypography.labelLarge(
-            context,
-          ).copyWith(fontWeight: FontWeight.w800, height: 1.25),
+          style: ClientTypography.headingSmall(context).copyWith(
+            fontWeight: FontWeight.w800,
+            height: 1.25,
+          ),
         ),
         const Spacer(),
         Divider(
           height: 1,
           thickness: 1,
-          color: ClientColors.borderFor(context),
+          color: ClientColors.borderFor(context).withAlpha(150),
         ),
         const SizedBox(height: ClientSpacing.xs),
         HomeOfficeFootnote(office: office),

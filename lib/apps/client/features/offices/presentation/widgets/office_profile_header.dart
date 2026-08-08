@@ -3,10 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 import '../../domain/entities/office_summary.dart';
 import 'office_logo_tile.dart';
-import 'office_rating_row.dart';
 import 'office_service_areas.dart';
 
 /// The profile masthead: who this operator is, how riders rate it, where it
@@ -20,9 +20,6 @@ class OfficeProfileHeader extends StatelessWidget {
   const OfficeProfileHeader({super.key, required this.office, this.stats});
 
   final OfficeSummary office;
-
-  /// The stat strip, or null while the profile's lists are still loading —
-  /// zeros that are about to change are worse than no figure at all.
   final Widget? stats;
 
   @override
@@ -42,16 +39,9 @@ class OfficeProfileHeader extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Container(
-            padding: const EdgeInsets.all(ClientSpacing.md),
+            padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: AlignmentDirectional.topStart,
-                end: AlignmentDirectional.bottomEnd,
-                colors: [
-                  accent.withAlpha(isDark ? 44 : 24),
-                  accent.withAlpha(0),
-                ],
-              ),
+              color: accent.withAlpha(isDark ? 20 : 10),
             ),
             child: _Identity(office: office),
           ),
@@ -70,45 +60,66 @@ class _Identity extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            OfficeLogoTile(logoUrl: office.logoUrl, size: 68),
-            const SizedBox(width: ClientSpacing.sm),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    office.name,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: ClientTypography.headingMedium(
-                      context,
-                    ).copyWith(fontWeight: FontWeight.w900, height: 1.2),
-                  ),
-                  const SizedBox(height: 6),
-                  OfficeRatingRow(office: office),
-                ],
+        OfficeLogoTile(logoUrl: office.logoUrl, size: 72, raised: true),
+        const SizedBox(height: ClientSpacing.md),
+        Text(
+          office.name,
+          textAlign: TextAlign.center,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: ClientTypography.headingMedium(context).copyWith(
+            fontWeight: FontWeight.w900,
+            color: ClientColors.textPrimaryFor(context),
+            height: 1.2,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: ClientColors.surfaceMutedFor(context),
+            borderRadius: BorderRadius.circular(ClientRadius.pill),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.star_rounded, size: 16, color: ClientColors.ratingFor(context)),
+              const SizedBox(width: 4),
+              Text(
+                office.hasRating ? office.rating.toStringAsFixed(1) : context.l10n.offices_noRatingsYet,
+                style: ClientTypography.labelMedium(context).copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: ClientColors.textPrimaryFor(context),
+                ),
               ),
-            ),
-          ],
+              if (office.hasRating) ...[
+                const SizedBox(width: 6),
+                Text(
+                  '(${office.ratingsCount})',
+                  style: ClientTypography.labelSmall(context).copyWith(
+                    color: ClientColors.textTertiaryFor(context),
+                  ),
+                ),
+              ]
+            ],
+          ),
         ),
         if (office.description.isNotEmpty) ...[
-          const SizedBox(height: ClientSpacing.sm),
+          const SizedBox(height: ClientSpacing.md),
           Text(
             office.description,
+            textAlign: TextAlign.center,
             maxLines: 3,
             overflow: TextOverflow.ellipsis,
-            style: ClientTypography.bodySmall(context).copyWith(
+            style: ClientTypography.bodyMedium(context).copyWith(
               color: ClientColors.textSecondaryFor(context),
-              height: 1.55,
+              height: 1.5,
             ),
           ),
         ],
         if (office.serviceAreas.isNotEmpty) ...[
-          const SizedBox(height: ClientSpacing.sm),
+          const SizedBox(height: ClientSpacing.lg),
           OfficeServiceAreas(areas: office.serviceAreas),
         ],
       ],

@@ -71,19 +71,22 @@ class _DayHeading extends StatelessWidget {
     if (label.isEmpty) return const SizedBox.shrink();
 
     return Padding(
-      padding: const EdgeInsets.only(top: ClientSpacing.xxs),
+      padding: const EdgeInsets.only(top: ClientSpacing.sm, bottom: ClientSpacing.xs),
       child: Row(
         children: [
           Text(
             label,
-            style: ClientTypography.labelMedium(context).copyWith(
+            style: ClientTypography.labelLarge(context).copyWith(
               fontWeight: FontWeight.w800,
               color: ClientColors.textSecondaryFor(context),
             ),
           ),
-          const SizedBox(width: ClientSpacing.xs),
+          const SizedBox(width: ClientSpacing.md),
           Expanded(
-            child: Container(height: 1, color: ClientColors.borderFor(context)),
+            child: Container(
+              height: 1, 
+              color: ClientColors.borderFor(context).withAlpha(100),
+            ),
           ),
         ],
       ),

@@ -15,34 +15,40 @@ class HomeOfficeBrandBand extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accent = ClientColors.primaryFor(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       height: height,
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: AlignmentDirectional.topStart,
-          end: AlignmentDirectional.bottomEnd,
-          colors: [
-            accent.withAlpha(isDark ? 56 : 32),
-            accent.withAlpha(isDark ? 20 : 10),
-          ],
-        ),
+        gradient: ClientColors.heroGradientFor(context),
       ),
-      child: ClipRect(
-        child: OverflowBox(
-          maxHeight: height * 2,
-          alignment: AlignmentDirectional.bottomEnd,
-          child: Padding(
-            padding: const EdgeInsetsDirectional.only(end: 8),
-            child: Icon(
-              Icons.directions_bus_filled_rounded,
-              size: 60,
-              color: accent.withAlpha(isDark ? 30 : 20),
+      child: Stack(
+        children: [
+          Positioned(
+            right: -20,
+            top: -20,
+            child: Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withAlpha(isDark ? 10 : 25),
+              ),
             ),
           ),
-        ),
+          Positioned(
+            left: -10,
+            bottom: -30,
+            child: Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white.withAlpha(isDark ? 5 : 15),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

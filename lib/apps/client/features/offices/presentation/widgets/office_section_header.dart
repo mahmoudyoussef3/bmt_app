@@ -28,39 +28,31 @@ class OfficeSectionHeader extends StatelessWidget {
 
     return Row(
       children: [
-        Container(
-          width: 32,
-          height: 32,
-          decoration: BoxDecoration(
-            color: accent.withAlpha(22),
-            borderRadius: BorderRadius.circular(ClientRadius.xs),
-          ),
-          child: Icon(icon, size: 18, color: accent),
-        ),
+        Icon(icon, size: 24, color: accent),
         const SizedBox(width: ClientSpacing.sm),
         Expanded(
           child: Text(
             title,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
-            style: ClientTypography.headingSmall(
-              context,
-            ).copyWith(fontWeight: FontWeight.w800),
+            style: ClientTypography.headingSmall(context).copyWith(
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ),
         if (count > 0) ...[
           const SizedBox(width: ClientSpacing.xs),
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: ClientColors.surfaceMutedFor(context),
+              color: accent.withAlpha(20),
               borderRadius: BorderRadius.circular(ClientRadius.pill),
             ),
             child: Text(
               '$count',
-              style: ClientTypography.labelSmall(context).copyWith(
+              style: ClientTypography.labelMedium(context).copyWith(
                 fontWeight: FontWeight.w900,
-                color: ClientColors.textSecondaryFor(context),
+                color: accent,
               ),
             ),
           ),

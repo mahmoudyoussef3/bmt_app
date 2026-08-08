@@ -33,9 +33,7 @@ class OfficeProfileStats extends StatelessWidget {
     final l10n = context.l10n;
 
     return Container(
-      decoration: BoxDecoration(
-        border: Border(top: BorderSide(color: ClientColors.borderFor(context))),
-      ),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
           Expanded(
@@ -49,7 +47,7 @@ class OfficeProfileStats extends StatelessWidget {
           Container(
             width: 1,
             height: 34,
-            color: ClientColors.borderFor(context),
+            color: ClientColors.borderFor(context).withAlpha(150),
           ),
           Expanded(
             child: _StatCell(
