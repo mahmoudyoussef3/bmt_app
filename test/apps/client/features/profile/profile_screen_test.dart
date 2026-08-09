@@ -19,6 +19,7 @@ import 'package:bmt_app/apps/client/features/profile/domain/usecases/get_profile
 import 'package:bmt_app/apps/client/features/profile/domain/usecases/update_profile_usecase.dart';
 import 'package:bmt_app/apps/client/features/profile/presentation/cubit/profile_cubit.dart';
 import 'package:bmt_app/apps/client/features/profile/presentation/screens/profile_screen.dart';
+import 'package:bmt_app/apps/client/features/wallet/presentation/routes/wallet_routes.dart';
 import 'package:bmt_app/core/localization/locale_cubit.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/cubit/remember_me_coordinator.dart';
@@ -91,6 +92,7 @@ Widget _app({
   ClientProfile profile = _profile,
   _StubAuthRepository? auth,
   Locale locale = const Locale('en'),
+  void Function(String route, [Object? arguments])? onOpenRoute,
 }) {
   final authRepository = auth ?? _StubAuthRepository();
   final profileRepository = _StubProfileRepository(profile);
@@ -124,7 +126,7 @@ Widget _app({
       locale: locale,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      home: ProfileScreen(onOpenRoute: (_, [_]) {}),
+      home: ProfileScreen(onOpenRoute: onOpenRoute ?? (_, [_]) {}),
       routes: {
         AuthRoutes.welcome: (_) => const Scaffold(body: Text('welcome screen')),
       },
@@ -169,6 +171,25 @@ void main() {
     // The active language is readable without opening anything.
     expect(find.text('English'), findsOneWidget);
     expect(find.text('System'), findsOneWidget);
+  });
+
+  testWidgets('the hub opens the rider’s wallet', (tester) async {
+    // The wallet screen, its cubit and its `/wallet` route were all built, but
+    // nothing on the hub opened them: a rider who had never been sent a refund
+    // notification had no way to reach what an office owed them.
+    final opened = <String>[];
+    await _pumpHub(
+      tester,
+      _app(onOpenRoute: (route, [_]) => opened.add(route)),
+    );
+
+    expect(find.text('My wallet'), findsOneWidget);
+    expect(find.text('Your balance at each office'), findsOneWidget);
+
+    await tester.tap(find.text('My wallet'));
+    await tester.pumpAndSettle();
+
+    expect(opened, [WalletRoutes.wallet]);
   });
 
   testWidgets('rewards, loyalty and messages are not offered', (tester) async {

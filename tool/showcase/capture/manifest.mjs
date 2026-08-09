@@ -41,6 +41,7 @@ const client = [
   'client-booking-payment',
   'client-my-trips',
   'client-trip-details',
+  'client-my-subscription',
   'client-wallet',
   'client-loyalty',
 ].map((id) => phone(id));

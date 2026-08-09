@@ -1167,6 +1167,12 @@ class AppLocalizationsAr extends AppLocalizations {
       'الاسم ورقم الهاتف والبريد الإلكتروني';
 
   @override
+  String get profile_wallet => 'محفظتي';
+
+  @override
+  String get profile_walletSubtitle => 'رصيدك لدى كل مكتب';
+
+  @override
   String get profile_subscription => 'اشتراكي';
 
   @override
@@ -1745,6 +1751,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get home_dayLeft => 'متبقي يوم واحد';
+
+  @override
+  String home_validUntil(String date) {
+    return 'صالح حتى $date';
+  }
 
   @override
   String booking_searchHint(String title) {
@@ -4783,6 +4794,17 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String mySubscription_daysUsedOfTotal(int used, int total) {
+    return 'مضى $used من $total يوم';
+  }
+
+  @override
+  String get mySubscription_statDaysLeft => 'أيام متبقية';
+
+  @override
+  String get mySubscription_statRidesLeft => 'رحلات متبقية';
+
+  @override
   String get mySubscription_unlimitedTrips => 'رحلات غير محدودة';
 
   @override
@@ -4983,4 +5005,76 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get booking_routePackagesNote =>
       'يتحدّد السعر النهائي بعد اختيار محطتَي الركوب والنزول وموعد الرحلة.';
+
+  @override
+  String get wallet_title => 'محفظتي';
+
+  @override
+  String get wallet_subtitle => 'رصيدك لدى كل مكتب وسجل حركاته';
+
+  @override
+  String get wallet_totalLabel => 'إجمالي رصيدك';
+
+  @override
+  String get wallet_totalOneOffice => 'يُستخدم لدى المكتب الذي منحه فقط.';
+
+  @override
+  String wallet_totalManyOffices(int count) {
+    return 'موزّع على $count مكاتب — رصيد كل مكتب يُستخدم لديه فقط.';
+  }
+
+  @override
+  String get wallet_emptyTitle => 'لا يوجد رصيد في محفظتك';
+
+  @override
+  String get wallet_emptyBody =>
+      'يظهر هنا أي مبلغ يعيده المكتب إليك أو يمنحه لك كمكافأة.';
+
+  @override
+  String get wallet_frozenNotice =>
+      'الرصيد موقوف مؤقتًا لدى هذا المكتب. تواصل معه لمعرفة السبب.';
+
+  @override
+  String wallet_entryCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count حركة',
+      few: '$count حركات',
+      two: 'حركتان',
+      one: 'حركة واحدة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String wallet_entriesTruncated(int count) {
+    return 'يتم عرض آخر $count حركة فقط.';
+  }
+
+  @override
+  String wallet_balanceAfter(String amount) {
+    return 'الرصيد $amount';
+  }
+
+  @override
+  String get wallet_kindRefund => 'استرداد';
+
+  @override
+  String get wallet_kindCashback => 'كاش باك';
+
+  @override
+  String get wallet_kindManualCredit => 'إضافة رصيد';
+
+  @override
+  String get wallet_kindManualDebit => 'خصم';
+
+  @override
+  String get wallet_kindWalletSpend => 'دفع من المحفظة';
+
+  @override
+  String get wallet_kindWalletTopup => 'شحن';
+
+  @override
+  String get wallet_kindReversal => 'تصحيح';
 }

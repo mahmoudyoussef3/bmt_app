@@ -1169,6 +1169,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profile_editProfileSubtitle => 'Name, phone and email';
 
   @override
+  String get profile_wallet => 'My wallet';
+
+  @override
+  String get profile_walletSubtitle => 'Your balance at each office';
+
+  @override
   String get profile_subscription => 'My package';
 
   @override
@@ -1747,6 +1753,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get home_dayLeft => '1 day left';
+
+  @override
+  String home_validUntil(String date) {
+    return 'Valid until $date';
+  }
 
   @override
   String booking_searchHint(String title) {
@@ -4816,6 +4827,17 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String mySubscription_daysUsedOfTotal(int used, int total) {
+    return '$used of $total days used';
+  }
+
+  @override
+  String get mySubscription_statDaysLeft => 'Days left';
+
+  @override
+  String get mySubscription_statRidesLeft => 'Rides left';
+
+  @override
   String get mySubscription_unlimitedTrips => 'Unlimited trips';
 
   @override
@@ -5013,4 +5035,75 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get booking_routePackagesNote =>
       'The exact price is confirmed once you pick your stops and departure.';
+
+  @override
+  String get wallet_title => 'My wallet';
+
+  @override
+  String get wallet_subtitle => 'Your balance at each office and its history';
+
+  @override
+  String get wallet_totalLabel => 'Total balance';
+
+  @override
+  String get wallet_totalOneOffice =>
+      'Usable only at the office that granted it.';
+
+  @override
+  String wallet_totalManyOffices(int count) {
+    return 'Split across $count offices — each balance is usable only at the office holding it.';
+  }
+
+  @override
+  String get wallet_emptyTitle => 'No balance in your wallet';
+
+  @override
+  String get wallet_emptyBody =>
+      'Anything an office refunds you, or grants you as a reward, appears here.';
+
+  @override
+  String get wallet_frozenNotice =>
+      'This office has paused your balance. Contact them to find out why.';
+
+  @override
+  String wallet_entryCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count entries',
+      one: '1 entry',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String wallet_entriesTruncated(int count) {
+    return 'Showing the $count most recent entries only.';
+  }
+
+  @override
+  String wallet_balanceAfter(String amount) {
+    return 'Balance $amount';
+  }
+
+  @override
+  String get wallet_kindRefund => 'Refund';
+
+  @override
+  String get wallet_kindCashback => 'Cashback';
+
+  @override
+  String get wallet_kindManualCredit => 'Credit added';
+
+  @override
+  String get wallet_kindManualDebit => 'Deduction';
+
+  @override
+  String get wallet_kindWalletSpend => 'Paid from wallet';
+
+  @override
+  String get wallet_kindWalletTopup => 'Top-up';
+
+  @override
+  String get wallet_kindReversal => 'Correction';
 }

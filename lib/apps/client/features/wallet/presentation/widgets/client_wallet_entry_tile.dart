@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
+import 'package:bmt_app/core/localization/format_util.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 import '../../domain/entities/client_wallet.dart';
+import 'client_wallet_kind_label.dart';
 
 /// One line of the rider's history.
 ///
@@ -47,7 +50,7 @@ class ClientWalletEntryTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  entry.kind.label,
+                  entry.kind.localizedLabel(context),
                   style: text.bodyMedium?.copyWith(
                     fontWeight: FontWeight.w600,
                     decoration: entry.isReversed
@@ -64,7 +67,8 @@ class ClientWalletEntryTile extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
-                  _date(entry.createdAt),
+                  '${FormatUtil.date(context, entry.createdAt)}'
+                  ' — ${FormatUtil.time(context, entry.createdAt)}',
                   style: text.labelSmall?.copyWith(
                     color: scheme.onSurfaceVariant,
                   ),
@@ -80,7 +84,8 @@ class ClientWalletEntryTile extends StatelessWidget {
                 // U+2212, not a hyphen: at this size in an RTL column a hyphen
                 // is easy to miss, and "was that taken from me?" is the one
                 // question this string exists to answer.
-                '${entry.isCredit ? '+' : '−'}${entry.amount.abs().toStringAsFixed(2)}',
+                '${entry.isCredit ? '+' : '−'}'
+                '${FormatUtil.currency(context, entry.amount.abs())}',
                 style: text.titleSmall?.copyWith(
                   fontWeight: FontWeight.w900,
                   color: tint,
@@ -90,7 +95,9 @@ class ClientWalletEntryTile extends StatelessWidget {
                 ),
               ),
               Text(
-                'الرصيد ${entry.balanceAfter.toStringAsFixed(2)}',
+                context.l10n.wallet_balanceAfter(
+                  FormatUtil.currency(context, entry.balanceAfter),
+                ),
                 style: text.labelSmall?.copyWith(
                   color: scheme.onSurfaceVariant,
                 ),
@@ -101,10 +108,4 @@ class ClientWalletEntryTile extends StatelessWidget {
       ),
     );
   }
-
-  String _date(DateTime value) =>
-      '${value.year}/${_two(value.month)}/${_two(value.day)} — '
-      '${_two(value.hour)}:${_two(value.minute)}';
-
-  static String _two(int value) => value.toString().padLeft(2, '0');
 }

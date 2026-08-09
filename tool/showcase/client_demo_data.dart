@@ -11,6 +11,7 @@ import 'package:bmt_app/apps/client/features/loyalty/domain/entities/redeemable_
 import 'package:bmt_app/apps/client/features/offices/domain/entities/office_route.dart';
 import 'package:bmt_app/apps/client/features/offices/domain/entities/office_summary.dart';
 import 'package:bmt_app/apps/client/features/offices/domain/entities/office_trip.dart';
+import 'package:bmt_app/apps/client/features/packages/domain/entities/my_subscription.dart';
 import 'package:bmt_app/apps/client/features/packages/domain/entities/package_plan.dart';
 import 'package:bmt_app/apps/client/features/payments/domain/entities/payment_models.dart';
 import 'package:bmt_app/apps/client/features/seat_selection/domain/entities/seat_option.dart';
@@ -189,6 +190,19 @@ const List<PackagePlan> packages = [
     officeRatingsCount: 1284,
   ),
 ];
+
+/// The plan the demo rider is riding on, matching the package Home advertises
+/// as active — the two screens are photographed as one rider's session.
+final MySubscription mySubscription = MySubscription(
+  id: 'sub-1',
+  packageName: 'باقة شهرية — 20 رحلة',
+  routeName: 'القاهرة — الإسكندرية',
+  status: 'active',
+  tripsTotal: 20,
+  tripsUsed: 7,
+  startDate: _midnight.subtract(const Duration(days: 12)),
+  endDate: _midnight.add(const Duration(days: 18)),
+);
 
 // ── Home ────────────────────────────────────────────────────────────────────
 
@@ -416,7 +430,8 @@ final SeatSelectionData seatSelection = SeatSelectionData(
       SeatOption(
         id: 'seat-$i',
         seatNumber: i,
-        seatLabel: '${String.fromCharCode(65 + (i - 1) ~/ 4)}${(i - 1) % 4 + 1}',
+        seatLabel:
+            '${String.fromCharCode(65 + (i - 1) ~/ 4)}${(i - 1) % 4 + 1}',
         row: (i - 1) ~/ 4,
         column: (i - 1) % 4,
         availability: const [1, 2, 5, 6, 9, 12].contains(i)

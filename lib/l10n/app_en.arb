@@ -556,6 +556,8 @@
   "profile_sectionLegal": "Legal",
   "profile_editProfile": "Personal details",
   "profile_editProfileSubtitle": "Name, phone and email",
+  "profile_wallet": "My wallet",
+  "profile_walletSubtitle": "Your balance at each office",
   "profile_subscription": "My package",
   "profile_subscriptionSubtitle": "Plans, renewals and billing",
   "profile_myTrips": "My trips",
@@ -795,6 +797,14 @@
     }
   },
   "home_dayLeft": "1 day left",
+  "home_validUntil": "Valid until {date}",
+  "@home_validUntil": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
   "booking_searchHint": "Search {title}",
   "@booking_searchHint": {
     "placeholders": {
@@ -2504,6 +2514,19 @@
       }
     }
   },
+  "mySubscription_daysUsedOfTotal": "{used} of {total} days used",
+  "@mySubscription_daysUsedOfTotal": {
+    "placeholders": {
+      "used": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "mySubscription_statDaysLeft": "Days left",
+  "mySubscription_statRidesLeft": "Rides left",
   "mySubscription_unlimitedTrips": "Unlimited trips",
   "mySubscription_emptyTitle": "No active subscription",
   "mySubscription_emptyBody": "Packages are offered while you book a trip, priced for the route you pick.",
@@ -2598,5 +2621,51 @@
   },
   "booking_routePackageFrom": "From",
   "booking_routePackageChoose": "Book with this plan",
-  "booking_routePackagesNote": "The exact price is confirmed once you pick your stops and departure."
+  "booking_routePackagesNote": "The exact price is confirmed once you pick your stops and departure.",
+  "wallet_title": "My wallet",
+  "wallet_subtitle": "Your balance at each office and its history",
+  "wallet_totalLabel": "Total balance",
+  "wallet_totalOneOffice": "Usable only at the office that granted it.",
+  "wallet_totalManyOffices": "Split across {count} offices — each balance is usable only at the office holding it.",
+  "@wallet_totalManyOffices": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "wallet_emptyTitle": "No balance in your wallet",
+  "wallet_emptyBody": "Anything an office refunds you, or grants you as a reward, appears here.",
+  "wallet_frozenNotice": "This office has paused your balance. Contact them to find out why.",
+  "wallet_entryCount": "{count, plural, =1{1 entry} other{{count} entries}}",
+  "@wallet_entryCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "wallet_entriesTruncated": "Showing the {count} most recent entries only.",
+  "@wallet_entriesTruncated": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "wallet_balanceAfter": "Balance {amount}",
+  "@wallet_balanceAfter": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "wallet_kindRefund": "Refund",
+  "wallet_kindCashback": "Cashback",
+  "wallet_kindManualCredit": "Credit added",
+  "wallet_kindManualDebit": "Deduction",
+  "wallet_kindWalletSpend": "Paid from wallet",
+  "wallet_kindWalletTopup": "Top-up",
+  "wallet_kindReversal": "Correction"
 }

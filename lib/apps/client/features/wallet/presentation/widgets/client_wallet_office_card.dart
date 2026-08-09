@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_card.dart';
 import 'package:bmt_app/apps/client/features/offices/presentation/widgets/office_logo_avatar.dart';
+import 'package:bmt_app/core/localization/format_util.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 import '../../domain/entities/client_wallet.dart';
 
@@ -56,7 +58,7 @@ class ClientWalletOfficeCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
-                      '${wallet.entryCount} حركة',
+                      context.l10n.wallet_entryCount(wallet.entryCount),
                       style: text.labelSmall?.copyWith(
                         color: scheme.onSurfaceVariant,
                       ),
@@ -64,11 +66,14 @@ class ClientWalletOfficeCard extends StatelessWidget {
                   ],
                 ),
               ),
+              // An operator's name is Arabic even in the English app, so the
+              // two runs sit against each other without a gap of their own.
+              const SizedBox(width: ClientSpacing.sm),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
-                    '${wallet.balance.toStringAsFixed(2)} ج.م',
+                    FormatUtil.currency(context, wallet.balance),
                     style: text.titleLarge?.copyWith(
                       fontWeight: FontWeight.w900,
                       color: wallet.hasBalance
@@ -101,12 +106,15 @@ class ClientWalletOfficeCard extends StatelessWidget {
               ),
               child: Row(
                 children: [
-                  Icon(Icons.pause_circle_outline_rounded,
-                      size: 18, color: scheme.error),
+                  Icon(
+                    Icons.pause_circle_outline_rounded,
+                    size: 18,
+                    color: scheme.error,
+                  ),
                   const SizedBox(width: ClientSpacing.xs),
                   Expanded(
                     child: Text(
-                      'الرصيد موقوف مؤقتًا لدى هذا المكتب. تواصل معه لمعرفة السبب.',
+                      context.l10n.wallet_frozenNotice,
                       style: text.bodySmall?.copyWith(color: scheme.error),
                     ),
                   ),
@@ -125,7 +133,7 @@ class ClientWalletOfficeCard extends StatelessWidget {
                 child: Text(
                   // Said out loud rather than truncated silently: a rider
                   // reconciling an old refund needs to know the list is partial.
-                  'يتم عرض آخر ${wallet.entries.length} حركة فقط.',
+                  context.l10n.wallet_entriesTruncated(wallet.entries.length),
                   style: text.labelSmall?.copyWith(
                     color: scheme.onSurfaceVariant,
                   ),

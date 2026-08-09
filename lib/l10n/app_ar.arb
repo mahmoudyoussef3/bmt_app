@@ -445,6 +445,8 @@
   "profile_sectionLegal": "القانونية",
   "profile_editProfile": "البيانات الشخصية",
   "profile_editProfileSubtitle": "الاسم ورقم الهاتف والبريد الإلكتروني",
+  "profile_wallet": "محفظتي",
+  "profile_walletSubtitle": "رصيدك لدى كل مكتب",
   "profile_subscription": "اشتراكي",
   "profile_subscriptionSubtitle": "الباقات والتجديد والفواتير",
   "profile_myTrips": "رحلاتي",
@@ -621,6 +623,7 @@
   "home_seatLabel": "مقعد {label}",
   "home_daysLeft": "متبقي {days} يوم",
   "home_dayLeft": "متبقي يوم واحد",
+  "home_validUntil": "صالح حتى {date}",
   "booking_searchHint": "ابحث عن {title}",
   "booking_noPickupPointsAvailable": "لا توجد نقاط ركوب متاحة حاليًا. برجاء المحاولة لاحقًا.",
   "booking_noDestinationsAvailable": "لا توجد وجهات متاحة حاليًا.",
@@ -1510,6 +1513,9 @@
   "mySubscription_expires": "ينتهي في",
   "mySubscription_tripsUsedOfTotal": "تم استخدام {used} من {total} رحلة",
   "mySubscription_tripsRemaining": "متبقي {count} رحلة",
+  "mySubscription_daysUsedOfTotal": "مضى {used} من {total} يوم",
+  "mySubscription_statDaysLeft": "أيام متبقية",
+  "mySubscription_statRidesLeft": "رحلات متبقية",
   "mySubscription_unlimitedTrips": "رحلات غير محدودة",
   "mySubscription_emptyTitle": "لا يوجد اشتراك نشط",
   "mySubscription_emptyBody": "تُعرض الباقات أثناء حجز رحلتك، بسعر الخط الذي تختاره.",
@@ -1590,5 +1596,51 @@
   },
   "booking_routePackageFrom": "يبدأ من",
   "booking_routePackageChoose": "احجز بهذه الباقة",
-  "booking_routePackagesNote": "يتحدّد السعر النهائي بعد اختيار محطتَي الركوب والنزول وموعد الرحلة."
+  "booking_routePackagesNote": "يتحدّد السعر النهائي بعد اختيار محطتَي الركوب والنزول وموعد الرحلة.",
+  "wallet_title": "محفظتي",
+  "wallet_subtitle": "رصيدك لدى كل مكتب وسجل حركاته",
+  "wallet_totalLabel": "إجمالي رصيدك",
+  "wallet_totalOneOffice": "يُستخدم لدى المكتب الذي منحه فقط.",
+  "wallet_totalManyOffices": "موزّع على {count} مكاتب — رصيد كل مكتب يُستخدم لديه فقط.",
+  "@wallet_totalManyOffices": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "wallet_emptyTitle": "لا يوجد رصيد في محفظتك",
+  "wallet_emptyBody": "يظهر هنا أي مبلغ يعيده المكتب إليك أو يمنحه لك كمكافأة.",
+  "wallet_frozenNotice": "الرصيد موقوف مؤقتًا لدى هذا المكتب. تواصل معه لمعرفة السبب.",
+  "wallet_entryCount": "{count, plural, =1{حركة واحدة} =2{حركتان} few{{count} حركات} other{{count} حركة}}",
+  "@wallet_entryCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "wallet_entriesTruncated": "يتم عرض آخر {count} حركة فقط.",
+  "@wallet_entriesTruncated": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "wallet_balanceAfter": "الرصيد {amount}",
+  "@wallet_balanceAfter": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      }
+    }
+  },
+  "wallet_kindRefund": "استرداد",
+  "wallet_kindCashback": "كاش باك",
+  "wallet_kindManualCredit": "إضافة رصيد",
+  "wallet_kindManualDebit": "خصم",
+  "wallet_kindWalletSpend": "دفع من المحفظة",
+  "wallet_kindWalletTopup": "شحن",
+  "wallet_kindReversal": "تصحيح"
 }

@@ -6,6 +6,8 @@ import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_app_bar.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_card.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_error_card.dart';
+import 'package:bmt_app/core/localization/format_util.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 
 import '../cubit/client_wallet_cubit.dart';
 import '../widgets/client_wallet_entry_tile.dart';
@@ -29,11 +31,13 @@ class ClientWalletScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
     return Scaffold(
       backgroundColor: ClientColors.backgroundFor(context),
-      appBar: const ClientAppBar(
-        title: 'محفظتي',
-        subtitle: 'رصيدك لدى كل مكتب وسجل حركاته',
+      appBar: ClientAppBar(
+        title: l10n.wallet_title,
+        subtitle: l10n.wallet_subtitle,
       ),
       body: SafeArea(
         child: BlocBuilder<ClientWalletCubit, ClientWalletState>(
@@ -43,7 +47,7 @@ class ClientWalletScreen extends StatelessWidget {
             ),
             ClientWalletError(:final message) => ClientErrorCard.fullScreen(
               message: message,
-              retryLabel: 'إعادة المحاولة',
+              retryLabel: l10n.common_retry,
               onRetry: () => context.read<ClientWalletCubit>().load(),
             ),
             ClientWalletLoaded() => _WalletBody(state: state),
@@ -70,11 +74,16 @@ class _WalletBody extends StatelessWidget {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: ClientSpacing.screen,
         children: [
-          _TotalCard(
-            total: summary.totalBalance,
-            officeCount: summary.wallets.length,
-          ),
-          const SizedBox(height: ClientSpacing.md),
+          // A rider with no wallets is the common case, and "EGP 0 — usable
+          // only at the office that granted it" describes a grant that never
+          // happened. The empty card below is the whole answer.
+          if (!summary.isEmpty) ...[
+            _TotalCard(
+              total: summary.totalBalance,
+              officeCount: summary.wallets.length,
+            ),
+            const SizedBox(height: ClientSpacing.md),
+          ],
           if (summary.isEmpty)
             const _EmptyWallet()
           else
@@ -117,12 +126,12 @@ class _TotalCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'إجمالي رصيدك',
+            context.l10n.wallet_totalLabel,
             style: text.labelLarge?.copyWith(color: scheme.onSurfaceVariant),
           ),
           const SizedBox(height: ClientSpacing.xs),
           Text(
-            '${total.toStringAsFixed(2)} ج.م',
+            FormatUtil.currency(context, total),
             style: text.displaySmall?.copyWith(
               fontWeight: FontWeight.w900,
               color: scheme.primary,
@@ -131,8 +140,8 @@ class _TotalCard extends StatelessWidget {
           const SizedBox(height: ClientSpacing.xs),
           Text(
             officeCount <= 1
-                ? 'يُستخدم لدى المكتب الذي منحه فقط.'
-                : 'موزّع على $officeCount مكاتب — رصيد كل مكتب يُستخدم لديه فقط.',
+                ? context.l10n.wallet_totalOneOffice
+                : context.l10n.wallet_totalManyOffices(officeCount),
             style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
           ),
         ],
@@ -159,12 +168,12 @@ class _EmptyWallet extends StatelessWidget {
           ),
           const SizedBox(height: ClientSpacing.sm),
           Text(
-            'لا يوجد رصيد في محفظتك',
+            context.l10n.wallet_emptyTitle,
             style: text.titleMedium?.copyWith(fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: ClientSpacing.xs),
           Text(
-            'يظهر هنا أي مبلغ يعيده المكتب إليك أو يمنحه لك كمكافأة.',
+            context.l10n.wallet_emptyBody,
             textAlign: TextAlign.center,
             style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
           ),

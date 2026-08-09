@@ -36,8 +36,11 @@ import 'package:bmt_app/apps/client/features/offices/presentation/cubit/offices_
 import 'package:bmt_app/apps/client/features/offices/presentation/cubit/offices_directory_state.dart';
 import 'package:bmt_app/apps/client/features/offices/presentation/screens/office_profile_screen.dart';
 import 'package:bmt_app/apps/client/features/offices/presentation/screens/offices_directory_screen.dart';
+import 'package:bmt_app/apps/client/features/packages/presentation/cubit/my_subscription_cubit.dart';
+import 'package:bmt_app/apps/client/features/packages/presentation/cubit/my_subscription_state.dart';
 import 'package:bmt_app/apps/client/features/packages/presentation/cubit/packages_cubit.dart';
 import 'package:bmt_app/apps/client/features/packages/presentation/cubit/packages_state.dart';
+import 'package:bmt_app/apps/client/features/packages/presentation/screens/my_subscription_screen.dart';
 import 'package:bmt_app/apps/client/features/payments/domain/entities/payment_models.dart';
 import 'package:bmt_app/apps/client/features/payments/domain/repositories/payment_repository.dart';
 import 'package:bmt_app/apps/client/features/payments/domain/usecases/get_payment_methods_usecase.dart';
@@ -148,6 +151,15 @@ class _FakeRoutePackages extends Cubit<RoutePackagesState>
   dynamic noSuchMethod(Invocation i) => null;
 }
 
+class _FakeMySubscription extends Cubit<MySubscriptionState>
+    implements MySubscriptionCubit {
+  _FakeMySubscription() : super(MySubscriptionLoaded(demo.mySubscription));
+  @override
+  Future<void> load() async {}
+  @override
+  dynamic noSuchMethod(Invocation i) => null;
+}
+
 class _FakeWallet extends Cubit<ClientWalletState>
     implements ClientWalletCubit {
   // Opened on the first office's ledger: a wallet screen with every office
@@ -197,6 +209,7 @@ void registerClientShowcaseFakes() {
     ..registerFactory<RoutePackagesCubit>(_FakeRoutePackages.new)
     ..registerFactory<SeatSelectionCubit>(_FakeSeats.new)
     ..registerFactory<PackagesCubit>(_FakePackages.new)
+    ..registerFactory<MySubscriptionCubit>(_FakeMySubscription.new)
     ..registerFactory<ClientWalletCubit>(_FakeWallet.new)
     ..registerFactory<LoyaltyCubit>(_FakeLoyalty.new)
     ..registerFactory<BookingWizardConfirmCubit>(_FakeConfirm.new)
@@ -284,6 +297,10 @@ final Map<String, Widget Function()> clientScreens = {
   'client-trip-details': () => BlocProvider<TripsCubit>(
     create: (_) => _FakeTripDetails(),
     child: const TripDetailsScreen(tripId: 'b-1'),
+  ),
+  'client-my-subscription': () => BlocProvider<MySubscriptionCubit>(
+    create: (_) => clientGetIt<MySubscriptionCubit>(),
+    child: const MySubscriptionScreen(),
   ),
   'client-wallet': () => BlocProvider<ClientWalletCubit>(
     create: (_) => clientGetIt<ClientWalletCubit>(),

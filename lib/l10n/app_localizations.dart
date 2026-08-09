@@ -2216,6 +2216,18 @@ abstract class AppLocalizations {
   /// **'Name, phone and email'**
   String get profile_editProfileSubtitle;
 
+  /// No description provided for @profile_wallet.
+  ///
+  /// In en, this message translates to:
+  /// **'My wallet'**
+  String get profile_wallet;
+
+  /// No description provided for @profile_walletSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your balance at each office'**
+  String get profile_walletSubtitle;
+
   /// No description provided for @profile_subscription.
   ///
   /// In en, this message translates to:
@@ -3271,6 +3283,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'1 day left'**
   String get home_dayLeft;
+
+  /// No description provided for @home_validUntil.
+  ///
+  /// In en, this message translates to:
+  /// **'Valid until {date}'**
+  String home_validUntil(String date);
 
   /// No description provided for @booking_searchHint.
   ///
@@ -8606,6 +8624,24 @@ abstract class AppLocalizations {
   /// **'{count} trips remaining'**
   String mySubscription_tripsRemaining(int count);
 
+  /// No description provided for @mySubscription_daysUsedOfTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'{used} of {total} days used'**
+  String mySubscription_daysUsedOfTotal(int used, int total);
+
+  /// No description provided for @mySubscription_statDaysLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'Days left'**
+  String get mySubscription_statDaysLeft;
+
+  /// No description provided for @mySubscription_statRidesLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'Rides left'**
+  String get mySubscription_statRidesLeft;
+
   /// No description provided for @mySubscription_unlimitedTrips.
   ///
   /// In en, this message translates to:
@@ -8923,6 +8959,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'The exact price is confirmed once you pick your stops and departure.'**
   String get booking_routePackagesNote;
+
+  /// No description provided for @wallet_title.
+  ///
+  /// In en, this message translates to:
+  /// **'My wallet'**
+  String get wallet_title;
+
+  /// No description provided for @wallet_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your balance at each office and its history'**
+  String get wallet_subtitle;
+
+  /// No description provided for @wallet_totalLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Total balance'**
+  String get wallet_totalLabel;
+
+  /// No description provided for @wallet_totalOneOffice.
+  ///
+  /// In en, this message translates to:
+  /// **'Usable only at the office that granted it.'**
+  String get wallet_totalOneOffice;
+
+  /// No description provided for @wallet_totalManyOffices.
+  ///
+  /// In en, this message translates to:
+  /// **'Split across {count} offices — each balance is usable only at the office holding it.'**
+  String wallet_totalManyOffices(int count);
+
+  /// No description provided for @wallet_emptyTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'No balance in your wallet'**
+  String get wallet_emptyTitle;
+
+  /// No description provided for @wallet_emptyBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Anything an office refunds you, or grants you as a reward, appears here.'**
+  String get wallet_emptyBody;
+
+  /// No description provided for @wallet_frozenNotice.
+  ///
+  /// In en, this message translates to:
+  /// **'This office has paused your balance. Contact them to find out why.'**
+  String get wallet_frozenNotice;
+
+  /// No description provided for @wallet_entryCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 entry} other{{count} entries}}'**
+  String wallet_entryCount(int count);
+
+  /// No description provided for @wallet_entriesTruncated.
+  ///
+  /// In en, this message translates to:
+  /// **'Showing the {count} most recent entries only.'**
+  String wallet_entriesTruncated(int count);
+
+  /// No description provided for @wallet_balanceAfter.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance {amount}'**
+  String wallet_balanceAfter(String amount);
+
+  /// No description provided for @wallet_kindRefund.
+  ///
+  /// In en, this message translates to:
+  /// **'Refund'**
+  String get wallet_kindRefund;
+
+  /// No description provided for @wallet_kindCashback.
+  ///
+  /// In en, this message translates to:
+  /// **'Cashback'**
+  String get wallet_kindCashback;
+
+  /// No description provided for @wallet_kindManualCredit.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit added'**
+  String get wallet_kindManualCredit;
+
+  /// No description provided for @wallet_kindManualDebit.
+  ///
+  /// In en, this message translates to:
+  /// **'Deduction'**
+  String get wallet_kindManualDebit;
+
+  /// No description provided for @wallet_kindWalletSpend.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid from wallet'**
+  String get wallet_kindWalletSpend;
+
+  /// No description provided for @wallet_kindWalletTopup.
+  ///
+  /// In en, this message translates to:
+  /// **'Top-up'**
+  String get wallet_kindWalletTopup;
+
+  /// No description provided for @wallet_kindReversal.
+  ///
+  /// In en, this message translates to:
+  /// **'Correction'**
+  String get wallet_kindReversal;
 }
 
 class _AppLocalizationsDelegate
