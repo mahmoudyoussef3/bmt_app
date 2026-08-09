@@ -35,9 +35,7 @@ class OfficeCard extends StatelessWidget {
           _Masthead(office: office),
           if (office.serviceAreas.isNotEmpty) ...[
             const SizedBox(height: 16),
-            Divider(
-              height: 1,
-              thickness: 1,
+            DashedDivider(
               color: ClientColors.borderFor(context).withAlpha(150),
             ),
             const SizedBox(height: 12),
@@ -115,7 +113,7 @@ class _Masthead extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: ClientTypography.bodyMedium(context).copyWith(
                     color: ClientColors.textSecondaryFor(context),
-                    height: 1.5,
+                    height: 1.4,
                   ),
                 ),
               ],

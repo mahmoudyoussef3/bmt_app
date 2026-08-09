@@ -84,89 +84,103 @@ class OfficeProfileScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: ClientColors.backgroundFor(context),
-      appBar: ClientAppBar(
-        title: office.name,
-        subtitle: l10n.offices_directoryTitle,
-      ),
       body: BlocBuilder<OfficeProfileCubit, OfficeProfileState>(
         builder: (context, state) {
           final loaded = state is OfficeProfileLoaded ? state : null;
 
           return RefreshIndicator(
             onRefresh: () => context.read<OfficeProfileCubit>().load(office.id),
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(
-                ClientSpacing.md,
-                ClientSpacing.sm,
-                ClientSpacing.md,
-                ClientSpacing.xl,
-              ),
+            child: CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(),
-              children: [
-                OfficeProfileHeader(
-                  office: office,
-                  stats: loaded == null
-                      ? null
-                      : OfficeProfileStats(
-                          counts: (
-                            departures: loaded.trips.length,
-                            routes: loaded.routes.length,
-                          ),
-                          onSelect: _scrollToSection,
-                        ),
+              slivers: [
+                ClientSliverAppBar(
+                  title: office.name,
+                  subtitle: l10n.offices_directoryTitle,
+                  expandedHeight: 340,
+                  pinned: true,
+                  stretch: true,
+                  backgroundColor: ClientColors.primaryFor(context),
+                  foregroundColor: Colors.white,
+                  background: OfficeProfileHeader(office: office),
                 ),
-                const SizedBox(height: ClientSpacing.lg),
-                switch (state) {
-                  OfficeProfileLoading() => const _ProfileSkeleton(),
-                  OfficeProfileError(:final message) => ClientErrorCard(
-                    message: message,
-                    retryLabel: l10n.common_retry,
-                    onRetry: () =>
-                        context.read<OfficeProfileCubit>().load(office.id),
+                if (loaded != null)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        ClientSpacing.md, 
+                        ClientSpacing.md, 
+                        ClientSpacing.md, 
+                        0,
+                      ),
+                      child: OfficeProfileStats(
+                        counts: (
+                          departures: loaded.trips.length,
+                          routes: loaded.routes.length,
+                        ),
+                        onSelect: _scrollToSection,
+                      ),
+                    ),
                   ),
-                  // An office with nothing published is a dead end unless it
-                  // ends somewhere: two "none" notes and no action was the
-                  // whole screen.
-                  OfficeProfileLoaded(:final routes, :final trips)
-                      when routes.isEmpty && trips.isEmpty =>
-                    const OfficeNothingListedView(),
-                  OfficeProfileLoaded(:final routes, :final trips) => Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(
+                    ClientSpacing.md,
+                    ClientSpacing.lg,
+                    ClientSpacing.md,
+                    ClientSpacing.xl,
+                  ),
+                  sliver: SliverList.list(
                     children: [
-                      OfficeProfileSectionBlock(
-                        key: _departuresKey,
-                        icon: Icons.departure_board_rounded,
-                        title: l10n.offices_departuresHeader,
-                        count: trips.length,
-                        child: trips.isEmpty
-                            ? OfficeEmptyNote(
-                                icon: Icons.event_busy_rounded,
-                                message: l10n.offices_noDepartures,
-                              )
-                            : OfficeDeparturesSection(
-                                trips: trips,
-                                onOpenTrip: (trip) => _openTrip(context, trip),
-                              ),
-                      ),
-                      OfficeProfileSectionBlock(
-                        key: _routesKey,
-                        icon: Icons.alt_route_rounded,
-                        title: l10n.offices_routesHeader,
-                        count: routes.length,
-                        child: routes.isEmpty
-                            ? OfficeEmptyNote(
-                                icon: Icons.wrong_location_outlined,
-                                message: l10n.offices_noRoutes,
-                              )
-                            : OfficeRoutesSection(
-                                routes: routes,
-                                onOpenRoute: (route) =>
-                                    _openRoute(context, route.id),
-                              ),
-                      ),
+                      switch (state) {
+                        OfficeProfileLoading() => const _ProfileSkeleton(),
+                        OfficeProfileError(:final message) => ClientErrorCard(
+                          message: message,
+                          retryLabel: l10n.common_retry,
+                          onRetry: () =>
+                              context.read<OfficeProfileCubit>().load(office.id),
+                        ),
+                        OfficeProfileLoaded(:final routes, :final trips)
+                            when routes.isEmpty && trips.isEmpty =>
+                          const OfficeNothingListedView(),
+                        OfficeProfileLoaded(:final routes, :final trips) => Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            OfficeProfileSectionBlock(
+                              key: _departuresKey,
+                              icon: Icons.departure_board_rounded,
+                              title: l10n.offices_departuresHeader,
+                              count: trips.length,
+                              child: trips.isEmpty
+                                  ? OfficeEmptyNote(
+                                      icon: Icons.event_busy_rounded,
+                                      message: l10n.offices_noDepartures,
+                                    )
+                                  : OfficeDeparturesSection(
+                                      trips: trips,
+                                      onOpenTrip: (trip) => _openTrip(context, trip),
+                                    ),
+                            ),
+                            OfficeProfileSectionBlock(
+                              key: _routesKey,
+                              icon: Icons.alt_route_rounded,
+                              title: l10n.offices_routesHeader,
+                              count: routes.length,
+                              child: routes.isEmpty
+                                  ? OfficeEmptyNote(
+                                      icon: Icons.wrong_location_outlined,
+                                      message: l10n.offices_noRoutes,
+                                    )
+                                  : OfficeRoutesSection(
+                                      routes: routes,
+                                      onOpenRoute: (route) =>
+                                          _openRoute(context, route.id),
+                                    ),
+                            ),
+                          ],
+                        ),
+                      },
                     ],
                   ),
-                },
+                ),
               ],
             ),
           );

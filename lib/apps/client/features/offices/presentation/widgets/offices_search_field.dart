@@ -57,26 +57,40 @@ class _OfficesSearchFieldState extends State<OfficesSearchField> {
   Widget build(BuildContext context) {
     final accent = ClientColors.primaryFor(context);
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
-      height: 52,
-      padding: const EdgeInsetsDirectional.only(start: 8, end: 6),
+      height: 56,
+      padding: const EdgeInsetsDirectional.only(start: 8, end: 8),
       decoration: BoxDecoration(
         color: ClientColors.surfaceFor(context),
         borderRadius: BorderRadius.circular(ClientRadius.pill),
-        boxShadow: ClientElevation.sm(context),
+        border: Border.all(
+          color: ClientColors.borderFor(context).withAlpha(100),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: isDark 
+                ? Colors.black26 
+                : Colors.black.withAlpha(15),
+            blurRadius: 16,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
       child: Row(
         children: [
           Container(
-            width: 34,
-            height: 34,
+            width: 40,
+            height: 40,
             decoration: BoxDecoration(
               color: accent.withAlpha(22),
               borderRadius: BorderRadius.circular(ClientRadius.pill),
             ),
-            child: Icon(Icons.search_rounded, size: 18, color: accent),
+            child: Icon(Icons.search_rounded, size: 20, color: accent),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 12),
           Expanded(
             child: TextField(
               controller: _controller,

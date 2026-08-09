@@ -24,29 +24,19 @@ class OfficeProfileHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final accent = ClientColors.primaryFor(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Container(
-      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: ClientColors.surfaceFor(context),
-        borderRadius: BorderRadius.circular(ClientRadius.lg),
-        border: Border.all(color: ClientColors.borderFor(context)),
-        boxShadow: ClientElevation.sm(context),
+        gradient: ClientColors.heroGradientFor(context),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Container(
-            padding: const EdgeInsets.fromLTRB(24, 32, 24, 24),
-            decoration: BoxDecoration(
-              color: accent.withAlpha(isDark ? 20 : 10),
-            ),
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(24, 64, 24, 32),
+          child: Align(
+            alignment: Alignment.center,
             child: _Identity(office: office),
           ),
-          if (stats case final Widget strip) strip,
-        ],
+        ),
       ),
     );
   }
@@ -70,7 +60,7 @@ class _Identity extends StatelessWidget {
           overflow: TextOverflow.ellipsis,
           style: ClientTypography.headingMedium(context).copyWith(
             fontWeight: FontWeight.w900,
-            color: ClientColors.textPrimaryFor(context),
+            color: Colors.white,
             height: 1.2,
           ),
         ),
@@ -78,7 +68,7 @@ class _Identity extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: ClientColors.surfaceMutedFor(context),
+            color: Colors.white.withAlpha(40),
             borderRadius: BorderRadius.circular(ClientRadius.pill),
           ),
           child: Row(
@@ -90,7 +80,7 @@ class _Identity extends StatelessWidget {
                 office.hasRating ? office.rating.toStringAsFixed(1) : context.l10n.offices_noRatingsYet,
                 style: ClientTypography.labelMedium(context).copyWith(
                   fontWeight: FontWeight.w800,
-                  color: ClientColors.textPrimaryFor(context),
+                  color: Colors.white,
                 ),
               ),
               if (office.hasRating) ...[
@@ -98,7 +88,7 @@ class _Identity extends StatelessWidget {
                 Text(
                   '(${office.ratingsCount})',
                   style: ClientTypography.labelSmall(context).copyWith(
-                    color: ClientColors.textTertiaryFor(context),
+                    color: Colors.white.withAlpha(200),
                   ),
                 ),
               ]
@@ -113,7 +103,7 @@ class _Identity extends StatelessWidget {
             maxLines: 3,
             overflow: TextOverflow.ellipsis,
             style: ClientTypography.bodyMedium(context).copyWith(
-              color: ClientColors.textSecondaryFor(context),
+              color: Colors.white.withAlpha(220),
               height: 1.5,
             ),
           ),

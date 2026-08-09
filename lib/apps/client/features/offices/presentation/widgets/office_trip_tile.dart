@@ -41,19 +41,20 @@ class OfficeTripTile extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          SizedBox(
-            width: 72,
+          Container(
+            width: 86,
+            padding: const EdgeInsets.symmetric(vertical: ClientSpacing.md),
+            decoration: BoxDecoration(
+              color: soldOut ? ClientColors.surfaceSubtleFor(context) : accent.withAlpha(15),
+              borderRadius: BorderRadius.circular(ClientRadius.md),
+            ),
+            alignment: Alignment.center,
             child: _DepartureStamp(
               time: formatTripTime(context, trip.departureTime),
               soldOut: soldOut,
             ),
           ),
-          Container(
-            width: 1,
-            height: 56,
-            color: ClientColors.borderFor(context).withAlpha(150),
-            margin: const EdgeInsets.only(right: ClientSpacing.md),
-          ),
+          const SizedBox(width: ClientSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -109,26 +110,27 @@ class OfficeTripTile extends StatelessWidget {
               if (!soldOut) ...[
                 const SizedBox(height: 8),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                   decoration: BoxDecoration(
-                    color: accent.withAlpha(20),
+                    color: accent,
                     borderRadius: BorderRadius.circular(ClientRadius.pill),
+                    boxShadow: ClientElevation.sm(context),
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
                         l10n.home_bookSeat,
-                        style: ClientTypography.labelSmall(context).copyWith(
-                          color: accent,
+                        style: ClientTypography.labelMedium(context).copyWith(
+                          color: Colors.white,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
-                      const SizedBox(width: 2),
-                      DirectionalIcon(
+                      const SizedBox(width: 4),
+                      const DirectionalIcon(
                         Icons.arrow_forward_ios_rounded,
-                        size: 10,
-                        color: accent,
+                        size: 12,
+                        color: Colors.white,
                       ),
                     ],
                   ),

@@ -130,10 +130,10 @@ class _RouteSpine extends StatelessWidget {
       children: [
         _Dot(color: accent, filled: false),
         Container(
-          width: 2, 
-          height: 18, 
-          color: accent.withAlpha(50),
-          margin: const EdgeInsets.symmetric(vertical: 2),
+          width: 3, 
+          height: 24, 
+          color: accent.withAlpha(100),
+          margin: const EdgeInsets.symmetric(vertical: 4),
         ),
         _Dot(color: accent, filled: true),
       ],
@@ -150,14 +150,14 @@ class _Dot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 10,
-      height: 10,
+      width: 14,
+      height: 14,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: filled ? color : Colors.transparent,
         border: Border.all(
           color: color, 
-          width: filled ? 0 : 2,
+          width: filled ? 0 : 3,
         ),
       ),
     );

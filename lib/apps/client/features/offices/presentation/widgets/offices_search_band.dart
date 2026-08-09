@@ -37,13 +37,13 @@ class OfficesSearchBand extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: accent.withAlpha(20),
+                color: Colors.white.withAlpha(40),
                 borderRadius: BorderRadius.circular(ClientRadius.pill),
               ),
               child: Text(
                 l10n.offices_matchesLabel(state.visibleOffices.length),
                 style: ClientTypography.labelSmall(context).copyWith(
-                  color: accent,
+                  color: Colors.white,
                   fontWeight: FontWeight.w800,
                 ),
               ),

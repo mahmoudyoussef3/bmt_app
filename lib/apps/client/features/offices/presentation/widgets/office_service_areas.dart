@@ -52,7 +52,7 @@ class _AreaChip extends StatelessWidget {
     return Container(
       padding: EdgeInsets.symmetric(horizontal: withPin ? 8 : 10, vertical: 5),
       decoration: BoxDecoration(
-        color: ClientColors.surfaceMutedFor(context),
+        color: ClientColors.primaryContainerFor(context),
         borderRadius: BorderRadius.circular(ClientRadius.xs),
       ),
       child: Row(
@@ -62,14 +62,14 @@ class _AreaChip extends StatelessWidget {
             Icon(
               Icons.place_rounded,
               size: 11,
-              color: ClientColors.textTertiaryFor(context),
+              color: ClientColors.onPrimaryContainerFor(context).withAlpha(150),
             ),
             const SizedBox(width: 4),
           ],
           Text(
             label,
             style: ClientTypography.labelSmall(context).copyWith(
-              color: ClientColors.textSecondaryFor(context),
+              color: ClientColors.onPrimaryContainerFor(context),
               fontWeight: FontWeight.w700,
             ),
           ),

@@ -18,7 +18,7 @@ class OfficesDirectoryList extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
       physics: const AlwaysScrollableScrollPhysics(),
       itemCount: offices.length,
-      separatorBuilder: (_, _) => const SizedBox(height: ClientSpacing.sm),
+      separatorBuilder: (_, _) => const SizedBox(height: ClientSpacing.md),
       itemBuilder: (context, index) => OfficeCard(
         office: offices[index],
         onTap: () => Navigator.pushNamed(

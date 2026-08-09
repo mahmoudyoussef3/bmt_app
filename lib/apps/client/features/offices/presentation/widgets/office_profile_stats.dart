@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
-import 'package:bmt_app/apps/client/core/widgets/pressable_scale.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// What this office publishes, counted.
@@ -33,7 +33,7 @@ class OfficeProfileStats extends StatelessWidget {
     final l10n = context.l10n;
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         children: [
           Expanded(
@@ -44,11 +44,7 @@ class OfficeProfileStats extends StatelessWidget {
               onTap: () => onSelect(OfficeProfileSection.departures),
             ),
           ),
-          Container(
-            width: 1,
-            height: 34,
-            color: ClientColors.borderFor(context).withAlpha(150),
-          ),
+          const SizedBox(width: ClientSpacing.sm),
           Expanded(
             child: _StatCell(
               icon: Icons.alt_route_rounded,
@@ -85,38 +81,43 @@ class _StatCell extends StatelessWidget {
         ? ClientColors.textTertiaryFor(context)
         : ClientColors.primaryFor(context);
 
-    return PressableScale(
+    return ClientCard(
       onTap: onTap,
-      scale: 0.97,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: ClientSpacing.sm),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, size: 15, color: accent),
-                const SizedBox(width: 6),
-                Text(
-                  '$value',
-                  style: ClientTypography.headingSmall(
-                    context,
-                  ).copyWith(fontWeight: FontWeight.w900, color: accent),
-                ),
-              ],
+      padding: const EdgeInsets.symmetric(vertical: ClientSpacing.md, horizontal: ClientSpacing.sm),
+      backgroundColor: muted 
+          ? ClientColors.surfaceFor(context) 
+          : accent.withAlpha(12),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 20, color: accent),
+              const SizedBox(width: 8),
+              Text(
+                '$value',
+                style: ClientTypography.headingMedium(
+                  context,
+                ).copyWith(fontWeight: FontWeight.w900, color: accent),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: ClientTypography.labelMedium(
+              context,
+            ).copyWith(
+              color: muted 
+                  ? ClientColors.textTertiaryFor(context) 
+                  : ClientColors.textSecondaryFor(context),
+              fontWeight: FontWeight.w700,
             ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: ClientTypography.labelSmall(
-                context,
-              ).copyWith(color: ClientColors.textTertiaryFor(context)),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

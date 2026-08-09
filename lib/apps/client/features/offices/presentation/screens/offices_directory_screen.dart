@@ -94,20 +94,22 @@ class _DirectoryMasthead extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: ClientColors.surfaceFor(context),
-        boxShadow: ClientElevation.sm(context),
-        border: Border(
-          bottom: BorderSide(
-            color: ClientColors.borderFor(context).withAlpha(100),
+        boxShadow: [
+          BoxShadow(
+            color: isDark 
+                ? Colors.black54 
+                : ClientColors.primaryFor(context).withAlpha(60),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
           ),
-        ),
+        ],
       ),
       child: Stack(
         children: [
           Positioned.fill(
             child: DecoratedBox(
               decoration: BoxDecoration(
-                color: accent.withAlpha(isDark ? 20 : 10),
+                gradient: ClientColors.heroGradientFor(context),
               ),
             ),
           ),
@@ -124,7 +126,7 @@ class _DirectoryMasthead extends StatelessWidget {
                       IconButton(
                         icon: const Icon(Icons.arrow_back_rounded),
                         onPressed: () => Navigator.of(context).maybePop(),
-                        color: ClientColors.textPrimaryFor(context),
+                        color: Colors.white,
                       ),
                       const SizedBox(width: 8),
                       Expanded(
@@ -136,6 +138,7 @@ class _DirectoryMasthead extends StatelessWidget {
                               title,
                               style: ClientTypography.headingMedium(context).copyWith(
                                 fontWeight: FontWeight.w900,
+                                color: Colors.white,
                               ),
                             ),
                             if (subtitle != null) ...[
@@ -143,7 +146,7 @@ class _DirectoryMasthead extends StatelessWidget {
                               Text(
                                 subtitle!,
                                 style: ClientTypography.labelSmall(context).copyWith(
-                                  color: ClientColors.textSecondaryFor(context),
+                                  color: Colors.white.withAlpha(200),
                                 ),
                               ),
                             ]
