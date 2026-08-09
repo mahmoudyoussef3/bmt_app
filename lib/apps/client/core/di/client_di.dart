@@ -10,22 +10,35 @@ import '../../features/onboarding/presentation/cubit/onboarding_cubit.dart';
 import '../../../../core/security/secure_storage.dart';
 
 import '../../features/auth/data/datasources/client_auth_datasource.dart';
+import '../../features/auth/data/datasources/pending_phone_auth_datasource.dart';
+import '../../features/auth/data/datasources/pending_social_auth_datasource.dart';
+import '../../features/auth/data/datasources/phone_auth_datasource.dart';
+import '../../features/auth/data/datasources/social_auth_datasource.dart';
 import '../../features/auth/data/datasources/supabase_client_auth_datasource.dart';
 import '../../features/auth/data/repositories/client_auth_repository_impl.dart';
+import '../../features/auth/data/repositories/phone_auth_repository_impl.dart';
 import '../../features/auth/data/repositories/remember_me_repository_impl.dart';
+import '../../features/auth/data/repositories/social_auth_repository_impl.dart';
 import '../../features/auth/domain/repositories/client_auth_repository.dart';
+import '../../features/auth/domain/repositories/phone_auth_repository.dart';
 import '../../features/auth/domain/repositories/remember_me_repository.dart';
+import '../../features/auth/domain/repositories/social_auth_repository.dart';
 import '../../features/auth/domain/usecases/clear_remembered_credentials_usecase.dart';
 import '../../features/auth/domain/usecases/get_remembered_credentials_usecase.dart';
 import '../../features/auth/domain/usecases/save_remembered_credentials_usecase.dart';
+import '../../features/auth/domain/usecases/send_phone_otp_usecase.dart';
+import '../../features/auth/domain/usecases/sign_in_with_apple_usecase.dart';
 import '../../features/auth/domain/usecases/sign_in_with_email_usecase.dart';
+import '../../features/auth/domain/usecases/sign_in_with_google_usecase.dart';
 import '../../features/auth/domain/usecases/sign_out_usecase.dart';
 import '../../features/auth/domain/usecases/sign_up_with_email_usecase.dart';
+import '../../features/auth/domain/usecases/verify_phone_otp_usecase.dart';
 import '../../features/auth/domain/usecases/send_password_reset_email_usecase.dart';
 import '../../features/auth/domain/usecases/update_password_usecase.dart';
 import '../../features/auth/presentation/cubit/auth_cubit.dart';
 import '../../features/auth/presentation/cubit/forgot_password_cubit.dart';
 import '../../features/auth/presentation/cubit/reset_password_cubit.dart';
+import '../../features/auth/presentation/cubit/social_auth_cubit.dart';
 import '../../features/auth/presentation/cubit/remember_me_coordinator.dart';
 import '../storage/remember_me_store.dart';
 
@@ -363,6 +376,80 @@ void _registerAuthDependencies() {
   if (!clientGetIt.isRegistered<ResetPasswordCubit>()) {
     clientGetIt.registerFactory<ResetPasswordCubit>(
       () => ResetPasswordCubit(clientGetIt<UpdatePasswordUseCase>()),
+    );
+  }
+
+  _registerAlternativeAuthDependencies();
+}
+
+/// Google, Apple and phone/OTP.
+///
+/// Registered exactly like the email/password graph above — same shapes, same
+/// lifetimes — with one difference: the two datasources bound here are the
+/// `Pending*` ones, which refuse every call. That is the *only* placeholder in
+/// the chain; the repositories, use cases and cubit are the real
+/// implementations and are exercised end to end the moment a provider lands.
+///
+/// Switching one on is two edits: swap the datasource registration below for
+/// the real implementation, then flip that method's flag in `AuthMethod`.
+/// Nothing else in this file, the router or the UI changes.
+void _registerAlternativeAuthDependencies() {
+  if (!clientGetIt.isRegistered<SocialAuthDatasource>()) {
+    clientGetIt.registerLazySingleton<SocialAuthDatasource>(
+      () => const PendingSocialAuthDatasource(),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<PhoneAuthDatasource>()) {
+    clientGetIt.registerLazySingleton<PhoneAuthDatasource>(
+      () => const PendingPhoneAuthDatasource(),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<SocialAuthRepository>()) {
+    clientGetIt.registerLazySingleton<SocialAuthRepository>(
+      () => SocialAuthRepositoryImpl(clientGetIt<SocialAuthDatasource>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<PhoneAuthRepository>()) {
+    clientGetIt.registerLazySingleton<PhoneAuthRepository>(
+      () => PhoneAuthRepositoryImpl(clientGetIt<PhoneAuthDatasource>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<SignInWithGoogleUseCase>()) {
+    clientGetIt.registerLazySingleton<SignInWithGoogleUseCase>(
+      () => SignInWithGoogleUseCase(clientGetIt<SocialAuthRepository>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<SignInWithAppleUseCase>()) {
+    clientGetIt.registerLazySingleton<SignInWithAppleUseCase>(
+      () => SignInWithAppleUseCase(clientGetIt<SocialAuthRepository>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<SendPhoneOtpUseCase>()) {
+    clientGetIt.registerLazySingleton<SendPhoneOtpUseCase>(
+      () => SendPhoneOtpUseCase(clientGetIt<PhoneAuthRepository>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<VerifyPhoneOtpUseCase>()) {
+    clientGetIt.registerLazySingleton<VerifyPhoneOtpUseCase>(
+      () => VerifyPhoneOtpUseCase(clientGetIt<PhoneAuthRepository>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<SocialAuthCubit>()) {
+    clientGetIt.registerFactory<SocialAuthCubit>(
+      () => SocialAuthCubit(
+        signInWithGoogle: clientGetIt<SignInWithGoogleUseCase>(),
+        signInWithApple: clientGetIt<SignInWithAppleUseCase>(),
+        sendPhoneOtp: clientGetIt<SendPhoneOtpUseCase>(),
+        verifyPhoneOtp: clientGetIt<VerifyPhoneOtpUseCase>(),
+      ),
     );
   }
 }

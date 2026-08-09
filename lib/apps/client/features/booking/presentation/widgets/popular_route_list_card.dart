@@ -66,7 +66,7 @@ class PopularRouteListCard extends StatelessWidget {
               ),
             ],
           ),
-          const Spacer(),
+          const SizedBox(height: 4),
           RouteCardCtaRow(hasTrips: hasTrips),
         ],
       ),

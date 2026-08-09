@@ -55,20 +55,26 @@ class RouteCardHeader extends StatelessWidget {
             children: [
               Text(
                 routeName,
-                maxLines: 2,
+                maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: ClientTypography.headingSmall(context),
               ),
-              const SizedBox(height: 4),
-              // Which office runs this corridor — without it, two providers'
-              // departures read as one operator's timetable.
-              RouteOfficeChip(office: office),
               const SizedBox(height: 6),
-              RouteAvailabilityBadge(
-                label: hasTrips
-                    ? context.l10n.booking_tripsCountToday(dailyTrips)
-                    : context.l10n.booking_noTripsToday,
-                active: hasTrips,
+              Wrap(
+                spacing: 8,
+                runSpacing: 6,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  // Which office runs this corridor — without it, two
+                  // providers' departures read as one operator's timetable.
+                  RouteOfficeChip(office: office),
+                  RouteAvailabilityBadge(
+                    label: hasTrips
+                        ? context.l10n.booking_tripsCountToday(dailyTrips)
+                        : context.l10n.booking_noTripsToday,
+                    active: hasTrips,
+                  ),
+                ],
               ),
             ],
           ),

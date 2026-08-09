@@ -5,6 +5,7 @@ import 'package:bmt_app/apps/client/core/di/client_di.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/cubit/auth_cubit.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/cubit/forgot_password_cubit.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/cubit/reset_password_cubit.dart';
+import 'package:bmt_app/apps/client/features/auth/presentation/cubit/social_auth_cubit.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_wizard_confirm_cubit.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_wizard_cubit.dart';
@@ -38,8 +39,28 @@ import 'package:bmt_app/apps/client/features/trips/presentation/cubit/trips_cubi
 abstract final class ClientCubitScopes {
   const ClientCubitScopes._();
 
-  static Widget auth(Widget child) => BlocProvider<ClientAuthCubit>(
-    create: (_) => clientGetIt<ClientAuthCubit>(),
+  /// Welcome, sign-in and sign-up.
+  ///
+  /// Carries [SocialAuthCubit] alongside the email/password one because all
+  /// three screens offer the alternative methods under their "or" divider.
+  /// Today those buttons are inert and never read it — they are built without a
+  /// `BlocBuilder` while the providers are switched off — so this is what will
+  /// already be in place when they are turned on.
+  static Widget auth(Widget child) => MultiBlocProvider(
+    providers: [
+      BlocProvider<ClientAuthCubit>(
+        create: (_) => clientGetIt<ClientAuthCubit>(),
+      ),
+      BlocProvider<SocialAuthCubit>(
+        create: (_) => clientGetIt<SocialAuthCubit>(),
+      ),
+    ],
+    child: child,
+  );
+
+  /// The phone/OTP screens, which need only the alternative-methods cubit.
+  static Widget socialAuth(Widget child) => BlocProvider<SocialAuthCubit>(
+    create: (_) => clientGetIt<SocialAuthCubit>(),
     child: child,
   );
 

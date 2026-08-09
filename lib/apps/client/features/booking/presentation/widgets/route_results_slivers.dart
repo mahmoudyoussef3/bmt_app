@@ -44,23 +44,44 @@ List<Widget> routeResultsSlivers({
     ];
   }
   final isTablet = MediaQuery.sizeOf(context).width >= 720;
+  final crossAxisCount = isTablet ? 2 : 1;
+
+  // Cards are laid out as self-sizing rows rather than a fixed-extent
+  // SliverGrid: card height varies with route-name length, office/rating
+  // presence, and locale (Arabic labels run longer than English ones), so a
+  // hardcoded mainAxisExtent inevitably overflows for some content.
+  final rows = <List<PopularRouteListData>>[
+    for (var i = 0; i < filteredRoutes.length; i += crossAxisCount)
+      filteredRoutes.skip(i).take(crossAxisCount).toList(),
+  ];
+
   return [
     SliverPadding(
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 116),
-      sliver: SliverGrid(
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: isTablet ? 2 : 1,
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
-          mainAxisExtent: 320,
-        ),
+      sliver: SliverList(
         delegate: SliverChildBuilderDelegate((context, index) {
-          final route = filteredRoutes[index];
-          return PopularRouteListCard(
-            route: route,
-            onTap: () => onRouteTap(route),
+          final rowRoutes = rows[index];
+          return Padding(
+            padding: EdgeInsets.only(
+              bottom: index == rows.length - 1 ? 0 : 12,
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (var j = 0; j < rowRoutes.length; j++) ...[
+                  if (j > 0) const SizedBox(width: 12),
+                  Expanded(
+                    child: PopularRouteListCard(
+                      route: rowRoutes[j],
+                      onTap: () => onRouteTap(rowRoutes[j]),
+                    ),
+                  ),
+                ],
+                if (rowRoutes.length < crossAxisCount) const Spacer(),
+              ],
+            ),
           );
-        }, childCount: filteredRoutes.length),
+        }, childCount: rows.length),
       ),
     ),
   ];

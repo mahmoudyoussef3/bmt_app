@@ -13,20 +13,29 @@ class WelcomeValueProps extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
+    // A third of the row each, rather than each prop taking its natural width:
+    // "تتبّع مباشر للحافلة" is wider than a third of a 390pt phone on its own,
+    // so the unconstrained row overflowed by ~108pt and clipped the labels.
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _ValueProp(
-          icon: Icons.event_seat_rounded,
-          label: l10n.welcome_valueSeats,
+        Expanded(
+          child: _ValueProp(
+            icon: Icons.event_seat_rounded,
+            label: l10n.welcome_valueSeats,
+          ),
         ),
-        _ValueProp(
-          icon: Icons.my_location_rounded,
-          label: l10n.welcome_valueTracking,
+        Expanded(
+          child: _ValueProp(
+            icon: Icons.my_location_rounded,
+            label: l10n.welcome_valueTracking,
+          ),
         ),
-        _ValueProp(
-          icon: Icons.card_membership_rounded,
-          label: l10n.welcome_valuePasses,
+        Expanded(
+          child: _ValueProp(
+            icon: Icons.card_membership_rounded,
+            label: l10n.welcome_valuePasses,
+          ),
         ),
       ],
     );

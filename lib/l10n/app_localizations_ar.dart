@@ -5077,4 +5077,75 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get wallet_kindReversal => 'تصحيح';
+
+  @override
+  String get auth_comingSoon => 'قريباً';
+
+  @override
+  String get auth_continueWithGoogle => 'المتابعة باستخدام Google';
+
+  @override
+  String get auth_continueWithApple => 'المتابعة باستخدام Apple';
+
+  @override
+  String get auth_continueWithPhone => 'الدخول برقم الهاتف';
+
+  @override
+  String get auth_phoneShort => 'الهاتف';
+
+  @override
+  String get auth_alternativeMethodsPendingNote =>
+      'هذه الطرق قيد التجهيز وستتاح قريباً. استخدم بريدك الإلكتروني للدخول الآن.';
+
+  @override
+  String get auth_methodUnavailable =>
+      'طريقة الدخول هذه غير متاحة بعد. استخدم بريدك الإلكتروني وكلمة المرور.';
+
+  @override
+  String get auth_phoneLoginTitle => 'الدخول برقم الهاتف';
+
+  @override
+  String get auth_phoneLoginSubtitle =>
+      'أدخل رقم هاتفك وسنرسل لك رمز تحقق للدخول.';
+
+  @override
+  String get auth_phoneOtpHelper =>
+      'سنرسل رمز التحقق برسالة نصية إلى هذا الرقم.';
+
+  @override
+  String get auth_sendOtpCode => 'إرسال رمز التحقق';
+
+  @override
+  String get auth_phoneOtpSecurityNote =>
+      'قد تُطبَّق رسوم الرسائل النصية من مشغّل الشبكة.';
+
+  @override
+  String get auth_otpTitle => 'أدخل رمز التحقق';
+
+  @override
+  String auth_otpIntro(int count) {
+    return 'أرسلنا رمزاً مكوناً من $count أرقام إلى';
+  }
+
+  @override
+  String get auth_verifyCode => 'تأكيد الرمز';
+
+  @override
+  String auth_resendCodeIn(String timer) {
+    return 'يمكن إعادة الإرسال بعد $timer';
+  }
+
+  @override
+  String get auth_changePhoneNumber => 'تغيير رقم الهاتف';
+
+  @override
+  String get auth_otpInvalidCode =>
+      'الرمز غير صحيح. تأكد من الأرقام وحاول مرة أخرى.';
+
+  @override
+  String get auth_otpExpiredCode => 'انتهت صلاحية الرمز. اطلب رمزاً جديداً.';
+
+  @override
+  String get auth_otpRateLimited =>
+      'محاولات كثيرة. انتظر قليلاً قبل طلب رمز جديد.';
 }

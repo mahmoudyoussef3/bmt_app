@@ -90,8 +90,13 @@ class _SeatBody extends StatelessWidget {
     final selectedIndex = seats.indexWhere(
       (seat) => seat.id == session.selectedSeatId,
     );
+    final selectedSlot = selectedIndex < 0
+        ? null
+        : blueprint.seatSlotAt(selectedIndex);
     final selectedLabel = selectedIndex < 0
         ? null
+        : selectedSlot != null
+        ? cabinSeatLabel(blueprint, selectedSlot)
         : seats[selectedIndex].displayLabel;
 
     return Column(
@@ -183,6 +188,22 @@ class _SeatBody extends StatelessWidget {
 
 }
 
+/// The label riders see on a seat tile: the row's letter (A the driver row,
+/// B the next, …) followed by its 1-based position in that row — counting the
+/// driver bench too, so the lone seat beside the driver reads `A3` rather than
+/// `A1`. Pure geometry off the blueprint; never touches the seat's stored id
+/// or the label persisted in `trip_seats`.
+String cabinSeatLabel(SeatLayoutBlueprint blueprint, SeatSlot slot) {
+  final rowLetter = String.fromCharCode('A'.codeUnitAt(0) + slot.row - 1);
+  var position = 0;
+  for (final other in blueprint.rows[slot.row - 1]) {
+    if (other.isGap) continue;
+    position++;
+    if (other.column == slot.column) break;
+  }
+  return '$rowLetter$position';
+}
+
 class _VehicleCabin extends StatelessWidget {
   const _VehicleCabin({
     required this.blueprint,
@@ -198,45 +219,75 @@ class _VehicleCabin extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      constraints: const BoxConstraints(maxWidth: 430),
-      margin: const EdgeInsets.symmetric(horizontal: 2),
-      padding: const EdgeInsets.fromLTRB(18, 16, 18, 22),
-      decoration: BoxDecoration(
-        color: ClientColors.surfaceFor(context),
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(54),
-          topRight: Radius.circular(54),
-          bottomLeft: Radius.circular(24),
-          bottomRight: Radius.circular(24),
-        ),
-        border: Border.all(color: ClientColors.borderStrongFor(context)),
-        boxShadow: ClientElevation.md(context),
-      ),
-      child: Column(
-        children: [
-          Container(
-            width: 76,
-            height: 7,
-            decoration: BoxDecoration(
-              color: ClientColors.surfaceMutedFor(context),
-              borderRadius: BorderRadius.circular(999),
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        Container(
+          constraints: const BoxConstraints(maxWidth: 430),
+          margin: const EdgeInsets.symmetric(horizontal: 2),
+          padding: const EdgeInsets.fromLTRB(18, 16, 18, 22),
+          decoration: BoxDecoration(
+            color: ClientColors.surfaceFor(context),
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(54),
+              topRight: Radius.circular(54),
+              bottomLeft: Radius.circular(24),
+              bottomRight: Radius.circular(24),
             ),
+            border: Border.all(color: ClientColors.borderStrongFor(context)),
+            boxShadow: ClientElevation.md(context),
           ),
-          const SizedBox(height: 10),
-          _CabinCaption(label: context.l10n.seatSelection_frontOfVehicle),
-          const SizedBox(height: 12),
-          ClientSeatMap(
-            blueprint: blueprint,
-            seatBuilder: _seat,
-            decorationBuilder: _decoration,
+          child: Column(
+            children: [
+              Container(
+                width: 76,
+                height: 7,
+                decoration: BoxDecoration(
+                  color: ClientColors.surfaceMutedFor(context),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+              const SizedBox(height: 10),
+              _CabinCaption(label: context.l10n.seatSelection_frontOfVehicle),
+              const SizedBox(height: 14),
+              ClientSeatMap(
+                blueprint: blueprint,
+                rowGap: 12,
+                seatBuilder: _seat,
+                decorationBuilder: _decoration,
+                clusterBuilder: _bench,
+              ),
+              const SizedBox(height: 14),
+              Divider(color: ClientColors.borderFor(context)),
+              const SizedBox(height: 6),
+              _CabinCaption(label: context.l10n.seatSelection_cabinRear),
+            ],
           ),
-          const SizedBox(height: 12),
-          Divider(color: ClientColors.borderFor(context)),
-          const SizedBox(height: 6),
-          _CabinCaption(label: context.l10n.seatSelection_cabinRear),
-        ],
+        ),
+        Positioned(bottom: -6, left: 30, child: _CabinWheel()),
+        Positioned(bottom: -6, right: 30, child: _CabinWheel()),
+      ],
+    );
+  }
+
+  /// The shared card behind one physical bench — a 2-seat pair, the lone
+  /// aisle seat across from it, or (on the flush back row) all four seats at
+  /// once. Makes the 2+1 split the rider will actually sit in visible instead
+  /// of implied by spacing alone.
+  Widget _bench(BuildContext context, List<SeatSlot> cluster, Widget row) {
+    final isDriverBench = cluster.every(
+      (slot) => slot.kind == SeatSlotKind.driver,
+    );
+    return Container(
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        color: isDriverBench
+            ? ClientColors.surfaceMutedFor(context)
+            : ClientColors.surfaceSubtleFor(context),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: ClientColors.borderFor(context)),
       ),
+      child: row,
     );
   }
 
@@ -248,46 +299,84 @@ class _VehicleCabin extends StatelessWidget {
     final seat = seats[index];
     return _SeatCell(
       seat: seat,
-      label: seat.displayLabel,
+      label: cabinSeatLabel(blueprint, slot),
       isSelected: seat.id == selectedSeatId,
       onTap: seat.isAvailable ? () => onSeatTap(seat) : null,
     );
   }
 
-  Widget _decoration(BuildContext context, SeatSlot slot) => slot.kind ==
-          SeatSlotKind.door
-      ? _CabinDoor(label: context.l10n.seatSelection_cabinDoor)
-      : _DriverSeat(label: slot.label.isEmpty ? 'A' : slot.label);
+  Widget _decoration(BuildContext context, SeatSlot slot) {
+    if (slot.kind == SeatSlotKind.door) {
+      return _CabinDoor(label: context.l10n.seatSelection_cabinDoor);
+    }
+    // Column 1 is always the driver's own seat — the blueprint is drawn in a
+    // fixed left-hand-drive coordinate system regardless of app direction.
+    final isDriver = slot.column == 1;
+    final fallback = isDriver ? 'A1' : 'A2';
+    return _DriverSeat(
+      caption: isDriver
+          ? context.l10n.booking_driver
+          : slot.label.isEmpty
+          ? fallback
+          : slot.label,
+      isDriver: isDriver,
+    );
+  }
 }
 
-class _DriverSeat extends StatelessWidget {
-  const _DriverSeat({required this.label});
-
-  final String label;
+/// A small wheel peeking out from the cabin card's bottom corner — the one
+/// cue that reads "vehicle" rather than "seating chart".
+class _CabinWheel extends StatelessWidget {
+  const _CabinWheel();
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 64,
+      width: 16,
+      height: 16,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: ClientColors.textTertiaryFor(context),
+        border: Border.all(color: ClientColors.surfaceFor(context), width: 2),
+      ),
+    );
+  }
+}
+
+class _DriverSeat extends StatelessWidget {
+  const _DriverSeat({required this.caption, required this.isDriver});
+
+  final String caption;
+  final bool isDriver;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
       height: 62,
       decoration: BoxDecoration(
         color: ClientColors.surfaceMutedFor(context),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: ClientColors.borderFor(context)),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
-            Icons.airline_seat_recline_extra_rounded,
+            isDriver
+                ? Icons.airline_seat_recline_extra_rounded
+                : Icons.airline_seat_recline_normal_rounded,
             color: ClientColors.textTertiaryFor(context),
-            size: 21,
+            size: 19,
           ),
+          const SizedBox(height: 2),
           Text(
-            label,
-            style: ClientTypography.labelSmall(
-              context,
-            ).copyWith(color: ClientColors.textTertiaryFor(context)),
+            caption,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: ClientTypography.labelSmall(context).copyWith(
+              color: ClientColors.textTertiaryFor(context),
+              fontSize: isDriver ? 9 : null,
+            ),
           ),
         ],
       ),
@@ -380,6 +469,7 @@ class _SeatCell extends StatelessWidget {
         : ClientColors.textTertiaryFor(context);
 
     return GestureDetector(
+      key: ValueKey('seat-${seat.id}'),
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),

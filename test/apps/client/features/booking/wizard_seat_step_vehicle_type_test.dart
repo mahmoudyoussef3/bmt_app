@@ -14,6 +14,21 @@ import 'package:bmt_app/apps/client/features/seat_selection/presentation/cubit/s
 import 'package:bmt_app/core/vehicles/vehicles.dart';
 import '../../client_test_app.dart';
 
+/// Mirrors `cabinSeatLabel` in `wizard_seat_step.dart`: the row's letter plus
+/// its 1-based position in that row, counting the driver bench too. Kept
+/// separate so a test failure here means the two disagree, not just that one
+/// changed.
+String _cabinLabel(SeatLayoutBlueprint blueprint, SeatSlot slot) {
+  final rowLetter = String.fromCharCode('A'.codeUnitAt(0) + slot.row - 1);
+  var position = 0;
+  for (final other in blueprint.rows[slot.row - 1]) {
+    if (other.isGap) continue;
+    position++;
+    if (other.column == slot.column) break;
+  }
+  return '$rowLetter$position';
+}
+
 /// The booking flow must draw the cabin of the vehicle on the trip, and must
 /// book the seat label the database actually holds.
 class _FakeSeatRepository implements SeatSelectionRepository {
@@ -157,10 +172,20 @@ void main() {
       _data(blueprint: VehicleSeatLayouts.hiace, vehicleType: 'Hiace'),
     );
 
-    for (var seat = 1; seat <= 14; seat++) {
-      expect(find.text('$seat'), findsOneWidget, reason: 'seat $seat');
+    // Tiles show the cabin position (row letter + seat number in that row),
+    // not the raw database seat number — the lone seat beside the driver
+    // reads A3, never A1/A2 (those are the driver bench).
+    for (final slot in VehicleSeatLayouts.hiace.seatSlots) {
+      expect(
+        find.text(_cabinLabel(VehicleSeatLayouts.hiace, slot)),
+        findsOneWidget,
+        reason: 'seat ${slot.seatNumber}',
+      );
     }
-    expect(find.text('15'), findsNothing);
+    // The driver's own seat (column 1 of the driver bench) reads "Driver";
+    // the empty front seat beside it keeps its blueprint label.
+    expect(find.text('Driver'), findsOneWidget);
+    expect(find.text('A2'), findsOneWidget);
     expect(find.byIcon(Icons.sensor_door_outlined), findsNothing);
   });
 
@@ -170,8 +195,12 @@ void main() {
       _data(blueprint: VehicleSeatLayouts.coaster, vehicleType: 'Coaster'),
     );
 
-    for (var seat = 1; seat <= 30; seat++) {
-      expect(find.text('$seat'), findsOneWidget, reason: 'seat $seat');
+    for (final slot in VehicleSeatLayouts.coaster.seatSlots) {
+      expect(
+        find.text(_cabinLabel(VehicleSeatLayouts.coaster, slot)),
+        findsOneWidget,
+        reason: 'seat ${slot.seatNumber}',
+      );
     }
     // The Coaster cabin shows its entrance; the Hiace one has none.
     expect(find.byIcon(Icons.sensor_door_outlined), findsOneWidget);
@@ -185,11 +214,13 @@ void main() {
       _data(blueprint: VehicleSeatLayouts.hiace, vehicleType: 'Hiace'),
     );
 
-    await tester.tap(find.text('5'));
+    // Seat 5 (id s-5) sits at C1 in the cabin, but the database label — what
+    // travels to `confirm_seat_booking_v2` as `p_seat_label` and what the
+    // operator's manifest matches against `trip_seats.seat_label` — stays the
+    // plain number regardless of how the tile is drawn.
+    await tester.tap(find.byKey(const ValueKey('seat-s-5')));
     await tester.pumpAndSettle();
 
-    // The label travels to `confirm_seat_booking_v2` as `p_seat_label` and is
-    // what the operator's manifest matches against `trip_seats.seat_label`.
     expect(wizard.state.selectedSeatId, 's-5');
     expect(wizard.state.selectedSeatLabel, '5');
     expect(wizard.state.seatValid, isTrue);
@@ -203,7 +234,7 @@ void main() {
       _data(blueprint: VehicleSeatLayouts.coaster, vehicleType: 'Coaster'),
     );
 
-    await tester.tap(find.text('27'));
+    await tester.tap(find.byKey(const ValueKey('seat-s-27')));
     await tester.pumpAndSettle();
 
     expect(wizard.state.selectedSeatId, 's-27');
@@ -220,7 +251,7 @@ void main() {
       ),
     );
 
-    await tester.tap(find.text('4'));
+    await tester.tap(find.byKey(const ValueKey('seat-s-4')));
     await tester.pumpAndSettle();
 
     expect(wizard.state.selectedSeatId, isNull);
@@ -247,8 +278,15 @@ void main() {
       _data(blueprint: VehicleSeatLayouts.hiace, vehicleType: 'Karsan e-ATA'),
     );
 
+    // An unmodelled vehicle type falls back to drawing the seat data as-is
+    // (see `SeatLayoutBlueprint.fromSeatGrid`), so the label scheme isn't the
+    // Hiace one — only that every real seat still made it onto the cabin.
     for (var seat = 1; seat <= 14; seat++) {
-      expect(find.text('$seat'), findsOneWidget, reason: 'seat $seat');
+      expect(
+        find.byKey(ValueKey('seat-s-$seat')),
+        findsOneWidget,
+        reason: 'seat $seat',
+      );
     }
     expect(tester.takeException(), isNull);
   });

@@ -36,6 +36,10 @@ const Map<String, String> _declaredRoutes = <String, String>{
   'AuthRoutes.forgotPassword': AuthRoutes.forgotPassword,
   'AuthRoutes.resetPassword': AuthRoutes.resetPassword,
   'AuthRoutes.success': AuthRoutes.success,
+  // Registered and navigable, but with no live entry point: the provider
+  // buttons that would open them are inert while `AuthMethod.phoneOtp` is off.
+  'AuthRoutes.phoneLogin': AuthRoutes.phoneLogin,
+  'AuthRoutes.otpVerification': AuthRoutes.otpVerification,
   'BookingRoutes.search': BookingRoutes.search,
   'BookingRoutes.routeSelection': BookingRoutes.routeSelection,
   'BookingRoutes.popularRoutes': BookingRoutes.popularRoutes,

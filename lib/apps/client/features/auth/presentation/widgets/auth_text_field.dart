@@ -43,6 +43,12 @@ class AuthTextField extends StatefulWidget {
 class _AuthTextFieldState extends State<AuthTextField> {
   late bool _obscured = widget.isPassword;
 
+  /// An email address is not prose. Left to the defaults, autocorrect rewrites
+  /// the domain as it is typed, so a rider who entered the right address gets
+  /// "invalid credentials" and no way to see why. Derived from the keyboard
+  /// type rather than passed in, so no call site can forget it.
+  bool get _isEmail => widget.keyboardType == TextInputType.emailAddress;
+
   @override
   Widget build(BuildContext context) {
     return TextFormField(
@@ -52,6 +58,12 @@ class _AuthTextFieldState extends State<AuthTextField> {
       textInputAction: widget.textInputAction,
       autofillHints: widget.autofillHints,
       obscureText: widget.isPassword && _obscured,
+      autocorrect: !_isEmail && !widget.isPassword,
+      enableSuggestions: !_isEmail && !widget.isPassword,
+      // Emails and passwords are read left to right whatever the app's
+      // language; inheriting Arabic RTL puts an `@` or a trailing symbol at the
+      // wrong end of what the rider typed.
+      textDirection: _isEmail || widget.isPassword ? TextDirection.ltr : null,
       validator: widget.validator,
       onChanged: widget.onChanged,
       onFieldSubmitted: widget.onFieldSubmitted,

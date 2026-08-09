@@ -9067,6 +9067,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Correction'**
   String get wallet_kindReversal;
+
+  /// No description provided for @auth_comingSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'Soon'**
+  String get auth_comingSoon;
+
+  /// No description provided for @auth_continueWithGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Google'**
+  String get auth_continueWithGoogle;
+
+  /// No description provided for @auth_continueWithApple.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Apple'**
+  String get auth_continueWithApple;
+
+  /// No description provided for @auth_continueWithPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with phone number'**
+  String get auth_continueWithPhone;
+
+  /// No description provided for @auth_phoneShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone'**
+  String get auth_phoneShort;
+
+  /// No description provided for @auth_alternativeMethodsPendingNote.
+  ///
+  /// In en, this message translates to:
+  /// **'These sign-in methods are being set up. Use your email for now.'**
+  String get auth_alternativeMethodsPendingNote;
+
+  /// No description provided for @auth_methodUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'This sign-in method isn\'t available yet. Use your email and password.'**
+  String get auth_methodUnavailable;
+
+  /// No description provided for @auth_phoneLoginTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone sign-in'**
+  String get auth_phoneLoginTitle;
+
+  /// No description provided for @auth_phoneLoginSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your phone number and we\'ll send you a verification code.'**
+  String get auth_phoneLoginSubtitle;
+
+  /// No description provided for @auth_phoneOtpHelper.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ll text a verification code to this number.'**
+  String get auth_phoneOtpHelper;
+
+  /// No description provided for @auth_sendOtpCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Send verification code'**
+  String get auth_sendOtpCode;
+
+  /// No description provided for @auth_phoneOtpSecurityNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Standard SMS rates from your carrier may apply.'**
+  String get auth_phoneOtpSecurityNote;
+
+  /// No description provided for @auth_otpTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter verification code'**
+  String get auth_otpTitle;
+
+  /// No description provided for @auth_otpIntro.
+  ///
+  /// In en, this message translates to:
+  /// **'We sent a {count}-digit code to'**
+  String auth_otpIntro(int count);
+
+  /// No description provided for @auth_verifyCode.
+  ///
+  /// In en, this message translates to:
+  /// **'Verify code'**
+  String get auth_verifyCode;
+
+  /// No description provided for @auth_resendCodeIn.
+  ///
+  /// In en, this message translates to:
+  /// **'You can resend in {timer}'**
+  String auth_resendCodeIn(String timer);
+
+  /// No description provided for @auth_changePhoneNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Change phone number'**
+  String get auth_changePhoneNumber;
+
+  /// No description provided for @auth_otpInvalidCode.
+  ///
+  /// In en, this message translates to:
+  /// **'That code isn\'t right. Check the digits and try again.'**
+  String get auth_otpInvalidCode;
+
+  /// No description provided for @auth_otpExpiredCode.
+  ///
+  /// In en, this message translates to:
+  /// **'That code has expired. Request a new one.'**
+  String get auth_otpExpiredCode;
+
+  /// No description provided for @auth_otpRateLimited.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many attempts. Wait a moment before requesting a new code.'**
+  String get auth_otpRateLimited;
 }
 
 class _AppLocalizationsDelegate

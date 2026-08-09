@@ -5106,4 +5106,75 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get wallet_kindReversal => 'Correction';
+
+  @override
+  String get auth_comingSoon => 'Soon';
+
+  @override
+  String get auth_continueWithGoogle => 'Continue with Google';
+
+  @override
+  String get auth_continueWithApple => 'Continue with Apple';
+
+  @override
+  String get auth_continueWithPhone => 'Continue with phone number';
+
+  @override
+  String get auth_phoneShort => 'Phone';
+
+  @override
+  String get auth_alternativeMethodsPendingNote =>
+      'These sign-in methods are being set up. Use your email for now.';
+
+  @override
+  String get auth_methodUnavailable =>
+      'This sign-in method isn\'t available yet. Use your email and password.';
+
+  @override
+  String get auth_phoneLoginTitle => 'Phone sign-in';
+
+  @override
+  String get auth_phoneLoginSubtitle =>
+      'Enter your phone number and we\'ll send you a verification code.';
+
+  @override
+  String get auth_phoneOtpHelper =>
+      'We\'ll text a verification code to this number.';
+
+  @override
+  String get auth_sendOtpCode => 'Send verification code';
+
+  @override
+  String get auth_phoneOtpSecurityNote =>
+      'Standard SMS rates from your carrier may apply.';
+
+  @override
+  String get auth_otpTitle => 'Enter verification code';
+
+  @override
+  String auth_otpIntro(int count) {
+    return 'We sent a $count-digit code to';
+  }
+
+  @override
+  String get auth_verifyCode => 'Verify code';
+
+  @override
+  String auth_resendCodeIn(String timer) {
+    return 'You can resend in $timer';
+  }
+
+  @override
+  String get auth_changePhoneNumber => 'Change phone number';
+
+  @override
+  String get auth_otpInvalidCode =>
+      'That code isn\'t right. Check the digits and try again.';
+
+  @override
+  String get auth_otpExpiredCode => 'That code has expired. Request a new one.';
+
+  @override
+  String get auth_otpRateLimited =>
+      'Too many attempts. Wait a moment before requesting a new code.';
 }

@@ -4,8 +4,11 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/apps/client/core/routes/client_cubit_scopes.dart';
 import 'package:bmt_app/apps/client/core/routes/client_routes.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/routes/auth_routes.dart';
+import 'package:bmt_app/apps/client/features/auth/presentation/routes/otp_verification_arguments.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/screens/auth_success_screen.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/screens/forgot_password_screen.dart';
+import 'package:bmt_app/apps/client/features/auth/presentation/screens/otp_verification_screen.dart';
+import 'package:bmt_app/apps/client/features/auth/presentation/screens/phone_login_screen.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/screens/reset_password_screen.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/screens/sign_in_screen.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/screens/sign_up_screen.dart';
@@ -148,6 +151,21 @@ abstract final class ClientRouter {
       return AuthSuccessScreen(
         email: args is Map ? args['email']?.toString() : null,
       );
+    },
+    // Passwordless sign-in by SMS. Both screens are registered and navigable,
+    // but nothing live points at them yet: the provider buttons that open
+    // `phoneLogin` are inert while `AuthMethod.phoneOtp.isAvailable` is false.
+    AuthRoutes.phoneLogin: (_) =>
+        ClientCubitScopes.socialAuth(const PhoneLoginScreen()),
+    AuthRoutes.otpVerification: (context) {
+      final args = OtpVerificationArguments.fromArguments(_args(context));
+      // Reached without a number means reached out of order — a stale link, a
+      // restored stack. Six boxes for a code that was never sent is a dead end,
+      // so send the rider back to the step that produces one.
+      if (!args.isValid) {
+        return ClientCubitScopes.socialAuth(const PhoneLoginScreen());
+      }
+      return ClientCubitScopes.socialAuth(OtpVerificationScreen(args: args));
     },
   };
 

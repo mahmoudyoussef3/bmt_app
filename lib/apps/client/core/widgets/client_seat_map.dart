@@ -22,6 +22,7 @@ class ClientSeatMap extends StatelessWidget {
     this.gap = 8,
     this.aisleGap = 34,
     this.centerRows = false,
+    this.clusterBuilder,
   });
 
   final SeatLayoutBlueprint blueprint;
@@ -36,6 +37,14 @@ class ClientSeatMap extends StatelessWidget {
   final double gap;
   final double aisleGap;
   final bool centerRows;
+
+  /// Wraps a **bench** — the run of seat/driver slots between two aisle gaps
+  /// — so a caller can draw a shared background behind it (e.g. a card behind
+  /// a 2-seat pair, a separate one behind the single seat across the aisle).
+  /// Left null, rows render exactly as before; existing callers are
+  /// unaffected.
+  final Widget Function(BuildContext context, List<SeatSlot> cluster, Widget child)?
+  clusterBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -67,14 +76,44 @@ class ClientSeatMap extends StatelessWidget {
   }
 
   List<Widget> _rowChildren(BuildContext context, List<SeatSlot> slots) {
-    final children = <Widget>[];
-    for (var i = 0; i < slots.length; i++) {
-      final slot = slots[i];
-      // The aisle is the gap, so it never gets padding of its own.
-      if (i > 0 && !slot.isGap && !slots[i - 1].isGap) {
-        children.add(SizedBox(width: gap));
+    final builder = clusterBuilder;
+    if (builder == null) {
+      final children = <Widget>[];
+      for (var i = 0; i < slots.length; i++) {
+        final slot = slots[i];
+        // The aisle is the gap, so it never gets padding of its own.
+        if (i > 0 && !slot.isGap && !slots[i - 1].isGap) {
+          children.add(SizedBox(width: gap));
+        }
+        children.add(_cell(context, slot));
       }
-      children.add(_cell(context, slot));
+      return children;
+    }
+
+    // Same shape, split into aisle-separated benches so each one can carry
+    // its own background.
+    final children = <Widget>[];
+    var i = 0;
+    while (i < slots.length) {
+      if (slots[i].isGap) {
+        children.add(_cell(context, slots[i]));
+        i++;
+        continue;
+      }
+      final cluster = <SeatSlot>[];
+      final cells = <Widget>[];
+      while (i < slots.length && !slots[i].isGap) {
+        if (cluster.isNotEmpty) cells.add(SizedBox(width: gap));
+        cluster.add(slots[i]);
+        cells.add(_cell(context, slots[i]));
+        i++;
+      }
+      children.add(
+        Expanded(
+          flex: cluster.length,
+          child: builder(context, cluster, Row(children: cells)),
+        ),
+      );
     }
     return children;
   }

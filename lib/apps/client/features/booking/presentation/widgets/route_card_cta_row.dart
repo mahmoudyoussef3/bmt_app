@@ -14,37 +14,45 @@ class RouteCardCtaRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            hasTrips
-                ? context.l10n.booking_chooseTripTimeAndVehicle
-                : context.l10n.booking_viewRouteDetails,
-            style: ClientTypography.labelMedium(context).copyWith(
-              color: ClientColors.textSecondaryFor(context),
-              fontWeight: FontWeight.w700,
+    return Container(
+      padding: const EdgeInsets.only(top: 14),
+      decoration: BoxDecoration(
+        border: Border(
+          top: BorderSide(color: ClientColors.borderFor(context)),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              hasTrips
+                  ? context.l10n.booking_chooseTripTimeAndVehicle
+                  : context.l10n.booking_viewRouteDetails,
+              style: ClientTypography.labelMedium(context).copyWith(
+                color: ClientColors.textSecondaryFor(context),
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
-        ),
-        Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            color: hasTrips
-                ? ClientColors.primary
-                : ClientColors.surfaceMutedFor(context),
-            borderRadius: BorderRadius.circular(12),
+          Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: hasTrips
+                  ? ClientColors.primary
+                  : ClientColors.surfaceMutedFor(context),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: DirectionalIcon(
+              Icons.arrow_forward_rounded,
+              color: hasTrips
+                  ? Colors.white
+                  : ClientColors.textSecondaryFor(context),
+              size: 20,
+            ),
           ),
-          child: DirectionalIcon(
-            Icons.arrow_forward_rounded,
-            color: hasTrips
-                ? Colors.white
-                : ClientColors.textSecondaryFor(context),
-            size: 20,
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

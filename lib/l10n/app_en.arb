@@ -2667,5 +2667,39 @@
   "wallet_kindManualDebit": "Deduction",
   "wallet_kindWalletSpend": "Paid from wallet",
   "wallet_kindWalletTopup": "Top-up",
-  "wallet_kindReversal": "Correction"
+  "wallet_kindReversal": "Correction",
+  "auth_comingSoon": "Soon",
+  "auth_continueWithGoogle": "Continue with Google",
+  "auth_continueWithApple": "Continue with Apple",
+  "auth_continueWithPhone": "Continue with phone number",
+  "auth_phoneShort": "Phone",
+  "auth_alternativeMethodsPendingNote": "These sign-in methods are being set up. Use your email for now.",
+  "auth_methodUnavailable": "This sign-in method isn't available yet. Use your email and password.",
+  "auth_phoneLoginTitle": "Phone sign-in",
+  "auth_phoneLoginSubtitle": "Enter your phone number and we'll send you a verification code.",
+  "auth_phoneOtpHelper": "We'll text a verification code to this number.",
+  "auth_sendOtpCode": "Send verification code",
+  "auth_phoneOtpSecurityNote": "Standard SMS rates from your carrier may apply.",
+  "auth_otpTitle": "Enter verification code",
+  "auth_otpIntro": "We sent a {count}-digit code to",
+  "@auth_otpIntro": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "auth_verifyCode": "Verify code",
+  "auth_resendCodeIn": "You can resend in {timer}",
+  "@auth_resendCodeIn": {
+    "placeholders": {
+      "timer": {
+        "type": "String"
+      }
+    }
+  },
+  "auth_changePhoneNumber": "Change phone number",
+  "auth_otpInvalidCode": "That code isn't right. Check the digits and try again.",
+  "auth_otpExpiredCode": "That code has expired. Request a new one.",
+  "auth_otpRateLimited": "Too many attempts. Wait a moment before requesting a new code."
 }
