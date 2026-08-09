@@ -11,10 +11,20 @@ import 'package:bmt_app/core/localization/l10n_context.dart';
 /// chip: on a directory card the row must stay one line tall no matter how many
 /// governorates an office serves, while the profile masthead shows them all.
 class OfficeServiceAreas extends StatelessWidget {
-  const OfficeServiceAreas({super.key, required this.areas, this.limit});
+  const OfficeServiceAreas({
+    super.key,
+    required this.areas,
+    this.limit,
+    this.alignment = WrapAlignment.start,
+  });
 
   final List<String> areas;
   final int? limit;
+
+  /// How the chips sit in their row. Start on a directory card, where they
+  /// hang off the same margin as the text above them; centred in the profile
+  /// masthead, which is a centred composition.
+  final WrapAlignment alignment;
 
   @override
   Widget build(BuildContext context) {
@@ -29,6 +39,7 @@ class OfficeServiceAreas extends StatelessWidget {
     return Wrap(
       spacing: 6,
       runSpacing: 6,
+      alignment: alignment,
       children: [
         for (final area in shown) _AreaChip(label: area),
         if (hidden > 0)

@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
 import '../cubit/offices_directory_cubit.dart';
@@ -23,25 +24,30 @@ class OfficesEmptyView extends StatelessWidget {
     final l10n = context.l10n;
     final isSearch = query.trim().isNotEmpty;
 
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 24),
-        child: Column(
+    return ListView(
+      // Scrollable so the state still answers a pull-to-refresh, and so a long
+      // "no match for …" line cannot overflow a short screen.
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.symmetric(
+        horizontal: ClientSpacing.xl,
+        vertical: ClientSpacing.xxl,
+      ),
+      children: [
+        Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 88,
-              height: 88,
+              width: 96,
+              height: 96,
+              alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: ClientColors.primaryFor(context).withAlpha(18),
+                color: ClientColors.primaryContainerFor(context),
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                isSearch
-                    ? Icons.search_off_rounded
-                    : Icons.storefront_outlined,
-                size: 40,
-                color: ClientColors.primaryFor(context),
+                isSearch ? Icons.search_off_rounded : Icons.storefront_outlined,
+                size: 42,
+                color: ClientColors.onPrimaryContainerFor(context),
               ),
             ),
             const SizedBox(height: ClientSpacing.md),
@@ -50,21 +56,28 @@ class OfficesEmptyView extends StatelessWidget {
                   ? l10n.offices_noSearchResults(query)
                   : l10n.offices_directoryEmpty,
               textAlign: TextAlign.center,
-              style: ClientTypography.bodyMedium(
-                context,
-              ).copyWith(color: ClientColors.textSecondaryFor(context)),
+              style: ClientTypography.headingSmall(context),
             ),
             if (isSearch) ...[
               const SizedBox(height: ClientSpacing.xs),
-              TextButton(
+              Text(
+                l10n.offices_searchHint,
+                textAlign: TextAlign.center,
+                style: ClientTypography.bodyMedium(
+                  context,
+                ).copyWith(color: ClientColors.textSecondaryFor(context)),
+              ),
+              const SizedBox(height: ClientSpacing.lg),
+              ClientButton.secondary(
+                label: l10n.offices_clearSearch,
+                expand: false,
                 onPressed: () =>
                     context.read<OfficesDirectoryCubit>().setQuery(''),
-                child: Text(l10n.offices_clearSearch),
               ),
             ],
           ],
         ),
-      ),
+      ],
     );
   }
 }

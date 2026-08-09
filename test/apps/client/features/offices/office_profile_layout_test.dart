@@ -124,7 +124,7 @@ void main() {
 
         // Walk the whole scroll so every tile is built and laid out, not just
         // the two that happen to fit the first viewport.
-        await tester.drag(find.byType(ListView), const Offset(0, -1200));
+        await tester.drag(find.byType(CustomScrollView), const Offset(0, -1200));
         await tester.pumpAndSettle();
         expect(tester.takeException(), isNull);
       });

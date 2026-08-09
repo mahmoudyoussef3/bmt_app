@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
@@ -6,9 +7,11 @@ import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
+import 'package:bmt_app/core/widgets/directional_icon.dart';
 
 import '../cubit/offices_directory_cubit.dart';
 import '../cubit/offices_directory_state.dart';
+import '../widgets/office_brand_decor.dart';
 import '../widgets/offices_directory_list.dart';
 import '../widgets/offices_empty_view.dart';
 import '../widgets/offices_search_band.dart';
@@ -36,10 +39,15 @@ class OfficesDirectoryScreen extends StatelessWidget {
             children: [
               _DirectoryMasthead(
                 title: l10n.offices_directoryTitle,
-                subtitle: loaded == null
+                lead: l10n.offices_directoryLead,
+                count: loaded == null
                     ? null
                     : l10n.offices_countLabel(loaded.offices.length),
-                searchBand: loaded != null ? OfficesSearchBand(state: loaded) : null,
+                // A directory with nothing in it has nothing to search: the box
+                // would only ever return the same empty list.
+                searchBand: loaded != null && loaded.offices.isNotEmpty
+                    ? OfficesSearchBand(state: loaded)
+                    : null,
               ),
               Expanded(
                 child: switch (state) {
@@ -50,21 +58,23 @@ class OfficesDirectoryScreen extends StatelessWidget {
                       child: ClientErrorCard(
                         message: message,
                         retryLabel: l10n.common_retry,
-                        onRetry: () => context.read<OfficesDirectoryCubit>().load(),
+                        onRetry: () =>
+                            context.read<OfficesDirectoryCubit>().load(),
                       ),
                     ),
                   ),
                   OfficesDirectoryLoaded(:final offices) when offices.isEmpty =>
                     const OfficesEmptyView(),
-                  final OfficesDirectoryLoaded loadedState => loadedState.isFilteredEmpty
-                      ? OfficesEmptyView(query: loadedState.query)
-                      : RefreshIndicator(
-                          onRefresh: () =>
-                              context.read<OfficesDirectoryCubit>().refresh(),
-                          child: OfficesDirectoryList(
-                            offices: loadedState.visibleOffices,
+                  final OfficesDirectoryLoaded loadedState =>
+                    loadedState.isFilteredEmpty
+                        ? OfficesEmptyView(query: loadedState.query)
+                        : RefreshIndicator(
+                            onRefresh: () =>
+                                context.read<OfficesDirectoryCubit>().refresh(),
+                            child: OfficesDirectoryList(
+                              offices: loadedState.visibleOffices,
+                            ),
                           ),
-                        ),
                 },
               ),
             ],
@@ -75,92 +85,137 @@ class OfficesDirectoryScreen extends StatelessWidget {
   }
 }
 
+/// The directory's letterhead: what this list is, how big it is, and the box
+/// that narrows it.
+///
+/// It is the same brand band the office profile opens with — a rider who taps a
+/// listing must land somewhere that looks like where they tapped from — and it
+/// is fixed rather than scrolling, because a rider filtering a directory
+/// reaches for the box repeatedly.
 class _DirectoryMasthead extends StatelessWidget {
   const _DirectoryMasthead({
     required this.title,
-    required this.subtitle,
+    required this.lead,
+    required this.count,
     required this.searchBand,
   });
 
   final String title;
-  final String? subtitle;
+  final String lead;
+
+  /// "12 operators" — absent until the directory has loaded, because a count
+  /// invented before the data arrives is a claim the screen cannot keep.
+  final String? count;
+
   final Widget? searchBand;
 
   @override
   Widget build(BuildContext context) {
     final topInset = MediaQuery.paddingOf(context).top;
-    final accent = ClientColors.primaryFor(context);
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Container(
-      decoration: BoxDecoration(
-        boxShadow: [
-          BoxShadow(
-            color: isDark 
-                ? Colors.black54 
-                : ClientColors.primaryFor(context).withAlpha(60),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light,
+      child: Container(
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          gradient: ClientColors.heroGradientFor(context),
+          borderRadius: const BorderRadius.vertical(
+            bottom: Radius.circular(ClientRadius.xl),
           ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: ClientColors.heroGradientFor(context),
+          boxShadow: ClientElevation.md(context),
+        ),
+        child: Stack(
+          children: [
+            const Positioned.fill(child: OfficeBrandDecor()),
+            Padding(
+              padding: EdgeInsets.only(top: topInset),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SizedBox(
+                    height: 56,
+                    child: Row(
+                      children: [
+                        const SizedBox(width: ClientSpacing.xs),
+                        IconButton(
+                          icon: const DirectionalIcon(Icons.arrow_back_rounded),
+                          tooltip: MaterialLocalizations.of(
+                            context,
+                          ).backButtonTooltip,
+                          onPressed: () => Navigator.of(context).maybePop(),
+                          color: Colors.white,
+                        ),
+                        const SizedBox(width: ClientSpacing.xs),
+                        Expanded(
+                          child: Text(
+                            title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: ClientTypography.headingMedium(context)
+                                .copyWith(
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                ),
+                          ),
+                        ),
+                        if (count != null) ...[
+                          const SizedBox(width: ClientSpacing.xs),
+                          _CountPill(label: count!),
+                        ],
+                        const SizedBox(width: ClientSpacing.md),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      ClientSpacing.lg,
+                      0,
+                      ClientSpacing.lg,
+                      0,
+                    ),
+                    child: Text(
+                      lead,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: ClientTypography.bodySmall(
+                        context,
+                      ).copyWith(color: Colors.white.withAlpha(210)),
+                    ),
+                  ),
+                  ?searchBand,
+                  if (searchBand == null)
+                    const SizedBox(height: ClientSpacing.lg),
+                ],
               ),
             ),
-          ),
-          Padding(
-            padding: EdgeInsets.only(top: topInset),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                SizedBox(
-                  height: 56,
-                  child: Row(
-                    children: [
-                      const SizedBox(width: 8),
-                      IconButton(
-                        icon: const Icon(Icons.arrow_back_rounded),
-                        onPressed: () => Navigator.of(context).maybePop(),
-                        color: Colors.white,
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              title,
-                              style: ClientTypography.headingMedium(context).copyWith(
-                                fontWeight: FontWeight.w900,
-                                color: Colors.white,
-                              ),
-                            ),
-                            if (subtitle != null) ...[
-                              const SizedBox(height: 2),
-                              Text(
-                                subtitle!,
-                                style: ClientTypography.labelSmall(context).copyWith(
-                                  color: Colors.white.withAlpha(200),
-                                ),
-                              ),
-                            ]
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                ?searchBand,
-              ],
-            ),
-          ),
-        ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// How many operators the directory holds, as a glass chip on the band.
+class _CountPill extends StatelessWidget {
+  const _CountPill({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.white.withAlpha(46),
+        borderRadius: BorderRadius.circular(ClientRadius.pill),
+      ),
+      child: Text(
+        label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: ClientTypography.labelSmall(
+          context,
+        ).copyWith(color: Colors.white, fontWeight: FontWeight.w800),
       ),
     );
   }
@@ -172,7 +227,12 @@ class _DirectorySkeleton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 32),
+      padding: const EdgeInsets.fromLTRB(
+        ClientSpacing.md,
+        ClientSpacing.md,
+        ClientSpacing.md,
+        ClientSpacing.xl,
+      ),
       itemCount: 5,
       separatorBuilder: (_, _) => const SizedBox(height: ClientSpacing.sm),
       itemBuilder: (_, _) => ClientSkeleton.officeCard(),

@@ -52,10 +52,19 @@ class OfficeRouteTile extends StatelessWidget {
                   ),
           ),
           const SizedBox(width: ClientSpacing.xs),
-          DirectionalIcon(
-            Icons.arrow_forward_ios_rounded,
-            size: 14,
-            color: ClientColors.textTertiaryFor(context),
+          Container(
+            width: 32,
+            height: 32,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: ClientColors.primaryContainerFor(context),
+            ),
+            child: DirectionalIcon(
+              Icons.arrow_forward_rounded,
+              size: 16,
+              color: ClientColors.onPrimaryContainerFor(context),
+            ),
           ),
         ],
       ),

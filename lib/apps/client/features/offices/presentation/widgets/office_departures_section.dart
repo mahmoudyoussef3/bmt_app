@@ -59,8 +59,9 @@ class OfficeDeparturesSection extends StatelessWidget {
   }
 }
 
-/// "Today", "Tomorrow", or the date — with a rule running out to the edge so
-/// the eye can find where one day's departures end.
+/// "Today", "Tomorrow", or the date — set in a pill with a rule running out to
+/// the edge, so the eye can find where one day's departures end without reading
+/// any of them.
 class _DayHeading extends StatelessWidget {
   const _DayHeading({required this.label});
 
@@ -71,21 +72,43 @@ class _DayHeading extends StatelessWidget {
     if (label.isEmpty) return const SizedBox.shrink();
 
     return Padding(
-      padding: const EdgeInsets.only(top: ClientSpacing.sm, bottom: ClientSpacing.xs),
+      padding: const EdgeInsets.only(
+        top: ClientSpacing.sm,
+        bottom: ClientSpacing.xxs,
+      ),
       child: Row(
         children: [
-          Text(
-            label,
-            style: ClientTypography.labelLarge(context).copyWith(
-              fontWeight: FontWeight.w800,
-              color: ClientColors.textSecondaryFor(context),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: ClientColors.surfaceFor(context),
+              borderRadius: BorderRadius.circular(ClientRadius.pill),
+              border: Border.all(color: ClientColors.borderFor(context)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.calendar_today_rounded,
+                  size: 12,
+                  color: ClientColors.primaryFor(context),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  label,
+                  style: ClientTypography.labelMedium(context).copyWith(
+                    fontWeight: FontWeight.w800,
+                    color: ClientColors.textSecondaryFor(context),
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(width: ClientSpacing.md),
+          const SizedBox(width: ClientSpacing.sm),
           Expanded(
             child: Container(
-              height: 1, 
-              color: ClientColors.borderFor(context).withAlpha(100),
+              height: 1,
+              color: ClientColors.borderFor(context).withAlpha(120),
             ),
           ),
         ],

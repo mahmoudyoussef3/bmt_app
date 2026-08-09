@@ -9,6 +9,10 @@ import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 /// A bare sentence floating between two card stacks read as a rendering glitch;
 /// giving the note the same panel shape as the cards it replaces keeps the
 /// column's rhythm and says "this section is empty", not "this section broke".
+///
+/// Quiet on purpose: an empty section is a fact, not an alert, so it takes the
+/// muted surface rather than the brand colour the cards around it use for the
+/// things a rider can actually buy.
 class OfficeEmptyNote extends StatelessWidget {
   const OfficeEmptyNote({super.key, required this.icon, required this.message});
 
@@ -20,18 +24,32 @@ class OfficeEmptyNote extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(ClientSpacing.md),
       decoration: BoxDecoration(
-        color: ClientColors.primaryContainerFor(context),
-        borderRadius: BorderRadius.circular(ClientRadius.md),
+        color: ClientColors.surfaceMutedFor(context),
+        borderRadius: BorderRadius.circular(ClientRadius.lg),
+        border: Border.all(color: ClientColors.borderFor(context)),
       ),
       child: Row(
         children: [
-          Icon(icon, size: 24, color: ClientColors.onPrimaryContainerFor(context).withAlpha(180)),
-          const SizedBox(width: ClientSpacing.md),
+          Container(
+            width: 40,
+            height: 40,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: ClientColors.surfaceFor(context),
+            ),
+            child: Icon(
+              icon,
+              size: 20,
+              color: ClientColors.textTertiaryFor(context),
+            ),
+          ),
+          const SizedBox(width: ClientSpacing.sm),
           Expanded(
             child: Text(
               message,
               style: ClientTypography.bodyMedium(context).copyWith(
-                color: ClientColors.onPrimaryContainerFor(context),
+                color: ClientColors.textSecondaryFor(context),
                 fontWeight: FontWeight.w600,
               ),
             ),

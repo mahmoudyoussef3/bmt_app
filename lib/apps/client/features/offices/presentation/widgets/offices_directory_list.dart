@@ -15,10 +15,15 @@ class OfficesDirectoryList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(20, 0, 20, 32),
+      padding: const EdgeInsets.fromLTRB(
+        ClientSpacing.md,
+        ClientSpacing.md,
+        ClientSpacing.md,
+        ClientSpacing.xl,
+      ),
       physics: const AlwaysScrollableScrollPhysics(),
       itemCount: offices.length,
-      separatorBuilder: (_, _) => const SizedBox(height: ClientSpacing.md),
+      separatorBuilder: (_, _) => const SizedBox(height: ClientSpacing.sm),
       itemBuilder: (context, index) => OfficeCard(
         office: offices[index],
         onTap: () => Navigator.pushNamed(
