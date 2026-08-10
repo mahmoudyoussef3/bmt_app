@@ -16,6 +16,7 @@ import 'package:bmt_app/apps/client/features/tracking/presentation/routes/tracki
 import 'package:bmt_app/apps/client/features/trips/presentation/routes/trips_routes.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:bmt_app/apps/client/features/offices/presentation/routes/offices_routes.dart';
+import 'package:bmt_app/apps/client/features/routes/presentation/routes/routes_feature_routes.dart';
 
 /// Every route name the app declares, by the constant that owns it.
 ///
@@ -62,6 +63,7 @@ const Map<String, String> _declaredRoutes = <String, String>{
   'CommunicationRoutes.chatThread': CommunicationRoutes.chatThread,
   'OfficesRoutes.directory': OfficesRoutes.directory,
   'OfficesRoutes.profile': OfficesRoutes.profile,
+  'RoutesFeatureRoutes.details': RoutesFeatureRoutes.details,
   'ReferralRoutes.rewards': ReferralRoutes.rewards,
   'LoyaltyRoutes.loyalty': LoyaltyRoutes.loyalty,
   'WalletRoutes.wallet': WalletRoutes.wallet,

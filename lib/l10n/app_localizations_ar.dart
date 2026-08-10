@@ -5148,4 +5148,75 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get auth_otpRateLimited =>
       'محاولات كثيرة. انتظر قليلاً قبل طلب رمز جديد.';
+
+  @override
+  String get routes_catalogLead =>
+      'كل الخطوط العاملة على إيزي واي، من جميع الشركات.';
+
+  @override
+  String routes_countLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count خط',
+      few: '$count خطوط',
+      two: 'خطان',
+      one: 'خط واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String routes_matchesLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count نتيجة',
+      few: '$count نتائج',
+      two: 'نتيجتان',
+      one: 'نتيجة واحدة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get routes_searchHint => 'ابحث باسم الخط أو المدينة أو الشركة';
+
+  @override
+  String routes_noSearchResults(String query) {
+    return 'لا يوجد خط يطابق \"$query\"';
+  }
+
+  @override
+  String get routes_clearSearch => 'مسح البحث';
+
+  @override
+  String get routes_catalogEmpty => 'لا توجد خطوط عاملة حالياً.';
+
+  @override
+  String get routes_pickupOnly => 'ركوب فقط';
+
+  @override
+  String get routes_dropoffOnly => 'نزول فقط';
+
+  @override
+  String routes_stopsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count محطة',
+      few: '$count محطات',
+      two: 'محطتان',
+      one: 'محطة واحدة',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get routes_bookThisRoute => 'احجز هذا الخط';
+
+  @override
+  String routes_operatedBy(String officeName) {
+    return 'تشغيل $officeName';
+  }
 }

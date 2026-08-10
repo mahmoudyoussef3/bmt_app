@@ -9187,6 +9187,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Too many attempts. Wait a moment before requesting a new code.'**
   String get auth_otpRateLimited;
+
+  /// No description provided for @routes_catalogLead.
+  ///
+  /// In en, this message translates to:
+  /// **'Every corridor running on EWT, across every operator.'**
+  String get routes_catalogLead;
+
+  /// No description provided for @routes_countLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 route} other{{count} routes}}'**
+  String routes_countLabel(int count);
+
+  /// No description provided for @routes_matchesLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 match} other{{count} matches}}'**
+  String routes_matchesLabel(int count);
+
+  /// No description provided for @routes_searchHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by route, city, or company'**
+  String get routes_searchHint;
+
+  /// No description provided for @routes_noSearchResults.
+  ///
+  /// In en, this message translates to:
+  /// **'No route matches \"{query}\"'**
+  String routes_noSearchResults(String query);
+
+  /// No description provided for @routes_clearSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear search'**
+  String get routes_clearSearch;
+
+  /// No description provided for @routes_catalogEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No routes are running right now.'**
+  String get routes_catalogEmpty;
+
+  /// No description provided for @routes_pickupOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Pickup only'**
+  String get routes_pickupOnly;
+
+  /// No description provided for @routes_dropoffOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Drop-off only'**
+  String get routes_dropoffOnly;
+
+  /// No description provided for @routes_stopsCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 stop} other{{count} stops}}'**
+  String routes_stopsCount(int count);
+
+  /// No description provided for @routes_bookThisRoute.
+  ///
+  /// In en, this message translates to:
+  /// **'Book this route'**
+  String get routes_bookThisRoute;
+
+  /// No description provided for @routes_operatedBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Operated by {officeName}'**
+  String routes_operatedBy(String officeName);
 }
 
 class _AppLocalizationsDelegate

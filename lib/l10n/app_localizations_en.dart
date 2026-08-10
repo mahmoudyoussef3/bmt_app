@@ -5177,4 +5177,69 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get auth_otpRateLimited =>
       'Too many attempts. Wait a moment before requesting a new code.';
+
+  @override
+  String get routes_catalogLead =>
+      'Every corridor running on EWT, across every operator.';
+
+  @override
+  String routes_countLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count routes',
+      one: '1 route',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String routes_matchesLabel(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count matches',
+      one: '1 match',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get routes_searchHint => 'Search by route, city, or company';
+
+  @override
+  String routes_noSearchResults(String query) {
+    return 'No route matches \"$query\"';
+  }
+
+  @override
+  String get routes_clearSearch => 'Clear search';
+
+  @override
+  String get routes_catalogEmpty => 'No routes are running right now.';
+
+  @override
+  String get routes_pickupOnly => 'Pickup only';
+
+  @override
+  String get routes_dropoffOnly => 'Drop-off only';
+
+  @override
+  String routes_stopsCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count stops',
+      one: '1 stop',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get routes_bookThisRoute => 'Book this route';
+
+  @override
+  String routes_operatedBy(String officeName) {
+    return 'Operated by $officeName';
+  }
 }

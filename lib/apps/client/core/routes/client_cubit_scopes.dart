@@ -24,7 +24,8 @@ import 'package:bmt_app/apps/client/features/profile/presentation/cubit/profile_
 import 'package:bmt_app/apps/client/features/referrals/presentation/cubit/referral_rewards_cubit.dart';
 import 'package:bmt_app/apps/client/features/offices/presentation/cubit/office_profile_cubit.dart';
 import 'package:bmt_app/apps/client/features/offices/presentation/cubit/offices_directory_cubit.dart';
-import 'package:bmt_app/apps/client/features/routes/presentation/cubit/routes_hub_cubit.dart';
+import 'package:bmt_app/apps/client/features/routes/presentation/cubit/route_details_cubit.dart';
+import 'package:bmt_app/apps/client/features/routes/presentation/cubit/routes_directory_cubit.dart';
 import 'package:bmt_app/apps/client/features/seat_release/presentation/cubit/seat_release_cubit.dart';
 import 'package:bmt_app/apps/client/features/seat_selection/presentation/cubit/seat_selection_cubit.dart';
 import 'package:bmt_app/apps/client/features/support/presentation/cubit/support_cubit.dart';
@@ -154,10 +155,18 @@ abstract final class ClientCubitScopes {
     child: child,
   );
 
-  static Widget routesHub(Widget child) => BlocProvider<RoutesHubCubit>(
-    create: (_) => clientGetIt<RoutesHubCubit>(),
-    child: child,
-  );
+  static Widget routesDirectory(Widget child) =>
+      BlocProvider<RoutesDirectoryCubit>(
+        create: (_) => clientGetIt<RoutesDirectoryCubit>()..load(),
+        child: child,
+      );
+
+  /// Scopes one route's details, loading it fresh from its id.
+  static Widget routeDetails(Widget child, {required String routeId}) =>
+      BlocProvider<RouteDetailsCubit>(
+        create: (_) => clientGetIt<RouteDetailsCubit>()..load(routeId),
+        child: child,
+      );
 
   static Widget officesDirectory(Widget child) =>
       BlocProvider<OfficesDirectoryCubit>(

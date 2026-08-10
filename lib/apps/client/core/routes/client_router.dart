@@ -53,7 +53,9 @@ import 'package:bmt_app/apps/client/features/profile/presentation/screens/legal_
 import 'package:bmt_app/apps/client/features/profile/presentation/screens/profile_screen.dart';
 import 'package:bmt_app/apps/client/features/referrals/presentation/routes/referral_routes.dart';
 import 'package:bmt_app/apps/client/features/referrals/presentation/screens/referral_rewards_screen.dart';
-import 'package:bmt_app/apps/client/features/routes/presentation/screens/routes_hub_screen.dart';
+import 'package:bmt_app/apps/client/features/routes/presentation/routes/routes_feature_routes.dart';
+import 'package:bmt_app/apps/client/features/routes/presentation/screens/route_details_screen.dart';
+import 'package:bmt_app/apps/client/features/routes/presentation/screens/routes_directory_screen.dart';
 import 'package:bmt_app/apps/client/features/seat_release/presentation/routes/seat_release_routes.dart';
 import 'package:bmt_app/apps/client/features/seat_release/presentation/screens/seat_release_screen.dart';
 import 'package:bmt_app/apps/client/features/support/presentation/routes/support_routes.dart';
@@ -84,6 +86,7 @@ abstract final class ClientRouter {
     ..._seats,
     ..._payments,
     ..._trips,
+    ..._routesCatalog,
     ..._support,
     ..._engagement,
     ..._profile,
@@ -110,8 +113,8 @@ abstract final class ClientRouter {
   /// inlined into the table.
   static Widget buildShell() {
     return ClientShellScreen(
-      routesBuilder: (context) => ClientCubitScopes.routesHub(
-        RoutesHubScreen(onOpenRoute: _opener(context)),
+      routesBuilder: (context) => ClientCubitScopes.routesDirectory(
+        RoutesDirectoryScreen(onOpenRoute: _opener(context)),
       ),
       tripsBuilder: (context) =>
           ClientCubitScopes.trips(MyTripsScreen(onOpenRoute: _opener(context))),
@@ -309,6 +312,23 @@ abstract final class ClientRouter {
       );
     },
   };
+
+  // --- Routes catalog ---------------------------------------------------------
+
+  static Map<String, WidgetBuilder> get _routesCatalog =>
+      <String, WidgetBuilder>{
+        RoutesFeatureRoutes.details: (context) {
+          final args = _args(context);
+          final routeId = args is Map ? args['routeId']?.toString() : null;
+          if (routeId == null || routeId.isEmpty) {
+            return const SizedBox.shrink();
+          }
+          return ClientCubitScopes.routeDetails(
+            RouteDetailsScreen(routeId: routeId),
+            routeId: routeId,
+          );
+        },
+      };
 
   // --- Support --------------------------------------------------------------
 

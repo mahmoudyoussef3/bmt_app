@@ -2701,5 +2701,52 @@
   "auth_changePhoneNumber": "Change phone number",
   "auth_otpInvalidCode": "That code isn't right. Check the digits and try again.",
   "auth_otpExpiredCode": "That code has expired. Request a new one.",
-  "auth_otpRateLimited": "Too many attempts. Wait a moment before requesting a new code."
+  "auth_otpRateLimited": "Too many attempts. Wait a moment before requesting a new code.",
+  "routes_catalogLead": "Every corridor running on EWT, across every operator.",
+  "routes_countLabel": "{count, plural, =1{1 route} other{{count} routes}}",
+  "@routes_countLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "routes_matchesLabel": "{count, plural, =1{1 match} other{{count} matches}}",
+  "@routes_matchesLabel": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "routes_searchHint": "Search by route, city, or company",
+  "routes_noSearchResults": "No route matches \"{query}\"",
+  "@routes_noSearchResults": {
+    "placeholders": {
+      "query": {
+        "type": "String"
+      }
+    }
+  },
+  "routes_clearSearch": "Clear search",
+  "routes_catalogEmpty": "No routes are running right now.",
+  "routes_pickupOnly": "Pickup only",
+  "routes_dropoffOnly": "Drop-off only",
+  "routes_stopsCount": "{count, plural, =1{1 stop} other{{count} stops}}",
+  "@routes_stopsCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "routes_bookThisRoute": "Book this route",
+  "routes_operatedBy": "Operated by {officeName}",
+  "@routes_operatedBy": {
+    "placeholders": {
+      "officeName": {
+        "type": "String"
+      }
+    }
+  }
 }

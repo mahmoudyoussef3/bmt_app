@@ -141,11 +141,14 @@ import '../../features/offices/domain/usecases/get_office_trips_usecase.dart';
 import '../../features/offices/domain/usecases/get_offices_usecase.dart';
 import '../../features/offices/presentation/cubit/office_profile_cubit.dart';
 import '../../features/offices/presentation/cubit/offices_directory_cubit.dart';
-import '../../features/routes/data/datasources/supabase_routes_hub_datasource.dart';
-import '../../features/routes/data/repositories/routes_hub_repository_impl.dart';
-import '../../features/routes/domain/repositories/routes_hub_repository.dart';
-import '../../features/routes/domain/usecases/get_routes_hub_data_usecase.dart';
-import '../../features/routes/presentation/cubit/routes_hub_cubit.dart';
+import '../../features/routes/data/datasources/routes_directory_datasource.dart';
+import '../../features/routes/data/datasources/supabase_routes_directory_datasource.dart';
+import '../../features/routes/data/repositories/routes_directory_repository_impl.dart';
+import '../../features/routes/domain/repositories/routes_directory_repository.dart';
+import '../../features/routes/domain/usecases/get_route_details_usecase.dart';
+import '../../features/routes/domain/usecases/get_routes_usecase.dart';
+import '../../features/routes/presentation/cubit/route_details_cubit.dart';
+import '../../features/routes/presentation/cubit/routes_directory_cubit.dart';
 import '../../features/referrals/data/datasources/supabase_referral_rewards_datasource.dart';
 import '../../features/referrals/data/repositories/referral_rewards_repository_impl.dart';
 import '../../features/referrals/domain/repositories/referral_rewards_repository.dart';
@@ -226,7 +229,7 @@ void registerClientDependencies() {
   _registerSupportDependencies();
   _registerNotificationsDependencies();
   _registerProfileDependencies();
-  _registerRoutesHubDependencies();
+  _registerRoutesDirectoryDependencies();
   _registerOfficesDependencies();
   _registerCommunicationDependencies();
   _registerReferralRewardsDependencies();
@@ -1181,28 +1184,42 @@ void _registerOfficesDependencies() {
   }
 }
 
-void _registerRoutesHubDependencies() {
-  if (!clientGetIt.isRegistered<SupabaseRoutesHubDatasource>()) {
-    clientGetIt.registerLazySingleton<SupabaseRoutesHubDatasource>(
-      () => SupabaseRoutesHubDatasource(Supabase.instance.client),
+void _registerRoutesDirectoryDependencies() {
+  if (!clientGetIt.isRegistered<RoutesDirectoryDatasource>()) {
+    clientGetIt.registerLazySingleton<RoutesDirectoryDatasource>(
+      () => SupabaseRoutesDirectoryDatasource(Supabase.instance.client),
     );
   }
 
-  if (!clientGetIt.isRegistered<RoutesHubRepository>()) {
-    clientGetIt.registerLazySingleton<RoutesHubRepository>(
-      () => RoutesHubRepositoryImpl(clientGetIt<SupabaseRoutesHubDatasource>()),
+  if (!clientGetIt.isRegistered<RoutesDirectoryRepository>()) {
+    clientGetIt.registerLazySingleton<RoutesDirectoryRepository>(
+      () => RoutesDirectoryRepositoryImpl(
+        clientGetIt<RoutesDirectoryDatasource>(),
+      ),
     );
   }
 
-  if (!clientGetIt.isRegistered<GetRoutesHubDataUseCase>()) {
-    clientGetIt.registerLazySingleton<GetRoutesHubDataUseCase>(
-      () => GetRoutesHubDataUseCase(clientGetIt<RoutesHubRepository>()),
+  if (!clientGetIt.isRegistered<GetRoutesUseCase>()) {
+    clientGetIt.registerLazySingleton<GetRoutesUseCase>(
+      () => GetRoutesUseCase(clientGetIt<RoutesDirectoryRepository>()),
     );
   }
 
-  if (!clientGetIt.isRegistered<RoutesHubCubit>()) {
-    clientGetIt.registerFactory<RoutesHubCubit>(
-      () => RoutesHubCubit(clientGetIt<GetRoutesHubDataUseCase>()),
+  if (!clientGetIt.isRegistered<GetRouteDetailsUseCase>()) {
+    clientGetIt.registerLazySingleton<GetRouteDetailsUseCase>(
+      () => GetRouteDetailsUseCase(clientGetIt<RoutesDirectoryRepository>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<RoutesDirectoryCubit>()) {
+    clientGetIt.registerFactory<RoutesDirectoryCubit>(
+      () => RoutesDirectoryCubit(clientGetIt<GetRoutesUseCase>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<RouteDetailsCubit>()) {
+    clientGetIt.registerFactory<RouteDetailsCubit>(
+      () => RouteDetailsCubit(clientGetIt<GetRouteDetailsUseCase>()),
     );
   }
 }
