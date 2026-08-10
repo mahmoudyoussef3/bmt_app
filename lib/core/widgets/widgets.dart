@@ -3,7 +3,7 @@ export 'app_button.dart';
 export 'metric_tile.dart';
 export 'progress_bar.dart';
 export 'map_placeholder.dart';
-export 'seat_widget.dart';
+export 'vehicle_seats/vehicle_seats.dart';
 export 'avatar.dart';
 export 'badge.dart';
 export 'empty_state.dart';

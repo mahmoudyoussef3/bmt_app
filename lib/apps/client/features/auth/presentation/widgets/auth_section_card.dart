@@ -22,17 +22,24 @@ class AuthSectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ClientCard(
-      padding: const EdgeInsets.all(ClientSpacing.md),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          if (title case final String heading) ...[
-            _SectionHeader(title: heading, icon: icon),
-            const SizedBox(height: ClientSpacing.md),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(ClientRadius.lg),
+        boxShadow: ClientElevation.lg(context),
+      ),
+      child: ClientCard(
+        useShadow: false,
+        padding: const EdgeInsets.all(ClientSpacing.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (title case final String heading) ...[
+              _SectionHeader(title: heading, icon: icon),
+              const SizedBox(height: ClientSpacing.md),
+            ],
+            ...children,
           ],
-          ...children,
-        ],
+        ),
       ),
     );
   }

@@ -64,9 +64,7 @@ void main() {
           type: type,
           capacity: VehicleSeatConfigurator.fixedCapacityFor(type)!,
         );
-        final passengers = config.seats.where(
-          (s) => s.seatType == 'passenger',
-        );
+        final passengers = config.seats.where((s) => s.seatType == 'passenger');
         expect(
           {for (final s in passengers) s.seatNumber},
           hasLength(passengers.length),
@@ -221,11 +219,8 @@ void main() {
       );
       expect(
         seats.every(
-          (s) => const {
-            'passenger',
-            'driver',
-            'empty',
-          }.contains(s['seat_type']),
+          (s) =>
+              const {'passenger', 'driver', 'empty'}.contains(s['seat_type']),
         ),
         isTrue,
       );

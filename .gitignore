@@ -43,3 +43,6 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Throwaway seat-map visual captures (see docs/architecture/VEHICLE_SEAT_BLUEPRINTS.md)
+test/core/widgets/vehicle_seats/_captures/

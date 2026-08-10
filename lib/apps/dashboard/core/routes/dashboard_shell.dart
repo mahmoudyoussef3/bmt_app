@@ -344,42 +344,7 @@ class _DashboardShellState extends State<DashboardShell> {
       feature: FeatureKeys.wallet,
       group: _navFinance,
     ),
-    /*  _DashboardNavItem(
-      label: 'التقارير',
-      route: DashboardRoutes.reports,
-      icon: DashboardIcons.reports,
-      selectedIcon: DashboardIcons.reportsActive,
-      permission: DashboardPermission.reports,
-      group: _navFinance,
-    ),
-    */
-    _DashboardNavItem(
-      label: 'نظرة المالك',
-      route: DashboardRoutes.ownerOverview,
-      icon: DashboardIcons.ownerOverview,
-      selectedIcon: DashboardIcons.ownerOverviewActive,
-      permission: DashboardPermission.ownerOverview,
-      // The analytics surface, so the analytics licence is what gates it. Its
-      // enum value (basic | advanced | ai) additionally decides how much of the
-      // screen is populated; `basic` is truthy, so the module stays visible on
-      // every plan and only its breadth moves.
-      feature: FeatureKeys.analyticsLevel,
-      group: _navFinance,
-    ),
-    // "برنامج الإحالات" is hidden from the sidebar for now. Only the nav entry
-    // is commented out — the route, cubit, screen and `FeatureKeys.referrals`
-    // licence gate all stay wired, so restoring the module is uncommenting this
-    // block (same treatment as "التقارير" above).
-    /* _DashboardNavItem(
-      label: 'برنامج الإحالات',
-      route: DashboardRoutes.referrals,
-      icon: DashboardIcons.referrals,
-      selectedIcon: DashboardIcons.referralsActive,
-      permission: DashboardPermission.referrals,
-      feature: FeatureKeys.referrals,
-      group: _navFinance,
-    ),
-    */
+
     _DashboardNavItem(
       label: 'الشكاوى',
       route: DashboardRoutes.tickets,
@@ -618,15 +583,6 @@ class _DashboardShellState extends State<DashboardShell> {
     return _entitlementContext.allows(item.feature);
   }
 
-  /// Off, but on a plan the office could buy (§10.2).
-  ///
-  /// Hiding these would make them unsellable — the owner cannot ask for a
-  /// module they have never seen — so they stay in the sidebar wearing a lock
-  /// and open the upgrade card instead of the screen. An **unpurchasable** or
-  /// ungated feature is still hidden outright, because that one is noise.
-  ///
-  /// The role gate is checked first and independently: a support agent must not
-  /// learn the shape of the owner's console from a row of locks.
   bool _isItemLocked(_DashboardNavItem item) {
     if (!_passesRoleGate(item)) return false;
     return _entitlementContext.isLocked(item.feature);
@@ -646,9 +602,7 @@ class _DashboardShellState extends State<DashboardShell> {
 
   String get _activeTitle => _activeItem.label;
 
-  /// The section the open module belongs to — one line of "you are here" above
-  /// the page title, so the top bar says where in the console the operator is
-  /// rather than only what the screen is called.
+
   String? get _activeGroup => _activeItem.group;
 
   void _setRole(DashboardRole role) {

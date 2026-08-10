@@ -6,6 +6,7 @@ import 'package:bmt_app/apps/client/features/trips/domain/entities/trip_seat.dar
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_seat_cabin.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 import 'package:bmt_app/core/theme/app_layout.dart';
+import 'package:bmt_app/core/widgets/vehicle_seats/vehicle_seats.dart';
 
 /// A focused, full-screen view of the trip's real seat layout, so the
 /// passenger can inspect exactly where their seat sits in the cabin.
@@ -42,7 +43,9 @@ class FullScreenSeatMapScreen extends StatelessWidget {
             child: TripSeatCabin(
               seats: seats,
               vehicleType: vehicleType,
-              seatSize: 52,
+              // The cabin is the whole screen here, so it gets the roomy
+              // density rather than the card-sized one used inline.
+              density: SeatLayoutDensity.comfortable,
             ),
           ),
         ),

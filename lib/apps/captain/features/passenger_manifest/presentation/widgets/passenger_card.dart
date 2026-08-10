@@ -89,7 +89,7 @@ class _Actions extends StatelessWidget {
         PassengerActionButton(
           icon: Icons.call_rounded,
           tooltip: onCall == null ? 'لا يوجد رقم هاتف' : 'اتصال',
-          color: CaptainColors.primaryBright,
+          color: CaptainColors.primary,
           onPressed: onCall,
         ),
       ],

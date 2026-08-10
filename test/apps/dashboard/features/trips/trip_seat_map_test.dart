@@ -81,7 +81,10 @@ void main() {
     }
 
     // The cabin, not just the seats: the driver bench and the front/rear cues.
-    expect(find.text('A1'), findsOneWidget);
+    // The driver's own place says what it is rather than showing its blueprint
+    // coordinate; the rest of the bench keeps the coordinate, because those
+    // letters are the language the passenger seats are numbered in.
+    expect(find.text('سائق'), findsOneWidget);
     expect(find.text('A2'), findsOneWidget);
     expect(find.text('مقدمة المركبة'), findsOneWidget);
     expect(find.text('مؤخرة المركبة'), findsOneWidget);
@@ -182,10 +185,9 @@ void main() {
       _trip(vehicleType: 'Coaster', seats: _seatsFor(VehicleType.coaster)),
     );
 
-    // The Coaster blueprint labels its own bench 'A1'; the derived-grid rule
-    // must not fire on top of it.
-    expect(find.text('سائق'), findsNothing);
-    expect(find.text('A1'), findsOneWidget);
+    // The Coaster blueprint states where its driver sits, so the inferred
+    // front-left bench must not fire on top of it: exactly one, never two.
+    expect(find.text('سائق'), findsOneWidget);
   });
 
   testWidgets('a seat count that disagrees with the type is drawn and named', (

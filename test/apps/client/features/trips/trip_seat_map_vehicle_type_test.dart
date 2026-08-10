@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip_seat.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_seat_map.dart';
-import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_seat_tile.dart';
+import 'package:bmt_app/core/widgets/vehicle_seats/vehicle_seats.dart';
 import 'package:bmt_app/core/vehicles/vehicles.dart';
 import '../../client_test_app.dart';
 
@@ -57,7 +57,7 @@ void main() {
   testWidgets('a Hiace trip renders the 14-seat Hiace cabin', (tester) async {
     await _pump(tester, _seatsFor(VehicleSeatLayouts.hiace), 'Hiace');
 
-    expect(find.byType(TripSeatTile), findsNWidgets(14));
+    expect(find.byType(VehicleSeat), findsNWidgets(14));
     for (var seat = 1; seat <= 14; seat++) {
       expect(find.text('$seat'), findsOneWidget);
     }
@@ -68,7 +68,7 @@ void main() {
   ) async {
     await _pump(tester, _seatsFor(VehicleSeatLayouts.coaster), 'Coaster');
 
-    expect(find.byType(TripSeatTile), findsNWidgets(30));
+    expect(find.byType(VehicleSeat), findsNWidgets(30));
     expect(find.text('30'), findsOneWidget);
     // The door only exists on the Coaster cabin.
     expect(find.byIcon(Icons.sensor_door_outlined), findsOneWidget);
@@ -85,7 +85,7 @@ void main() {
     tester,
   ) async {
     await _pump(tester, _seatsFor(VehicleSeatLayouts.coaster), 'Coaster');
-    expect(find.byType(TripSeatTile), isNot(findsNWidgets(14)));
+    expect(find.byType(VehicleSeat), isNot(findsNWidgets(14)));
   });
 
   testWidgets('seat availability comes from the data, not the layout', (
@@ -101,17 +101,20 @@ void main() {
     expect(seats.where((s) => s.isOccupied), hasLength(3));
     expect(seats.where((s) => s.isMine), hasLength(1));
     expect(seats.where((s) => s.isAvailable), hasLength(26));
-    expect(find.byType(TripSeatTile), findsNWidgets(30));
+    expect(find.byType(VehicleSeat), findsNWidgets(30));
   });
 
   testWidgets('a Coaster still carrying Hiace seats renders every seat', (
     tester,
   ) async {
-    // The placeholder row in production: typed Coaster, 14 seats stored. The
-    // map must show 14 real seats, not a Coaster frame full of holes.
+    // The placeholder row in production: typed Coaster, 14 seats stored. Every
+    // stored seat is drawn, and the vehicle keeps its own cabin — a stale seat
+    // configuration is a data problem, not grounds for drawing a different
+    // vehicle.
     await _pump(tester, _seatsFor(VehicleSeatLayouts.hiace), 'Coaster');
 
-    expect(find.byType(TripSeatTile), findsNWidgets(14));
+    expect(find.byType(VehicleSeat), findsNWidgets(14));
+    expect(find.byIcon(Icons.sensor_door_outlined), findsOneWidget);
   });
 
   testWidgets('an unknown vehicle type still renders every real seat', (
@@ -119,7 +122,7 @@ void main() {
   ) async {
     await _pump(tester, _seatsFor(VehicleSeatLayouts.hiace), 'Karsan e-ATA');
 
-    expect(find.byType(TripSeatTile), findsNWidgets(14));
+    expect(find.byType(VehicleSeat), findsNWidgets(14));
   });
 
   testWidgets('an empty seat map renders nothing rather than throwing', (
@@ -127,7 +130,7 @@ void main() {
   ) async {
     await _pump(tester, const [], 'Coaster');
 
-    expect(find.byType(TripSeatTile), findsNothing);
+    expect(find.byType(VehicleSeat), findsNothing);
     expect(tester.takeException(), isNull);
   });
 }

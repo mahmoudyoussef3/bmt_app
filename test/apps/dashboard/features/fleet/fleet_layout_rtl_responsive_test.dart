@@ -101,9 +101,9 @@ void main() {
 
       // Blueprint column 1 is the driver's side of a left-hand-drive vehicle.
       // Seat '1' sits on the far side of the aisle from it, in the last column.
-      final driverIcon = tester.getCenter(
-        find.byIcon(Icons.settings_accessibility_rounded).first,
-      );
+      // The driver's place is now a painted steering wheel rather than an
+      // icon, so the tile is located by its label.
+      final driverIcon = tester.getCenter(find.text('سائق').first);
       final firstSeat = tester.getCenter(find.text('1'));
 
       expect(
@@ -134,9 +134,9 @@ void main() {
       await tester.pumpAndSettle();
 
       // Coaster row 1 is `D . | ^ S`: driver at column 1, entrance at column 4.
-      final driverIcon = tester.getCenter(
-        find.byIcon(Icons.settings_accessibility_rounded).first,
-      );
+      // The driver's place is now a painted steering wheel rather than an
+      // icon, so the tile is located by its label.
+      final driverIcon = tester.getCenter(find.text('سائق').first);
       final door = tester.getCenter(find.byIcon(Icons.sensor_door_outlined));
 
       expect(
@@ -179,7 +179,11 @@ void main() {
 
   group('the vehicle form stays usable at every size', () {
     // 1280 is a small laptop; 900 a narrow docked window; 1600 a wide desktop.
-    for (final size in const [Size(900, 700), Size(1280, 800), Size(1600, 1000)]) {
+    for (final size in const [
+      Size(900, 700),
+      Size(1280, 800),
+      Size(1600, 1000),
+    ]) {
       for (final scale in const [1.0, 1.3, 1.6]) {
         testWidgets(
           'save is on screen and nothing overflows @ ${size.width.toInt()}x'

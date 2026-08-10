@@ -26,19 +26,16 @@ class CaptainColors {
 
   /// The pale end of the palette (Blue 400) — for the earliest step of a
   /// progression, before it reaches full [primary].
-  static const Color primaryLight = Color(0xFF2563EB);
 
   /// The bright end of the palette (Sky 500). Reads as "done / good" while
   /// staying inside the blue family — this is what replaced the old green.
-  static const Color primaryBright = Color(0xFF4338CA);
 
   // Semantic
-  static const Color online = primaryBright;
   static const Color offline = Color(0xFF64748B); // Slate 500
   static const Color tripActive = primary;
   static const Color error = Color(0xFFEF4444); // Red 500
   static const Color warning = Color(0xFFF59E0B); // Amber 500
-  static const Color success = primaryBright;
+  static const Color success = primary; // Blue 600, not green, to avoid competing with the brand
 
   /// Star/rating gold. Distinct from [warning] on purpose: a rating is not a
   /// caution state, and the two must stay independently tunable.

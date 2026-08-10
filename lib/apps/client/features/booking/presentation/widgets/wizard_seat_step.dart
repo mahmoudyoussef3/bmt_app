@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
-import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_button.dart';
-import 'package:bmt_app/apps/client/core/widgets/client_seat_map.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_seat_labels.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_skeleton.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_wizard_session.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_wizard_cubit.dart';
@@ -16,6 +15,7 @@ import 'package:bmt_app/apps/client/features/seat_selection/presentation/cubit/s
 import 'package:bmt_app/core/localization/l10n_context.dart';
 import 'package:bmt_app/core/vehicles/vehicles.dart';
 import 'package:bmt_app/core/widgets/directional_icon.dart';
+import 'package:bmt_app/core/widgets/vehicle_seats/vehicle_seats.dart';
 
 class WizardSeatStep extends StatefulWidget {
   const WizardSeatStep({super.key, required this.onNext});
@@ -114,26 +114,21 @@ class _SeatBody extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              const _SeatLegend(),
-              const SizedBox(height: 16),
-              _VehicleCabin(
+              VehicleSeatLayout(
                 blueprint: blueprint,
-                seats: seats,
-                selectedSeatId: session.selectedSeatId,
-                onSeatTap: (seat) => context
-                    .read<BookingWizardCubit>()
-                    .selectSeat(seat.id, seat.displayLabel),
+                seats: [
+                  for (var i = 0; i < seats.length; i++)
+                    _seatData(blueprint, seats[i], i, session.selectedSeatId),
+                ],
+                mode: SeatLayoutMode.selection,
+                showLegend: true,
+                labels: clientSeatLabels(context),
+                onSeatTap: (data) =>
+                    context.read<BookingWizardCubit>().selectSeat(
+                      data.id,
+                      seats.firstWhere((s) => s.id == data.id).displayLabel,
+                    ),
               ),
-              if (seats.length > blueprint.capacity) ...[
-                const SizedBox(height: 14),
-                _ExtraSeats(
-                  seats: seats.skip(blueprint.capacity).toList(),
-                  selectedSeatId: session.selectedSeatId,
-                  onSeatTap: (seat) => context
-                      .read<BookingWizardCubit>()
-                      .selectSeat(seat.id, seat.displayLabel),
-                ),
-              ],
             ],
           ),
         ),
@@ -186,6 +181,31 @@ class _SeatBody extends StatelessWidget {
     );
   }
 
+  /// Turns one booking seat into a tile for the shared cabin renderer.
+  ///
+  /// This is where the client's booking rule lives — and the only place it
+  /// does: a rider may tap a seat that is free, and nothing else. The renderer
+  /// is told the outcome (`enabled`), never the rule.
+  VehicleSeatData _seatData(
+    SeatLayoutBlueprint blueprint,
+    SeatOption seat,
+    int index,
+    String? selectedSeatId,
+  ) {
+    // Seats past the cabin's capacity have no slot to take a cabin label from,
+    // so they fall back to the label stored on the seat itself.
+    final slot = blueprint.seatSlotAt(index);
+    return VehicleSeatData(
+      id: seat.id,
+      label: slot == null ? seat.displayLabel : cabinSeatLabel(blueprint, slot),
+      state: seat.id == selectedSeatId
+          ? SeatViewState.selected
+          : seat.isAvailable
+          ? SeatViewState.available
+          : SeatViewState.occupied,
+      enabled: seat.isAvailable,
+    );
+  }
 }
 
 /// The label riders see on a seat tile: the row's letter (A the driver row,
@@ -202,408 +222,6 @@ String cabinSeatLabel(SeatLayoutBlueprint blueprint, SeatSlot slot) {
     if (other.column == slot.column) break;
   }
   return '$rowLetter$position';
-}
-
-class _VehicleCabin extends StatelessWidget {
-  const _VehicleCabin({
-    required this.blueprint,
-    required this.seats,
-    required this.selectedSeatId,
-    required this.onSeatTap,
-  });
-
-  final SeatLayoutBlueprint blueprint;
-  final List<SeatOption> seats;
-  final String? selectedSeatId;
-  final ValueChanged<SeatOption> onSeatTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Stack(
-      clipBehavior: Clip.none,
-      children: [
-        Container(
-          constraints: const BoxConstraints(maxWidth: 430),
-          margin: const EdgeInsets.symmetric(horizontal: 2),
-          padding: const EdgeInsets.fromLTRB(18, 16, 18, 22),
-          decoration: BoxDecoration(
-            color: ClientColors.surfaceFor(context),
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(54),
-              topRight: Radius.circular(54),
-              bottomLeft: Radius.circular(24),
-              bottomRight: Radius.circular(24),
-            ),
-            border: Border.all(color: ClientColors.borderStrongFor(context)),
-            boxShadow: ClientElevation.md(context),
-          ),
-          child: Column(
-            children: [
-              Container(
-                width: 76,
-                height: 7,
-                decoration: BoxDecoration(
-                  color: ClientColors.surfaceMutedFor(context),
-                  borderRadius: BorderRadius.circular(999),
-                ),
-              ),
-              const SizedBox(height: 10),
-              _CabinCaption(label: context.l10n.seatSelection_frontOfVehicle),
-              const SizedBox(height: 14),
-              ClientSeatMap(
-                blueprint: blueprint,
-                rowGap: 12,
-                seatBuilder: _seat,
-                decorationBuilder: _decoration,
-                clusterBuilder: _bench,
-              ),
-              const SizedBox(height: 14),
-              Divider(color: ClientColors.borderFor(context)),
-              const SizedBox(height: 6),
-              _CabinCaption(label: context.l10n.seatSelection_cabinRear),
-            ],
-          ),
-        ),
-        Positioned(bottom: -6, left: 30, child: _CabinWheel()),
-        Positioned(bottom: -6, right: 30, child: _CabinWheel()),
-      ],
-    );
-  }
-
-  /// The shared card behind one physical bench — a 2-seat pair, the lone
-  /// aisle seat across from it, or (on the flush back row) all four seats at
-  /// once. Makes the 2+1 split the rider will actually sit in visible instead
-  /// of implied by spacing alone.
-  Widget _bench(BuildContext context, List<SeatSlot> cluster, Widget row) {
-    final isDriverBench = cluster.every(
-      (slot) => slot.kind == SeatSlotKind.driver,
-    );
-    return Container(
-      padding: const EdgeInsets.all(6),
-      decoration: BoxDecoration(
-        color: isDriverBench
-            ? ClientColors.surfaceMutedFor(context)
-            : ClientColors.surfaceSubtleFor(context),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: ClientColors.borderFor(context)),
-      ),
-      child: row,
-    );
-  }
-
-  Widget _seat(BuildContext context, SeatSlot slot) {
-    final index = slot.seatNumber - 1;
-    if (index < 0 || index >= seats.length) {
-      return const SizedBox(height: 62);
-    }
-    final seat = seats[index];
-    return _SeatCell(
-      seat: seat,
-      label: cabinSeatLabel(blueprint, slot),
-      isSelected: seat.id == selectedSeatId,
-      onTap: seat.isAvailable ? () => onSeatTap(seat) : null,
-    );
-  }
-
-  Widget _decoration(BuildContext context, SeatSlot slot) {
-    if (slot.kind == SeatSlotKind.door) {
-      return _CabinDoor(label: context.l10n.seatSelection_cabinDoor);
-    }
-    // Column 1 is always the driver's own seat — the blueprint is drawn in a
-    // fixed left-hand-drive coordinate system regardless of app direction.
-    final isDriver = slot.column == 1;
-    final fallback = isDriver ? 'A1' : 'A2';
-    return _DriverSeat(
-      caption: isDriver
-          ? context.l10n.booking_driver
-          : slot.label.isEmpty
-          ? fallback
-          : slot.label,
-      isDriver: isDriver,
-    );
-  }
-}
-
-/// A small wheel peeking out from the cabin card's bottom corner — the one
-/// cue that reads "vehicle" rather than "seating chart".
-class _CabinWheel extends StatelessWidget {
-  const _CabinWheel();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 16,
-      height: 16,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: ClientColors.textTertiaryFor(context),
-        border: Border.all(color: ClientColors.surfaceFor(context), width: 2),
-      ),
-    );
-  }
-}
-
-class _DriverSeat extends StatelessWidget {
-  const _DriverSeat({required this.caption, required this.isDriver});
-
-  final String caption;
-  final bool isDriver;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 62,
-      decoration: BoxDecoration(
-        color: ClientColors.surfaceMutedFor(context),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: ClientColors.borderFor(context)),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            isDriver
-                ? Icons.airline_seat_recline_extra_rounded
-                : Icons.airline_seat_recline_normal_rounded,
-            color: ClientColors.textTertiaryFor(context),
-            size: 19,
-          ),
-          const SizedBox(height: 2),
-          Text(
-            caption,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: ClientTypography.labelSmall(context).copyWith(
-              color: ClientColors.textTertiaryFor(context),
-              fontSize: isDriver ? 9 : null,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// The FRONT / REAR markers that orient the rider inside the cabin.
-class _CabinCaption extends StatelessWidget {
-  const _CabinCaption({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      label.toUpperCase(),
-      style: ClientTypography.labelSmall(context).copyWith(
-        color: ClientColors.textTertiaryFor(context),
-        letterSpacing: 1.2,
-      ),
-    );
-  }
-}
-
-/// The passenger entrance, so the rider can read front from rear and see which
-/// seats sit by the door.
-class _CabinDoor extends StatelessWidget {
-  const _CabinDoor({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 62,
-      decoration: BoxDecoration(
-        color: ClientColors.surfaceSubtleFor(context),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: ClientColors.borderFor(context),
-          style: BorderStyle.solid,
-        ),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.sensor_door_outlined,
-            color: ClientColors.textTertiaryFor(context),
-            size: 21,
-          ),
-          Text(
-            label,
-            style: ClientTypography.labelSmall(
-              context,
-            ).copyWith(color: ClientColors.textTertiaryFor(context)),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SeatCell extends StatelessWidget {
-  const _SeatCell({
-    required this.seat,
-    required this.label,
-    required this.isSelected,
-    this.onTap,
-  });
-
-  final SeatOption seat;
-  final String label;
-  final bool isSelected;
-  final VoidCallback? onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final available = seat.isAvailable;
-    final background = isSelected
-        ? ClientColors.primary
-        : available
-        ? ClientColors.seatAvailableFor(context)
-        : ClientColors.surfaceMutedFor(context);
-    final foreground = isSelected
-        ? Colors.white
-        : available
-        ? ClientColors.onSeatAvailableFor(context)
-        : ClientColors.textTertiaryFor(context);
-
-    return GestureDetector(
-      key: ValueKey('seat-${seat.id}'),
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        height: 62,
-        decoration: BoxDecoration(
-          color: background,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: isSelected
-                ? ClientColors.primary
-                : available
-                ? ClientColors.seatAvailableBorderFor(context)
-                : ClientColors.borderFor(context),
-          ),
-          boxShadow: isSelected ? ClientElevation.sm(context) : null,
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.event_seat_rounded, size: 22, color: foreground),
-            const SizedBox(height: 3),
-            Text(
-              label,
-              style: ClientTypography.labelMedium(
-                context,
-              ).copyWith(color: foreground),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _ExtraSeats extends StatelessWidget {
-  const _ExtraSeats({
-    required this.seats,
-    required this.selectedSeatId,
-    required this.onSeatTap,
-  });
-
-  final List<SeatOption> seats;
-  final String? selectedSeatId;
-  final ValueChanged<SeatOption> onSeatTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return BookingSurfaceCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            context.l10n.booking_additionalVehicleSeats,
-            style: ClientTypography.labelMedium(context),
-          ),
-          const SizedBox(height: 12),
-          GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: seats.length,
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 3,
-              mainAxisSpacing: 8,
-              crossAxisSpacing: 8,
-              mainAxisExtent: 62,
-            ),
-            itemBuilder: (context, index) {
-              final seat = seats[index];
-              return _SeatCell(
-                seat: seat,
-                label: seat.displayLabel,
-                isSelected: seat.id == selectedSeatId,
-                onTap: seat.isAvailable ? () => onSeatTap(seat) : null,
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SeatLegend extends StatelessWidget {
-  const _SeatLegend();
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = context.l10n;
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        _item(
-          context,
-          ClientColors.seatAvailableFor(context),
-          l10n.booking_available,
-          border: ClientColors.seatAvailableBorderFor(context),
-        ),
-        const SizedBox(width: 16),
-        _item(context, ClientColors.primary, l10n.seatSelection_seatStatusSelected),
-        const SizedBox(width: 16),
-        _item(
-          context,
-          ClientColors.surfaceMutedFor(context),
-          l10n.booking_unavailable,
-        ),
-      ],
-    );
-  }
-
-  Widget _item(
-    BuildContext context,
-    Color color,
-    String label, {
-    Color? border,
-  }) => Row(
-    children: [
-      Container(
-        width: 12,
-        height: 12,
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(4),
-          border: Border.all(color: border ?? ClientColors.borderFor(context)),
-        ),
-      ),
-      const SizedBox(width: 5),
-      Text(
-        label,
-        style: ClientTypography.labelSmall(
-          context,
-        ).copyWith(color: ClientColors.textSecondaryFor(context)),
-      ),
-    ],
-  );
 }
 
 class _SeatLoadingBody extends StatelessWidget {

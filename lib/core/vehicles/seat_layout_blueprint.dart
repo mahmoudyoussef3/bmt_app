@@ -109,6 +109,79 @@ class SeatLayoutBlueprint {
         if (slot.isSeat) slot,
   ];
 
+  /// How many leading rows form the **front cabin** — the driver's compartment,
+  /// which is a different part of the vehicle from the passenger cabin behind
+  /// it and is drawn as one.
+  ///
+  /// Derived rather than declared: a front cabin is exactly the run of rows at
+  /// the nose of the vehicle that hold a driver position. A grid derived from
+  /// seat data has none (`trip_seats` never stores the driver), and then the
+  /// cabin is undivided — guessing a bulkhead from passenger seats alone would
+  /// be inventing structure.
+  int get frontCabinRows {
+    var count = 0;
+    for (final row in rows) {
+      if (!row.any((slot) => slot.kind == SeatSlotKind.driver)) break;
+      count++;
+    }
+    // A front cabin that swallowed the whole vehicle is not a front cabin.
+    return count == rows.length ? 0 : count;
+  }
+
+  /// The rows of the passenger cabin, front to back — everything behind
+  /// [frontCabinRows].
+  List<List<SeatSlot>> get passengerCabinRows => rows.sublist(frontCabinRows);
+
+  /// The rows that are a **bench**: seats all the way across, wall to wall,
+  /// with no walkway through them.
+  ///
+  /// A rear bench is not a row of the seat grid — it is where the cabin runs
+  /// out of aisle and fits one more seat across, which is why its seats are
+  /// slightly narrower than the ones in front of them and why they sit flush
+  /// against each other rather than in the columns above. Drawing it on the
+  /// grid is what makes the last seat look like a stray single.
+  ///
+  /// Derived, not declared: a row with nothing but seats in it has nowhere to
+  /// walk, and that is exactly what a bench is.
+  Set<int> get benchRows => {
+    for (var r = 0; r < rows.length; r++)
+      if (rows[r].isNotEmpty && rows[r].every((slot) => slot.isSeat)) r,
+  };
+
+  /// The 1-based columns that are walkway for the whole length of the cabin.
+  ///
+  /// A column counts as aisle when some row walks through it and **no** row
+  /// puts a seat, a driver or a door in it. That is what makes the walkway one
+  /// channel rather than a per-row gap: the renderer can narrow these columns
+  /// and run a single line down them, and a row that happens to leave the
+  /// column empty (the front cabin's walk-through) does not break the channel.
+  ///
+  /// Bench rows are ignored here. A bench spans the cabin instead of sitting in
+  /// the columns, so the seat it puts "in" the aisle column is not a seat in
+  /// the aisle — counting it would close the walkway for the whole vehicle.
+  Set<int> get aisleColumns {
+    final benches = benchRows;
+    final walked = <int>{};
+    final occupied = <int>{};
+    for (var r = 0; r < rows.length; r++) {
+      if (benches.contains(r)) continue;
+      for (final slot in rows[r]) {
+        if (slot.kind == SeatSlotKind.aisle) {
+          walked.add(slot.column);
+        } else if (!slot.isGap) {
+          occupied.add(slot.column);
+        }
+      }
+    }
+    return walked.difference(occupied);
+  }
+
+  /// How many bookable seats sit in each row, front to back. The shape of the
+  /// cabin in one line — `[1, 3, 3, 3, 4]` is a Hiace.
+  List<int> get seatsPerRow => [
+    for (final row in rows) row.where((slot) => slot.isSeat).length,
+  ];
+
   /// The slot that holds the `index`-th real seat (0-based), or null when the
   /// blueprint has fewer slots than the trip has seats.
   SeatSlot? seatSlotAt(int index) {
@@ -212,10 +285,11 @@ class SeatLayoutBlueprint {
   /// The honest fallback for a vehicle with no predefined blueprint: draw the
   /// seat data exactly as it is stored, one tile per occupied `(row, column)`.
   ///
-  /// Used for vehicle types this app does not model yet, and — importantly —
-  /// whenever a modelled type's seat count does not match its blueprint (a
-  /// vehicle typed `Coaster` that still carries a 14-seat configuration, say).
-  /// Better a truthful grid than a Coaster frame with fourteen holes in it.
+  /// Used for vehicle types this app does not model yet — and only for those. A
+  /// modelled type keeps its own cabin even when the seat count disagrees with
+  /// it, because a stale `seat_configuration` is a data problem and redrawing
+  /// the vehicle as a grid hides it instead of showing it. See
+  /// `VehicleSeatLayouts.resolve`.
   factory SeatLayoutBlueprint.fromSeatGrid(
     List<({int row, int column})> coordinates, {
     int fallbackColumns = 4,
@@ -239,16 +313,15 @@ class SeatLayoutBlueprint {
     }
 
     // Seats fill the grid in the same reading order the apps sort them in.
-    final ordered = [...placed]..sort((a, b) {
-      final byRow = a.row.compareTo(b.row);
-      return byRow != 0 ? byRow : a.column.compareTo(b.column);
-    });
+    final ordered = [...placed]
+      ..sort((a, b) {
+        final byRow = a.row.compareTo(b.row);
+        return byRow != 0 ? byRow : a.column.compareTo(b.column);
+      });
     final occupied = {for (final c in ordered) '${c.row}:${c.column}'};
 
     final lastRow = ordered.last.row;
-    final widest = ordered
-        .map((c) => c.column)
-        .reduce((a, b) => a > b ? a : b);
+    final widest = ordered.map((c) => c.column).reduce((a, b) => a > b ? a : b);
 
     final rows = <List<SeatSlot>>[];
     var seatNumber = 0;

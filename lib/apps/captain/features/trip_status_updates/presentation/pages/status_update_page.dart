@@ -166,8 +166,8 @@ class StatusUpdatePage extends StatelessWidget {
   /// that's waiting on the captain to act.
   Color _color(CaptainTripStatus status) {
     return switch (status) {
-      CaptainTripStatus.headingToPickup => CaptainColors.primaryLight,
-      CaptainTripStatus.arrivedPickup => CaptainColors.primaryBright,
+      CaptainTripStatus.headingToPickup => CaptainColors.primary,
+      CaptainTripStatus.arrivedPickup => CaptainColors.primary,
       CaptainTripStatus.boarding => CaptainColors.warning,
       CaptainTripStatus.departed => CaptainColors.primary,
       CaptainTripStatus.arrivedDestination => CaptainColors.primaryDeep,

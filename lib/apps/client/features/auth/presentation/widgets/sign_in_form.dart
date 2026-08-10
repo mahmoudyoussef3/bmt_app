@@ -85,39 +85,53 @@ class _SignInFormState extends State<SignInForm> {
             key: _formKey,
             autovalidateMode: AutovalidateMode.onUserInteraction,
             child: AutofillGroup(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  AuthErrorBanner(
-                    message: error,
-                    onDismiss: context
-                        .read<ClientAuthCubit>()
-                        .dismissSignInError,
-                  ),
-                  AuthSectionCard(
-                    children: [
-                      SignInFields(
-                        emailController: _emailController,
-                        passwordController: _passwordController,
-                        emailFocus: _emailFocus,
-                        passwordFocus: _passwordFocus,
-                        onSubmit: _submit,
-                      ),
-                      const SizedBox(height: ClientSpacing.xs),
-                      SignInOptionsRow(
-                        isLoading: isLoading,
-                        rememberMe: _rememberMe,
-                        onRememberChanged: (checked) =>
-                            setState(() => _rememberMe = checked),
-                        onForgotPassword: () => Navigator.of(
-                          context,
-                        ).pushNamed(AuthRoutes.forgotPassword),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: ClientSpacing.lg),
-                  SignInActions(isLoading: isLoading, onSubmit: _submit),
-                ],
+              child: TweenAnimationBuilder<double>(
+                tween: Tween(begin: 0.0, end: 1.0),
+                duration: ClientMotion.slow,
+                curve: ClientMotion.curve,
+                builder: (context, value, formChild) {
+                  return Transform.translate(
+                    offset: Offset(0, 20 * (1 - value)),
+                    child: Opacity(
+                      opacity: value,
+                      child: formChild,
+                    ),
+                  );
+                },
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    AuthErrorBanner(
+                      message: error,
+                      onDismiss: context
+                          .read<ClientAuthCubit>()
+                          .dismissSignInError,
+                    ),
+                    AuthSectionCard(
+                      children: [
+                        SignInFields(
+                          emailController: _emailController,
+                          passwordController: _passwordController,
+                          emailFocus: _emailFocus,
+                          passwordFocus: _passwordFocus,
+                          onSubmit: _submit,
+                        ),
+                        const SizedBox(height: ClientSpacing.xs),
+                        SignInOptionsRow(
+                          isLoading: isLoading,
+                          rememberMe: _rememberMe,
+                          onRememberChanged: (checked) =>
+                              setState(() => _rememberMe = checked),
+                          onForgotPassword: () => Navigator.of(
+                            context,
+                          ).pushNamed(AuthRoutes.forgotPassword),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: ClientSpacing.lg),
+                    SignInActions(isLoading: isLoading, onSubmit: _submit),
+                  ],
+                ),
               ),
             ),
           ),

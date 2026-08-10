@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
-import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
+import 'package:bmt_app/core/widgets/directional_icon.dart';
 
 /// The shared chrome of every auth screen.
 ///
@@ -30,21 +31,60 @@ class AuthScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: ClientColors.backgroundFor(context),
-      appBar: ClientAppBar(title: title, onBack: onBack),
-      body: SafeArea(
-        top: false,
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-          padding: const EdgeInsets.fromLTRB(
-            ClientSpacing.md,
-            ClientSpacing.sm,
-            ClientSpacing.md,
-            ClientSpacing.xl,
-          ),
-          child: child,
+    final bool showsBack = onBack != null || (ModalRoute.of(context)?.impliesAppBarDismissal ?? false);
+
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: SystemUiOverlayStyle.light,
+      child: Scaffold(
+        backgroundColor: ClientColors.backgroundFor(context),
+        body: Stack(
+          children: [
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              height: MediaQuery.of(context).size.height * 0.45,
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: ClientColors.heroGradientFor(context),
+                ),
+              ),
+            ),
+            SafeArea(
+              bottom: false,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  SizedBox(
+                    height: kToolbarHeight,
+                    child: Row(
+                      children: [
+                        if (showsBack)
+                          IconButton(
+                            icon: const DirectionalIcon(Icons.arrow_back_rounded),
+                            color: ClientColors.textInverse,
+                            onPressed: onBack ?? () => Navigator.of(context).maybePop(),
+                          ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                      padding: const EdgeInsets.fromLTRB(
+                        ClientSpacing.md,
+                        0,
+                        ClientSpacing.md,
+                        ClientSpacing.xl,
+                      ),
+                      child: child,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

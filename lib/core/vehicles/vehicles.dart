@@ -4,5 +4,6 @@
 library;
 
 export 'seat_layout_blueprint.dart';
+export 'seat_view_state.dart';
 export 'vehicle_seat_layouts.dart';
 export 'vehicle_type.dart';
