@@ -348,20 +348,41 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
 
   Widget _buildPlannerHeader(ColorScheme scheme) {
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.medium),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.large, vertical: AppSpacing.medium),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withAlpha(45),
-        borderRadius: BorderRadius.only(
+        color: scheme.surface,
+        borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(AppTokens.radiusLarge),
           topRight: Radius.circular(AppTokens.radiusLarge),
         ),
-        border: Border(bottom: BorderSide(color: scheme.outline.withAlpha(50))),
+        boxShadow: [
+          BoxShadow(
+            color: scheme.shadow.withAlpha(15),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            backgroundColor: scheme.primaryContainer,
-            child: Icon(Icons.route_rounded, color: scheme.primary),
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.small),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [scheme.primary, scheme.primary.withAlpha(180)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(AppTokens.radius),
+              boxShadow: [
+                BoxShadow(
+                  color: scheme.primary.withAlpha(60),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+              ],
+            ),
+            child: Icon(Icons.rocket_launch_rounded, color: scheme.onPrimary, size: 28),
           ),
           const SizedBox(width: AppSpacing.medium),
           Expanded(
@@ -374,7 +395,7 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
                       : 'نسخ رحلة وتشغيلها',
                   style: Theme.of(
                     context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.5),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -386,12 +407,24 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
               ],
             ),
           ),
-          _PlannerReadinessPill(ready: _isTripReady()),
-          const SizedBox(width: AppSpacing.small),
-          IconButton(
-            tooltip: 'إغلاق',
-            onPressed: () => Navigator.of(context).pop(),
-            icon: const Icon(Icons.close_rounded),
+          AnimatedSwitcher(
+            duration: AppTokens.motionBase,
+            child: _PlannerReadinessPill(
+              key: ValueKey(_isTripReady()),
+              ready: _isTripReady(),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.medium),
+          Container(
+            decoration: BoxDecoration(
+              color: scheme.surfaceContainerHighest.withAlpha(100),
+              shape: BoxShape.circle,
+            ),
+            child: IconButton(
+              tooltip: 'إغلاق',
+              onPressed: () => Navigator.of(context).pop(),
+              icon: const Icon(Icons.close_rounded),
+            ),
           ),
         ],
       ),
@@ -429,43 +462,52 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
   Widget _buildPlannerFooter(ColorScheme scheme) {
     final ready = _isTripReady();
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.medium),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.large, vertical: AppSpacing.medium),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withAlpha(30),
-        borderRadius: BorderRadius.only(
+        color: scheme.surface,
+        borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(AppTokens.radiusLarge),
           bottomRight: Radius.circular(AppTokens.radiusLarge),
         ),
-        border: Border(top: BorderSide(color: scheme.outline.withAlpha(50))),
+        boxShadow: [
+          BoxShadow(
+            color: scheme.shadow.withAlpha(15),
+            blurRadius: 10,
+            offset: const Offset(0, -4),
+          ),
+        ],
       ),
-      // The readiness line now carries whole sentences — "this driver has no vehicle
-      // assigned", not just a list of missing fields — so it needs room to wrap rather
-      // than a fixed slot between the buttons. Below ~720 logical pixels, or at a large
-      // text scale, it moves onto its own line instead of squeezing the actions out.
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final message = Text(
-            ready ? 'كل شيء جاهز للتشغيل' : _readinessMessage(),
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: ready ? scheme.primary : scheme.onSurfaceVariant,
-              fontWeight: ready ? FontWeight.w700 : null,
+          final message = AnimatedSwitcher(
+            duration: AppTokens.motionBase,
+            child: Text(
+              ready ? 'كل شيء جاهز للتشغيل' : _readinessMessage(),
+              key: ValueKey(ready ? 'ready' : _readinessMessage()),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: ready ? scheme.primary : scheme.onSurfaceVariant,
+                fontWeight: ready ? FontWeight.w700 : FontWeight.w500,
+              ),
             ),
           );
           final actions = [
-            OutlinedButton.icon(
+            TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              icon: const Icon(Icons.close_rounded),
-              label: const Text('إلغاء'),
+              child: const Text('إلغاء'),
             ),
-            TextButton.icon(
+            OutlinedButton.icon(
               onPressed: _resetPlanner,
               icon: const Icon(Icons.restart_alt_rounded),
               label: const Text('إعادة ضبط'),
             ),
             FilledButton.icon(
               onPressed: ready ? _onSubmitTrip : null,
-              icon: const Icon(Icons.rocket_launch_outlined),
+              icon: const Icon(Icons.check_circle_rounded),
               label: const Text('إنشاء الرحلة'),
+              style: FilledButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.large, vertical: AppSpacing.medium),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTokens.radius)),
+              ),
             ),
           ];
 
@@ -474,10 +516,11 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 message,
-                const SizedBox(height: AppSpacing.small),
+                const SizedBox(height: AppSpacing.medium),
                 Wrap(
                   spacing: AppSpacing.small,
                   runSpacing: AppSpacing.small,
+                  alignment: WrapAlignment.end,
                   children: actions,
                 ),
               ],
@@ -811,41 +854,26 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
           spacing: AppSpacing.medium,
           runSpacing: AppSpacing.medium,
           children: [
-            SizedBox(
-              width: 220,
-              child: TextField(
-                controller: _dateController,
-                readOnly: true,
-                onTap: _pickTripDate,
-                decoration: const InputDecoration(
-                  labelText: 'تاريخ الرحلة',
-                  prefixIcon: Icon(Icons.calendar_today_rounded),
-                ),
-              ),
+            _InteractiveTimeTile(
+              label: 'تاريخ الرحلة',
+              value: _dateController.text,
+              icon: Icons.calendar_month_rounded,
+              onTap: _pickTripDate,
+              placeholder: 'اختر التاريخ',
             ),
-            SizedBox(
-              width: 220,
-              child: TextField(
-                controller: _timeController,
-                readOnly: true,
-                onTap: _pickDepartureTime,
-                decoration: const InputDecoration(
-                  labelText: 'وقت الانطلاق',
-                  prefixIcon: Icon(Icons.access_time_rounded),
-                ),
-              ),
+            _InteractiveTimeTile(
+              label: 'وقت الانطلاق',
+              value: _timeController.text,
+              icon: Icons.access_time_filled_rounded,
+              onTap: _pickDepartureTime,
+              placeholder: 'اختر الوقت',
             ),
-            SizedBox(
-              width: 220,
-              child: TextField(
-                controller: _arrivalController,
-                readOnly: true,
-                onTap: _pickArrivalTime,
-                decoration: const InputDecoration(
-                  labelText: 'وقت الوصول',
-                  prefixIcon: Icon(Icons.flag_rounded),
-                ),
-              ),
+            _InteractiveTimeTile(
+              label: 'وقت الوصول',
+              value: _arrivalController.text,
+              icon: Icons.flag_circle_rounded,
+              onTap: _pickArrivalTime,
+              placeholder: 'اختر الوقت',
             ),
           ],
         ),
@@ -855,12 +883,12 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
           runSpacing: AppSpacing.xSmall,
           children: [
             ActionChip(
-              avatar: const Icon(Icons.today_outlined, size: 18),
+              avatar: const Icon(Icons.today_rounded, size: 18),
               label: const Text('اليوم'),
               onPressed: () => _setDateOffset(0),
             ),
             ActionChip(
-              avatar: const Icon(Icons.event_outlined, size: 18),
+              avatar: const Icon(Icons.event_rounded, size: 18),
               label: const Text('غداً'),
               onPressed: () => _setDateOffset(1),
             ),
@@ -1179,35 +1207,75 @@ class _PlannerSectionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return AppCard(
-      padding: const EdgeInsets.all(AppSpacing.medium),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: scheme.primary),
-              const SizedBox(width: AppSpacing.small),
-              Expanded(
-                child: Text(
-                  title,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              Icon(
-                done
-                    ? Icons.check_circle_rounded
-                    : Icons.radio_button_unchecked,
-                color: done ? scheme.primary : scheme.onSurfaceVariant,
-                size: 20,
-              ),
-            ],
+    return Container(
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
+        border: Border.all(
+          color: done ? scheme.primary.withAlpha(40) : scheme.outline.withAlpha(40),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: scheme.shadow.withAlpha(5),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
           ),
-          const SizedBox(height: AppSpacing.medium),
-          child,
         ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
+        child: AnimatedContainer(
+          duration: AppTokens.motionBase,
+          decoration: BoxDecoration(
+            border: BorderDirectional(
+              start: BorderSide(
+                color: done ? scheme.primary : Colors.transparent,
+                width: 4,
+              ),
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.large),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: done ? scheme.primaryContainer.withAlpha(100) : scheme.surfaceContainerHighest.withAlpha(100),
+                        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+                      ),
+                      child: Icon(icon, color: done ? scheme.primary : scheme.onSurfaceVariant, size: 20),
+                    ),
+                    const SizedBox(width: AppSpacing.medium),
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    AnimatedSwitcher(
+                      duration: AppTokens.motionBase,
+                      child: Icon(
+                        done ? Icons.check_circle_rounded : Icons.radio_button_unchecked,
+                        key: ValueKey(done),
+                        color: done ? scheme.primary : scheme.outline.withAlpha(100),
+                        size: 24,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.large),
+                child,
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -1216,7 +1284,7 @@ class _PlannerSectionCard extends StatelessWidget {
 class _PlannerReadinessPill extends StatelessWidget {
   final bool ready;
 
-  const _PlannerReadinessPill({required this.ready});
+  const _PlannerReadinessPill({super.key, required this.ready});
 
   @override
   Widget build(BuildContext context) {
@@ -1257,6 +1325,77 @@ class _PlannerStatusChip extends StatelessWidget {
           ? scheme.primaryContainer.withAlpha(70)
           : scheme.surfaceContainerHighest.withAlpha(60),
       side: BorderSide(color: scheme.outline.withAlpha(60)),
+    );
+  }
+}
+
+class _InteractiveTimeTile extends StatelessWidget {
+  final String label;
+  final String value;
+  final String placeholder;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _InteractiveTimeTile({
+    required this.label,
+    required this.value,
+    required this.placeholder,
+    required this.icon,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final hasValue = value.isNotEmpty;
+    
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AppTokens.radius),
+        child: Ink(
+          width: 220,
+          padding: const EdgeInsets.all(AppSpacing.medium),
+          decoration: BoxDecoration(
+            color: hasValue ? scheme.primaryContainer.withAlpha(30) : scheme.surfaceContainerHighest.withAlpha(50),
+            borderRadius: BorderRadius.circular(AppTokens.radius),
+            border: Border.all(
+              color: hasValue ? scheme.primary.withAlpha(80) : scheme.outline.withAlpha(40),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    icon, 
+                    size: 18, 
+                    color: hasValue ? scheme.primary : scheme.onSurfaceVariant
+                  ),
+                  const SizedBox(width: AppSpacing.small),
+                  Text(
+                    label,
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.small),
+              Text(
+                hasValue ? value : placeholder,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: hasValue ? scheme.onSurface : scheme.onSurfaceVariant.withAlpha(150),
+                  fontWeight: hasValue ? FontWeight.bold : FontWeight.normal,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -1358,38 +1497,72 @@ class _AssignedVehicleCard extends StatelessWidget {
       ),
     };
 
-    return AppCard(
-      padding: const EdgeInsets.all(AppSpacing.medium),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: line),
-              const SizedBox(width: AppSpacing.small),
-              Expanded(
-                child: Text(
-                  'السيارة المخصصة للسائق',
-                  style: text.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              Icon(Icons.lock_outline_rounded, size: 18, color: scheme.outline),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.medium),
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(AppSpacing.medium),
-            decoration: BoxDecoration(
-              color: tint.withAlpha(55),
-              borderRadius: BorderRadius.circular(AppTokens.radius),
-              border: Border.all(color: line.withAlpha(80)),
-            ),
-            child: _body(context, current, vehicle, line),
+    return Container(
+      decoration: BoxDecoration(
+        color: scheme.surface,
+        borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
+        border: Border.all(color: line.withAlpha(40)),
+        boxShadow: [
+          BoxShadow(
+            color: scheme.shadow.withAlpha(5),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
           ),
         ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
+        child: Container(
+          decoration: BoxDecoration(
+            border: BorderDirectional(
+              start: BorderSide(
+                color: line,
+                width: 4,
+              ),
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(AppSpacing.large),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: tint.withAlpha(100),
+                        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+                      ),
+                      child: Icon(icon, color: line, size: 20),
+                    ),
+                    const SizedBox(width: AppSpacing.medium),
+                    Expanded(
+                      child: Text(
+                        'السيارة المخصصة للسائق',
+                        style: text.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    Icon(Icons.lock_rounded, size: 18, color: scheme.outline.withAlpha(150)),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.medium),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(AppSpacing.medium),
+                  decoration: BoxDecoration(
+                    color: tint.withAlpha(30),
+                    borderRadius: BorderRadius.circular(AppTokens.radius),
+                    border: Border.all(color: line.withAlpha(40)),
+                  ),
+                  child: _body(context, current, vehicle, line),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
