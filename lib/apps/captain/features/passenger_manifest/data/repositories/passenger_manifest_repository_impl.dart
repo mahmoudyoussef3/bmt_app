@@ -1,3 +1,5 @@
+import 'package:bmt_app/apps/captain/features/station_progress/domain/entities/station_passenger.dart';
+
 import '../../domain/entities/passenger.dart';
 import '../../domain/repositories/passenger_manifest_repository.dart';
 import '../datasources/passenger_manifest_datasource.dart';
@@ -21,8 +23,12 @@ class PassengerManifestRepositoryImpl implements PassengerManifestRepository {
   Future<void> updatePassengerStatus({
     required String tripPassengerId,
     required PassengerBoardingStatus status,
+    NoShowReason? noShowReason,
+    String? note,
   }) => _dataSource.updatePassengerStatus(
     tripPassengerId: tripPassengerId,
     status: status,
+    noShowReason: noShowReason,
+    note: note,
   );
 }

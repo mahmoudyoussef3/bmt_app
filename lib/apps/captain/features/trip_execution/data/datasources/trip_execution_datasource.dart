@@ -162,17 +162,35 @@ class TripExecutionDataSource {
     );
   }
 
-  Future<void> markStationArrived({
-    required String tripId,
-    required String pointId,
-    required String pointName,
-  }) async {
-    await _supabase.from('trip_events').insert({
-      'trip_id': tripId,
-      'title': kStationArrivalEventTitle,
-      'description': 'وصلت الرحلة إلى محطة: $pointName',
-      'done': true,
-    });
+  /// Reports reaching the current station.
+  ///
+  /// Previously this inserted the `trip_events` marker directly, which meant the
+  /// caller named the station — so a captain could file arrivals for stops the
+  /// vehicle had not reached, and (once `trip_station_progress` existed) file
+  /// them without the station board ever advancing.
+  ///
+  /// `captain_arrive_station` takes no station argument at all: the server picks
+  /// the trip's next un-departed stop, writes the board and files the same event.
+  /// Which station the vehicle has reached is not the app's to assert.
+  Future<void> markStationArrived(String tripId) async {
+    try {
+      await _supabase.rpc(
+        'captain_arrive_station',
+        params: {'p_trip_id': tripId},
+      );
+    } on PostgrestException catch (e) {
+      if (e.message.contains('no_pending_station')) {
+        throw Exception('لا توجد محطات متبقية في هذه الرحلة');
+      }
+      if (e.message.contains('trip_not_running')) {
+        throw Exception('حالة الرحلة لا تسمح بتسجيل الوصول');
+      }
+      if (e.message.contains('not_your_trip') ||
+          e.message.contains('not_a_captain')) {
+        throw Exception('غير مصرح لك بتعديل هذه الرحلة');
+      }
+      rethrow;
+    }
   }
 
   Future<void> _transitionStatus(String tripId, String newStatus) async {

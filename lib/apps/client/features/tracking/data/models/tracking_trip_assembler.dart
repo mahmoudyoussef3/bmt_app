@@ -1,4 +1,5 @@
 import 'package:bmt_app/core/tracking/progress/arrival_events.dart';
+import 'package:bmt_app/core/tracking/progress/station_board_mapper.dart';
 
 import '../../domain/entities/tracking_trip.dart';
 import 'tracking_crew_model.dart';
@@ -19,6 +20,8 @@ abstract final class TrackingTripAssembler {
     required List<Map<String, dynamic>> eventRows,
     required Map<String, dynamic>? passengerRow,
     required bool hasReview,
+    List<Map<String, dynamic>> stationRows = const [],
+    String? bookingStatus,
   }) {
     final tripDate = tripRow?['trip_date']?.toString();
     final departureAt = TrackingStopsModel.combineDateAndTime(
@@ -63,9 +66,11 @@ abstract final class TrackingTripAssembler {
       vehicle: TrackingCrewModel.vehicle(
         tripRow?['vehicle'] as Map<String, dynamic>?,
       ),
+      stations: StationBoardMapper.fromRows(stationRows),
       rider: TrackingRiderModel.fromRows(
         passengerRow: passengerRow,
         pointRows: ordered,
+        bookingStatus: bookingStatus,
       ),
       vehicleFix: vehicleFix,
       hasReview: hasReview,

@@ -32,13 +32,6 @@ class TripExecutionRepositoryImpl implements TripExecutionRepository {
   );
 
   @override
-  Future<void> markStationArrived({
-    required String tripId,
-    required String pointId,
-    required String pointName,
-  }) => _dataSource.markStationArrived(
-    tripId: tripId,
-    pointId: pointId,
-    pointName: pointName,
-  );
+  Future<void> markStationArrived(String tripId) =>
+      _dataSource.markStationArrived(tripId);
 }

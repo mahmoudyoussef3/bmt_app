@@ -1046,12 +1046,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tracking_yourDropoffBadge => 'Your drop-off';
 
   @override
-  String get tracking_stopDeparted => 'Departed';
-
-  @override
-  String get tracking_stopArrived => 'At the stop';
-
-  @override
   String get tracking_stopNext => 'Next';
 
   @override
@@ -1096,6 +1090,53 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get tracking_mapUnavailableBody =>
       'No route coordinates were found for this trip.';
+
+  @override
+  String get tracking_boardingTitle => 'Have you boarded?';
+
+  @override
+  String tracking_boardingBody(String station) {
+    return 'The vehicle is at $station. Confirm you are on board so the captain can continue.';
+  }
+
+  @override
+  String get tracking_boardingAction => 'Yes, I\'m on board';
+
+  @override
+  String get tracking_boardingWaitingTitle => 'Waiting for the vehicle';
+
+  @override
+  String tracking_boardingWaitingBody(String station) {
+    return 'The confirm button appears once the vehicle reaches $station.';
+  }
+
+  @override
+  String get tracking_boardedTitle => 'Boarding confirmed';
+
+  @override
+  String get tracking_boardedBody =>
+      'You no longer need to follow the vehicle\'s location — enjoy the ride.';
+
+  @override
+  String tracking_boardingPending(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Waiting for $count passengers',
+      one: 'Waiting for 1 passenger',
+      zero: 'Everyone is on board',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tracking_stationPassed => 'Passed';
+
+  @override
+  String get tracking_stationHere => 'Vehicle is here';
+
+  @override
+  String get tracking_etaMayChange => 'Times may change with traffic';
 
   @override
   String get tracking_recenter => 'Recenter';

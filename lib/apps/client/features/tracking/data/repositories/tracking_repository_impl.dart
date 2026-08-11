@@ -24,4 +24,8 @@ class TrackingRepositoryImpl implements TrackingRepository {
   @override
   Stream<void> watchTripChanges(String tripId) =>
       _datasource.watchTripChanges(tripId);
+
+  @override
+  Future<void> confirmBoarding(String bookingId) =>
+      _datasource.confirmBoarding(bookingId);
 }

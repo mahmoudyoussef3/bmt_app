@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bmt_app/apps/captain/core/theme/captain_theme.dart';
@@ -9,6 +10,15 @@ import 'package:bmt_app/apps/captain/features/trip_execution/presentation/cubit/
 import 'package:bmt_app/apps/captain/features/trip_execution/presentation/widgets/trip_execution_action_bar.dart';
 import 'package:bmt_app/apps/captain/features/trip_execution/presentation/widgets/trip_execution_canopy.dart';
 import 'package:bmt_app/apps/captain/features/trip_execution/presentation/widgets/trip_execution_tools.dart';
+import 'package:bmt_app/apps/captain/features/station_progress/domain/entities/station_passenger.dart';
+import 'package:bmt_app/apps/captain/features/station_progress/domain/repositories/station_progress_repository.dart';
+import 'package:bmt_app/apps/captain/features/station_progress/domain/usecases/arrive_at_station_usecase.dart';
+import 'package:bmt_app/apps/captain/features/station_progress/domain/usecases/depart_station_usecase.dart';
+import 'package:bmt_app/apps/captain/features/station_progress/domain/usecases/get_station_passengers_usecase.dart';
+import 'package:bmt_app/apps/captain/features/station_progress/domain/usecases/resolve_no_show_usecase.dart';
+import 'package:bmt_app/apps/captain/features/station_progress/domain/usecases/watch_station_board_usecase.dart';
+import 'package:bmt_app/apps/captain/features/station_progress/presentation/cubit/station_progress_cubit.dart';
+import 'package:bmt_app/core/tracking/progress/station_board.dart';
 
 /// The execution screen is a stage-coloured canopy over a scrolling body, with
 /// the trip's one action docked at the bottom. Both ends are pure layout that
@@ -190,10 +200,14 @@ void main() {
   });
 }
 
+/// Once the trip is live the docked bar renders the *station* action, so the
+/// host has to carry a [StationProgressCubit]. [board] is what that cubit
+/// reports; the default empty board is the "trip has no stations" fallback.
 Widget _host({
   required Widget body,
   required Widget bottomBar,
   double scale = 1.0,
+  StationBoard board = const StationBoard.empty(),
 }) {
   return MaterialApp(
     theme: CaptainTheme.light(),
@@ -201,10 +215,53 @@ Widget _host({
       data: MediaQueryData(textScaler: TextScaler.linear(scale)),
       child: Directionality(
         textDirection: TextDirection.rtl,
-        child: Scaffold(body: body, bottomNavigationBar: bottomBar),
+        child: BlocProvider<StationProgressCubit>(
+          create: (_) => _stationCubit(board),
+          child: Scaffold(body: body, bottomNavigationBar: bottomBar),
+        ),
       ),
     ),
   );
+}
+
+StationProgressCubit _stationCubit(StationBoard board) {
+  final repository = _StubStationRepository(board);
+  return StationProgressCubit(
+    watchBoard: WatchStationBoardUseCase(repository),
+    arriveAtStation: ArriveAtStationUseCase(repository),
+    departStation: DepartStationUseCase(repository),
+    resolveNoShow: ResolveNoShowUseCase(repository),
+    getStationPassengers: GetStationPassengersUseCase(repository),
+  )..watch('trip-1');
+}
+
+class _StubStationRepository implements StationProgressRepository {
+  const _StubStationRepository(this.board);
+
+  final StationBoard board;
+
+  @override
+  Stream<StationBoard> watchBoard(String tripId) => Stream.value(board);
+
+  @override
+  Future<void> arriveAtStation(String tripId) async {}
+
+  @override
+  Future<void> departStation(String tripId) async {}
+
+  @override
+  Future<void> resolveNoShow({
+    required String passengerId,
+    required NoShowReason reason,
+    String? note,
+  }) async {}
+
+  @override
+  Future<List<StationPassenger>> passengersAt({
+    required String tripId,
+    String? routePointId,
+    required String pointName,
+  }) async => const [];
 }
 
 AssignedTrip _trip() {

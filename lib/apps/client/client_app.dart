@@ -11,6 +11,7 @@ import 'package:bmt_app/apps/client/core/routes/client_router.dart';
 import 'package:bmt_app/apps/client/core/theme/client_app_theme.dart';
 import 'package:bmt_app/apps/client/core/theme/client_theme.dart';
 import 'package:bmt_app/apps/client/core/theme/client_theme_store.dart';
+import 'package:bmt_app/apps/client/features/auth/domain/usecases/ensure_client_session_usecase.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/routes/auth_routes.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/screens/welcome_screen.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/screens/client_splash_gate.dart';
@@ -39,6 +40,7 @@ class _ClientAppState extends State<ClientApp> {
   final _appLinks = AppLinks();
   StreamSubscription<AuthState>? _authSub;
   StreamSubscription<Uri>? _deepLinkSub;
+  bool _sessionVetted = false;
 
   @override
   void initState() {
@@ -46,6 +48,7 @@ class _ClientAppState extends State<ClientApp> {
     registerClientDependencies();
     _restoreThemeMode();
     _listenAuth();
+    _vetRestoredSession();
     _listenDeepLinks();
   }
 
@@ -84,6 +87,26 @@ class _ClientAppState extends State<ClientApp> {
         FcmService.instance.deactivateToken(supabase);
       }
     });
+  }
+
+  /// Checks that a session restored from storage is actually a passenger's
+  /// before the shell is built over it.
+  ///
+  /// A device runs whichever EWT apps it likes against one Supabase session
+  /// store, so the session waiting here at launch may belong to a captain or a
+  /// dashboard operator. Those accounts have no `clients` row: nothing in the
+  /// client app looked wrong until the booking insert failed on
+  /// `operation_bookings_client_id_fkey`, at the end of the wizard, after
+  /// payment details had been entered. The use case signs a rejected session
+  /// out, which drops [_LandingScreen] back to the welcome screen.
+  ///
+  /// Runs while [ClientSplashGate] is still holding its intro, and the splash
+  /// is kept up until it answers so the shell is never shown speculatively.
+  Future<void> _vetRestoredSession() async {
+    if (Supabase.instance.client.auth.currentSession != null) {
+      await clientGetIt<EnsureClientSessionUseCase>()();
+    }
+    if (mounted) setState(() => _sessionVetted = true);
   }
 
   void _initFcm(SupabaseClient supabase, String userId) {
@@ -142,14 +165,15 @@ class _ClientAppState extends State<ClientApp> {
                 builder: (context, onboardingState) {
                   return ClientSplashGate(
                     isReady:
-                        onboardingState is OnboardingLoaded ||
-                        onboardingState is OnboardingError,
+                        _sessionVetted &&
+                        (onboardingState is OnboardingLoaded ||
+                            onboardingState is OnboardingError),
                     builder: (_) => _LandingScreen(state: onboardingState),
                   );
                 },
               ),
               routes: ClientRouter.routes,
-              
+
               onUnknownRoute: (settings) => MaterialPageRoute<void>(
                 settings: settings,
                 builder: (_) => ClientRouter.buildShell(),
@@ -191,7 +215,6 @@ class _LandingScreen extends StatelessWidget {
     return StreamBuilder<AuthState>(
       stream: Supabase.instance.client.auth.onAuthStateChange,
       builder: (context, snapshot) {
-        
         final session =
             snapshot.data?.session ??
             Supabase.instance.client.auth.currentSession;

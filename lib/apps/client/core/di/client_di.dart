@@ -9,21 +9,26 @@ import '../../features/onboarding/domain/usecases/complete_onboarding_usecase.da
 import '../../features/onboarding/presentation/cubit/onboarding_cubit.dart';
 import '../../../../core/security/secure_storage.dart';
 
+import '../../features/auth/data/datasources/client_account_guard.dart';
 import '../../features/auth/data/datasources/client_auth_datasource.dart';
+import '../../features/auth/data/datasources/client_session_datasource.dart';
 import '../../features/auth/data/datasources/pending_phone_auth_datasource.dart';
 import '../../features/auth/data/datasources/pending_social_auth_datasource.dart';
 import '../../features/auth/data/datasources/phone_auth_datasource.dart';
 import '../../features/auth/data/datasources/social_auth_datasource.dart';
 import '../../features/auth/data/datasources/supabase_client_auth_datasource.dart';
 import '../../features/auth/data/repositories/client_auth_repository_impl.dart';
+import '../../features/auth/data/repositories/client_session_repository_impl.dart';
 import '../../features/auth/data/repositories/phone_auth_repository_impl.dart';
 import '../../features/auth/data/repositories/remember_me_repository_impl.dart';
 import '../../features/auth/data/repositories/social_auth_repository_impl.dart';
 import '../../features/auth/domain/repositories/client_auth_repository.dart';
+import '../../features/auth/domain/repositories/client_session_repository.dart';
 import '../../features/auth/domain/repositories/phone_auth_repository.dart';
 import '../../features/auth/domain/repositories/remember_me_repository.dart';
 import '../../features/auth/domain/repositories/social_auth_repository.dart';
 import '../../features/auth/domain/usecases/clear_remembered_credentials_usecase.dart';
+import '../../features/auth/domain/usecases/ensure_client_session_usecase.dart';
 import '../../features/auth/domain/usecases/get_remembered_credentials_usecase.dart';
 import '../../features/auth/domain/usecases/save_remembered_credentials_usecase.dart';
 import '../../features/auth/domain/usecases/send_phone_otp_usecase.dart';
@@ -202,6 +207,7 @@ import '../../features/trips/presentation/cubit/trips_cubit.dart';
 import '../../features/tracking/data/datasources/supabase_tracking_datasource.dart';
 import '../../features/tracking/data/repositories/tracking_repository_impl.dart';
 import '../../features/tracking/domain/repositories/tracking_repository.dart';
+import '../../features/tracking/domain/usecases/confirm_boarding_usecase.dart';
 import '../../features/tracking/domain/usecases/get_tracking_trip_usecase.dart';
 import '../../features/tracking/domain/usecases/watch_tracking_trip_usecase.dart';
 import '../../features/tracking/domain/usecases/watch_vehicle_position_usecase.dart';
@@ -213,7 +219,7 @@ final GetIt clientGetIt = GetIt.instance;
 void registerClientDependencies() {
   _registerCoreDependencies();
   _registerAuthDependencies();
-  
+
   registerNetworkDependencies(clientGetIt);
 
   _registerOnboardingDependencies();
@@ -289,6 +295,24 @@ void _registerAuthDependencies() {
   if (!clientGetIt.isRegistered<ClientAuthRepository>()) {
     clientGetIt.registerLazySingleton<ClientAuthRepository>(
       () => ClientAuthRepositoryImpl(clientGetIt<ClientAuthDatasource>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<ClientSessionDatasource>()) {
+    clientGetIt.registerLazySingleton<ClientSessionDatasource>(
+      () => ClientAccountGuard(Supabase.instance.client),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<ClientSessionRepository>()) {
+    clientGetIt.registerLazySingleton<ClientSessionRepository>(
+      () => ClientSessionRepositoryImpl(clientGetIt<ClientSessionDatasource>()),
+    );
+  }
+
+  if (!clientGetIt.isRegistered<EnsureClientSessionUseCase>()) {
+    clientGetIt.registerLazySingleton<EnsureClientSessionUseCase>(
+      () => EnsureClientSessionUseCase(clientGetIt<ClientSessionRepository>()),
     );
   }
 
@@ -964,6 +988,11 @@ void _registerTrackingDependencies() {
       () => WatchTrackingTripUseCase(clientGetIt<TrackingRepository>()),
     );
   }
+  if (!clientGetIt.isRegistered<ConfirmBoardingUseCase>()) {
+    clientGetIt.registerLazySingleton<ConfirmBoardingUseCase>(
+      () => ConfirmBoardingUseCase(clientGetIt<TrackingRepository>()),
+    );
+  }
 
   if (!clientGetIt.isRegistered<TrackingCubit>()) {
     clientGetIt.registerFactory<TrackingCubit>(
@@ -971,6 +1000,7 @@ void _registerTrackingDependencies() {
         getTrackingTrip: clientGetIt<GetTrackingTripUseCase>(),
         watchVehiclePosition: clientGetIt<WatchVehiclePositionUseCase>(),
         watchTrackingTrip: clientGetIt<WatchTrackingTripUseCase>(),
+        confirmBoarding: clientGetIt<ConfirmBoardingUseCase>(),
       ),
     );
   }

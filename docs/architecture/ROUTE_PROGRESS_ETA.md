@@ -137,17 +137,23 @@ Arabic ETA line per pending/current stop.
 
 ## Captain app (trip execution)
 
-The "تم الوصول للمحطة" (arrived at station) button in `TripExecutionPage`
-inserts the same `trip_events` arrival marker via
-`TripExecutionCubit.markStationArrived` → `MarkStationArrivedUseCase` →
-`TripExecutionRepository` → `TripExecutionDataSource`, matching the
-Dashboard's `markPointArrived` convention exactly (title `'وصول محطة'`,
-`done: true`). `CaptainTripRemoteDataSource` also computes each assigned
-trip's `arrivedStationsCount` via `stationArrivalFloor` so reopening the trip
-execution screen resumes at the correct next station instead of resetting to
-the first one. This action is deliberately independent of the
-board/start/complete trip-status state machine — it never touches
-`TripExecutionCubitState`.
+**Superseded for the captain's own screen by `STATION_BOARDING.md`.** Station
+progress is now a real record (`trip_station_progress`) written by
+`captain_arrive_station` / `captain_depart_station`, and the captain's trip
+screen renders that rather than an inferred count.
+
+What is unchanged: those RPCs still file the same `trip_events` arrival marker
+(title `'وصول محطة'`, `done: true`), so `countStationArrivalEvents` /
+`stationArrivalFloor` keep working everywhere they are used — the Dashboard's
+live trips, the Client's engine seeding, and `CaptainTripRemoteDataSource`'s
+`arrivedStationsCount`. The marker is now written server-side, and
+`markStationArrived` takes only a trip id: which station has been reached is not
+the app's to assert.
+
+The Client engine continues to seed from that count. Where the station board is
+also available it is laid over the inferred timeline by
+`lib/core/tracking/progress/station_overlay.dart`, because the captain's record
+of what happened beats inference about what probably happened.
 
 ## Tests
 

@@ -53,10 +53,18 @@ class _TrackingViewState extends State<TrackingView> {
     final isWide = MediaQuery.sizeOf(context).width > 900;
     final labels = widget.labels;
 
+    // Once this rider boards, the vehicle marker goes with their read access:
+    // `can_read_trip_fixes` stops admitting the rows, the subscription is
+    // dropped, and passing the last-known fix on to the map would leave a
+    // marker frozen at wherever the bus happened to be — a stale position
+    // presented as a live one. The route line and the stops stay; those are
+    // still their journey.
     final map = _scoped(
       (loaded) => TrackingMap(
         routePoints: loaded.data.routePoints,
-        vehicleFix: loaded.data.vehicleFix,
+        vehicleFix: loaded.data.rider.canTrackVehicle
+            ? loaded.data.vehicleFix
+            : null,
         progress: loaded.progress,
         labels: labels,
         onRetry: _refresh,
@@ -79,6 +87,8 @@ class _TrackingViewState extends State<TrackingView> {
         progress: loaded.progress,
         labels: labels,
         onRefresh: _refresh,
+        isBoarding: loaded.isBoarding,
+        boardingError: loaded.boardingError,
         scrollController: scrollController,
       ),
     );

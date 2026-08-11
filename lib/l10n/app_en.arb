@@ -488,8 +488,6 @@
   "tracking_stopsTitle": "Trip stops",
   "tracking_yourStopBadge": "Your stop",
   "tracking_yourDropoffBadge": "Your drop-off",
-  "tracking_stopDeparted": "Departed",
-  "tracking_stopArrived": "At the stop",
   "tracking_stopNext": "Next",
   "tracking_captain": "Captain",
   "tracking_vehicle": "Vehicle",
@@ -514,6 +512,26 @@
   "tracking_bookAgain": "Book another trip",
   "tracking_mapUnavailableTitle": "Map data unavailable",
   "tracking_mapUnavailableBody": "No route coordinates were found for this trip.",
+  "tracking_boardingTitle": "Have you boarded?",
+  "tracking_boardingBody": "The vehicle is at {station}. Confirm you are on board so the captain can continue.",
+  "@tracking_boardingBody": {
+    "placeholders": { "station": { "type": "String" } }
+  },
+  "tracking_boardingAction": "Yes, I'm on board",
+  "tracking_boardingWaitingTitle": "Waiting for the vehicle",
+  "tracking_boardingWaitingBody": "The confirm button appears once the vehicle reaches {station}.",
+  "@tracking_boardingWaitingBody": {
+    "placeholders": { "station": { "type": "String" } }
+  },
+  "tracking_boardedTitle": "Boarding confirmed",
+  "tracking_boardedBody": "You no longer need to follow the vehicle's location — enjoy the ride.",
+  "tracking_boardingPending": "{count, plural, =0{Everyone is on board} =1{Waiting for 1 passenger} other{Waiting for {count} passengers}}",
+  "@tracking_boardingPending": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "tracking_stationPassed": "Passed",
+  "tracking_stationHere": "Vehicle is here",
+  "tracking_etaMayChange": "Times may change with traffic",
   "tracking_recenter": "Recenter",
   "tracking_followVehicle": "Follow the vehicle",
   "profile_title": "Profile",

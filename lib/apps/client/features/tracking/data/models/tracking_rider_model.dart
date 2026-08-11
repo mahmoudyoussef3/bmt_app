@@ -8,8 +8,14 @@ abstract final class TrackingRiderModel {
   static TrackingRider fromRows({
     required Map<String, dynamic>? passengerRow,
     required List<Map<String, dynamic>> pointRows,
+    String? bookingStatus,
   }) {
-    if (passengerRow == null) return const TrackingRider();
+    // A trip can have no readable manifest row for this rider and still have a
+    // booking — the booking status is what gates tracking and the boarding
+    // action, so it is carried either way.
+    if (passengerRow == null) {
+      return TrackingRider(bookingStatus: bookingStatus);
+    }
 
     final boardingName = _text(passengerRow['pickup_point_name']);
     final dropoffName = _text(passengerRow['dropoff_point_name']);
@@ -18,6 +24,7 @@ abstract final class TrackingRiderModel {
       seatLabel: _text(passengerRow['seat_label']),
       boardingName: boardingName,
       dropoffName: dropoffName,
+      boardingPointId: _text(passengerRow['pickup_point_id']),
       boardingIndex: _indexOf(
         pointRows,
         pointId: _text(passengerRow['pickup_point_id']),
@@ -29,6 +36,7 @@ abstract final class TrackingRiderModel {
         name: dropoffName,
       ),
       status: _text(passengerRow['status']),
+      bookingStatus: bookingStatus,
     );
   }
 

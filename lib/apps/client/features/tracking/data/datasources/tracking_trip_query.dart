@@ -1,5 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:bmt_app/core/tracking/progress/station_board_mapper.dart';
+
 /// The raw Supabase reads behind one tracking session, kept separate from the
 /// row→entity mapping so each stays readable.
 class TrackingTripQuery {
@@ -79,6 +81,13 @@ class TrackingTripQuery {
         .maybeSingle();
   }
 
+  /// Returns nothing once this rider has boarded.
+  ///
+  /// Not by choice here — `can_read_trip_fixes` stops admitting the row the
+  /// moment the booking flips to `boarded`, and every other rider on the same
+  /// trip who is still waiting keeps reading it. The app cancels its
+  /// subscription too (see `TrackingSubscriptions.syncLocation`), but that is a
+  /// courtesy to the socket, not the boundary.
   Future<Map<String, dynamic>?> latestLocation(String tripId) {
     return _client
         .from('trip_live_locations')
@@ -87,6 +96,26 @@ class TrackingTripQuery {
         .order('recorded_at', ascending: false)
         .limit(1)
         .maybeSingle();
+  }
+
+  /// The trip's station board: planned and real arrival/departure per stop, plus
+  /// the boarding tally there.
+  ///
+  /// Empty until the trip starts boarding — the board is built when the vehicle
+  /// begins collecting passengers, and before that the published schedule on
+  /// `trip_route_points` is all there is to show. The screen degrades to exactly
+  /// that rather than showing nothing.
+  Future<List<Map<String, dynamic>>> stations(String tripId) async {
+    try {
+      final rows = await _client
+          .from('trip_station_progress')
+          .select(StationBoardMapper.columns)
+          .eq('trip_id', tripId)
+          .order('sequence');
+      return (rows as List).cast<Map<String, dynamic>>();
+    } on PostgrestException {
+      return const [];
+    }
   }
 
   /// The rider's own manifest row: seat, boarding/drop-off point, and whether

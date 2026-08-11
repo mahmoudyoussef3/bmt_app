@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
+import 'package:bmt_app/apps/captain/features/station_progress/presentation/widgets/no_show_reason_sheet.dart';
 
 import '../../domain/entities/passenger.dart';
 import '../cubit/passenger_manifest_cubit.dart';
@@ -12,19 +13,40 @@ import 'passenger_status_presentation.dart';
 Future<void> showPassengerStatusSheet(
   BuildContext context,
   Passenger passenger,
-) {
+) async {
   final cubit = context.read<PassengerManifestCubit>();
-  return showModalBottomSheet<void>(
+
+  final status = await showModalBottomSheet<PassengerBoardingStatus>(
     context: context,
     backgroundColor: Colors.transparent,
     builder: (sheetContext) => _PassengerStatusSheet(
       passenger: passenger,
-      onSelect: (status) {
-        Navigator.pop(sheetContext);
-        cubit.updateStatus(tripPassengerId: passenger.id, status: status);
-      },
+      onSelect: (status) => Navigator.pop(sheetContext, status),
     ),
   );
+  if (status == null || !context.mounted) return;
+
+  // Boarding and un-boarding are the captain's own observation. Marking someone
+  // absent takes a paying rider off the vehicle's obligation list, so it asks
+  // for the same reason the station flow asks for — one no-show flow in the app,
+  // matching the one no-show path in the database.
+  if (status == PassengerBoardingStatus.absent) {
+    final resolution = await showNoShowReasonSheet(
+      context,
+      passengerName: passenger.name,
+      seatLabel: passenger.seat,
+    );
+    if (resolution == null) return;
+    await cubit.updateStatus(
+      tripPassengerId: passenger.id,
+      status: status,
+      noShowReason: resolution.reason,
+      note: resolution.note,
+    );
+    return;
+  }
+
+  await cubit.updateStatus(tripPassengerId: passenger.id, status: status);
 }
 
 class _PassengerStatusSheet extends StatelessWidget {

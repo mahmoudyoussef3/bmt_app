@@ -1988,18 +1988,6 @@ abstract class AppLocalizations {
   /// **'Your drop-off'**
   String get tracking_yourDropoffBadge;
 
-  /// No description provided for @tracking_stopDeparted.
-  ///
-  /// In en, this message translates to:
-  /// **'Departed'**
-  String get tracking_stopDeparted;
-
-  /// No description provided for @tracking_stopArrived.
-  ///
-  /// In en, this message translates to:
-  /// **'At the stop'**
-  String get tracking_stopArrived;
-
   /// No description provided for @tracking_stopNext.
   ///
   /// In en, this message translates to:
@@ -2083,6 +2071,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No route coordinates were found for this trip.'**
   String get tracking_mapUnavailableBody;
+
+  /// No description provided for @tracking_boardingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Have you boarded?'**
+  String get tracking_boardingTitle;
+
+  /// No description provided for @tracking_boardingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The vehicle is at {station}. Confirm you are on board so the captain can continue.'**
+  String tracking_boardingBody(String station);
+
+  /// No description provided for @tracking_boardingAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Yes, I\'m on board'**
+  String get tracking_boardingAction;
+
+  /// No description provided for @tracking_boardingWaitingTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for the vehicle'**
+  String get tracking_boardingWaitingTitle;
+
+  /// No description provided for @tracking_boardingWaitingBody.
+  ///
+  /// In en, this message translates to:
+  /// **'The confirm button appears once the vehicle reaches {station}.'**
+  String tracking_boardingWaitingBody(String station);
+
+  /// No description provided for @tracking_boardedTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Boarding confirmed'**
+  String get tracking_boardedTitle;
+
+  /// No description provided for @tracking_boardedBody.
+  ///
+  /// In en, this message translates to:
+  /// **'You no longer need to follow the vehicle\'s location — enjoy the ride.'**
+  String get tracking_boardedBody;
+
+  /// No description provided for @tracking_boardingPending.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Everyone is on board} =1{Waiting for 1 passenger} other{Waiting for {count} passengers}}'**
+  String tracking_boardingPending(int count);
+
+  /// No description provided for @tracking_stationPassed.
+  ///
+  /// In en, this message translates to:
+  /// **'Passed'**
+  String get tracking_stationPassed;
+
+  /// No description provided for @tracking_stationHere.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle is here'**
+  String get tracking_stationHere;
+
+  /// No description provided for @tracking_etaMayChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Times may change with traffic'**
+  String get tracking_etaMayChange;
 
   /// No description provided for @tracking_recenter.
   ///

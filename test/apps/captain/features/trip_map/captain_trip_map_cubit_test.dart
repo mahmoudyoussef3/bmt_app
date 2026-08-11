@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:bmt_app/apps/captain/features/station_progress/domain/entities/station_passenger.dart';
 import 'package:bmt_app/apps/captain/features/assigned_trips/domain/entities/assigned_trip.dart';
 import 'package:bmt_app/apps/captain/features/passenger_manifest/domain/entities/passenger.dart';
 import 'package:bmt_app/apps/captain/features/passenger_manifest/domain/repositories/passenger_manifest_repository.dart';
@@ -100,7 +101,8 @@ void main() {
     );
   });
 
-  test('marking the active pickup arrived writes the shared station event',
+  test('marking the active pickup arrived reports the trip, letting the server '
+      'resolve which station — the captain cannot name an arbitrary one',
       () async {
     manifest.passengers = [
       _rider('p1', 'محطة مصر', PassengerBoardingStatus.pending),
@@ -109,7 +111,7 @@ void main() {
 
     await cubit.markArrivedAtActivePickup();
 
-    expect(execution.arrivals, [('s0', 'محطة مصر')]);
+    expect(execution.arrivals, ['trip-1']);
   });
 
   test('a completed trip stops tracking and reads as finished', () async {
@@ -206,6 +208,8 @@ class _FakeManifestRepo implements PassengerManifestRepository {
   Future<void> updatePassengerStatus({
     required String tripPassengerId,
     required PassengerBoardingStatus status,
+    NoShowReason? noShowReason,
+    String? note,
   }) async {
     if (failNextUpdate) {
       failNextUpdate = false;
@@ -219,7 +223,7 @@ class _FakeManifestRepo implements PassengerManifestRepository {
 }
 
 class _FakeTripExecutionRepo implements TripExecutionRepository {
-  final arrivals = <(String, String)>[];
+  final arrivals = <String>[];
   final _snapshots = StreamController<TripExecutionSnapshot>.broadcast();
 
   void emit(TripExecutionSnapshot snapshot) => _snapshots.add(snapshot);
@@ -231,11 +235,7 @@ class _FakeTripExecutionRepo implements TripExecutionRepository {
   }) => _snapshots.stream;
 
   @override
-  Future<void> markStationArrived({
-    required String tripId,
-    required String pointId,
-    required String pointName,
-  }) async => arrivals.add((pointId, pointName));
+  Future<void> markStationArrived(String tripId) async => arrivals.add(tripId);
 
   @override
   Future<TripExecutionStateData> startBoarding(String tripId) =>

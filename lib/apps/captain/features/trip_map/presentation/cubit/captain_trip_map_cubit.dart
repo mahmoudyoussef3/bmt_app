@@ -245,11 +245,7 @@ class CaptainTripMapCubit extends Cubit<CaptainTripMapState> {
     if (active == null || active.stopId == null) return;
     emit(state.copyWith(arrivingStopId: active.stopId, actionError: null));
     try {
-      await _markStationArrived(
-        tripId: _trip.id,
-        pointId: active.stopId!,
-        pointName: active.name,
-      );
+      await _markStationArrived(_trip.id);
       if (isClosed) return;
       emit(state.copyWith(arrivingStopId: null));
     } catch (error) {

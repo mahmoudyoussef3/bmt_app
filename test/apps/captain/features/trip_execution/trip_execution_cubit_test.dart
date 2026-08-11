@@ -41,15 +41,9 @@ void main() {
     'of only updating local widget state — this is the regression the '
     'original bug (a bare setState with no backend call) would have failed',
     () async {
-      await cubit.markStationArrived(
-        tripId: 'trip-1',
-        pointId: 'point-2',
-        pointName: 'محطة بنها',
-      );
+      await cubit.markStationArrived('trip-1');
 
       expect(repository.markedTripId, 'trip-1');
-      expect(repository.markedPointId, 'point-2');
-      expect(repository.markedPointName, 'محطة بنها');
     },
   );
 
@@ -58,11 +52,7 @@ void main() {
     await cubit.board('trip-1');
     final before = cubit.state;
 
-    await cubit.markStationArrived(
-      tripId: 'trip-1',
-      pointId: 'point-1',
-      pointName: 'محطة',
-    );
+    await cubit.markStationArrived('trip-1');
 
     expect(cubit.state, same(before));
   });
@@ -71,11 +61,7 @@ void main() {
     repository.failure = Exception('فشل الاتصال');
 
     expect(
-      () => cubit.markStationArrived(
-        tripId: 'trip-1',
-        pointId: 'point-1',
-        pointName: 'محطة',
-      ),
+      () => cubit.markStationArrived('trip-1'),
       throwsA(isA<Exception>()),
     );
   });
@@ -83,20 +69,12 @@ void main() {
 
 class _FakeTripExecutionRepository implements TripExecutionRepository {
   String? markedTripId;
-  String? markedPointId;
-  String? markedPointName;
   Object? failure;
 
   @override
-  Future<void> markStationArrived({
-    required String tripId,
-    required String pointId,
-    required String pointName,
-  }) async {
+  Future<void> markStationArrived(String tripId) async {
     if (failure case final error?) throw error;
     markedTripId = tripId;
-    markedPointId = pointId;
-    markedPointName = pointName;
   }
 
   @override

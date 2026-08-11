@@ -11,4 +11,8 @@ abstract class TrackingDatasource {
   /// Fires whenever any table backing the trip changes, so the screen can
   /// refetch its joined view.
   Stream<void> watchTripChanges(String tripId);
+
+  /// Records that this rider is aboard. Throws with a rider-facing message when
+  /// the server refuses.
+  Future<void> confirmBoarding(String bookingId);
 }

@@ -1,4 +1,8 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import 'package:bmt_app/apps/captain/features/station_progress/domain/entities/station_action_failure.dart';
+import 'package:bmt_app/apps/captain/features/station_progress/domain/entities/station_passenger.dart';
+
 import '../../domain/entities/passenger.dart';
 import '../models/passenger_model.dart';
 
@@ -68,10 +72,44 @@ class PassengerManifestDataSource {
     }).toList();
   }
 
+  /// Marking a rider boarded (or putting them back on the waiting list) is the
+  /// captain's own observation and is a direct write.
+  ///
+  /// Marking them absent is not: it removes them from a station's boarding
+  /// requirement, which is the one thing standing between a captain and driving
+  /// off without a passenger who paid. It goes through
+  /// `captain_resolve_no_show`, which demands a reason and stamps it with the
+  /// captain's id — and the RLS policy on `trip_passengers` no longer admits
+  /// `no_show` as a value the captain may write, so this is not a convention
+  /// that could be sidestepped by an older build.
   Future<void> updatePassengerStatus({
     required String tripPassengerId,
     required PassengerBoardingStatus status,
+    NoShowReason? noShowReason,
+    String? note,
   }) async {
+    if (status == PassengerBoardingStatus.absent) {
+      final reason = noShowReason;
+      if (reason == null) {
+        throw const StationActionException(
+          StationActionFailure.noShowNoteRequired,
+        );
+      }
+      try {
+        await _supabase.rpc(
+          'captain_resolve_no_show',
+          params: {
+            'p_trip_passenger_id': tripPassengerId,
+            'p_reason': reason.wireValue,
+            'p_note': note,
+          },
+        );
+      } on PostgrestException catch (error) {
+        throw stationFailureFrom(error.message);
+      }
+      return;
+    }
+
     await _supabase
         .from('trip_passengers')
         .update({'status': _statusToString(status)})

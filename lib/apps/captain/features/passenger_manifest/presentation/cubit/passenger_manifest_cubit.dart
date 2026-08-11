@@ -2,6 +2,10 @@ import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/apps/captain/features/station_progress/domain/entities/station_action_failure.dart';
+import 'package:bmt_app/apps/captain/features/station_progress/domain/entities/station_passenger.dart';
+import 'package:bmt_app/apps/captain/features/station_progress/presentation/formatters/station_labels.dart';
+
 import '../../domain/entities/passenger.dart';
 import '../../domain/usecases/get_trip_passengers_usecase.dart';
 import '../../domain/usecases/update_passenger_status_usecase.dart';
@@ -55,9 +59,14 @@ class PassengerManifestCubit extends Cubit<PassengerManifestState> {
     _emitIfLoaded();
   }
 
+  /// [noShowReason] and [note] are only meaningful for
+  /// [PassengerBoardingStatus.absent], where the reason is what makes the
+  /// difference between a recorded no-show and a passenger quietly left behind.
   Future<void> updateStatus({
     required String tripPassengerId,
     required PassengerBoardingStatus status,
+    NoShowReason? noShowReason,
+    String? note,
   }) async {
     if (state is PassengerManifestLoading || state is PassengerManifestError) {
       return;
@@ -74,6 +83,8 @@ class PassengerManifestCubit extends Cubit<PassengerManifestState> {
       await _updatePassengerStatus(
         tripPassengerId: tripPassengerId,
         status: status,
+        noShowReason: noShowReason,
+        note: note,
       );
     } catch (e) {
       if (isClosed) return;
@@ -87,8 +98,11 @@ class PassengerManifestCubit extends Cubit<PassengerManifestState> {
     }
   }
 
-  String _readableError(Object error) =>
-      error.toString().replaceFirst(RegExp(r'^Exception: ?'), '');
+  /// A refused no-show comes back typed, so the manifest says the same thing the
+  /// station screen would rather than surfacing a raw Postgres string.
+  String _readableError(Object error) => error is StationActionException
+      ? StationLabels.failure(error)
+      : error.toString().replaceFirst(RegExp(r'^Exception: ?'), '');
 
   Future<void> _reload() async {
     final tripId = _tripId;

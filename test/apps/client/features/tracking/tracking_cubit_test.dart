@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:bmt_app/apps/client/features/tracking/data/datasources/tracking_datasource.dart';
 import 'package:bmt_app/apps/client/features/tracking/data/repositories/tracking_repository_impl.dart';
 import 'package:bmt_app/apps/client/features/tracking/domain/entities/tracking_trip.dart';
+import 'package:bmt_app/apps/client/features/tracking/domain/usecases/confirm_boarding_usecase.dart';
 import 'package:bmt_app/apps/client/features/tracking/domain/usecases/get_tracking_trip_usecase.dart';
 import 'package:bmt_app/apps/client/features/tracking/domain/usecases/watch_tracking_trip_usecase.dart';
 import 'package:bmt_app/apps/client/features/tracking/domain/usecases/watch_vehicle_position_usecase.dart';
@@ -127,6 +128,7 @@ TrackingCubit _cubit(TrackingDatasource datasource) {
     getTrackingTrip: GetTrackingTripUseCase(repository),
     watchVehiclePosition: WatchVehiclePositionUseCase(repository),
     watchTrackingTrip: WatchTrackingTripUseCase(repository),
+    confirmBoarding: ConfirmBoardingUseCase(repository),
   );
 }
 
@@ -155,6 +157,8 @@ class _FakeDatasource implements TrackingDatasource {
   final TrackingTripData trip;
   final Stream<TrackingPoint> positions;
   bool failNext = false;
+  String? confirmedBookingId;
+  Object? failBoarding;
 
   @override
   Future<TrackingTripData> getTrackingTrip({
@@ -173,4 +177,10 @@ class _FakeDatasource implements TrackingDatasource {
 
   @override
   Stream<void> watchTripChanges(String tripId) => const Stream.empty();
+
+  @override
+  Future<void> confirmBoarding(String bookingId) async {
+    confirmedBookingId = bookingId;
+    if (failBoarding != null) throw failBoarding!;
+  }
 }

@@ -1043,12 +1043,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tracking_yourDropoffBadge => 'محطة نزولك';
 
   @override
-  String get tracking_stopDeparted => 'غادرت';
-
-  @override
-  String get tracking_stopArrived => 'عند المحطة';
-
-  @override
   String get tracking_stopNext => 'التالية';
 
   @override
@@ -1093,6 +1087,54 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get tracking_mapUnavailableBody =>
       'لم يتم العثور على إحداثيات لمسار هذه الرحلة.';
+
+  @override
+  String get tracking_boardingTitle => 'هل صعدت إلى السيارة؟';
+
+  @override
+  String tracking_boardingBody(String station) {
+    return 'السيارة الآن عند $station. أكّد صعودك حتى يتمكن الكابتن من متابعة الرحلة.';
+  }
+
+  @override
+  String get tracking_boardingAction => 'نعم، صعدت';
+
+  @override
+  String get tracking_boardingWaitingTitle => 'في انتظار وصول السيارة';
+
+  @override
+  String tracking_boardingWaitingBody(String station) {
+    return 'سيظهر زر تأكيد الصعود بمجرد وصول السيارة إلى $station.';
+  }
+
+  @override
+  String get tracking_boardedTitle => 'تم تسجيل صعودك';
+
+  @override
+  String get tracking_boardedBody =>
+      'لم تعد بحاجة لمتابعة موقع السيارة — نتمنى لك رحلة سعيدة.';
+
+  @override
+  String tracking_boardingPending(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'في انتظار $count ركاب',
+      two: 'في انتظار راكبين',
+      one: 'في انتظار راكب واحد',
+      zero: 'اكتمل صعود الركاب',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get tracking_stationPassed => 'تم المرور';
+
+  @override
+  String get tracking_stationHere => 'السيارة هنا الآن';
+
+  @override
+  String get tracking_etaMayChange => 'قد يتغير الوقت حسب حالة الطريق';
 
   @override
   String get tracking_recenter => 'توسيط المسار';

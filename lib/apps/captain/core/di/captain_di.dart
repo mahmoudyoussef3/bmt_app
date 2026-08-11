@@ -92,6 +92,15 @@ import '../../features/trip_execution/domain/usecases/start_boarding_usecase.dar
 import '../../features/trip_execution/domain/usecases/watch_trip_execution_snapshot_usecase.dart';
 import '../../features/trip_execution/domain/usecases/start_trip_usecase.dart';
 import '../../features/trip_execution/presentation/cubit/trip_execution_cubit.dart';
+import '../../features/station_progress/data/datasources/station_progress_datasource.dart';
+import '../../features/station_progress/data/repositories/station_progress_repository_impl.dart';
+import '../../features/station_progress/domain/repositories/station_progress_repository.dart';
+import '../../features/station_progress/domain/usecases/arrive_at_station_usecase.dart';
+import '../../features/station_progress/domain/usecases/depart_station_usecase.dart';
+import '../../features/station_progress/domain/usecases/get_station_passengers_usecase.dart';
+import '../../features/station_progress/domain/usecases/resolve_no_show_usecase.dart';
+import '../../features/station_progress/domain/usecases/watch_station_board_usecase.dart';
+import '../../features/station_progress/presentation/cubit/station_progress_cubit.dart';
 import '../../features/trip_map/data/datasources/captain_location_stream_datasource.dart';
 import '../../features/trip_map/data/repositories/captain_location_stream_repository_impl.dart';
 import '../../features/trip_map/domain/repositories/captain_location_stream_repository.dart';
@@ -135,6 +144,7 @@ void registerCaptainDependencies() {
   _registerPassengerManifestDependencies();
   _registerLiveLocationDependencies();
   _registerTripExecutionDependencies();
+  _registerStationProgressDependencies();
   _registerTripMapDependencies();
   _registerIncidentsDependencies();
   _registerTripStatusUpdateDependencies();
@@ -434,6 +444,58 @@ void _registerTripExecutionDependencies() {
         completeTrip: captainGetIt<CompleteTripUseCase>(),
         watchTripSnapshot: captainGetIt<WatchTripExecutionSnapshotUseCase>(),
         markStationArrived: captainGetIt<MarkStationArrivedUseCase>(),
+      ),
+    );
+  }
+}
+
+void _registerStationProgressDependencies() {
+  if (!captainGetIt.isRegistered<StationProgressDataSource>()) {
+    captainGetIt.registerLazySingleton<StationProgressDataSource>(
+      () => StationProgressDataSource(captainGetIt<SupabaseClient>()),
+    );
+  }
+  if (!captainGetIt.isRegistered<StationProgressRepository>()) {
+    captainGetIt.registerLazySingleton<StationProgressRepository>(
+      () => StationProgressRepositoryImpl(
+        captainGetIt<StationProgressDataSource>(),
+      ),
+    );
+  }
+  if (!captainGetIt.isRegistered<WatchStationBoardUseCase>()) {
+    captainGetIt.registerLazySingleton<WatchStationBoardUseCase>(
+      () => WatchStationBoardUseCase(captainGetIt<StationProgressRepository>()),
+    );
+  }
+  if (!captainGetIt.isRegistered<ArriveAtStationUseCase>()) {
+    captainGetIt.registerLazySingleton<ArriveAtStationUseCase>(
+      () => ArriveAtStationUseCase(captainGetIt<StationProgressRepository>()),
+    );
+  }
+  if (!captainGetIt.isRegistered<DepartStationUseCase>()) {
+    captainGetIt.registerLazySingleton<DepartStationUseCase>(
+      () => DepartStationUseCase(captainGetIt<StationProgressRepository>()),
+    );
+  }
+  if (!captainGetIt.isRegistered<ResolveNoShowUseCase>()) {
+    captainGetIt.registerLazySingleton<ResolveNoShowUseCase>(
+      () => ResolveNoShowUseCase(captainGetIt<StationProgressRepository>()),
+    );
+  }
+  if (!captainGetIt.isRegistered<GetStationPassengersUseCase>()) {
+    captainGetIt.registerLazySingleton<GetStationPassengersUseCase>(
+      () =>
+          GetStationPassengersUseCase(captainGetIt<StationProgressRepository>()),
+    );
+  }
+  if (!captainGetIt.isRegistered<StationProgressCubit>()) {
+    captainGetIt.registerFactory<StationProgressCubit>(
+      () => StationProgressCubit(
+        watchBoard: captainGetIt<WatchStationBoardUseCase>(),
+        arriveAtStation: captainGetIt<ArriveAtStationUseCase>(),
+        departStation: captainGetIt<DepartStationUseCase>(),
+        resolveNoShow: captainGetIt<ResolveNoShowUseCase>(),
+        getStationPassengers: captainGetIt<GetStationPassengersUseCase>(),
       ),
     );
   }

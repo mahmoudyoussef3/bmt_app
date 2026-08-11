@@ -76,6 +76,17 @@ removed — trip state is followed in the Trips module (`الرحلات`) instea
 All thresholds live in `TrackingConfig`; consumers may pass a custom config to
 `VehicleTrackController`. Defaults are calibrated for intercity buses.
 
+## Read boundary
+
+Who may consume these fixes is decided by `can_read_trip_fixes`
+(`20260729090000`, narrowed by `20260811090000`): platform admin, the operating
+office, the assigned captain, and a passenger whose booking is `confirmed` —
+that is, still *waiting* for the vehicle. A passenger who has boarded loses the
+feed; every other passenger on the same trip who is still waiting keeps it, and
+the captain publishes throughout. The gate is per booking, evaluated per
+delivered row, never a switch on the trip. See `STATION_BOARDING.md` §per-rider
+tracking visibility.
+
 ## Related
 
 The **Smart Route Progress & ETA System** (`lib/core/tracking/progress/`,

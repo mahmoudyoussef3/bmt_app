@@ -1,9 +1,11 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'client_session_datasource.dart';
+
 /// Reads and writes the `clients` table that backs client-app accounts. Kept
 /// separate from [SupabaseClientAuthDatasource] so the Supabase auth calls stay
 /// distinct from the profile-row bookkeeping around them.
-class ClientAccountGuard {
+class ClientAccountGuard implements ClientSessionDatasource {
   const ClientAccountGuard(this._supabase);
 
   final SupabaseClient _supabase;
@@ -25,6 +27,39 @@ class ClientAccountGuard {
         'Use the correct app for your account type.',
       );
     }
+  }
+
+  /// Vets a session the app restored from storage rather than just signed in.
+  ///
+  /// Returns true when that session belongs to a registered client. All three
+  /// EWT apps share one Supabase session store per device, so a captain who
+  /// signed in here leaves a driver session the client app would otherwise
+  /// restore as a passenger — an account with no `clients` row, which looks
+  /// normal on every screen until the booking insert fails on its foreign key.
+  /// Such a session is signed out and reported false.
+  ///
+  /// Fails open: a lookup that errors (offline, transient failure) keeps the
+  /// session, so a flaky network never evicts a real passenger. Only a
+  /// definitive "no such row" rejects.
+  @override
+  Future<bool> ensureClientSession() async {
+    final uid = _supabase.auth.currentUser?.id;
+    if (uid == null) return false;
+
+    final Map<String, dynamic>? row;
+    try {
+      row = await _supabase
+          .from('clients')
+          .select('id')
+          .eq('id', uid)
+          .maybeSingle();
+    } catch (_) {
+      return true;
+    }
+    if (row != null) return true;
+
+    await _supabase.auth.signOut();
+    return false;
   }
 
   /// True when [phone] already belongs to a client. Fails open: a failed

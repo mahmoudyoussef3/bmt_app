@@ -30,8 +30,19 @@ class TrackingSubscriptions {
 
   /// A finished trip has no more positions to report; holding the channel open
   /// keeps a socket alive for nothing.
-  void syncLocation(String tripId, TrackingTripState state) {
-    if (state.isFinished) return cancelLocation();
+  ///
+  /// [canTrack] is the rider's own eligibility. Once they board, this rider stops
+  /// receiving positions — but the captain keeps publishing and every other rider
+  /// still waiting down the route keeps their feed, because the boundary is
+  /// `can_read_trip_fixes` evaluated per booking, not a switch on the trip.
+  /// Dropping the subscription here is the courteous half; the database is the
+  /// half that matters.
+  void syncLocation(
+    String tripId,
+    TrackingTripState state, {
+    bool canTrack = true,
+  }) {
+    if (state.isFinished || !canTrack) return cancelLocation();
     if (_locationTripId == tripId && _locationSub != null) return;
 
     cancelLocation();

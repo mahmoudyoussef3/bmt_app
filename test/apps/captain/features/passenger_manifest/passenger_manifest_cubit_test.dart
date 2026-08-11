@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:bmt_app/apps/captain/features/station_progress/domain/entities/station_passenger.dart';
 import 'package:bmt_app/apps/captain/features/passenger_manifest/domain/entities/passenger.dart';
 import 'package:bmt_app/apps/captain/features/passenger_manifest/domain/repositories/passenger_manifest_repository.dart';
 import 'package:bmt_app/apps/captain/features/passenger_manifest/domain/usecases/get_trip_passengers_usecase.dart';
@@ -137,6 +138,8 @@ class _FakeRepository implements PassengerManifestRepository {
   Future<void> updatePassengerStatus({
     required String tripPassengerId,
     required PassengerBoardingStatus status,
+    NoShowReason? noShowReason,
+    String? note,
   }) async {
     if (failNextUpdate) {
       failNextUpdate = false;

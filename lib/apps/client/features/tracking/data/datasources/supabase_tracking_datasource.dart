@@ -43,6 +43,7 @@ class SupabaseTrackingDatasource implements TrackingDatasource {
       _query.events(resolvedTripId),
       _query.passenger(resolvedTripId, userId),
       _query.hasReview(resolvedBookingId),
+      _query.stations(resolvedTripId),
     ]);
 
     return TrackingTripAssembler.assemble(
@@ -54,7 +55,47 @@ class SupabaseTrackingDatasource implements TrackingDatasource {
       eventRows: results[3] as List<Map<String, dynamic>>,
       passengerRow: results[4] as Map<String, dynamic>?,
       hasReview: results[5] as bool,
+      stationRows: results[6] as List<Map<String, dynamic>>,
+      bookingStatus: booking?['status']?.toString(),
     );
+  }
+
+  /// "نعم، صعدت".
+  ///
+  /// The app checks nothing here — the rider owns this booking, the vehicle is
+  /// at their station, the booking is paid for, and none of that is decided in
+  /// Dart. `passenger_confirm_boarding` checks all three and refuses otherwise;
+  /// the screen's job is to make the button unavailable when it already knows
+  /// the answer, not to be the answer.
+  @override
+  Future<void> confirmBoarding(String bookingId) async {
+    try {
+      await _client.rpc(
+        'passenger_confirm_boarding',
+        params: {'p_booking_id': bookingId},
+      );
+    } on PostgrestException catch (error) {
+      throw Exception(_boardingFailure(error.message));
+    }
+  }
+
+  String _boardingFailure(String message) {
+    if (message.contains('vehicle_not_at_station')) {
+      return 'لم تصل السيارة إلى محطتك بعد';
+    }
+    if (message.contains('not_your_station')) {
+      return 'السيارة الآن في محطة أخرى — انتظر وصولها إلى محطتك';
+    }
+    if (message.contains('not_your_booking')) {
+      return 'لا يمكنك تأكيد صعود حجز لا يخصك';
+    }
+    if (message.contains('booking_not_boardable')) {
+      return 'حالة حجزك لا تسمح بتأكيد الصعود';
+    }
+    if (message.contains('trip_not_running')) {
+      return 'لم تبدأ الرحلة بعد';
+    }
+    return 'تعذر تأكيد الصعود، حاول مجدداً';
   }
 
   /// Realtime delivers a fix the instant the captain shares it; the poll is a

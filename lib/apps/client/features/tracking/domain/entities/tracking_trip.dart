@@ -1,4 +1,5 @@
 import 'package:bmt_app/core/tracking/progress/route_stop.dart';
+import 'package:bmt_app/core/tracking/progress/station_board.dart';
 
 import 'tracking_crew.dart';
 import 'tracking_point.dart';
@@ -18,6 +19,7 @@ class TrackingTripData {
   const TrackingTripData({
     required this.stops,
     required this.tripState,
+    this.stations = const StationBoard.empty(),
     this.tripId,
     this.bookingId,
     this.tripCode,
@@ -36,6 +38,7 @@ class TrackingTripData {
   const TrackingTripData.none()
     : stops = const [],
       tripState = TrackingTripState.notStarted,
+      stations = const StationBoard.empty(),
       tripId = null,
       bookingId = null,
       tripCode = null,
@@ -52,6 +55,13 @@ class TrackingTripData {
   /// The trip's stops in route order (`trip_route_points.point_order`), each
   /// with its real coordinates and planned times.
   final List<RouteStop> stops;
+
+  /// The live station board: which stops the vehicle has actually reached and
+  /// left, and the boarding tally at each.
+  ///
+  /// Empty until the trip starts boarding — the board is built at that moment,
+  /// and before it exists the published schedule in [stops] is the honest answer.
+  final StationBoard stations;
 
   final TrackingTripState tripState;
   final String? tripId;
@@ -94,6 +104,19 @@ class TrackingTripData {
 
   String? get destinationName => stops.isEmpty ? null : stops.last.name;
 
+  /// This rider's own stop on the live board, matched by route point id and
+  /// falling back to the name — null before the board exists or when the
+  /// manifest point does not correspond to any stop on this trip.
+  TripStation? get riderStation => stations.stationForPickup(
+    routePointId: rider.boardingPointId,
+    name: rider.boardingName,
+  );
+
+  /// The vehicle is standing at this rider's stop right now, so boarding is a
+  /// thing they can actually do. The database checks the same thing before it
+  /// accepts a confirmation.
+  bool get isVehicleAtRiderStation => riderStation?.isCurrent ?? false;
+
   TrackingTripData copyWith({
     TrackingTripState? tripState,
     TrackingPoint? vehicleFix,
@@ -101,6 +124,7 @@ class TrackingTripData {
   }) {
     return TrackingTripData(
       stops: stops,
+      stations: stations,
       tripState: tripState ?? this.tripState,
       tripId: tripId,
       bookingId: bookingId,

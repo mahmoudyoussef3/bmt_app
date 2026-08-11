@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/entities/tracking_trip.dart';
+import '../../domain/usecases/confirm_boarding_usecase.dart';
 import '../../domain/usecases/get_tracking_trip_usecase.dart';
 import '../../domain/usecases/watch_tracking_trip_usecase.dart';
 import '../../domain/usecases/watch_vehicle_position_usecase.dart';
@@ -20,7 +21,9 @@ class TrackingCubit extends Cubit<TrackingState> {
     required GetTrackingTripUseCase getTrackingTrip,
     required WatchVehiclePositionUseCase watchVehiclePosition,
     required WatchTrackingTripUseCase watchTrackingTrip,
+    required ConfirmBoardingUseCase confirmBoarding,
   }) : _getTrackingTrip = getTrackingTrip,
+       _confirmBoarding = confirmBoarding,
        super(const TrackingLoading()) {
     _subscriptions = TrackingSubscriptions(
       watchVehiclePosition: watchVehiclePosition,
@@ -31,6 +34,7 @@ class TrackingCubit extends Cubit<TrackingState> {
   }
 
   final GetTrackingTripUseCase _getTrackingTrip;
+  final ConfirmBoardingUseCase _confirmBoarding;
   final _progress = TrackingProgressController();
   late final TrackingSubscriptions _subscriptions;
 
@@ -74,7 +78,11 @@ class TrackingCubit extends Cubit<TrackingState> {
         ),
       );
       _subscriptions
-        ..syncLocation(data.tripId!, data.tripState)
+        ..syncLocation(
+          data.tripId!,
+          data.tripState,
+          canTrack: data.rider.canTrackVehicle,
+        )
         ..syncTripChanges(data.tripId!);
       _startEtaTicker();
     } catch (error) {
@@ -102,6 +110,54 @@ class TrackingCubit extends Cubit<TrackingState> {
         progress: _progress.addFix(fix, next, now: DateTime.now()),
       ),
     );
+  }
+
+  /// The rider confirming they are aboard.
+  ///
+  /// On success the refetch picks up a booking that is now `boarded`, which does
+  /// three things at once: the station's tally drops a pending rider (the captain
+  /// sees it immediately over realtime), the boarding card is replaced by the
+  /// confirmation, and [TrackingSubscriptions.syncLocation] drops this rider's
+  /// position feed. The failure path leaves everything exactly as it was and
+  /// surfaces the server's reason.
+  Future<void> confirmBoarding() async {
+    final current = state;
+    if (current is! TrackingLoaded) return;
+
+    final bookingId = current.data.bookingId;
+    if (bookingId == null || current.isBoarding) return;
+
+    emit(current.copyWith(isBoarding: true, clearBoardingError: true));
+    try {
+      await _confirmBoarding(bookingId);
+      if (isClosed) return;
+      await _fetch(silent: true);
+      if (isClosed) return;
+      final refreshed = state;
+      if (refreshed is TrackingLoaded) {
+        emit(refreshed.copyWith(isBoarding: false));
+      }
+    } catch (error) {
+      if (isClosed) return;
+      final latest = state;
+      if (latest is! TrackingLoaded) return;
+      emit(
+        latest.copyWith(
+          isBoarding: false,
+          boardingError: error.toString().replaceFirst(
+            RegExp(r'^Exception: ?'),
+            '',
+          ),
+        ),
+      );
+    }
+  }
+
+  void dismissBoardingError() {
+    final current = state;
+    if (current is TrackingLoaded && current.boardingError != null) {
+      emit(current.copyWith(clearBoardingError: true));
+    }
   }
 
   /// ETAs are moments in time, so they go stale on their own. This re-reads the

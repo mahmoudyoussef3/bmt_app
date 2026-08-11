@@ -67,27 +67,34 @@ class ClientButton extends StatelessWidget {
         child: Container(
           constraints: BoxConstraints(minHeight: minSize.height),
           padding: const EdgeInsets.symmetric(horizontal: 24),
-          alignment: Alignment.center,
           decoration: BoxDecoration(
             color: effective == null
                 ? ClientColors.surfaceMutedFor(context)
                 : ClientColors.primaryFor(context),
             borderRadius: BorderRadius.circular(ClientRadius.pill),
           ),
-          child: DefaultTextStyle(
-            style: ClientTypography.labelLarge(context).copyWith(
-              color: effective == null
-                  ? ClientColors.textTertiaryFor(context)
-                  : ClientColors.textInverse,
-            ),
-            child: IconTheme(
-              data: IconThemeData(
+          // `heightFactor: 1` keeps the button at its content height instead of
+          // filling the parent: a bare `alignment` stretches to the incoming
+          // max height, which swallows whole screens in bounded slots such as
+          // Scaffold's `bottomNavigationBar`.
+          child: Align(
+            alignment: Alignment.center,
+            heightFactor: 1,
+            child: DefaultTextStyle(
+              style: ClientTypography.labelLarge(context).copyWith(
                 color: effective == null
                     ? ClientColors.textTertiaryFor(context)
                     : ClientColors.textInverse,
-                size: 20,
               ),
-              child: child,
+              child: IconTheme(
+                data: IconThemeData(
+                  color: effective == null
+                      ? ClientColors.textTertiaryFor(context)
+                      : ClientColors.textInverse,
+                  size: 20,
+                ),
+                child: child,
+              ),
             ),
           ),
         ),

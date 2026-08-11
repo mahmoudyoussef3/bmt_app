@@ -5,13 +5,5 @@ class MarkStationArrivedUseCase {
 
   final TripExecutionRepository _repository;
 
-  Future<void> call({
-    required String tripId,
-    required String pointId,
-    required String pointName,
-  }) => _repository.markStationArrived(
-    tripId: tripId,
-    pointId: pointId,
-    pointName: pointName,
-  );
+  Future<void> call(String tripId) => _repository.markStationArrived(tripId);
 }

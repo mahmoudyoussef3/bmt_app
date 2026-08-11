@@ -397,8 +397,6 @@
   "tracking_stopsTitle": "محطات الرحلة",
   "tracking_yourStopBadge": "محطتك",
   "tracking_yourDropoffBadge": "محطة نزولك",
-  "tracking_stopDeparted": "غادرت",
-  "tracking_stopArrived": "عند المحطة",
   "tracking_stopNext": "التالية",
   "tracking_captain": "الكابتن",
   "tracking_vehicle": "المركبة",
@@ -423,6 +421,26 @@
   "tracking_bookAgain": "احجز رحلة أخرى",
   "tracking_mapUnavailableTitle": "لا تتوفر بيانات الخريطة",
   "tracking_mapUnavailableBody": "لم يتم العثور على إحداثيات لمسار هذه الرحلة.",
+  "tracking_boardingTitle": "هل صعدت إلى السيارة؟",
+  "tracking_boardingBody": "السيارة الآن عند {station}. أكّد صعودك حتى يتمكن الكابتن من متابعة الرحلة.",
+  "@tracking_boardingBody": {
+    "placeholders": { "station": { "type": "String" } }
+  },
+  "tracking_boardingAction": "نعم، صعدت",
+  "tracking_boardingWaitingTitle": "في انتظار وصول السيارة",
+  "tracking_boardingWaitingBody": "سيظهر زر تأكيد الصعود بمجرد وصول السيارة إلى {station}.",
+  "@tracking_boardingWaitingBody": {
+    "placeholders": { "station": { "type": "String" } }
+  },
+  "tracking_boardedTitle": "تم تسجيل صعودك",
+  "tracking_boardedBody": "لم تعد بحاجة لمتابعة موقع السيارة — نتمنى لك رحلة سعيدة.",
+  "tracking_boardingPending": "{count, plural, =0{اكتمل صعود الركاب} =1{في انتظار راكب واحد} =2{في انتظار راكبين} other{في انتظار {count} ركاب}}",
+  "@tracking_boardingPending": {
+    "placeholders": { "count": { "type": "int" } }
+  },
+  "tracking_stationPassed": "تم المرور",
+  "tracking_stationHere": "السيارة هنا الآن",
+  "tracking_etaMayChange": "قد يتغير الوقت حسب حالة الطريق",
   "tracking_recenter": "توسيط المسار",
   "tracking_followVehicle": "تتبع المركبة",
   "profile_title": "حسابي",

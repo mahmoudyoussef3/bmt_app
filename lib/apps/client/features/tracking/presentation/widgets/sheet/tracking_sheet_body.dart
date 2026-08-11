@@ -5,6 +5,7 @@ import 'package:bmt_app/core/tracking/progress/route_progress_snapshot.dart';
 
 import '../../../domain/entities/tracking_trip.dart';
 import '../../formatters/tracking_labels.dart';
+import 'tracking_boarding_card.dart';
 import 'tracking_booking_card.dart';
 import 'tracking_completed_card.dart';
 import 'tracking_crew_card.dart';
@@ -25,6 +26,8 @@ class TrackingSheetBody extends StatelessWidget {
     required this.progress,
     required this.labels,
     required this.onRefresh,
+    this.isBoarding = false,
+    this.boardingError,
     this.scrollController,
   });
 
@@ -32,6 +35,8 @@ class TrackingSheetBody extends StatelessWidget {
   final RouteProgressSnapshot? progress;
   final TrackingLabels labels;
   final VoidCallback onRefresh;
+  final bool isBoarding;
+  final String? boardingError;
   final ScrollController? scrollController;
 
   @override
@@ -57,6 +62,18 @@ class TrackingSheetBody extends StatelessWidget {
             onReviewed: onRefresh,
           ),
         ],
+        // Directly under the status, above the booking details: while the bus is
+        // at the rider's stop this is the only thing on the screen they need to
+        // act on.
+        if (TrackingBoardingCard.isRelevantFor(trip)) ...[
+          const SizedBox(height: 16),
+          TrackingBoardingCard(
+            trip: trip,
+            labels: labels,
+            isBoarding: isBoarding,
+            boardingError: boardingError,
+          ),
+        ],
         if (showBooking) ...[
           const SizedBox(height: 16),
           TrackingBookingCard(rider: rider, labels: labels),
@@ -67,6 +84,7 @@ class TrackingSheetBody extends StatelessWidget {
             progress: progress,
             rider: rider,
             labels: labels,
+            stations: trip.stations,
           ),
         ],
         const SizedBox(height: 16),

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/captain/core/di/captain_di.dart';
-import 'package:bmt_app/apps/captain/core/routes/captain_nav.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
@@ -12,18 +11,25 @@ import 'package:bmt_app/apps/captain/core/widgets/captain_section_label.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_ticker.dart';
 import 'package:bmt_app/apps/captain/features/assigned_trips/domain/entities/assigned_trip.dart';
 import 'package:bmt_app/apps/captain/features/live_location/presentation/widgets/trip_location_auto_share.dart';
+import 'package:bmt_app/apps/captain/features/station_progress/presentation/cubit/station_progress_cubit.dart';
+import 'package:bmt_app/apps/captain/features/station_progress/presentation/cubit/station_progress_state.dart';
+import 'package:bmt_app/apps/captain/features/station_progress/presentation/widgets/station_progress_section.dart';
 
 import '../../domain/entities/trip_execution_state.dart';
 import '../cubit/trip_execution_cubit.dart';
 import '../cubit/trip_execution_state.dart';
-import '../widgets/navigate_to_stop_button.dart';
-import '../widgets/route_progress_timeline.dart';
 import '../widgets/trip_execution_action_bar.dart';
 import '../widgets/trip_execution_canopy.dart';
-import '../widgets/trip_execution_next_stop_banner.dart';
 import '../widgets/trip_execution_tools.dart';
 import '../widgets/trip_gps_status_card.dart';
 
+/// The captain's trip screen.
+///
+/// There is deliberately no map here. A captain driving a fixed route does not
+/// navigate — they work a sequence of stations — and a map is a second thing
+/// competing for the attention of someone holding a wheel. GPS itself is
+/// untouched: [TripLocationAutoShare] keeps publishing throughout, because the
+/// riders still waiting down the route are watching it.
 class TripExecutionPage extends StatelessWidget {
   const TripExecutionPage({super.key, required this.trip});
 
@@ -31,13 +37,20 @@ class TripExecutionPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<TripExecutionCubit>(
-      create: (_) => captainGetIt<TripExecutionCubit>()
-        ..watch(
-          tripId: trip.id,
-          routePointCount: trip.stops.length,
-          initialSnapshot: _initialSnapshotFromTrip(trip),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<TripExecutionCubit>(
+          create: (_) => captainGetIt<TripExecutionCubit>()
+            ..watch(
+              tripId: trip.id,
+              routePointCount: trip.stops.length,
+              initialSnapshot: _initialSnapshotFromTrip(trip),
+            ),
         ),
+        BlocProvider<StationProgressCubit>(
+          create: (_) => captainGetIt<StationProgressCubit>()..watch(trip.id),
+        ),
+      ],
       child: _TripExecutionView(trip: trip),
     );
   }
@@ -79,11 +92,16 @@ class _TripExecutionView extends StatelessWidget {
     DateTime now,
   ) {
     final snapshot = state.snapshot;
-    final isUnderway = snapshot.status == TripExecutionStatus.inProgress;
     final stage = snapshot.status.stageAt(
       departureTime: trip.departureTime,
       now: now,
     );
+
+    // GPS publishing follows the *trip*, never any one rider's boarding state:
+    // the moment the vehicle is collecting passengers it starts, and it does not
+    // stop until the trip ends. Who is allowed to read those positions is a
+    // separate question, answered per booking by `can_read_trip_fixes`.
+    final isSharingLocation = stage.isLive;
 
     return Scaffold(
       backgroundColor: CaptainColors.backgroundFor(context),
@@ -104,31 +122,18 @@ class _TripExecutionView extends StatelessWidget {
                   _InlineError(message: message),
                   const SizedBox(height: CaptainDesignTokens.s24),
                 ],
+                TripLocationAutoShare(
+                  tripId: trip.id,
+                  enabled: isSharingLocation,
+                ),
                 if (stage.isLive) ...[
-                  _LiveMapCta(trip: trip),
-                  const SizedBox(height: CaptainDesignTokens.s24),
-                ],
-                TripLocationAutoShare(tripId: trip.id, enabled: isUnderway),
-                if (isUnderway && trip.stops.isNotEmpty) ...[
-                  const CaptainSectionLabel('المحطة القادمة'),
-                  TripExecutionNextStopBanner(
-                    tripId: trip.id,
-                    stops: trip.stops,
-                    arrivedStationsCount: snapshot.arrivedStationsCount,
-                  ),
-                  const SizedBox(height: CaptainDesignTokens.s16),
-                  NavigateToStopButton(stop: _nextStop(snapshot)),
-                  const SizedBox(height: CaptainDesignTokens.s24),
-                ],
-                if (trip.stops.isNotEmpty) ...[
-                  const CaptainSectionLabel('مسار الرحلة'),
-                  RouteProgressTimeline(
-                    stops: trip.stops,
-                    arrivedStationsCount: snapshot.arrivedStationsCount,
+                  BlocBuilder<StationProgressCubit, StationProgressState>(
+                    builder: (context, stationState) => StationProgressSection(
+                      state: stationState,
+                      now: now,
+                    ),
                   ),
                   const SizedBox(height: CaptainDesignTokens.s24),
-                ],
-                if (isUnderway) ...[
                   const CaptainSectionLabel('الموقع والوصول'),
                   TripGpsStatusCard(
                     lastLocation: snapshot.lastLocation,
@@ -149,77 +154,6 @@ class _TripExecutionView extends StatelessWidget {
         state: state,
         tripId: trip.id,
         departureTime: trip.departureTime,
-      ),
-    );
-  }
-
-  AssignedTripStop? _nextStop(TripExecutionSnapshot snapshot) {
-    final index = snapshot.arrivedStationsCount;
-    if (index >= trip.stops.length) return null;
-    return trip.stops[index];
-  }
-}
-
-class _LiveMapCta extends StatelessWidget {
-  const _LiveMapCta({required this.trip});
-
-  final AssignedTrip trip;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () => context.openTripMap(trip),
-      borderRadius: CaptainDesignTokens.br24,
-      child: Container(
-        padding: const EdgeInsets.all(CaptainDesignTokens.s20),
-        decoration: BoxDecoration(
-          gradient: CaptainColors.primaryGradient(context),
-          borderRadius: CaptainDesignTokens.br24,
-          boxShadow: CaptainDesignTokens.floatingShadow(context),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.18),
-                borderRadius: CaptainDesignTokens.br16,
-              ),
-              child: const Icon(
-                Icons.map_rounded,
-                color: Colors.white,
-                size: 26,
-              ),
-            ),
-            const SizedBox(width: CaptainDesignTokens.s16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'الخريطة المباشرة',
-                    style: CaptainTypography.titleMedium(context).copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'موقعك، المسار، ونقطة التجميع القادمة',
-                    style: CaptainTypography.bodySmall(
-                      context,
-                    ).copyWith(color: Colors.white.withValues(alpha: 0.9)),
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              Icons.chevron_right_rounded,
-              color: Colors.white.withValues(alpha: 0.9),
-            ),
-          ],
-        ),
       ),
     );
   }

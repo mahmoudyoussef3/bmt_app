@@ -15,12 +15,20 @@ class TrackingRealtime {
   /// Tables whose rows change what the rider sees — a status flip, a captain's
   /// station arrival, a check-in, a re-sequenced stop. Any of them firing means
   /// the joined view is stale and must be refetched.
+  ///
+  /// One channel covering all of them, deliberately: the screen renders a single
+  /// joined view, so there is one thing to invalidate, and a second subscription
+  /// per table would only give several ways to arrive at the same refetch.
   static const _tripScopedTables = [
     'operation_bookings',
     'trip_events',
     'trip_passengers',
     'trip_route_points',
     'trip_seats',
+    // The station board: arrivals, departures and boarding tallies. This is what
+    // makes "✓ تم المرور" and the next stop's ETA move on the rider's screen the
+    // moment the captain leaves a station.
+    'trip_station_progress',
   ];
 
   Stream<TrackingPoint> watchVehiclePosition(String tripId) {

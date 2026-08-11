@@ -97,17 +97,8 @@ class TripExecutionCubit extends Cubit<TripExecutionCubitState> {
     }
   }
 
-  Future<void> markStationArrived({
-    required String tripId,
-    required String pointId,
-    required String pointName,
-  }) {
-    return _markStationArrived(
-      tripId: tripId,
-      pointId: pointId,
-      pointName: pointName,
-    );
-  }
+  Future<void> markStationArrived(String tripId) =>
+      _markStationArrived(tripId);
 
   @override
   Future<void> close() {

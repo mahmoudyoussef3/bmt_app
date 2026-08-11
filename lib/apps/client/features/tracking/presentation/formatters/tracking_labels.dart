@@ -48,8 +48,8 @@ class TrackingLabels {
   };
 
   String stopStatus(StopVisitStatus status) => switch (status) {
-    StopVisitStatus.departed => l10n.tracking_stopDeparted,
-    StopVisitStatus.arrived => l10n.tracking_stopArrived,
+    StopVisitStatus.departed => l10n.tracking_stationPassed,
+    StopVisitStatus.arrived => l10n.tracking_stationHere,
     StopVisitStatus.next => l10n.tracking_stopNext,
     StopVisitStatus.upcoming => '',
   };

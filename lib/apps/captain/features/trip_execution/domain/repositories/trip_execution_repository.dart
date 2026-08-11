@@ -10,9 +10,8 @@ abstract class TripExecutionRepository {
     required int routePointCount,
   });
 
-  Future<void> markStationArrived({
-    required String tripId,
-    required String pointId,
-    required String pointName,
-  });
+  /// Reports reaching the trip's next un-departed station. There is no station
+  /// argument: the server resolves which one, so the captain cannot mark an
+  /// arbitrary stop completed.
+  Future<void> markStationArrived(String tripId);
 }
