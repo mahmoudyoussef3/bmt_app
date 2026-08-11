@@ -10,11 +10,7 @@ class SupabasePackagesDatasource implements PackagesDatasource {
 
   @override
   Future<List<PackagePlanModel>> getPackages({String? officeId}) async {
-    // Packages are per-office offers competing in one catalogue, so each row
-    // carries its seller's public identity — name, logo and rating — embedded
-    // from the anon-safe `public_offices` view. That view already excludes
-    // paused/unlisted offices, so a package whose seller is not for sale comes
-    // back with a null `office`; the repository drops those.
+    
     var query = _supabase
         .from('transport_packages')
         .select(
@@ -23,7 +19,6 @@ class SupabasePackagesDatasource implements PackagesDatasource {
         )
         .eq('active', true);
 
-    // The office profile reuses this to list one seller's packages.
     if (officeId != null && officeId.isNotEmpty) {
       query = query.eq('office_id', officeId);
     }

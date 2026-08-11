@@ -51,8 +51,7 @@ class PlatformAdminCubit extends Cubit<PlatformAdminState> {
     emit(const PlatformAdminLoading());
     try {
       final offices = await _getOffices();
-      // The list is emitted before the analytics call is awaited, so the screen
-      // is usable while the heavier aggregate query runs.
+      
       _isAnalyticsLoading = true;
       emit(_loaded(offices));
       await _loadAnalytics();
@@ -104,11 +103,6 @@ class PlatformAdminCubit extends Cubit<PlatformAdminState> {
     await _loadAnalytics();
   }
 
-  // ── Search and filtering ──────────────────────────────────────────────────
-  // Purely local: `platform_list_offices()` returns every office the platform
-  // has, and offices are onboarded one at a time by a human. See
-  // [PlatformOfficeFilter] for why this does not go to the server.
-
   void search(String query) => _applyFilter(_filter.copyWith(query: query));
 
   void filterByStatus(String? status) => _applyFilter(
@@ -140,8 +134,6 @@ class PlatformAdminCubit extends Cubit<PlatformAdminState> {
     if (offices == null) return;
     emit(_loaded(offices));
   }
-
-  // ── Details ───────────────────────────────────────────────────────────────
 
   /// Opens the details panel for [officeId] and fetches it.
   ///
@@ -188,9 +180,7 @@ class PlatformAdminCubit extends Cubit<PlatformAdminState> {
     emit(_loaded(offices, isSubmitting: true));
     try {
       final result = await _onboardOffice(request);
-      // Reload before revealing: the new office has to be in the list the
-      // operator returns to once they dismiss the credentials. A failed reload
-      // must not swallow the reveal, so it degrades to the list we already had.
+      
       List<PlatformOffice> refreshed;
       try {
         refreshed = await _getOffices();
@@ -255,16 +245,11 @@ class PlatformAdminCubit extends Cubit<PlatformAdminState> {
     try {
       await action();
       final refreshed = await _getOffices();
-      // Publishing from inside the details panel changes what that panel says —
-      // the listing badge, and whether there is a marketplace preview at all. The
-      // list refresh alone would leave it showing the pre-action office.
+      
       await _refreshSelection();
       emit(PlatformAdminActionSuccess(successMessage, refreshed));
       emit(_loaded(refreshed));
-      // Publishing or suspending changes the answers analytics gives — a newly
-      // listed office with no upcoming trips becomes a marketplace dead end the
-      // moment it is published — so the numbers are refetched rather than left
-      // describing the platform as it was one action ago.
+      
       await _loadAnalytics();
     } catch (error) {
       emit(PlatformAdminActionFailure(_message(error), offices));
@@ -286,7 +271,7 @@ class PlatformAdminCubit extends Cubit<PlatformAdminState> {
         details: details,
       );
     } catch (_) {
-      // Keep whatever the panel was showing.
+      
     }
   }
 

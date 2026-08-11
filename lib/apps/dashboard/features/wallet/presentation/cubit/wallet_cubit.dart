@@ -69,8 +69,6 @@ class WalletCubit extends Cubit<WalletState> {
   WalletLoadedState? get _loaded =>
       state is WalletLoadedState ? state as WalletLoadedState : null;
 
-  // ── Loading ──────────────────────────────────────────────────────────────
-
   Future<void> load() async {
     emit(const WalletLoadingState());
     try {
@@ -81,8 +79,7 @@ class WalletCubit extends Cubit<WalletState> {
           directory: workspace.directory,
         ),
       );
-      // The pending-refund count is a control the header shows, so the queue is
-      // fetched on first load rather than lazily when its tab is opened.
+      
       await loadRefundQueue();
     } catch (e) {
       emit(WalletErrorState(_clean(e)));
@@ -110,7 +107,7 @@ class WalletCubit extends Cubit<WalletState> {
       if (current.tab == WalletTab.activity) await loadLedger();
       await loadRefundQueue();
     } catch (_) {
-      // Keep the last good picture. The operator can retry from the header.
+      
     }
   }
 
@@ -122,8 +119,7 @@ class WalletCubit extends Cubit<WalletState> {
       final page = await _searchDirectory(search: query);
       if (isClosed) return;
       final now = _loaded;
-      // Guard against an out-of-order response: only apply the page if the
-      // query it was fetched for is still the one in the box.
+      
       if (now != null && now.directorySearch == query) {
         emit(now.copyWith(directory: page));
       }
@@ -155,7 +151,7 @@ class WalletCubit extends Cubit<WalletState> {
       final summary = await _getSummary(clientId);
       if (isClosed) return;
       final current = _loaded;
-      // The operator may have moved on while this was in flight.
+      
       if (current == null || current.selectedClientId != clientId) return;
       emit(current.copyWith(summary: summary, detailLoading: false));
     } catch (e) {
@@ -221,11 +217,6 @@ class WalletCubit extends Cubit<WalletState> {
 
   Future<List<CancelledTripRefundTarget>> cancelledTrips() =>
       _getCancelledTrips();
-
-  // ── Actions ──────────────────────────────────────────────────────────────
-  //
-  // Each returns `null` on success or the operator-facing message on failure, so
-  // a dialog can stay open and show the reason instead of closing on a refusal.
 
   Future<String?> adjust({
     required WalletKind kind,
@@ -376,7 +367,7 @@ class WalletCubit extends Cubit<WalletState> {
           actionError: result.verified ? null : result.faultLabel,
         ),
       );
-      // A fault freezes the wallet server-side; re-read so the screen shows it.
+      
       if (!result.verified) await refresh();
       return result.verified ? null : result.faultLabel;
     } catch (e) {

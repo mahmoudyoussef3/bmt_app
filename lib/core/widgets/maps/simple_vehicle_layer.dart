@@ -8,7 +8,6 @@ import 'package:bmt_app/core/maps/route_path_math.dart';
 import 'package:bmt_app/core/theme/motion_preference.dart';
 import 'package:bmt_app/core/widgets/maps/map_style.dart';
 
-
 class SimpleVehicleData {
   const SimpleVehicleData({
     required this.position,
@@ -24,7 +23,6 @@ class SimpleVehicleData {
   /// GPS accuracy radius; the layer draws a soft circle when provided.
   final double? accuracyMeters;
 }
-
 
 class SimpleVehicleLayer extends StatefulWidget {
   const SimpleVehicleLayer({super.key, required this.vehicle});
@@ -59,7 +57,7 @@ class _SimpleVehicleLayerState extends State<SimpleVehicleLayer>
     super.didUpdateWidget(oldWidget);
     final next = widget.vehicle;
     if (next == null || _to == null) {
-      // First fix (or tracking stopped): snap, don't animate from nowhere.
+      
       _from = _to = next;
       _controller.value = 1;
       return;

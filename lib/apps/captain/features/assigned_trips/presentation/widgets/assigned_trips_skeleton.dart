@@ -5,7 +5,6 @@ import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_bottom_nav.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_loading_state.dart';
 
-/// Mirrors the loaded home layout: header, focus card, stats strip, trip list.
 class AssignedTripsSkeleton extends StatelessWidget {
   const AssignedTripsSkeleton({super.key});
 

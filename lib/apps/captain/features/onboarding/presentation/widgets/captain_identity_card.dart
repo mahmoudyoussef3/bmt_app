@@ -5,7 +5,6 @@ import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_card.dart';
 
-/// Who the app thinks this captain is: name, phone, employee code.
 class CaptainIdentityCard extends StatelessWidget {
   const CaptainIdentityCard({super.key, required this.session});
 

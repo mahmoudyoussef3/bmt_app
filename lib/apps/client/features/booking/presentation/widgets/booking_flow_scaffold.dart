@@ -31,7 +31,7 @@ class BookingFlowScaffold extends StatelessWidget {
       appBar: ClientAppBar(
         title: title,
         actions: actions,
-        // A header floating over map/photo content keeps no surface of its own.
+        
         backgroundColor: extendBodyBehindAppBar ? Colors.transparent : null,
       ),
       body: Column(

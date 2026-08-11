@@ -121,8 +121,7 @@ class _TripRow extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  // The departure time leads the row: it is what an operator
-                  // scans the board by.
+                  
                   Text(
                     trip.departure.isEmpty ? '--:--' : trip.departure,
                     style: text.titleSmall?.copyWith(
@@ -160,8 +159,7 @@ class _TripRow extends StatelessWidget {
                         _MetaChip(
                           icon: DashboardIcons.captain,
                           label: noCaptain ? 'بدون سائق' : trip.driver,
-                          // The one meta value that is a problem rather than a
-                          // detail, so it is the only one that gets colour.
+                          
                           tone: noCaptain ? palette.negative : null,
                         ),
                         _MetaChip(

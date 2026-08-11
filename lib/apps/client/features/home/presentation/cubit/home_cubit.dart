@@ -63,7 +63,7 @@ class HomeCubit extends Cubit<HomeState> {
       if (isClosed) return;
       emit(HomeLoaded(data));
     } catch (_) {
-      // A realtime refresh is best-effort; keep the last usable state.
+      
     } finally {
       _refreshing = false;
     }

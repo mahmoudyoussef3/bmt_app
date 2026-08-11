@@ -4,12 +4,6 @@ import 'package:latlong2/latlong.dart';
 
 import 'package:bmt_app/core/widgets/maps/map_camera_animator.dart';
 
-/// The captain map's camera: fitting the route, following the vehicle, and
-/// letting go the moment the captain drags the map themselves.
-///
-/// A mirror of the client's tracking camera (both wrap the shared
-/// [RouteCameraAnimator]) so the captain map behaves identically — it never
-/// forces the camera to chase the bus once the captain has taken over.
 class CaptainMapCamera {
   CaptainMapCamera({required TickerProvider vsync, required this.controller})
     : _animator = RouteCameraAnimator(vsync: vsync, controller: controller);
@@ -29,7 +23,6 @@ class CaptainMapCamera {
   void resumeFollow() => _follow = true;
   void stopFollowing() => _follow = false;
 
-  /// True when this event was the captain moving the map themselves.
   bool breaksFollow(MapEvent event) {
     return _follow &&
         event.source != MapEventSource.mapController &&

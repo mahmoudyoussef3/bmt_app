@@ -180,8 +180,7 @@ class _Header extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppSpacing.small),
-              // The fare is the number every review decision turns on, so it
-              // sits in the header instead of three sections down.
+              
               Text(
                 booking.amountLabel,
                 style: text.titleLarge?.copyWith(

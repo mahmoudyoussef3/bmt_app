@@ -49,9 +49,7 @@ class TrackingMapSurface extends StatelessWidget {
           onMapReady: onMapReady,
           onMapEvent: onMapEvent,
           onPositionChanged: onPositionChanged,
-          // No rotation: a rider matching the screen to the street ahead of
-          // them is served by north-up, and a stray two-finger twist that
-          // tilts the whole city is pure frustration.
+          
           interactionOptions: const InteractionOptions(
             flags: InteractiveFlag.drag |
                 InteractiveFlag.pinchZoom |

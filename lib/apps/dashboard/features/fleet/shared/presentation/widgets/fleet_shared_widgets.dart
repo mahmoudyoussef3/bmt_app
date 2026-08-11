@@ -232,10 +232,7 @@ class FleetFormActionsBar extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.medium),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          // The reassurance line is the first thing to go: on a narrow pane, or
-          // once Arabic labels grow at a large text scale, the two buttons still
-          // have to fit and stay tappable. Dropping the hint before wrapping the
-          // buttons keeps the bar one row for as long as it honestly can.
+          
           final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
           final roomForHint = constraints.maxWidth >= 520 * scale;
 

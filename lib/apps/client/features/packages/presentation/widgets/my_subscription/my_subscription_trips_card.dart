@@ -89,8 +89,7 @@ class _RemainingPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // A spent allowance stops being brand-blue: the package is still valid, but
-    // there is nothing left to draw on, and the pill must not say otherwise.
+    
     final spent = count == 0;
     final ink = spent
         ? ClientColors.journeyAmberFor(context)

@@ -46,10 +46,6 @@ List<Widget> routeResultsSlivers({
   final isTablet = MediaQuery.sizeOf(context).width >= 720;
   final crossAxisCount = isTablet ? 2 : 1;
 
-  // Cards are laid out as self-sizing rows rather than a fixed-extent
-  // SliverGrid: card height varies with route-name length, office/rating
-  // presence, and locale (Arabic labels run longer than English ones), so a
-  // hardcoded mainAxisExtent inevitably overflows for some content.
   final rows = <List<PopularRouteListData>>[
     for (var i = 0; i < filteredRoutes.length; i += crossAxisCount)
       filteredRoutes.skip(i).take(crossAxisCount).toList(),

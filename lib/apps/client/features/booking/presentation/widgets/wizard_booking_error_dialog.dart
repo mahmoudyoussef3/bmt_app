@@ -14,8 +14,7 @@ Future<void> showWizardBookingErrorDialog(
   required String reason,
 }) {
   final l10n = context.l10n;
-  // Only one active booking is allowed at a time, so the way out is the
-  // bookings list rather than another attempt.
+  
   final isDuplicate = reason.contains('duplicate_active_booking');
 
   return showDialog<void>(

@@ -124,9 +124,7 @@ class TripCreationCubit extends Cubit<TripCreationState> {
   /// exclusion-constraint names appear when a conflicting write reaches the table
   /// without going through `create_trip`.
   static String _friendlyError(String raw) {
-    // The driver and the bus they are paired with are one resource, so both refusals
-    // are phrased as being about that pair — telling the operator to "pick another
-    // vehicle" would be advice they can no longer act on from this screen.
+    
     if (raw.contains('driver_has_no_vehicle')) {
       return 'هذا السائق غير مرتبط بسيارة حالياً. عيّن له سيارة من إدارة الأسطول '
           'ثم أعد المحاولة.';

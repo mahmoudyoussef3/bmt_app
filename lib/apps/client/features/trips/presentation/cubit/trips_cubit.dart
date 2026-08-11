@@ -66,7 +66,7 @@ class TripsCubit extends Cubit<TripsState> {
       if (isClosed || trip == null) return;
       emit(current.copyWith(selectedTrip: trip));
     } catch (_) {
-      // Keep the trip on screen; the next refresh will pick the review up.
+      
     }
   }
 
@@ -97,7 +97,7 @@ class TripsCubit extends Cubit<TripsState> {
       if (isClosed || current is! TripsLoaded) return;
       emit(current.withTrips(trips));
     } catch (_) {
-      // A realtime refresh is best-effort; keep the last usable state.
+      
     }
   }
 

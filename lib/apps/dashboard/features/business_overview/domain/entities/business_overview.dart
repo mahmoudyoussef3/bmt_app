@@ -139,12 +139,6 @@ class BusinessOverview {
 
   late final DateTime _today = _startOfDay(generatedAt);
 
-  // ── Daily series ───────────────────────────────────────────────────────────
-  //
-  // One bucketing helper behind every sparkline and every "vs yesterday"
-  // arrow, so the figure on the tile is always the last point of the line
-  // above it.
-
   /// Buckets [days] days ending on today, oldest first, quiet days as zeros.
   ///
   /// [valueOf] contributes to the bucket for [dayOf]; rows outside the window
@@ -231,8 +225,6 @@ class BusinessOverview {
     combine: (bucket) => bucket.total,
   );
 
-  // ── Today, and the day before ──────────────────────────────────────────────
-
   /// Compares the last point of [series] with the one before it.
   ///
   /// Null when the series is too short to hold a comparison — the caller then
@@ -299,8 +291,6 @@ class BusinessOverview {
   late final MetricTrend? revenueWeekTrend = _weekOverWeek(
     revenueSeries(days: 14),
   );
-
-  // ── Trips ──────────────────────────────────────────────────────────────────
 
   late final List<OperationTrip> todayTrips = trips.where((trip) {
     final at = trip.scheduledAt;
@@ -406,8 +396,6 @@ class BusinessOverview {
     return rows.take(limit).toList();
   }
 
-  // ── Fleet ──────────────────────────────────────────────────────────────────
-
   FleetSummary? get fleetSummary => fleet?.summary;
 
   int get activeDrivers =>
@@ -450,8 +438,6 @@ class BusinessOverview {
   }
 
   int get openIncidents => liveOps?.openIncidentCount ?? 0;
-
-  // ── Money ──────────────────────────────────────────────────────────────────
 
   static const _unpaidStatuses = {
     PaymentStatus.pending,
@@ -558,11 +544,6 @@ class BusinessOverview {
     return cancelled / total;
   }
 
-  // ── Customers ──────────────────────────────────────────────────────────────
-  //
-  // Counted off account ids on bookings. Guest bookings carry no client, so
-  // they are excluded throughout rather than lumped into one phantom customer.
-
   late final Map<String, List<OperationBooking>> _byCustomer = () {
     final map = <String, List<OperationBooking>>{};
     for (final booking in bookings) {
@@ -646,8 +627,6 @@ class BusinessOverview {
     return best;
   }
 
-  // ── Satisfaction ───────────────────────────────────────────────────────────
-
   /// Mean of the driver, vehicle and route ratings left in the window, on the
   /// original 1–5 scale. Null when nobody rated anything.
   double? satisfaction({int days = 30}) {
@@ -685,8 +664,6 @@ class BusinessOverview {
     }
     return count == 0 ? null : sum / count;
   }
-
-  // ── Health ─────────────────────────────────────────────────────────────────
 
   /// The seven graded readings, problems first.
   ///
@@ -870,8 +847,6 @@ class BusinessOverview {
       detail: 'من قيمة حجوزات آخر ٣٠ يوم · ${outstanding.round()} ج.م لم تُحصّل',
     );
   }
-
-  // ── Insights ───────────────────────────────────────────────────────────────
 
   /// What the numbers *mean*, in sentences, most urgent first.
   ///
@@ -1101,8 +1076,6 @@ class BusinessOverview {
     ];
   }
 
-  // ── What needs the owner ───────────────────────────────────────────────────
-
   /// Bookings still live on a trip that was cancelled.
   ///
   /// The passenger holds a seat on a bus that will not run and nothing else on
@@ -1161,8 +1134,7 @@ class BusinessOverview {
             kind: BusinessAttentionKind.staleTrips,
             count: staleTrips.length,
           ),
-          // Raised as a queue only past the critical threshold the health panel
-          // grades on; below that it is a reading, not a task.
+          
           BusinessAttentionItem(
             kind: BusinessAttentionKind.highCancellationRate,
             count: cancellation >= 0.10 ? (cancellation * 100).round() : 0,

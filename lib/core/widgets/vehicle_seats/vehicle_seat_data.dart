@@ -93,8 +93,7 @@ class VehicleSeatLabels {
     this.front = 'مقدمة المركبة',
     this.rear = 'مؤخرة المركبة',
     this.passengerArea = 'منطقة الركاب',
-    // Short on purpose: these have to fit inside a seat-sized tile at compact
-    // density without ellipsising.
+    
     this.driver = 'سائق',
     this.coDriver = 'مرافق',
     this.door = 'باب',

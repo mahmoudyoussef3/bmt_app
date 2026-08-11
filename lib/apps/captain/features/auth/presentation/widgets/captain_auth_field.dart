@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 
-/// A rounded, elevated input used across the captain auth forms. Handles its
-/// own focus highlight and (optionally) the password visibility toggle.
 class CaptainAuthField extends StatefulWidget {
   const CaptainAuthField({
     super.key,
@@ -29,10 +27,6 @@ class CaptainAuthField extends StatefulWidget {
   final TextInputAction? textInputAction;
   final bool isPassword;
 
-  /// Scopes LTR to the field's own content — for phone numbers and other
-  /// digit strings, which read left-to-right even inside the app's ambient
-  /// Arabic RTL. Arabic inputs (names) must leave this off or they render
-  /// left-aligned against the rest of the form.
   final bool forceLtr;
 
   final Iterable<String>? autofillHints;
@@ -47,8 +41,6 @@ class _CaptainAuthFieldState extends State<CaptainAuthField> {
   bool _obscure = true;
   bool _focused = false;
 
-  /// Owned only when the caller didn't supply one — disposing a caller's node
-  /// would pull it out from under them.
   FocusNode? _ownedNode;
 
   FocusNode get _node => widget.focusNode ?? (_ownedNode ??= FocusNode());

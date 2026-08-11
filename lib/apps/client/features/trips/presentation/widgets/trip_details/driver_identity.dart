@@ -52,8 +52,7 @@ class DriverIdentity extends StatelessWidget {
                 color: ClientColors.textPrimaryFor(context),
               ),
             ),
-            // A long captain name — or a narrow phone — used to push this
-            // straight off the card's right edge.
+            
             Flexible(
               child: Text(
                 _isRated

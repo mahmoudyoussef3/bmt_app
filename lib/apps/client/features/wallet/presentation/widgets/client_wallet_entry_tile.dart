@@ -81,9 +81,7 @@ class ClientWalletEntryTile extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                // U+2212, not a hyphen: at this size in an RTL column a hyphen
-                // is easy to miss, and "was that taken from me?" is the one
-                // question this string exists to answer.
+                
                 '${entry.isCredit ? '+' : '−'}'
                 '${FormatUtil.currency(context, entry.amount.abs())}',
                 style: text.titleSmall?.copyWith(

@@ -28,8 +28,7 @@ Marker buildStationMarker(
     point: stop.coordinate,
     width: box.width,
     height: box.height,
-    // Puts the box above the coordinate, so the tail tip lands on the stop.
-    // See MapStyle.pinAnchor — flutter_map inverts this alignment.
+    
     alignment: MapStyle.pinAnchor,
     child: GestureDetector(
       behavior: HitTestBehavior.opaque,

@@ -30,8 +30,7 @@ extension FailureL10nExt on Failure {
         return l10n.error_server;
       case 'UNKNOWN':
       default:
-        // You can return the original message if it's a dynamic backend error
-        // But for fully localized apps, it's safer to show the generic localized error
+        
         return l10n.error_unknown;
     }
   }

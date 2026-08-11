@@ -28,8 +28,7 @@ class _WizardTransferPanelState extends State<WizardTransferPanel> {
   @override
   void initState() {
     super.initState();
-    // Seeded from the session so switching method — or stepping back to fix a
-    // seat — does not silently wipe what the rider already typed.
+    
     final session = context.read<BookingWizardCubit>().state;
     _reference = TextEditingController(text: session.paymentReference ?? '');
     _payerPhone = TextEditingController(text: session.payerPhone ?? '');

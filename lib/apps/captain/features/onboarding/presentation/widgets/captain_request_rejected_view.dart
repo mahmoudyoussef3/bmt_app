@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_button.dart';
 
-/// Rejection outcome — shows the operations reason and lets the captain either
-/// re-apply with corrected details or return to sign in.
 class CaptainRequestRejectedView extends StatelessWidget {
   final String reason;
   final VoidCallback onRetry;

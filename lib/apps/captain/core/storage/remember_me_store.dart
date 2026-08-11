@@ -1,9 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Remembers the phone number typed on the captain login screen. No
-/// password is ever involved in captain sign-in (see [CaptainAuthDatasource]),
-/// so this is a plain device-local preference — the same tier of storage
-/// already used for [CaptainSessionStore].
 class CaptainRememberMeStore {
   const CaptainRememberMeStore();
 

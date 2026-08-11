@@ -39,7 +39,7 @@ class PassengerManifestDataSource {
       PassengerBoardingStatus status;
       switch (statusString.toLowerCase()) {
         case 'confirmed':
-        case 'boarded': // fallback for old data
+        case 'boarded':
           status = PassengerBoardingStatus.boarded;
           break;
         case 'no_show':
@@ -78,9 +78,6 @@ class PassengerManifestDataSource {
         .eq('id', tripPassengerId);
   }
 
-  /// Maps onto `trip_passengers.status`'s check constraint. Every value here
-  /// round-trips: writing one and re-reading it yields the same enum back,
-  /// which is what makes the optimistic update in the cubit safe to keep.
   String _statusToString(PassengerBoardingStatus status) => switch (status) {
     PassengerBoardingStatus.boarded => 'confirmed',
     PassengerBoardingStatus.absent => 'no_show',

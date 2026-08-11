@@ -30,8 +30,7 @@ class TripPaymentCard extends StatelessWidget {
             children: [
               Icon(_paymentIcon(trip.paymentStatus), size: 20, color: color),
               const SizedBox(width: 10),
-              // The status word itself is the badge — printing it as a heading
-              // too, as this card used to, said the same thing twice.
+              
               Expanded(
                 child: Text(
                   _paymentNote(context, trip.paymentStatus),

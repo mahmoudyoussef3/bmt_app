@@ -1,6 +1,3 @@
-/// An office a captain may apply to, as listed by the public `public_offices`
-/// directory. Carries no join code — that is issued by the office out of band
-/// and never published.
 class OnboardingOffice {
   final String id;
   final String name;
@@ -24,17 +21,7 @@ class OnboardingOffice {
   }
 }
 
-/// Outcome of submitting a captain access request.
-enum SubmitOutcome {
-  /// Newly queued for operations review.
-  submitted,
-
-  /// A review for this phone is already in flight.
-  pending,
-
-  /// This phone already belongs to an active captain — just sign in.
-  alreadyActive,
-}
+enum SubmitOutcome { submitted, pending, alreadyActive }
 
 class SubmitResult {
   final SubmitOutcome outcome;
@@ -44,7 +31,6 @@ class SubmitResult {
 
 enum RequestStatus { pending, approved, rejected }
 
-/// Snapshot of a request's review state, polled by the captain app.
 class CaptainRequestStatusData {
   final RequestStatus status;
   final String fullName;

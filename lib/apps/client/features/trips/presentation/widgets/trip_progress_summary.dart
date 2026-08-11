@@ -16,10 +16,7 @@ class TripProgressSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Switched exhaustively over the sealed state rather than cast: this used
-    // to fall through to `state as TrackingLoaded`, so a TrackingEmpty — the
-    // ordinary "no trackable booking yet" answer — threw and took the whole
-    // trip-details list down with it.
+    
     final progress = switch (state) {
       TrackingLoading() => null,
       TrackingError() => null,

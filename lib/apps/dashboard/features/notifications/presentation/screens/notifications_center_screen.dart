@@ -68,8 +68,7 @@ class _ComposerTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Scroll owns the padding so the composer can never be clipped on short
-    // viewports; Center only handles horizontal placement of the capped column.
+    
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppSpacing.large),
       child: Center(

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// Inline, dismissible error surface for captain auth forms — a calmer
-/// alternative to a transient snackbar that keeps the message in context.
 class CaptainAuthErrorBanner extends StatelessWidget {
   const CaptainAuthErrorBanner({
     super.key,

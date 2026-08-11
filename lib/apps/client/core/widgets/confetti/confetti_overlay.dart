@@ -55,8 +55,7 @@ class _ConfettiOverlayState extends State<ConfettiOverlay>
   }
 
   void _onTick(Duration _) {
-    // Unbounded constraints would spawn flecks at infinity and never retire
-    // them; wait for a real layout instead.
+    
     if (_bounds.isEmpty || !_bounds.isFinite) return;
     widget.controller.spawnPendingBurst(_bounds);
     if (!widget.controller.advance(_bounds)) {

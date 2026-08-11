@@ -9,29 +9,11 @@ import '../../domain/entities/captain_trip_status.dart';
 import '../cubit/trip_status_update_cubit.dart';
 import '../cubit/trip_status_update_state.dart';
 
-/// Posts a progress note to operations. **Not** a lifecycle control.
-///
-/// Every option here writes one narrative row to `trip_events`; none of them
-/// touches `operation_trips.status`. The trip's real stage is moved only by the
-/// docked action bar on the execution screen, through
-/// `captain_update_trip_status`.
-///
-/// That distinction used to be invisible. The page was titled "تحديث حالة
-/// الرحلة" — update the trip's status — and offered "مكتمل" alongside the rest,
-/// so a captain could tap it, watch it tick, and leave believing the trip was
-/// finished while the backend still had it `in_progress`, the seats still held
-/// and the client's map still tracking. The three options that shadow a real
-/// transition (boarding / departed / completed) are gone, and what remains is
-/// framed as what it is: telling operations where you are.
 class StatusUpdatePage extends StatelessWidget {
   const StatusUpdatePage({super.key, required this.tripId});
 
   final String tripId;
 
-  /// The notes with no lifecycle counterpart. `boarding`, `departed` and
-  /// `completed` are deliberately absent — each is performed for real by the
-  /// execution screen's primary action, and offering a look-alike here that
-  /// only writes a log line invites the captain to file the wrong one.
   static const _reportableStatuses = [
     CaptainTripStatus.headingToPickup,
     CaptainTripStatus.arrivedPickup,
@@ -56,12 +38,7 @@ class StatusUpdatePage extends StatelessWidget {
                     ? state.status
                     : null;
                 return SliverPadding(
-                  padding: const EdgeInsetsDirectional.fromSTEB(
-                    16,
-                    14,
-                    16,
-                    20,
-                  ),
+                  padding: const EdgeInsetsDirectional.fromSTEB(16, 14, 16, 20),
                   sliver: SliverList.list(
                     children: [
                       if (state is TripStatusUpdateError) ...[
@@ -76,9 +53,6 @@ class StatusUpdatePage extends StatelessWidget {
                         ),
                         const SizedBox(height: 12),
                       ],
-                      // Says plainly that this is a message, not a state
-                      // change — the captain should not leave here thinking
-                      // the trip moved.
                       Padding(
                         padding: const EdgeInsetsDirectional.only(bottom: 12),
                         child: Text(
@@ -160,15 +134,11 @@ class StatusUpdatePage extends StatelessWidget {
     };
   }
 
-  /// The ladder walks the brand palette from its palest tint to its deepest
-  /// shade as the trip progresses, so the colour itself reads as distance
-  /// travelled. Boarding breaks out to amber on purpose — it's the one step
-  /// that's waiting on the captain to act.
   Color _color(CaptainTripStatus status) {
     return switch (status) {
       CaptainTripStatus.headingToPickup => CaptainColors.primary,
       CaptainTripStatus.arrivedPickup => CaptainColors.primary,
-      CaptainTripStatus.boarding => CaptainColors.warning,
+      CaptainTripStatus.boarding => CaptainColors.primary,
       CaptainTripStatus.departed => CaptainColors.primary,
       CaptainTripStatus.arrivedDestination => CaptainColors.primaryDeep,
       CaptainTripStatus.completed => CaptainColors.offline,

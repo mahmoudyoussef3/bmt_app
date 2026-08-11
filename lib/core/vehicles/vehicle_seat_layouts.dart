@@ -56,12 +56,12 @@ abstract final class VehicleSeatLayouts {
   /// change (plus a data migration for the vehicles already saved), and nothing
   /// in the renderer moves.
   static final SeatLayoutBlueprint hiace = SeatLayoutBlueprint.parse(const [
-    // Front cabin: driver, crew position, walk-through, front passenger.
+    
     'D:A1 D:A2  .  S',
     'S    S     |  S',
     'S    S     |  S',
     'S    S     |  S',
-    // The rear bench: four across, no walkway through it.
+    
     'S    S     S  S',
   ]);
 

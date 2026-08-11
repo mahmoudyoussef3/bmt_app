@@ -88,10 +88,6 @@ class _SupportCenterScreenState extends State<SupportCenterScreen> {
             );
           }
 
-          // SupportInitial / SupportLoading, and defensively any transient
-          // state this screen's cubit should never actually emit (ticket
-          // creation and details states belong to their own screens' cubit
-          // instances) — a skeleton is always a safe default.
           return const SupportCenterLoadingView();
         },
       ),

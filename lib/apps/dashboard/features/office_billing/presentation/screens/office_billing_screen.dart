@@ -122,7 +122,7 @@ class _Loaded extends StatelessWidget {
                     ),
                   const SizedBox(height: AppSpacing.small),
                   Text(
-                    // The rule that protects the customer, told to the customer.
+                    
                     'الحد يمنع الإضافة الجديدة فقط. لا يُحذف ولا يُعطَّل أي عنصر '
                     'قائم عند تغيير الباقة.',
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -238,8 +238,7 @@ class _FeatureChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final on = feature.isOn;
-    // Blocked by a prerequisite is a THIRD state, not just "off": the office
-    // needs to know it is one switch away, and which switch.
+    
     final blocked = feature.blockedBy != null;
 
     final color = on

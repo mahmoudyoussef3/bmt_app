@@ -85,8 +85,7 @@ class _OfficeIdentityFormState extends State<OfficeIdentityForm> {
   void _addArea() {
     final value = _areaCtrl.text.trim();
     if (value.isEmpty) return;
-    // Case-insensitive: "الجيزة" and "الجيزه" are the operator's problem, but
-    // the same string twice is ours.
+    
     final exists = _serviceAreas.any(
       (area) => area.toLowerCase() == value.toLowerCase(),
     );
@@ -108,8 +107,7 @@ class _OfficeIdentityFormState extends State<OfficeIdentityForm> {
         type: FileType.custom,
         allowedExtensions: const ['png', 'jpg', 'jpeg', 'webp'],
         allowMultiple: false,
-        // On web there is no path to read from, so the bytes have to come back
-        // with the pick itself.
+        
         withData: kIsWeb,
       );
       if (result == null || result.files.isEmpty) return;
@@ -128,9 +126,6 @@ class _OfficeIdentityFormState extends State<OfficeIdentityForm> {
       final url = await widget.onUploadLogo(bytes, file.name);
       if (!mounted || url == null) return;
 
-      // Straight into the same controller the URL field edits, so an uploaded
-      // logo and a pasted link are the same value from here on — and both are
-      // only persisted by the save button below.
       setState(() => _logoCtrl.text = url);
     } catch (error) {
       if (!mounted) return;
@@ -535,9 +530,7 @@ class _LogoPreview extends StatelessWidget {
           : Image.network(
               url,
               fit: BoxFit.cover,
-              // Rendered from the stored public URL rather than the picked
-              // bytes: if this shows the logo, the upload is genuinely readable
-              // by the same anonymous request the client app will make.
+              
               errorBuilder: (_, _, _) =>
                   Icon(Icons.broken_image_outlined, color: scheme.error),
             ),

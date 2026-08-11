@@ -2,15 +2,6 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-/// Rebuilds its subtree on a fixed interval with a fresh `now`.
-///
-/// Anything that renders "in 20 minutes" or "3 minutes ago" is a function of
-/// the current time, but a `StatelessWidget` only samples `DateTime.now()`
-/// when something else happens to rebuild it. On the captain home screen that
-/// is a realtime trip change — which can be hours apart — so a countdown
-/// computed once at load kept reporting the gap that existed when the screen
-/// opened, long after it had elapsed. The wall clock has to drive these, not
-/// the data stream.
 class CaptainTicker extends StatefulWidget {
   const CaptainTicker({
     super.key,
@@ -20,8 +11,6 @@ class CaptainTicker extends StatefulWidget {
 
   final Widget Function(BuildContext context, DateTime now) builder;
 
-  /// Kept well under a minute so a minute-granularity label is never visibly
-  /// behind the phone's own clock.
   final Duration interval;
 
   @override

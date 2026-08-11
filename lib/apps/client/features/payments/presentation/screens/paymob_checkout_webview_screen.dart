@@ -75,14 +75,10 @@ class _PaymobCheckoutWebViewScreenState
     final pending = params['pending']?.trim().toLowerCase() == 'true';
     final responseCode = params['txn_response_code']?.trim().toUpperCase();
 
-    // No verdict fields at all: still somewhere inside the gateway's own flow.
     if (success == null && responseCode == null) return null;
 
     if (success == 'true' || responseCode == 'APPROVED') return true;
 
-    // A payment left pending (3-D Secure still finishing) is not a refusal.
-    // Reporting it as paid hands the wait to the settlement check, which
-    // asks our own backend rather than guessing here.
     if (pending) return true;
 
     if (success == 'false' ||

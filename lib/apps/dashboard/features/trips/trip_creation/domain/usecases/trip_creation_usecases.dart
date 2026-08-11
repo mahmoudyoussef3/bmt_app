@@ -15,9 +15,7 @@ class CreateTripUseCase {
     List<TripPricing> pricing,
   ) async {
     final trip = await _repository.createTrip(input);
-    // `trip_pricing` is keyed by trip_route_point ids, which only exist once
-    // the trip has snapshotted its route stations — so the fare configured in
-    // the planner is expanded across the pairs here, not in the widget.
+    
     final pricingRows = pricing.isNotEmpty
         ? pricing
         : _standardPricingFromTrip(trip, input);

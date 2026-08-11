@@ -54,7 +54,7 @@ class ReportSidebarSelector extends StatelessWidget {
                 return Material(
                   color: isSelected
                       ? scheme.primaryContainer.withValues(alpha: 0.47)
-                      : Colors.transparent, // ~120/255
+                      : Colors.transparent, 
                   borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
                   child: ListTile(
                     selected: isSelected,

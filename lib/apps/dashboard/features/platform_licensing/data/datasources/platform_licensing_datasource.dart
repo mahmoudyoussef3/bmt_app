@@ -7,12 +7,11 @@ import '../../domain/entities/office_license.dart';
 /// server-side, so this interface carries no authorisation of its own — the
 /// nav item that reveals it is a hint, and the boundary is in Postgres.
 abstract class PlatformLicensingDatasource {
-  // ── Catalog ───────────────────────────────────────────────────────────────
+  
   Future<FeatureCatalog> catalog();
   Future<void> upsertFeature(Map<String, dynamic> payload);
   Future<void> setFeatureStatus(String key, String status);
 
-  // ── Plans ─────────────────────────────────────────────────────────────────
   Future<List<LicensingPlan>> plans();
   Future<PlanDetail> planDetail(String planId);
 
@@ -30,7 +29,6 @@ abstract class PlatformLicensingDatasource {
   /// reimplementation — a preview that can drift is worse than no preview.
   Future<Map<String, dynamic>> previewPlan(String planId);
 
-  // ── Licenses ──────────────────────────────────────────────────────────────
   Future<List<OfficeLicenseRow>> licenses();
   Future<OfficeLicenseDetail> officeLicense(String officeId);
   Future<OfficeLicenseDetail> assignPlan(
@@ -55,7 +53,6 @@ abstract class PlatformLicensingDatasource {
     String reason,
   );
 
-  // ── Overrides ─────────────────────────────────────────────────────────────
   Future<OfficeLicenseDetail> setOverride(
     String officeId,
     String featureKey,
@@ -69,7 +66,6 @@ abstract class PlatformLicensingDatasource {
     String reason,
   );
 
-  // ── Billing ───────────────────────────────────────────────────────────────
   Future<BillingOverview> billing({String? officeId, String? status});
   Future<void> issueInvoice(String officeId, {Map<String, dynamic> options});
   Future<void> recordPayment(
@@ -79,7 +75,6 @@ abstract class PlatformLicensingDatasource {
   );
   Future<void> voidInvoice(String invoiceId, String reason);
 
-  // ── Ops ───────────────────────────────────────────────────────────────────
   Future<List<OfficeUsageRow>> usage();
   Future<List<LicenseAuditEntry>> audit({
     Map<String, dynamic> filters,

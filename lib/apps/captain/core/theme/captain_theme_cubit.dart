@@ -30,9 +30,6 @@ class CaptainThemeCubit extends Cubit<CaptainThemeState> {
     emit(CaptainThemeState(themeMode: mode));
     try {
       await _repository.saveThemeMode(mode);
-    } catch (_) {
-      // The choice already applied in-session; it just won't survive a
-      // restart if the write failed.
-    }
+    } catch (_) {}
   }
 }

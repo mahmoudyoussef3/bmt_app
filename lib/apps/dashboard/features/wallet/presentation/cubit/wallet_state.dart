@@ -134,7 +134,7 @@ class WalletLoadedState extends WalletState {
       refundQueue: refundQueue ?? this.refundQueue,
       queueLoading: queueLoading ?? this.queueLoading,
       busy: busy ?? this.busy,
-      // Deliberately NOT carried forward: both are one-shot.
+      
       actionError: actionError,
       actionMessage: actionMessage,
       chainVerification: clearChainVerification

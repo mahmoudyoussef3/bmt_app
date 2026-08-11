@@ -98,7 +98,7 @@ class RouteGeometry {
   ) {
     final a = stops[index];
     final b = stops[index + 1];
-    // Local planar frame centered on the segment start.
+    
     final metersPerLat = 111132.0;
     final metersPerLng =
         111320.0 * math.cos(((a.latitude + b.latitude) / 2) * math.pi / 180);

@@ -3,11 +3,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/session/captain_office_session.dart';
 import '../../domain/exceptions/captain_auth_exceptions.dart';
 
-/// Passwordless captain login: the phone is checked server-side against
-/// active drivers (resolve_captain_login), which hands back a stable
-/// email/secret pair derived from that phone. We sign in with it — or sign
-/// up, the first time a phone is seen — then bind the resulting session to
-/// the driver record via link_current_captain_driver.
 class CaptainAuthDatasource {
   const CaptainAuthDatasource(this._supabase, this._session);
 
@@ -46,8 +41,6 @@ class CaptainAuthDatasource {
       }
     }
 
-    // Binds auth.uid() to the drivers row and hands back the captain's office, so
-    // the app never has to ask which office they belong to — or trust an answer.
     final linked = await _supabase.rpc(
       'link_current_captain_driver',
       params: {'p_phone': phone},
@@ -62,10 +55,6 @@ class CaptainAuthDatasource {
     try {
       await _supabase.auth.signOut();
     } finally {
-      // The cached identity must not outlive the sign-out attempt. Supabase's
-      // sign-out makes a network call, and letting a failed one skip this left
-      // the device holding a captain identity the app still treated as current
-      // — the next screen would resolve trips for the captain who just left.
       _session.clear();
     }
   }

@@ -59,17 +59,14 @@ class FleetSeatLayoutVisualizer extends StatelessWidget {
             ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
           ),
           const SizedBox(height: AppSpacing.medium),
-          // A preview, so every seat reads `available`: this is the shape of
-          // the vehicle being saved, not the state of any trip on it.
+          
           VehicleSeatLayout(
             blueprint: blueprint,
             seats: [
               for (final seat in passengers)
                 VehicleSeatData(
                   id: seat.seatNumber,
-                  // The seat's real stored label, so the preview shows the
-                  // numbers that will end up on `trip_seats` rather than a
-                  // redrawn sequence.
+                  
                   label: seat.seatNumber,
                   state: SeatViewState.available,
                   enabled: false,

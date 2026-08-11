@@ -46,8 +46,7 @@ class OfficeProfileStats extends StatelessWidget {
             onTap: () => onSelect(OfficeProfileSection.departures),
           ),
         ),
-        // Fixed rather than stretched: the strip sits in an unbounded column,
-        // where a stretching child asks for infinite height.
+        
         Container(
           width: 1,
           height: 34,
@@ -81,8 +80,7 @@ class _StatCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // An empty section is still worth landing on — the empty note is the answer
-    // to "does this office have any?" — but it must not promise a list.
+    
     final muted = value == 0;
     final accent = muted
         ? ClientColors.textTertiaryFor(context)

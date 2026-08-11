@@ -53,7 +53,6 @@ class FinanceLoaded extends FinanceState {
 
   final FinanceSection section;
 
-  // Ledger tab controls.
   final String searchQuery;
   final FinanceEntryType? typeFilter;
   final FinancePaymentMethod? methodFilter;

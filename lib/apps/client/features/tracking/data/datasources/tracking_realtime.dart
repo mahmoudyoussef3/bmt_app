@@ -36,7 +36,7 @@ class TrackingRealtime {
             try {
               controller.add(TrackingPointModel.fromRow(change.newRecord));
             } catch (_) {
-              // One malformed fix must not tear down the live stream.
+              
             }
           },
         )
@@ -51,10 +51,6 @@ class TrackingRealtime {
       if (!controller.isClosed) controller.add(null);
     }
 
-    // No listener on `operation_trips`: clients hold no read policy on it, so
-    // its events would never be delivered. Status flips reach the rider
-    // through `trip_events` — update_trip_status writes one per transition —
-    // which is already in [_tripScopedTables].
     var channel = _client.channel('client_tracking:$tripId');
 
     for (final table in _tripScopedTables) {

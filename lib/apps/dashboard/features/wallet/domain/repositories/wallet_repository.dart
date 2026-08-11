@@ -13,8 +13,7 @@ import '../entities/wallet_vocabulary.dart';
 /// Keys on **walletId/clientId at the boundary only** (§3A.8) — nothing above
 /// this line knows how a wallet is stored.
 abstract class WalletRepository {
-  // ── Reads ────────────────────────────────────────────────────────────────
-
+  
   Future<WalletOverview> getOverview();
 
   Future<WalletDirectoryPage> getDirectory({
@@ -38,13 +37,6 @@ abstract class WalletRepository {
   Future<List<RefundableBooking>> getRefundableBookings(String clientId);
 
   Future<List<CancelledTripRefundTarget>> getCancelledTripsWithRefunds();
-
-  // ── Writes ───────────────────────────────────────────────────────────────
-  //
-  // Each returns the resulting record so the caller can show what actually
-  // happened rather than assume it. [requestKey] is generated once per dialog
-  // open, so a double-tap or a retried request returns the original transaction
-  // instead of posting a second one.
 
   Future<WalletTransaction> grantCashback({
     required String clientId,

@@ -36,8 +36,7 @@ class OfficeProfileTopBar extends StatelessWidget {
     final solid = ClientColors.heroTopFor(context);
 
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      // The bar is deep brand blue at both ends of the fade — over the gradient
-      // and over its own solid fill — so the status bar never has to flip.
+      
       value: SystemUiOverlayStyle.light,
       child: Container(
         padding: EdgeInsets.only(top: MediaQuery.paddingOf(context).top),

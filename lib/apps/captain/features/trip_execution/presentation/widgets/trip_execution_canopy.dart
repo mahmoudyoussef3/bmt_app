@@ -13,21 +13,6 @@ import 'package:bmt_app/apps/captain/features/assigned_trips/domain/entities/ass
 
 import '../../domain/entities/trip_execution_state.dart';
 
-/// What this trip is and where it stands, as a full-bleed header painted in the
-/// trip's own stage colour.
-///
-/// This replaces a white card that sat under a plain "تنفيذ الرحلة" toolbar and
-/// carried the route, a status chip, two tinted fact boxes and the primary
-/// action all at once. Three problems with that: the screen's title named the
-/// screen rather than the trip, the card was one more framed rectangle in a
-/// column of them, and the action a driving captain most needs was buried
-/// mid-scroll (it now lives in a docked bar at the bottom of the page).
-///
-/// The gradient is the stage — slate while operations still owns the trip,
-/// brand blue once it is the captain's to board, amber through boarding, and
-/// the bright live end of the palette while it is actually moving. A captain
-/// glancing down at a cradled phone reads the state from the colour before
-/// reading a word.
 class TripExecutionCanopy extends StatelessWidget {
   const TripExecutionCanopy({
     super.key,
@@ -69,10 +54,6 @@ class TripExecutionCanopy extends StatelessWidget {
                     children: [
                       const _BackButton(),
                       const Spacer(),
-                      // Flexible, not bare: at an enlarged system font the
-                      // stage label grows past the width the back button
-                      // leaves it, and a fixed chip overflows the canopy.
-                      // Shrinking the chip keeps the row intact.
                       Flexible(child: _StageChip(stage: stage)),
                     ],
                   ),
@@ -115,10 +96,6 @@ class _BackButton extends StatelessWidget {
         child: const SizedBox(
           width: 40,
           height: 40,
-          // `arrow_back` ships with `matchTextDirection`, so Flutter mirrors it
-          // to point rightwards in this RTL layout on its own. Reaching for
-          // `arrow_forward` to "pre-mirror" it flips it twice and lands back on
-          // an arrow pointing the wrong way.
           child: Icon(Icons.arrow_back_rounded, size: 20, color: Colors.white),
         ),
       ),
@@ -126,8 +103,6 @@ class _BackButton extends StatelessWidget {
   }
 }
 
-/// The stage, named. The canopy already says it in colour; this says it in
-/// words for anyone who does not read the colour that way.
 class _StageChip extends StatelessWidget {
   const _StageChip({required this.stage});
 
@@ -156,8 +131,6 @@ class _StageChip extends StatelessWidget {
             color: Colors.white,
           ),
           const SizedBox(width: CaptainDesignTokens.s4),
-          // The chip shrinks before the row breaks; the stage name then
-          // truncates rather than pushing the back button off the canopy.
           Flexible(
             child: Text(
               CaptainTripStageLabels.eyebrow(stage),
@@ -174,7 +147,6 @@ class _StageChip extends StatelessWidget {
   }
 }
 
-/// The bus the captain is looking for, and its plate.
 class _VehicleLine extends StatelessWidget {
   const _VehicleLine({required this.trip});
 
@@ -205,9 +177,6 @@ class _VehicleLine extends StatelessWidget {
         if (trip.plateNumber.isNotEmpty) ...[
           Text(' · ', style: style),
           Flexible(
-            // The plate resolves its own direction: this fleet runs Egyptian
-            // plates but latin ones turn up too, and either reorders if handed
-            // the screen's direction instead of its own.
             child: Directionality(
               textDirection: CaptainTextDirection.ofIdentifier(
                 trip.plateNumber,
@@ -226,7 +195,6 @@ class _VehicleLine extends StatelessWidget {
   }
 }
 
-/// The three numbers the trip is judged by, as glass tiles on the gradient.
 class _Facts extends StatelessWidget {
   const _Facts({required this.trip, required this.snapshot});
 

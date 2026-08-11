@@ -64,9 +64,7 @@ class RouteStopLibrary {
   bool get isEmpty => stops.isEmpty;
 
   factory RouteStopLibrary.fromRoutes(Iterable<OperationRoute> routes) {
-    // Keyed by normalized name so the four spellings of one place collapse into
-    // a single entry; the first spelling seen wins as the display name, and a
-    // later duplicate contributes its coordinates if the first had none.
+    
     final byKey = <String, RouteStopSuggestion>{};
     for (final route in routes) {
       for (final station in route.stations) {
@@ -148,7 +146,7 @@ class RouteStopLibrary {
     final buffer = StringBuffer();
     for (final rune in value.toLowerCase().runes) {
       final char = String.fromCharCode(rune);
-      // Arabic diacritics (harakat) and tatweel carry no identity.
+      
       if (rune >= 0x064B && rune <= 0x0652) continue;
       if (rune == 0x0640) continue;
       buffer.write(switch (char) {
@@ -167,14 +165,14 @@ class RouteStopLibrary {
         'ó' || 'ò' || 'ô' || 'ö' => 'o',
         'ú' || 'ù' || 'û' || 'ü' => 'u',
         _ => rune >= 0x0660 && rune <= 0x0669
-            // Arabic-Indic digits read as their Western equivalents.
+            
             ? String.fromCharCode(rune - 0x0660 + 0x30)
             : char,
       });
     }
 
     var text = buffer.toString().replaceAll(RegExp(r'[^\p{L}\p{N}]+', unicode: true), ' ').trim();
-    // "المرج" and "مرج" are the same stop; so are "el marg" and "marg".
+    
     text = text
         .split(' ')
         .where((word) => word.isNotEmpty)

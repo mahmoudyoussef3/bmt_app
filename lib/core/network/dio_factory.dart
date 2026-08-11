@@ -23,7 +23,7 @@ class DioFactory {
         'Content-Type': ApiConstants.contentType,
         'Accept': ApiConstants.accept,
         'apikey': ApiConstants
-            .anonKey, // Needed if querying Supabase REST endpoints via Retrofit
+            .anonKey, 
       },
     );
 

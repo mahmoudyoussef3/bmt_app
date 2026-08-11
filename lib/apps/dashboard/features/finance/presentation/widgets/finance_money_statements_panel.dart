@@ -65,8 +65,7 @@ class FinanceMoneyStatementsPanel extends StatelessWidget {
               DashboardKpiCard(
                 label: 'التزامات المحفظة',
                 value: FinanceFormat.money(statements.liabilityEnd),
-                // The correction, said in the label: this is not money the
-                // office earned, it is money it owes back as service.
+                
                 detail: 'أرصدة لدى العملاء — التزام وليس إيرادًا',
                 icon: Icons.account_balance_wallet_rounded,
                 color: palette.warning,

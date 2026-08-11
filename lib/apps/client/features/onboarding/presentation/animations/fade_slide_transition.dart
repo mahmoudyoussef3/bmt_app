@@ -11,7 +11,7 @@ class FadeSlideTransition extends StatefulWidget {
     required this.child,
     this.delay = Duration.zero,
     this.duration = const Duration(milliseconds: 600),
-    this.beginOffset = const Offset(0.0, 0.2), // Slide up by default
+    this.beginOffset = const Offset(0.0, 0.2), 
   });
 
   @override

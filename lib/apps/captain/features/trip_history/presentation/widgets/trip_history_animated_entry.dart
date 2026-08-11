@@ -1,9 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// A gentle staggered fade + slide-in for list items as they first appear.
-///
-/// The stagger is capped: past the first handful of rows the extra delay stops
-/// reading as choreography and starts reading as lag.
 class TripHistoryAnimatedEntry extends StatelessWidget {
   const TripHistoryAnimatedEntry({
     super.key,

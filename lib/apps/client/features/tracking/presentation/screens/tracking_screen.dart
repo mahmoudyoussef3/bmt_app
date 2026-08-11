@@ -48,8 +48,7 @@ class _TrackingScreenState extends State<TrackingScreen> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       backgroundColor: ClientColors.surfaceFor(context),
-      // The header floats over the live map, so it carries no surface of its
-      // own and lets the map show through.
+      
       appBar: ClientAppBar(
         title: l10n.tracking_title,
         backgroundColor: Colors.transparent,
@@ -62,8 +61,7 @@ class _TrackingScreenState extends State<TrackingScreen> {
         ],
       ),
       body: BlocBuilder<TrackingCubit, TrackingState>(
-        // The live view manages its own finer-grained rebuilds; rebuilding the
-        // whole scaffold on every GPS fix would tear the map down with it.
+        
         buildWhen: (previous, current) =>
             previous.runtimeType != current.runtimeType,
         builder: (context, state) => switch (state) {

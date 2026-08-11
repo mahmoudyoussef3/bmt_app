@@ -10,15 +10,6 @@ import 'package:bmt_app/core/widgets/app_snackbar.dart';
 
 import '../cubit/trip_execution_cubit.dart';
 
-/// The station the captain is driving to, and the control to report arriving
-/// at it.
-///
-/// Stateful by design, and the one place on this screen that is. Reporting an
-/// arrival deliberately does not move the cubit's state — see
-/// [TripExecutionCubit.markStationArrived] — because it is a side action that
-/// must not flash the main trip button into a loading state. That leaves the
-/// in-flight and optimistic bookkeeping local to this banner, which is the
-/// only widget that cares about it.
 class TripExecutionNextStopBanner extends StatefulWidget {
   const TripExecutionNextStopBanner({
     super.key,
@@ -30,11 +21,6 @@ class TripExecutionNextStopBanner extends StatefulWidget {
   final String tripId;
   final List<AssignedTripStop> stops;
 
-  /// The live count of stations confirmed arrived (the shared `trip_events`
-  /// arrival floor), read fresh from the cubit on every rebuild rather than
-  /// captured once — so reopening this screen mid-trip always resumes at the
-  /// correct next station instead of replaying a snapshot from whenever the
-  /// trip was first loaded.
   final int arrivedStationsCount;
 
   @override
@@ -46,10 +32,6 @@ class _TripExecutionNextStopBannerState
     extends State<TripExecutionNextStopBanner> {
   bool _isSubmitting = false;
 
-  /// A local bump ahead of [widget.arrivedStationsCount] so a successful tap
-  /// advances the banner immediately, without waiting for the realtime round
-  /// trip back through the live watch. Cleared automatically once the live
-  /// count catches up to (or passes) it.
   int? _optimisticIndex;
 
   int get _currentIndex {

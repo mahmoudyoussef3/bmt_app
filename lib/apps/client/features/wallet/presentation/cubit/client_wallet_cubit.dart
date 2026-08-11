@@ -59,8 +59,7 @@ class ClientWalletCubit extends Cubit<ClientWalletState> {
       emit(
         ClientWalletLoaded(
           summary: summary,
-          // With one office there is nothing to choose between, so its history
-          // opens straight away.
+          
           expandedWalletId: summary.wallets.length == 1
               ? summary.wallets.first.walletId
               : null,
@@ -82,7 +81,7 @@ class ClientWalletCubit extends Cubit<ClientWalletState> {
       if (isClosed) return;
       emit(current.copyWith(summary: summary));
     } catch (_) {
-      // Keep what is on screen. The next pull retries.
+      
     }
   }
 

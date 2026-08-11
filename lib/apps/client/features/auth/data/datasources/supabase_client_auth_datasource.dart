@@ -22,11 +22,10 @@ class SupabaseClientAuthDatasource implements ClientAuthDatasource {
     try {
       await _supabase.auth.signInWithPassword(email: email, password: password);
     } on AuthException catch (e) {
-      // Surface the real reason (bad credentials, unconfirmed email) instead of
-      // a blanket message the user can't act on.
+      
       throw Exception(e.message);
     }
-    // Only users registered as clients may use this app.
+    
     await _accounts.assertRegistered();
   }
 
@@ -46,8 +45,6 @@ class SupabaseClientAuthDatasource implements ClientAuthDatasource {
     }
     final code = referralCode?.trim().toUpperCase() ?? '';
 
-    // Guard the phone UNIQUE constraint up front, outside the sign-up try/catch,
-    // so a duplicate produces a clear message rather than an opaque trigger error.
     if (await _accounts.phoneRegistered(trimmedPhone)) {
       throw Exception(
         'This phone number is already registered.\n'
@@ -84,9 +81,7 @@ class SupabaseClientAuthDatasource implements ClientAuthDatasource {
     try {
       await _supabase.auth.signOut();
     } catch (_) {
-      // A global sign-out needs the network to revoke the refresh token. When
-      // that fails, fall back to a local sign-out rather than leaving the rider
-      // signed in on a device they asked to sign out of.
+      
       await _supabase.auth.signOut(scope: SignOutScope.local);
     }
   }

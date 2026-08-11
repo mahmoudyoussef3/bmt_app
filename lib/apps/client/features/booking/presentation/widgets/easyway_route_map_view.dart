@@ -65,8 +65,7 @@ class EasyWayRouteMapView extends StatefulWidget {
 class _EasyWayRouteMapViewState extends State<EasyWayRouteMapView>
     with TickerProviderStateMixin {
   final MapController _mapController = MapController();
-  // Created in initState: a lazy `late final` ticker would otherwise be
-  // instantiated during dispose() when no build path ever touched it.
+  
   late final RouteCameraAnimator _camera;
 
   List<MapRouteStop> _stops = const [];
@@ -117,15 +116,14 @@ class _EasyWayRouteMapViewState extends State<EasyWayRouteMapView>
         .toList(growable: false);
 
     _road = RouteGeometryService.instance.cached(_stopCoordinates);
-    // No setState here: _syncStops only runs from initState/didUpdateWidget,
-    // both of which are followed by a build.
+    
     _loadingRoad = _road == null && _stopCoordinates.length > 1;
     if (_loadingRoad) _loadRoadGeometry(_stopCoordinates);
   }
 
   Future<void> _loadRoadGeometry(List<LatLng> requested) async {
     final road = await RouteGeometryService.instance.load(requested);
-    // Ignore stale responses: the stops may have changed mid-flight.
+    
     if (!mounted || !identical(requested, _stopCoordinates)) return;
     setState(() {
       _loadingRoad = false;
@@ -165,7 +163,7 @@ class _EasyWayRouteMapViewState extends State<EasyWayRouteMapView>
 
   void _onMapReady() {
     _mapReady = true;
-    // Entrance: the initial camera sits slightly wide; settle onto the route.
+    
     _fitRoute();
   }
 

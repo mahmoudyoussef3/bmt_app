@@ -3,8 +3,6 @@ import 'package:flutter/material.dart';
 import '../../domain/entities/passenger.dart';
 import 'passenger_status_badge.dart';
 
-/// The passenger's name, seat, route and pickup time — everything on the card
-/// that is information rather than action.
 class PassengerCardDetails extends StatelessWidget {
   const PassengerCardDetails({super.key, required this.passenger});
 
@@ -67,8 +65,6 @@ class _MutedText extends StatelessWidget {
   }
 }
 
-/// A small icon-led line. Defaults to the muted treatment; a colour promotes it
-/// (the pickup time is the one the captain scans for).
 class _IconLine extends StatelessWidget {
   const _IconLine({required this.icon, required this.text, this.color});
 

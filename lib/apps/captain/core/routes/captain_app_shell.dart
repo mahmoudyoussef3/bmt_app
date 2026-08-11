@@ -19,9 +19,6 @@ class CaptainAppShell extends StatefulWidget {
 }
 
 class _CaptainAppShellState extends State<CaptainAppShell> {
-  // Named rather than passed around as bare integers: the day view hands the
-  // captain shortcuts into the other two tabs when their schedule is empty, and
-  // "go to 1" at that call site would break silently the day a tab is inserted.
   static const _todayTab = 0;
   static const _historyTab = 1;
   static const _profileTab = 2;
@@ -65,13 +62,6 @@ class _CaptainAppShellState extends State<CaptainAppShell> {
           value: captainGetIt<CaptainNotificationBadgeCubit>(),
         ),
       ],
-      // extendBody lets pages scroll under the floating nav; pages reserve
-      // CaptainBottomNav.reservedSpace so their controls stay reachable.
-      //
-      // Operations reaches the captain through the notifications feature (the
-      // bell and its badge), which is the app's one inbound channel. The shell
-      // used to also pop a snackbar for the newest `captain_messages` row from
-      // operations — that table was the chat feature's, and it went with it.
       child: Scaffold(
         extendBody: true,
         body: IndexedStack(

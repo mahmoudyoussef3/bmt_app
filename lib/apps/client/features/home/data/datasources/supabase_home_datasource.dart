@@ -15,10 +15,7 @@ class SupabaseHomeDatasource implements HomeDatasource {
   static const _bookingColumns =
       'id, trip_id, booking_number, status, seat, trip_date, '
       'trip_time, route, payment_amount, pickup_point_name, dropoff_point_name, '
-      // The trip's own status tells Home when a booking has run its course:
-      // completion stamps the trip, not the booking, so without this a finished
-      // seat lingers as "Confirmed". Aliased so mappers keep reading the
-      // `operation_trips` key; the base table itself is closed to clients.
+      
       'operation_trips:public_trips(status)';
 
   @override
@@ -28,11 +25,6 @@ class SupabaseHomeDatasource implements HomeDatasource {
       if (!controller.isClosed) controller.add(null);
     }
 
-    // Clients hold no read policy on `operation_trips` any more, so its
-    // postgres_changes never reach them. `trip_seats` is the marketplace-
-    // readable signal that fires for both a new trip (its seats are inserted
-    // with it) and any booking; `trip_events` covers lifecycle flips of trips
-    // the rider actually booked (RLS scopes delivery to those).
     final channel = _supabase
         .channel('client_home_trips')
         .onPostgresChanges(
@@ -47,8 +39,7 @@ class SupabaseHomeDatasource implements HomeDatasource {
           table: 'trip_events',
           callback: notify,
         )
-        // A booking changing state — approved, rejected, boarded — changes what
-        // Home must show about it, so it has to refetch on that too.
+        
         .onPostgresChanges(
           event: PostgresChangeEvent.all,
           schema: 'public',
@@ -71,9 +62,7 @@ class SupabaseHomeDatasource implements HomeDatasource {
           .from('operation_routes')
           .select('id, name, start_city, end_city, duration, status')
           .eq('status', 'active'),
-      // The departures feed sells seats, so it carries only trips the booking
-      // RPC will accept — never a `boarding`, `in_progress` or `completed` one
-      // that `public_trips` also exposes for riders reading their own bookings.
+      
       _supabase
           .from('public_trips')
           .select('''
@@ -154,8 +143,7 @@ class SupabaseHomeDatasource implements HomeDatasource {
     List<dynamic> tripsData,
     List<HomeBookingData> bookings,
   ) {
-    // A booking holds exactly one seat, so the seats a rider has on a departure
-    // is the number of bookings they hold on it.
+    
     final booked = <String, HomeBookingData>{};
     final bookedSeats = <String, int>{};
     for (final booking in bookings) {

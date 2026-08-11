@@ -115,8 +115,7 @@ class TodayKpisSection extends StatelessWidget {
           DashboardKpiCard(
             label: 'سائقون في الخدمة',
             value: hasTrips ? count(overview.driversOnDuty) : '—',
-            // No arrow: nothing in the schema records how many drivers were
-            // rostered yesterday, so a comparison here would be invented.
+            
             detail: hasFleet
                 ? 'من ${count(overview.activeDrivers)} سائقاً نشطاً'
                 : 'رحلات اليوم',
@@ -173,8 +172,7 @@ class TodayKpisSection extends StatelessWidget {
             trend: hasWallet
                 ? kpiTrendFrom(
                     overview.walletTrend,
-                    // A wallet balance climbing is money the office owes back,
-                    // not money it earned.
+                    
                     upIsGood: false,
                     absolute: money,
                   )

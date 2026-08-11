@@ -294,8 +294,7 @@ class _TripPricingEditorDialogState extends State<TripPricingEditorDialog> {
     });
     final now = DateTime.now();
     final existing = widget.pricing;
-    // The stop pair + metadata live here; the five fares come from the shared
-    // fare editor, so create and edit always write the same shape.
+    
     final result = await context.read<TripPricingCubit>().savePricing(
       _fare.applyTo(
         TripPricing(

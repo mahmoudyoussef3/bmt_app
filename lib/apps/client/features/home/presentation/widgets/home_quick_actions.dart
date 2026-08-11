@@ -59,7 +59,6 @@ class HomeQuickActions extends StatelessWidget {
       ),
     ];
 
-    // Clamped so a large system font can't overflow the fixed tile height.
     return MediaQuery.withClampedTextScaling(
       maxScaleFactor: 1.2,
       child: SizedBox(

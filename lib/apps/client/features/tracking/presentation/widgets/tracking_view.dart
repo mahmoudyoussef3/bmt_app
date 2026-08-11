@@ -27,9 +27,7 @@ class TrackingView extends StatefulWidget {
 }
 
 class _TrackingViewState extends State<TrackingView> {
-  // Owned here, not inside the sheet: the sheet rebuilds on every GPS fix and
-  // the drag position must survive that. The map reads its extent for camera
-  // padding.
+  
   final _sheetController = DraggableScrollableController();
 
   @override

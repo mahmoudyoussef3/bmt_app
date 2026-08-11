@@ -79,8 +79,7 @@ class TrackingCubit extends Cubit<TrackingState> {
       _startEtaTicker();
     } catch (error) {
       if (isClosed) return;
-      // A failed background refetch must not blow away a screen that is still
-      // showing good data — the rider is mid-journey and needs it.
+      
       if (silent && current is TrackingLoaded) {
         emit(current.copyWith(isRefreshing: false));
         return;
@@ -93,8 +92,6 @@ class TrackingCubit extends Cubit<TrackingState> {
     final current = state;
     if (current is! TrackingLoaded) return;
 
-    // A fix arriving while we still believe the trip has not started means the
-    // captain is already moving — trust the position over the stale status.
     final next = current.tripState == TrackingTripState.notStarted
         ? TrackingTripState.driverOnWay
         : current.tripState;

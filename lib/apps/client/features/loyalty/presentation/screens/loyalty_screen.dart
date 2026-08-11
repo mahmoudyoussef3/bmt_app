@@ -27,8 +27,7 @@ class LoyaltyScreen extends StatelessWidget {
             : LoyaltyView.dashboard;
 
         return PopScope(
-          // A system back closes the open panel first, matching what the app
-          // bar's back arrow does — the two used to disagree.
+          
           canPop: view == LoyaltyView.dashboard,
           onPopInvokedWithResult: (didPop, _) {
             if (!didPop) context.read<LoyaltyCubit>().popView();

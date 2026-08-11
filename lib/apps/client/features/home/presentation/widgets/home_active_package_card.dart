@@ -167,8 +167,6 @@ class _Validity extends StatelessWidget {
         ? l10n.home_dayLeft
         : l10n.home_daysLeft(remaining);
 
-    // A window closing this week is the one state on this card a rider has to
-    // act on, so it stops being brand-blue and takes the attention colour.
     final accent = expiring
         ? ClientColors.journeyAmberFor(context)
         : ClientColors.primaryFor(context);

@@ -81,8 +81,7 @@ class _SeatBody extends StatelessWidget {
         final rowCompare = a.row.compareTo(b.row);
         return rowCompare != 0 ? rowCompare : a.column.compareTo(b.column);
       });
-    // The vehicle on the trip decides the cabin — never the seat count, the
-    // seat labels or the trip name.
+    
     final blueprint = VehicleSeatLayouts.resolveRaw(
       vehicleType: state.data.vehicleType,
       seats: [for (final seat in seats) (row: seat.row, column: seat.column)],
@@ -192,8 +191,7 @@ class _SeatBody extends StatelessWidget {
     int index,
     String? selectedSeatId,
   ) {
-    // Seats past the cabin's capacity have no slot to take a cabin label from,
-    // so they fall back to the label stored on the seat itself.
+    
     final slot = blueprint.seatSlotAt(index);
     return VehicleSeatData(
       id: seat.id,

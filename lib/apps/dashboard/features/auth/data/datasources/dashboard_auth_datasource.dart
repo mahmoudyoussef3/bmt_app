@@ -36,8 +36,7 @@ class DashboardAuthDatasource {
         password: password,
       );
     } on AuthException {
-      // Deliberately the same message as an unknown name: distinguishing them would
-      // turn this screen into a directory of who works here.
+      
       throw const DashboardAuthFailure(
         'اسم المستخدم أو كلمة المرور غير صحيحة.',
       );
@@ -48,25 +47,19 @@ class DashboardAuthDatasource {
     try {
       return await loadContext();
     } on DashboardAuthFailure catch (failure) {
-      // An account created by [signUp] whose office was never written — the sign-up
-      // succeeded but `register_office` did not — carries the typed office name in its
-      // user metadata. Finishing the job here is what makes that half-state recoverable
-      // by simply signing in, rather than stranding an account whose email can never be
-      // registered again. Any account that did NOT come from sign-up has no pending name
-      // and is refused with `invalid_office_name`, so this is not a path to granting an
-      // office to an arbitrary user.
+      
       if (failure.code == _noOfficeCode) {
         try {
           await _supabase.rpc('register_office');
           return await loadContext();
         } catch (_) {
-          // Fall through to the sign-out below.
+          
         }
       }
       await signOut();
       rethrow;
     } catch (e) {
-      // A valid password on an account with no active office is not a session.
+      
       await signOut();
       rethrow;
     }
@@ -92,9 +85,7 @@ class DashboardAuthDatasource {
         email: trimmedEmail,
         password: password,
         data: {
-          // Keeps `handle_new_client_user` from writing a `clients` row for an operator:
-          // that row defaults phone to '', which is uniquely constrained, so the second
-          // office to sign up would collide on it.
+          
           'role': 'office_user',
           'pending_office_name': trimmedOffice,
         },
@@ -106,8 +97,7 @@ class DashboardAuthDatasource {
     }
 
     if (response.session == null) {
-      // Email confirmation is enabled on the project. The account exists and carries the
-      // office name; signing in after confirming completes the registration above.
+      
       throw const DashboardAuthFailure(
         'تم إنشاء الحساب. فعّل الرابط المرسل إلى بريدك الإلكتروني ثم سجّل الدخول '
         'لإكمال إنشاء المكتب.',
@@ -120,8 +110,7 @@ class DashboardAuthDatasource {
         params: {'p_office_name': trimmedOffice},
       );
     } on PostgrestException catch (e) {
-      // The auth account survives deliberately: its email cannot be reused, and signing
-      // in with it retries `register_office` from the metadata.
+      
       throw DashboardAuthFailure(_registerMessage(e.message));
     } catch (_) {
       throw const DashboardAuthFailure('تعذر إنشاء المكتب. حاول مرة أخرى.');

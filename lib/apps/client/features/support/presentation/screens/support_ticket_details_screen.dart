@@ -33,8 +33,7 @@ class SupportTicketDetailsScreen extends StatelessWidget {
           SupportInitial() || SupportLoading() => TicketDetailsPlaceholder(
             child: CircularProgressIndicator(color: scheme.primary),
           ),
-          // SupportError, plus any state belonging to another support screen's
-          // cubit instance that could only reach here by mistake.
+          
           _ => TicketDetailsPlaceholder(
             child: Text(
               context.l10n.support_failedToLoad,

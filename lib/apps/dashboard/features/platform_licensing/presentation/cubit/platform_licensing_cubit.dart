@@ -122,7 +122,6 @@ class PlatformLicensingCubit extends Cubit<PlatformLicensingState> {
         ),
       );
 
-      // The heavier aggregates follow, so the console is usable while they run.
       await Future.wait([loadUsage(), loadBilling(), loadAudit()]);
     } catch (error) {
       emit(PlatformLicensingError(_message(error)));
@@ -148,8 +147,6 @@ class PlatformLicensingCubit extends Cubit<PlatformLicensingState> {
 
   Future<void> loadHealth() =>
       _section(() async => _loaded?.copyWith(health: await _getHealth()));
-
-  // ── Catalog ────────────────────────────────────────────────────────────────
 
   void searchFeatures(String query) {
     final loaded = _loaded;
@@ -230,8 +227,6 @@ class PlatformLicensingCubit extends Cubit<PlatformLicensingState> {
     );
   });
 
-  // ── Plans ──────────────────────────────────────────────────────────────────
-
   Future<void> selectPlan(String planId) => _action(() async {
     final detail = await _getPlanDetail(planId);
     return _loaded?.copyWith(selectedPlan: detail, clearPlanPreview: true);
@@ -260,8 +255,7 @@ class PlatformLicensingCubit extends Cubit<PlatformLicensingState> {
       selectedPlan: detail,
       plans: await _getPlans(),
       health: await _getHealth(),
-      // The sentence that matters: this took effect for every subscribed office
-      // the moment it saved, because the resolver reads plan values live.
+      
       actionMessage:
           'تم الحفظ. سرى التغيير فورًا على كل مكتب مشترك في هذه الباقة، '
           'وحُفظت النسخة السابقة في السجل.',
@@ -300,8 +294,6 @@ class PlatformLicensingCubit extends Cubit<PlatformLicensingState> {
     if (loaded == null) return;
     emit(loaded.copyWith(clearPlanPreview: true));
   }
-
-  // ── Licences ───────────────────────────────────────────────────────────────
 
   void filterLicenses(String? status) {
     final loaded = _loaded;
@@ -354,8 +346,7 @@ class PlatformLicensingCubit extends Cubit<PlatformLicensingState> {
       licenses: await _getLicenses(),
       health: await _getHealth(),
       actionMessage: status == 'suspended'
-          // Said explicitly at the moment of the action, because this is the
-          // decision most often misunderstood as a blackout.
+          
           ? 'تم الإيقاف. المكتب الآن في وضع القراءة فقط: التذاكر المُباعة '
                 'والرحلات الجارية ودخول الكباتن تكمل كالمعتاد.'
           : 'تم تحديث حالة الترخيص.',
@@ -372,8 +363,6 @@ class PlatformLicensingCubit extends Cubit<PlatformLicensingState> {
           actionMessage: 'تم تمديد الفترة التجريبية.',
         );
       });
-
-  // ── Overrides ──────────────────────────────────────────────────────────────
 
   Future<void> setOverride(
     String officeId,
@@ -409,8 +398,6 @@ class PlatformLicensingCubit extends Cubit<PlatformLicensingState> {
     );
   });
 
-  // ── Billing ────────────────────────────────────────────────────────────────
-
   Future<void> issueInvoice(String officeId) => _action(() async {
     await _issueInvoice(officeId);
     return _loaded?.copyWith(
@@ -444,8 +431,6 @@ class PlatformLicensingCubit extends Cubit<PlatformLicensingState> {
           actionMessage: 'تم إبطال الفاتورة.',
         );
       });
-
-  // ── Settings and the scheduled jobs ────────────────────────────────────────
 
   /// The kill switch. `off` restores pre-licensing behaviour instantly.
   Future<void> setEnforcementMode(String mode) => _action(() async {
@@ -512,8 +497,7 @@ class PlatformLicensingCubit extends Cubit<PlatformLicensingState> {
       final next = await run();
       if (next != null) emit(next);
     } catch (_) {
-      // Leave the section as it was. A failed aggregate is not a reason to take
-      // the plan list down with it.
+      
     }
   }
 
@@ -523,9 +507,7 @@ class PlatformLicensingCubit extends Cubit<PlatformLicensingState> {
     emit(loaded.copyWith(isBusy: true));
     try {
       final next = (await run()) ?? _loaded ?? loaded;
-      // The feedback fields are re-passed explicitly: copyWith deliberately
-      // does NOT carry them forward, so clearing the busy flag would otherwise
-      // throw away the message the action just produced.
+      
       emit(
         next.copyWith(
           isBusy: false,

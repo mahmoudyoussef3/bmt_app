@@ -18,7 +18,7 @@ enum FleetVehicleStatus {
 
 class SeatLayoutItem {
   final String seatNumber;
-  final String seatType; // driver, passenger, empty, vip, etc.
+  final String seatType; 
   final int row;
   final int column;
 
@@ -85,8 +85,6 @@ class SeatConfiguration {
             .toList() ??
         const <SeatLayoutItem>[];
 
-    // Fall back to the geometry the seats themselves describe, which is the only
-    // honest answer when the stored envelope is missing or disagrees with them.
     final derivedRows = seats.fold<int>(
       0,
       (max, s) => s.row > max ? s.row : max,
@@ -232,7 +230,6 @@ class FleetVehicle {
     this.timeline = const [],
   });
 
-  // Legacy compatibility getters:
   String get vehicleNumber => vehicleCode;
   int get modelYear => manufactureYear;
   int get seatsCount => capacity;

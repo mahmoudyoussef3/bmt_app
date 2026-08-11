@@ -91,9 +91,7 @@ class _Arrow extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final icon = Icon(
-      // Deliberately not a directional glyph Material would mirror under
-      // RTL for the wrong reason — "next stage in the story" always points
-      // toward the reading direction's forward, so it must stay logical.
+      
       horizontal ? Icons.arrow_back_ios_new_rounded : Icons.arrow_downward_rounded,
       size: 18,
       color: scheme.onSurfaceVariant,

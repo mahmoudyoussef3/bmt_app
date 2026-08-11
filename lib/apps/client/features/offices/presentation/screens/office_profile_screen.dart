@@ -146,7 +146,7 @@ class _OfficeProfileScreenState extends State<OfficeProfileScreen> {
               return RefreshIndicator(
                 onRefresh: () =>
                     context.read<OfficeProfileCubit>().load(office.id),
-                // The spinner drops below the floating bar rather than behind it.
+                
                 edgeOffset: _chromeHeight,
                 child: CustomScrollView(
                   controller: _scroll,

@@ -26,8 +26,7 @@ class LoyaltyBody extends StatelessWidget {
       ),
       final LoyaltyLoaded loaded => AnimatedSwitcher(
         duration: ClientMotion.base,
-        // Keyed by panel: without it the switcher sees the same widget type
-        // across a view change and skips the transition entirely.
+        
         child: KeyedSubtree(
           key: ValueKey(loaded.view),
           child: _panel(loaded),

@@ -109,9 +109,7 @@ class RouteDetailsSheetContent extends StatelessWidget {
           selectedTripId: selectedTripId,
           onSelectTrip: onSelectTrip,
         ),
-        // After the departures, not before: a plan is only worth reading once
-        // the rider has seen that this corridor runs when they need it. The
-        // section brings its own leading gap so it can vanish without one.
+        
         RoutePackagesSection(route: route, onSelectPackage: onSelectPackage),
         if (routes.length > 1) ...[
           const SizedBox(height: 18),

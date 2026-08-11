@@ -48,10 +48,6 @@ extension ChatMessageListMapper on List<ChatMessageModel> {
   List<ChatMessage> toEntities() => map((model) => model.toEntity()).toList();
 }
 
-// Backend-string knowledge lives here in the data layer so the domain enums
-// stay pure Dart. All three columns are unconstrained text, so every parser
-// falls back rather than throwing on an unexpected value.
-
 ConversationCategory _category(String? raw) {
   return switch (raw?.trim().toLowerCase()) {
     'driver' => ConversationCategory.driver,

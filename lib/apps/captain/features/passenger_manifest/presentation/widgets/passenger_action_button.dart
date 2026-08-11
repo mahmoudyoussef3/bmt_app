@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 
-/// One of the small square affordances down the trailing edge of a passenger
-/// card — edit status, call, message.
 class PassengerActionButton extends StatelessWidget {
   const PassengerActionButton({
     super.key,
@@ -17,8 +15,6 @@ class PassengerActionButton extends StatelessWidget {
   final String tooltip;
   final Color color;
 
-  /// Null renders the button visibly unavailable. The affordance stays in
-  /// place so the row of actions doesn't reflow from card to card.
   final VoidCallback? onPressed;
 
   @override
@@ -35,8 +31,6 @@ class PassengerActionButton extends StatelessWidget {
         child: InkWell(
           onTap: onPressed,
           borderRadius: CaptainDesignTokens.br12,
-          // A 40pt box is below the 48pt minimum touch target, so the tap area
-          // is widened past the paint bounds rather than growing the visual.
           child: Container(
             width: 44,
             height: 44,

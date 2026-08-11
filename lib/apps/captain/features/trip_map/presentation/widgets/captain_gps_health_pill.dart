@@ -6,9 +6,6 @@ import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 
 import '../cubit/captain_trip_map_state.dart';
 
-/// The GPS traffic light: tells the captain, at a glance, whether their
-/// position is really being tracked. A degraded feed offers a retry and never
-/// masquerades as a working one.
 class CaptainGpsHealthPill extends StatelessWidget {
   const CaptainGpsHealthPill({
     super.key,

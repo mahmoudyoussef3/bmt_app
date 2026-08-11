@@ -25,8 +25,7 @@ class OfficesEmptyView extends StatelessWidget {
     final isSearch = query.trim().isNotEmpty;
 
     return ListView(
-      // Scrollable so the state still answers a pull-to-refresh, and so a long
-      // "no match for …" line cannot overflow a short screen.
+      
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.symmetric(
         horizontal: ClientSpacing.xl,

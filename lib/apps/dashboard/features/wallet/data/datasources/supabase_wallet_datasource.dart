@@ -97,10 +97,7 @@ class SupabaseWalletDatasource implements WalletDatasource {
     List<RefundStatus> statuses,
   ) async {
     try {
-      // A table read, not an RPC: `refund_requests_office_read` already scopes
-      // this to the signed-in office, and the queue wants the embedded customer
-      // and booking that PostgREST resolves in the same round trip. The
-      // *decision* is the part that goes through an RPC.
+      
       final rows = await _client
           .from('refund_requests')
           .select('''
@@ -165,9 +162,7 @@ class SupabaseWalletDatasource implements WalletDatasource {
     String? notes,
     required String requestKey,
   }) async {
-    // Three RPCs rather than one with a `kind` parameter: the kind is what the
-    // accounting reads and what the capability check keys on, so it stays out of
-    // the client's hands.
+    
     final function = switch (kind) {
       WalletKind.cashback => 'office_wallet_cashback',
       WalletKind.manualCredit => 'office_wallet_credit',
@@ -337,10 +332,7 @@ class SupabaseWalletDatasource implements WalletDatasource {
   /// fired, and an operator who is told "this booking has already been fully
   /// refunded" stops, while one told "database error 23514" calls support.
   Exception _handleError(dynamic error) {
-    // The wallet ledger and the refund table are both trigger-gated (`wallet`,
-    // `cashback`, `refunds`), so a licensing refusal reaches this method exactly
-    // like every other machine code below — but it deserves the upgrade card
-    // rather than a snackbar, so it leaves here as a LicensingFailure.
+    
     LicensingGuard.check(error);
 
     if (error is PostgrestException) {

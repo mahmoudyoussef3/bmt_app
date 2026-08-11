@@ -71,7 +71,7 @@ class _WizardPackageStepState extends State<WizardPackageStep> {
             onRetry: context.read<PackagesCubit>().load,
           );
         }
-        // The wizard has no filter strip, so it always shows the full catalogue.
+        
         final plans = (packagesState as PackagesLoaded).packages;
         final featured = _featuredIndex(plans);
 

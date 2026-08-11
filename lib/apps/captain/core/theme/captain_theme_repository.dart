@@ -1,10 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Persists the captain's appearance choice (light/dark/system) — a
-/// non-sensitive preference, so this uses `SharedPreferences` like the
-/// app's other local stores (`CaptainSessionStore`, `SeenTripsLocalDataSource`),
-/// not secure storage.
 class CaptainThemeRepository {
   const CaptainThemeRepository();
 

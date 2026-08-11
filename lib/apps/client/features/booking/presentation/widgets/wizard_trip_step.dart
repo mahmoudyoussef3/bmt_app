@@ -157,8 +157,7 @@ class _TripCard extends StatelessWidget {
         padding: const EdgeInsets.all(18),
         child: Column(
           children: [
-            // The day the rider travels. It is also the day any package they
-            // buy starts running, so it must never be a hidden detail.
+            
             if (trip.tripDate.isNotEmpty) ...[
               Row(
                 children: [
@@ -291,10 +290,7 @@ class _TripCard extends StatelessWidget {
                 ),
               ],
             ),
-            // Riders commit more readily to a bus they have seen and a captain
-            // they can name, so the card offers both before the seat step —
-            // even when the route runs a single vehicle and there is nothing
-            // to compare it against.
+            
             const SizedBox(height: 14),
             Divider(height: 1, color: ClientColors.borderFor(context)),
             const SizedBox(height: 12),

@@ -50,9 +50,7 @@ class SupabaseNotificationsDispatchDatasource
 
   @override
   Future<int> broadcastRpc(NotificationDraft draft) async {
-    // Broadcast fans out to every user of the target app and has no office
-    // dimension, so it is gated on the platform-admin role rather than on
-    // office membership. The raw RPC is no longer callable from the client tier.
+    
     final result = await _client.rpc(
       'platform_broadcast_notification',
       params: {

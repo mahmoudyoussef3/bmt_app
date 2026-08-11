@@ -18,11 +18,6 @@ class CaptainNavTab {
   final IconData activeIcon;
 }
 
-/// The captain shell's floating bottom navigation.
-///
-/// The shell runs with `extendBody: true`, so tab pages paint *underneath* this
-/// bar. A scrolling page must therefore end its content with [reservedSpace] of
-/// bottom padding, otherwise its last row of controls is hidden behind the bar.
 class CaptainBottomNav extends StatelessWidget {
   const CaptainBottomNav({
     super.key,
@@ -31,15 +26,10 @@ class CaptainBottomNav extends StatelessWidget {
     required this.onTabChanged,
   });
 
-  /// Height of the bar itself, without the margin under it or the device inset.
   static const double barHeight = 64;
 
   static const double _margin = CaptainDesignTokens.s16;
 
-  /// Bottom padding a scrolling tab page must reserve to clear the bar.
-  ///
-  /// Covers the bar, the margin below it, the device's bottom inset, and one
-  /// margin of breathing room between the content and the bar.
   static double reservedSpace(BuildContext context) =>
       barHeight + _margin * 2 + MediaQuery.viewPaddingOf(context).bottom;
 

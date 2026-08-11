@@ -468,7 +468,7 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
               await overviewCubit.loadWorkspace();
               return null;
             } catch (error) {
-              // Keep the dialog open so the user can fix the data and retry.
+              
               return error.toString().replaceAll('Exception: ', '');
             }
           },

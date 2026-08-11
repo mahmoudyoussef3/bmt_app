@@ -18,8 +18,6 @@ import 'package:flutter/material.dart';
 abstract final class DashboardIcons {
   const DashboardIcons._();
 
-  // ── Modules ────────────────────────────────────────────────────────────────
-
   /// The landing screen. A console overview, not a house: the operator is
   /// already inside their workspace.
   static const home = Icons.space_dashboard_outlined;
@@ -109,11 +107,6 @@ abstract final class DashboardIcons {
   static const platformOffices = Icons.apartment_outlined;
   static const platformOfficesActive = Icons.apartment_rounded;
 
-  // ── The licensing console (platform admins only) ──────────────────────────
-  // "الخطط" and never "الباقات" in code: `package` and `subscription` are
-  // already taken — twice each — by the passenger fare-bundle domain, and a
-  // third meaning would make them unreadable everywhere.
-
   /// Plans: named bundles of feature values the platform sells.
   static const plans = Icons.workspace_premium_outlined;
   static const plansActive = Icons.workspace_premium_rounded;
@@ -152,8 +145,6 @@ abstract final class DashboardIcons {
   static const settings = Icons.settings_outlined;
   static const settingsActive = Icons.settings_rounded;
 
-  // ── Attributes (used inside rows, chips and KPI tiles) ────────────────────
-
   /// A departure or booking time.
   static const time = Icons.schedule_rounded;
 
@@ -177,8 +168,6 @@ abstract final class DashboardIcons {
 
   /// Revenue as a figure rather than as a module.
   static const revenue = Icons.account_balance_wallet_outlined;
-
-  // ── States & actions ──────────────────────────────────────────────────────
 
   /// Something needs a decision. Used only where an action really is required —
   /// never as decoration on a healthy panel.

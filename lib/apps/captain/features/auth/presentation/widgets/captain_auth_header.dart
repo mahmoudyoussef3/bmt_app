@@ -4,7 +4,6 @@ import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_brand_mark.dart';
 
-/// Brand lockup + title/subtitle used at the top of captain auth screens.
 class CaptainAuthHeader extends StatelessWidget {
   const CaptainAuthHeader({
     super.key,

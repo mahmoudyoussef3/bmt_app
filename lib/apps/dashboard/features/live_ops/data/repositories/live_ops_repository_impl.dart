@@ -10,8 +10,7 @@ class LiveOpsRepositoryImpl implements LiveOpsRepository {
 
   @override
   Future<LiveOpsSnapshot> getSnapshot() async {
-    // The two reads are independent; run them together so the desk refresh is
-    // one round-trip's latency, not two.
+    
     final results = await Future.wait([
       _datasource.fetchActiveTrips(),
       _datasource.fetchOpenIncidents(),

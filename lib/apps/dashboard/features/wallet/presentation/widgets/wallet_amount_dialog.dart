@@ -142,8 +142,7 @@ class _WalletAmountDialogState extends State<WalletAmountDialog> {
           TextFormField(
             controller: _amountController,
             keyboardType: const TextInputType.numberWithOptions(decimal: true),
-            // Western digits only: an Arabic-Indic numeral typed into a money
-            // field parses as null and silently becomes zero.
+            
             inputFormatters: [
               FilteringTextInputFormatter.allow(RegExp(r'[0-9.]')),
             ],
@@ -301,8 +300,7 @@ class _WalletAmountDialogState extends State<WalletAmountDialog> {
   Future<void> _onPrimary() async {
     if (!_confirming) {
       if (!(_formKey.currentState?.validate() ?? false)) return;
-      // Credits go straight through unless the office asked for step-up; a debit
-      // always gets the second screen.
+      
       if (_isDebit || _needsStepUp) {
         setState(() {
           _confirming = true;
@@ -347,8 +345,7 @@ class _WalletAmountDialogState extends State<WalletAmountDialog> {
       Navigator.of(context).pop(true);
       return;
     }
-    // Stay open on a refusal: the operator needs to read why, and usually to fix
-    // one field rather than start over.
+    
     setState(() {
       _submitting = false;
       _error = failure;

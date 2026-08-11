@@ -40,9 +40,7 @@ class ClientWalletOfficeCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              // Reuses the Offices module's avatar rather than a second logo
-              // widget: the same office must not look different depending on
-              // which screen the rider reached it from.
+              
               OfficeLogoAvatar(logoUrl: wallet.officeLogoUrl, size: 44),
               const SizedBox(width: ClientSpacing.sm),
               Expanded(
@@ -66,8 +64,7 @@ class ClientWalletOfficeCard extends StatelessWidget {
                   ],
                 ),
               ),
-              // An operator's name is Arabic even in the English app, so the
-              // two runs sit against each other without a gap of their own.
+              
               const SizedBox(width: ClientSpacing.sm),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
@@ -95,9 +92,7 @@ class ClientWalletOfficeCard extends StatelessWidget {
           ),
           if (wallet.isFrozen) ...[
             const SizedBox(height: ClientSpacing.sm),
-            // Says what freezing actually means for the rider. "Frozen" on its
-            // own reads as "your money is gone", and it is not: credits still
-            // land, only spending is paused.
+            
             Container(
               padding: const EdgeInsets.all(ClientSpacing.sm),
               decoration: BoxDecoration(
@@ -131,8 +126,7 @@ class ClientWalletOfficeCard extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(top: ClientSpacing.xs),
                 child: Text(
-                  // Said out loud rather than truncated silently: a rider
-                  // reconciling an old refund needs to know the list is partial.
+                  
                   context.l10n.wallet_entriesTruncated(wallet.entries.length),
                   style: text.labelSmall?.copyWith(
                     color: scheme.onSurfaceVariant,

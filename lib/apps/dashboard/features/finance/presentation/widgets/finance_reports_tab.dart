@@ -341,8 +341,7 @@ class _DailyTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = DashboardChartPalette.of(context);
-    // Newest first: a finance reader opens this to check yesterday, not the
-    // first day of the quarter.
+    
     final rows = analytics.daily.reversed.toList();
 
     return OpsDataTable(

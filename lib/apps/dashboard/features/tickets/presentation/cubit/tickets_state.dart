@@ -61,7 +61,6 @@ class TicketsLoaded extends TicketsState {
       return true;
     }).toList();
 
-    // breached first, then near-breach, then by remaining SLA time
     result.sort((a, b) {
       if (a.slaBreached != b.slaBreached) {
         return a.slaBreached ? -1 : 1;
@@ -78,7 +77,6 @@ class TicketsLoaded extends TicketsState {
     return result;
   }
 
-  // Summary Metrics
   int get newCount {
     return tickets.where((t) => t.status == TicketStatus.submitted).length;
   }

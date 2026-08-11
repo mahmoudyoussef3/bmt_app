@@ -12,10 +12,6 @@ import '../cubit/captain_activation_state.dart';
 import '../widgets/captain_activation_error.dart';
 import '../widgets/captain_identity_card.dart';
 
-/// Landing home for a freshly-approved captain. While operations finishes
-/// activating the driver record, this waits — polling in the background and on
-/// pull-to-refresh — and hands over to the operational shell the moment the
-/// captain can sign in, without any sign-out/sign-in round trip.
 class CaptainWelcomeHomeScreen extends StatefulWidget {
   final CaptainLocalSession session;
   final Future<void> Function() onSignOut;

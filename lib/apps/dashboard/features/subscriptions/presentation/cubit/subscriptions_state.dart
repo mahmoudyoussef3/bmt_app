@@ -167,8 +167,6 @@ class SubscriptionsLoaded extends SubscriptionsState {
 
   int countForTab(SubscriptionQueueTab tab) => _tabCounts[tab] ?? 0;
 
-  // ── Office-level KPIs (always the whole set, never the filtered slice) ──
-
   late final int activeCount = subscriptions
       .where((s) => s.status == SubscriptionStatus.active)
       .length;

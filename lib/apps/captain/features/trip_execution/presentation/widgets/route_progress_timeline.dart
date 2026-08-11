@@ -7,11 +7,6 @@ import 'package:bmt_app/apps/captain/features/assigned_trips/domain/entities/ass
 
 enum _StopProgress { arrived, current, upcoming }
 
-/// A read-only route visualization: every stop on this trip, marked arrived,
-/// current, or upcoming against the live `arrivedStationsCount` — the same
-/// arrival floor the "mark arrived" action (in the next-stop card) advances.
-/// Purely a visualization; the action itself lives elsewhere so this stays
-/// simple and never risks the optimistic-update logic that button owns.
 class RouteProgressTimeline extends StatelessWidget {
   const RouteProgressTimeline({
     super.key,

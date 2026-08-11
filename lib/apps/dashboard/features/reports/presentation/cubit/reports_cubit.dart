@@ -40,7 +40,6 @@ class ReportsCubit extends Cubit<ReportsState> {
       final vehicles = await _getAvailableVehicles();
       final packages = await _getAvailablePackages();
 
-      // Default date range: last 30 days
       final end = DateTime.now();
       final start = end.subtract(const Duration(days: 30));
 

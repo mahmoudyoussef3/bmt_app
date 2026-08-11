@@ -54,7 +54,7 @@ class _ClientSplashGateState extends State<ClientSplashGate> {
     return AnimatedSwitcher(
       duration: const Duration(milliseconds: 450),
       child: showSplash
-          // Stable key so a rebuild while waiting never restarts the intro.
+          
           ? const ClientSplashScreen(key: ValueKey('client-splash'))
           : KeyedSubtree(
               key: const ValueKey('client-landing'),

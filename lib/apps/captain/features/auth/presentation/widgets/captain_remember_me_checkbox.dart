@@ -4,11 +4,6 @@ import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 
-/// The "تذكرني" row on the captain login form.
-///
-/// Says what it actually does — the phone number is kept on this device so the
-/// next sign-in is one tap — because a bare "تذكرني" reads to a captain as
-/// "stay signed in", which is a different promise than the one this keeps.
 class CaptainRememberMeCheckbox extends StatelessWidget {
   const CaptainRememberMeCheckbox({
     super.key,

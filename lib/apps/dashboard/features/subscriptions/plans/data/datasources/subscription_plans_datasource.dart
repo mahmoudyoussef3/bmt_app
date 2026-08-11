@@ -25,11 +25,6 @@ class SubscriptionPlansDatasource {
         .toList();
   }
 
-  // Every write below is wrapped: `transport_packages` is gated on
-  // `passenger_packages` at creation, and frozen entirely while the office's
-  // licence is held (§14.3 read-only). Without the guard those refusals reach
-  // the cubit as a raw PostgrestException and read as "خطأ".
-
   Future<void> createPlan(SubscriptionPlan plan) async {
     final displayOrder = await _nextDisplayOrder();
     await LicensingGuard.run(

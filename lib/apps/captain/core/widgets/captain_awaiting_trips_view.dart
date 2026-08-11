@@ -9,22 +9,6 @@ import 'captain_list_group.dart';
 import 'captain_live_sync_chip.dart';
 import 'captain_section_label.dart';
 
-/// Shown whenever operations has not assigned the captain a trip yet — on the
-/// day view and on the post-approval home.
-///
-/// It is a *page*, not a card. It used to be one framed, shadowed rectangle
-/// holding a headline, a paragraph, a bordered step panel and two controls —
-/// the titled-card-per-block pattern the rest of the captain app was rebuilt to
-/// get away from, and the loudest surviving example of it, since on an empty
-/// day it was the only thing on screen. Now the hero sits directly on the page
-/// background and each block below it is named from the outside by a
-/// [CaptainSectionLabel], the same shape the profile and trip-execution screens
-/// use.
-///
-/// Two things it must keep doing: place the captain inside the assignment
-/// workflow so waiting reads as progress rather than as a dead app, and promise
-/// that the trip arrives on its own — a captain who believes they have to
-/// re-login will re-login, repeatedly.
 class CaptainAwaitingTripsView extends StatelessWidget {
   const CaptainAwaitingTripsView({
     super.key,
@@ -44,12 +28,6 @@ class CaptainAwaitingTripsView extends StatelessWidget {
   final String message;
   final String currentStepLabel;
 
-  /// Somewhere for the captain to go while the schedule is empty — rows for a
-  /// [CaptainListGroup], supplied by the screen that knows what it can reach.
-  ///
-  /// Empty on the onboarding home, which has no tabs to offer yet; the day view
-  /// fills it. Without these the screen is a dead end whose only control
-  /// re-asks a question it has already answered ("still nothing").
   final List<Widget> shortcuts;
 
   @override
@@ -79,8 +57,6 @@ class CaptainAwaitingTripsView extends StatelessWidget {
         Center(child: CaptainLiveSyncChip(isRefreshing: isRefreshing)),
         const SizedBox(height: CaptainDesignTokens.s32),
         const CaptainSectionLabel('أين وصل جدولك'),
-        // One child, so the group draws no dividers through the step
-        // connector: the three steps are a single progression, not three rows.
         CaptainListGroup(
           children: [
             Padding(
@@ -123,15 +99,6 @@ class CaptainAwaitingTripsView extends StatelessWidget {
   }
 }
 
-/// The standby emblem: an icon inside two soft halos.
-///
-/// Static, and a size smaller than the badge it replaces. That badge breathed
-/// on a repeating controller, which is the wrong call twice over on this
-/// screen: the captain's phone sits in a cradle for a whole shift, so an
-/// animation that never settles is a battery cost carrying no information — and
-/// a never-settling animation hangs `pumpAndSettle` for every widget test that
-/// renders an empty day. The halos say "standing by" without moving, the same
-/// way `FocusLiveDot` says "live".
 class _StandbyMark extends StatelessWidget {
   const _StandbyMark();
 

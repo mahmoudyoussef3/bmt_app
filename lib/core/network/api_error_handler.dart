@@ -9,7 +9,7 @@ class ApiErrorHandler {
   /// user-friendly Failure. This ensures technical exceptions never reach the UI.
   static Failure<T> handle<T>(dynamic error) {
     if (error is DioException) {
-      // Log for developers
+      
       if (kDebugMode) {
         debugPrint(
           '🌐 [API ERROR] ${error.requestOptions.uri} -> ${error.message}',
@@ -44,7 +44,7 @@ class ApiErrorHandler {
           );
       }
     } else {
-      // Handle non-Dio errors (e.g. Supabase exceptions or formatting errors)
+      
       if (kDebugMode) {
         debugPrint('🌐 [UNKNOWN ERROR] $error');
       }
@@ -58,7 +58,6 @@ class ApiErrorHandler {
   static Failure<T> _handleBadResponse<T>(Response? response) {
     final statusCode = response?.statusCode;
 
-    // Attempt to extract backend error message if available
     String? backendMessage;
     if (response?.data != null && response?.data is Map<String, dynamic>) {
       backendMessage =

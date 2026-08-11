@@ -21,8 +21,7 @@ class FormatUtil {
     String symbol = 'EGP',
   }) {
     final isArabic = Localizations.localeOf(context).languageCode == 'ar';
-    // Standard Arabic numerals (123) throughout, unless Eastern Arabic (١٢٣) is
-    // specifically requested later.
+    
     final formatter = NumberFormat.decimalPattern(
       isArabic ? 'ar_EG' : 'en_US',
     );

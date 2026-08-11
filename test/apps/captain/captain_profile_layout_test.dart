@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_theme.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_theme_cubit.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_theme_repository.dart';
+import 'package:bmt_app/apps/captain/features/notifications/presentation/cubit/captain_notification_badge_cubit.dart';
 import 'package:bmt_app/apps/captain/features/profile/domain/entities/driver_profile.dart';
 import 'package:bmt_app/apps/captain/features/profile/presentation/cubit/driver_profile_cubit.dart';
 import 'package:bmt_app/apps/captain/features/profile/presentation/cubit/driver_profile_state.dart';
@@ -46,6 +47,17 @@ class _StubProfileCubit extends Cubit<DriverProfileState>
   noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
+/// `CaptainRootHeader` carries the notification bell on every root tab now,
+/// so any full-page pump needs this in the tree — the shell provides the real
+/// one in the app itself.
+class _StubNotificationBadgeCubit extends Cubit<int>
+    implements CaptainNotificationBadgeCubit {
+  _StubNotificationBadgeCubit() : super(0);
+
+  @override
+  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
 DriverProfile _profile({
   String name = 'محمود عبد الرحمن السيد',
   double rating = 4.8,
@@ -72,8 +84,15 @@ DriverProfile _profile({
 }
 
 Widget _host(Widget child, {double scale = 1.0}) {
-  return BlocProvider<CaptainThemeCubit>(
-    create: (_) => CaptainThemeCubit(_StubThemeRepository()),
+  return MultiBlocProvider(
+    providers: [
+      BlocProvider<CaptainThemeCubit>(
+        create: (_) => CaptainThemeCubit(_StubThemeRepository()),
+      ),
+      BlocProvider<CaptainNotificationBadgeCubit>(
+        create: (_) => _StubNotificationBadgeCubit(),
+      ),
+    ],
     child: MaterialApp(
       // Mirrors CaptainApp: the delegates are what load the app's `ar` date
       // symbols, which VerificationCard's DateFormat depends on.

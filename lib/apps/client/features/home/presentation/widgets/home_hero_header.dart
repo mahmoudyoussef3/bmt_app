@@ -42,8 +42,7 @@ class HomeHeroHeader extends StatelessWidget {
     return Stack(
       clipBehavior: Clip.none,
       children: [
-        // Solid fill above the hero so iOS overscroll bounce reveals the
-        // hero color instead of the page background.
+        
         PositionedDirectional(
           top: -600,
           start: 0,

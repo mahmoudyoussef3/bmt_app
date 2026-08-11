@@ -10,12 +10,7 @@ class SupabaseDailyBookingDatasource implements DailyBookingDatasource {
 
   @override
   Future<DailyBookingData> getDailyBookingData() async {
-    // `public_trips` carries sanitised `drivers` / `vehicles` jsonb columns in
-    // its `*`, replacing the table embeds the base table used to serve.
-    //
-    // This screen sells same-day seats, so it asks for exactly what can be
-    // sold: `open_for_booking`, not yet departed. A `boarding` bus has closed
-    // its manifest and a yesterday-dated one has left.
+    
     final tripsResponse = await _supabase
         .from('public_trips')
         .select('*, ${BookableTrip.seatsEmbed}')

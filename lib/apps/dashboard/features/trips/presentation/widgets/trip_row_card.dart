@@ -172,11 +172,7 @@ class TripRowCard extends StatelessWidget {
                           title: Text('نسخ الرحلة'),
                         ),
                       ),
-                      // Only an unpublished, unbooked trip can be deleted. Anything
-                      // else must be cancelled so its riders are told and its seats
-                      // are released — deleting it would leave paid bookings pointing
-                      // at no trip at all. Disabled rather than hidden so the reason
-                      // is visible where the action used to be.
+                      
                       PopupMenuItem(
                         value: 'delete',
                         enabled: TripLifecycle.canDelete(trip),

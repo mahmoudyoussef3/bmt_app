@@ -43,17 +43,13 @@ class CaptainOnboardingRepositoryImpl implements CaptainOnboardingRepository {
     try {
       return await _datasource.getStatus(phone);
     } catch (_) {
-      // Polling is best-effort; a transient failure shouldn't surface an error.
       return null;
     }
   }
 
   String _message(PostgrestException e) {
-    // RPC validation raises errcode 22023 with an Arabic, user-facing message.
     if (e.code == '22023') return e.message;
 
-    // Office-code failures are raised as bare identifiers by the RPC so the
-    // wording lives here rather than in SQL.
     final raw = e.message;
     if (raw.contains('office_code_required')) {
       return 'أدخل كود المكتب الذي تنضم إليه.';

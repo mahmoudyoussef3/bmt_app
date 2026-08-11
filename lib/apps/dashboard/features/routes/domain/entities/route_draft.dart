@@ -213,8 +213,6 @@ class RouteDraft {
       );
     }).toList();
 
-    // A saved route with fewer than two stations can still be opened; pad it so
-    // the builder always has an origin and a destination to show.
     while (stops.length < 2) {
       stops.add(RouteStopDraft(key: RouteStopDraft.freshKey()));
     }

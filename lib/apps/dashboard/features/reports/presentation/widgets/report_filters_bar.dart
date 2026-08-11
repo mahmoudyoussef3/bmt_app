@@ -35,7 +35,7 @@ class ReportFiltersBar extends StatelessWidget {
 
               return Column(
                 children: [
-                  // Row 1: Dates range
+                  
                   if (isCompact)
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -126,7 +126,6 @@ class ReportFiltersBar extends StatelessWidget {
                     ),
                   const SizedBox(height: AppSpacing.small),
 
-                  // Row 2: Select drop-down selectors
                   if (isCompact)
                     Column(children: _buildDropdownFilters(context))
                   else

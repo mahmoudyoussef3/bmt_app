@@ -26,8 +26,7 @@ class SupabasePaymentDatasource implements PaymentDatasource {
 
       return methods;
     } on PostgrestException catch (error) {
-      // Table not yet provisioned — degrade to an empty list so the screen
-      // shows its empty state instead of a crash.
+      
       if (error.code == 'PGRST205' || error.code == '42P01') {
         return const <PaymentMethodData>[];
       }
@@ -63,9 +62,6 @@ class SupabasePaymentDatasource implements PaymentDatasource {
       final discountAmount = (row['discount_amount'] as num?)?.toInt() ?? 0;
       final discountType = row['discount_type']?.toString() ?? 'fixed';
 
-      // For 'percentage' type the caller is responsible for applying the %.
-      // We return the raw value in both cases; the cubit already treats the
-      // returned int as the discount to subtract from the total.
       return discountType == 'percentage' ? discountAmount : discountAmount;
     } on PostgrestException {
       return 0;
@@ -118,10 +114,7 @@ class SupabasePaymentDatasource implements PaymentDatasource {
           'trip_id': checkoutData.tripId,
           'route': checkoutData.route,
           'seat': checkoutData.selectedSeat,
-          // Merchant credentials are deliberately NOT sent. Each office collects its
-          // own money, and the Edge Function resolves that office's integration and
-          // iframe ids from the booking with the service-role key. A client-supplied
-          // integration id would let a rider route the payment to any merchant.
+          
           'customer': {
             'email': user?.email,
             'name':

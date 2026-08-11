@@ -16,11 +16,6 @@ import '../widgets/captain_gps_health_pill.dart';
 import '../widgets/map/captain_trip_map.dart';
 import '../widgets/panel/captain_next_pickup_sheet.dart';
 
-/// The captain's dedicated Active Trip Map: their live position, the route, the
-/// stops, and the pickup sequence with the boarding actions. The trip-execution
-/// screen beneath keeps the start/complete controls and keeps publishing the
-/// position that feeds the client — this screen adds the visual and the pickup
-/// flow, and writes nothing to `trip_live_locations` itself.
 class CaptainTripMapPage extends StatelessWidget {
   const CaptainTripMapPage({super.key, required this.trip});
 
@@ -44,8 +39,6 @@ class _CaptainTripMapView extends StatelessWidget {
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
     final panelMaxHeight = size.height * 0.52;
-    // Camera padding under the panel — an estimate is fine, it only frames the
-    // route on load; the follow camera keeps the vehicle centred regardless.
     final bottomInset = size.height * 0.4;
     final route = _routePoints(trip);
 
@@ -125,8 +118,6 @@ class _CaptainTripMapView extends StatelessWidget {
   }
 }
 
-/// A floating back control and trip title over the map, so the map runs full
-/// height instead of losing a strip to an app bar.
 class _TopBar extends StatelessWidget {
   const _TopBar({required this.title});
 
@@ -198,9 +189,6 @@ class _RoundButton extends StatelessWidget {
         child: SizedBox(
           width: 44,
           height: 44,
-          // Icons.arrow_back_rounded carries matchTextDirection, so the
-          // framework already mirrors it under RTL to point the "back" way — no
-          // manual flip (that would double-mirror it back to front).
           child: Icon(icon, color: CaptainColors.textPrimaryFor(context)),
         ),
       ),

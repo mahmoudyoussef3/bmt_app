@@ -24,12 +24,8 @@ class PassengerManifestCubit extends Cubit<PassengerManifestState> {
   StreamSubscription<void>? _subscription;
   String? _tripId;
 
-  /// The whole manifest. The view only ever sees the filtered slice, but the
-  /// tallies and the optimistic status write both need the full list.
   List<Passenger> _allPassengers = const [];
 
-  /// Live view filters. They sit on the cubit so the realtime watch below can
-  /// push a fresh manifest without resetting what the captain is looking at.
   String _search = '';
   PassengerBoardingStatus? _statusFilter;
 
@@ -54,8 +50,6 @@ class PassengerManifestCubit extends Cubit<PassengerManifestState> {
     _emitIfLoaded();
   }
 
-  /// Tapping the active filter clears it — the chips are a toggle, not a
-  /// radio group.
   void toggleStatusFilter(PassengerBoardingStatus status) {
     _statusFilter = _statusFilter == status ? null : status;
     _emitIfLoaded();
@@ -65,18 +59,11 @@ class PassengerManifestCubit extends Cubit<PassengerManifestState> {
     required String tripPassengerId,
     required PassengerBoardingStatus status,
   }) async {
-    // Guarded on the manifest being *loaded*, not on the state being exactly
-    // `PassengerManifestLoaded`: a previous failed write leaves
-    // `PassengerManifestUpdateError` on top of a perfectly good manifest, and
-    // testing for the concrete type there meant one failure silently froze
-    // every subsequent status change until a realtime refresh happened to
-    // land.
     if (state is PassengerManifestLoading || state is PassengerManifestError) {
       return;
     }
     final rollback = _allPassengers;
 
-    // Optimistic: reflect the tap immediately, reconcile with the server after.
     _allPassengers = [
       for (final p in _allPassengers)
         if (p.id == tripPassengerId) p.copyWith(status: status) else p,
@@ -100,8 +87,6 @@ class PassengerManifestCubit extends Cubit<PassengerManifestState> {
     }
   }
 
-  /// Strips Dart's `Exception: ` prefix so a captain reading a snackbar at a
-  /// boarding door sees the message, not the wrapper type.
   String _readableError(Object error) =>
       error.toString().replaceFirst(RegExp(r'^Exception: ?'), '');
 
@@ -113,13 +98,9 @@ class PassengerManifestCubit extends Cubit<PassengerManifestState> {
       if (isClosed) return;
       _allPassengers = passengers;
       _emitLoaded();
-    } catch (_) {
-      // A dropped realtime refresh keeps the current manifest on screen.
-    }
+    } catch (_) {}
   }
 
-  /// Re-emits only while a manifest is on screen, so a filter tap can't
-  /// resurrect a list over a loading or error view.
   void _emitIfLoaded() {
     if (state is PassengerManifestLoading || state is PassengerManifestError) {
       return;
@@ -156,8 +137,6 @@ class PassengerManifestCubit extends Cubit<PassengerManifestState> {
         p.pickupPoint.toLowerCase().contains(query);
   }
 
-  /// One pass over the manifest instead of one pass per status — the view
-  /// previously re-scanned the whole list four times on every keystroke.
   PassengerCounts _counts() {
     var boarded = 0;
     var pending = 0;

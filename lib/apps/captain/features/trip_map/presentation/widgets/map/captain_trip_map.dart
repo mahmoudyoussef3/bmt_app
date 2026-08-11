@@ -12,10 +12,6 @@ import 'captain_map_road.dart';
 import 'captain_map_surface.dart';
 import 'captain_map_vehicle.dart';
 
-/// The captain's live map: the shared EasyWay basemap, the route on real road
-/// geometry, the ordered stops with the active pickup raised, and the captain's
-/// own interpolated vehicle. Reference and actions live in the pickup panel
-/// below; the map carries only what has to sit on the road.
 class CaptainTripMap extends StatefulWidget {
   const CaptainTripMap({
     super.key,
@@ -30,11 +26,8 @@ class CaptainTripMap extends StatefulWidget {
   final CaptainLocationFix? fix;
   final RouteProgressSnapshot? progress;
 
-  /// The active pickup stop's coordinate, drawn with a raised pin.
   final LatLng? activePickup;
 
-  /// Height of the panel covering the map's bottom, so the camera frames the
-  /// route above it and the chrome rides over it.
   final double bottomInset;
 
   @override

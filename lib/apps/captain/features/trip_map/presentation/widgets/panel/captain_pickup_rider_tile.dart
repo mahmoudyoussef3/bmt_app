@@ -7,9 +7,6 @@ import 'package:bmt_app/apps/captain/features/passenger_manifest/domain/entities
 
 import '../../../domain/entities/pickup_plan.dart';
 
-/// One rider under a pickup stop, with the boarding actions valid for their
-/// current state — the captain can only make the transitions the manifest
-/// allows, so an already-boarded rider is never offered "board" again.
 class CaptainPickupRiderTile extends StatelessWidget {
   const CaptainPickupRiderTile({
     super.key,
@@ -64,8 +61,7 @@ class CaptainPickupRiderTile extends StatelessWidget {
                   ).copyWith(fontWeight: FontWeight.w800),
                 ),
               ),
-              if (rider.seat.trim().isNotEmpty)
-                _SeatChip(seat: rider.seat),
+              if (rider.seat.trim().isNotEmpty) _SeatChip(seat: rider.seat),
             ],
           ),
           const SizedBox(height: CaptainDesignTokens.s12),
@@ -125,7 +121,9 @@ class _ResolvedRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final label = rider.hasBoarded ? 'صعد إلى المركبة' : 'مُسجّل كغائب';
-    final color = rider.hasBoarded ? CaptainColors.success : CaptainColors.error;
+    final color = rider.hasBoarded
+        ? CaptainColors.success
+        : CaptainColors.error;
     return Row(
       children: [
         Expanded(

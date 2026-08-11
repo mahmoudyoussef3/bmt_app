@@ -164,10 +164,7 @@ class BookingVerificationStatusCard extends StatelessWidget {
       );
     }
     return _StatusPhase(
-      // The pending phase used Material's own `orangeAccent`/`deepOrange`/
-      // `orange` — the only place in the client app reaching into the stock
-      // palette, and a visibly different orange from the amber every other
-      // "awaiting action" surface uses.
+      
       gradient: const [
         ClientColors.journeyAmber,
         ClientColors.journeyAmberStrong,

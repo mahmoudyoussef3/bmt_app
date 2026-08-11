@@ -6,15 +6,6 @@ import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 
 import '../../domain/entities/captain_day_summary.dart';
 
-/// The captain's day in one line: trips, active, passengers — plus how far
-/// along boarding is overall.
-///
-/// Deliberately *not* a card. This was a bordered panel of three stat columns
-/// separated by vertical rules, which is the KPI widget every web admin console
-/// ships — and it made the home screen read as a dashboard more than anything
-/// else on it. These numbers are context for the trip list below, not a report,
-/// so they now sit directly on the page background under a hairline: present
-/// when the captain wants them, silent when they don't.
 class AssignedTripsStatsStrip extends StatelessWidget {
   const AssignedTripsStatsStrip({super.key, required this.summary});
 
@@ -54,7 +45,6 @@ class AssignedTripsStatsStrip extends StatelessWidget {
   }
 }
 
-/// One number and what it counts, stated inline rather than stacked in a tile.
 class _Stat extends StatelessWidget {
   const _Stat({
     required this.icon,
@@ -67,8 +57,6 @@ class _Stat extends StatelessWidget {
   final String value;
   final String label;
 
-  /// Set only when the number itself is worth noticing — an active trip is,
-  /// a total is not. Everything else stays in the page's quiet register.
   final Color? color;
 
   @override
@@ -110,8 +98,6 @@ class _Stat extends StatelessWidget {
   }
 }
 
-/// How far along the whole day's boarding is — a hairline-thin bar, because it
-/// is a background fact and not the thing the captain came here to do.
 class _BoardingLine extends StatelessWidget {
   const _BoardingLine({required this.summary});
 

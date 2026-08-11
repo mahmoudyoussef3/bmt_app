@@ -35,7 +35,7 @@ class CommunicationCubit extends Cubit<CommunicationState> {
       if (isClosed) return;
       emit(current.copyWith(conversations: conversations));
     } catch (_) {
-      // Keep showing the list already on screen.
+      
     }
   }
 

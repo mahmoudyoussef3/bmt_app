@@ -148,8 +148,7 @@ class SupabaseBookingsDatasource implements BookingsDatasource {
 
   @override
   Stream<List<OperationBookingModel>> watchBookings() {
-    // The realtime stream only carries base-table rows, so every change
-    // triggers an enriched re-read to keep joined trip/package data current.
+    
     return _client
         .from('operation_bookings')
         .stream(primaryKey: ['id'])
@@ -166,8 +165,7 @@ class SupabaseBookingsDatasource implements BookingsDatasource {
   }
 
   Exception _handleError(dynamic error) {
-    // `bookings` is trigger-gated on operation_bookings, and reassignment runs
-    // through office_reassign_booking, which the same gate covers.
+    
     LicensingGuard.check(error);
 
     if (error is PostgrestException) {

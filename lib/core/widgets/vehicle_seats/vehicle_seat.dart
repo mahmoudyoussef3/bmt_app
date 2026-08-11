@@ -43,16 +43,13 @@ class VehicleSeat extends StatelessWidget {
     );
     final accent = seat.accent;
     final isSelected = seat.state == SeatViewState.selected;
-    // Only `disabled` fades. An occupied seat is real inventory and stays at
-    // full strength — fading it would say "not there" when it means "taken".
+    
     final isDimmed = seat.state == SeatViewState.disabled;
 
     final border = accent ?? tones.border;
     final glyph = seat.icon ?? _glyphFor(seat.state);
     final showDetail = size >= _detailThreshold;
 
-    // Armrests eat into the cushion's width, so the number stays centred on the
-    // seat rather than on the tile.
     final armrest = size * 0.12;
     final fontSize = (size * 0.32).clamp(9.0, 18.0);
     final glyphSize = (size * 0.22).clamp(8.0, 15.0);
@@ -64,7 +61,7 @@ class VehicleSeat extends StatelessWidget {
       height: size,
       child: Stack(
         children: [
-          // Armrests sit behind the cushion so they read as side rails.
+          
           Positioned(
             left: 0,
             top: size * 0.32,
@@ -81,8 +78,7 @@ class VehicleSeat extends StatelessWidget {
             child: DecoratedBox(
               decoration: BoxDecoration(
                 color: tones.fill,
-                // A backrest is rounder than the cushion in front of it. The
-                // asymmetry is what gives the tile a front and a back.
+                
                 borderRadius: BorderRadius.only(
                   topLeft: Radius.circular(size * 0.30),
                   topRight: Radius.circular(size * 0.30),
@@ -127,8 +123,7 @@ class VehicleSeat extends StatelessWidget {
                       ),
                     ),
                   ),
-                  // The second cue. Every state but `available` carries one, so
-                  // the map does not depend on telling five fills apart.
+                  
                   if (glyph != null)
                     Positioned(
                       bottom: size * 0.07,
@@ -282,9 +277,7 @@ class VehicleSeatFixture extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (kind == VehicleFixtureKind.driver)
-              // A steering wheel is the one glyph nobody has to decode. Material
-              // has no such icon, so it is painted — twenty lines that remove
-              // every "is that a seat or the driver?" question from the map.
+              
               CustomPaint(
                 size: Size.square(glyphSize.toDouble()),
                 painter: _SteeringWheelPainter(colors.fixtureForeground),
@@ -339,11 +332,8 @@ class _SteeringWheelPainter extends CustomPainter {
       ..strokeWidth = stroke;
     canvas.drawCircle(center, radius - stroke / 2, rim);
 
-    // Hub.
     canvas.drawCircle(center, radius * 0.22, Paint()..color = color);
 
-    // Three spokes: two lateral, one down. The arrangement everyone reads as a
-    // steering wheel rather than as a target.
     final spoke = Paint()
       ..color = color
       ..style = PaintingStyle.stroke

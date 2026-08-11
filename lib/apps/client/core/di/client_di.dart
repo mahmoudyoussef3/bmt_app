@@ -213,10 +213,9 @@ final GetIt clientGetIt = GetIt.instance;
 void registerClientDependencies() {
   _registerCoreDependencies();
   _registerAuthDependencies();
-  // Register Core Networking (Dio, Retrofit ApiService)
+  
   registerNetworkDependencies(clientGetIt);
 
-  // Register Core dependencies();
   _registerOnboardingDependencies();
   _registerHomeDependencies();
   _registerTripsDependencies();
@@ -667,8 +666,6 @@ void _registerBookingDependencies() {
     );
   }
 
-  // Route Details' commute-plans shelf. Registered here rather than with the
-  // packages feature because it is scoped to the booking route that shows it.
   if (!clientGetIt.isRegistered<RoutePackagesCubit>()) {
     clientGetIt.registerFactory<RoutePackagesCubit>(
       () => RoutePackagesCubit(clientGetIt<GetOfficePackagesUseCase>()),
@@ -924,8 +921,6 @@ void _registerPackagesDependencies() {
     );
   }
 
-  // Consumed by the offices feature's profile to list one seller's packages,
-  // so the whole packages data path stays behind a single repository.
   if (!clientGetIt.isRegistered<GetOfficePackagesUseCase>()) {
     clientGetIt.registerLazySingleton<GetOfficePackagesUseCase>(
       () => GetOfficePackagesUseCase(clientGetIt<PackagesRepository>()),
@@ -1084,7 +1079,6 @@ void _registerNotificationsDependencies() {
     );
   }
 
-  // Singleton badge cubit — always alive, drives the bell badge everywhere.
   if (!clientGetIt.isRegistered<NotificationBadgeCubit>()) {
     clientGetIt.registerLazySingleton<NotificationBadgeCubit>(
       () => NotificationBadgeCubit(clientGetIt<WatchUnreadCountUseCase>()),

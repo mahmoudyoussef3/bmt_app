@@ -13,7 +13,6 @@ class AppSpacing {
   static const double xl = AppLayout.spaceXl;
   static const double xxl = AppLayout.spaceXxl;
 
-  // Legacy aliases
   static const double xSmall = xs;
   static const double small = sm;
   static const double medium = md;

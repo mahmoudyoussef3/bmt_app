@@ -52,9 +52,7 @@ class PlatformOfficesScreen extends StatelessWidget {
             message: message,
             onRetry: () => context.read<PlatformAdminCubit>().load(),
           ),
-          // The one-time credential reveal takes over the screen: it is the only
-          // copy of the password that will ever exist, so it must not be
-          // reachable-then-lost behind a scroll position or a rebuild.
+          
           PlatformAdminOnboarded(:final result) => OnboardingCredentialsPanel(
             result: result,
             onDone: () =>
@@ -80,11 +78,7 @@ class PlatformOfficesScreen extends StatelessWidget {
               isAnalyticsLoading: isAnalyticsLoading,
               analyticsError: analyticsError,
             ),
-          // The transient action states carry the office list but no filter of
-          // their own; they are followed immediately by a `PlatformAdminLoaded`
-          // that does. Rendering the unfiltered list for that one frame would
-          // flash every office back onto a screen the operator had narrowed, so
-          // these keep showing the list they were given without re-filtering it.
+          
           PlatformAdminActionSuccess(:final offices) => _Body(
             offices: offices,
             isSubmitting: false,
@@ -139,8 +133,6 @@ class _Body extends StatelessWidget {
     final open = selection;
     if (open == null) return master;
 
-    // The office the panel is about, taken from the list so the panel has a name
-    // to show before its own fetch resolves.
     final office = offices.where((o) => o.id == open.officeId).firstOrNull;
 
     return MasterDetailLayout(
@@ -218,8 +210,7 @@ class _OfficeList extends StatelessWidget {
           ],
         ),
         const SizedBox(height: AppSpacing.medium),
-        // Describes the platform, never the current search: the header would
-        // stop being an overview if it changed with every keystroke.
+        
         PlatformOverviewPanel(
           analytics: analytics,
           offices: offices,

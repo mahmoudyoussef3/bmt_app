@@ -11,12 +11,10 @@ class ApiConstants {
   /// Replace with your actual anon key or service role key if needed for external API calls
   static String get anonKey => AppFlavorConfig.current.supabasePublishableKey;
 
-  // Timeouts
   static const Duration connectTimeout = Duration(seconds: 60);
   static const Duration receiveTimeout = Duration(seconds: 60);
   static const Duration sendTimeout = Duration(seconds: 60);
 
-  // Headers
   static const String contentType = 'application/json';
   static const String accept = 'application/json';
   static const String authorization = 'Authorization';

@@ -157,19 +157,16 @@ class TripCreationWizard extends StatefulWidget {
 }
 
 class _TripCreationWizardState extends State<TripCreationWizard> {
-  // Selected values. The vehicle is not among them — it is read off
-  // `_selectedDriver.assignedVehicle` wherever it is needed, so the two can never
-  // drift apart in this form.
+  
   OperationRoute? _selectedRoute;
   TripDriverOption? _selectedDriver;
 
-  // Schedule values
   final _dateController = TextEditingController();
   final _timeController = TextEditingController();
   final _arrivalController = TextEditingController();
-  Map<String, int> _stopWaits = {}; // stationId -> wait minutes
-  final Map<String, String> _customArrivals = {}; // stationId -> custom HH:MM
-  final Map<String, String> _customDepartures = {}; // stationId -> custom HH:MM
+  Map<String, int> _stopWaits = {}; 
+  final Map<String, String> _customArrivals = {}; 
+  final Map<String, String> _customDepartures = {}; 
 
   /// The ONE fare configured for this trip: the ticket price plus the four
   /// package tiers derived from it. Applied to every boarding -> dropoff pair
@@ -197,9 +194,7 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
       _selectedRoute = widget.routes
           .where((r) => r.id == prefill.routeId)
           .firstOrNull;
-      // Only the driver is carried over. A copied trip re-derives its vehicle from
-      // whoever that driver is paired with *now* — copying the old trip's vehicle id
-      // would recreate the very mismatch this planner exists to prevent.
+      
       _selectedDriver = widget.drivers
           .where((d) => d.id == prefill.driverId)
           .firstOrNull;
@@ -230,7 +225,6 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
     if (_selectedRoute == null) return;
     final points = _selectedRoute!.stations;
 
-    // Initialize stop wait durations (default 2 mins)
     _stopWaits = {for (var st in points) st.id: 2};
 
     _syncArrivalFromRoute();
@@ -625,8 +619,7 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
       children: [
         DropdownButtonFormField<String>(
           initialValue: _selectedRoute?.id,
-          // Route names are long and the selection column is narrow; without this the
-          // field sizes to the widest name and overflows its own decoration.
+          
           isExpanded: true,
           decoration: const InputDecoration(
             labelText: 'اختر المسار',
@@ -694,11 +687,7 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
           ),
           items: drivers.map((driver) {
             final conflict = _driverConflict(driver);
-            // Only a scheduling clash disables the option. A driver with no bus — or
-            // whose bus is off the road — stays selectable on purpose: picking them is
-            // how the operator gets the card below to explain what is wrong and offer
-            // the fix. A greyed-out row that says nothing is the error state this
-            // planner is meant to replace.
+            
             return DropdownMenuItem(
               value: driver.id,
               enabled: conflict == null,
@@ -811,8 +800,7 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
               ],
             ),
           ),
-          // Flexible, not bare: a Wrap next to an Expanded takes its full intrinsic
-          // width and overflows the card the moment the text scale grows.
+          
           Flexible(
             child: Wrap(
               alignment: WrapAlignment.end,
@@ -824,8 +812,7 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
                   label: 'سائق',
                   done: _selectedDriver != null,
                 ),
-                // Derived, not chosen — it ticks when the chosen driver brings a
-                // schedulable bus with them.
+                
                 _PlannerStatusChip(
                   label: 'سيارة',
                   done: _selectedDriver?.isSchedulable ?? false,
@@ -1055,10 +1042,6 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
         _checkingAvailability = false;
       });
 
-      // One selection to re-validate, against both halves of the resource: the driver
-      // and the bus they are paired with are committed together, so either being taken
-      // clears the pick — and the notice names which one it was, because "choose
-      // another driver" for a bus that is out is otherwise baffling.
       final chosen = _selectedDriver;
       if (chosen == null) return;
 
@@ -1181,12 +1164,11 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
     );
 
     final cubit = context.read<TripCreationCubit>();
-    // Pricing rows are expanded from `input` inside CreateTripUseCase, once
-    // the trip's route points exist to key them by.
+    
     final created = await cubit.submitTrip(input, const []);
 
     if (mounted && created != null) {
-      Navigator.of(context).pop(); // Close wizard dialog
+      Navigator.of(context).pop(); 
     }
   }
 }
@@ -1621,8 +1603,7 @@ class _AssignedVehicleCard extends StatelessWidget {
           style: text.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: AppSpacing.small),
-        // Wrap, not Row: at 1.6x text scale a fixed row of three facts is exactly
-        // where a planner panel overflows.
+        
         Wrap(
           spacing: AppSpacing.small,
           runSpacing: AppSpacing.xSmall,

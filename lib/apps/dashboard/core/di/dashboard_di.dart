@@ -74,7 +74,6 @@ import '../../features/business_overview/presentation/cubit/business_overview_cu
 import '../../features/live_ops/domain/usecases/live_ops_usecases.dart';
 import '../../features/trips/trip_management/domain/usecases/trip_management_usecases.dart';
 
-// ── Fleet Sub-modules ────────────────────────────────────────────────
 import '../../features/fleet/fleet_drivers/data/repositories/fleet_drivers_repository_impl.dart';
 import '../../features/fleet/fleet_drivers/domain/repositories/fleet_drivers_repository.dart';
 import '../../features/fleet/fleet_drivers/domain/usecases/fleet_drivers_usecases.dart';
@@ -152,7 +151,7 @@ import '../../features/subscriptions/plans/presentation/cubit/subscription_plans
 import '../../features/trips/trips_di.dart';
 import '../../features/live_ops/live_ops_di.dart';
 import '../../features/wallet/wallet_di.dart';
-// Mock vehicles removed
+
 import '../../features/tickets/data/datasources/supabase_tickets_datasource.dart';
 import '../../features/tickets/data/repositories/tickets_repository_impl.dart';
 import '../../features/tickets/domain/repositories/tickets_repository.dart';
@@ -209,16 +208,10 @@ void registerDashboardDependencies() {
     );
   }
 
-  // Registered first: office-scoped datasources are lazy singletons built before
-  // anyone signs in, so they hold this and read the office id per query.
   if (!dashboardDi.isRegistered<DashboardSession>()) {
     dashboardDi.registerLazySingleton<DashboardSession>(DashboardSession.new);
   }
 
-  // The third axis of `role ∧ entitlement ∧ quota`, alongside DashboardSession
-  // and for the same reason: built before sign-in, filled at sign-in, read per
-  // query. It is a hint for the shell — every write it enables is re-checked
-  // server-side.
   if (!dashboardDi.isRegistered<EntitlementService>()) {
     dashboardDi.registerLazySingleton<EntitlementService>(
       () => EntitlementService(
@@ -241,12 +234,6 @@ void registerDashboardDependencies() {
     );
   }
 
-  // DashboardHomeCubit owns no data source of its own: it is a pure
-  // composition root over use cases every sibling feature already registers
-  // (below and via `registerTripsDependencies`, called later in this
-  // function). Registered as a factory, so resolution is deferred until the
-  // Home route actually mounts — by which point every dependency here is
-  // registered regardless of declaration order.
   if (!dashboardDi.isRegistered<DashboardHomeCubit>()) {
     dashboardDi.registerFactory(
       () => DashboardHomeCubit(
@@ -265,12 +252,6 @@ void registerDashboardDependencies() {
     );
   }
 
-  // The executive tab. Same composition-root pattern as Home above, over
-  // twelve use cases instead of ten — the two extra money feeds (refund queue,
-  // wallet position) and the live-ops snapshot. Also a factory, and for the
-  // same reason: `registerLiveOpsDependencies` and the finance block are called
-  // further down this function, so resolution has to be deferred to mount time
-  // rather than evaluated here.
   if (!dashboardDi.isRegistered<BusinessOverviewCubit>()) {
     dashboardDi.registerFactory(
       () => BusinessOverviewCubit(
@@ -312,7 +293,6 @@ void registerDashboardDependencies() {
     );
   }
 
-  // ── Fleet Drivers Module ──────────────────────────────────────────────
   if (!dashboardDi.isRegistered<FleetDriversRepository>()) {
     dashboardDi.registerLazySingleton<FleetDriversRepository>(
       () => FleetDriversRepositoryImpl(dashboardDi<FleetDatasource>()),
@@ -368,7 +348,6 @@ void registerDashboardDependencies() {
     );
   }
 
-  // ── Fleet Vehicles Module ─────────────────────────────────────────────
   if (!dashboardDi.isRegistered<FleetVehiclesRepository>()) {
     dashboardDi.registerLazySingleton<FleetVehiclesRepository>(
       () => FleetVehiclesRepositoryImpl(dashboardDi<FleetDatasource>()),
@@ -425,7 +404,6 @@ void registerDashboardDependencies() {
     );
   }
 
-  // ── Fleet Assignments Module ──────────────────────────────────────────
   if (!dashboardDi.isRegistered<FleetAssignmentsRepository>()) {
     dashboardDi.registerLazySingleton<FleetAssignmentsRepository>(
       () => FleetAssignmentsRepositoryImpl(dashboardDi<FleetDatasource>()),
@@ -492,7 +470,6 @@ void registerDashboardDependencies() {
     );
   }
 
-  // ── Fleet Documents Module ────────────────────────────────────────────
   if (!dashboardDi.isRegistered<FleetDocumentsRepository>()) {
     dashboardDi.registerLazySingleton<FleetDocumentsRepository>(
       () => FleetDocumentsRepositoryImpl(dashboardDi<FleetDatasource>()),
@@ -541,7 +518,6 @@ void registerDashboardDependencies() {
     );
   }
 
-  // ── Fleet Overview Cubit ─────────────────────────────────────────────
   if (!dashboardDi.isRegistered<FleetOverviewCubit>()) {
     dashboardDi.registerFactory(
       () => FleetOverviewCubit(
@@ -631,10 +607,6 @@ void registerDashboardDependencies() {
       () => GetReassignmentTargetsUseCase(dashboardDi<BookingsRepository>()),
     );
   }
-
-  // Mock drivers registrations removed
-
-  // Mock assignments registrations removed
 
   if (!dashboardDi.isRegistered<BookingPaymentVerificationDatasource>()) {
     dashboardDi.registerLazySingleton<BookingPaymentVerificationDatasource>(
@@ -798,8 +770,6 @@ void registerDashboardDependencies() {
     );
   }
 
-  // One per builder session: the cubit holds an in-progress draft, so a stale
-  // one must never be handed to the next route the operator opens.
   if (!dashboardDi.isRegistered<RouteBuilderCubit>()) {
     dashboardDi.registerFactory(
       () => RouteBuilderCubit(dashboardDi<GetRouteGeometryUseCase>()),
@@ -906,7 +876,6 @@ void registerDashboardDependencies() {
     );
   }
 
-  // Subscription Plans (packages) CRUD
   if (!dashboardDi.isRegistered<SubscriptionPlansDatasource>()) {
     dashboardDi.registerLazySingleton(
       () => SubscriptionPlansDatasource(
@@ -964,8 +933,6 @@ void registerDashboardDependencies() {
   registerTripsDependencies(dashboardDi);
   registerLiveOpsDependencies(dashboardDi);
   registerWalletDependencies(dashboardDi);
-
-  // Mock vehicles registrations removed
 
   if (!dashboardDi.isRegistered<SupabaseTicketsDatasource>()) {
     dashboardDi.registerLazySingleton<SupabaseTicketsDatasource>(
@@ -1041,7 +1008,6 @@ void registerDashboardDependencies() {
     );
   }
 
-  // Finance Feature Registration
   if (!dashboardDi.isRegistered<FinanceDatasource>()) {
     dashboardDi.registerLazySingleton<FinanceDatasource>(
       () => SupabaseFinanceDatasource(dashboardDi<SupabaseClient>()),
@@ -1102,7 +1068,6 @@ void registerDashboardDependencies() {
     );
   }
 
-  // Owner / Revenue Overview Registration
   if (!dashboardDi.isRegistered<OwnerOverviewDatasource>()) {
     dashboardDi.registerLazySingleton(
       () => OwnerOverviewDatasource(dashboardDi<SupabaseClient>()),
@@ -1126,7 +1091,6 @@ void registerDashboardDependencies() {
     );
   }
 
-  // Reports Feature Registration
   if (!dashboardDi.isRegistered<ReportsDatasource>()) {
     dashboardDi.registerLazySingleton<ReportsDatasource>(
       () => SupabaseReportsDatasource(dashboardDi<SupabaseClient>()),
@@ -1217,7 +1181,6 @@ void registerDashboardDependencies() {
     );
   }
 
-  // ── Referrals ────────────────────────────────────────────────────────
   if (!dashboardDi.isRegistered<ReferralDatasource>()) {
     dashboardDi.registerLazySingleton<ReferralDatasource>(
       () => SupabaseReferralDatasource(dashboardDi<SupabaseClient>()),
@@ -1284,9 +1247,7 @@ void registerDashboardDependencies() {
 void _registerPlatformAdminDependencies() {
   if (!dashboardDi.isRegistered<PlatformAdminDatasource>()) {
     dashboardDi.registerLazySingleton<PlatformAdminDatasource>(
-      // No DashboardSession here, unlike every other datasource: these calls act
-      // across offices, and the RPCs resolve the caller's platform-admin
-      // identity server-side. There is nothing office-scoped to inject.
+      
       () => SupabasePlatformAdminDatasource(dashboardDi<SupabaseClient>()),
     );
   }
@@ -1496,8 +1457,7 @@ void _registerNotificationsDispatchDependencies() {
       () => DashboardAuthDatasource(dashboardDi<SupabaseClient>()),
     );
   }
-  // Singleton, not a factory: the auth gate and the sign-out button must act on the
-  // same instance, and the session it owns is read by every office-scoped datasource.
+  
   if (!dashboardDi.isRegistered<DashboardAuthCubit>()) {
     dashboardDi.registerLazySingleton<DashboardAuthCubit>(
       () => DashboardAuthCubit(
@@ -1564,10 +1524,6 @@ void _registerOperationalAlertsDependencies() {
     );
   }
 
-  // ── Platform licensing (platform admins only) ────────────────────────────
-  // Registered unconditionally: the RPCs behind it re-check is_platform_admin()
-  // server-side, so a non-admin resolving the cubit reaches a screen whose
-  // every call is refused rather than a hole.
   if (!dashboardDi.isRegistered<PlatformLicensingDatasource>()) {
     dashboardDi.registerLazySingleton<PlatformLicensingDatasource>(
       () => SupabasePlatformLicensingDatasource(dashboardDi<SupabaseClient>()),
@@ -1613,8 +1569,6 @@ void _registerOperationalAlertsDependencies() {
     });
   }
 
-  // The office's own view of what it bought. No datasource of its own: it reads
-  // the resolved document the shell already holds, plus one invoice query.
   if (!dashboardDi.isRegistered<OfficeBillingCubit>()) {
     dashboardDi.registerFactory<OfficeBillingCubit>(
       () => OfficeBillingCubit(

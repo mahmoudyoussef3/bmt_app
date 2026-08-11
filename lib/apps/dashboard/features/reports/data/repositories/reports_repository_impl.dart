@@ -20,14 +20,12 @@ class ReportsRepositoryImpl implements ReportsRepository {
     ReportFilter filter,
     String format,
   ) async {
-    // 1. Get real data
+    
     final data = await _datasource.getReportData(type, filter);
 
-    // 2. Generate file bytes
     final service = ReportExportService();
     final bytes = await service.generateExportBytes(data, type, format);
 
-    // 3. Define file name and mime type
     final dateStr = DateTime.now().toString().substring(0, 10);
     final ext = format.toLowerCase();
     final fileName = 'تقرير_${type.label}_$dateStr';
@@ -43,7 +41,6 @@ class ReportsRepositoryImpl implements ReportsRepository {
       mimeType = MimeType.other;
     }
 
-    // 4. Save file
     await FileSaver.instance.saveFile(
       name: fileName,
       bytes: bytes,

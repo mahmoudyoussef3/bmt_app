@@ -23,7 +23,7 @@ class ReportsLoaded extends ReportsState {
   final List<String> availableVehicles;
   final List<String> availablePackages;
 
-  final String? exportingFormat; // pdf, excel, csv
+  final String? exportingFormat; 
   final String? exportedFileName;
   final bool actionLoading;
 

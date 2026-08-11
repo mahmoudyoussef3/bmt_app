@@ -43,9 +43,7 @@ class TripSeatMap extends StatelessWidget {
       seats: [
         for (final seat in ordered)
           VehicleSeatData(
-            // `trip_seats` rows reach this screen without their id, so the
-            // grid coordinate is the identity — it is unique per cabin and
-            // stable across rebuilds, which is all a widget key needs.
+            
             id: '${seat.row}-${seat.column}',
             label: seat.displayLabel,
             state: switch (seat.state) {

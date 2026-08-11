@@ -27,9 +27,6 @@ abstract final class TrackingTripAssembler {
     );
     final vehicleFix = TrackingPointModel.fromNullableRow(locationRow);
 
-    // Sorted once, here: the stops and the rider's resolved indices must be
-    // built against the same ordering or the rider's badges land on the
-    // wrong stops.
     final ordered = [...pointRows]..sort(
       (a, b) => _order(a).compareTo(_order(b)),
     );

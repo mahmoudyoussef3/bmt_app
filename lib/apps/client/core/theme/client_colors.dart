@@ -3,8 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/core/theme/app_dark_colors.dart';
 
 abstract final class ClientColors {
-  // ── Brand Blue Palette ─────────────────────────────────────────────────────
-
+  
   /// Primary EWT brand color.
   /// Use for primary actions, active navigation, selected states, links,
   /// focused controls, and important interactive elements.
@@ -44,8 +43,6 @@ abstract final class ClientColors {
   /// EWT should remain visually centered around the primary blue palette.
   static const Color accent = Color(0xFF60A5FA);
 
-  // ── Dark Brand Colors ───────────────────────────────────────────────────────
-
   static const Color darkPrimary = AppDarkColors.primaryAccent;
 
   /// Dark-mode fill used for primary buttons and solid interactive surfaces.
@@ -60,8 +57,6 @@ abstract final class ClientColors {
 
   /// Keep the dark theme fully aligned with the EWT blue identity.
   static const Color darkAccent = AppDarkColors.primaryAccent;
-
-  // ── Gradients ───────────────────────────────────────────────────────────────
 
   /// Subtle EWT blue gradient.
   ///
@@ -95,21 +90,6 @@ abstract final class ClientColors {
     end: Alignment.bottomRight,
   );
 
-  // ── Journey Status ──────────────────────────────────────────────────────────
-  //
-  // EWT uses Blue as the primary journey identity.
-  //
-  // Blue      → Active / Upcoming
-  // Amber     → Departing soon / Attention needed
-  // Red       → Cancelled / Error
-  // Slate     → Completed / Historical
-  //
-  // Avoid green and purple status colors.
-  // Status colors should communicate meaning without competing with the
-  // EWT brand identity.
-
-  // ── Active ──────────────────────────────────────────────────────────────────
-
   /// Active trip — EWT primary blue.
   static const Color journeyCyan = Color(0xFF2563EB);
 
@@ -121,8 +101,6 @@ abstract final class ClientColors {
 
   /// Strong blue used for active trip indicators and filled surfaces.
   static const Color journeyCyanStrong = Color(0xFF1D4ED8);
-
-  // ── Departing / Attention ───────────────────────────────────────────────────
 
   /// Amber is reserved for attention-required states.
   static const Color journeyAmber = Color(0xFFD97706);
@@ -136,8 +114,6 @@ abstract final class ClientColors {
   /// Strong amber for emphasis.
   static const Color journeyAmberStrong = Color(0xFFB45309);
 
-  // ── Cancelled / Error ───────────────────────────────────────────────────────
-
   /// Red is reserved for errors, cancellation, and destructive states.
   static const Color journeyRed = Color(0xFFDC2626);
 
@@ -150,8 +126,6 @@ abstract final class ClientColors {
   /// Strong red for destructive actions and important error indicators.
   static const Color journeyRedStrong = Color(0xFFB91C1C);
 
-  // ── Completed / Inactive ────────────────────────────────────────────────────
-
   /// Neutral slate for completed trips and historical states.
   static const Color journeySlate = Color(0xFF64748B);
 
@@ -161,22 +135,10 @@ abstract final class ClientColors {
   /// Text and icon color on neutral surfaces.
   static const Color onJourneySlate = Color(0xFF334155);
 
-  // ── Rating ──────────────────────────────────────────────────────────────────
-
   /// Gold is reserved exclusively for ratings and stars.
   ///
   /// Do not use this color for warnings.
   static const Color rating = Color(0xFFF59E0B);
-
-  // ── Deprecated Purple Compatibility ────────────────────────────────────────
-  //
-  // Purple is intentionally removed from the EWT visual language.
-  //
-  // These aliases remain only to prevent breaking existing references.
-  // New UI code should NOT use these colors.
-  //
-  // If there are no existing usages, these constants can be removed safely
-  // after a full project-wide reference audit.
 
   @Deprecated('Purple is no longer part of the EWT color system.')
   static const Color journeyPurple = primary;
@@ -187,15 +149,6 @@ abstract final class ClientColors {
   @Deprecated('Purple is no longer part of the EWT color system.')
   static const Color onJourneyPurple = onPrimaryContainer;
 
-  // ── Seat Map ────────────────────────────────────────────────────────────────
-  //
-  // Seat states use the EWT blue palette.
-  //
-  // Available  → Soft Blue
-  // Selected   → Primary Blue
-  // Occupied   → Neutral Slate
-  // Unavailable → Strong Neutral
-
   /// Available seat background.
   static const Color seatAvailable = Color(0xFFEFF6FF);
 
@@ -205,15 +158,11 @@ abstract final class ClientColors {
   /// Text and icon color for available seats.
   static const Color onSeatAvailable = Color(0xFF1D4ED8);
 
-  // ── Dark Seat Map ───────────────────────────────────────────────────────────
-
   static const Color _darkSeatAvailable = Color(0xFF172554);
 
   static const Color _darkSeatAvailableBorder = AppDarkColors.primaryContainer;
 
   static const Color _darkOnSeatAvailable = AppDarkColors.primaryAccent;
-
-  // ── Text ────────────────────────────────────────────────────────────────────
 
   /// Main text color.
   static const Color textPrimary = Color(0xFF0F172A);
@@ -229,8 +178,6 @@ abstract final class ClientColors {
 
   /// Text displayed on dark or primary surfaces.
   static const Color textInverse = Color(0xFFFFFFFF);
-
-  // ── Surfaces ────────────────────────────────────────────────────────────────
 
   /// Main page background.
   ///
@@ -255,8 +202,6 @@ abstract final class ClientColors {
   /// Strong border for inputs and emphasized separators.
   static const Color borderStrong = Color(0xFFCBD5E1);
 
-  // ── Dark-mode overrides ─────────────────────────────────────────────────────
-
   static const Color _darkBackground = AppDarkColors.background;
 
   static const Color _darkSurface = AppDarkColors.surface;
@@ -276,8 +221,6 @@ abstract final class ClientColors {
   static const Color _darkTextSecondary = AppDarkColors.onSurfaceMuted;
 
   static const Color _darkTextTertiary = AppDarkColors.onSurfaceFaint;
-
-  // ── Theme-aware Accessors ──────────────────────────────────────────────────
 
   static Color surfaceFor(BuildContext context) =>
       _isDark(context) ? _darkSurface : surface;
@@ -310,8 +253,6 @@ abstract final class ClientColors {
   static Color heroTopFor(BuildContext context) =>
       _isDark(context) ? AppDarkColors.background : const Color(0xFF1E40AF);
 
-  // ── Theme-aware Text ────────────────────────────────────────────────────────
-
   static Color textPrimaryFor(BuildContext context) =>
       _isDark(context) ? _darkTextPrimary : textPrimary;
 
@@ -320,8 +261,6 @@ abstract final class ClientColors {
 
   static Color textTertiaryFor(BuildContext context) =>
       _isDark(context) ? _darkTextTertiary : textTertiary;
-
-  // ── Theme-aware Brand Blue ──────────────────────────────────────────────────
 
   /// Brand blue used as text, icon, border, focus ring, or indicator.
   static Color primaryFor(BuildContext context) =>
@@ -339,8 +278,6 @@ abstract final class ClientColors {
   static Color onPrimaryContainerFor(BuildContext context) =>
       _isDark(context) ? AppDarkColors.onPrimaryContainer : onPrimaryContainer;
 
-  // ── Theme-aware Seat Map ────────────────────────────────────────────────────
-
   static Color seatAvailableFor(BuildContext context) =>
       _isDark(context) ? _darkSeatAvailable : seatAvailable;
 
@@ -349,8 +286,6 @@ abstract final class ClientColors {
 
   static Color onSeatAvailableFor(BuildContext context) =>
       _isDark(context) ? _darkOnSeatAvailable : onSeatAvailable;
-
-  // ── Shadows ─────────────────────────────────────────────────────────────────
 
   static Color shadowFor(BuildContext context) =>
       _isDark(context) ? AppDarkColors.shadow : const Color(0xFF0F172A);
@@ -361,8 +296,6 @@ abstract final class ClientColors {
   /// between surfaces.
   static double shadowAlphaScaleFor(BuildContext context) =>
       _isDark(context) ? 5.0 : 1.0;
-
-  // ── Journey Status — Theme-aware ────────────────────────────────────────────
 
   /// Active trip.
   ///
@@ -388,8 +321,6 @@ abstract final class ClientColors {
   @Deprecated('Purple is no longer part of the EWT color system.')
   static Color journeyPurpleFor(BuildContext context) => primaryFor(context);
 
-  // ── Journey Status Containers ───────────────────────────────────────────────
-
   static Color journeyCyanLightFor(BuildContext context) =>
       _isDark(context) ? AppDarkColors.primaryContainer : journeyCyanLight;
 
@@ -406,8 +337,6 @@ abstract final class ClientColors {
   @Deprecated('Purple is no longer part of the EWT color system.')
   static Color journeyPurpleLightFor(BuildContext context) =>
       primaryContainerFor(context);
-
-  // ── Journey Status Text ─────────────────────────────────────────────────────
 
   static Color onJourneyCyanFor(BuildContext context) =>
       _isDark(context) ? AppDarkColors.onPrimaryContainer : onJourneyCyan;
@@ -426,46 +355,38 @@ abstract final class ClientColors {
   static Color onJourneyPurpleFor(BuildContext context) =>
       onPrimaryContainerFor(context);
 
-  // ── Rating ──────────────────────────────────────────────────────────────────
-
   static Color ratingFor(BuildContext context) =>
       _isDark(context) ? AppDarkColors.rating : rating;
-
-  // ── Journey Badges ──────────────────────────────────────────────────────────
 
   static ({Color bg, Color fg, Color label}) journeyBadge(
     ClientJourneyStatus status,
   ) {
     return switch (status) {
-      // Active is EWT Blue.
+      
       ClientJourneyStatus.active => (
         bg: journeyCyanLight,
         fg: onJourneyCyan,
         label: journeyCyan,
       ),
 
-      // Upcoming is also Blue, but uses the standard brand palette.
       ClientJourneyStatus.upcoming => (
         bg: primaryLight,
         fg: onPrimaryContainer,
         label: primary,
       ),
 
-      // Amber is reserved for attention-required states.
       ClientJourneyStatus.departing => (
         bg: journeyAmberLight,
         fg: onJourneyAmber,
         label: journeyAmber,
       ),
 
-      // Slate represents completed historical states.
       ClientJourneyStatus.completed => (
         bg: journeySlateLight,
         fg: onJourneySlate,
         label: journeySlate,
       ),
 
-      // Red represents cancellation and errors.
       ClientJourneyStatus.cancelled => (
         bg: journeyRedLight,
         fg: onJourneyRed,
@@ -483,35 +404,31 @@ abstract final class ClientColors {
     }
 
     return switch (status) {
-      // Active — Blue
+      
       ClientJourneyStatus.active => (
         bg: AppDarkColors.primaryContainer,
         fg: AppDarkColors.onPrimaryContainer,
         label: AppDarkColors.primaryAccent,
       ),
 
-      // Upcoming — Blue
       ClientJourneyStatus.upcoming => (
         bg: AppDarkColors.primaryContainer,
         fg: AppDarkColors.onPrimaryContainer,
         label: AppDarkColors.primaryAccent,
       ),
 
-      // Departing — Amber
       ClientJourneyStatus.departing => (
         bg: AppDarkColors.warningContainer,
         fg: AppDarkColors.onWarningContainer,
         label: AppDarkColors.warningInk,
       ),
 
-      // Completed — Neutral
       ClientJourneyStatus.completed => (
         bg: AppDarkColors.neutralContainer,
         fg: AppDarkColors.onNeutralContainer,
         label: AppDarkColors.onSurfaceMuted,
       ),
 
-      // Cancelled — Red
       ClientJourneyStatus.cancelled => (
         bg: AppDarkColors.dangerContainer,
         fg: AppDarkColors.onDangerContainer,
@@ -519,8 +436,6 @@ abstract final class ClientColors {
       ),
     };
   }
-
-  // ── Private ─────────────────────────────────────────────────────────────────
 
   static bool _isDark(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark;

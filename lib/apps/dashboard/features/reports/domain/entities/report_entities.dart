@@ -57,7 +57,7 @@ class TripReportRow {
   final String driverName;
   final String vehiclePlate;
   final int passengerCount;
-  final double occupancyRate; // 0.0 to 1.0
+  final double occupancyRate; 
   final double revenue;
   final DateTime date;
   final String status;
@@ -138,7 +138,7 @@ class VehicleReportRow {
   final String plateNumber;
   final String model;
   final int completedTrips;
-  final double fuelConsumption; // L/100km
+  final double fuelConsumption; 
   final String maintenanceStatus;
   final String status;
 
@@ -173,7 +173,7 @@ class ComplaintReportRow {
   final String category;
   final int totalComplaints;
   final int resolvedComplaints;
-  final double avgResolutionTime; // hours
+  final double avgResolutionTime; 
   final int pendingComplaints;
 
   const ComplaintReportRow({
@@ -187,9 +187,9 @@ class ComplaintReportRow {
 
 class ReportData {
   final Map<String, String> kpis;
-  final List<dynamic> rows; // Will contain row types matching selection
-  final List<MapEntry<String, double>> trends; // Trend data points for graphing
-  final List<MapEntry<String, double>> occupancyTrends; // Occupancy % by period
+  final List<dynamic> rows; 
+  final List<MapEntry<String, double>> trends; 
+  final List<MapEntry<String, double>> occupancyTrends; 
 
   const ReportData({
     required this.kpis,

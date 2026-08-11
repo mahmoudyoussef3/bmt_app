@@ -7,16 +7,6 @@ import 'package:bmt_app/apps/captain/core/widgets/captain_section_label.dart';
 
 import '../../domain/entities/driver_profile.dart';
 
-/// The captain's real verification standing — license expiry and account
-/// status, both already recorded on `drivers` and already fetched by
-/// `DriverProfileDataSource`. No fabricated "verified" badge: an expired or
-/// soon-to-expire license shows exactly that, since a captain who can't
-/// legally drive needs to know before it becomes a problem on the road.
-///
-/// Each standing is one list row that carries its own colour: the icon and
-/// headline take the status hue, and the reason sits under them as detail. The
-/// old shape stacked two tinted panels *inside* a titled card, so a healthy
-/// profile showed three nested rectangles to say "everything is fine".
 class VerificationCard extends StatelessWidget {
   const VerificationCard({super.key, required this.profile});
 

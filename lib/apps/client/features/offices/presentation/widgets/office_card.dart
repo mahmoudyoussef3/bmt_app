@@ -93,9 +93,7 @@ class _Masthead extends StatelessWidget {
                   ),
                 ),
               ],
-              // Hung off the logo's column rather than the card's full width:
-              // an operator with no blurb would otherwise leave a band of dead
-              // space beside its crest.
+              
               if (office.serviceAreas.isNotEmpty) ...[
                 const SizedBox(height: ClientSpacing.sm),
                 OfficeServiceAreas(areas: office.serviceAreas, limit: 3),

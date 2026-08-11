@@ -28,8 +28,6 @@ class VehicleSeatLegend extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = palette ?? VehicleSeatPalette.of(context);
 
-    // Fixed order, so the legend does not reshuffle as seats change state
-    // underneath the rider.
     final ordered = [
       for (final state in SeatViewState.values)
         if (states.contains(state)) state,

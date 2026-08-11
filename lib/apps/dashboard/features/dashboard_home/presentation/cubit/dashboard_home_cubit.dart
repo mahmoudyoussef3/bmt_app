@@ -59,8 +59,7 @@ class DashboardHomeCubit extends Cubit<DashboardHomeState> {
   Future<void> load() async {
     emit(const DashboardHomeLoading());
     try {
-      // Started together (not awaited one by one) so the 10 independent
-      // fetches run concurrently instead of serially.
+      
       final tripsFuture = _getTrips();
       final bookingsFuture = _getBookings();
       final paymentVerificationsFuture = _getPaymentVerifications();

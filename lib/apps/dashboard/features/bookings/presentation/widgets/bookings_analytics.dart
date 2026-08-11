@@ -182,8 +182,7 @@ class BookingsAnalytics extends StatelessWidget {
           ChartDatum(
             label: status.label,
             value: counts[status]!.toDouble(),
-            // Same colour the status wears on every chip and KPI tile, instead
-            // of a second private palette that disagreed with them.
+            
             color: bookingStatusStyle(status).resolve(context).accent,
           ),
     ];

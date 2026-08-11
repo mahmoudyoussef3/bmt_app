@@ -39,9 +39,7 @@ class OfficeProfileCubit extends Cubit<OfficeProfileState> {
       emit(OfficeProfileActionSuccess('تم حفظ بيانات المكتب', updated));
       emit(OfficeProfileLoaded(updated));
     } catch (error) {
-      // A failure state carrying the last good profile, not OfficeProfileError:
-      // the form is still on screen with the operator's edits in it, and a
-      // full-screen error would discard them.
+      
       emit(OfficeProfileActionFailure(_message(error), current));
       emit(OfficeProfileLoaded(current));
     }

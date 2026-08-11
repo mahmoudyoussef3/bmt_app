@@ -158,8 +158,6 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
   ) {
     final cubit = context.read<FleetDriversCubit>();
 
-    // The form is now a Dialog, launched via _showDriverForm()
-
     final sorted = _sortDrivers(
       _applyOperationsFilter(state.filteredDrivers, workspace),
     );
@@ -168,7 +166,6 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
       builder: (context, constraints) {
         final isSplit = constraints.maxWidth >= AppLayout.breakpointTablet;
 
-        // Narrow screens push a full-screen detail view (legacy behaviour).
         if (!isSplit &&
             _viewState == _DriversViewState.details &&
             _activeDriver != null) {
@@ -195,7 +192,6 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
 
         if (!isSplit || _selectedDriver == null) return master;
 
-        // Desktop: keep the list in view alongside the readiness detail pane.
         final detail = _detailsView(
           context,
           state,
@@ -411,7 +407,7 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
               await overviewCubit.loadWorkspace();
               return null;
             } catch (error) {
-              // Keep the dialog open so the user can fix the data and retry.
+              
               return error.toString().replaceAll('Exception: ', '');
             }
           },

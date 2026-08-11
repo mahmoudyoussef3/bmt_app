@@ -20,4 +20,3 @@ class TripSoftIcon extends StatelessWidget {
     );
   }
 }
-

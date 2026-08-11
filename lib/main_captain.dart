@@ -4,4 +4,3 @@ import 'package:bmt_app/core/flavors/app_flavor.dart';
 Future<void> main() {
   return bootstrapFlavorApp(AppFlavor.captain);
 }
-

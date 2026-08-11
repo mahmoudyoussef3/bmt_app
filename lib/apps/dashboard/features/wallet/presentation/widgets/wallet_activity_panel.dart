@@ -101,8 +101,7 @@ class WalletActivityPanel extends StatelessWidget {
                   Padding(
                     padding: const EdgeInsets.only(top: AppSpacing.small),
                     child: Text(
-                      // Say so rather than truncate silently: an operator
-                      // reconciling a figure must know the list is partial.
+                      
                       'يتم عرض أحدث ${WalletFormat.count(page.rows.length)} حركة '
                       'من ${WalletFormat.count(page.total)}. ضيّق الفلاتر للوصول لحركات أقدم.',
                       textAlign: TextAlign.center,
@@ -183,7 +182,7 @@ class _FilterBar extends StatelessWidget {
               const _Divider(),
               FilterChip(
                 label: const Text('بها تصحيح'),
-                // The first thing anyone investigating a discrepancy wants.
+                
                 tooltip: 'العمليات المعكوسة والعمليات العكسية فقط',
                 selected: filters.hasReversal == true,
                 selectedColor: palette.warning.withAlpha(40),
@@ -238,8 +237,6 @@ class _DateRangeRow extends StatelessWidget {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
 
-    // Preset chips rather than a date picker first: "this week" is what an
-    // operator actually asks for, and the custom range is one tap further.
     final presets = <(String, DateTime?)>[
       ('الكل', null),
       ('اليوم', today),

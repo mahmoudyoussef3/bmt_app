@@ -79,8 +79,7 @@ class OfficeJoinCodeCard extends StatelessWidget {
                   ),
                   child: Text(
                     profile.joinCode,
-                    // Read aloud and typed by hand, so it is spaced and
-                    // monospaced rather than set in the body font.
+                    
                     style: Theme.of(context).textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.bold,
                       letterSpacing: 4,

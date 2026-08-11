@@ -39,9 +39,6 @@ class TrackingProgressController {
       _engine!.updatePhase(phaseFor(data.tripState));
     }
 
-    // The captain's confirmed station arrivals are the authoritative floor —
-    // seed them before layering GPS inference on top, exactly as the Dashboard
-    // does, so the two apps can never disagree about which stops were reached.
     final floor = stationArrivalFloor(
       arrivalEventCount: data.arrivalEventCount,
       routePointCount: data.stops.length,

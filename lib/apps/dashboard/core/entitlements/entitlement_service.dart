@@ -56,8 +56,7 @@ class EntitlementService extends ChangeNotifier {
         notifyListeners();
       }
     } catch (_) {
-      // Deliberately swallowed. See the class doc: failing open is the correct
-      // default for a hint, and the server refuses anything this wrongly allows.
+      
     }
     _watch();
   }
@@ -86,15 +85,6 @@ class EntitlementService extends ChangeNotifier {
       value: officeId,
     );
 
-    // One channel, four tables. Realtime applies RLS per subscriber, so the two
-    // office-scoped tables deliver only this office's rows and the two catalog
-    // tables deliver only what any office may already read (§13.3).
-    //
-    // Plan and catalog changes are unfiltered on purpose: a plan edit does not
-    // name the offices it affects, and working out whether this office is on the
-    // edited plan costs exactly the round trip that [refresh] already makes.
-    // Coalescing is [load]'s job — a burst of row events during a
-    // `platform_save_plan` joins one in-flight fetch instead of starting many.
     _channel = _client
         .channel('dashboard_entitlements_$officeId')
         .onPostgresChanges(

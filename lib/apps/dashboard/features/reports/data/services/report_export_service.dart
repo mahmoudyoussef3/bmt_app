@@ -14,9 +14,7 @@ class ReportExportService {
     ReportType type,
     String format,
   ) async {
-    // Before any bytes exist: assert export_pdf / export_excel and consume one
-    // unit of max_exports_per_month, server-side. Throws a LicensingFailure the
-    // toolbar turns into the upgrade card.
+    
     await LicensedExport.consume(format);
 
     final List<List<dynamic>> rowsAsList = _mapDataToList(data.rows, type);
@@ -34,7 +32,7 @@ class ReportExportService {
   }
 
   Uint8List _generateCsv(List<List<dynamic>> rows) {
-    // Add UTF-8 BOM for Arabic support in Excel
+    
     final List<int> utf8BOM = [0xEF, 0xBB, 0xBF];
     final String csvData = const CsvEncoder().convert(rows);
     return Uint8List.fromList([...utf8BOM, ...csvData.codeUnits]);

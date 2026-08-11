@@ -63,9 +63,7 @@ class DashboardAuthCubit extends Cubit<DashboardAuthState> {
   void _clearSession() {
     _session.clear();
     _entitlements?.clear();
-    // Collapsed-section layout is per-session by design: the next operator on
-    // this machine starts from the designed defaults instead of inheriting
-    // panels someone else folded away.
+    
     DashboardSectionStateStore.instance.clear();
   }
 
@@ -154,7 +152,7 @@ class DashboardAuthCubit extends Cubit<DashboardAuthState> {
       _startSession(context);
       emit(DashboardAuthSignedIn(context));
     } catch (_) {
-      // Keep the existing context.
+      
     }
   }
 

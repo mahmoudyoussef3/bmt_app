@@ -56,10 +56,6 @@ class TripHistoryDataSource {
     final route = row['operation_routes'] as Map<String, dynamic>? ?? {};
     final vehicle = row['vehicles'] as Map<String, dynamic>? ?? {};
     final passengers = (row['trip_passengers'] as List?) ?? [];
-    // scan_passenger_ticket writes 'confirmed' on check-in (see migration_07)
-    // — trip_passengers.status has no 'boarded' value in its check
-    // constraint. 'completed' is kept defensively; nothing currently writes
-    // it, but it would mean the same thing if something one day did.
     final boarded = passengers.where((p) {
       final s = (p as Map<String, dynamic>)['status']?.toString();
       return s == 'confirmed' || s == 'completed';

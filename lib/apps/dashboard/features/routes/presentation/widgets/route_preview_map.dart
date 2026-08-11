@@ -47,7 +47,7 @@ class RoutePreviewMap extends StatefulWidget {
 
 class _RoutePreviewMapState extends State<RoutePreviewMap>
     with SingleTickerProviderStateMixin {
-  static const _fallbackCenter = LatLng(30.0444, 31.2357); // Cairo
+  static const _fallbackCenter = LatLng(30.0444, 31.2357); 
 
   late final MapController _controller;
   late final RouteCameraAnimator _camera;

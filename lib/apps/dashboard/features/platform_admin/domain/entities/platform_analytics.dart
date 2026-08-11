@@ -68,9 +68,7 @@ class PlatformAnalytics {
     PlatformOffice office,
     PlatformOfficeMetrics? metrics,
   ) {
-    // An office with no metrics row is not a healthy office — it is one the
-    // analytics call did not cover — so it raises nothing rather than reporting
-    // zeros that would read as "quiet".
+    
     if (metrics == null) return null;
     final flags = <OfficeAttention>[];
 
@@ -86,8 +84,6 @@ class PlatformAnalytics {
       );
     }
 
-    // Nobody can sign in. Everything else about the office is moot until this
-    // is fixed, so it outranks every other flag.
     if (metrics.activeAdmins == 0) {
       add(
         AttentionSeverity.critical,
@@ -96,9 +92,6 @@ class PlatformAnalytics {
       );
     }
 
-    // Visible in the marketplace with nothing on sale. Every passenger who
-    // opens this office reaches a dead end, which costs the platform its own
-    // credibility, not just this office's sales.
     if (office.isListed && metrics.upcomingTrips == 0) {
       add(
         AttentionSeverity.critical,
@@ -124,8 +117,6 @@ class PlatformAnalytics {
       );
     }
 
-    // Traded before, silent now. The single clearest churn signal the platform
-    // has, and invisible on a card that only shows lifetime totals.
     if (metrics.isIdle) {
       final days = metrics.daysSinceLastBooking;
       add(
@@ -156,9 +147,6 @@ class PlatformAnalytics {
       );
     }
 
-    // Onboarded and never used. Only worth raising once the office has had a
-    // fair chance — a week — otherwise every newly created office would appear
-    // in the queue on the day it was created.
     final age = office.createdAt == null
         ? null
         : DateTime.now().difference(office.createdAt!).inDays;

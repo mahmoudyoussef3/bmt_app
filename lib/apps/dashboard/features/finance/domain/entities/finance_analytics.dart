@@ -155,8 +155,7 @@ class FinanceAnalytics {
   }) {
     final previousStart = period.previousStartFrom(now);
     if (previousStart == null) return null;
-    // Ends the instant before the current window opens, so the two windows can
-    // never both claim the boundary day.
+    
     final previousEnd = period
         .startFrom(now)!
         .subtract(const Duration(microseconds: 1));
@@ -221,8 +220,6 @@ class FinanceAnalytics {
           cancelled += entry.amount;
       }
 
-      // Breakdowns describe where the *kept* money came from; a reversed or
-      // never-collected row would flatter every ranking on the screen.
       if (!entry.isRealised) continue;
       final method = entry.method;
       if (method != null) {
@@ -259,12 +256,7 @@ class FinanceAnalytics {
       byClient: _rank(byClient),
       byWeekday: _weekdayRows(byWeekday),
       previous: previous,
-      // `net + refunded` is every pound the office *sold* in the window: the
-      // ledger is built from `operation_bookings.payment_amount`, so this is the
-      // fare, not the tender. That is what makes a wallet-paid rebooking count
-      // as revenue once V2 lands (§2.2). External tender is the same figure in
-      // V1 — wallet tender is never written to `booking_payments`, so the day it
-      // exists it drops out of here on its own.
+      
       statements: FinanceMoneyStatements.from(
         soldFare: net + refunded,
         externalTender: net + refunded,
@@ -273,8 +265,6 @@ class FinanceAnalytics {
       ),
     );
   }
-
-  // ── Headline figures ───────────────────────────────────────────────────────
 
   /// Every pound that reached the office in the window, reversals included.
   double get grossReceived => netRevenue + refunded;
@@ -334,8 +324,6 @@ class FinanceAnalytics {
     ];
   }
 
-  // ── Period-over-period ─────────────────────────────────────────────────────
-
   bool get hasComparison => previous != null;
 
   /// Fractional change vs the previous window, or `null` when the previous
@@ -357,8 +345,6 @@ class FinanceAnalytics {
     return (now - before) / before;
   }
 
-  // ── Export ─────────────────────────────────────────────────────────────────
-
   FinanceStatement toStatement({required DateTime generatedAt}) {
     return FinanceStatement(
       periodLabel: period.label,
@@ -373,9 +359,7 @@ class FinanceAnalytics {
           isSubtotal: true,
         ),
         FinanceStatementLine('صافي الإيراد', netRevenue, isTotal: true),
-        // The three statements travel with the export for the same reason they
-        // are on the screen: a file that reports revenue without the liability
-        // beside it lets the reader mistake money owed back for money earned.
+        
         FinanceStatementLine(
           'النقدية المحصّلة',
           statements.cash,
@@ -407,8 +391,6 @@ class FinanceAnalytics {
       entries: entries,
     );
   }
-
-  // ── Derivation helpers ─────────────────────────────────────────────────────
 
   /// A bounded window is filled edge to edge so a quiet day is a visible zero
   /// on the chart instead of the line silently skipping it. All-time keeps only

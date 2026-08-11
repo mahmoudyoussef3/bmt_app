@@ -3,17 +3,6 @@ import 'package:bmt_app/apps/captain/features/passenger_manifest/domain/entities
 
 import '../entities/pickup_plan.dart';
 
-/// Builds the [PickupPlan] for a trip from its route stops and manifest.
-///
-/// Riders board at named route stops, so a rider's pickup point is matched to a
-/// route stop by name (case- and whitespace-insensitive, the same rule the
-/// shared progress engine uses in `stopByName`). Riders whose pickup name
-/// matches no stop are still shown — grouped after the mapped stops — so a
-/// renamed or legacy pickup point never makes a paying rider vanish from the
-/// captain's sequence.
-///
-/// Cancelled bookings are dropped entirely: they are not people the captain is
-/// waiting for, and leaving them in would keep a resolved stop looking pending.
 class PickupPlanner {
   const PickupPlanner._();
 
@@ -21,13 +10,10 @@ class PickupPlanner {
     required List<AssignedTripStop> stops,
     required List<Passenger> passengers,
   }) {
-    // route stop name -> its position and coordinates.
     final byName = <String, _StopRef>{};
     for (var i = 0; i < stops.length; i++) {
       final stop = stops[i];
       final key = _normalize(stop.name);
-      // First occurrence wins: if two stops share a name, a rider's pickup can
-      // only sensibly mean the earlier one.
       byName.putIfAbsent(
         key,
         () => _StopRef(
@@ -40,7 +26,6 @@ class PickupPlanner {
       );
     }
 
-    // Group riders, preserving first-seen order for the unmatched buckets.
     final groups = <String, _Group>{};
     for (final passenger in passengers) {
       if (passenger.status == PassengerBoardingStatus.cancelled) continue;
@@ -71,16 +56,15 @@ class PickupPlanner {
       );
     }
 
-    // Mapped stops in route order, then the unmatched ones after them.
     final mapped = groups.values.where((g) => g.index != null).toList()
       ..sort((a, b) => a.index!.compareTo(b.index!));
     final unmatched = groups.values.where((g) => g.index == null).toList();
 
-    final ordered = [...mapped, ...unmatched]
-        .map((g) => g.toPickupStop())
-        .toList(growable: false);
+    final ordered = [
+      ...mapped,
+      ...unmatched,
+    ].map((g) => g.toPickupStop()).toList(growable: false);
 
-    // The active pickup is the first stop that still has a pending rider.
     int? activeIndex;
     for (var i = 0; i < ordered.length; i++) {
       if (!ordered[i].isResolved) {

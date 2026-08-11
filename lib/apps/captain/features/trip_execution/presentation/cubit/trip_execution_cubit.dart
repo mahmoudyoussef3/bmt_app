@@ -39,12 +39,6 @@ class TripExecutionCubit extends Cubit<TripExecutionCubitState> {
   StreamSubscription<TripExecutionSnapshot>? _subscription;
   TripExecutionSnapshot _snapshot = _initialSnapshot;
 
-  /// Starts watching [tripId]. [initialSnapshot] (derived from the trip the
-  /// captain tapped on the home list) is shown immediately so the screen
-  /// never opens blank; the live watch then takes over as the source of
-  /// truth for status, boarded/passenger counts, and arrived stations for as
-  /// long as this screen stays open — none of them stay frozen at whatever
-  /// they were when the screen was pushed.
   void watch({
     required String tripId,
     required int routePointCount,
@@ -103,12 +97,6 @@ class TripExecutionCubit extends Cubit<TripExecutionCubitState> {
     }
   }
 
-  /// Persists a station arrival. Deliberately does not touch [state]: this
-  /// is a per-stop side action independent from the board/start/complete
-  /// lifecycle, so it must not flash the main action button into a loading
-  /// state. Callers (the next-stop banner) track their own local
-  /// submitting/error UI; the live watch picks up the resulting `trip_events`
-  /// insert and corrects `arrivedStationsCount` on its own.
   Future<void> markStationArrived({
     required String tripId,
     required String pointId,

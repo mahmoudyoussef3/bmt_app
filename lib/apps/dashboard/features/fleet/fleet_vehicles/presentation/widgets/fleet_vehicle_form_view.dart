@@ -118,9 +118,7 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
     if (value == null || value == vehicleType) return;
     setState(() {
       vehicleType = value;
-      // Switching type replaces the whole seat configuration — the preview
-      // below re-renders from the new type's blueprint, so what the operator
-      // sees before saving is exactly what gets persisted.
+      
       _applyTypeCapacity();
     });
   }
@@ -335,8 +333,7 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
                         },
                       ),
                       const SizedBox(height: AppSpacing.large),
-                      // Live preview of what will actually be saved: change the vehicle
-                      // type above and the cabin below becomes that type's cabin.
+                      
                       FleetSeatLayoutVisualizer(
                         seatConfig: _previewSeatConfiguration(),
                         vehicleType: vehicleType,
@@ -386,11 +383,7 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
                 ),
               ),
             ),
-            // Docked, not scrolled. This form is ~2400px tall once the seat map and
-            // the document section are laid out, so an action bar at the end of the
-            // scroll view put "حفظ" below the fold on every real window — the
-            // operator had to scroll past the whole document uploader to save an
-            // edit they made at the top.
+            
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
               child: FleetFormActionsBar(
@@ -667,9 +660,6 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
         finalUrls.add(url);
       }
 
-      // The seat configuration always follows the selected type, so a vehicle
-      // switched from Hiace to Coaster is saved with Coaster seats only —
-      // never a merge of the two.
       final seatConfig = VehicleSeatConfigurator.resolve(
         type: vehicleType,
         capacity: seatsValue,
@@ -705,7 +695,7 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
       );
 
       final error = await widget.onSave(finalVehicle, _pendingDocs);
-      // On success the caller closes the dialog, so this widget is gone.
+      
       if (mounted && error != null) {
         setState(() => _globalError = error);
       }
@@ -780,9 +770,7 @@ class _VehicleImagePickerCard extends StatelessWidget {
             GestureDetector(
               onTap: onPick,
               child: Container(
-                // A floor, not a ceiling. At text scale 1.6 the two lines of
-                // Arabic below the icon are taller than 140px, and a fixed height
-                // clipped them rather than letting the drop zone grow.
+                
                 constraints: const BoxConstraints(minHeight: 140),
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(

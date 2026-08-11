@@ -37,7 +37,6 @@ class AppInterceptors extends Interceptor {
       debugPrint('➡️ [API Request] [${options.method}] ${options.uri}');
     }
 
-    // Inject the Supabase session token into all requests automatically if available.
     final session = _currentSessionOrNull();
     if (session != null) {
       options.headers['Authorization'] = 'Bearer ${session.accessToken}';
@@ -63,7 +62,6 @@ class AppInterceptors extends Interceptor {
       }
     }
 
-    // Continue processing the response
     super.onResponse(response, handler);
   }
 
@@ -91,12 +89,11 @@ class AppInterceptors extends Interceptor {
       }
     }
 
-    // Handle global authentication failures (e.g., token expired)
     if (err.response?.statusCode == 401) {
       debugPrint(
         '⚠️ [Auth Warning] Unauthorized request! Token might be expired.',
       );
-      // Future logic: Trigger global logout or token refresh here.
+      
     }
 
     super.onError(err, handler);
@@ -105,7 +102,7 @@ class AppInterceptors extends Interceptor {
   String _formatData(dynamic data) {
     try {
       dynamic jsonData = _redact(data);
-      // If it's a list of bytes (from ResponseType.bytes), decode it to a string first
+      
       if (data is List<int>) {
         final decodedString = utf8.decode(data);
         jsonData = _redact(jsonDecode(decodedString));
@@ -114,7 +111,7 @@ class AppInterceptors extends Interceptor {
       }
       return const JsonEncoder.withIndent('  ').convert(jsonData);
     } catch (_) {
-      // Fallback to standard toString if it's not JSON
+      
       if (data is List<int>) {
         try {
           return _redactSensitiveText(utf8.decode(data));

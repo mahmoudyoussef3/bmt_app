@@ -32,7 +32,7 @@ class ClientCard extends StatelessWidget {
       padding: padding ?? ClientSpacing.card,
       decoration: BoxDecoration(
         color: backgroundColor ?? ClientColors.surfaceFor(context),
-        borderRadius: BorderRadius.circular(ClientRadius.lg), // 24px
+        borderRadius: BorderRadius.circular(ClientRadius.lg), 
         border: Border.all(
           color: borderColor ?? ClientColors.borderFor(context),
           width: 1,

@@ -16,9 +16,6 @@ class SupabaseLoyaltyDatasource implements LoyaltyDatasource {
   Future<LoyaltySnapshotModel> fetchSnapshot() async {
     final clientId = _requireClientId();
 
-    // The balance is core data — a failure here is a real failure. The three
-    // catalog/history reads are fetched defensively so one unprovisioned table
-    // degrades to an empty section instead of failing the whole screen.
     final account = await _supabase
         .from('loyalty_accounts')
         .select()
@@ -74,9 +71,6 @@ class SupabaseLoyaltyDatasource implements LoyaltyDatasource {
       throw Exception('Insufficient points balance to redeem this reward');
     }
 
-    // Optimistic lock: the debit only lands while the balance is still what we
-    // read. Without it, concurrent taps each computed `balance - cost` from the
-    // same read and the second overwrote the first — spending the points twice.
     final debited = await _supabase
         .from('loyalty_accounts')
         .update({'points': balance - pointsCost})
@@ -88,9 +82,6 @@ class SupabaseLoyaltyDatasource implements LoyaltyDatasource {
       throw Exception('Your points balance changed. Please try again.');
     }
 
-    // Written after the debit, not alongside it: if the ledger insert fails the
-    // rider's balance is still correct and only the audit row is missing, which
-    // is the less harmful half to lose.
     await _supabase.from('loyalty_transactions').insert({
       'client_id': clientId,
       'title': 'Redeemed: $rewardTitle',

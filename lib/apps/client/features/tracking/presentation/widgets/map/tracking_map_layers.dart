@@ -31,7 +31,7 @@ List<Widget> buildTrackingMapLayers({
     if (route.length > 1)
       PolylineLayer(
         polylines: [
-          // Road already covered: a thin slate trail that recedes.
+          
           ...buildRoutePolylines(
             context,
             traveled,
@@ -39,8 +39,7 @@ List<Widget> buildTrackingMapLayers({
             glow: false,
             style: RouteLineStyle.trail,
           ),
-          // Road ahead: the brand line, slim enough to leave the stops and the
-          // vehicle legible on top of it.
+          
           ...buildRoutePolylines(
             context,
             remaining,

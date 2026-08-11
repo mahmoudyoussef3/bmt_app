@@ -27,8 +27,7 @@ class EasyWayTileLayer extends StatelessWidget {
           retinaMode: RetinaMode.isHighDensity(context),
           userAgentPackageName: 'com.bmt.app',
         ),
-        // Brand veil: cool enough to stay invisible as a "filter" but warm
-        // the basemap toward EasyWay blue instead of stock CARTO grey.
+        
         IgnorePointer(
           child: ColoredBox(
             color: scheme.primary.withAlpha(isDark ? 16 : 8),

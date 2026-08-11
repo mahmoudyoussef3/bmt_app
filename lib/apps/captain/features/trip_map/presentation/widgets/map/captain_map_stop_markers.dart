@@ -7,12 +7,6 @@ import 'package:bmt_app/core/tracking/progress/stop_progress.dart';
 import 'package:bmt_app/core/widgets/maps/map_style.dart';
 import 'package:bmt_app/core/widgets/maps/markers/pulse_halo.dart';
 
-/// Builds the ordered stop markers for the captain map.
-///
-/// One family of circular dots that differ only by state — done stops recede to
-/// slate, the destination is flagged — with one exception: the **active pickup**
-/// stop wears a raised, labelled pin so the captain's eye lands on where they
-/// are headed to collect riders, distinct from a plain "next stop".
 List<Marker> buildCaptainStopMarkers({
   required List<LatLng> route,
   required List<StopProgress> stops,
@@ -24,10 +18,12 @@ List<Marker> buildCaptainStopMarkers({
 
   for (var i = 0; i < route.length; i++) {
     final point = route[i];
-    final status = i < stops.length ? stops[i].status : StopVisitStatus.upcoming;
+    final status = i < stops.length
+        ? stops[i].status
+        : StopVisitStatus.upcoming;
     final isDestination = i == route.length - 1;
-    final isActivePickup = activePickup != null &&
-        _sameSpot(point, activePickup);
+    final isActivePickup =
+        activePickup != null && _sameSpot(point, activePickup);
     final name = i < stops.length ? stops[i].stop.name : null;
 
     markers.add(
@@ -40,7 +36,9 @@ List<Marker> buildCaptainStopMarkers({
             : _StopMarker(
                 status: status,
                 isDestination: isDestination,
-                name: (labelled && (isDestination || status == StopVisitStatus.next))
+                name:
+                    (labelled &&
+                        (isDestination || status == StopVisitStatus.next))
                     ? name
                     : null,
               ),
@@ -54,8 +52,6 @@ bool _sameSpot(LatLng a, LatLng b) =>
     (a.latitude - b.latitude).abs() < 1e-6 &&
     (a.longitude - b.longitude).abs() < 1e-6;
 
-/// The raised "next pickup" pin — a person badge with a soft pulse, so the stop
-/// the captain is collecting riders at reads differently from every other stop.
 class _PickupPin extends StatelessWidget {
   const _PickupPin({this.name});
 
@@ -126,11 +122,17 @@ class _StopMarker extends StatelessWidget {
 
   Widget _dot(BuildContext context) {
     if (isDestination && status != StopVisitStatus.departed) {
-      return _Dot(diameter: 22, fill: CaptainColors.error, icon: Icons.flag_rounded);
+      return _Dot(
+        diameter: 22,
+        fill: CaptainColors.error,
+        icon: Icons.flag_rounded,
+      );
     }
     return switch (status) {
-      StopVisitStatus.departed =>
-        const _Dot(diameter: 11, fill: CaptainColors.offline),
+      StopVisitStatus.departed => const _Dot(
+        diameter: 11,
+        fill: CaptainColors.offline,
+      ),
       StopVisitStatus.arrived => _Dot(
         diameter: 22,
         fill: CaptainColors.primary,

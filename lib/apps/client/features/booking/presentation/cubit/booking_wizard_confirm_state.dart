@@ -64,8 +64,7 @@ class WizardBookingRecord {
     required bool isNew,
   }) {
     final id = booking['booking_id']?.toString();
-    // A booking is only ever shown by its number; an id prefix stands in until
-    // the backend has one, so the rider always has something to quote.
+    
     final reference =
         booking['booking_number']?.toString() ??
         (id != null && id.length >= 8

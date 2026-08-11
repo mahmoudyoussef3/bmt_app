@@ -26,7 +26,6 @@ class _BusSilhouettePainter extends CustomPainter {
     );
     canvas.drawRRect(bodyRect, body);
 
-    // Windshield band across the top third.
     final bandRect = RRect.fromRectAndRadius(
       Rect.fromLTWH(
         size.width * 0.1,
@@ -38,7 +37,6 @@ class _BusSilhouettePainter extends CustomPainter {
     );
     canvas.drawRRect(bandRect, glass);
 
-    // Two window squares below the band.
     final windowWidth = size.width * 0.28;
     final windowHeight = size.height * 0.22;
     final windowY = size.height * 0.5;

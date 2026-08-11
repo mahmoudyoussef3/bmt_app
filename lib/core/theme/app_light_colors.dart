@@ -58,8 +58,7 @@ import 'package:flutter/material.dart';
 /// instead of importing a foreign accent. Amber and red survive because a
 /// warning that shares the brand hue stops registering as a warning.
 abstract final class AppLightColors {
-  // ── Surfaces ───────────────────────────────────────────────────────────────
-
+  
   /// Deeper than the page. For content that should read as cut *into* the
   /// surface — map backdrops, progress tracks, inset wells.
   static const Color canvas = Color(0xFFE6EBF2);
@@ -84,11 +83,9 @@ abstract final class AppLightColors {
   /// skeleton bases, neutral chips.
   static const Color surfaceHighest = Color(0xFFEDF1F7);
 
-  // ── Ink ────────────────────────────────────────────────────────────────────
-
   /// Titles, values, anything the user came to the screen to read.
   /// 17.4:1 on [surface].
-  static const Color onSurface = Color(0xFF0F172A); // Slate 900
+  static const Color onSurface = Color(0xFF0F172A); 
 
   /// Labels, captions, supporting detail. 7.6:1 on [surface] and 7.1:1 on
   /// [background].
@@ -98,19 +95,17 @@ abstract final class AppLightColors {
   /// caption passed AA inside a card and failed it directly on the scaffold —
   /// a floor that depends on which parent a widget happens to have is not a
   /// floor. One step down clears both with room to spare.
-  static const Color onSurfaceMuted = Color(0xFF475569); // Slate 600
+  static const Color onSurfaceMuted = Color(0xFF475569); 
 
   /// Disabled text, placeholders, and the third line of a row. Below the AA
   /// floor by design: never use it for information the user must read.
-  static const Color onSurfaceFaint = Color(0xFF94A3B8); // Slate 400
+  static const Color onSurfaceFaint = Color(0xFF94A3B8); 
 
   /// Ink on a filled brand/danger surface.
   static const Color onFilled = Color(0xFFFFFFFF);
 
-  // ── Lines ──────────────────────────────────────────────────────────────────
-
   /// Card borders and the hairline between rows in a grouped list.
-  static const Color border = Color(0xFFE2E8F0); // Slate 200
+  static const Color border = Color(0xFFE2E8F0); 
 
   /// For a line inside an already-bordered surface, which would otherwise
   /// compete with the border around it.
@@ -119,30 +114,28 @@ abstract final class AppLightColors {
   /// A border that has to carry weight on its own — the outline of a selected
   /// tile, a divider between two same-coloured surfaces, the edge of an input
   /// that is doing the separating rather than the fill behind it.
-  static const Color borderStrong = Color(0xFFCBD5E1); // Slate 300
-
-  // ── Brand ──────────────────────────────────────────────────────────────────
+  static const Color borderStrong = Color(0xFFCBD5E1); 
 
   /// Brand blue, identical to [AppDarkColors.primary]. The **fill** tone:
   /// white on it is 4.87:1. Buttons, FABs, selected states, gradients.
-  static const Color primary = Color(0xFF2563EB); // Blue 600
+  static const Color primary = Color(0xFF2563EB); 
 
   static const Color onPrimary = Color(0xFFFFFFFF);
 
   /// The **ink** tone of the same blue: 6.9:1 on [surface]. Links, active nav
   /// items, tinted icons, focus rings — anywhere the brand appears as text or
   /// a thin mark rather than as a filled shape.
-  static const Color primaryAccent = Color(0xFF1D4ED8); // Blue 700
+  static const Color primaryAccent = Color(0xFF1D4ED8); 
 
   /// A brand-tinted fill that is still a surface: selected rows, brand chips,
   /// the "current step" of a progression.
-  static const Color primaryContainer = Color(0xFFDBEAFE); // Blue 100
+  static const Color primaryContainer = Color(0xFFDBEAFE); 
 
-  static const Color onPrimaryContainer = Color(0xFF1E3A8A); // Blue 900
+  static const Color onPrimaryContainer = Color(0xFF1E3A8A); 
 
   /// The deep end of the brand gradient. Pairs with [primary] for the hero
   /// lockups, the splash mark and the auth screen.
-  static const Color primaryDeep = Color(0xFF4338CA); // Indigo 700
+  static const Color primaryDeep = Color(0xFF4338CA); 
 
   /// The gradient the hero lockups are built on — the same two stops as
   /// [AppDarkColors.brandGradient], so the brand sweep is one object across
@@ -153,57 +146,49 @@ abstract final class AppLightColors {
     end: AlignmentDirectional.bottomEnd,
   );
 
-  // ── Status ─────────────────────────────────────────────────────────────────
-  //
-  // Role for role with [AppDarkColors]. Each pair splits the same way the brand
-  // does: a `fill` tone that carries white text, and an `Ink` tone that is
-  // readable as text on the page.
-
   /// Confirmed, on-time, completed, online. The fill tone — white on it is
   /// 5.3:1.
-  static const Color success = Color(0xFF0E7490); // Cyan 700
+  static const Color success = Color(0xFF0E7490); 
 
   /// Success as ink on a light surface. 4.5:1 on [surface].
-  static const Color successInk = Color(0xFF0891B2); // Cyan 600
-  static const Color successContainer = Color(0xFFCFFAFE); // Cyan 100
-  static const Color onSuccessContainer = Color(0xFF164E63); // Cyan 900
+  static const Color successInk = Color(0xFF0891B2); 
+  static const Color successContainer = Color(0xFFCFFAFE); 
+  static const Color onSuccessContainer = Color(0xFF164E63); 
 
   /// Departing soon, scarcity, action needed.
-  static const Color warning = Color(0xFFB45309); // Amber 700
-  static const Color warningInk = Color(0xFFD97706); // Amber 600
-  static const Color warningContainer = Color(0xFFFEF3C7); // Amber 100
-  static const Color onWarningContainer = Color(0xFF78350F); // Amber 900
+  static const Color warning = Color(0xFFB45309); 
+  static const Color warningInk = Color(0xFFD97706); 
+  static const Color warningContainer = Color(0xFFFEF3C7); 
+  static const Color onWarningContainer = Color(0xFF78350F); 
 
   /// Cancelled, failed, destructive. The fill tone — white on it is 4.83:1.
-  static const Color danger = Color(0xFFDC2626); // Red 600
+  static const Color danger = Color(0xFFDC2626); 
   static const Color onDanger = Color(0xFFFFFFFF);
 
   /// Danger as ink: error messages, failed-state labels and icons.
-  static const Color dangerInk = Color(0xFFDC2626); // Red 600
-  static const Color dangerContainer = Color(0xFFFEE2E2); // Red 100
-  static const Color onDangerContainer = Color(0xFF7F1D1D); // Red 900
+  static const Color dangerInk = Color(0xFFDC2626); 
+  static const Color dangerContainer = Color(0xFFFEE2E2); 
+  static const Color onDangerContainer = Color(0xFF7F1D1D); 
 
   /// Informational, and the "upcoming" state of a journey.
   static const Color info = primaryAccent;
   static const Color infoContainer = primaryContainer;
-  static const Color onInfoContainer = Color(0xFF1E40AF); // Blue 800
+  static const Color onInfoContainer = Color(0xFF1E40AF); 
 
   /// Inactive, historical, dimmed — a state with no urgency attached.
   static const Color neutral = onSurfaceMuted;
-  static const Color neutralContainer = Color(0xFFF1F5F9); // Slate 100
-  static const Color onNeutralContainer = Color(0xFF1E293B); // Slate 800
+  static const Color neutralContainer = Color(0xFFF1F5F9); 
+  static const Color onNeutralContainer = Color(0xFF1E293B); 
 
   /// Packages, subscriptions, premium. The one hue outside the blue family,
   /// and it is spent deliberately.
-  static const Color special = Color(0xFF7C3AED); // Violet 600
-  static const Color specialContainer = Color(0xFFF5F3FF); // Violet 50
-  static const Color onSpecialContainer = Color(0xFF3B0764); // Violet 950
+  static const Color special = Color(0xFF7C3AED); 
+  static const Color specialContainer = Color(0xFFF5F3FF); 
+  static const Color onSpecialContainer = Color(0xFF3B0764); 
 
   /// Star ratings. Kept apart from [warning] on purpose: a rating is not a
   /// caution, and the two have to stay independently tunable.
-  static const Color rating = Color(0xFFD97706); // Amber 600
-
-  // ── Depth ──────────────────────────────────────────────────────────────────
+  static const Color rating = Color(0xFFD97706); 
 
   /// Light mode reads elevation from shadow rather than lightness, so unlike
   /// the dark palette these carry real weight. The tint is slate rather than

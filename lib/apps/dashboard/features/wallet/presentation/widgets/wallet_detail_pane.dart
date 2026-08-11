@@ -134,8 +134,7 @@ class WalletDetailPane extends StatelessWidget {
                     for (final entry in data.entries)
                       WalletLedgerEntryTile(
                         entry: entry,
-                        // Only an owner may reverse, and only an entry that is
-                        // neither a reversal nor already reversed can be.
+                        
                         onReverse:
                             canApprove && !entry.isReversal && !entry.isReversed
                             ? () => onReverse(entry)
@@ -306,9 +305,7 @@ class _ActionBar extends StatelessWidget {
       spacing: AppSpacing.small,
       runSpacing: AppSpacing.small,
       children: [
-        // A support agent sees exactly one action here: raise a request. That is
-        // their escalation path, and it is a real one — it lands in the owner's
-        // queue with an alert attached.
+        
         FilledButton.icon(
           onPressed: busy ? null : onRefund,
           icon: const Icon(Icons.assignment_return_rounded, size: 18),
@@ -326,8 +323,7 @@ class _ActionBar extends StatelessWidget {
             label: const Text('إضافة رصيد'),
           ),
           OutlinedButton.icon(
-            // Disabled rather than hidden while frozen: the operator should see
-            // that the action exists and understand why it is unavailable.
+            
             onPressed: busy || frozen ? null : onDebit,
             icon: const Icon(Icons.remove_circle_outline_rounded, size: 18),
             label: const Text('خصم'),

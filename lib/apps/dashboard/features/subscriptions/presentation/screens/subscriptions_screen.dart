@@ -184,8 +184,6 @@ class _SubscriptionsWorkspace extends StatelessWidget {
       ];
     }
 
-    // On a trip board every row carries its link chip and check-in action; off
-    // it, the same card without the trip-specific parts.
     if (state.tripBoard != null) {
       return [
         for (final subscriber in state.visibleTripSubscribers)

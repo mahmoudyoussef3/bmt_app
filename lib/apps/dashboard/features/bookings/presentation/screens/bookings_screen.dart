@@ -33,8 +33,7 @@ class BookingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Directionality is applied once for the whole dashboard in MaterialApp's
-    // builder, so screens do not re-declare it.
+    
     return BlocConsumer<BookingsCubit, BookingsState>(
       listenWhen: (previous, current) =>
           current is BookingsLoaded && current.actionError != null,
@@ -105,8 +104,6 @@ class _LoadedView extends StatelessWidget {
           );
         }
 
-        // The panel is a share of the window rather than a constant, so it stays
-        // readable at 1200px and does not swallow a 2560px screen.
         final panelWidth = constraints.maxWidth.clamp(0.0, 3000.0) * 0.30;
 
         return Row(
@@ -119,9 +116,7 @@ class _LoadedView extends StatelessWidget {
               width: opened == null
                   ? 0
                   : panelWidth.clamp(380.0, 460.0).toDouble(),
-              // Clipped fixed-width child: laying the panel out at its final
-              // width behind the clip is what keeps the open/close animation
-              // from overflowing while the container is mid-transition.
+              
               child: opened == null
                   ? const SizedBox.shrink()
                   : ClipRect(

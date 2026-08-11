@@ -11,9 +11,6 @@ class SupabaseSubscriptionsDatasource implements SubscriptionsDatasource {
 
   const SupabaseSubscriptionsDatasource(this._client, this._session);
 
-  // Join packages to recover title + days for renewals, even on old rows, and
-  // the route so a subscriber's line is shown from the linked route rather than
-  // the free text copied off the booking at sale time.
   static const _select = '''
     *,
     client:clients(full_name, phone),
@@ -55,8 +52,7 @@ class SupabaseSubscriptionsDatasource implements SubscriptionsDatasource {
         'package_id': subscription.packageId,
       'package_name': subscription.packageName,
       if (subscription.routeId.isNotEmpty) 'route_id': subscription.routeId,
-      // Persist the route the subscriber signed up for; fall back to the
-      // package name only if no route was chosen.
+      
       'route_name': subscription.routeLabel.isNotEmpty
           ? subscription.routeLabel
           : subscription.packageName,
@@ -191,8 +187,7 @@ class SupabaseSubscriptionsDatasource implements SubscriptionsDatasource {
         .select('id, title, price, days, trips_count, status')
         .neq('status', 'archived')
         .order('price');
-    // operation_routes, not the legacy global `routes` table: only this one is
-    // office-scoped, and only its ids can be stored on subscriptions.route_id.
+    
     final routes = await _client
         .from('operation_routes')
         .select('id, name, start_city, end_city, status')
@@ -265,8 +260,6 @@ class SupabaseSubscriptionsDatasource implements SubscriptionsDatasource {
     final tripsCount = _toInt(json['trips_count'] ?? pkg?['trips_count']);
     final tripsUsed = _toInt(json['trips_used']);
 
-    // The linked route is authoritative — it is a live row the office still
-    // maintains, where route_name is a copy frozen at sale time.
     final linkedRouteLabel = _routeLabel(route);
 
     final now = DateTime.now();

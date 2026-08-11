@@ -24,7 +24,6 @@ abstract class FleetRepository {
   );
   Future<FleetAssignment> removeAssignment(String assignmentId);
 
-  // Document Management & File Storage
   Future<FleetDocument> createDocument({
     required String ownerId,
     required bool isDriver,

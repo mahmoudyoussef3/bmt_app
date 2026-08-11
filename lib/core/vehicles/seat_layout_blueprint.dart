@@ -124,7 +124,7 @@ class SeatLayoutBlueprint {
       if (!row.any((slot) => slot.kind == SeatSlotKind.driver)) break;
       count++;
     }
-    // A front cabin that swallowed the whole vehicle is not a front cabin.
+    
     return count == rows.length ? 0 : count;
   }
 
@@ -312,7 +312,6 @@ class SeatLayoutBlueprint {
       return const SeatLayoutBlueprint(rows: [], capacity: 0, columns: 0);
     }
 
-    // Seats fill the grid in the same reading order the apps sort them in.
     final ordered = [...placed]
       ..sort((a, b) {
         final byRow = a.row.compareTo(b.row);

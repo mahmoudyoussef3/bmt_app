@@ -5,16 +5,6 @@ import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 import 'package:bmt_app/apps/captain/core/trips/captain_trip_stage_palette.dart';
 
-/// Pieces of [CaptainFocusCard].
-///
-/// These used to be painted white-on-gradient, because the card itself was a
-/// full brand-blue slab sitting directly under a brand-blue app bar — two
-/// identical gradients a hairline apart, which is what made the home screen
-/// read as one smeared header. The card is now an ordinary surface with a
-/// stage-tinted strip, so everything here is drawn in full-contrast text
-/// against it.
-
-/// The card's tinted crown: which trip this is, and its live state.
 class FocusEyebrow extends StatelessWidget {
   const FocusEyebrow({
     super.key,
@@ -24,8 +14,6 @@ class FocusEyebrow extends StatelessWidget {
     required this.trailing,
   });
 
-  /// Drives the pulsing dot only. The wording comes from [label] so every
-  /// screen names the stage identically (see `CaptainTripStageLabels`).
   final bool isRunning;
   final String label;
   final Color accent;
@@ -67,14 +55,6 @@ class FocusEyebrow extends StatelessWidget {
   }
 }
 
-/// The "this trip is running" marker: a filled dot inside a soft halo.
-///
-/// Static on purpose. A breathing dot is the obvious choice here and it is the
-/// wrong one twice over — this phone sits in a cradle for a whole shift, so a
-/// permanently repeating animation on the app's primary screen is a battery
-/// cost with no information in it; and a never-settling animation makes
-/// `pumpAndSettle` hang for every widget test that renders a live trip. The
-/// halo carries the same "live" reading for free.
 class FocusLiveDot extends StatelessWidget {
   const FocusLiveDot({super.key, required this.color, this.size = 9});
 
@@ -100,8 +80,6 @@ class FocusLiveDot extends StatelessWidget {
   }
 }
 
-/// One scannable fact — an icon and its value, sized to be read at arm's
-/// length rather than studied.
 class FocusFact extends StatelessWidget {
   const FocusFact({super.key, required this.icon, required this.text});
 
@@ -133,8 +111,6 @@ class FocusFact extends StatelessWidget {
   }
 }
 
-/// How full the bus is, as a bar plus its own count — the one number a captain
-/// checks repeatedly while the doors are open.
 class FocusBoardingBar extends StatelessWidget {
   const FocusBoardingBar({
     super.key,
@@ -182,8 +158,6 @@ class FocusBoardingBar extends StatelessWidget {
   }
 }
 
-/// States what the trip is waiting on, in a line the captain can act on:
-/// which clock time opens boarding, or how late the departure now is.
 class FocusStatusPanel extends StatelessWidget {
   const FocusStatusPanel({
     super.key,
@@ -198,41 +172,28 @@ class FocusStatusPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(
-        horizontal: CaptainDesignTokens.s12,
-        vertical: CaptainDesignTokens.s12,
-      ),
-      decoration: BoxDecoration(
-        color: accent.withValues(alpha: 0.08),
-        borderRadius: CaptainDesignTokens.br16,
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: accent),
-          const SizedBox(width: CaptainDesignTokens.s8),
-          Expanded(
-            child: Text(
-              text,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: CaptainTypography.bodySmall(context).copyWith(
-                color: CaptainColors.textPrimaryFor(context),
-                fontWeight: FontWeight.w700,
-                height: 1.4,
-              ),
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 18, color: accent),
+        const SizedBox(width: CaptainDesignTokens.s8),
+        Expanded(
+          child: Text(
+            text,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: CaptainTypography.bodySmall(context).copyWith(
+              color: CaptainColors.textSecondaryFor(context),
+              fontWeight: FontWeight.w700,
+              height: 1.4,
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
 
-/// The card's CTA. Its own button rather than [CaptainButton] because it is
-/// painted in the *stage's* colour, not the app's primary — the whole point of
-/// the card is that its call to action changes character with the trip.
 class FocusAction extends StatelessWidget {
   const FocusAction({
     super.key,
@@ -249,8 +210,6 @@ class FocusAction extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Measured against the fill rather than assumed white — the stage colours
-    // run from slate through amber to blue. See `CaptainTripStagePalette`.
     final foreground = CaptainTripStagePalette.onAccent(accent);
 
     return SizedBox(

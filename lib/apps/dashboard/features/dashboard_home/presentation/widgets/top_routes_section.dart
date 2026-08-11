@@ -64,7 +64,7 @@ class _RouteRow extends StatelessWidget {
     final text = Theme.of(context).textTheme;
     final palette = DashboardChartPalette.of(context);
     final rate = route.occupancyRate.clamp(0.0, 1.0);
-    // Three bands, not a gradient: full enough, worth watching, losing money.
+    
     final tone = rate >= 0.7
         ? palette.positive
         : rate >= 0.4

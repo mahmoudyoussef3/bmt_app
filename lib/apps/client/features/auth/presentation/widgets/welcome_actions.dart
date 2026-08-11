@@ -45,9 +45,7 @@ class WelcomeActions extends StatelessWidget {
           onPressed: () => Navigator.of(context).pushNamed(AuthRoutes.signUp),
         ),
         const SizedBox(height: ClientSpacing.md),
-        // Tiles, not full-width rows: the hero and two primary actions already
-        // own the fold on a small phone, and three more 56pt bars would push
-        // the guest link and the terms off it.
+        
         const AuthAlternativeMethods(compact: true),
         const SizedBox(height: ClientSpacing.sm),
         ClientButton.text(

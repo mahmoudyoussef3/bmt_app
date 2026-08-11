@@ -46,10 +46,6 @@ class _ReportIncidentPageState extends State<ReportIncidentPage> {
             BlocConsumer<IncidentCubit, IncidentState>(
               listener: (context, state) {
                 if (state is IncidentReady && state.submitted) {
-                  // The screen used to close in silence, which reads the same
-                  // as a tap that did nothing — a poor answer for a captain
-                  // who has just reported an emergency and needs to know it
-                  // reached operations.
                   AppSnackbar.success(context, 'تم إرسال البلاغ إلى العمليات');
                   context.closeScreen();
                 }
@@ -60,12 +56,7 @@ class _ReportIncidentPageState extends State<ReportIncidentPage> {
               },
               builder: (context, state) {
                 return SliverPadding(
-                  padding: const EdgeInsetsDirectional.fromSTEB(
-                    16,
-                    14,
-                    16,
-                    20,
-                  ),
+                  padding: const EdgeInsetsDirectional.fromSTEB(16, 14, 16, 20),
                   sliver: SliverList.list(
                     children: [
                       AppCard(

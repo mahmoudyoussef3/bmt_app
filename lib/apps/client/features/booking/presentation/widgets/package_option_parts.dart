@@ -124,8 +124,7 @@ class PackagePriceBlock extends StatelessWidget {
             ),
             if (regularTotal != null) ...[
               const SizedBox(width: 8),
-              // The struck-through total is the first thing to give up room:
-              // a long fare must never push the price the rider pays off-card.
+              
               Flexible(
                 child: Text(
                   l10n.packages_egpAmount(regularTotal!.toStringAsFixed(0)),

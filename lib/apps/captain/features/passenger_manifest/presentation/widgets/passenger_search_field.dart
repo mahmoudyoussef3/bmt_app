@@ -3,11 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 
-/// Search across name, seat and pickup point.
-///
-/// Stateful for one reason: the clear button has to be able to empty the field,
-/// which means owning the [TextEditingController] and disposing it. The query
-/// itself is the cubit's — this only reports changes upward.
 class PassengerSearchField extends StatefulWidget {
   const PassengerSearchField({
     super.key,
@@ -15,8 +10,6 @@ class PassengerSearchField extends StatefulWidget {
     required this.onChanged,
   });
 
-  /// Drives the clear affordance. Read from cubit state rather than from the
-  /// controller so the button can't disagree with the list being shown.
   final bool hasQuery;
   final ValueChanged<String> onChanged;
 

@@ -165,9 +165,7 @@ class _LoadedTrips extends StatelessWidget {
           child: _SummaryStrip(state: state),
         ),
         const SizedBox(height: AppSpacing.medium),
-        // Status mix, occupancy and busiest routes — derived from the trips
-        // already in state, matching the analytics strip Bookings and Routes
-        // show in the same position.
+        
         TripsAnalytics(state: state),
         const SizedBox(height: AppSpacing.medium),
         _SimpleToolbar(state: state),
@@ -413,9 +411,7 @@ class _SimpleToolbar extends StatelessWidget {
       sectionId: DashboardSectionIds.tripsFilters,
       icon: Icons.tune_rounded,
       title: 'البحث والتصفية',
-      // Folding the toolbar away must never hide *that* the list is filtered,
-      // or an operator wonders where their trips went. The summary carries the
-      // active filters forward.
+      
       collapsedSummary: DashboardSectionSummary(items: _summaryItems()),
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -659,14 +655,9 @@ class _DetailsHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final trip = state.trip;
     final isStale = trip.isStaleBooking();
-    // Advancing a trip that already departed to "boarding" would contradict the
-    // notice below, so the forward action is withheld until the operator
-    // resolves the trip.
+    
     final next = isStale ? null : TripLifecycle.nextStep(trip.status);
-    // Why the forward step cannot be taken yet, when that step is publishing. Shown
-    // on the button itself: the server refuses an unready trip either way, and an
-    // operator who is told "no pricing configured" can fix it, where one who is told
-    // only that it failed cannot.
+    
     final publishBlocker = next == OperationTripStatus.openForBooking
         ? TripPublishBlocker.evaluate(trip)
         : null;
@@ -758,10 +749,7 @@ class _DetailsHeader extends StatelessWidget {
                 ),
               if (canCancel && !isStale) ...[
                 const SizedBox(width: 8),
-                // Cancellation used to be reachable from exactly one place — the
-                // stale-trip banner — so a trip that simply was not going to run had
-                // no cancel action at all, and an operator's only recourse was to
-                // delete it out from under its passengers.
+                
                 OutlinedButton.icon(
                   onPressed: state.isSaving
                       ? null
@@ -811,13 +799,7 @@ class _DetailsHeader extends StatelessWidget {
                   spacing: 8,
                   runSpacing: 8,
                   children: [
-                    // "إنهاء الرحلة" used to fire `open_for_booking → completed`,
-                    // which is not an edge of the state machine — so this button
-                    // could only ever fail, and the failure surfaced as an
-                    // unexplained "تعذر تحديث حالة الرحلة.". It now walks the real
-                    // machine server-side, and is only offered for a trip that was
-                    // actually published (an unpublished one could not be booked, so
-                    // it cannot have carried anyone).
+                    
                     if (trip.status == OperationTripStatus.openForBooking)
                       FilledButton.tonalIcon(
                         onPressed: state.isSaving
@@ -888,8 +870,7 @@ class _DetailsHeader extends StatelessWidget {
     String fallback,
     Future<OperationTrip?> Function(TripDetailsCubit cubit) action,
   ) async {
-    // Everything the result is delivered to is resolved before the await, so no
-    // BuildContext is carried across it.
+    
     final details = context.read<TripDetailsCubit>();
     final list = context.read<TripsListCubit>();
     final messenger = ScaffoldMessenger.of(context);

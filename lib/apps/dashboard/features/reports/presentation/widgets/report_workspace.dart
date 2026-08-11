@@ -19,11 +19,10 @@ class ReportWorkspace extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // 1. Export & Toolbar
+          
           ReportExportToolbar(state: state),
           const SizedBox(height: AppSpacing.medium),
 
-          // 2. Interactive Filters
           ReportFiltersBar(state: state),
           const SizedBox(height: AppSpacing.medium),
 
@@ -32,15 +31,13 @@ class ReportWorkspace extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // 3. KPIs
+                  
                   ReportKpiGrid(state: state),
                   const SizedBox(height: AppSpacing.medium),
 
-                  // 4. Trends
                   ReportTrendChart(state: state),
                   const SizedBox(height: AppSpacing.medium),
 
-                  // 5. Detailed Table
                   ReportDataTable(state: state),
                 ],
               ),

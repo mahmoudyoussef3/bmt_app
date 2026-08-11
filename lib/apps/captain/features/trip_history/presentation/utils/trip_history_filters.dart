@@ -25,7 +25,6 @@ extension TripHistoryDateFilterLabel on TripHistoryDateFilter {
   }
 }
 
-/// Applies the date filter and a free-text route search, in that order.
 List<TripHistoryItem> filterTripHistory({
   required List<TripHistoryItem> trips,
   required TripHistoryDateFilter dateFilter,
@@ -42,12 +41,6 @@ List<TripHistoryItem> filterTripHistory({
   }).toList();
 }
 
-/// How many trips sit in each date range.
-///
-/// The search query is deliberately left out: a chip's count answers "is there
-/// anything for me over there?", and narrowing it by a query the captain is
-/// about to leave behind would answer a question nobody asked — every chip
-/// would read zero the moment a search missed.
 Map<TripHistoryDateFilter, int> countTripsByDateFilter(
   List<TripHistoryItem> trips, {
   DateTime? now,
@@ -68,8 +61,6 @@ class TripHistoryGroup {
   final List<TripHistoryItem> trips;
 }
 
-/// Buckets an already-sorted (newest first) trip list into recency sections.
-/// Order within each bucket is preserved from the input.
 List<TripHistoryGroup> groupTripHistoryByPeriod(
   List<TripHistoryItem> trips, {
   DateTime? now,

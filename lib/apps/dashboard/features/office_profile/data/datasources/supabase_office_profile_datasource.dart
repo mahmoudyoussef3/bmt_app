@@ -49,9 +49,7 @@ class SupabaseOfficeProfileDatasource implements OfficeProfileDatasource {
           .maybeSingle();
 
       if (row == null) {
-        // RLS returns an empty set rather than an error when the row is out of
-        // reach, so "not found" here means the session points at an office the
-        // operator can no longer read — a stale session, not a missing office.
+        
         throw Exception(
           'تعذر قراءة بيانات المكتب. سجّل الخروج ثم الدخول مرة أخرى.',
         );
@@ -83,9 +81,7 @@ class SupabaseOfficeProfileDatasource implements OfficeProfileDatasource {
   @override
   Future<OfficeProfile> updateProfile(OfficeProfileEdit edit) async {
     try {
-      // Only the six marketplace-facing columns are ever sent. status, rating,
-      // ratings_count, slug and join_code are deliberately absent: RLS would
-      // permit them, so this payload is what actually keeps them platform-owned.
+      
       final row = await _client
           .from('offices')
           .update({
@@ -104,8 +100,7 @@ class SupabaseOfficeProfileDatasource implements OfficeProfileDatasource {
           .maybeSingle();
 
       if (row == null) {
-        // An update filtered to an existing id that returns nothing was blocked
-        // by the policy's USING clause — i.e. the operator is a support agent.
+        
         throw Exception('لا تملك صلاحية تعديل بيانات المكتب.');
       }
 
@@ -125,14 +120,7 @@ class SupabaseOfficeProfileDatasource implements OfficeProfileDatasource {
     required Uint8List bytes,
     required String fileName,
   }) async {
-    // The leading segment is the office id because the storage policy compares
-    // it against `current_office_id()` — this is not a naming convention, it is
-    // the condition that makes the upload succeed at all.
-    //
-    // The timestamp gives every upload a fresh name rather than overwriting a
-    // fixed `logo.png`. A stable name would be served stale for as long as the
-    // CDN and every client's image cache held the old bytes, and the operator
-    // would see the logo they just replaced.
+    
     final path =
         '${_session.officeId}/'
         '${DateTime.now().millisecondsSinceEpoch}-${_safeFileName(fileName)}';
@@ -148,8 +136,7 @@ class SupabaseOfficeProfileDatasource implements OfficeProfileDatasource {
 
       return _client.storage.from(_logoBucket).getPublicUrl(path);
     } on StorageException catch (error) {
-      // `logo_max_kb` and `max_storage_mb` are enforced by a trigger on
-      // storage.objects, so both refusals arrive as a StorageException here.
+      
       LicensingGuard.check(error);
       throw Exception(error.message);
     }
@@ -201,9 +188,7 @@ class SupabaseOfficeProfileDatasource implements OfficeProfileDatasource {
       description: row['description']?.toString() ?? '',
       serviceAreas: _toStringList(row['service_areas']),
       status: row['status']?.toString() ?? 'active',
-      // Falls back to 'draft', not 'listed': if the column ever fails to come
-      // back, the honest answer is "we cannot confirm you are visible" rather
-      // than a badge telling the operator their office is on the marketplace.
+      
       listingStatus: row['listing_status']?.toString() ?? 'draft',
       rating: _toDouble(row['rating']),
       ratingsCount: _toInt(row['ratings_count']),

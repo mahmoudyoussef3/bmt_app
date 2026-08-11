@@ -289,7 +289,7 @@ class EntitlementContext {
     if (featureKey == null) return true;
     if (!isEnforcing) return true;
     final f = features[featureKey];
-    if (f == null) return true; // unknown key: never hide on missing data
+    if (f == null) return true; 
     return f.isOn;
   }
 

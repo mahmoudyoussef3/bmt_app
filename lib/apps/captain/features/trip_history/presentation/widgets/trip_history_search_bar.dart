@@ -8,14 +8,6 @@ import '../utils/trip_history_filters.dart';
 import '../utils/trip_history_labels.dart';
 import '../utils/trip_history_palette.dart';
 
-/// Route search, the date ranges, and what the two of them are hiding.
-///
-/// The text field's controller is owned here and never written from the cubit's
-/// state: it exists so the field can carry its own clear button, not so the
-/// query can be pushed back down mid-edit, which would fight the keyboard's own
-/// editing state for no gain. The one external reset — "مسح الفلاتر" — is
-/// routed through this widget for the same reason, so the controller stays the
-/// only writer of the field's text.
 class TripHistorySearchBar extends StatefulWidget {
   const TripHistorySearchBar({
     super.key,
@@ -113,9 +105,6 @@ class _SearchField extends StatelessWidget {
           context,
         ).copyWith(color: muted, fontWeight: FontWeight.w500),
         prefixIcon: Icon(Icons.search_rounded, size: 20, color: muted),
-        // Only rebuilds the clear button as the captain types, rather than the
-        // whole bar — the chips and the results line below don't change with a
-        // keystroke that hasn't reached the cubit yet.
         suffixIcon: ValueListenableBuilder<TextEditingValue>(
           valueListenable: controller,
           builder: (context, value, _) {
@@ -180,11 +169,6 @@ class _DateFilterRow extends StatelessWidget {
   }
 }
 
-/// A date range and how many trips it holds.
-///
-/// A range with nothing in it stays visible but refuses the tap: hiding it
-/// would make the row's shape shift under the captain's thumb, and letting it
-/// through would only ever land on the same empty list.
 class _DateChip extends StatelessWidget {
   const _DateChip({
     required this.label,
@@ -290,7 +274,6 @@ class _CountBadge extends StatelessWidget {
   }
 }
 
-/// What the filters left, and the way back out of them.
 class _ResultsLine extends StatelessWidget {
   const _ResultsLine({required this.matchCount, required this.onClear});
 

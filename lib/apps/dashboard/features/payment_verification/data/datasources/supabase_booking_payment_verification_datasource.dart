@@ -264,8 +264,7 @@ class SupabaseBookingPaymentVerificationDatasource
   }
 
   Exception _handleError(dynamic error) {
-    // Approving a payment can settle to the wallet, and the ledger is gated on
-    // `wallet`. Refusals reach here rather than the wallet datasource.
+    
     LicensingGuard.check(error);
 
     if (error is PostgrestException) {

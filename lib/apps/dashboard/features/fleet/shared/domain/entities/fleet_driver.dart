@@ -72,7 +72,6 @@ class FleetDriver {
     return diff >= 0 && diff <= 30;
   }
 
-  // Legacy compatibility getters:
   String get name => fullName;
   String get emergencyContact => emergencyPhone;
   String get licenseExpiry => licenseExpiryDate;

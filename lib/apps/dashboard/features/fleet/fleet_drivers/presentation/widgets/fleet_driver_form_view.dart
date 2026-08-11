@@ -172,7 +172,7 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
 
     setState(() => _saving = true);
     final error = await widget.onSave(driver, _pendingDocs);
-    // On success the caller closes the dialog, so this widget is gone.
+    
     if (!mounted) return;
     setState(() {
       _saving = false;
@@ -430,9 +430,7 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
                   ),
                 ),
               ),
-              // Docked, not scrolled — same reason as the vehicle form: this form is
-              // taller than any window it opens in, so an action bar at the end of
-              // the scroll view is never on screen when the operator wants it.
+              
               Padding(
                 padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
                 child: FleetFormActionsBar(

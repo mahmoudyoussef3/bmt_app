@@ -69,8 +69,6 @@ class RouteBuilderCubit extends Cubit<RouteBuilderState> {
     if (opened.allStopsLocated) _scheduleRecalculate(immediate: true);
   }
 
-  // ── Focus ───────────────────────────────────────────────────────────
-
   /// Marks which stop the operator is talking about, so the preview map can
   /// centre on it. Purely presentational — nothing about the draft changes.
   void focusStop(int index) {
@@ -89,8 +87,6 @@ class RouteBuilderCubit extends Cubit<RouteBuilderState> {
     if (target == null) return;
     emit(state.copyWith(activeIndex: target));
   }
-
-  // ── Stop editing ────────────────────────────────────────────────────
 
   /// Replaces a stop wholesale — what the stop editor returns when the operator
   /// confirms it.
@@ -169,7 +165,7 @@ class RouteBuilderCubit extends Cubit<RouteBuilderState> {
     emit(
       state.copyWith(
         draft: state.draft.replaceStop(index, stop.withoutPoint()),
-        // The road geometry described a shape this route no longer has.
+        
         path: const [],
       ),
     );
@@ -250,8 +246,6 @@ class RouteBuilderCubit extends Cubit<RouteBuilderState> {
     _scheduleRecalculate();
   }
 
-  // ── Route identity ──────────────────────────────────────────────────
-
   void setName(String value) =>
       emit(state.copyWith(draft: state.draft.copyWith(nameOverride: value)));
 
@@ -268,8 +262,6 @@ class RouteBuilderCubit extends Cubit<RouteBuilderState> {
 
   void setDuration(String value) =>
       emit(state.copyWith(draft: state.draft.copyWith(duration: value)));
-
-  // ── Derived totals ──────────────────────────────────────────────────
 
   void _scheduleRecalculate({bool immediate = false}) {
     if (!state.geoEnabled) return;

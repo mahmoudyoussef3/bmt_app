@@ -1,11 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// The shared yes/no confirmation dialog for the captain app.
-///
-/// A plain `AlertDialog` with a cancel button and a colored confirm button —
-/// trip completion and sign-out both hand-rolled this exact shape before
-/// this existed. Use it before firing an action that can't be casually
-/// undone.
 class CaptainConfirmDialog {
   const CaptainConfirmDialog._();
 

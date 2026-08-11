@@ -68,8 +68,7 @@ class LiveOpsSummaryBar extends StatelessWidget {
               : (openIncidents > 0
                     ? context.status(AppStatusTone.warning).ink
                     : context.status(AppStatusTone.neutral).ink),
-          // "Open" and "nobody has touched it" are different operational facts;
-          // the detail line reports the one that should move an operator.
+          
           detail: snapshot.hasCriticalIncident
               ? 'بلاغ طوارئ نشط'
               : (unacknowledged > 0

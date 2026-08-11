@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class AppProgressBar extends StatelessWidget {
-  final double progress; // 0..1
+  final double progress; 
   const AppProgressBar({super.key, required this.progress});
 
   @override

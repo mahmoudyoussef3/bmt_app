@@ -27,10 +27,6 @@ library;
 
 import 'operation_booking.dart';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Booking state machine
-// ─────────────────────────────────────────────────────────────────────────────
-
 extension BookingStatusRules on BookingStatus {
   /// Whether [next] is a legal booking-state move.
   ///
@@ -45,7 +41,7 @@ extension BookingStatusRules on BookingStatus {
       next == BookingStatus.confirmed || next == BookingStatus.cancelled,
     BookingStatus.confirmed =>
       next == BookingStatus.boarded || next == BookingStatus.cancelled,
-    // A no-show is closed by cancelling before departure, not after boarding.
+    
     BookingStatus.boarded => next == BookingStatus.completed,
     BookingStatus.completed || BookingStatus.cancelled => false,
   };
@@ -65,10 +61,6 @@ extension BookingStatusRules on BookingStatus {
   bool get hasTravelled =>
       this == BookingStatus.boarded || this == BookingStatus.completed;
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Payment state machine
-// ─────────────────────────────────────────────────────────────────────────────
 
 extension PaymentStatusRules on PaymentStatus {
   /// Whether [next] is a legal payment-state move.
@@ -91,8 +83,7 @@ extension PaymentStatusRules on PaymentStatus {
       next == PaymentStatus.approved ||
           next == PaymentStatus.rejected ||
           next == PaymentStatus.cancelled,
-    // A rejected receipt can be replaced — that is the whole point of telling
-    // the passenger why it was rejected.
+    
     PaymentStatus.rejected =>
       next == PaymentStatus.submitted || next == PaymentStatus.cancelled,
     PaymentStatus.approved => next == PaymentStatus.refunded,
@@ -118,10 +109,6 @@ extension PaymentStatusRules on PaymentStatus {
   bool get isClosed =>
       this == PaymentStatus.refunded || this == PaymentStatus.cancelled;
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Cross-machine consistency
-// ─────────────────────────────────────────────────────────────────────────────
 
 /// How serious a detected inconsistency is.
 enum BookingIssueSeverity {
@@ -213,10 +200,6 @@ List<BookingIssue> detectBookingIssues({
   return issues;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Next action
-// ─────────────────────────────────────────────────────────────────────────────
-
 /// What the desk can do with a booking right now.
 enum BookingActionKind {
   approvePayment,
@@ -288,8 +271,7 @@ BookingNextAction resolveNextAction({
   }
 
   if (paymentStatus.needsReview) {
-    // Without a receipt there is nothing to judge; asking the passenger to
-    // upload one is the only honest move.
+    
     if (!hasReceipt) {
       return const BookingNextAction(
         kind: BookingActionKind.requestReview,

@@ -47,11 +47,7 @@ class ReferralRewardsScreen extends StatefulWidget {
 }
 
 class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
-  // Views:
-  // 1 = Referral Dashboard
-  // 2 = Invite Friends Screen
-  // 3 = Referral History Screen
-  // 4 = Rewards Wallet Screen
+  
   int _currentView = 1;
 
   ReferralRewardsData? _data;
@@ -77,7 +73,6 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
 
   final ConfettiController _confetti = ConfettiController();
 
-  // Scratch card parameters
   final List<Offset?> _scratchPoints = [];
   bool _scratchCompleted = false;
 
@@ -93,8 +88,6 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
     _confetti.dispose();
     super.dispose();
   }
-
-  // --- ACTIONS ---
 
   void _onBackPress() {
     if (_currentView > 1) {
@@ -148,7 +141,6 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
     Navigator.of(context).pushNamed(WalletRoutes.wallet);
   }
 
-  // Scratch card interaction
   void _openScratchCard(ScratchVoucher voucher) {
     setState(() {
       _scratchPoints.clear();
@@ -200,7 +192,6 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
                   ),
                   const SizedBox(height: 24),
 
-                  // Scratch area stack
                   Expanded(
                     child: Center(
                       child: Container(
@@ -216,7 +207,7 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
                         child: Stack(
                           alignment: Alignment.center,
                           children: [
-                            // Back layer (Reward details)
+                            
                             Padding(
                               padding: const EdgeInsets.all(20.0),
                               child: Column(
@@ -288,7 +279,6 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
                               ),
                             ),
 
-                            // Scratch Layer Custom paint
                             if (!_scratchCompleted)
                               GestureDetector(
                                 onPanUpdate: (details) {
@@ -298,18 +288,18 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
                                     final localPos = renderBox.globalToLocal(
                                       details.globalPosition,
                                     );
-                                    // Adjust for modal layout offset
+                                    
                                     final cardOffset = Offset(
                                       localPos.dx - 48,
                                       localPos.dy - 100,
                                     );
                                     setModalState(() {
                                       _scratchPoints.add(cardOffset);
-                                      // If scratched enough, automatically resolve
+                                      
                                       if (_scratchPoints.length > 80) {
                                         _scratchCompleted = true;
                                         _confetti.fire();
-                                        // Update state of voucher
+                                        
                                         setState(() {
                                           context
                                               .read<ReferralRewardsCubit>()
@@ -321,7 +311,7 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
                                 },
                                 onPanEnd: (_) {
                                   setModalState(() {
-                                    _scratchPoints.add(null); // break line
+                                    _scratchPoints.add(null); 
                                   });
                                 },
                                 child: CustomPaint(
@@ -367,8 +357,6 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
     );
   }
 
-  // --- RENDERS ---
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -381,9 +369,7 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
         }
 
         return PopScope(
-          // A system back gesture should step the inner view back first,
-          // matching what the app bar's back arrow does — the two used to
-          // disagree and a system back always popped the whole route.
+          
           canPop: _currentView == 1,
           onPopInvokedWithResult: (didPop, _) {
             if (!didPop) _onBackPress();
@@ -412,7 +398,7 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
                 ),
                 ReferralRewardsLoaded() => Stack(
                   children: [
-                    // Core view
+                    
                     AnimatedSwitcher(
                       duration: const Duration(milliseconds: 250),
                       child: _buildCurrentView(scheme),
@@ -439,31 +425,26 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
     };
   }
 
-  // --- SCREEN 1: REFERRAL DASHBOARD ---
   Widget _buildDashboardView(ColorScheme scheme) {
     return ListView(
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 30),
       children: [
-        // Gamified Milestone Ring
+        
         _buildMilestoneProgressCard(scheme),
         const SizedBox(height: 18),
 
-        // Metrics Grid (Stats)
         _buildStatsGrid(scheme),
         const SizedBox(height: 18),
 
-        // Referral Code Card
         _buildReferralCodeCard(scheme),
         const SizedBox(height: 18),
 
-        // Top referrers leaderboard
         if (_leaderboard.isNotEmpty) ...[
           _buildLeaderboardCard(scheme),
           const SizedBox(height: 18),
         ],
 
-        // Quick Navigation rows
         _buildQuickNavOptions(scheme),
       ],
     );
@@ -980,7 +961,7 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // Beautiful simulated QR Code vector
+              
               Container(
                 width: 180,
                 height: 180,
@@ -1020,18 +1001,16 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
     );
   }
 
-  // --- SCREEN 2: INVITE FRIENDS ---
   Widget _buildInviteView(ColorScheme scheme) {
     return ListView(
       key: const ValueKey('view2'),
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 30),
       children: [
-        // Quick Share Header Card
+        
         _buildInviteShareHeader(scheme),
         const SizedBox(height: 16),
 
-        // Referral code highlight
         Container(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
@@ -1109,7 +1088,6 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
         ),
         const SizedBox(height: 16),
 
-        // How it works
         Container(
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
@@ -1278,7 +1256,6 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
     );
   }
 
-  // --- SCREEN 3: REFERRAL HISTORY SCREEN ---
   Widget _buildHistoryView(ColorScheme scheme) {
     return ListView(
       physics: const BouncingScrollPhysics(),
@@ -1394,17 +1371,15 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
     );
   }
 
-  // --- SCREEN 4: REWARDS WALLET SCREEN ---
   Widget _buildWalletView(ColorScheme scheme) {
     return ListView(
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(20),
       children: [
-        // Available Balances Box
+        
         _buildWalletBalancesCard(scheme),
         const SizedBox(height: 24),
 
-        // Unscratched Cards
         Text(
           context.l10n.referral_claimVouchersTitle,
           style: ClientTypography.bodyMedium(context).copyWith(
@@ -1602,7 +1577,6 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
   }
 }
 
-// Custom Painter to draw scratch card metallic layer
 class ScratchCardPainter extends CustomPainter {
   final List<Offset?> points;
   final ColorScheme scheme;
@@ -1619,7 +1593,6 @@ class ScratchCardPainter extends CustomPainter {
 
     canvas.saveLayer(Rect.fromLTWH(0, 0, size.width, size.height), Paint());
 
-    // Draw card background
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromLTWH(0, 0, size.width, size.height),
@@ -1628,7 +1601,6 @@ class ScratchCardPainter extends CustomPainter {
       paint,
     );
 
-    // Draw scratch text
     final textPainter = TextPainter(
       text: TextSpan(
         text: label,
@@ -1650,7 +1622,6 @@ class ScratchCardPainter extends CustomPainter {
       ),
     );
 
-    // Draw clear lines
     final clearPaint = Paint()
       ..blendMode = BlendMode.clear
       ..style = PaintingStyle.stroke
@@ -1670,7 +1641,6 @@ class ScratchCardPainter extends CustomPainter {
   bool shouldRepaint(covariant ScratchCardPainter oldDelegate) => true;
 }
 
-// Custom Painter to draw a simulated QR Code
 class QRPainter extends CustomPainter {
   final Color primaryColor;
 
@@ -1682,8 +1652,6 @@ class QRPainter extends CustomPainter {
       ..color = Colors.black
       ..style = PaintingStyle.fill;
 
-    // Outer framing squares (simulating standard QR finder patterns)
-    // Top Left
     canvas.drawRect(const Rect.fromLTWH(0, 0, 40, 40), paint);
     canvas.drawRect(
       const Rect.fromLTWH(8, 8, 24, 24),
@@ -1694,7 +1662,6 @@ class QRPainter extends CustomPainter {
       Paint()..color = primaryColor,
     );
 
-    // Top Right
     canvas.drawRect(Rect.fromLTWH(size.width - 40, 0, 40, 40), paint);
     canvas.drawRect(
       Rect.fromLTWH(size.width - 32, 8, 24, 24),
@@ -1705,7 +1672,6 @@ class QRPainter extends CustomPainter {
       Paint()..color = primaryColor,
     );
 
-    // Bottom Left
     canvas.drawRect(Rect.fromLTWH(0, size.height - 40, 40, 40), paint);
     canvas.drawRect(
       Rect.fromLTWH(8, size.height - 32, 24, 24),
@@ -1716,7 +1682,6 @@ class QRPainter extends CustomPainter {
       Paint()..color = primaryColor,
     );
 
-    // Draw some random dot grids representing data
     final random = math.Random(12345);
     paint.color = Colors.black;
     const dotSize = 8.0;

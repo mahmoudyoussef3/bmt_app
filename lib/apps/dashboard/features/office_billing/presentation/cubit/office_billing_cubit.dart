@@ -54,8 +54,7 @@ class OfficeBillingCubit extends Cubit<OfficeBillingState> {
   Future<void> load() async {
     emit(const OfficeBillingLoading());
     try {
-      // Refresh first: this is the one screen where a stale plan or a stale
-      // usage number is the actual subject matter.
+      
       await _entitlements.refresh();
 
       final raw = await _client.rpc(

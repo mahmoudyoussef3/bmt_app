@@ -204,9 +204,7 @@ class FinanceMoneyStatements {
     var promotional = 0.0;
     var afterWindow = 0.0;
     for (final movement in wallet.movements) {
-      // Movements after the window's close are unwound from the *current*
-      // liability to recover the closing position — law L2: every derived
-      // figure is back-computable from the ledger.
+      
       if (movement.date.isAfter(range.end)) {
         afterWindow += movement.amount;
         continue;

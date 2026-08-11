@@ -51,8 +51,7 @@ class _BookButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final primary = ClientColors.primaryFor(context);
-    // A repeat booking is offered, not pushed: it keeps the brand colour but
-    // gives up the filled weight to the first-time booking action.
+    
     final isSecondary = trip.isBooked;
 
     return FilledButton(

@@ -2,10 +2,6 @@ import 'dart:convert';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// A lightweight, device-local captain identity for the self-service
-/// onboarding path (name + phone, no SMS). Distinct from the Supabase auth
-/// session used by the operational shell — it only backs the post-approval
-/// welcome experience until the captain is assigned trips.
 class CaptainLocalSession {
   final String driverId;
   final String name;

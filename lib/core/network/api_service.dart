@@ -11,12 +11,4 @@ part 'api_service.g.dart';
 abstract class ApiService {
   factory ApiService(Dio dio, {String baseUrl}) = _ApiService;
 
-  // Example endpoint to demonstrate Retrofit setup.
-  // Replace or add actual endpoints as needed for external APIs.
-  //
-  // @GET('/example/endpoint')
-  // Future<ExampleModel> getExampleData();
-
-  // @POST('/example/submit')
-  // Future<void> submitData(@Body() Map<String, dynamic> body);
 }

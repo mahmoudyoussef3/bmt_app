@@ -74,7 +74,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
   @override
   Future<OperationTripModel> createTrip(CreateTripInput input) async {
     try {
-      // 1. Fetch route stations (client-side; used to build the snapshot array)
+      
       final stationsResponse = await _client
           .from('route_stations')
           .select()
@@ -86,7 +86,6 @@ class SupabaseTripsDatasource implements TripsDatasource {
         throw Exception('لا يمكن إنشاء رحلة لمسار ليس له محطات.');
       }
 
-      // 2. Build route points array (preserving custom time overrides)
       final List<Map<String, dynamic>> routePoints = [];
       for (final station in stations) {
         final stId = station['id']?.toString();
@@ -117,20 +116,6 @@ class SupabaseTripsDatasource implements TripsDatasource {
         });
       }
 
-      // 3. Single atomic RPC call — all inserts in one transaction.
-      //    If any insert fails the entire trip creation rolls back.
-      //
-      //    No vehicle, no capacity and no seat array are sent. Since
-      //    20260731090000_driver_vehicle_authority the server resolves the vehicle from
-      //    the driver's active assignment and derives the trip's capacity and seat map
-      //    from that vehicle. This method used to assemble a seat array here — from the
-      //    vehicle's stored configuration, or from a blueprint, or from a bare 3-wide
-      //    grid — and post it alongside a vehicle id the operator had picked
-      //    independently of the driver. Both were the client deciding things only the
-      //    fleet can know.
-      //
-      //    office_create_trip also validates that the route and driver belong to this
-      //    office and mints the trip code server-side.
       final rpcResult = await _client.rpc(
         'office_create_trip',
         params: {
@@ -148,7 +133,6 @@ class SupabaseTripsDatasource implements TripsDatasource {
 
       final tripId = (rpcResult as Map<String, dynamic>)['trip_id'] as String;
 
-      // 5. Fetch the fully assembled trip to return to the cubit
       return await fetchTripById(tripId);
     } catch (e) {
       throw _handleError(e);
@@ -158,10 +142,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
   @override
   Future<OperationTripModel> updateTripInfo(OperationTrip trip) async {
     try {
-      // `status` is deliberately absent. Writing it here was a direct table update that
-      // skipped the state machine entirely — any status to any status, with none of the
-      // side effects or notifications. Since migration 20260727160000 the database
-      // rejects it outright; status moves through updateTripStatus.
+      
       await _client
           .from('operation_trips')
           .update({
@@ -261,7 +242,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
     TripSeatState state,
   ) async {
     try {
-      // Fetch current seat info to log
+      
       final seatResponse = await _client
           .from('trip_seats')
           .select('seat_label')
@@ -273,7 +254,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
           .from('trip_seats')
           .update({
             'state': state.name,
-            // If seat is blocked or available, clear passenger
+            
             if (state == TripSeatState.available ||
                 state == TripSeatState.blocked)
               'passenger_id': null,
@@ -325,7 +306,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
     String passengerId,
   ) async {
     try {
-      // Find the passenger record to find the seat and log details
+      
       final pResponse = await _client
           .from('trip_passengers')
           .select('passenger_name, seat_id')
@@ -335,13 +316,11 @@ class SupabaseTripsDatasource implements TripsDatasource {
       final name = pResponse['passenger_name'] as String;
       final seatId = pResponse['seat_id'] as String?;
 
-      // Update passenger status to canceled
       await _client
           .from('trip_passengers')
           .update({'status': 'cancelled'})
           .eq('id', passengerId);
 
-      // Free the seat
       if (seatId != null) {
         await _client
             .from('trip_seats')
@@ -368,7 +347,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
     String seatLabel,
   ) async {
     try {
-      // 1. Fetch passenger and target seat
+      
       final pResponse = await _client
           .from('trip_passengers')
           .select('passenger_name, seat_id, status')
@@ -391,7 +370,6 @@ class SupabaseTripsDatasource implements TripsDatasource {
         throw Exception('المقعد المطلوب غير متاح حالياً.');
       }
 
-      // 2. Free old seat
       if (oldSeatId != null) {
         await _client
             .from('trip_seats')
@@ -399,7 +377,6 @@ class SupabaseTripsDatasource implements TripsDatasource {
             .eq('id', oldSeatId);
       }
 
-      // 3. Occupy new seat
       final targetSeatState = passengerStatus == 'subscription'
           ? 'subscription'
           : 'reserved';
@@ -408,7 +385,6 @@ class SupabaseTripsDatasource implements TripsDatasource {
           .update({'state': targetSeatState, 'passenger_id': passengerId})
           .eq('id', newSeatId);
 
-      // 4. Update passenger details
       await _client
           .from('trip_passengers')
           .update({'seat_id': newSeatId, 'seat_label': seatLabel})
@@ -425,10 +401,6 @@ class SupabaseTripsDatasource implements TripsDatasource {
       throw _handleError(e);
     }
   }
-
-  // ============================================================
-  // Pricing Operations
-  // ============================================================
 
   @override
   Future<List<TripPricingModel>> fetchTripPricing(String tripId) async {
@@ -456,7 +428,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
 
       Map<String, dynamic> response;
       if (pricing.id.trim().isEmpty) {
-        // Create new pricing segment
+        
         data['trip_id'] = pricing.tripId;
         response = await _client
             .from('trip_pricing')
@@ -464,7 +436,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
             .select()
             .single();
       } else {
-        // Update existing pricing segment
+        
         response = await _client
             .from('trip_pricing')
             .update(data)
@@ -512,10 +484,6 @@ class SupabaseTripsDatasource implements TripsDatasource {
     }
   }
 
-  // ============================================================
-  // Events Log Helpers
-  // ============================================================
-
   @override
   Future<List<TripEventModel>> fetchTripEvents(String tripId) async {
     try {
@@ -543,7 +511,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
         'done': true,
       });
     } catch (e) {
-      // Fail silently to prevent blocking core workflows
+      
       developer.log('Supabase logEvent error: $e', error: e);
     }
   }
@@ -669,8 +637,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
       var end = arrivalTime.isEmpty
           ? start.add(const Duration(hours: 1))
           : DateTime.parse('$date $arrivalTime');
-      // Mirrors `service_window`'s generated formula: an arrival at or before
-      // departure means the trip runs past midnight.
+      
       if (arrivalTime.isNotEmpty && !end.isAfter(start)) {
         end = end.add(const Duration(days: 1));
       }
@@ -710,10 +677,6 @@ class SupabaseTripsDatasource implements TripsDatasource {
       throw _handleError(e);
     }
   }
-
-  // ============================================================
-  // Realtime
-  // ============================================================
 
   @override
   Stream<void> watchTripsChanges() {
@@ -794,10 +757,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
   }
 
   Exception _handleError(dynamic error) {
-    // `trips`, `max_trips_per_month` and `max_live_trips` are trigger-gated on
-    // operation_trips, so a licensing refusal lands here alongside every other
-    // server code. It leaves as a LicensingFailure so the operator gets the
-    // limit card (§10.3) instead of "خطأ بقاعدة البيانات: quota_exceeded".
+    
     LicensingGuard.check(error);
 
     if (error is PostgrestException) {

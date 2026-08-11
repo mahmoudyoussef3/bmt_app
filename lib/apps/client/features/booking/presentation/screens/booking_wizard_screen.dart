@@ -21,22 +21,18 @@ class BookingWizardScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<BookingWizardStepCubit, int>(
       builder: (context, step) => PopScope(
-        // The system back gesture walks the wizard backwards before it leaves
-        // it, so a rider correcting a stop never loses the rest of the session.
+        
         canPop: step == 0,
         onPopInvokedWithResult: (didPop, _) {
           if (didPop) return;
-          // A confirm in flight blocks the app bar's manual back button below;
-          // the system back gesture must be just as inert, or it can change
-          // the step underneath the blocking overlay mid-write.
+          
           if (_isBusy(context.read<BookingWizardConfirmCubit>().state)) return;
           context.read<BookingWizardStepCubit>().back();
         },
         child: WizardConfirmListener(
           child: BlocBuilder<BookingWizardConfirmCubit, BookingWizardConfirmState>(
             builder: (context, confirmState) {
-              // The gateway webview runs over the wizard, so the block stays up
-              // until the payment resolves rather than only while the RPC runs.
+              
               final busy = _isBusy(confirmState);
 
               return Stack(

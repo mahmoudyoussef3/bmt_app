@@ -27,10 +27,7 @@ class OfficeMarketplaceSummary extends StatelessWidget {
           DashboardKpiGrid(
             maxColumns: 3,
             children: [
-              // Visibility reads `listing_status`, never `status`. The two are
-              // independent: a draft office is fully active and still invisible,
-              // so deriving one from the other would tell the operator their
-              // office is on the marketplace when no passenger can see it.
+              
               DashboardKpiCard(
                 label: 'حالة الظهور في السوق',
                 value: profile.listingLabel,
@@ -80,10 +77,7 @@ class OfficeMarketplaceSummary extends StatelessWidget {
                 : (profile.isDraft ? scheme.tertiary : scheme.error),
             message: profile.isListed
                 ? profile.listingExplanation
-                // No publish control accompanies this, by design. Only
-                // `platform_set_office_listing` can move the listing axis and it
-                // refuses anyone who is not a platform admin, so offering the
-                // office a button here would be an action that always fails.
+                
                 : '${profile.listingExplanation} '
                       'النشر والسحب من السوق قرار إداري على مستوى منصة EWT ولا يتم من هنا.',
           ),

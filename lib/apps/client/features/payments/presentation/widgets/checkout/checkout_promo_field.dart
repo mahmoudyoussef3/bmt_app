@@ -51,8 +51,7 @@ class _CheckoutPromoFieldState extends State<CheckoutPromoField> {
 
   @override
   Widget build(BuildContext context) {
-    // A code in flight or a rejected one keeps the field open on its own: the
-    // rider has to see what they typed to fix it, whatever [_open] last was.
+    
     final open =
         _open ||
         widget.status == PromoStatus.checking ||

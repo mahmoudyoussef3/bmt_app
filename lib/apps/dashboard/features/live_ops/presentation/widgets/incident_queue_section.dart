@@ -337,8 +337,7 @@ class _Actions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // A read-only viewer gets no buttons at all rather than disabled ones: a
-    // greyed "resolve" invites a support agent to keep clicking it.
+    
     if (!canAct) return const SizedBox.shrink();
 
     if (busy) {
@@ -356,8 +355,6 @@ class _Actions extends StatelessWidget {
     final canResolve = status.canTransitionTo(IncidentStatus.resolved);
     final canDismiss = status.canTransitionTo(IncidentStatus.dismissed);
 
-    // Wrap keeps the buttons from overflowing a narrow incident panel or a
-    // large text scale — they stack instead.
     return Align(
       alignment: AlignmentDirectional.centerEnd,
       child: Wrap(

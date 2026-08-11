@@ -68,7 +68,6 @@ class ProfileHubBody extends StatelessWidget {
         const SizedBox(height: AppLayout.spaceXl),
         LogoutButton(isLoading: isSigningOut, onPressed: onLogout),
 
-        // Clears the bottom navigation bar.
         const SizedBox(height: 96),
       ],
     );

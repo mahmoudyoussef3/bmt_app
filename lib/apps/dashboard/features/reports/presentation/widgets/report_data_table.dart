@@ -59,7 +59,7 @@ class ReportDataTable extends StatelessWidget {
 
     return Theme(
       data: Theme.of(context).copyWith(
-        dividerColor: scheme.outlineVariant.withValues(alpha: 0.2), // ~50/255
+        dividerColor: scheme.outlineVariant.withValues(alpha: 0.2), 
       ),
       child: switch (state.activeReportType) {
         ReportType.trips => DataTable(

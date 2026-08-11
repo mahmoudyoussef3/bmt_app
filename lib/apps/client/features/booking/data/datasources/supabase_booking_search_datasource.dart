@@ -32,9 +32,7 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
 
   @override
   Future<List<RouteOptionModel>> getRoutes(BookingSearchQuery query) async {
-    // EWT is a marketplace: this deliberately spans every ACTIVE office rather than
-    // filtering to one. The embedded office is what lets the UI tell providers apart
-    // — two offices may run the same corridor at different times and prices.
+    
     var routesQuery = _supabase
         .from('operation_routes')
         .select('*, office:public_offices(*)')
@@ -195,10 +193,7 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
     List<String> routeIds,
   ) async {
     if (routeIds.isEmpty) return const {};
-    // `public_trips` is the only trip surface the Client may query; its
-    // `drivers` / `vehicles` are sanitised jsonb columns, not table embeds.
-    // The bookable predicate is applied here rather than only in Dart so a
-    // route's departed and in-flight trips never cross the wire at all.
+    
     final response = await _supabase
         .from('public_trips')
         .select('''

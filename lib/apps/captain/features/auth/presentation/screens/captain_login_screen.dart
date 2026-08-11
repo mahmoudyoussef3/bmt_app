@@ -21,8 +21,6 @@ import '../widgets/captain_remember_me_checkbox.dart';
 class CaptainLoginScreen extends StatefulWidget {
   const CaptainLoginScreen({super.key, this.onRequestAccess});
 
-  /// When provided (by the auth gate), tapping "Request access" swaps the
-  /// top-level screen to the onboarding flow instead of pushing a route.
   final VoidCallback? onRequestAccess;
 
   @override
@@ -172,8 +170,6 @@ class _CaptainLoginScreenState extends State<CaptainLoginScreen> {
   }
 }
 
-/// A hairline rule with a centred "أو" — separates signing in from the
-/// distinct path of asking to join.
 class _AuthDivider extends StatelessWidget {
   const _AuthDivider();
 
@@ -203,11 +199,6 @@ class _AuthDivider extends StatelessWidget {
   }
 }
 
-/// Entry point to onboarding for a captain who has no account yet.
-///
-/// Presented as a full tappable card rather than an inline text link: it is the
-/// screen's only other route forward, and a captain who can't sign in because
-/// they were never provisioned needs to find it without hunting.
 class _RequestAccessLink extends StatelessWidget {
   const _RequestAccessLink({required this.onTap});
 

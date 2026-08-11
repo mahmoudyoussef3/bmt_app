@@ -14,9 +14,6 @@ import '../widgets/captain_request_form.dart';
 import '../widgets/captain_request_pending_view.dart';
 import '../widgets/captain_request_rejected_view.dart';
 
-/// Root of the self-service captain onboarding: form → pending → approved /
-/// rejected. Terminal transitions (enter home, back to sign in) are delegated
-/// to the auth gate via callbacks so it can swap the top-level screen.
 class CaptainOnboardingFlow extends StatefulWidget {
   final void Function(CaptainLocalSession session) onEnterHome;
   final VoidCallback onBackToLogin;
@@ -53,19 +50,13 @@ class _CaptainOnboardingFlowState extends State<CaptainOnboardingFlow> {
     return CaptainAuthScaffold(
       child: BlocBuilder<CaptainOnboardingCubit, CaptainOnboardingState>(
         builder: (context, state) => switch (state) {
-          OnboardingForm(
-            :final error,
-            :final offices,
-            :final loadingOffices,
-          ) =>
+          OnboardingForm(:final error, :final offices, :final loadingOffices) =>
             _form(
               submitting: false,
               error: error,
               offices: _remember(offices),
               loadingOffices: loadingOffices,
             ),
-          // Submitting carries no office list of its own; reuse the last one
-          // so the picker doesn't blink out from under the applicant.
           OnboardingSubmitting() => _form(
             submitting: true,
             offices: _lastOffices,
@@ -97,7 +88,6 @@ class _CaptainOnboardingFlowState extends State<CaptainOnboardingFlow> {
 
   List<OnboardingOffice> _lastOffices = const [];
 
-  /// Caches the office list so the transient submitting state can reuse it.
   List<OnboardingOffice> _remember(List<OnboardingOffice> offices) {
     if (offices.isNotEmpty) _lastOffices = offices;
     return offices.isEmpty ? _lastOffices : offices;

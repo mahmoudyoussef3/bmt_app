@@ -39,8 +39,6 @@ abstract final class WalletMapper {
     return text.isEmpty ? fallback : text;
   }
 
-  // ── Wallet ───────────────────────────────────────────────────────────────
-
   static Wallet wallet(Map<String, dynamic>? json) {
     if (json == null || json['exists'] != true) return const Wallet.empty();
     return Wallet(
@@ -134,8 +132,6 @@ abstract final class WalletMapper {
             .toList(),
       );
 
-  // ── Ledger ───────────────────────────────────────────────────────────────
-
   static WalletTransaction transaction(Map<String, dynamic> json) =>
       WalletTransaction(
         id: _text(json['id']),
@@ -204,8 +200,6 @@ abstract final class WalletMapper {
         cachedBalance: _money(json['cached_balance']),
         headHash: json['head_hash'] as String?,
       );
-
-  // ── Refunds ──────────────────────────────────────────────────────────────
 
   /// Handles both shapes this row arrives in: the flat `to_jsonb(refund_row)`
   /// an RPC returns, and the PostgREST read with `client:clients(...)` and

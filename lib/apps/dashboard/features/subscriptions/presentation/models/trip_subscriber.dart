@@ -128,8 +128,6 @@ class TripSubscriberBoard {
       );
     }
 
-    // Work first: who still needs checking in, then who is already on board,
-    // then the rest — with the strongest link deciding ties.
     subscribers.sort((a, b) {
       final byLink = a.primaryLink.index.compareTo(b.primaryLink.index);
       if (byLink != 0) return byLink;

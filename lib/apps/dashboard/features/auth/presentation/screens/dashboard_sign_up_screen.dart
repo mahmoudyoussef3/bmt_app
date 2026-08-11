@@ -53,8 +53,7 @@ class _DashboardSignUpScreenState extends State<DashboardSignUpScreen> {
   String? _validateEmail(String? value) {
     final email = value?.trim() ?? '';
     if (email.isEmpty) return 'أدخل البريد الإلكتروني';
-    // Matches the server's own check in register_office, so a value that passes here
-    // is not rejected a round-trip later.
+    
     final valid = RegExp(r'^[^@\s]+@[^@\s]+\.[a-zA-Z]{2,}$').hasMatch(email);
     return valid ? null : 'البريد الإلكتروني غير صالح';
   }

@@ -46,9 +46,6 @@ class PlatformOverviewPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final data = analytics;
 
-    // A failed analytics call is reported in place, not as a screen error: the
-    // office list below is intact and still usable, and taking it down because
-    // the numbers failed would trade a whole screen for a chart.
     if (data == null) {
       return AppCard(
         padding: const EdgeInsets.all(AppSpacing.large),
@@ -247,8 +244,7 @@ class _HeadlineKpis extends StatelessWidget {
       ),
       DashboardKpiCard(
         label: 'إشغال المقاعد',
-        // Null means nothing was on sale, which is not the same as nothing
-        // sold — so it says so rather than printing 0%.
+        
         value: occupancy == null
             ? '—'
             : '${(occupancy * 100).toStringAsFixed(0)}%',
@@ -259,9 +255,7 @@ class _HeadlineKpis extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Three across on a wide dashboard, two on a narrow one. Fixed columns
-        // rather than a Wrap so the tiles line up in a grid instead of leaving
-        // a ragged last row.
+        
         final columns = constraints.maxWidth >= 900 ? 3 : 2;
         return GridView.count(
           crossAxisCount: columns,
@@ -451,9 +445,6 @@ class _TrendAndLeaders extends StatelessWidget {
         ),
     ];
 
-    // Only offices that actually earned something in the window. A ranking
-    // padded out with zero-revenue offices tells the reader nothing and makes
-    // the leader's bar look shorter than it is.
     final leaders = [
       for (final office in offices)
         if (analytics.metricsFor(office.id) case final m?

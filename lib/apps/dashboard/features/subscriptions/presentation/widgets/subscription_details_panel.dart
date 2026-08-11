@@ -251,8 +251,7 @@ class _RideHistoryPanel extends StatelessWidget {
       child: history.isEmpty
           ? Text(
               subscription.usedRides > 0
-                  // Rides consumed before the ledger existed have no trip
-                  // attached; claiming otherwise would be inventing data.
+                  
                   ? 'لا يوجد سجل مفصّل — استُهلكت '
                         '${arabicNumber(subscription.usedRides)} رحلة قبل تفعيل '
                         'سجل الرحلات.'

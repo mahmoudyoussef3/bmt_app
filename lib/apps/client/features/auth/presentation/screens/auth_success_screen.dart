@@ -10,7 +10,6 @@ import '../widgets/auth_success_badge.dart';
 import '../widgets/auth_success_content.dart';
 import '../widgets/auth_success_cta.dart';
 
-
 class AuthSuccessScreen extends StatefulWidget {
   const AuthSuccessScreen({super.key, this.email});
 

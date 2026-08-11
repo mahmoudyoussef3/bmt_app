@@ -128,10 +128,7 @@ class FleetVehiclesCardList extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(width: AppSpacing.small),
-                              // Two readings, deliberately side by side: what the
-                              // bus is doing, and what state its record is in.
-                              // Wrap so a large text scale stacks them instead of
-                              // overflowing the card header.
+                              
                               Wrap(
                                 spacing: AppSpacing.xSmall,
                                 runSpacing: AppSpacing.xSmall,

@@ -17,9 +17,7 @@ PaymentCheckoutData wizardCheckoutData(BookingWizardSession session) {
     tripId: trip?.id ?? '',
     pickupPoint: session.pickupStop?.name ?? '',
     destination: session.dropoffStop?.name ?? '',
-    // The plate identifies the bus at the kerb; the generic type is the
-    // fallback so the ticket's vehicle fact is never blank — and never
-    // reports the booking as incomplete over a thin fleet record.
+    
     vehicleNumber: vehicle.plateNumber.isNotEmpty
         ? vehicle.plateNumber
         : (trip?.vehicleType ?? ''),
@@ -30,8 +28,7 @@ PaymentCheckoutData wizardCheckoutData(BookingWizardSession session) {
     arrivalTime: trip?.arrivalTime ?? '',
     selectedSeatId: session.selectedSeatId ?? '',
     selectedSeat: session.selectedSeatLabel ?? '',
-    // The captain is on the trip the rider picked, so the ticket they pay on
-    // names the same person as the card they picked it from.
+    
     driverName: vehicle.driverName,
     driverImageUrl: vehicle.driverImageUrl,
     driverRating: vehicle.hasDriverRating ? vehicle.driverRating : 0,

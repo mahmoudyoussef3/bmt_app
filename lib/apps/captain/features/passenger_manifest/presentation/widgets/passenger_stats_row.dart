@@ -6,7 +6,6 @@ import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 
 import '../cubit/passenger_manifest_state.dart';
 
-/// Boarding tallies and progress for the whole trip.
 class PassengerStatsRow extends StatelessWidget {
   const PassengerStatsRow({super.key, required this.counts});
 
@@ -76,8 +75,6 @@ class _BoardingProgress extends StatelessWidget {
         value: ratio,
         minHeight: 8,
         backgroundColor: CaptainColors.primary.withValues(alpha: 0.1),
-        // Turning green only at a full load makes "everyone is aboard" a state
-        // the captain can see without reading the numbers.
         valueColor: AlwaysStoppedAnimation<Color>(
           ratio == 1.0 ? CaptainColors.success : CaptainColors.primary,
         ),

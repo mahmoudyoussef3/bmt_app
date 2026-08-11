@@ -3,11 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 
-/// The "EasyWay · كابتن" lockup that fades in and slides up during the intro.
-///
-/// The wordmark stays Latin (it is the brand) while the role sits beneath it in
-/// Arabic — the captain build is the same product as the rider app, worn
-/// differently, and the mark should say so.
 class CaptainSplashWordmark extends StatelessWidget {
   const CaptainSplashWordmark({super.key, required this.reveal});
 
@@ -31,8 +26,6 @@ class CaptainSplashWordmark extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // The wordmark is the brand, so it stays LTR inside the app's
-          // ambient RTL rather than reflowing to "WayEasy".
           Directionality(
             textDirection: TextDirection.ltr,
             child: RichText(

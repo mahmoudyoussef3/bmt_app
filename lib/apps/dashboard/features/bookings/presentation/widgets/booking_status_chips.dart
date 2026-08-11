@@ -134,8 +134,7 @@ class BookingStateChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(999),
         border: Border.all(color: tone.ink.withAlpha(45)),
       ),
-      // Intrinsic width so a long Arabic label is never clipped inside a table
-      // cell, and shrinks with the row instead of forcing it wider.
+      
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

@@ -71,13 +71,11 @@ class _ClientAppState extends State<ClientApp> {
   void _listenAuth() {
     final supabase = Supabase.instance.client;
 
-    // Initialise FCM for a session that already exists at startup.
     final current = supabase.auth.currentSession;
     if (current != null) {
       _initFcm(supabase, current.user.id);
     }
 
-    // Track future sign-in / sign-out events.
     _authSub = supabase.auth.onAuthStateChange.listen((state) {
       final session = state.session;
       if (session != null) {
@@ -151,9 +149,7 @@ class _ClientAppState extends State<ClientApp> {
                 },
               ),
               routes: ClientRouter.routes,
-              // Notification taps (in-app and FCM) push `action_url` straight
-              // from the database, so an unrecognised value must land somewhere
-              // harmless instead of throwing on a route that does not exist.
+              
               onUnknownRoute: (settings) => MaterialPageRoute<void>(
                 settings: settings,
                 builder: (_) => ClientRouter.buildShell(),
@@ -195,7 +191,7 @@ class _LandingScreen extends StatelessWidget {
     return StreamBuilder<AuthState>(
       stream: Supabase.instance.client.auth.onAuthStateChange,
       builder: (context, snapshot) {
-        // currentSession covers the case where the stream has not emitted yet.
+        
         final session =
             snapshot.data?.session ??
             Supabase.instance.client.auth.currentSession;

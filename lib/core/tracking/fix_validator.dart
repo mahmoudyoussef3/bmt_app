@@ -52,7 +52,7 @@ class FixValidator {
   bool _hasSaneCoordinates(VehicleFix fix) {
     if (!fix.latitude.isFinite || !fix.longitude.isFinite) return false;
     if (fix.latitude.abs() > 90 || fix.longitude.abs() > 180) return false;
-    // A (0,0) fix is the classic "no GPS lock yet" placeholder.
+    
     if (fix.latitude == 0 && fix.longitude == 0) return false;
     return true;
   }

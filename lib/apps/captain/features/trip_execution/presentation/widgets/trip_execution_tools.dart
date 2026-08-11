@@ -5,22 +5,6 @@ import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/trips/captain_trip_stage.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_list_group.dart';
 
-/// Everything else the captain can do on this trip, scoped to its [stage].
-///
-/// These were a two-column `GridView` of square tiles, each with a tinted
-/// circular icon — the module grid an admin console opens on, and the single
-/// most dashboard-like thing in the app. They are secondary tools, not the
-/// screen's subject: as a list of rows they take a third of the height, say
-/// what they do in full, and stop competing with the trip itself.
-///
-/// Boarding passengers is done from the manifest ("الركاب"), where a captain
-/// taps a name and sets it to صعد. There is no ticket QR to scan — clients are
-/// never issued one — so the scanner tile that used to sit here opened a camera
-/// that could not succeed at anything.
-///
-/// The rest follow the stage: reporting a position or a status update before
-/// operations has even released the trip describes a journey that isn't
-/// happening.
 class TripExecutionTools extends StatelessWidget {
   const TripExecutionTools({
     super.key,
@@ -35,8 +19,6 @@ class TripExecutionTools extends StatelessWidget {
   Widget build(BuildContext context) {
     return CaptainListGroup(
       children: [
-        // The manifest is the boarding door: available from the moment there
-        // are bookings to look at.
         _Tool(
           label: 'كشف الركاب',
           detail: 'من صعد ومن لم يصعد بعد',
@@ -51,8 +33,6 @@ class TripExecutionTools extends StatelessWidget {
             onTap: () => context.openLocationUpdate(tripId),
           ),
           _Tool(
-            // "تحديث الحالة" read as a lifecycle control sitting next to the
-            // real one. It posts a note to operations — the label now says so.
             label: 'إبلاغ العمليات',
             detail: 'رسالة بموقفك الحالي',
             icon: Icons.sync_rounded,

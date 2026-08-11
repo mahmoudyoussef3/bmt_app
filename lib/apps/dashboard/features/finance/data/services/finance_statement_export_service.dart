@@ -21,7 +21,7 @@ class FinanceStatementExportService {
     FinanceStatement statement,
     String format,
   ) async {
-    // Server-side licence + monthly meter, before any bytes exist.
+    
     await LicensedExport.consume(format);
 
     switch (format.toLowerCase()) {
@@ -45,9 +45,7 @@ class FinanceStatementExportService {
         ..addAll(section.rows)
         ..add(const []);
     }
-    // `addBom` + real UTF-8 encoding: without the BOM Excel renders the Arabic
-    // headers as mojibake, and encoding via `String.codeUnits` would mangle
-    // every non-Latin character on the way out.
+    
     final csv = const CsvEncoder(addBom: true).convert(rows);
     return Uint8List.fromList(utf8.encode(csv));
   }

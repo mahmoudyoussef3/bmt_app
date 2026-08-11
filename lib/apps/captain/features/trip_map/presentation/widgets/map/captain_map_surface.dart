@@ -7,9 +7,6 @@ import 'package:bmt_app/core/tracking/progress/route_progress_snapshot.dart';
 import 'captain_map_layers.dart';
 import 'captain_map_vehicle.dart';
 
-/// The captain map surface: tiles, route, stops and the captain's vehicle,
-/// wrapped in a [RepaintBoundary] so a live fix repaints the map alone and not
-/// the pickup panel over it.
 class CaptainMapSurface extends StatelessWidget {
   const CaptainMapSurface({
     super.key,
@@ -50,10 +47,9 @@ class CaptainMapSurface extends StatelessWidget {
           onMapReady: onMapReady,
           onMapEvent: onMapEvent,
           onPositionChanged: onPositionChanged,
-          // North-up: a captain matching the screen to the road ahead is served
-          // by it, and a stray twist that tilts the city is pure friction.
           interactionOptions: const InteractionOptions(
-            flags: InteractiveFlag.drag |
+            flags:
+                InteractiveFlag.drag |
                 InteractiveFlag.pinchZoom |
                 InteractiveFlag.doubleTapZoom,
           ),

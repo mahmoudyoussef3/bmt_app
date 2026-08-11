@@ -56,8 +56,7 @@ class OfficeNothingListedView extends StatelessWidget {
           const SizedBox(height: ClientSpacing.sm),
           ClientButton.secondary(
             label: l10n.offices_browseOtherOffices,
-            // Back to the directory this profile was opened from, rather than a
-            // second copy of it pushed on top.
+            
             onPressed: () => Navigator.of(context).maybePop(),
           ),
         ],

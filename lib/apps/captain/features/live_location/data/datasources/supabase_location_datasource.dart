@@ -16,23 +16,11 @@ class SupabaseLocationDatasource implements LocationDatasource {
   Future<LocationUpdateModel> sendLocation(String tripId) async {
     await _ensureLocationAvailable();
 
-    // The driver stamped on the fix is the signed-in captain, not whoever the
-    // trip row names. The database no longer takes this on trust either — the
-    // `trip_live_locations_captain_publish` policy refuses an insert for a trip
-    // that is not this captain's, and `enforce_live_location_authorship`
-    // overwrites `driver_id` with the server-resolved captain regardless of
-    // what the payload says (migrations 20260728120000 / 20260729090000). What
-    // follows is the client-side half: it produces a correct row and a readable
-    // Arabic message, rather than letting the captain watch an opaque
-    // Postgrest error.
     final driverId = await _identity.driverId();
     if (driverId == null) {
       throw Exception('لا يمكن إرسال الموقع: لم يتم التعرف على السائق.');
     }
 
-    // Scoping the lookup by driver is also the ownership check: a trip that is
-    // not this captain's returns nothing, so they cannot push positions onto
-    // another captain's — or another office's — trip.
     final trip = await _supabase
         .from('operation_trips')
         .select('vehicle_id')

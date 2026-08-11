@@ -102,9 +102,7 @@ class PlatformOfficeCard extends StatelessWidget {
               Wrap(
                 spacing: AppSpacing.xSmall,
                 children: [
-                  // Activity first: of the three chips it is the only one that
-                  // can change without anyone touching the office, and so the
-                  // only one that carries news.
+                  
                   if (metrics case final m?)
                     StatusChip(
                       label: m.activityLevel.label,
@@ -153,10 +151,7 @@ class PlatformOfficeCard extends StatelessWidget {
               _Stat(label: 'رحلات', value: office.trips),
             ],
           ),
-          // The activity line, kept separate from the inventory line above it:
-          // those five counts describe what the office HAS, these describe what
-          // it DID, and reading them as one row invites treating a fleet of ten
-          // buses as evidence the office is trading.
+          
           if (metrics case final m?) ...[
             const SizedBox(height: AppSpacing.xSmall),
             Wrap(
@@ -226,8 +221,7 @@ class PlatformOfficeCard extends StatelessWidget {
                 )
               else
                 FilledButton.icon(
-                  // Disabled with the reason spelled out above rather than
-                  // letting the operator press it and read office_profile_incomplete.
+                  
                   onPressed: isBusy || !office.canBeListed
                       ? null
                       : () => onSetListing('listed'),

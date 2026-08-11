@@ -15,24 +15,6 @@ import 'assigned_trip_card_parts.dart';
 import 'captain_focus_card_parts.dart';
 import 'home_quick_actions.dart';
 
-/// The one thing the captain should act on now: the running trip, or the next
-/// scheduled one. Deliberately the loudest element on the home screen.
-///
-/// It is a surface card with a stage-tinted crown, **not** a brand-gradient
-/// slab. It used to be one, sitting a hairline below an equally blue app bar,
-/// and two identical gradients that close together read as a single smeared
-/// header rather than as chrome plus content. On a surface the trip's own
-/// facts also carry full-contrast text instead of white-on-blue, which is what
-/// a captain glancing down at a phone in a cradle actually needs.
-///
-/// It absorbs the day's shortcuts as a footer. They were three more bordered
-/// tiles floating under the card; as a footer strip they belong to the trip
-/// they act on, and the home screen loses a whole tier of boxes.
-///
-/// Everything time-dependent here is rebuilt from a [CaptainTicker] rather
-/// than sampled once at build: the home cubit only re-emits on realtime trip
-/// changes, so a countdown drawn from a build-time `DateTime.now()` froze at
-/// whatever gap existed when the screen loaded.
 class CaptainFocusCard extends StatelessWidget {
   const CaptainFocusCard({super.key, required this.trip, required this.onOpen});
 
@@ -86,9 +68,6 @@ class CaptainFocusCard extends StatelessWidget {
                     const SizedBox(height: CaptainDesignTokens.s12),
                     Row(
                       children: [
-                        // The scheduled departure is stated as a clock time,
-                        // always. A relative countdown alone gives the captain
-                        // nothing to check against the trip's own schedule.
                         FocusFact(
                           icon: Icons.schedule_rounded,
                           text:
@@ -111,7 +90,7 @@ class CaptainFocusCard extends StatelessWidget {
                         accent: accent,
                       ),
                     ],
-                    const SizedBox(height: CaptainDesignTokens.s16),
+                    const SizedBox(height: CaptainDesignTokens.s12),
                     FocusStatusPanel(
                       text: CaptainTripStageLabels.status(
                         stage: stage,
@@ -121,7 +100,7 @@ class CaptainFocusCard extends StatelessWidget {
                       icon: CaptainTripStagePalette.icon(stage),
                       accent: accent,
                     ),
-                    const SizedBox(height: CaptainDesignTokens.s20),
+                    const SizedBox(height: CaptainDesignTokens.s16),
                     FocusAction(
                       label: CaptainTripStageLabels.openAction(stage),
                       icon: _actionIcon(stage),

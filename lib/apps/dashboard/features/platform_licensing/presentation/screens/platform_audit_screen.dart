@@ -165,9 +165,7 @@ class _PlatformAuditScreenState extends State<PlatformAuditScreen> {
                             day: group.day,
                             count: group.entries.length,
                           ),
-                          // Rows vary in height — some carry a reason, some do
-                          // not — so they get the same hairline the console's
-                          // tables use rather than relying on rhythm alone.
+                          
                           for (final (index, entry)
                               in group.entries.indexed) ...[
                             if (index > 0)
@@ -278,8 +276,7 @@ class _AuditHeader extends StatelessWidget {
               for (final entry in _entityTypes.entries)
                 ChoiceChip(
                   label: Text(entry.value),
-                  // Single-select: the checkmark a FilterChip adds says
-                  // "multiple", which these are not.
+                  
                   showCheckmark: false,
                   selected: entityType == entry.key,
                   onSelected: (_) => onEntityType(entry.key),

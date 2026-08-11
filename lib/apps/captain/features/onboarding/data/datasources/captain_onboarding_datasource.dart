@@ -2,18 +2,16 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../domain/entities/captain_onboarding_models.dart';
 
-/// Talks to the anon-callable onboarding RPCs. The captain has no auth session
-/// at this stage, so identity is carried entirely by the phone number.
 class CaptainOnboardingDatasource {
   final SupabaseClient _client;
   const CaptainOnboardingDatasource(this._client);
 
-  /// The offices currently accepting applications. Reads the anon-safe
-  /// directory view, which excludes each office's join code.
   Future<List<OnboardingOffice>> fetchActiveOffices() async {
     final rows = await _client.from('public_offices').select().order('name');
     return (rows as List)
-        .map((r) => OnboardingOffice.fromRow(Map<String, dynamic>.from(r as Map)))
+        .map(
+          (r) => OnboardingOffice.fromRow(Map<String, dynamic>.from(r as Map)),
+        )
         .toList();
   }
 

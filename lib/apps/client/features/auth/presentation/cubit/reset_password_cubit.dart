@@ -25,9 +25,7 @@ class ResetPasswordCubit extends Cubit<ResetPasswordState> {
         _onAuthStateChange,
         onError: _onAuthError,
       );
-      // A malformed/expired link that Supabase's deep-link handler does not
-      // even recognise never emits an event or an error, so without a
-      // timeout the screen would wait on "verifying" forever.
+      
       _verifyTimeout = Timer(
         const Duration(seconds: 12),
         () => _onAuthError('TimedOut', StackTrace.empty),
@@ -69,9 +67,7 @@ class ResetPasswordCubit extends Cubit<ResetPasswordState> {
     );
     try {
       await _updatePasswordUseCase(newPassword);
-      // The recovery session is now a valid session for the account; sign it
-      // out so the rider must confirm the new password by signing in again
-      // rather than landing back in the app still authenticated.
+      
       try {
         await Supabase.instance.client.auth.signOut();
       } catch (_) {}

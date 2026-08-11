@@ -36,14 +36,6 @@ class TripExecutionDataSource {
     );
   }
 
-  /// Watches this trip's status, boarded/passenger counts, and confirmed
-  /// station arrivals, re-fetching the aggregate snapshot on every relevant
-  /// change so none of them go stale for the lifetime of the execution
-  /// screen. `trip_passengers`/`trip_events` changes aren't filtered to this
-  /// trip at the channel level (Realtime only supports a single equality
-  /// filter, already spent on `operation_trips.id`) — the same trade-off
-  /// `CaptainTripRemoteDataSource.watchTripUpdates` makes; the debounced
-  /// re-fetch below is what actually scopes the result to [tripId].
   Stream<TripExecutionSnapshot> watchSnapshot({
     required String tripId,
     required int routePointCount,
@@ -56,12 +48,7 @@ class TripExecutionDataSource {
       try {
         final snapshot = await _fetchSnapshot(tripId, routePointCount);
         if (!controller.isClosed) controller.add(snapshot);
-      } catch (_) {
-        // Realtime is a refinement over the initial fetch already shown by
-        // the screen; a transient refresh failure just waits for the next
-        // change (or the next manual reopen) rather than surfacing an error
-        // over data the captain can already see.
-      }
+      } catch (_) {}
     }
 
     void scheduleEmit() {
@@ -131,10 +118,6 @@ class TripExecutionDataSource {
         TripExecutionStatus.scheduled;
 
     final passengers = (response['trip_passengers'] as List?) ?? const [];
-    // scan_passenger_ticket writes 'confirmed' on check-in (see
-    // migration_07) — trip_passengers.status has no 'boarded' value in its
-    // check constraint. 'completed' is kept defensively; nothing currently
-    // writes it, but it would mean the same thing if something one day did.
     final boarded = passengers.where((p) {
       final s = (p as Map<String, dynamic>)['status']?.toString();
       return s == 'confirmed' || s == 'completed';
@@ -157,10 +140,6 @@ class TripExecutionDataSource {
     );
   }
 
-  /// The newest stored position for this trip, if any. Each automatic or
-  /// manual send inserts its own row, so this reads the latest rather than
-  /// subscribing to a feed — the realtime insert trigger above is what makes
-  /// it refresh.
   Future<TripLastLocationFix?> _fetchLastLocation(String tripId) async {
     final row = await _supabase
         .from('trip_live_locations')
@@ -183,9 +162,6 @@ class TripExecutionDataSource {
     );
   }
 
-  /// Inserts the canonical per-station arrival marker into `trip_events` —
-  /// the exact convention the Dashboard uses (`markPointArrived`), so
-  /// Dashboard, Client, and Captain all read the same source of truth.
   Future<void> markStationArrived({
     required String tripId,
     required String pointId,
@@ -199,9 +175,6 @@ class TripExecutionDataSource {
     });
   }
 
-  /// Calls the driver-scoped wrapper around update_trip_status, which asserts
-  /// the caller is this trip's assigned driver before delegating. The raw RPC
-  /// carries no such check and is no longer granted to `authenticated`.
   Future<void> _transitionStatus(String tripId, String newStatus) async {
     try {
       await _supabase.rpc(

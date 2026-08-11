@@ -9,13 +9,6 @@ import 'package:bmt_app/apps/captain/core/widgets/captain_live_sync_chip.dart';
 
 import '../../domain/entities/captain_day_summary.dart';
 
-/// Every assigned trip is done and no new one has arrived yet.
-///
-/// This takes the place of the focus card, so it has to carry the same weight:
-/// it closes the day with the captain's own numbers rather than leaving a
-/// screen of finished trips with nothing to act on, then hands the waiting back
-/// to operations with the same "it arrives here on its own" promise the
-/// awaiting-trips view makes.
 class CaptainDayCompleteView extends StatelessWidget {
   const CaptainDayCompleteView({
     super.key,
@@ -40,8 +33,6 @@ class CaptainDayCompleteView extends StatelessWidget {
   }
 }
 
-/// The celebration itself, in the focus card's gradient language so a finished
-/// day reads as an achievement rather than an absence.
 class _CompletionHero extends StatelessWidget {
   const _CompletionHero({required this.summary});
 
@@ -52,8 +43,6 @@ class _CompletionHero extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        // Runs from the "done" end of the palette into the brand anchor: still
-        // one blue family, but visibly not the focus card's live-trip blue.
         gradient: const LinearGradient(
           colors: [CaptainColors.primaryDeep, CaptainColors.primary],
           begin: AlignmentDirectional.topStart,
@@ -127,7 +116,6 @@ class _CompletionHero extends StatelessWidget {
   }
 }
 
-/// A soft blob of light behind the hero content, for depth on a flat gradient.
 class _Glow extends StatelessWidget {
   const _Glow(this.size);
 
@@ -146,7 +134,6 @@ class _Glow extends StatelessWidget {
   }
 }
 
-/// The check mark, stamped on once when the finished day first appears.
 class _CompletionSeal extends StatelessWidget {
   const _CompletionSeal();
 
@@ -171,8 +158,6 @@ class _CompletionSeal extends StatelessWidget {
   }
 }
 
-/// What the captain actually did today — the reason this screen is a reward and
-/// not just an empty state.
 class _CompletionMetrics extends StatelessWidget {
   const _CompletionMetrics({required this.summary});
 
@@ -273,8 +258,6 @@ class _MetricDivider extends StatelessWidget {
   }
 }
 
-/// Where the day goes next. Without this the captain is left to guess whether
-/// finishing the schedule means the app is done talking to them.
 class _NextAssignmentCard extends StatelessWidget {
   const _NextAssignmentCard({
     required this.onRefresh,

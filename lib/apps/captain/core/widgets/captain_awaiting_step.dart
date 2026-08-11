@@ -6,8 +6,6 @@ import '../theme/captain_typography.dart';
 
 enum CaptainStepState { done, current, upcoming }
 
-/// One row of the assignment workflow the captain is waiting inside:
-/// account activated → operations assigns a trip → the trip appears here.
 class CaptainAwaitingStep extends StatelessWidget {
   const CaptainAwaitingStep({
     super.key,

@@ -37,8 +37,8 @@ class SupabaseReportsDatasource implements ReportsDatasource {
 
         double totalNet = 0;
         double totalBkgRev = 0;
-        int totalRefundsCount = 0; // Stub since refunds aren't tracked yet
-        double totalSubRev = 0; // Stub since subscriptions aren't tracked yet
+        int totalRefundsCount = 0; 
+        double totalSubRev = 0; 
 
         for (var r in response) {
           final rev =
@@ -175,7 +175,7 @@ class SupabaseReportsDatasource implements ReportsDatasource {
         int totalComplaints = 0;
         int resolved = 0;
         int pending = 0;
-        double avgTime = 0.0; // Stub
+        double avgTime = 0.0; 
 
         for (var r in response) {
           final total = int.tryParse(r['total_complaints'].toString()) ?? 0;
@@ -187,7 +187,7 @@ class SupabaseReportsDatasource implements ReportsDatasource {
           totalComplaints += total;
           resolved += res;
           pending += pend;
-          avgTime = time; // Taking the stub value
+          avgTime = time; 
 
           rows.add(
             ComplaintReportRow(
@@ -212,7 +212,7 @@ class SupabaseReportsDatasource implements ReportsDatasource {
       case ReportType.trips:
       case ReportType.bookings:
       case ReportType.subscriptions:
-        // Stub implementation for other types to prevent breaking the UI
+        
         kpis['البيانات'] = 'قيد التطوير الفعلي';
         break;
     }

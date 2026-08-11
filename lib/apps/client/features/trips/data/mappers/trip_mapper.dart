@@ -14,17 +14,11 @@ abstract final class TripMapper {
     final vehicleObj = tripObj?['vehicles'] as Map<String, dynamic>?;
     final driverObj = tripObj?['drivers'] as Map<String, dynamic>?;
 
-    // Routes are always assembled client-side as "$pickup → $destination".
-    // Split on the arrow first; only fall back to a whitespace-padded hyphen
-    // (never a bare mid-word one) for legacy rows, so place names such as
-    // "6th-of-October City" are not mis-split.
     final routeRaw = data['route'] as String? ?? '';
     final routeParts = routeRaw.contains('→')
         ? routeRaw.split(RegExp(r'\s*→\s*'))
         : routeRaw.split(RegExp(r'\s+-\s+'));
-    // Left blank rather than a hardcoded English word: the data layer cannot
-    // localize, so an unresolved pickup/destination is resolved to a
-    // localized fallback by the presentation widgets that display it.
+    
     final pickup = routeParts.isNotEmpty ? routeParts[0] : '';
     final destination = routeParts.length > 1 ? routeParts[1] : '';
 
@@ -54,9 +48,7 @@ abstract final class TripMapper {
       destination: destination,
       dateLabel: data['trip_date']?.toString() ?? '',
       timeLabel: data['trip_time']?.toString() ?? '',
-      // Blank rather than a hardcoded English word: the data layer cannot
-      // localize a missing driver/vehicle/seat, so the presentation widgets
-      // that display these resolve the localized fallback themselves.
+      
       driverName: driverObj?['full_name']?.toString() ?? '',
       driverPhone: driverObj?['phone']?.toString() ?? 'Not available',
       driverInitials: _initials(driverObj?['full_name']?.toString()),

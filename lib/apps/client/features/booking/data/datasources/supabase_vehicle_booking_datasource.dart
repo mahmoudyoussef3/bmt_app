@@ -10,7 +10,7 @@ class SupabaseVehicleBookingDatasource implements VehicleBookingDatasource {
 
   @override
   Future<List<VehicleDetailModel>> getVehicles({String? routeId}) async {
-    // `public_trips` carries sanitised `drivers` / `vehicles` jsonb in its `*`.
+    
     var query = _supabase
         .from('public_trips')
         .select('''

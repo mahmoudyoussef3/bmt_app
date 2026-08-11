@@ -84,8 +84,7 @@ class SupabasePlatformAdminDatasource implements PlatformAdminDatasource {
         body: request.toPayload(),
       );
     } on FunctionException catch (error) {
-      // Non-2xx responses arrive here with the parsed body attached, which is
-      // where the machine-readable error code lives.
+      
       throw Exception(_messageForCode(_codeFromBody(error.details)));
     } catch (_) {
       throw Exception('تعذر الاتصال بالخادم. تحقق من الشبكة وحاول مرة أخرى.');
@@ -118,8 +117,7 @@ class SupabasePlatformAdminDatasource implements PlatformAdminDatasource {
           office['username']?.toString() ??
           '',
       listingStatus: office['listing_status']?.toString() ?? 'draft',
-      // Present only when the server generated it. Held in memory for the one
-      // screen that reveals it and never written anywhere.
+      
       temporaryPassword: _nullIfBlank(data['temporary_password']?.toString()),
     );
   }
@@ -264,9 +262,6 @@ class SupabasePlatformAdminDatasource implements PlatformAdminDatasource {
         ? Map<String, dynamic>.from(row['counts'] as Map)
         : const <String, dynamic>{};
 
-    // The list card's own count fields are flattened in from `counts`, so an
-    // office rendered from a details payload and one rendered from the list are
-    // the same object with the same numbers on it.
     final office = _mapOffice({
       ...row,
       'operators': counts['operators'],
@@ -294,8 +289,7 @@ class SupabasePlatformAdminDatasource implements PlatformAdminDatasource {
           for (final item in row['operators'] as List)
             if (item is Map) _mapOperator(Map<String, dynamic>.from(item)),
       ],
-      // Absent when the office is not on the marketplace. Kept null rather than
-      // defaulted, because "a passenger sees nothing" is the information.
+      
       marketplace: marketplace is Map
           ? _mapMarketplace(Map<String, dynamic>.from(marketplace))
           : null,
@@ -364,9 +358,7 @@ class SupabasePlatformAdminDatasource implements PlatformAdminDatasource {
 
   PlatformTrendPoint _mapTrendPoint(Map<String, dynamic> row) {
     return PlatformTrendPoint(
-      // A `date` column, so it arrives without a time. Parsed as-is rather than
-      // localised: shifting a calendar day by a timezone offset would move a
-      // day's bookings onto the day before it.
+      
       day: DateTime.tryParse(row['day']?.toString() ?? '') ?? DateTime.now(),
       bookings: _toInt(row['bookings']),
       revenue: _toDouble(row['revenue']),
@@ -402,8 +394,7 @@ class SupabasePlatformAdminDatasource implements PlatformAdminDatasource {
       recentReviews: _toInt(row['reviews_recent']),
       activeOperators: _toInt(row['active_operators']),
       activeAdmins: _toInt(row['active_admins']),
-      // Null when the office has no rated reviews. Kept null rather than
-      // defaulted to 0, which would read as "rated one star".
+      
       averageRating: row['avg_office_rating'] == null
           ? null
           : _toDouble(row['avg_office_rating']),

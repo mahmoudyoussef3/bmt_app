@@ -394,9 +394,7 @@ class _StopNameFieldState extends State<_StopNameField> {
     final scheme = Theme.of(context).colorScheme;
     final query = widget.controller.text;
     final suggestions = widget.library.search(query);
-    // On an empty field the library shows the office's most-used stops, which
-    // is the whole point of it: the operator picks rather than types. It only
-    // hides once the text *is* something they already accepted from a list.
+    
     final showSuggestions =
         suggestions.isNotEmpty &&
         (_accepted.trim().isEmpty || query.trim() != _accepted.trim());

@@ -60,8 +60,7 @@ class TripAttentionBanner extends StatelessWidget {
                 ),
                 if (offersSupport) ...[
                   const SizedBox(height: 6),
-                  // A dead-end explanation is worse than none. Every branch that
-                  // the rider cannot resolve alone ends at a real screen.
+                  
                   InkWell(
                     onTap: () =>
                         Navigator.pushNamed(context, SupportRoutes.center),

@@ -24,7 +24,7 @@ class SupabaseSeatReleaseDatasource implements SeatReleaseDatasource {
     ).toIso8601String().substring(0, 10);
 
     final results = await Future.wait([
-      // Active subscription
+      
       _client
           .from('subscriptions')
           .select('package_name, route_name, start_date, end_date, status')
@@ -34,7 +34,6 @@ class SupabaseSeatReleaseDatasource implements SeatReleaseDatasource {
           .limit(1)
           .maybeSingle(),
 
-      // Upcoming confirmed bookings
       _client
           .from('operation_bookings')
           .select(
@@ -46,7 +45,6 @@ class SupabaseSeatReleaseDatasource implements SeatReleaseDatasource {
           .order('trip_date')
           .limit(10),
 
-      // Cancelled bookings this month (proxy for released seats)
       _client
           .from('operation_bookings')
           .select('id')

@@ -11,7 +11,6 @@ class BookingRoutes {
 
   static const dailyBooking = '/daily-booking';
 
-  // New flow
   static const wizard = '/booking/wizard';
   static const routeOverview = '/booking/route-overview';
 }

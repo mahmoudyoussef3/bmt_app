@@ -51,7 +51,6 @@ class FcmService {
     );
     if (settings.authorizationStatus == AuthorizationStatus.denied) return;
 
-    // iOS: suppress system banner while app is open — we show our own.
     await FirebaseMessaging.instance.setForegroundNotificationPresentationOptions(
       alert: false,
       badge: true,

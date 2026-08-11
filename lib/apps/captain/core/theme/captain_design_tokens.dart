@@ -2,15 +2,9 @@ import 'package:flutter/material.dart';
 
 import 'captain_colors.dart';
 
-/// The single source of spacing, radius and shadow values for the captain app.
-///
-/// The scale is deliberately numeric (`s16`, `br24`) rather than semantic
-/// (`lg`, `rXl`): captain screens are dense operational layouts where the
-/// literal value is the useful information at the call site.
 class CaptainDesignTokens {
   CaptainDesignTokens._();
 
-  // Spacing
   static const double s4 = 4.0;
   static const double s8 = 8.0;
   static const double s12 = 12.0;
@@ -21,20 +15,15 @@ class CaptainDesignTokens {
   static const double s40 = 40.0;
   static const double s48 = 48.0;
 
-  // Radius
   static const Radius r8 = Radius.circular(8);
   static const Radius r12 = Radius.circular(12);
   static const Radius r16 = Radius.circular(16);
 
-  /// The grouped-list radius. Sits between the inline [r16] used by chips and
-  /// panels and the [r24] reserved for heroes, so a screen's list groups read
-  /// as one tier of surface rather than competing with its hero card.
   static const Radius r20 = Radius.circular(20);
 
   static const Radius r24 = Radius.circular(24);
   static const Radius r32 = Radius.circular(32);
 
-  /// Fully rounded ends — chips, pills and progress tracks.
   static const Radius rPill = Radius.circular(999);
 
   static const BorderRadius br8 = BorderRadius.all(r8);
@@ -45,7 +34,6 @@ class CaptainDesignTokens {
   static const BorderRadius br32 = BorderRadius.all(r32);
   static const BorderRadius brPill = BorderRadius.all(rPill);
 
-  // Shadows
   static List<BoxShadow> softShadow(BuildContext context) {
     return [
       BoxShadow(

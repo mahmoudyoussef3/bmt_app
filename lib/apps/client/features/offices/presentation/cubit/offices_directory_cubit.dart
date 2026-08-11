@@ -33,8 +33,7 @@ class OfficesDirectoryCubit extends Cubit<OfficesDirectoryState> {
     if (state is! OfficesDirectoryLoaded) return load();
     final previous = state as OfficesDirectoryLoaded;
     try {
-      // The rider's search survives a refresh — results reappearing unfiltered
-      // under a search box that still shows their text reads as a bug.
+      
       emit(previous.copyWith(offices: await _getOffices()));
     } catch (_) {
       if (!isClosed) emit(previous);

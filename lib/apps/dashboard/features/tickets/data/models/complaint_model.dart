@@ -25,7 +25,7 @@ class SupportTicketModel extends SupportTicket {
   });
 
   factory SupportTicketModel.fromJson(Map<String, dynamic> json) {
-    // Determine client details gracefully from the nested client object if available
+    
     String clientName = 'Unknown User';
     String clientPhone = '';
 

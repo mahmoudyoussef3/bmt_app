@@ -74,7 +74,7 @@ class _BarChart extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Y-Axis labels
+                
                 Column(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: List.generate(4, (index) {
@@ -90,7 +90,6 @@ class _BarChart extends StatelessWidget {
                 ),
                 const SizedBox(width: AppSpacing.small),
 
-                // Chart Bars
                 Expanded(
                   child: LayoutBuilder(
                     builder: (context, box) {
@@ -121,7 +120,7 @@ class _BarChart extends StatelessWidget {
                                     colors: [
                                       scheme.primary,
                                       scheme.primary.withValues(alpha: 0.47),
-                                    ], // ~120/255
+                                    ], 
                                     begin: Alignment.bottomCenter,
                                     end: Alignment.topCenter,
                                   ),

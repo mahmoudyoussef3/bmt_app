@@ -122,8 +122,7 @@ enum TripPublishBlocker {
         return TripPublishBlocker.pastDate;
       }
     }
-    // Pricing is not carried on the trip entity, so it is not evaluated here; the
-    // server's `no_pricing` block is surfaced through [fromCode] when it fires.
+    
     return null;
   }
 }

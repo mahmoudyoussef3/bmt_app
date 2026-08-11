@@ -54,8 +54,7 @@ class LoyaltyCubit extends Cubit<LoyaltyState> {
     emit(current.copyWith(isRedeeming: true));
     try {
       await _redeemReward(reward);
-      // Re-read rather than adjusting locally: the balance and ledger the
-      // rider sees next must be what Supabase actually persisted.
+      
       emit(LoyaltyLoaded(await _getData(), view: current.view));
       return null;
     } catch (error) {

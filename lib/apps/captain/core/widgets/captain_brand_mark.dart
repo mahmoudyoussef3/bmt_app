@@ -2,16 +2,9 @@ import 'package:flutter/material.dart';
 
 import '../theme/captain_colors.dart';
 
-/// The rounded, elevated brand tile — the captain app's identity anchor.
-///
-/// Shared by the splash, the auth lockup and the onboarding views so the same
-/// mark greets the captain from cold start through to sign-in, rather than
-/// each screen rolling its own gradient tile.
 class CaptainBrandMark extends StatelessWidget {
   const CaptainBrandMark({super.key, this.icon, this.size = 84});
 
-  /// Glyph drawn inside the tile. When null the EasyWay logo mark is used —
-  /// the same glyph the launcher icon and the native launch frame carry.
   final IconData? icon;
   final double size;
 
@@ -24,7 +17,6 @@ class CaptainBrandMark extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         gradient: CaptainColors.primaryGradient(context),
-        // Tracks the tile so the squircle reads the same at every size.
         borderRadius: BorderRadius.circular(size * 0.31),
         boxShadow: [
           BoxShadow(

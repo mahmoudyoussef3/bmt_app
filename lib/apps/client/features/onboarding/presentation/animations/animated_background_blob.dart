@@ -58,7 +58,7 @@ class _AnimatedBackgroundBlobState extends State<AnimatedBackgroundBlob>
 
   @override
   Widget build(BuildContext context) {
-    // Generate slow drifting movement based on animation value
+    
     final currentX = _offsetX + (math.sin(_animation.value * math.pi * 2) * 50);
     final currentY = _offsetY + (math.cos(_animation.value * math.pi * 2) * 50);
     final currentScale = 1.0 + (_animation.value * 0.2);

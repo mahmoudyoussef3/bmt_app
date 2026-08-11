@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bmt_app/apps/captain/core/theme/captain_theme.dart';
+import 'package:bmt_app/apps/captain/features/notifications/presentation/cubit/captain_notification_badge_cubit.dart';
 import 'package:bmt_app/apps/captain/features/trip_history/domain/entities/trip_history_item.dart';
 import 'package:bmt_app/apps/captain/features/trip_history/presentation/cubit/trip_history_cubit.dart';
 import 'package:bmt_app/apps/captain/features/trip_history/presentation/cubit/trip_history_state.dart';
@@ -40,6 +41,17 @@ class _StubTripHistoryCubit extends Cubit<TripHistoryState>
 
   @override
   void clearFilters() {}
+
+  @override
+  noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
+/// `CaptainRootHeader` carries the notification bell on every root tab now,
+/// so any full-page pump needs this in the tree — the shell provides the real
+/// one in the app itself.
+class _StubNotificationBadgeCubit extends Cubit<int>
+    implements CaptainNotificationBadgeCubit {
+  _StubNotificationBadgeCubit() : super(0);
 
   @override
   noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
@@ -114,8 +126,15 @@ Future<void> _pump(
 }) async {
   await tester.pumpWidget(
     _host(
-      BlocProvider<TripHistoryCubit>(
-        create: (_) => _StubTripHistoryCubit(state),
+      MultiBlocProvider(
+        providers: [
+          BlocProvider<TripHistoryCubit>(
+            create: (_) => _StubTripHistoryCubit(state),
+          ),
+          BlocProvider<CaptainNotificationBadgeCubit>(
+            create: (_) => _StubNotificationBadgeCubit(),
+          ),
+        ],
         child: const TripHistoryPage(),
       ),
       scale: scale,

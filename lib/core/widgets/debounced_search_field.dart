@@ -42,7 +42,7 @@ class _DebouncedSearchFieldState extends State<DebouncedSearchField> {
   void _onChanged(String value) {
     _debounce?.cancel();
     _debounce = Timer(widget.duration, () => widget.onChanged(value));
-    // Rebuild so the clear button appears/disappears with the field's content.
+    
     setState(() {});
   }
 

@@ -8,28 +8,8 @@ import '../widgets/captain_splash_backdrop.dart';
 import '../widgets/captain_splash_progress.dart';
 import '../widgets/captain_splash_wordmark.dart';
 
-/// Edge length of the brand tile. Matches the 96dp tile baked into the native
-/// launch frame by `tool/generate_splash_assets.py`, so the two line up.
 const double _brandMarkSize = 96;
 
-/// Branded animated splash shown while the auth gate resolves which root the
-/// captain belongs on (operational session / local session / pending request /
-/// sign in).
-///
-/// Motion sequence (intro ~1100ms, then a looping progress shimmer):
-///   0ms   – brand mark is already on screen, unanimated, exactly where the
-///           native launch frame drew it, while the ambient glow breathes
-///   260ms – wordmark fades in and slides up
-///   520ms – tagline fades in
-///   760ms – progress track reveals and animates indefinitely
-///
-/// The mark deliberately does not scale or fade in: the OS has been showing the
-/// identical tile since the process started, so animating it would read as a
-/// pop rather than an entrance.
-///
-/// The gate owns the actual transition — this widget never self-dismisses, so
-/// a slow session read simply keeps the loop running rather than racing a
-/// timer the way a fixed-duration splash would.
 class CaptainSplashScreen extends StatefulWidget {
   const CaptainSplashScreen({super.key});
 
@@ -88,9 +68,6 @@ class _CaptainSplashScreenState extends State<CaptainSplashScreen>
       body: Stack(
         children: [
           CaptainSplashBackdrop(animation: _ambient),
-          // The mark is pinned to the exact center of the screen — the spot the
-          // native splash leaves it in — and the lockup hangs off it, so the
-          // handoff reveals text instead of sliding the brand upward.
           Center(
             child: SizedBox(
               height: _brandMarkSize,

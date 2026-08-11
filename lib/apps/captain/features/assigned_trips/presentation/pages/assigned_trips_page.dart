@@ -33,9 +33,6 @@ class AssignedTripsPage extends StatelessWidget {
     required this.onOpenProfile,
   });
 
-  /// The shell's other two tabs. An empty schedule offers them as somewhere to
-  /// go — the page cannot switch tabs itself, and a captain with no trip today
-  /// should not be left with "تحديث الآن" as the only thing on screen to press.
   final VoidCallback onOpenHistory;
   final VoidCallback onOpenProfile;
 
@@ -87,11 +84,6 @@ class _Content extends StatelessWidget {
   final VoidCallback onOpenHistory;
   final VoidCallback onOpenProfile;
 
-  /// Where a captain with nothing scheduled can usefully go.
-  ///
-  /// All three are places the app already had; the empty day simply stopped
-  /// being the one screen that hid them behind the nav bar. Notifications is a
-  /// push, the other two are the shell's own tabs — hence the callbacks.
   List<Widget> _idleShortcuts(BuildContext context) {
     return [
       CaptainListRow(
@@ -121,8 +113,6 @@ class _Content extends StatelessWidget {
     ];
   }
 
-  /// Refreshes and reports a failure. A silent no-op would be indistinguishable
-  /// from a successful refresh that found nothing new.
   Future<void> _refresh(BuildContext context) async {
     final succeeded = await context.read<AssignedTripsCubit>().refresh();
     if (!succeeded && context.mounted) {
@@ -137,8 +127,6 @@ class _Content extends StatelessWidget {
   Widget build(BuildContext context) {
     final summary = CaptainDaySummary.fromTrips(state.trips);
     final focus = summary.focusTrip;
-    // The focus trip is already shown as the hero above, so the list carries
-    // the rest of the day.
     final rest = focus == null
         ? state.trips
         : [
@@ -152,9 +140,6 @@ class _Content extends StatelessWidget {
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
           AssignedTripsHeader(
-            // The app-mode switcher is a development affordance: in a release
-            // build a captain tapping their own avatar must not be able to
-            // hop into the client or dashboard app.
             onAvatarTap: kDebugMode
                 ? () => showCaptainDevModeSheet(context)
                 : null,
@@ -165,7 +150,6 @@ class _Content extends StatelessWidget {
               CaptainDesignTokens.s20,
               CaptainDesignTokens.s20,
               CaptainDesignTokens.s20,
-              // The shell paints this page under its floating nav bar.
               CaptainBottomNav.reservedSpace(context),
             ),
             sliver: summary.isEmpty
@@ -174,10 +158,6 @@ class _Content extends StatelessWidget {
                       onRefresh: () => _refresh(context),
                       isRefreshing: state.isRefreshing,
                       title: 'لا توجد رحلات اليوم',
-                      // Shorter than it was: the step list underneath already
-                      // states that operations assigns the trip and that it
-                      // arrives on its own, so the paragraph above it does not
-                      // need to say the same thing a second time.
                       message:
                           'فور إسناد رحلة من العمليات ستظهر هنا تلقائياً — '
                           'لا حاجة لإعادة تسجيل الدخول.',
@@ -198,7 +178,6 @@ class _Content extends StatelessWidget {
   }
 }
 
-/// The captain's day: what's next, the numbers, then everything else.
 class _DaySlivers extends StatelessWidget {
   const _DaySlivers({
     required this.state,
@@ -232,16 +211,11 @@ class _DaySlivers extends StatelessWidget {
               const SizedBox(height: CaptainDesignTokens.s16),
             ],
             if (focusTrip != null) ...[
-              // The card carries the day's shortcuts in its own footer — they
-              // act on this trip, so they travel with it rather than floating
-              // underneath as a separate row of tiles.
               CaptainFocusCard(
                 trip: focusTrip,
                 onOpen: () => context.openTripExecution(focusTrip),
               ),
               const SizedBox(height: CaptainDesignTokens.s20),
-              // The finished day states these numbers in its own hero, so the
-              // strip would only repeat them.
               AssignedTripsStatsStrip(summary: summary),
             ] else
               CaptainDayCompleteView(
@@ -259,8 +233,6 @@ class _DaySlivers extends StatelessWidget {
             ],
           ],
         ),
-        // Built lazily: the rest of the day can run long, and only the cards
-        // near the viewport need to exist.
         SliverList.builder(
           itemCount: rest.length,
           itemBuilder: (context, i) {

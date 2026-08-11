@@ -9,13 +9,6 @@ import 'package:bmt_app/apps/captain/features/assigned_trips/domain/entities/ass
 import 'package:bmt_app/apps/captain/features/trip_execution/domain/entities/trip_execution_state.dart';
 import 'package:bmt_app/core/tracking/geo_math.dart';
 
-/// GPS status, distance remaining, and expected arrival.
-///
-/// Reports the age of the last *stored* fix rather than implying a live
-/// position: a running trip reports automatically every minute (see
-/// `TripLocationAutoShare`), but a tunnel, a denied permission or a dead
-/// signal all show up here as a fix going stale — which is exactly what the
-/// captain needs to see before operations calls to ask where they are.
 class TripGpsStatusCard extends StatelessWidget {
   const TripGpsStatusCard({
     super.key,
@@ -26,8 +19,6 @@ class TripGpsStatusCard extends StatelessWidget {
 
   final TripLastLocationFix? lastLocation;
 
-  /// The trip's final stop, used to compute distance remaining — null when
-  /// the route point has no saved coordinates.
   final AssignedTripStop? destination;
   final DateTime expectedArrivalTime;
 
@@ -53,8 +44,6 @@ class TripGpsStatusCard extends StatelessWidget {
             ).copyWith(fontWeight: FontWeight.w900),
           ),
           const SizedBox(height: CaptainDesignTokens.s12),
-          // Ticked, not sampled at build: "منذ 3 دقائق" has to keep counting
-          // while the captain looks at it.
           CaptainTicker(
             builder: (context, now) => _GpsFreshnessRow(fix: fix, now: now),
           ),
@@ -125,9 +114,6 @@ class _GpsFreshnessRow extends StatelessWidget {
     }
 
     final age = now.difference(fix!.recordedAt);
-    // Thresholds are tighter than the old one-shot model warranted: automatic
-    // reporting runs every minute, so anything past a few minutes means the
-    // sends are actually failing, not that the captain simply hasn't tapped.
     final (color, label) = switch (age) {
       Duration(inMinutes: < 3) => (
         CaptainColors.success,

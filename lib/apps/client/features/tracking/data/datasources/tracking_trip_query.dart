@@ -66,9 +66,7 @@ class TrackingTripQuery {
   /// `drivers.rating` / `vehicles.rating` are the real averages maintained by
   /// the `trip_reviews` triggers — the screen shows those, or nothing.
   Future<Map<String, dynamic>?> trip(String tripId) {
-    // `driver` / `vehicle` are the view's sanitised jsonb columns (no phone,
-    // no plate number — those never reach the Client app), aliased to the
-    // keys the assembler already reads.
+    
     return _client
         .from('public_trips')
         .select('''
@@ -122,8 +120,7 @@ class TrackingTripQuery {
           .order('created_at', ascending: false);
       return (rows as List).cast<Map<String, dynamic>>();
     } on PostgrestException {
-      // Some deployments don't expose operational event text to clients; trip
-      // status and live location remain authoritative fallbacks.
+      
       return const [];
     }
   }

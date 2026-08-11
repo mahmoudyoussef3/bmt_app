@@ -6,11 +6,6 @@ import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 import '../utils/trip_history_labels.dart';
 import '../utils/trip_history_palette.dart';
 
-/// How many of a trip's booked seats actually boarded.
-///
-/// This is the one figure on a history card that still varies — every other
-/// fact about a finished trip is settled — so it gets the only colour that
-/// changes with its value.
 class TripHistoryBoardingBar extends StatelessWidget {
   const TripHistoryBoardingBar({
     super.key,

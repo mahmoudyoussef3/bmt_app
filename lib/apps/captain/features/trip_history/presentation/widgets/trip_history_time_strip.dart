@@ -7,18 +7,6 @@ import 'package:bmt_app/apps/captain/core/utils/captain_formats.dart';
 
 import '../utils/trip_history_palette.dart';
 
-/// Departure, arrival, and the time the trip spent between them.
-///
-/// The two ends used to be one string — `'07:05 → 08:30'` — which is exactly
-/// the shape Arabic breaks. The clock runs are digits, so bidi keeps them
-/// left-to-right, but the arrow between them is neutral and takes the
-/// paragraph's RTL direction instead; the runs are then reordered around it and
-/// the line renders as `08:30 → 07:05`: arrival first, arrow aimed back at the
-/// departure it came from.
-///
-/// Laying the ends out as real widgets lets the row order itself from the
-/// ambient direction — departure leads on the right, where Arabic starts
-/// reading — and leaves no arrow glyph to point the wrong way.
 class TripHistoryTimeStrip extends StatelessWidget {
   const TripHistoryTimeStrip({
     super.key,
@@ -33,27 +21,21 @@ class TripHistoryTimeStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // The ends are Flexible rather than fixed: at an enlarged system font
-    // "المغادرة" and "الوصول" grow until the two of them alone exceed the card,
-    // and an unconstrained pair overflows the row no matter how far the link
-    // between them shrinks.
     return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        Flexible(
-          child: _Endpoint(
-            label: 'المغادرة',
-            time: CaptainFormats.clock(departure),
-            alignment: CrossAxisAlignment.start,
-          ),
+        _Endpoint(
+          label: 'المغادرة',
+          time: CaptainFormats.clock(departure),
+          alignment: CrossAxisAlignment.start,
         ),
+
         Expanded(child: _Link(duration: duration)),
-        Flexible(
-          child: _Endpoint(
-            label: 'الوصول',
-            time: CaptainFormats.clock(arrival),
-            alignment: CrossAxisAlignment.end,
-          ),
+        _Endpoint(
+          label: 'الوصول',
+          time: CaptainFormats.clock(arrival),
+          alignment: CrossAxisAlignment.end,
         ),
       ],
     );
@@ -86,8 +68,6 @@ class _Endpoint extends StatelessWidget {
           ).copyWith(color: TripHistoryPalette.neutral(context)),
         ),
         const SizedBox(height: 2),
-        // The clock is the value the captain came for — it stays on one line
-        // and never wraps, whatever the label above it does.
         Text(
           time,
           maxLines: 1,
@@ -101,7 +81,6 @@ class _Endpoint extends StatelessWidget {
   }
 }
 
-/// The run between the two ends, carrying the duration it took.
 class _Link extends StatelessWidget {
   const _Link({required this.duration});
 
@@ -112,7 +91,6 @@ class _Link extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: CaptainDesignTokens.s8),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             CaptainFormats.duration(duration),

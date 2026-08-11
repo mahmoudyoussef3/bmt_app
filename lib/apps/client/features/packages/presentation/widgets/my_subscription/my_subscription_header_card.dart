@@ -42,8 +42,7 @@ class MySubscriptionHeaderCard extends StatelessWidget {
                 padding: const EdgeInsets.all(ClientSpacing.md),
                 child: _Identity(subscription: subscription),
               ),
-              // The notches are punched out of the card's edge, so they show
-              // the page behind it — the tear line's default fill.
+              
               const TicketTearLine(),
               Padding(
                 padding: const EdgeInsets.fromLTRB(
@@ -209,8 +208,7 @@ class _RemainingStrip extends StatelessWidget {
         Container(width: 1, height: 34, color: Colors.white.withAlpha(56)),
         Expanded(
           child: _Stat(
-            // A package with no ride cap has no number to print, and a "0"
-            // there would read as spent rather than as unlimited.
+            
             value: unlimited ? '∞' : '${subscription.tripsRemaining}',
             semanticValue: unlimited
                 ? l10n.mySubscription_unlimitedTrips

@@ -50,15 +50,13 @@ class OperationTripModel extends OperationTrip {
   }
 
   factory OperationTripModel.fromJson(Map<String, dynamic> json) {
-    // Parse route name from joined operation_routes
+    
     final routeMap = json['route'] as Map<String, dynamic>?;
     final routeName = routeMap?['name'] as String? ?? 'مسار غير معروف';
 
-    // Parse driver name from joined drivers
     final driverMap = json['driver'] as Map<String, dynamic>?;
     final driverName = driverMap?['full_name'] as String? ?? 'سائق غير معروف';
 
-    // Parse vehicle name/plate from joined vehicles
     final vehicleMap = json['vehicle'] as Map<String, dynamic>?;
     final vehiclePlate = vehicleMap?['plate_number'] as String? ?? '';
     final vehicleCode = vehicleMap?['vehicle_code'] as String? ?? '';
@@ -67,7 +65,6 @@ class OperationTripModel extends OperationTrip {
         ? '$vehicleType ($vehicleCode) $vehiclePlate'
         : vehiclePlate;
 
-    // Parse sublists
     final pointsList =
         (json['route_points'] as List?)
             ?.map(
@@ -96,7 +93,6 @@ class OperationTripModel extends OperationTrip {
             .toList() ??
         [];
 
-    // Parse notes array
     final rawNotes = json['notes'] as List?;
     final notesList = rawNotes?.map((n) => n.toString()).toList() ?? [];
 

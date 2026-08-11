@@ -43,8 +43,7 @@ class FullScreenSeatMapScreen extends StatelessWidget {
             child: TripSeatCabin(
               seats: seats,
               vehicleType: vehicleType,
-              // The cabin is the whole screen here, so it gets the roomy
-              // density rather than the card-sized one used inline.
+              
               density: SeatLayoutDensity.comfortable,
             ),
           ),

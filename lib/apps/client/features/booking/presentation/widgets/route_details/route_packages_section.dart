@@ -56,8 +56,7 @@ class _RoutePackagesSectionState extends State<RoutePackagesSection> {
         if (state is! RoutePackagesLoaded || state.packages.isEmpty) {
           return const SizedBox.shrink();
         }
-        // The leading gap belongs to the section, not to the list above it, so
-        // a route with no plans leaves no stray space behind.
+        
         return Padding(
           padding: const EdgeInsets.only(top: 14),
           child: RoutePackagesPanel(

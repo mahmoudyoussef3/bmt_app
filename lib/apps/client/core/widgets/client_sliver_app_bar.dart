@@ -93,9 +93,7 @@ class ClientSliverAppBar extends StatelessWidget {
             )
           : null,
       actions: actions,
-      // The title always rides in the toolbar rather than scaling down out of
-      // the flexible space. Backgrounds here are photos and maps, and a title
-      // painted over them is unreadable at exactly the moment it is largest.
+      
       title: titleBlock,
       flexibleSpace: background == null
           ? null

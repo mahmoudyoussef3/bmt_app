@@ -69,8 +69,7 @@ class _UsersViewState extends State<_UsersView> {
                   label: const Text('تحديث'),
                 ),
               ],
-              // headerPadding is zeroed because the module header already insets
-              // its child slot; the default would read as a double margin.
+              
               child: DashboardCollapsibleSection.bare(
                 sectionId: DashboardSectionIds.usersFilters,
                 icon: Icons.filter_alt_outlined,

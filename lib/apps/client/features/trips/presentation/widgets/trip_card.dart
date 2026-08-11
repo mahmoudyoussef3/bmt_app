@@ -96,7 +96,7 @@ class TripCard extends StatelessWidget {
                   ),
                 ),
               ),
-              // Who ran this trip — the office the rider actually booked with.
+              
               if (trip.officeName.isNotEmpty) ...[
                 const SizedBox(width: 8),
                 Icon(

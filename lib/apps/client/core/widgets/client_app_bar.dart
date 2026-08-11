@@ -107,8 +107,7 @@ class ClientAppBar extends StatelessWidget implements PreferredSizeWidget {
       automaticallyImplyLeading: false,
       leading: _showsBack(context)
           ? IconButton(
-              // A back arrow needs RTL mirroring; an explicit override (close,
-              // menu) is a symmetric glyph used exactly as given.
+              
               icon: navigationIcon == null
                   ? const DirectionalIcon(Icons.arrow_back_rounded)
                   : Icon(navigationIcon),

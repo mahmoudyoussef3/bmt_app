@@ -114,8 +114,7 @@ class _BoardHeader extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (selectable > 0)
-              // Only reviewable rows can be batch-approved, so "select all"
-              // advertises exactly how many rows it will take.
+              
               Flexible(
                 child: TextButton.icon(
                   onPressed: cubit.toggleSelectAllOnPage,
@@ -228,8 +227,7 @@ class _BoardTable extends StatelessWidget {
     OpsColumn('المبلغ', flex: 3, minWidth: 105, numeric: true, sortable: true),
     OpsColumn('حالة الحجز', flex: 3, minWidth: 110),
     OpsColumn('حالة الدفع', flex: 3, minWidth: 120),
-    // Wide enough for three review buttons plus the details chevron: a tighter
-    // actions column is what pushed the whole table into horizontal scroll.
+    
     OpsColumn('إجراءات', flex: 3, minWidth: 170),
   ];
 
@@ -331,8 +329,7 @@ class _SelectCell extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (!booking.awaitingReview) {
-      // A disabled checkbox on every settled row reads as a broken control, so
-      // rows that no batch action can touch simply show no control.
+      
       return const SizedBox.shrink();
     }
     return Tooltip(
@@ -527,8 +524,7 @@ class _BoardCards extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Two columns from tablet up: one column of full-width cards on a 900px
-    // board wasted half the row and pushed the list twice as long.
+    
     final columns = width >= 720 ? 2 : 1;
     final cardWidth = columns == 1
         ? width

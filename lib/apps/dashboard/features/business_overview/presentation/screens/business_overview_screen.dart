@@ -118,9 +118,7 @@ class _LoadedView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Plan limits are merged in here rather than inside the entity: they come
-    // from the live licence, not from the snapshot, so they must not be frozen
-    // at load time alongside the rest.
+    
     final attention = [
       ...overview.attentionItems,
       ...licenseLimitAttention(entitlements),

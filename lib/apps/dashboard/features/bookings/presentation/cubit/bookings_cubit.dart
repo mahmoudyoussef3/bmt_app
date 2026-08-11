@@ -57,8 +57,7 @@ class BookingsCubit extends Cubit<BookingsState> {
       final bookings = await _getBookings();
       emit(BookingsLoaded(bookings: bookings, filters: const BookingFilters()));
       _bookingsSubscription?.cancel();
-      // A transient realtime/refetch error must not tear down the live view or
-      // replace the loaded list with an error screen; keep the last good data.
+      
       _bookingsSubscription = _watchBookings().listen(
         _onRealtimeUpdate,
         onError: (_) {},
@@ -101,8 +100,7 @@ class BookingsCubit extends Cubit<BookingsState> {
     emit(
       current.copyWith(
         sortField: field,
-        // Dates read best newest-first and text best A→Z, so a fresh column
-        // starts in the direction that column is normally read in.
+        
         sortAscending: sameField
             ? !current.sortAscending
             : field == BookingSortField.passenger ||

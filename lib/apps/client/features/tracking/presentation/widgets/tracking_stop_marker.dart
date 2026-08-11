@@ -30,9 +30,7 @@ class TrackingStopMarker extends StatelessWidget {
   Widget build(BuildContext context) {
     final label = name;
     if (label == null) return _dot(context);
-    // The dot stays centered — flutter_map anchors the marker box's center on
-    // the coordinate, so a Column would push the dot off its own stop. The
-    // label hangs off the bottom of the box instead.
+    
     return Stack(
       alignment: Alignment.center,
       clipBehavior: Clip.none,
@@ -61,12 +59,12 @@ class TrackingStopMarker extends StatelessWidget {
       );
     }
     return switch (status) {
-      // Done: a flat slate dot that recedes into the traveled trail.
+      
       StopVisitStatus.departed => const TrackingStopDot(
         diameter: 12,
         fill: ClientColors.journeySlate,
       ),
-      // The bus is standing at this stop right now.
+      
       StopVisitStatus.arrived => TrackingStopPulse(
         color: route,
         diameter: 24,
@@ -76,7 +74,7 @@ class TrackingStopMarker extends StatelessWidget {
           icon: Icons.directions_bus_rounded,
         ),
       ),
-      // Heading here next: hollow, ringed, breathing.
+      
       StopVisitStatus.next => TrackingStopPulse(
         color: route,
         diameter: 18,

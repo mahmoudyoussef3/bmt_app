@@ -42,9 +42,7 @@ class PolylineCodec {
         lng += deltaLng.$1;
 
         final point = GeoPoint(lat / factor, lng / factor);
-        // One bad point means the accumulator has drifted, so everything after
-        // it is wrong too — drop the whole geometry instead of drawing a line
-        // that leaves the world.
+        
         if (!_isOnEarth(point)) return const [];
         points.add(point);
       }
@@ -76,7 +74,6 @@ class PolylineCodec {
       multiplier *= 32;
     } while (byte >= 0x20);
 
-    // Zigzag: the low bit carries the sign, the rest is the magnitude.
     final magnitude = result ~/ 2;
     return (result.isOdd ? -magnitude - 1 : magnitude, index);
   }

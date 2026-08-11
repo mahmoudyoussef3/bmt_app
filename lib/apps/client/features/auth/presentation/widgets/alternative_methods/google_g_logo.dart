@@ -45,13 +45,11 @@ class _GoogleGPainter extends CustomPainter {
       ..strokeWidth = stroke
       ..strokeCap = StrokeCap.butt;
 
-    // Ring split into four colored arcs (0° = east, clockwise positive).
     canvas.drawArc(rect, _rad(-18), _rad(80), false, arc..color = _blue);
     canvas.drawArc(rect, _rad(60), _rad(72), false, arc..color = _green);
     canvas.drawArc(rect, _rad(130), _rad(72), false, arc..color = _yellow);
     canvas.drawArc(rect, _rad(200), _rad(92), false, arc..color = _red);
 
-    // Signature blue crossbar reaching in from the right edge.
     final barPaint = Paint()..color = _blue;
     final barRect = Rect.fromLTWH(
       center.dx,

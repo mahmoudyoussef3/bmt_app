@@ -132,9 +132,6 @@ class _PassengerListView extends StatelessWidget {
                 ),
                 child: PassengerCard(
                   passenger: passenger,
-                  // Null disables the button rather than launching `tel:` with
-                  // an empty number, which opens the dialer on nothing and
-                  // reads to the captain as the call having failed.
                   onCall: passenger.phone.trim().isEmpty
                       ? null
                       : () => _call(context, passenger.phone),
@@ -147,8 +144,6 @@ class _PassengerListView extends StatelessWidget {
   }
 }
 
-/// Places the call, telling the captain when the handset refuses it instead
-/// of leaving a tap that appears to do nothing.
 Future<void> _call(BuildContext context, String phone) async {
   final uri = Uri(scheme: 'tel', path: phone.trim());
   final launched = await launchUrl(uri);
@@ -157,8 +152,6 @@ Future<void> _call(BuildContext context, String phone) async {
   }
 }
 
-/// "Nothing matched your search" and "nobody booked this trip" are different
-/// facts, and a captain acts differently on each.
 class _EmptyManifest extends StatelessWidget {
   const _EmptyManifest({required this.isFiltering});
 

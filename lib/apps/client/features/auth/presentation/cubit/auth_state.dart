@@ -45,7 +45,6 @@ class ClientAuthState {
     );
   }
 
-  // Intent-named transitions, so the cubit reads as `emit(state.signInLoading())`.
   static const _loading = AuthSubmissionStatus.loading;
   static const _failure = AuthSubmissionStatus.failure;
   static const _initial = AuthSubmissionStatus.initial;

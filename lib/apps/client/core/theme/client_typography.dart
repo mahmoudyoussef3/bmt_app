@@ -13,9 +13,6 @@ import 'package:flutter/material.dart';
 abstract final class ClientTypography {
   ClientTypography._();
 
-  // ── Display ────────────────────────────────────────────────────────────────
-  // Hero headlines — onboarding, splash, empty states
-
   static TextStyle displayLarge(BuildContext context) =>
       Theme.of(context).textTheme.displaySmall!.copyWith(
         fontSize: 40,
@@ -31,8 +28,6 @@ abstract final class ClientTypography {
         letterSpacing: -0.5,
         height: 1.08,
       );
-
-  // ── Headings ───────────────────────────────────────────────────────────────
 
   static TextStyle headingLarge(BuildContext context) =>
       Theme.of(context).textTheme.headlineSmall!.copyWith(
@@ -58,8 +53,6 @@ abstract final class ClientTypography {
         height: 1.3,
       );
 
-  // ── Body ───────────────────────────────────────────────────────────────────
-
   static TextStyle bodyLarge(BuildContext context) => Theme.of(context)
       .textTheme
       .bodyLarge!
@@ -78,8 +71,6 @@ abstract final class ClientTypography {
         height: 1.45,
       );
 
-  // ── Labels ─────────────────────────────────────────────────────────────────
-
   static TextStyle labelLarge(BuildContext context) => Theme.of(context)
       .textTheme
       .labelLarge!
@@ -94,9 +85,6 @@ abstract final class ClientTypography {
       .textTheme
       .labelSmall!
       .copyWith(fontSize: 10, fontWeight: FontWeight.w600, letterSpacing: 0);
-
-  // ── Price ──────────────────────────────────────────────────────────────────
-  // Dedicated price display styles — used on trip cards, checkout, packages
 
   static TextStyle priceHero(BuildContext context) => Theme.of(context)
       .textTheme

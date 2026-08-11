@@ -144,8 +144,7 @@ class RoutesLoaded extends RoutesState {
           ? null
           : statusFilter ?? this.statusFilter,
       saving: saving ?? this.saving,
-      // Transient by design: any state change that does not explicitly restate
-      // them clears them, so a stale error can never outlive the action.
+      
       actionError: actionError ?? '',
       flashMessage: flashMessage ?? '',
     );

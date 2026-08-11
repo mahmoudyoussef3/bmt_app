@@ -21,7 +21,7 @@ Marker buildCalloutMarker(
     point: stop.coordinate,
     width: 232,
     height: clearance + 82,
-    // Above the coordinate; the pin occupies the [clearance] below the card.
+    
     alignment: MapStyle.pinAnchor,
     child: Padding(
       padding: EdgeInsets.only(bottom: clearance),

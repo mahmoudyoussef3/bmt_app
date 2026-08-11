@@ -11,11 +11,6 @@ import '../../../auth/presentation/widgets/captain_auth_field.dart';
 import '../../../auth/presentation/widgets/captain_auth_header.dart';
 import '../../../auth/presentation/widgets/captain_auth_reveal.dart';
 
-/// The three stages of joining, shown above the form.
-///
-/// Approval is a human review by operations, not an instant sign-up, so the
-/// wait is set as an expectation up front rather than discovered on the
-/// pending screen after submitting.
 class _RequestSteps extends StatelessWidget {
   const _RequestSteps();
 
@@ -105,9 +100,6 @@ class _Step extends StatelessWidget {
   }
 }
 
-/// Office selector, shown only when more than one office is accepting
-/// applications. Styled to sit alongside [CaptainAuthField] rather than as a
-/// bare dropdown.
 class _OfficePicker extends StatelessWidget {
   const _OfficePicker({
     required this.offices,
@@ -143,13 +135,6 @@ class _OfficePicker extends StatelessWidget {
   }
 }
 
-/// Name + phone access-request form. Submission is delegated upward to the
-/// onboarding cubit; this widget only owns its inputs and validation.
-///
-/// When more than one office is active the applicant picks the office and
-/// enters the join code that office gave them. The code is what actually
-/// routes the request — the picker only narrows it down — so the server
-/// rejects a mismatched pair rather than trusting the selection.
 class CaptainRequestForm extends StatefulWidget {
   final bool submitting;
   final String? error;
@@ -188,10 +173,7 @@ class _CaptainRequestFormState extends State<CaptainRequestForm> {
   @override
   void didUpdateWidget(CaptainRequestForm old) {
     super.didUpdateWidget(old);
-    // Drop a selection that is no longer on offer (office deactivated while
-    // the form was open).
-    if (_officeId != null &&
-        !widget.offices.any((o) => o.id == _officeId)) {
+    if (_officeId != null && !widget.offices.any((o) => o.id == _officeId)) {
       _officeId = null;
     }
   }

@@ -71,8 +71,7 @@ class LiveTripCard extends StatelessWidget {
               TrackingHealthBadge(health: health),
             ],
           ),
-          // Only renders when the trip is actually late or due — see
-          // DepartureStatusBadge.
+          
           Builder(
             builder: (context) {
               final badge = DepartureStatusBadge(trip: trip, now: now);
@@ -164,9 +163,7 @@ class _MetaRow extends StatelessWidget {
         ),
         if (secondary != null) ...[
           const SizedBox(width: AppSpacing.small),
-          // Flexible + ellipsis: at a large text scale in a narrow column a
-          // fixed-width secondary (a phone number, a departure time) is what
-          // pushes this row past the card edge.
+          
           Flexible(
             child: Text(
               secondary!,

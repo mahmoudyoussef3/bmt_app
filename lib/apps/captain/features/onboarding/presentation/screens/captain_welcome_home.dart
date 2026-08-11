@@ -7,8 +7,6 @@ import 'package:bmt_app/apps/captain/core/session/captain_session_store.dart';
 import '../cubit/captain_activation_cubit.dart';
 import 'captain_welcome_home_screen.dart';
 
-/// Wires [CaptainWelcomeHomeScreen] to the activation cubit that turns the
-/// local session into an operational one.
 class CaptainWelcomeHome extends StatelessWidget {
   const CaptainWelcomeHome({
     super.key,

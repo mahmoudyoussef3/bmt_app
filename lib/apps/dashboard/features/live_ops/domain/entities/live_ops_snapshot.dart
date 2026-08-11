@@ -136,8 +136,7 @@ class LiveTrip {
     final fix = lastFix;
     if (fix == null) return null;
     final age = now.difference(fix.recordedAt);
-    // A clock skew (fix stamped slightly in the future) should read as fresh,
-    // never negative.
+    
     return age.isNegative ? Duration.zero : age;
   }
 

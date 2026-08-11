@@ -79,9 +79,7 @@ class _ClientSplashScreenState extends State<ClientSplashScreen>
       body: Stack(
         children: [
           SplashGlowBackdrop(animation: _ambient),
-          // The mark is pinned to the exact center of the screen — the spot the
-          // native splash leaves it in — and the lockup hangs off it, so the
-          // handoff reveals text instead of sliding the brand upward.
+          
           Center(
             child: SizedBox(
               height: kSplashBrandMarkSize,

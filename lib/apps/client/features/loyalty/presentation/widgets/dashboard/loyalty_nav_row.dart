@@ -18,10 +18,6 @@ class LoyaltyNavRow extends StatelessWidget {
     final l10n = context.l10n;
     final cubit = context.read<LoyaltyCubit>();
 
-    // IntrinsicHeight gives the two cards a common height even when their
-    // subtitles wrap differently. `CrossAxisAlignment.stretch` alone cannot:
-    // inside the dashboard's ListView the row is vertically unbounded, so
-    // stretching asks for an infinite height and the layout asserts.
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,

@@ -33,8 +33,7 @@ class FinanceCubit extends Cubit<FinanceState> {
        super(const FinanceLoading());
 
   Future<void> load() async {
-    // Keep the operator's period when refreshing, so "تحديث" doesn't silently
-    // throw them back to the default window.
+    
     final current = state;
     final period = current is FinanceLoaded
         ? current.period
@@ -42,9 +41,7 @@ class FinanceCubit extends Cubit<FinanceState> {
 
     emit(const FinanceLoading());
     try {
-      // Future.wait, not sequential awaits: the reads are independent, and
-      // awaiting them one at a time both multiplies the wait and leaves the
-      // others' errors unobserved when the first one throws.
+      
       final (payments, refunds, subscriptions, wallet) = await (
         _getPayments(),
         _getRefundRequests(),

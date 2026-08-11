@@ -1,7 +1,3 @@
-/// A driver's account standing, mirroring `drivers.status`. A captain who
-/// isn't active couldn't have signed in in the first place (the phone-login
-/// RPC only matches active drivers) — this is shown as confirmation, not a
-/// gate the UI enforces itself.
 enum DriverAccountStatus { active, suspended, archived }
 
 class DriverProfile {
@@ -39,9 +35,6 @@ class DriverProfile {
   final int? vehicleCapacity;
   final String? employeeCode;
 
-  /// The office this captain drives for. Resolved server-side from their own
-  /// driver row at sign-in — a captain belongs to exactly one office and never
-  /// chooses it in the app.
   final String officeName;
 
   final DateTime? licenseExpiryDate;

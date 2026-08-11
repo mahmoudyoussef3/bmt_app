@@ -37,8 +37,7 @@ class RoutePackagesCubit extends Cubit<RoutePackagesState> {
       emit(RoutePackagesLoaded(packages));
     } catch (_) {
       if (isClosed || _officeId != officeId) return;
-      // Deliberately silent: the rider came here to book a seat, and a plans
-      // shelf that cannot load is not worth an error they must dismiss.
+      
       emit(const RoutePackagesUnavailable());
     }
   }

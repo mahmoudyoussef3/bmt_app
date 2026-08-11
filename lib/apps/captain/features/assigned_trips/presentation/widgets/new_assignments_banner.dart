@@ -4,10 +4,6 @@ import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 
-/// Tells the captain new trips were assigned since they last looked, with a
-/// single action to acknowledge it. Trip assignment happens entirely from
-/// the Dashboard — there is no accept/decline step here, only "I've seen
-/// this."
 class NewAssignmentsBanner extends StatelessWidget {
   const NewAssignmentsBanner({
     super.key,

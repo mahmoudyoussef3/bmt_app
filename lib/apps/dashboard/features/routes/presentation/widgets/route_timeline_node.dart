@@ -183,9 +183,7 @@ class RouteDirectionChain extends StatelessWidget {
           for (final entry in names.indexed) ...[
             if (entry.$1 != 0)
               TextSpan(
-                // U+2190 keeps the arrow pointing along the reading direction
-                // in an RTL layout; a Latin "→" would flip and reverse the
-                // route's meaning.
+                
                 text: ' ← ',
                 style: base?.copyWith(color: scheme.outline),
               ),

@@ -50,7 +50,7 @@ class _SplashProgressTrackState extends State<SplashProgressTrack>
             AnimatedBuilder(
               animation: _controller,
               builder: (context, _) {
-                // Sweep a highlighted segment from fully-left to fully-right.
+                
                 final x = (_controller.value * 2) - 1;
                 return Align(
                   alignment: Alignment(x, 0),

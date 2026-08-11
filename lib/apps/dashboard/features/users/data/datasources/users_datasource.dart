@@ -22,11 +22,6 @@ class SupabaseUsersDatasource implements UsersRepository {
     return rows.map((r) => _fromRow(r as Map<String, dynamic>)).toList();
   }
 
-  // `office_users` carries three licensing gates: max_admin_users on creation
-  // and on re-activation, and the read-only freeze while the office's licence is
-  // held. Re-roling or removing an operator during a suspension is refused by
-  // the database, so both writes go through the guard.
-
   @override
   Future<AppUser> updateUserRole(String userRoleId, DashboardRole role) async {
     final rows = await LicensingGuard.run(
@@ -61,8 +56,7 @@ class SupabaseUsersDatasource implements UsersRepository {
   }
 
   AppUser _fromRow(Map<String, dynamic> r) {
-    // updateUserRole reads back from office_users, which has no email column; the
-    // username is the operator's identity on the login screen anyway.
+    
     final email = (r['email'] as String?) ?? (r['username'] as String?);
     return AppUser(
       id: r['id'] as String,

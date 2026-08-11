@@ -18,8 +18,7 @@ enum WalletKind {
   manualDebit('manual_debit', 'خصم رصيد', false),
   walletSpend('wallet_spend', 'دفع من المحفظة', false),
   walletTopup('wallet_topup', 'شحن المحفظة', true),
-  // Direction mirrors whatever it reverses, so `isCredit` is not meaningful
-  // here; read the sign of the amount instead.
+  
   reversal('reversal', 'عملية عكسية', true);
 
   const WalletKind(this.dbValue, this.label, this.isCredit);
@@ -107,8 +106,7 @@ abstract final class WalletCategories {
     WalletKind.manualCredit => manualCredit,
     WalletKind.manualDebit => manualDebit,
     WalletKind.reversal => reversal,
-    // V2 kinds carry their own small allowlists server-side; nothing in the
-    // dashboard offers them, so there is no picker to fill.
+    
     WalletKind.walletSpend || WalletKind.walletTopup => const [],
   };
 

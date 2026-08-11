@@ -9,8 +9,6 @@ import 'passenger_card_details.dart';
 import 'passenger_status_presentation.dart';
 import 'passenger_status_sheet.dart';
 
-/// One passenger on the manifest: who they are, where they board, and the two
-/// things a captain does about them — set their boarding status, or call them.
 class PassengerCard extends StatelessWidget {
   const PassengerCard({
     super.key,
@@ -20,8 +18,6 @@ class PassengerCard extends StatelessWidget {
 
   final Passenger passenger;
 
-  /// Null when the booking carries no phone number — the button then renders
-  /// disabled instead of pretending a call is possible.
   final VoidCallback? onCall;
 
   @override
@@ -31,8 +27,6 @@ class PassengerCard extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // The status rail: readable at a glance down a scrolling list,
-            // before any text is.
             Container(width: 6, color: passenger.status.color),
             Expanded(
               child: Padding(
@@ -68,9 +62,6 @@ class _Actions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // A cancelled booking is a record, not a passenger to board — offering a
-    // status change on it invites the captain to un-cancel a seat the booking
-    // flow has already released.
     final canChangeStatus =
         passenger.status != PassengerBoardingStatus.cancelled;
 

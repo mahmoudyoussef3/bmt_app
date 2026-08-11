@@ -25,9 +25,7 @@ class WizardConfirmListener extends StatelessWidget {
         BookingWizardConfirmFailed() => _explainFailure(context, state),
         BookingWizardConfirmIdle() ||
         BookingWizardConfirming() ||
-        // Verification draws itself in the pay bar rather than over the
-        // screen: the rider has just come back from the gateway and a modal
-        // would hide the booking they are waiting on.
+        
         BookingWizardVerifyingPayment() => null,
       },
       child: child,
@@ -76,8 +74,7 @@ class WizardConfirmListener extends StatelessWidget {
   }
 
   void _explainFailure(BuildContext context, BookingWizardConfirmFailed state) {
-    // Re-arm the pay button first: the rider may fix the reason and try again
-    // without leaving the dialog's route.
+    
     context.read<BookingWizardConfirmCubit>().reset();
     showWizardBookingErrorDialog(context, reason: state.reason);
   }

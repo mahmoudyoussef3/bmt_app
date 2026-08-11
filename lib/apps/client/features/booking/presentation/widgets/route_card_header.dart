@@ -65,8 +65,7 @@ class RouteCardHeader extends StatelessWidget {
                 runSpacing: 6,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  // Which office runs this corridor — without it, two
-                  // providers' departures read as one operator's timetable.
+                  
                   RouteOfficeChip(office: office),
                   RouteAvailabilityBadge(
                     label: hasTrips

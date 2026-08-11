@@ -35,18 +35,9 @@ class SeatReleaseScreen extends StatefulWidget {
 
 class _SeatReleaseScreenState extends State<SeatReleaseScreen>
     with TickerProviderStateMixin {
-  // Views:
-  // 1 = Seat Release Dashboard
-  // 2 = Release Seat Form
-  // 4 = Release Success Screen
-  // 5 = Release Details Screen
-  // 6 = Compensation Status Screen
-  // 7 = Release History Screen
-  // 8 = Notifications Feed Panel
-  // 9 = Loyalty & Achievements Portal
+  
   int _currentView = 1;
 
-  // Active package details
   String _packageName = '';
   String _packageType = '';
   String _packageRoute = '';
@@ -54,38 +45,30 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
   String _endDate = '';
   String _packageStatus = '';
 
-  // Stats
   int _remainingDays = 0;
   int _releasedSeatsThisMonth = 0;
   int _successfullyRebookedSeats = 0;
-  int _totalCompensationEarned = 0; // EGP
+  int _totalCompensationEarned = 0; 
 
-  // Form states
   UpcomingTrip? _selectedTripForRelease;
   String _selectedReason = 'Personal Plans';
   final TextEditingController _notesController = TextEditingController();
 
-  // Active details record
   SeatReleaseRecord? _activeRecord;
 
-  // History states
-  String _historyFilter = 'All'; // 'All', 'Waiting', 'Rebooked', 'Rewarded'
+  String _historyFilter = 'All'; 
   final TextEditingController _historySearchController =
       TextEditingController();
   String _historySearchQuery = '';
 
   final ConfettiController _confetti = ConfettiController();
 
-  // Reasons list
   List<String> _reasons = [];
 
-  // Upcoming trips
   List<UpcomingTrip> _upcomingTrips = [];
 
-  // Past release records
   List<SeatReleaseRecord> _pastReleases = [];
 
-  // Seat-release status notifications derived from loaded account state.
   List<NotificationItem> _notifications = [];
 
   bool _seatReleaseDataApplied = false;
@@ -139,11 +122,9 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
     super.dispose();
   }
 
-  // --- ACTIONS ---
-
   void _onBackPress() {
     if (_currentView == 4) {
-      // Return from success to dashboard
+      
       setState(() => _currentView = 1);
     } else if (_currentView > 1) {
       setState(() => _currentView = 1);
@@ -180,13 +161,6 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
     );
   }
 
-  // --- RENDERS ---
-
-  // `_seatReleaseDataApplied` only ever gates whether the loading/error
-  // screens give way to content (see the checks in `build` below) — it must
-  // never gate applying the data itself, or the refresh button in the app
-  // bar re-fetches from Supabase but the result never reaches the UI after
-  // the first load.
   void _applySeatReleaseData(SeatReleaseLoaded state) {
     final data = state.data;
     _packageName = data.packageName;
@@ -256,7 +230,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
           body: SafeArea(
             child: Stack(
               children: [
-                // Core Screens
+                
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 250),
                   child: _buildCurrentView(scheme),
@@ -285,25 +259,21 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
     };
   }
 
-  // --- SCREEN 1: SEAT RELEASE DASHBOARD ---
   Widget _buildDashboardView(ColorScheme scheme) {
     return ListView(
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 30),
       children: [
-        // Header active package card
+        
         _buildPackageHeaderCard(scheme),
         const SizedBox(height: 18),
 
-        // Quick Stats Section
         _buildStatsGrid(scheme),
         const SizedBox(height: 20),
 
-        // Custom Quick Links row
         _buildDashboardQuickLinks(scheme),
         const SizedBox(height: 24),
 
-        // Upcoming trips list header
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
@@ -676,7 +646,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
                   ],
                 ),
                 const SizedBox(height: 10),
-                // Route line
+                
                 Row(
                   children: [
                     Column(
@@ -744,7 +714,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
                       children: [
                         TextButton(
                           onPressed: () {
-                            // Find and show details of that date if it exists
+                            
                             final recordIdx = _pastReleases.indexWhere(
                               (r) => r.tripDate == trip.date,
                             );
@@ -771,10 +741,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
                           ),
                         ),
                         const SizedBox(width: 6),
-                        // There is no release RPC yet (see
-                        // SeatReleaseRepository — read-only), so this stays
-                        // disabled rather than opening a request flow nothing
-                        // on the backend can honour.
+                        
                         Tooltip(
                           message: context.l10n.seatRelease_actionUnavailable,
                           child: ElevatedButton(
@@ -809,7 +776,6 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
     );
   }
 
-  // --- SCREEN 2: RELEASE SEAT FORM ---
   Widget _buildReleaseSeatForm(ColorScheme scheme) {
     if (_selectedTripForRelease == null) return const SizedBox.shrink();
     final trip = _selectedTripForRelease!;
@@ -823,19 +789,16 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
             physics: const BouncingScrollPhysics(),
             padding: const EdgeInsets.all(20),
             children: [
-              // Trip Preview Card
+              
               _buildTripSummaryCard(trip, scheme),
               const SizedBox(height: 18),
 
-              // Release info card explanation
               _buildReleaseExplanationCard(scheme),
               const SizedBox(height: 18),
 
-              // Warning alert
               _buildReleaseWarningAlert(scheme),
               const SizedBox(height: 18),
 
-              // Selectable Chips for Reason
               Text(
                 l10n.seatRelease_reasonSectionTitle,
                 style: const TextStyle(
@@ -848,7 +811,6 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
               _buildReasonChips(scheme),
               const SizedBox(height: 18),
 
-              // Multi-line optional notes
               Text(
                 l10n.seatRelease_optionalNotesTitle,
                 style: const TextStyle(
@@ -871,7 +833,6 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
               ),
               const SizedBox(height: 24),
 
-              // Benefits section
               Text(
                 l10n.seatRelease_whyReleaseTitle,
                 style: const TextStyle(
@@ -886,7 +847,6 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
           ),
         ),
 
-        // Sticky bottom action buttons
         _buildReleaseFormActionRow(scheme),
       ],
     );
@@ -1176,9 +1136,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
             ),
             const SizedBox(width: 14),
             Expanded(
-              // There is no release RPC yet (see SeatReleaseRepository —
-              // read-only), so this stays disabled rather than pretending to
-              // submit a request nothing on the backend can act on.
+              
               child: Tooltip(
                 message: context.l10n.seatRelease_actionUnavailable,
                 child: ClientButton(
@@ -1194,7 +1152,6 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
     );
   }
 
-  // --- SCREEN 4: RELEASE SUCCESS SCREEN ---
   Widget _buildSuccessView(ColorScheme scheme) {
     if (_activeRecord == null) return const SizedBox.shrink();
     final rec = _activeRecord!;
@@ -1207,7 +1164,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.all(24),
         children: [
-          // Elastic checkmark animation simulation
+          
           const CircleAvatar(
             radius: 36,
             backgroundColor: ClientColors.journeyCyan,
@@ -1227,7 +1184,6 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
           ),
           const SizedBox(height: 24),
 
-          // Released details card
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
@@ -1261,7 +1217,6 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
           ),
           const SizedBox(height: 18),
 
-          // Next steps warning card
           Container(
             padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
@@ -1288,7 +1243,6 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
           ),
           const SizedBox(height: 30),
 
-          // Actions
           ClientButton(
             label: l10n.seatRelease_viewReleaseDetailsButton,
             expand: true,
@@ -1304,7 +1258,6 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
     );
   }
 
-  // --- SCREEN 5: RELEASE DETAILS SCREEN ---
   Widget _buildDetailsView(ColorScheme scheme) {
     if (_activeRecord == null) return const SizedBox.shrink();
     final rec = _activeRecord!;
@@ -1315,7 +1268,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(20),
       children: [
-        // Main details info card
+        
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -1375,7 +1328,6 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
         ),
         const SizedBox(height: 24),
 
-        // Beautiful vertical status timeline
         Text(
           l10n.seatRelease_statusTimelineTitle,
           style: const TextStyle(
@@ -1388,7 +1340,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
         _buildStatusTimeline(rec.status, scheme),
 
         const SizedBox(height: 30),
-        // Go back CTA
+        
         ClientButton(
           label: l10n.seatRelease_backToDashboardButton,
           expand: true,
@@ -1575,7 +1527,6 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
     };
   }
 
-  // --- SCREEN 6: COMPENSATION STATUS SCREEN ---
   Widget _buildCompensationStatusView(ColorScheme scheme) {
     if (_activeRecord == null) return const SizedBox.shrink();
     final rec = _activeRecord!;
@@ -1586,7 +1537,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(20),
       children: [
-        // Header
+        
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -1620,7 +1571,6 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
         ),
         const SizedBox(height: 18),
 
-        // Status Card type
         _buildCompensationDetailsCard(rec, scheme),
         const SizedBox(height: 24),
 
@@ -1708,7 +1658,6 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
       );
     }
 
-    // Rewarded Fintech Voucher Card
     final amt = rec.compensationAmount ?? l10n.seatRelease_egpAmount('50');
     final date = rec.rewardDate ?? l10n.common_today;
     return Container(
@@ -1791,7 +1740,6 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
     );
   }
 
-  // --- SCREEN 7: RELEASE HISTORY SCREEN ---
   Widget _buildHistoryView(ColorScheme scheme) {
     final filtered = _pastReleases.where((item) {
       final matchesSearch =
@@ -1812,7 +1760,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
     return Column(
       key: const ValueKey('view7'),
       children: [
-        // Search bar
+        
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
           child: TextField(
@@ -1833,10 +1781,8 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
           ),
         ),
 
-        // Filter chips row
         _buildHistoryFilterChips(scheme),
 
-        // List
         Expanded(
           child: filtered.isEmpty
               ? ClientErrorCard.fullScreen(
@@ -1910,7 +1856,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
             onTap: () {
               setState(() {
                 _activeRecord = log;
-                _currentView = 5; // details
+                _currentView = 5; 
               });
             },
             child: Padding(
@@ -1981,7 +1927,6 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
     );
   }
 
-  // --- SCREEN 8: NOTIFICATION PANEL ---
   Widget _buildNotificationsView(ColorScheme scheme) {
     return ListView(
       key: const ValueKey('view8'),
@@ -2072,7 +2017,6 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
     );
   }
 
-  // --- SCREEN 9: LOYALTY & ACHIEVEMENTS ---
   Widget _buildLoyaltyAchievementsView(ColorScheme scheme) {
     final l10n = context.l10n;
     return ListView(
@@ -2080,7 +2024,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(20),
       children: [
-        // Achievements summary box
+        
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
@@ -2140,7 +2084,6 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
         ),
         const SizedBox(height: 12),
 
-        // Badges progress indicators
         _buildAchievementProgressTile(
           title: l10n.seatRelease_badgeEcoTitle,
           subtitle: l10n.seatRelease_badgeEcoSubtitle,

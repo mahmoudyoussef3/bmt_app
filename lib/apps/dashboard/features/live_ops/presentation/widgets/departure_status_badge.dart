@@ -43,8 +43,7 @@ class DepartureStatusBadge extends StatelessWidget {
         ),
         Icons.schedule_rounded,
       ),
-      // A trip already on the road only earns a badge if it left late — that is
-      // context for the delay a passenger is feeling, not an action item.
+      
       DepartureStatus.departed when delay != null => (
         'انطلقت متأخرة ${_delayText(delay)}',
         (
@@ -71,8 +70,7 @@ class DepartureStatusBadge extends StatelessWidget {
         children: [
           Icon(icon, size: 13, color: colors.$2),
           const SizedBox(width: 5),
-          // Flexible so a long delay string wraps/ellipsises inside a narrow
-          // card instead of overflowing it at large text scales.
+          
           Flexible(
             child: Text(
               label,

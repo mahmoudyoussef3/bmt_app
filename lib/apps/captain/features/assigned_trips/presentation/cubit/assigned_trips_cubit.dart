@@ -29,9 +29,6 @@ class AssignedTripsCubit extends Cubit<AssignedTripsState> {
   Timer? _refreshDebounce;
   bool _refreshing = false;
 
-  /// Cached rather than re-read from storage on every refresh — it only
-  /// changes when the captain explicitly acknowledges (see
-  /// [acknowledgeNewTrips]), not on every realtime-triggered poll.
   Set<String> _seenTripIds = const {};
 
   Future<void> load() async {
@@ -49,16 +46,8 @@ class AssignedTripsCubit extends Cubit<AssignedTripsState> {
     }
   }
 
-  /// Re-fetches the trip list at the captain's request, showing progress while
-  /// it runs. Returns whether it succeeded so a manual pull-to-refresh can
-  /// tell the captain it failed — a silent no-op otherwise looks identical to
-  /// a successful refresh.
   Future<bool> refresh() => _fetch(showProgress: true);
 
-  /// The realtime-triggered re-fetch. Silent by design: it ignores the result
-  /// and shows no progress, because quietly retrying on the next change is the
-  /// right behavior for a background poll, not surfacing a message — or a
-  /// spinner — for a momentary connectivity blip nobody asked about.
   Future<void> _backgroundRefresh() => _fetch(showProgress: false);
 
   Future<bool> _fetch({required bool showProgress}) async {
@@ -71,7 +60,6 @@ class AssignedTripsCubit extends Cubit<AssignedTripsState> {
       emit(AssignedTripsLoaded(trips, newTripIds: _newTripIds(trips)));
       return true;
     } catch (_) {
-      // Keep current state on silent refresh failure.
       if (showProgress) _setRefreshing(false);
       return false;
     } finally {
@@ -85,9 +73,6 @@ class AssignedTripsCubit extends Cubit<AssignedTripsState> {
     emit(current.copyWith(isRefreshing: value));
   }
 
-  /// Dismisses the "new assignment" notice: everything currently visible
-  /// becomes "seen", so only trips assigned after this point will show as
-  /// new again.
   Future<void> acknowledgeNewTrips() async {
     final current = state;
     if (current is! AssignedTripsLoaded || current.newTripIds.isEmpty) return;

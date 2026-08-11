@@ -100,9 +100,7 @@ class _HealthCard extends StatelessWidget {
           ),
           child: Row(
             children: [
-              // A colour bar rather than a coloured card: seven tinted blocks
-              // side by side is a traffic light, not a dashboard, and the eye
-              // stops being able to tell which one is actually red.
+              
               Container(
                 width: 4,
                 height: 44,

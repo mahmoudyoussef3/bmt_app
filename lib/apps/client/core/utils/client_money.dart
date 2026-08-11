@@ -1,6 +1,3 @@
-// Money formatting for every Client surface that prices a trip. Supabase stores
-// amounts as bare numerics, and a missing or zero amount means "not priced yet"
-// — which the UI says out loud rather than rendering as a fake `EGP 0`.
 
 /// The cheapest published fare on a trip row, e.g. `EGP 100`. Empty when the
 /// dashboard has not priced the trip.

@@ -14,9 +14,6 @@ class CaptainTripRemoteDataSource {
   final SupabaseClient _supabase;
   final CaptainIdentityProvider _identity;
 
-  /// Reads the driver from the session rather than a field of its own. This is a
-  /// lazy singleton, so a locally cached id outlived sign-out — the next captain
-  /// on the same device would subscribe with the previous captain's id.
   Stream<void> watchTripUpdates() {
     final driverId = _identity.driverIdOrNull;
     if (driverId == null) return const Stream.empty();
@@ -77,9 +74,6 @@ class CaptainTripRemoteDataSource {
           trip_events(title)
         ''')
         .eq('driver_id', driverId)
-        // Trips still to drive (any day) plus today's already-completed ones —
-        // otherwise a captain done for the day sees "no trips assigned" instead
-        // of a day summary that accounts for what they already drove today.
         .or(
           'status.in.(scheduled,open_for_booking,boarding,in_progress),'
           'and(status.eq.completed,trip_date.eq.$today)',
@@ -109,10 +103,6 @@ class CaptainTripRemoteDataSource {
             ),
           );
     final passengers = (json['trip_passengers'] as List?) ?? const [];
-    // scan_passenger_ticket writes 'confirmed' on check-in (see migration_07)
-    // — trip_passengers.status has no 'boarded' value in its check
-    // constraint. 'completed' is kept defensively; nothing currently writes
-    // it, but it would mean the same thing if something one day did.
     final boarded = passengers.where((p) {
       final status = (p as Map<String, dynamic>)['status']?.toString();
       return status == 'confirmed' || status == 'completed';
@@ -154,15 +144,6 @@ class CaptainTripRemoteDataSource {
     );
   }
 
-  /// Combines `trip_date` (a `date`) with `departure_time`/`arrival_time` (a
-  /// `time`) into one local wall-clock instant.
-  ///
-  /// Both halves are validated rather than silently defaulted to zero: an
-  /// unparseable time used to land the trip at midnight, which the home
-  /// screen then rendered as a countdown that disagreed with the departure
-  /// clock shown right beside it. Falling back to the *date's* midnight only
-  /// when the time is genuinely absent keeps that failure visible instead of
-  /// dressing it up as a plausible-looking hour.
   DateTime _dateTime(String date, Object? time) {
     final parsedDate = DateTime.tryParse(date) ?? DateTime.now();
     final parts = time?.toString().split(':') ?? const [];
@@ -189,8 +170,6 @@ class CaptainTripRemoteDataSource {
       'boarding' => AssignedTripStatus.boarding,
       'in_progress' => AssignedTripStatus.inProgress,
       'completed' => AssignedTripStatus.completed,
-      // Anything else — including 'scheduled' — is a trip operations has not
-      // published yet. Never assume bookable on an unknown value.
       _ => AssignedTripStatus.scheduled,
     };
   }

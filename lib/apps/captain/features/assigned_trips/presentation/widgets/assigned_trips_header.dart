@@ -1,24 +1,12 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:bmt_app/core/widgets/widgets.dart';
-
-import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
-import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
-import 'package:bmt_app/apps/captain/core/utils/captain_formats.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
-import 'package:bmt_app/apps/captain/core/widgets/captain_notification_bell.dart';
+import 'package:bmt_app/apps/captain/core/utils/captain_formats.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_root_header.dart';
 import 'package:bmt_app/apps/captain/features/profile/presentation/cubit/driver_profile_cubit.dart';
 import 'package:bmt_app/apps/captain/features/profile/presentation/cubit/driver_profile_state.dart';
 
-/// Home header: who the captain is, what day it is, and their notifications.
-///
-/// Stays pinned while the trip list scrolls, so the bell is always reachable.
-/// The greeting is the title — a separate "لوحة القيادة" line above it only
-/// named the tab the captain had just tapped, and paying an expanded height to
-/// keep both cost the top third of the screen for one useful line of text.
 class AssignedTripsHeader extends StatelessWidget {
   const AssignedTripsHeader({
     super.key,
@@ -26,68 +14,20 @@ class AssignedTripsHeader extends StatelessWidget {
     required this.onNotificationsTap,
   });
 
-  /// Null in release builds: the avatar's only action is the development
-  /// app-mode switcher, so outside debug it is an emblem, not a button.
   final VoidCallback? onAvatarTap;
 
   final VoidCallback onNotificationsTap;
 
   @override
   Widget build(BuildContext context) {
-    // Greeting over date, both inside the toolbar — so it grows with the user's
-    // text scale rather than clipping.
-    final toolbarHeight = math.max(
-      kToolbarHeight,
-      MediaQuery.textScalerOf(context).scale(64),
-    );
-
-    return SliverAppBar(
-      pinned: true,
-      elevation: 0,
-      toolbarHeight: toolbarHeight,
-      backgroundColor: CaptainColors.primary,
-      foregroundColor: Colors.white,
-      titleSpacing: CaptainDesignTokens.s20,
+    return CaptainRootHeader(
       title: const Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [_Greeting(), _TodayLabel()],
       ),
-      actions: [
-        CaptainNotificationBell(onTap: onNotificationsTap),
-        // Centred because `AppBar` stretches its actions to the full toolbar
-        // height, which would leave the avatar's ring off-centre in the slot.
-        Center(
-          child: onAvatarTap == null
-              ? const _HeaderAvatar()
-              : GestureDetector(
-                  onTap: onAvatarTap,
-                  child: const _HeaderAvatar(),
-                ),
-        ),
-        const SizedBox(width: CaptainDesignTokens.s20),
-      ],
-      flexibleSpace: const _HeaderBackground(),
-    );
-  }
-}
-
-/// The brand gradient behind the bar — the only thing the old expanded hero
-/// still earns its keep for, now at toolbar height.
-class _HeaderBackground extends StatelessWidget {
-  const _HeaderBackground();
-
-  @override
-  Widget build(BuildContext context) {
-    // The app's one brand gradient, shared with the splash mark, the auth
-    // lockup and the profile hero. It used to fade primary into a paler primary
-    // so it wouldn't clash with the (then also blue) focus card sitting right
-    // under it; now that the card is a surface, the bar can carry the full
-    // identity and read as chrome rather than as more content.
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: CaptainColors.primaryGradient(context),
-      ),
+      onAvatarTap: onAvatarTap,
+      onNotificationsTap: onNotificationsTap,
     );
   }
 }
@@ -134,24 +74,6 @@ class _TodayLabel extends StatelessWidget {
         color: Colors.white.withValues(alpha: 0.85),
         fontWeight: FontWeight.w600,
       ),
-    );
-  }
-}
-
-class _HeaderAvatar extends StatelessWidget {
-  const _HeaderAvatar();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.35),
-          width: 2,
-        ),
-      ),
-      child: const AppAvatar(initials: 'ك', radius: 16),
     );
   }
 }

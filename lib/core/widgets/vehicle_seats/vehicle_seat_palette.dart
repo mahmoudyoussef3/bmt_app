@@ -94,9 +94,9 @@ class VehicleSeatPalette {
   /// rider's map does not change colour under a refactor.
   static const VehicleSeatPalette light = VehicleSeatPalette(
     available: SeatTones(
-      fill: Color(0xFFEFF6FF), // Blue 50
-      border: Color(0xFFBFDBFE), // Blue 200
-      foreground: Color(0xFF1D4ED8), // Blue 700
+      fill: Color(0xFFEFF6FF), 
+      border: Color(0xFFBFDBFE), 
+      foreground: Color(0xFF1D4ED8), 
     ),
     selected: SeatTones(
       fill: AppLightColors.primary,
@@ -113,10 +113,7 @@ class VehicleSeatPalette {
       border: AppLightColors.warning,
       foreground: AppLightColors.onWarningContainer,
     ),
-    // Deliberately close to the cabin floor: a withdrawn seat should recede
-    // into the vehicle rather than compete with the seats that are for sale.
-    // Its neighbour [occupied] keeps a solid slate fill because an occupied
-    // seat is real, present inventory — the two must not look alike.
+    
     disabled: SeatTones(
       fill: AppLightColors.surfaceLow,
       border: AppLightColors.border,
@@ -136,7 +133,7 @@ class VehicleSeatPalette {
   /// the loud state against a slate page.
   static const VehicleSeatPalette dark = VehicleSeatPalette(
     available: SeatTones(
-      fill: Color(0xFF172554), // Blue 950
+      fill: Color(0xFF172554), 
       border: AppDarkColors.primaryContainer,
       foreground: AppDarkColors.primaryAccent,
     ),

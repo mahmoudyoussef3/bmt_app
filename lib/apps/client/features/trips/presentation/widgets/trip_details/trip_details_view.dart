@@ -60,9 +60,7 @@ class TripDetailsView extends StatelessWidget {
       backgroundColor: ClientColors.backgroundFor(context),
       appBar: TripBrandAppBar(
         actions: [
-          // Cancelling lives in the bottom bar only. Mirroring it up here gave
-          // the screen two destructive buttons, one of them a stray tap away
-          // from the back arrow.
+          
           if (onRefresh != null)
             IconButton(
               tooltip: context.l10n.tracking_refresh,
@@ -81,8 +79,7 @@ class TripDetailsView extends StatelessWidget {
           child: ListView(
             padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
             children: [
-              // Above the hero on purpose: if this booking needs something, that
-              // is the first thing the rider must read — not the route poster.
+              
               TripAttentionBanner(trip: trip),
               if (trip.attention != TripAttention.none)
                 const SizedBox(height: 14),

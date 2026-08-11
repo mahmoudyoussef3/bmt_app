@@ -68,7 +68,6 @@ class UserSubscription {
   final int usedRides;
   final int remainingRides;
 
-  // Real financial fields from the `subscriptions` table.
   final double paidAmount;
   final double remainingAmount;
   final int renewalsCount;

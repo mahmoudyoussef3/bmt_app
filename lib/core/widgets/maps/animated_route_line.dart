@@ -26,8 +26,7 @@ class AnimatedRouteLine extends StatefulWidget {
 
 class _AnimatedRouteLineState extends State<AnimatedRouteLine>
     with SingleTickerProviderStateMixin {
-  // Created in initState so the ticker never gets lazily instantiated
-  // outside the widget's active lifecycle.
+  
   late final AnimationController _controller;
 
   List<double> _cumulative = const [];

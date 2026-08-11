@@ -31,12 +31,7 @@ class ProfileAccountSection extends StatelessWidget {
           subtitle: l10n.profile_editProfileSubtitle,
           onTap: onEdit,
         ),
-        // The rider's money. `/wallet` was built, routed and deep-linked from
-        // every refund notification, but nothing in the hub opened it — a
-        // rider who had not been sent a notification had no way to see what an
-        // office owed them. The tile names the balance without printing a
-        // figure: the wallet screen reads its numbers from the server, and the
-        // hub must not quote a total it has not loaded.
+        
         ProfileHubTile(
           icon: Icons.account_balance_wallet_outlined,
           title: l10n.profile_wallet,

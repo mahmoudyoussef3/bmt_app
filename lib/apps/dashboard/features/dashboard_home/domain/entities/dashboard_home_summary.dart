@@ -42,8 +42,6 @@ class DashboardHomeSummary {
     required this.subscriptions,
   });
 
-  // ---- Trips -------------------------------------------------------------
-
   late final List<OperationTrip> todayTrips = trips.where((trip) {
     final at = trip.scheduledAt;
     if (at == null) return false;
@@ -108,8 +106,6 @@ class DashboardHomeSummary {
     return upcoming.take(limit).toList();
   }
 
-  // ---- Bookings ------------------------------------------------------------
-
   late final Map<BookingStatus, int> _bookingStatusCounts = _tally(
     bookings.map((b) => b.status),
   );
@@ -138,8 +134,6 @@ class DashboardHomeSummary {
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     return sorted.take(limit).toList();
   }
-
-  // ---- Revenue trend --------------------------------------------------------
 
   /// Daily collected booking revenue over the last [days] days, oldest first,
   /// with quiet days present as zeros so the line keeps its true shape.
@@ -176,8 +170,6 @@ class DashboardHomeSummary {
         ),
     ];
   }
-
-  // ---- Route performance ----------------------------------------------------
 
   /// How full each route ran, best first, over the trips in the last
   /// [windowDays] days plus everything still ahead.
@@ -227,8 +219,6 @@ class DashboardHomeSummary {
     return rows.take(limit).toList();
   }
 
-  // ---- Payments needing review ---------------------------------------------
-
   late final List<BookingPaymentVerification> pendingPaymentReviews =
       paymentVerifications
           .where((p) => p.status == BookingVerificationStatus.pending)
@@ -236,11 +226,7 @@ class DashboardHomeSummary {
 
   int get pendingPaymentReviewsCount => pendingPaymentReviews.length;
 
-  // ---- Fleet -----------------------------------------------------------
-
   FleetSummary get fleetSummary => fleet.summary;
-
-  // ---- Captains ----------------------------------------------------------
 
   late final List<CaptainRequest> pendingCaptainRequests = captainRequests
       .where((r) => r.isPending)
@@ -248,11 +234,7 @@ class DashboardHomeSummary {
 
   int get pendingCaptainRequestsCount => pendingCaptainRequests.length;
 
-  // ---- Reviews -------------------------------------------------------------
-
   ReviewsSummary get reviewsSummary => ReviewsSummary.from(reviews);
-
-  // ---- Tickets / complaints -------------------------------------------------
 
   /// Open complaints, most urgent and most recently updated first.
   List<SupportTicket> openComplaints({int limit = 5}) {
@@ -273,8 +255,6 @@ class DashboardHomeSummary {
     return open.take(limit).toList();
   }
 
-  // ---- Subscriptions ---------------------------------------------------
-
   /// Subscriptions worth an operator's attention: awaiting payment first,
   /// then active ones running out soonest.
   List<UserSubscription> subscriptionsNeedingFollowUp({int limit = 5}) {
@@ -294,8 +274,6 @@ class DashboardHomeSummary {
           });
     return relevant.take(limit).toList();
   }
-
-  // ---- What needs a decision now -------------------------------------------
 
   /// Trips still open or scheduled that nobody is driving.
   ///

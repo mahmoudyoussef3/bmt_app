@@ -87,9 +87,6 @@ class SupabaseCommunicationDatasource implements CommunicationDatasource {
       _fail(error, 'Unable to send your message.');
     }
 
-    // A zero-row update means either a competing write or a policy that
-    // refused ours — PostgREST reports both the same way, so the message
-    // stays neutral about which it was.
     throw Exception('Your message could not be sent. Please try again.');
   }
 

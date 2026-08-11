@@ -77,8 +77,7 @@ class _TripReviewFormState extends State<TripReviewForm> {
               ? context.l10n.trips_reviewSubmitting
               : context.l10n.trips_submitReviewButton,
           isLoading: state.isSubmitting,
-          // Stays disabled until all three ratings are set — the sheet never
-          // submits stars the passenger did not choose.
+          
           onPressed: state.canSubmit ? cubit.submit : null,
         ),
         if (!state.draft.isValid && !state.isSubmitting) ...[

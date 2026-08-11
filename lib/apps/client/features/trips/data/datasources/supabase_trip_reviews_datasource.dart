@@ -53,8 +53,7 @@ class SupabaseTripReviewsDatasource implements TripReviewsDatasource {
         'submit_trip_review',
         params: {
           'p_booking_id': review.bookingId,
-          // The office is resolved server-side from booking → trip → route, so only
-          // the score travels: a client cannot aim a review at an arbitrary office.
+          
           'p_office_rating': review.officeRating,
           'p_driver_rating': review.driverRating,
           'p_vehicle_rating': review.vehicleRating,

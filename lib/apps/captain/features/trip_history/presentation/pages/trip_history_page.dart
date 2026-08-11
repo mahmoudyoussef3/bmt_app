@@ -1,10 +1,13 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/apps/captain/core/routes/captain_nav.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_bottom_nav.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_dev_mode_sheet.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_empty_state.dart';
-import 'package:bmt_app/apps/captain/core/widgets/captain_sliver_header.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_root_header.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
 
 import '../cubit/trip_history_cubit.dart';
@@ -64,9 +67,16 @@ class _LoadedBody extends StatelessWidget {
       onRefresh: cubit.refresh,
       child: CustomScrollView(
         slivers: [
-          CaptainSliverHeader(
-            title: 'سجل الرحلات',
-            subtitle: TripHistoryLabels.completedTrips(state.totalTrips),
+          CaptainRootHeader(
+            title: CaptainRootHeader.titleSubtitle(
+              context,
+              title: 'سجل الرحلات',
+              subtitle: TripHistoryLabels.completedTrips(state.totalTrips),
+            ),
+            onNotificationsTap: () => context.openNotifications(),
+            onAvatarTap: kDebugMode
+                ? () => showCaptainDevModeSheet(context)
+                : null,
           ),
           if (state.hasNoTrips)
             const SliverFillRemaining(
@@ -98,9 +108,6 @@ class _LoadedBody extends StatelessWidget {
                 onClearFilters: cubit.clearFilters,
               ),
             ),
-            // No "clear filters" action here on purpose: the search field owns
-            // its own text, so the only reset that can also empty the field is
-            // the one inside the bar — which is on screen, directly above this.
             if (state.hasNoMatches)
               const SliverFillRemaining(
                 hasScrollBody: false,
@@ -118,7 +125,6 @@ class _LoadedBody extends StatelessWidget {
                   CaptainDesignTokens.s24,
                   CaptainDesignTokens.s8,
                   CaptainDesignTokens.s24,
-                  // Cleared for the shell's floating nav bar.
                   CaptainBottomNav.reservedSpace(context),
                 ),
                 sliver: TripHistoryList(groups: state.groups),

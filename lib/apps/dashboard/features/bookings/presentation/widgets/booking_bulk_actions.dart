@@ -51,9 +51,7 @@ class BookingBulkActions extends StatelessWidget {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // While a batch runs the bar reports progress instead of just
-                // greying out: the RPCs are sequential, so a large batch can
-                // take several seconds and silence reads as a frozen screen.
+                
                 if (busy)
                   const Padding(
                     padding: EdgeInsetsDirectional.only(end: AppSpacing.small),

@@ -49,8 +49,7 @@ class FleetTabBar extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.small),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          // Each tab needs ~224px to show its label, subtitle and count without
-          // clipping, so the side-by-side row is only used when every tab fits.
+          
           const minTabWidth = 224.0;
           final isCompact = constraints.maxWidth < minTabWidth * tabs.length;
 

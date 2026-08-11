@@ -52,16 +52,13 @@ class RouteTimelineEditor extends StatelessWidget {
           stop: stops.first,
           role: RouteTimelineRole.origin,
           position: 1,
-          // "من" / "إلى" spell out the two questions a route is, so the
-          // timeline doubles as the From/To form instead of repeating the
-          // endpoints in a separate pair of fields above it.
+          
           roleLabel: 'من',
           active: activeIndex == 0,
           flagged: issueIndex == 0,
           emptyPrompt: 'اضغط لتحديد نقطة الانطلاق',
           onTap: () => onEditStop(0),
-          // The gap under the origin: a stop added here is the first thing the
-          // bus reaches after leaving.
+          
           onAddBelow: () => onAddStopAt(1),
         ),
         if (waypoints.isNotEmpty)
@@ -70,8 +67,7 @@ class RouteTimelineEditor extends StatelessWidget {
             physics: const NeverScrollableScrollPhysics(),
             buildDefaultDragHandles: false,
             itemCount: waypoints.length,
-            // The list holds only the stops between the endpoints, so positions
-            // are shifted by one to address the draft's full ordered list.
+            
             onReorder: (oldIndex, newIndex) =>
                 onReorder(oldIndex + 1, newIndex + 1),
             itemBuilder: (context, position) {

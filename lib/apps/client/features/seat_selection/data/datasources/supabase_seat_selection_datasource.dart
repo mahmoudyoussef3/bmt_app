@@ -12,7 +12,7 @@ class SupabaseSeatSelectionDatasource implements SeatSelectionDatasource {
   @override
   Future<SeatSelectionModel> getSeatSelectionData(String tripId) async {
     try {
-      // 1. Fetch real trip_seats for this trip.
+      
       final seatsResponse = await _supabase
           .from('trip_seats')
           .select('id, seat_label, seat_row, seat_column, state')
@@ -41,8 +41,6 @@ class SupabaseSeatSelectionDatasource implements SeatSelectionDatasource {
         );
       }
 
-      // 2. Fetch trip details, vehicle details and driver.
-      // `public_trips` carries sanitised `drivers` / `vehicles` jsonb in `*`.
       final tripResponse = await _supabase
           .from('public_trips')
           .select('''
@@ -57,9 +55,6 @@ class SupabaseSeatSelectionDatasource implements SeatSelectionDatasource {
         throw Exception('Trip details could not be found.');
       }
 
-      // The seat map is the last screen before money moves, and a trip can flip
-      // out of `open_for_booking` while a rider sits on it. Refuse here rather
-      // than let them pick a seat the booking RPC will reject at checkout.
       if (!BookableTrip.isOffered(tripResponse)) {
         throw Exception('This trip is no longer open for booking.');
       }
@@ -154,8 +149,6 @@ class SupabaseSeatSelectionDatasource implements SeatSelectionDatasource {
     final user = _supabase.auth.currentUser;
     if (user == null) return;
 
-    // Best-effort compensation: the caller is already handling a failure, and
-    // an expired lock is reclaimed by lock_trip_seat's self-heal anyway.
     try {
       await _supabase.rpc(
         'release_trip_seat_lock',
@@ -179,9 +172,7 @@ class SupabaseSeatSelectionDatasource implements SeatSelectionDatasource {
 
     final rpcParams = Map<String, dynamic>.from(params);
     rpcParams['p_client_id'] = user.id;
-    // The passenger is whoever is signed in. Callers may still name them
-    // explicitly (an operator booking on someone's behalf); this only fills the
-    // blank so no caller has to reach into the auth session itself.
+    
     final metadata = user.userMetadata ?? const <String, dynamic>{};
     rpcParams['p_passenger_name'] = _orFallback(
       params['p_passenger_name'],

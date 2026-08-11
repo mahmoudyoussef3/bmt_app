@@ -28,8 +28,7 @@ class LandingShot extends StatelessWidget {
     final image = Image.asset(
       'assets/showcase/$asset.png',
       fit: BoxFit.contain,
-      // Screenshots are wide; letting them scale with the column keeps the
-      // console readable on a laptop without cropping it on a phone.
+      
       filterQuality: FilterQuality.medium,
     );
 

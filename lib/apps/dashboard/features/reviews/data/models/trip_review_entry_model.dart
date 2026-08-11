@@ -13,9 +13,7 @@ class TripReviewEntryModel {
     return TripReviewEntry(
       id: _text('id'),
       bookingId: _text('booking_id'),
-      // The snapshots are taken at submit time, so an archived driver or a
-      // deleted route still reads correctly here. Fall back only if a review
-      // predates the snapshot columns.
+      
       bookingNumber: _fallback(_text('booking_number'), 'بدون رقم حجز'),
       clientName: _fallback(_text('client_name'), 'عميل'),
       driverName: _fallback(_text('driver_name'), 'سائق غير محدد'),

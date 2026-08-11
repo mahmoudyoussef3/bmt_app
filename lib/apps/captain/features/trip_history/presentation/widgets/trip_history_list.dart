@@ -8,13 +8,6 @@ import '../utils/trip_history_filters.dart';
 import 'trip_history_animated_entry.dart';
 import 'trip_history_card.dart';
 
-/// The grouped history, built lazily.
-///
-/// The groups are flattened into a single row list so this can use
-/// `SliverList.builder`: the previous `SliverList.list` eagerly constructed a
-/// card for every trip the captain had ever driven, on every rebuild, however
-/// few were on screen. Flattening is cheap — the rows only hold references —
-/// and it hands the sliver the item count it needs to build on demand.
 class TripHistoryList extends StatelessWidget {
   const TripHistoryList({super.key, required this.groups});
 
@@ -65,8 +58,6 @@ class _TripRow extends _Row {
   const _TripRow(this.trip, this.indexInGroup);
   final TripHistoryItem trip;
 
-  /// Position within its own group, so each section's entry animation staggers
-  /// from its own start rather than from the top of the whole list.
   final int indexInGroup;
 }
 

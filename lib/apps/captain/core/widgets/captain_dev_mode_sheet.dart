@@ -4,7 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/core/app_mode/app_mode.dart';
 import 'package:bmt_app/core/app_mode/app_mode_cubit.dart';
 
-/// Development-only switcher between the platform's apps.
 Future<void> showCaptainDevModeSheet(BuildContext context) {
   return showModalBottomSheet<void>(
     context: context,

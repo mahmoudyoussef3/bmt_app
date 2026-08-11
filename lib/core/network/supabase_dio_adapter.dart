@@ -15,17 +15,16 @@ class DioHttpClientAdapter extends http.BaseClient {
 
   @override
   Future<http.StreamedResponse> send(http.BaseRequest request) async {
-    // 1. Convert http.BaseRequest to Dio RequestOptions
+    
     final options = Options(
       method: request.method,
       headers: request.headers,
-      // Buffer the response so we can log it fully
+      
       responseType: ResponseType.bytes,
       validateStatus: (status) =>
-          true, // Let the caller (Supabase) handle status errors
+          true, 
     );
 
-    // 2. Prepare the body if present
     dynamic data;
     if (request is http.Request) {
       data = request.bodyBytes.isEmpty ? null : request.bodyBytes;
@@ -33,7 +32,6 @@ class DioHttpClientAdapter extends http.BaseClient {
       data = request.finalize();
     }
 
-    // 3. Execute the request via Dio
     try {
       final dioResponse = await dio.request<List<int>>(
         request.url.toString(),
@@ -41,7 +39,6 @@ class DioHttpClientAdapter extends http.BaseClient {
         options: options,
       );
 
-      // 4. Convert Dio Response back to http.StreamedResponse
       final List<int> bytes = dioResponse.data as List<int>;
       final stream = Stream.value(bytes);
 

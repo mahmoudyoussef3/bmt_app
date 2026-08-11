@@ -4,8 +4,6 @@ import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_button.dart';
 
-/// Approval confirmation. "Continue" establishes the local session and enters
-/// the captain's home.
 class CaptainRequestApprovedView extends StatelessWidget {
   final String name;
   final String phone;

@@ -24,7 +24,7 @@ class TrackingMapCard extends StatelessWidget {
           builder: (context, constraints) {
             final w = constraints.maxWidth;
             final h = constraints.maxHeight;
-            // vehicle position computed below
+            
             return Stack(
               children: [
                 Positioned.fill(

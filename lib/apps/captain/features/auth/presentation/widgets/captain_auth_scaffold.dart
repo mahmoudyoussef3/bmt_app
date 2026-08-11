@@ -4,13 +4,6 @@ import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/core/widgets/directional_icon.dart';
 
-/// Shared shell for the captain auth screens (login + request access).
-///
-/// Provides the ambient brand glow, an optional back affordance, and a
-/// vertically-centered, width-constrained scroll area so the keyboard never
-/// clips the form. Inherits the app's ambient RTL — the phone number field
-/// (`CaptainAuthField`) scopes its own LTR to just the digits it displays, so
-/// nothing here needs to force a direction on the rest of the Arabic screen.
 class CaptainAuthScaffold extends StatelessWidget {
   const CaptainAuthScaffold({
     super.key,

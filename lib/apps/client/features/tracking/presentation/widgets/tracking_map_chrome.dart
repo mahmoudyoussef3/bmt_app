@@ -71,4 +71,3 @@ class TrackingMapChrome extends StatelessWidget {
     );
   }
 }
-

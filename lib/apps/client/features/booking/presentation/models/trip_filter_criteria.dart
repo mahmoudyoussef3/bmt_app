@@ -69,8 +69,7 @@ class TripFilterCriteria {
     if (vehicleType != null && trip.vehicleType != vehicleType) return false;
     if (timeOfDay != null) {
       final bucket = bucketFor(trip.departureTime);
-      // An unparseable departure time never excludes the trip — fail open,
-      // consistent with the price/duration parsing above.
+      
       if (bucket != null && bucket != timeOfDay) return false;
     }
     return true;

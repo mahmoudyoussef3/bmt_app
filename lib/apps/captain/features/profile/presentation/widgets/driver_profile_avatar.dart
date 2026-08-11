@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
+
 import 'driver_profile_metrics.dart';
 
-/// The captain's photo on the header gradient, falling back to their initial.
-///
-/// The fallback is also the error state: a broken photo URL must not leave a
-/// hole in the identity block.
 class DriverProfileAvatar extends StatelessWidget {
   const DriverProfileAvatar({super.key, required this.name, this.photoUrl});
 
@@ -20,15 +18,11 @@ class DriverProfileAvatar extends StatelessWidget {
       height: DriverProfileMetrics.avatarSize,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: Colors.white.withAlpha(40),
-        border: Border.all(color: Colors.white.withAlpha(150), width: 3),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(40),
-            blurRadius: 24,
-            offset: const Offset(0, 10),
-          ),
-        ],
+        color: CaptainColors.primary.withAlpha(20),
+        border: Border.all(
+          color: CaptainColors.primary.withAlpha(70),
+          width: 3,
+        ),
       ),
       child: url == null
           ? _Initials(name: name)
@@ -58,7 +52,7 @@ class _Initials extends StatelessWidget {
         style: const TextStyle(
           fontSize: 36,
           fontWeight: FontWeight.w900,
-          color: Colors.white,
+          color: CaptainColors.primary,
         ),
       ),
     );

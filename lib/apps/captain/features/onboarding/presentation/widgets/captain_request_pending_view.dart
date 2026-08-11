@@ -4,8 +4,6 @@ import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_button.dart';
 
-/// Shown while a submitted request awaits an operations decision. The cubit
-/// polls in the background; this view offers a manual refresh too.
 class CaptainRequestPendingView extends StatelessWidget {
   final String phone;
   final VoidCallback onRefresh;

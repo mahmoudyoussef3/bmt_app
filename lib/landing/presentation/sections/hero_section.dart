@@ -63,8 +63,7 @@ class HeroSection extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 48),
-                    // The rig is three screenshots wide; give it the larger
-                    // half or the console inside it stops being readable.
+                    
                     const Expanded(
                       flex: 6,
                       child: LandingShot(asset: 'ewt-ecosystem-devices'),

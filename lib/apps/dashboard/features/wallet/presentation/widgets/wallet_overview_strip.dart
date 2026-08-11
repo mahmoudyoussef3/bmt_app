@@ -77,8 +77,7 @@ class WalletOverviewStrip extends StatelessWidget {
             color: overview.pendingRefundCount > 0
                 ? palette.warning
                 : palette.neutral,
-            // A KPI that can be drilled into is the shortest path from "three
-            // requests are waiting" to the queue that clears them.
+            
             onTap: onOpenRefunds,
             tapHint: 'افتح طلبات الاسترداد',
           ),

@@ -70,7 +70,7 @@ class LiveTripModel extends LiveTrip {
   /// entirely rather than measure against a guessed time.
   static DateTime? _parseSchedule(String date, String time) {
     if (date.isEmpty || time.isEmpty) return null;
-    // `time` arrives as HH:mm or HH:mm:ss; DateTime.tryParse needs seconds.
+    
     final parts = time.split(':');
     if (parts.length < 2) return null;
     final normalized = parts.length == 2 ? '$time:00' : time;
@@ -92,8 +92,6 @@ class LiveTripModel extends LiveTrip {
     final recordedAt = DateTime.tryParse(fix['recorded_at'] as String? ?? '');
     if (lat == null || lng == null || recordedAt == null) return null;
 
-    // Captain publishes `speed` in metres/second (Geolocator); the desk reads
-    // km/h.
     final speedMs = (fix['speed'] as num?)?.toDouble();
     return LiveFix(
       latitude: lat,

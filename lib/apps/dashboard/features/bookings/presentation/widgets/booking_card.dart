@@ -43,8 +43,7 @@ class BookingCard extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
         border: Border.all(
-          // Selection and inspection are drawn as a border rather than a tint,
-          // so both survive greyscale and high-contrast rendering.
+          
           color: opened
               ? scheme.primary
               : selected
@@ -138,8 +137,7 @@ class _CardHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(width: AppSpacing.small),
-        // Payment state leads: it is the state a review acts on, and the one
-        // that decides whether this card needs the operator at all.
+        
         Flexible(
           child: BookingStateChip.payment(booking.paymentStatus, dense: true),
         ),
@@ -182,8 +180,7 @@ class _TripBlock extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.xSmall),
-          // Wrap, not a Row: at a large text scale in a narrow column the trip
-          // facts must fall onto a second line instead of clipping.
+          
           Wrap(
             spacing: AppSpacing.medium,
             runSpacing: AppSpacing.xSmall,

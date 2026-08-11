@@ -4,8 +4,6 @@ import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 
-/// Boarding progress across the whole trip: how many of the expected riders are
-/// on board. Reads the same as the manifest's tally so the two never disagree.
 class CaptainPickupProgressBar extends StatelessWidget {
   const CaptainPickupProgressBar({
     super.key,

@@ -96,10 +96,7 @@ class _DailyBookingFlowScreenState extends State<DailyBookingFlowScreen> {
   }
 
   void _book(DailyBookingVehicle vehicle) {
-    // This flow never fetched route points or trip pricing (it only lists
-    // distinct pickup/destination city names and same-day vehicles), so the
-    // route handed to the wizard is built entirely from what was selected
-    // here: two stops in travel order and the one trip the rider tapped.
+    
     final route = RouteOptionData(
       id: vehicle.id,
       routeName: '$_pickup - $_destination',

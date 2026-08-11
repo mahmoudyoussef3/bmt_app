@@ -39,7 +39,7 @@ class RouteGeometryCache {
 
   RoadRoute? get(String signature) {
     final hit = _entries.remove(signature);
-    if (hit != null) _entries[signature] = hit; // Refresh LRU position.
+    if (hit != null) _entries[signature] = hit; 
     return hit;
   }
 

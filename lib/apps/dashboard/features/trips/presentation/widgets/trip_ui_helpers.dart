@@ -12,8 +12,7 @@ Color tripStatusColor(BuildContext context, OperationTripStatus status) {
     OperationTripStatus.scheduled => scheme.secondary,
     OperationTripStatus.openForBooking => scheme.primary,
     OperationTripStatus.boarding => scheme.tertiary,
-    // Material's own green and teal were the last two colours on a trip screen
-    // that came from outside the product's palette.
+    
     OperationTripStatus.inProgress => palette.positive,
     OperationTripStatus.completed => palette.neutral,
     OperationTripStatus.cancelled => scheme.error,
@@ -41,8 +40,7 @@ Color tripSeatOnColor(BuildContext context, TripSeatState state) {
   return switch (state) {
     TripSeatState.available => scheme.onPrimaryContainer,
     TripSeatState.reserved => scheme.onSecondaryContainer,
-    // A translucent positive tint over the card surface, so the surface's own
-    // foreground is the one that contrasts in both themes.
+    
     TripSeatState.paid => scheme.onSurface,
     TripSeatState.subscription => scheme.onTertiaryContainer,
     TripSeatState.blocked => scheme.onErrorContainer,

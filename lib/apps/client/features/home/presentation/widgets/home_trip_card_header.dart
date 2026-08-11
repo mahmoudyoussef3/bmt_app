@@ -42,8 +42,7 @@ class HomeTripCardHeader extends StatelessWidget {
           const SizedBox(width: ClientSpacing.sm),
           Expanded(child: _Schedule(trip: trip)),
           const SizedBox(width: ClientSpacing.xs),
-          // The rider's own stake in this departure outranks how it is running:
-          // "Under review" is what they came to the app to check.
+          
           if (trip.isBooked)
             ClientStatusBadge(
               status: trip.bookedStatus!.badge,
@@ -123,8 +122,7 @@ class _Schedule extends StatelessWidget {
         ),
         const SizedBox(height: 2),
         Text(
-          // The feed lists several operators' departures side by side, so the
-          // route line also names whose bus this is.
+          
           trip.officeName.isEmpty
               ? trip.routeName
               : '${trip.routeName} · ${trip.officeName}',

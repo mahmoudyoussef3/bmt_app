@@ -8,12 +8,6 @@ import '../../../onboarding/presentation/cubit/captain_onboarding_cubit.dart';
 import '../../../onboarding/presentation/screens/captain_onboarding_flow.dart';
 import '../../../onboarding/presentation/screens/captain_welcome_home.dart';
 
-/// Captain "sign up" — a self-service access request reviewed by operations.
-///
-/// Drivers are provisioned by the Dashboard (the operational source of truth),
-/// so this submits an application (name + phone) rather than minting a live
-/// account. Hosts the real onboarding flow; used when reached as a pushed
-/// route (the auth gate hosts the same flow inline).
 class CaptainRequestAccessScreen extends StatelessWidget {
   const CaptainRequestAccessScreen({super.key});
 
@@ -24,9 +18,6 @@ class CaptainRequestAccessScreen extends StatelessWidget {
       child: CaptainOnboardingFlow(
         onBackToLogin: () => Navigator.of(context).maybePop(),
         onEnterHome: (CaptainLocalSession session) {
-          // Stays a direct push rather than a CaptainRoutes name: the welcome
-          // home takes an `onSignOut` callback, and behaviour does not survive
-          // a trip through `settings.arguments` the way plain data does.
           Navigator.of(context).pushReplacement(
             MaterialPageRoute(
               builder: (_) => CaptainWelcomeHome(

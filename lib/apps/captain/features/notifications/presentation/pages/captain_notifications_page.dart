@@ -197,8 +197,6 @@ class _CaptainNotifTile extends StatelessWidget {
     _ => Icons.notifications_outlined,
   };
 
-  // Every other category is brand blue; emergency alone breaks from it so an
-  // incident still reads as urgent in a list that is otherwise all brand.
   Color _categoryColor(CaptainNotificationCategory c, ColorScheme cs) =>
       c == CaptainNotificationCategory.emergency ? cs.error : cs.primary;
 }

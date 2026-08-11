@@ -63,9 +63,7 @@ class TripHeroCard extends StatelessWidget {
                         color: badge.label,
                       ),
                       const SizedBox(width: 12),
-                      // Expanded + Align, not Spacer + Flexible: a Spacer would
-                      // claim half the free space and ellipsize a reference
-                      // that had room to fit.
+                      
                       Expanded(
                         child: Align(
                           alignment: AlignmentDirectional.centerEnd,

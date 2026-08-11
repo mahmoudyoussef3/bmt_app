@@ -35,9 +35,7 @@ abstract final class WalletStatementExportService {
     required List<WalletTransaction> rows,
     required WalletOverview overview,
   }) async {
-    // The licensing axis, alongside the capability check the doc above
-    // describes: `export_excel` covers CSV, and the monthly export meter is
-    // consumed server-side.
+    
     await LicensedExport.consume('csv');
 
     final now = DateTime.now();
@@ -74,8 +72,7 @@ abstract final class WalletStatementExportService {
           entry.kind.label,
           entry.categoryLabel,
           entry.source.label,
-          // Raw numbers, not formatted strings: this file gets summed in a
-          // spreadsheet, and "1,234.00 ج.م" is text there.
+          
           entry.amount,
           entry.balanceBefore,
           entry.balanceAfter,
@@ -86,10 +83,6 @@ abstract final class WalletStatementExportService {
         ],
     ];
 
-    // `addBom` + real UTF-8 encoding: without the BOM Excel renders the Arabic
-    // headers as mojibake, and encoding via `String.codeUnits` would mangle
-    // every non-Latin character on the way out. Same choice as Finance's
-    // exporter, for the same reason.
     final csv = const CsvEncoder(addBom: true).convert(records);
     final bytes = Uint8List.fromList(utf8.encode(csv));
 

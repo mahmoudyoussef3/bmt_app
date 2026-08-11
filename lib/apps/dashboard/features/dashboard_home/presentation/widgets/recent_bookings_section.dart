@@ -165,8 +165,7 @@ class _BookingRow extends StatelessWidget {
         palette.warning,
         palette.warning.withAlpha(26),
       ),
-      // Not yet paid and not yet a problem: the neutral default reads as
-      // "waiting", which is exactly what it is.
+      
       PaymentStatus.pending || PaymentStatus.refunded => (null, null),
     };
   }

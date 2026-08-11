@@ -303,8 +303,7 @@ class _BookCta extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
         decoration: BoxDecoration(
-          // The fill tone, not the ink tone: white on the dark theme's accent
-          // blue misses contrast, and this pill is white on blue.
+          
           color: ClientColors.primaryFillFor(context),
           borderRadius: BorderRadius.circular(ClientRadius.pill),
         ),

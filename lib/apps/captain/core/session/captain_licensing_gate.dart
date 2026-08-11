@@ -5,22 +5,6 @@ import '../di/captain_di.dart';
 import 'captain_identity_provider.dart';
 import 'captain_office_session.dart';
 
-/// Stands between the auth gate and the operational shell, for one case:
-/// the office's platform licence no longer covers the captain app.
-///
-/// ── The mid-trip rule ────────────────────────────────────────────────────────
-///
-/// A captain who is **already driving is never cut off**, whatever the office
-/// owes. The exemption is computed server-side in `captain_session_context`
-/// (a trip in `boarding` or `in_progress` clears the block outright), so the
-/// app cannot get it wrong and an out-of-date build cannot bypass it either.
-///
-/// ── Why a message and not a null session ─────────────────────────────────────
-///
-/// Returning no identity would land the captain on the "you are not registered
-/// as a driver" path — an explanation that is both wrong and unactionable. A
-/// licensing block is a fact about the office, so it says so, names who to ask,
-/// and offers the sign-out the captain would otherwise hunt for.
 class CaptainLicensingGate extends StatefulWidget {
   const CaptainLicensingGate({super.key, required this.child});
 
@@ -39,9 +23,6 @@ class _CaptainLicensingGateState extends State<CaptainLicensingGate> {
     return FutureBuilder<CaptainIdentity?>(
       future: _future,
       builder: (context, snapshot) {
-        // Still resolving, or no identity at all: hand straight over. The shell
-        // already handles both — a spinner for the first, its own explanation
-        // for the second — and duplicating either here would fork that logic.
         if (snapshot.connectionState != ConnectionState.done) {
           return widget.child;
         }
@@ -104,9 +85,6 @@ class _LicensingBlockedScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    // The reassurance that matters most to the person holding
-                    // the phone: this is not about them, and a trip they have
-                    // already started is never interrupted by it.
                     'هذا إجراء يخص اشتراك المكتب في المنصة ولا علاقة له بحسابك. '
                     'الرحلات التي بدأت بالفعل تكمل كالمعتاد.',
                     textAlign: TextAlign.center,

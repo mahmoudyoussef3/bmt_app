@@ -285,9 +285,7 @@ class _CabinGeometry {
   }) {
     final columns = blueprint.columns == 0 ? 1 : blueprint.columns;
     final aisles = blueprint.aisleColumns;
-    // Width is measured in seat-widths: aisle columns count for a fraction of
-    // one, so narrowing the walkway widens the seats instead of shrinking the
-    // vehicle.
+    
     final units = (columns - aisles.length) + aisles.length * aisleWidthFactor;
     final chrome = (density.floorPadding + _Cabin.wallWidth) * 2;
     final forSeats = availableWidth - chrome - density.gap * (columns - 1);
@@ -295,10 +293,6 @@ class _CabinGeometry {
         .clamp(density.minSeat, density.maxSeat)
         .toDouble();
 
-    // The front cabin is the driver's compartment at the nose of the vehicle.
-    // A derived grid describes none — `trip_seats` holds no driver row — and
-    // then the vehicle is undivided, because guessing a bulkhead from
-    // passenger seats alone would be inventing structure.
     final frontCabinRows = blueprint.frontCabinRows;
 
     return _CabinGeometry(
@@ -433,16 +427,14 @@ class _Cabin extends StatelessWidget {
       decoration: BoxDecoration(
         color: colors.cabinFill,
         border: Border.all(color: colors.cabinBorder, width: wallWidth),
-        // A rounded nose and a squarer tail: the silhouette that says which end
-        // of the drawing is the front before a single label is read.
+        
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(nose),
           topRight: Radius.circular(nose),
           bottomLeft: Radius.circular(geometry.seatSize * 0.4),
           bottomRight: Radius.circular(geometry.seatSize * 0.4),
         ),
-        // Just enough lift to read as an object sitting on the page rather
-        // than a panel drawn on it.
+        
         boxShadow: [
           BoxShadow(
             color: colors.shadow.withValues(alpha: 0.10),
@@ -461,14 +453,7 @@ class _Cabin extends StatelessWidget {
             radius: nose * 0.7,
           ),
           SizedBox(height: geometry.rowGap),
-          // A cabin is a physical object and does not mirror with the writing
-          // system. Column 1 of a blueprint is the driver's side of a
-          // left-hand-drive vehicle, so under Arabic the ambient RTL would flip
-          // the whole vehicle: steering wheel on the wrong side, the aisle on
-          // the wrong side, every window seat against the opposite wall from
-          // the one the rider will actually sit by. Seat labels travel with
-          // their tile, so pinning the grid to LTR changes nothing about which
-          // seat a number refers to.
+          
           Directionality(
             textDirection: TextDirection.ltr,
             child: SizedBox(
@@ -561,8 +546,7 @@ class _Cabin extends StatelessWidget {
               geometry.frontCabinRows > 0 && start == geometry.frontCabinRows
               ? geometry.bulkheadTop
               : geometry.rowTop(start) + geometry.seatSize * 0.06;
-          // Run to the rear wall, or right up to the bench that ends it — the
-          // walkway stops where the vehicle stops having one, not a row early.
+          
           final bottom = end == geometry.rows - 1
               ? geometry.rowTop(end) + geometry.seatSize
               : geometry.benchRows.contains(end + 1)
@@ -577,9 +561,7 @@ class _Cabin extends StatelessWidget {
               height: bottom - top,
               width: width,
               child: DecoratedBox(
-                // Keyed so a test can assert the walkway is *one* lane over the
-                // rows it serves, which is the whole difference between an
-                // aisle and a column of gaps.
+                
                 key: ValueKey('cabin-aisle-${c + 1}-${start + 1}'),
                 decoration: BoxDecoration(
                   color: colors.aisle.withValues(alpha: 0.28),
@@ -651,7 +633,7 @@ class _Cabin extends StatelessWidget {
   /// instead of a floating block of seats.
   bool get _inferDriverAtFrontLeft {
     if (blueprint.rows.isEmpty || blueprint.rows.first.isEmpty) return false;
-    // Never on top of a blueprint that already says where the driver is.
+    
     final hasRealDriver = blueprint.rows.any(
       (row) => row.any((slot) => slot.kind == SeatSlotKind.driver),
     );
@@ -690,15 +672,7 @@ class _Cabin extends StatelessWidget {
 
         final child = switch (slot.kind) {
           SeatSlotKind.seat => _seat(slot),
-          // Column 1 is the driver's own place in the fixed left-hand-drive
-          // coordinate system every blueprint is written in; the rest of the
-          // bench is crew seating.
-          //
-          // The driver position always says so — it is the most useful thing
-          // that tile can say. The rest of the bench prefers the blueprint's
-          // own label (`A2` on a Hiace), because those labels are the same
-          // row-letter coordinates the passenger seats use, and dropping them
-          // would break the front row out of that language.
+          
           SeatSlotKind.driver => VehicleSeatFixture(
             kind: slot.column == 1
                 ? VehicleFixtureKind.driver
@@ -745,8 +719,7 @@ class _Cabin extends StatelessWidget {
   List<Widget> _bench(int row) {
     final slots = blueprint.rows[row];
     final size = geometry.benchSeatSize(slots.length);
-    // Slightly narrower seats than the rows in front, centred in the row band
-    // so the bench still lines up with them vertically.
+    
     final top = geometry.rowTop(row) + (geometry.seatSize - size) / 2;
 
     return [
@@ -764,8 +737,7 @@ class _Cabin extends StatelessWidget {
 
   Widget? _seat(SeatSlot slot, {double? size}) {
     final index = slot.seatNumber - 1;
-    // A blueprint slot with no seat behind it. Drawing a placeholder would
-    // invent inventory, so the cell is simply left as cabin floor.
+    
     if (index < 0 || index >= seats.length) return null;
 
     final seat = seats[index];

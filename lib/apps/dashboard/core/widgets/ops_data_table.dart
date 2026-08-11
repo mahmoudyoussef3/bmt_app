@@ -91,8 +91,7 @@ class OpsDataTable extends StatelessWidget {
                           child: Text(emptyLabel),
                         )
                       else
-                        // Rows are pre-paginated by the host, so we render the
-                        // current page inline under unbounded scroll parents.
+                        
                         ...rows.asMap().entries.expand((entry) sync* {
                           if (entry.key > 0) {
                             yield Divider(

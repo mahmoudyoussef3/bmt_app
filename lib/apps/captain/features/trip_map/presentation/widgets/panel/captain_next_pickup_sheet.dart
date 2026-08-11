@@ -13,9 +13,6 @@ import '../../formatters/captain_pickup_formats.dart';
 import 'captain_pickup_progress_bar.dart';
 import 'captain_pickup_rider_tile.dart';
 
-/// The fixed panel below the map: the active pickup stop (who, how far, when),
-/// the boarding actions, and the boarding tally. What the captain reads and
-/// acts on lives here so it never sits on top of the road.
 class CaptainNextPickupSheet extends StatelessWidget {
   const CaptainNextPickupSheet({
     super.key,
@@ -37,9 +34,7 @@ class CaptainNextPickupSheet extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: CaptainColors.surfaceFor(context),
-        borderRadius: const BorderRadius.vertical(
-          top: CaptainDesignTokens.r24,
-        ),
+        borderRadius: const BorderRadius.vertical(top: CaptainDesignTokens.r24),
         boxShadow: CaptainDesignTokens.floatingShadow(context),
       ),
       child: SafeArea(
@@ -74,7 +69,6 @@ class CaptainNextPickupSheet extends StatelessWidget {
       return _AllResolvedCard(state: state);
     }
 
-    // Manifest still loading, or a trip with no riders.
     return _EmptyPickupCard(hasRiders: state.riderCount > 0);
   }
 }
@@ -139,7 +133,11 @@ class _ActivePickup extends StatelessWidget {
         const SizedBox(height: CaptainDesignTokens.s12),
         _MetricsRow(distance: distance, eta: progress?.eta),
         const SizedBox(height: CaptainDesignTokens.s16),
-        _Actions(active: active, arriving: state.arrivingStopId == active.stopId, onArrived: onArrived),
+        _Actions(
+          active: active,
+          arriving: state.arrivingStopId == active.stopId,
+          onArrived: onArrived,
+        ),
         const SizedBox(height: CaptainDesignTokens.s20),
         Row(
           children: [
@@ -240,10 +238,7 @@ class _Metric extends StatelessWidget {
                 color: CaptainColors.textSecondaryFor(context),
               ),
               const SizedBox(width: CaptainDesignTokens.s4),
-              Text(
-                label,
-                style: CaptainTypography.labelSmall(context),
-              ),
+              Text(label, style: CaptainTypography.labelSmall(context)),
             ],
           ),
           const SizedBox(height: CaptainDesignTokens.s4),
@@ -365,10 +360,7 @@ class _AllResolvedCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(
-                Icons.task_alt_rounded,
-                color: CaptainColors.success,
-              ),
+              const Icon(Icons.task_alt_rounded, color: CaptainColors.success),
               const SizedBox(width: CaptainDesignTokens.s8),
               Text(
                 'تم تجميع كل الركاب',
@@ -419,7 +411,9 @@ class _EmptyPickupCard extends StatelessWidget {
           const SizedBox(width: CaptainDesignTokens.s12),
           Expanded(
             child: Text(
-              hasRiders ? 'جارٍ تحميل قائمة الركاب…' : 'لا يوجد ركاب على هذه الرحلة.',
+              hasRiders
+                  ? 'جارٍ تحميل قائمة الركاب…'
+                  : 'لا يوجد ركاب على هذه الرحلة.',
               style: CaptainTypography.bodyMedium(context),
             ),
           ),
@@ -453,7 +447,9 @@ class _FinishedCard extends StatelessWidget {
           const SizedBox(width: CaptainDesignTokens.s12),
           Expanded(
             child: Text(
-              cancelled ? 'أُلغيت الرحلة. توقف التتبع.' : 'اكتملت الرحلة. توقف التتبع.',
+              cancelled
+                  ? 'أُلغيت الرحلة. توقف التتبع.'
+                  : 'اكتملت الرحلة. توقف التتبع.',
               style: CaptainTypography.titleSmall(
                 context,
               ).copyWith(fontWeight: FontWeight.w800),

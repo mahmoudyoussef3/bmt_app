@@ -8,10 +8,8 @@ class SupabaseFinanceDatasource implements FinanceDatasource {
 
   const SupabaseFinanceDatasource(this._client);
 
-  // Realised revenue = payments a client actually made AND finance verified.
   static const _paidPaymentStatus = 'approved';
-  // A "payment" only exists once the client submits it; drafts and unpaid
-  // credit-card intents (payment_status = 'pending') are not payments yet.
+  
   static const _paidPaymentStatuses = [
     'submitted',
     'underReview',
@@ -50,7 +48,7 @@ class SupabaseFinanceDatasource implements FinanceDatasource {
         bookingMonthly = 0,
         bookingTotal = 0;
     for (final r in (bookingRows as List).cast<Map<String, dynamic>>()) {
-      // Only verified payments count as realised revenue.
+      
       if (r['payment_status'] != _paidPaymentStatus) continue;
       final amount = _toDouble(r['payment_amount']);
       final date = DateTime.tryParse(r['created_at']?.toString() ?? '');
@@ -61,8 +59,6 @@ class SupabaseFinanceDatasource implements FinanceDatasource {
       if (date.isAfter(monthStart)) bookingMonthly += amount;
     }
 
-    // Include subscription revenue in totals (subscriptions with active/
-    // expired status where total_price > 0 represent realised revenue).
     final subRows = await _client
         .from('subscriptions')
         .select('status, total_price, created_at');
@@ -133,8 +129,6 @@ class SupabaseFinanceDatasource implements FinanceDatasource {
           DateTime.tryParse(m['end_date']?.toString() ?? '') ??
           now.add(const Duration(days: 30));
 
-      // Real ride balance: trips_count − trips_used.
-      // Falls back to remaining days only when trips_count is 0 (legacy rows).
       final tripsCount = _toInt(m['trips_count']);
       final tripsUsed = _toInt(m['trips_used']);
       final remainingRides = tripsCount > 0
@@ -149,8 +143,7 @@ class SupabaseFinanceDatasource implements FinanceDatasource {
             'غير معروف',
         packageName: m['package_name']?.toString() ?? 'باقة',
         amount: _toDouble(m['total_price']),
-        // The ledger files a package under the day it was *bought*; start_date
-        // is when the rides begin and is often a different day.
+        
         createdAt:
             DateTime.tryParse(m['created_at']?.toString() ?? '') ?? startDate,
         startDate: startDate,
@@ -165,10 +158,7 @@ class SupabaseFinanceDatasource implements FinanceDatasource {
 
   @override
   Future<WalletFinancePosition> getWalletPosition() async {
-    // Three reads, run together. Office scoping is a server property on all
-    // three: `office_wallet_overview` resolves the office itself, and both table
-    // reads are covered by their office SELECT policies — there is no office id
-    // to pass and none to get wrong.
+    
     final (overview, movementRows, refundRows) = await (
       _client.rpc('office_wallet_overview'),
       _client
@@ -177,10 +167,7 @@ class SupabaseFinanceDatasource implements FinanceDatasource {
           .eq('status', 'posted')
           .order('created_at', ascending: false)
           .limit(FinanceLedger.rowCap),
-      // Settled refunds come from `refund_requests`, not from the wallet ledger:
-      // a refund to InstaPay or in cash never posts a wallet row, so a
-      // ledger-derived total would silently omit exactly the amounts most likely
-      // to be disputed.
+      
       _client
           .from('refund_requests')
           .select('settled_at, approved_amount, settlement_method')
@@ -216,8 +203,6 @@ class SupabaseFinanceDatasource implements FinanceDatasource {
     );
   }
 
-  // ── Mapping helpers ──────────────────────────────────────────────────────────
-
   PaymentRecord _paymentFromRow(Map<String, dynamic> r) {
     return PaymentRecord(
       id: r['id'].toString(),
@@ -242,20 +227,13 @@ class SupabaseFinanceDatasource implements FinanceDatasource {
     _ => FinancePaymentMethod.cash,
   };
 
-  // Maps the decoupled payment_status vocabulary
-  // (pending/submitted/underReview/approved/rejected/refunded/failed).
   PaymentStatus _paymentStatus(String s) => switch (s) {
     'approved' => PaymentStatus.success,
     'rejected' || 'failed' => PaymentStatus.cancelled,
     'refunded' => PaymentStatus.refunded,
-    _ => PaymentStatus.pending, // pending / submitted / underReview
+    _ => PaymentStatus.pending, 
   };
 
-  // `refund_requests.status` gained three values with the wallet subsystem
-  // (settled / failed / cancelled). Without them, a *settled* refund would fall
-  // through to `pending` and be counted as outstanding liability forever — the
-  // module's pending-refund KPI would grow with every refund the office
-  // successfully paid.
   RefundStatus _refundStatus(String? s) => switch (s) {
     'approved' || 'settled' => RefundStatus.approved,
     'rejected' || 'failed' || 'cancelled' => RefundStatus.rejected,

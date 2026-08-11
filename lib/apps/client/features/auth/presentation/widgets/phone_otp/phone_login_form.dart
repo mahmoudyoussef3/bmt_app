@@ -54,8 +54,7 @@ class _PhoneLoginFormState extends State<PhoneLoginForm> {
 
     Navigator.of(context).pushNamed(
       AuthRoutes.otpVerification,
-      // Built through the arguments class rather than a raw map, so the pusher
-      // and the screen cannot disagree about the key names.
+      
       arguments: OtpVerificationArguments(
         phone: ContactValidation.normalizeEgyptianPhone(_phoneController.text),
       ).toArguments(),

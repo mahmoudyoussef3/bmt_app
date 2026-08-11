@@ -19,7 +19,6 @@ import 'app_light_colors.dart';
 class AppColors {
   AppColors._();
 
-  // Light theme — all forwarded to [AppLightColors].
   static const Color primary = AppLightColors.primary;
   static const Color primaryForeground = AppLightColors.onPrimary;
 
@@ -52,7 +51,6 @@ class AppColors {
 
   static const Color ring = AppLightColors.primaryAccent;
 
-  // Dark theme — aliases onto the unified palette in [AppDarkColors].
   static const Color primaryDark = AppDarkColors.primary;
   static const Color primaryForegroundDark = AppDarkColors.onPrimary;
 
@@ -92,27 +90,21 @@ class AppColors {
 class AppStatusColors {
   AppStatusColors._();
 
-  // Success (cyan — the brand-family positive, not green)
   static const Color successContainer = AppLightColors.successContainer;
   static const Color onSuccessContainer = AppLightColors.onSuccessContainer;
 
-  // Warning (amber)
   static const Color warningContainer = AppLightColors.warningContainer;
   static const Color onWarningContainer = AppLightColors.onWarningContainer;
 
-  // Error / danger (red)
   static const Color errorContainer = AppLightColors.dangerContainer;
   static const Color onErrorContainer = AppLightColors.onDangerContainer;
 
-  // Info (blue)
   static const Color infoContainer = AppLightColors.infoContainer;
   static const Color onInfoContainer = AppLightColors.onInfoContainer;
 
-  // Neutral (slate)
   static const Color neutralContainer = AppLightColors.neutralContainer;
   static const Color onNeutralContainer = AppLightColors.onNeutralContainer;
 
-  // Special / accent (violet — packages, subscriptions, "contacted")
   static const Color specialContainer = AppLightColors.specialContainer;
   static const Color onSpecialContainer = AppLightColors.onSpecialContainer;
 }
@@ -235,15 +227,11 @@ ColorScheme lightColorSchemeFromPalette() {
   return const ColorScheme(
     brightness: Brightness.light,
 
-    // Brand. [AppLightColors.primary] is the fill tone (white on it clears AA);
-    // ink-weight brand blue is [AppLightColors.primaryAccent].
     primary: AppLightColors.primary,
     onPrimary: AppLightColors.onPrimary,
     primaryContainer: AppLightColors.primaryContainer,
     onPrimaryContainer: AppLightColors.onPrimaryContainer,
 
-    // Positive states — cyan, not green: all three apps keep "confirmed /
-    // on-time / done" inside the brand's own family.
     secondary: AppLightColors.success,
     onSecondary: AppLightColors.onFilled,
     secondaryContainer: AppLightColors.successContainer,
@@ -259,10 +247,6 @@ ColorScheme lightColorSchemeFromPalette() {
     errorContainer: AppLightColors.dangerContainer,
     onErrorContainer: AppLightColors.onDangerContainer,
 
-    // Surfaces. The ladder runs the opposite direction to dark — see
-    // [AppLightColors] — but the role each tier plays is identical, so a widget
-    // that reads `surfaceContainerHighest` for an input fill gets the right
-    // answer in both themes.
     surface: AppLightColors.surface,
     onSurface: AppLightColors.onSurface,
     onSurfaceVariant: AppLightColors.onSurfaceMuted,
@@ -280,9 +264,6 @@ ColorScheme lightColorSchemeFromPalette() {
     shadow: AppLightColors.shadow,
     scrim: AppLightColors.scrim,
 
-    // Surfaces here are explicit tones, so M3's automatic primary-hue tint on
-    // elevated surfaces is switched off — it would push every card faintly
-    // blue on top of a palette that is already deliberately slate-tinted.
     surfaceTint: Colors.transparent,
 
     inverseSurface: AppLightColors.onSurface,
@@ -307,15 +288,11 @@ ColorScheme darkColorSchemeFromPalette() {
   return const ColorScheme(
     brightness: Brightness.dark,
 
-    // Brand. [AppDarkColors.primary] is the fill tone (white on it clears AA);
-    // ink-weight brand blue is [AppDarkColors.primaryAccent].
     primary: AppDarkColors.primary,
     onPrimary: AppDarkColors.onPrimary,
     primaryContainer: AppDarkColors.primaryContainer,
     onPrimaryContainer: AppDarkColors.onPrimaryContainer,
 
-    // Positive states — cyan, not green: both apps keep "confirmed / on-time"
-    // inside the brand's own family.
     secondary: AppDarkColors.successInk,
     onSecondary: AppDarkColors.background,
     secondaryContainer: AppDarkColors.successContainer,
@@ -331,7 +308,6 @@ ColorScheme darkColorSchemeFromPalette() {
     errorContainer: AppDarkColors.dangerContainer,
     onErrorContainer: AppDarkColors.onDangerContainer,
 
-    // Surfaces, lowest tier to highest.
     surface: AppDarkColors.surface,
     onSurface: AppDarkColors.onSurface,
     onSurfaceVariant: AppDarkColors.onSurfaceMuted,
@@ -349,9 +325,6 @@ ColorScheme darkColorSchemeFromPalette() {
     shadow: AppDarkColors.shadow,
     scrim: AppDarkColors.scrim,
 
-    // M3 tints every elevated surface with the primary hue by default, which on
-    // this palette turns cards faintly violet. Surfaces here are explicit tones,
-    // so the tint is switched off.
     surfaceTint: Colors.transparent,
 
     inverseSurface: AppDarkColors.onSurface,

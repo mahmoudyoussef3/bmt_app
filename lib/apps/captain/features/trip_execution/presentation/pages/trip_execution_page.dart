@@ -42,8 +42,6 @@ class TripExecutionPage extends StatelessWidget {
     );
   }
 
-  /// Seeds the screen from the trip the captain tapped, so it never opens
-  /// blank while the live watch connects.
   TripExecutionSnapshot _initialSnapshotFromTrip(AssignedTrip trip) {
     return TripExecutionSnapshot(
       status: switch (trip.status) {
@@ -60,14 +58,6 @@ class TripExecutionPage extends StatelessWidget {
   }
 }
 
-/// The trip, as a stage-coloured canopy over a scrolling body, with the one
-/// action that matters docked at the bottom.
-///
-/// The action used to live inside a card a third of the way down this page,
-/// under the route and above a timeline, a GPS panel and a grid of square
-/// tiles — a layout that asks a captain at the wheel to scroll before they can
-/// start or end a trip. Everything below the canopy is now reference material
-/// the captain reads at a stop; everything they *do* is in the docked bar.
 class _TripExecutionView extends StatelessWidget {
   const _TripExecutionView({required this.trip});
 
@@ -114,17 +104,10 @@ class _TripExecutionView extends StatelessWidget {
                   _InlineError(message: message),
                   const SizedBox(height: CaptainDesignTokens.s24),
                 ],
-                // The live map is the trip's primary operational surface once
-                // it is running: the captain's position, the route, and the
-                // pickup sequence. Offered from boarding onward; the map itself
-                // reads the device GPS locally and adds no database traffic.
                 if (stage.isLive) ...[
                   _LiveMapCta(trip: trip),
                   const SizedBox(height: CaptainDesignTokens.s24),
                 ],
-                // Kept mounted across the whole trip so the transition into
-                // and out of `inProgress` is an explicit start/stop rather
-                // than a widget disposal the timer happens to ride on.
                 TripLocationAutoShare(tripId: trip.id, enabled: isUnderway),
                 if (isUnderway && trip.stops.isNotEmpty) ...[
                   const CaptainSectionLabel('المحطة القادمة'),
@@ -137,9 +120,6 @@ class _TripExecutionView extends StatelessWidget {
                   NavigateToStopButton(stop: _nextStop(snapshot)),
                   const SizedBox(height: CaptainDesignTokens.s24),
                 ],
-                // The route is worth showing before departure too: a captain
-                // checking which stops they are due to call at should not have
-                // to start the trip to find out.
                 if (trip.stops.isNotEmpty) ...[
                   const CaptainSectionLabel('مسار الرحلة'),
                   RouteProgressTimeline(
@@ -173,9 +153,6 @@ class _TripExecutionView extends StatelessWidget {
     );
   }
 
-  /// The next stop the captain hasn't reported arrived yet, or null once
-  /// every station on the route has been reported (nothing left to
-  /// navigate to).
   AssignedTripStop? _nextStop(TripExecutionSnapshot snapshot) {
     final index = snapshot.arrivedStationsCount;
     if (index >= trip.stops.length) return null;
@@ -183,9 +160,6 @@ class _TripExecutionView extends StatelessWidget {
   }
 }
 
-/// The entry point to the live trip map — the trip's primary operational
-/// surface while it is running. A hero card rather than a tools-list row: the
-/// map is where the captain reads their position and works the pickups.
 class _LiveMapCta extends StatelessWidget {
   const _LiveMapCta({required this.trip});
 
@@ -233,9 +207,9 @@ class _LiveMapCta extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     'موقعك، المسار، ونقطة التجميع القادمة',
-                    style: CaptainTypography.bodySmall(context).copyWith(
-                      color: Colors.white.withValues(alpha: 0.9),
-                    ),
+                    style: CaptainTypography.bodySmall(
+                      context,
+                    ).copyWith(color: Colors.white.withValues(alpha: 0.9)),
                   ),
                 ],
               ),

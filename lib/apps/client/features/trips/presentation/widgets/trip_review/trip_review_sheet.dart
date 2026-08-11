@@ -17,9 +17,7 @@ class TripReviewSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Cap the sheet so a tall review (three rating cards + comment box, or a
-    // small screen with the keyboard up) scrolls inside the sheet instead of
-    // overflowing the layout.
+    
     final maxHeight = MediaQuery.sizeOf(context).height * 0.9;
     return SafeArea(
       child: ConstrainedBox(

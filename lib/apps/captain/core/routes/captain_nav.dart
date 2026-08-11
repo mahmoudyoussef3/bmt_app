@@ -7,18 +7,10 @@ import 'package:bmt_app/apps/captain/features/trip_history/domain/entities/trip_
 import 'captain_route_args.dart';
 import 'captain_routes.dart';
 
-/// Typed navigation for the captain app.
-///
-/// Call sites say `context.openPassengerManifest(tripId)` rather than building a
-/// `MaterialPageRoute` by hand, so a screen never imports the screen it opens
-/// and the argument types are checked at compile time — the cast back to a
-/// type happens once, in `CaptainAppRouter`.
 extension CaptainNav on BuildContext {
   Future<T?> _push<T>(String route, [Object? arguments]) =>
       Navigator.of(this).pushNamed<T>(route, arguments: arguments);
 
-  /// Closes the current screen. Here rather than at the call site so a screen
-  /// drawing its own back control still never reaches for `Navigator` itself.
   void closeScreen() => Navigator.of(this).maybePop();
 
   Future<void> openTripExecution(AssignedTrip trip) =>

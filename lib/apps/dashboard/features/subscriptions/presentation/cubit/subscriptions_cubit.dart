@@ -74,8 +74,6 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
     }
   }
 
-  // ── Filtering / view state ────────────────────────────────────────────────
-
   void updateFilters(SubscriptionFilters filters) {
     final current = _loaded;
     if (current == null) return;
@@ -163,8 +161,6 @@ class SubscriptionsCubit extends Cubit<SubscriptionsState> {
       emit(latest.copyWith(actionError: _message(error)));
     }
   }
-
-  // ── Actions ───────────────────────────────────────────────────────────────
 
   Future<void> createManualSubscription({
     required SubscriptionUserOption user,

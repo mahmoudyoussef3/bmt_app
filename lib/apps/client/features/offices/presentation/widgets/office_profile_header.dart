@@ -81,8 +81,7 @@ class _IdentityCard extends StatelessWidget {
       alignment: Alignment.topCenter,
       children: [
         Padding(
-          // Half the crest hangs above the card; the rest of the offset is the
-          // gap between the logo's bottom edge and the name.
+          
           padding: const EdgeInsets.only(top: _logoSize / 2),
           child: ClientCard(
             padding: const EdgeInsets.fromLTRB(

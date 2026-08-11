@@ -14,9 +14,6 @@ class TripStatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (label, variant, icon) = switch (status) {
-      // "مجدولة" is not yet visible to clients; "الحجز مفتوح" is. A captain
-      // reading the same chip for both cannot tell why one trip can board
-      // and the other cannot.
       AssignedTripStatus.scheduled => (
         'لم تُفتح',
         CaptainStatusVariant.neutral,

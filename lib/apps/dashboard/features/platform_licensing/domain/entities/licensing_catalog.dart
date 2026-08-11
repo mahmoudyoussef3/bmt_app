@@ -63,7 +63,7 @@ class FeatureCategory {
 class FeatureGate {
   const FeatureGate({required this.kind, required this.ref, this.note = ''});
 
-  final String kind; // trigger | rpc | rls | view | ui
+  final String kind; 
   final String ref;
   final String note;
 

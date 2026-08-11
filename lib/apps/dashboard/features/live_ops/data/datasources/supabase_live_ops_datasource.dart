@@ -96,10 +96,7 @@ class SupabaseLiveOpsDatasource implements LiveOpsDatasource {
   @override
   Future<List<TripIncidentModel>> fetchOpenIncidents() async {
     try {
-      // `!inner` on the trip embed matters for isolation as well as data: it
-      // makes the join mandatory, so a report whose trip is not visible to this
-      // office under RLS drops out of the result instead of arriving stripped of
-      // context.
+      
       final rows = await _client
           .from('driver_trip_reports')
           .select('''
@@ -135,9 +132,6 @@ class SupabaseLiveOpsDatasource implements LiveOpsDatasource {
 
       final payload = <String, dynamic>{'status': next.db};
 
-      // Each transition stamps only its own moment, so a report closed straight
-      // from `pending` truthfully carries no acknowledgement time rather than a
-      // synthesized one.
       switch (next) {
         case IncidentStatus.acknowledged:
           payload['acknowledged_at'] = now;
@@ -154,9 +148,6 @@ class SupabaseLiveOpsDatasource implements LiveOpsDatasource {
         payload['resolution_note'] = trimmed;
       }
 
-      // The office RLS policy (`driver_trip_reports_office_manage`) is what makes
-      // this safe: an id belonging to another office matches zero rows rather
-      // than being updated.
       await _client
           .from('driver_trip_reports')
           .update(payload)
@@ -173,11 +164,6 @@ class SupabaseLiveOpsDatasource implements LiveOpsDatasource {
       if (!controller.isClosed) controller.add(null);
     }
 
-    // Trip status flips (a captain starting/finishing a trip) and incident
-    // filings are the events that change the live picture. Location fixes are
-    // deliberately not subscribed to here — they arrive every ~30s per trip and
-    // would be pure cross-office noise; the cubit's own poll keeps positions
-    // fresh instead.
     final channel = _client
         .channel('dashboard_live_ops_${_session.officeId}')
         .onPostgresChanges(

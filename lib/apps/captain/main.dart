@@ -102,12 +102,6 @@ class _CaptainAppState extends State<CaptainApp> {
   }
 }
 
-/// Routes the captain to the right root:
-/// 1. Supabase auth session  → operational shell (existing captains)
-/// 2. Local approved session → welcome home, which keeps trying to establish an
-///    operational session and lands on the shell as soon as it can (1)
-/// 3. A submitted request     → onboarding flow resumed at pending
-/// 4. Otherwise               → sign in (with a request-access entry)
 class _CaptainAuthGate extends StatefulWidget {
   const _CaptainAuthGate();
 
@@ -128,18 +122,10 @@ class _CaptainAuthGateState extends State<_CaptainAuthGate> {
   void initState() {
     super.initState();
     _reloadLocal();
-    // The welcome home upgrades a local session into an operational one on
-    // sight, so a local session that outlives a sign-out would immediately
-    // sign the captain back in. Drop it with the operational session.
     _signOutSub = Supabase.instance.client.auth.onAuthStateChange.listen((
       event,
     ) {
       if (event.event == AuthChangeEvent.signedOut) {
-        // Position reporting is owned by the app now, not by the trip screen,
-        // which is what lets it survive a captain navigating away mid-trip.
-        // Sign-out is therefore the one place that has to stop it explicitly:
-        // otherwise the timer outlives the session and keeps trying to publish
-        // for a captain who is no longer signed in.
         captainGetIt<LiveLocationCubit>().stopAutoSharing();
         _forgetLocalSession();
       }
@@ -172,8 +158,6 @@ class _CaptainAuthGateState extends State<_CaptainAuthGate> {
             snapshot.data?.session ??
             Supabase.instance.client.auth.currentSession;
         if (session != null) {
-          // The licence is checked here rather than inside the shell so a
-          // blocked office never mounts the operational tree at all.
           return const CaptainLicensingGate(child: CaptainAppShell());
         }
 

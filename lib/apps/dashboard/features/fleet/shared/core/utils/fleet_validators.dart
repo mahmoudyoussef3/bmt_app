@@ -12,9 +12,9 @@ class FleetValidators {
     final buffer = StringBuffer();
     for (final rune in value.runes) {
       if (rune >= 0x0660 && rune <= 0x0669) {
-        buffer.writeCharCode(rune - 0x0660 + 0x30); // ٠..٩
+        buffer.writeCharCode(rune - 0x0660 + 0x30); 
       } else if (rune >= 0x06F0 && rune <= 0x06F9) {
-        buffer.writeCharCode(rune - 0x06F0 + 0x30); // ۰..۹
+        buffer.writeCharCode(rune - 0x06F0 + 0x30); 
       } else {
         buffer.writeCharCode(rune);
       }
@@ -102,9 +102,7 @@ class FleetValidators {
     if (value == null || value.trim().isEmpty) return 'رقم اللوحة مطلوب';
     final trimmed = normalizeDigits(value.trim());
     final hasDigits = RegExp(r'[0-9]').hasMatch(trimmed);
-    // Arabic letters only. The two Arabic-Indic digit blocks (U+0660-U+0669 and
-    // U+06F0-U+06F9) sit deliberately outside these ranges, so a plate of bare
-    // digits is never mistaken for one carrying letters.
+    
     final hasLetters = RegExp(
       r'[a-zA-Z\u0621-\u063A\u0641-\u064A\u0671-\u06D3]',
     ).hasMatch(trimmed);

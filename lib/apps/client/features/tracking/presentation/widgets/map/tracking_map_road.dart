@@ -39,7 +39,7 @@ class TrackingMapRoad extends ChangeNotifier {
 
   Future<void> _load(List<LatLng> requested) async {
     final road = await RouteGeometryService.instance.load(requested);
-    // The trip may have changed mid-flight; drop a stale response.
+    
     if (!identical(requested, _stops)) return;
     _road = road;
     if (road != null) notifyListeners();

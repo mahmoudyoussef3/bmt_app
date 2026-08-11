@@ -35,8 +35,7 @@ class _OfficesSearchFieldState extends State<OfficesSearchField> {
   @override
   void didUpdateWidget(OfficesSearchField oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Only follow the cubit when the two have genuinely diverged; assigning on
-    // every keystroke would fight the user's cursor.
+    
     if (widget.query != _controller.text) {
       _controller.text = widget.query;
     }
@@ -99,10 +98,7 @@ class _OfficesSearchFieldState extends State<OfficesSearchField> {
               style: ClientTypography.bodyMedium(context),
               decoration: InputDecoration(
                 isCollapsed: true,
-                // Every variant, not just `border`: the app's
-                // InputDecorationTheme supplies enabled/focused outlines, and
-                // those win over `border` — leaving a second bordered box
-                // drawn inside this pill.
+                
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,

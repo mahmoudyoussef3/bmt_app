@@ -28,9 +28,7 @@ class AuthDivider extends StatelessWidget {
     return Row(
       children: [
         line,
-        // Flexible, not a bare Padding: at a large system font a longer
-        // label than "or" is wider than a small phone and the row overflows —
-        // the two rules shrink to nothing before the text is allowed to.
+        
         Flexible(
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: ClientSpacing.sm),

@@ -84,11 +84,6 @@ class SupabaseFleetDatasource implements FleetDatasource {
           .eq('office_id', officeId)
           .order('assigned_at', ascending: false);
 
-      // What each vehicle is actually doing. `assignments` records which driver a
-      // bus is paired with; it says nothing about whether that bus is on the road,
-      // which only `operation_trips` knows. Restricted to trips that can still
-      // commit a vehicle — anything cancelled or completed holds nothing — and to
-      // today onward, so the fleet list is not paying for years of history.
       final dutiesData = await _client
           .from('operation_trips')
           .select(
@@ -107,8 +102,6 @@ class SupabaseFleetDatasource implements FleetDatasource {
           .order('trip_date')
           .order('departure_time');
 
-      // Documents have no office_id of their own — they inherit it from the driver or
-      // vehicle they belong to, so they are filtered through that owner.
       final driverIds = driversData.map((d) => d['id'] as String).toList();
       final vehicleIds = vehiclesData.map((v) => v['id'] as String).toList();
 
@@ -350,12 +343,7 @@ class SupabaseFleetDatasource implements FleetDatasource {
   @override
   Future<void> deleteDriver(String driverId) async {
     try {
-      // Ask before destroying anything. The assignments and documents are removed
-      // first so the RESTRICT foreign keys let the driver row go — which means a
-      // delete that the database then refuses would already have taken the
-      // driver's history with it. `operation_trips.driver_id` is ON DELETE SET
-      // NULL, so a driver who has ever run a trip must be archived, never erased,
-      // or every one of those trips silently forgets who drove it.
+      
       await _assertNoTripHistory(
         column: 'driver_id',
         id: driverId,
@@ -730,8 +718,7 @@ class SupabaseFleetDatasource implements FleetDatasource {
 
       return _client.storage.from(bucket).getPublicUrl(path);
     } on StorageException catch (e) {
-      // `max_storage_mb` is enforced by a trigger on storage.objects, so a
-      // quota refusal arrives here rather than on the Postgrest path.
+      
       LicensingGuard.check(e);
       throw Exception(e.message);
     } catch (e) {

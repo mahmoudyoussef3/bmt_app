@@ -16,17 +16,6 @@ import 'captain_app_shell.dart';
 import 'captain_route_args.dart';
 import 'captain_routes.dart';
 
-/// Builds a screen for every captain route name.
-///
-/// This is the one place that casts `settings.arguments` back to a type. Every
-/// call site goes through the `CaptainNav` extension instead, which is typed —
-/// so a wrong argument is a compile error there rather than a cast failure
-/// here.
-///
-/// Screens keep providing their own cubits. The playbook wires `BlocProvider`
-/// in the router, but these pages already self-provide (each is reachable both
-/// as a route and, in a couple of cases, hosted inline by the auth gate);
-/// moving that wiring is a presentation refactor, not routing.
 class CaptainAppRouter {
   const CaptainAppRouter._();
 
@@ -34,8 +23,6 @@ class CaptainAppRouter {
     final args = settings.arguments;
 
     return switch (settings.name) {
-      // The alias lands on the shell, whose first tab is the captain's trips —
-      // which is exactly what the notification that carries it is about.
       CaptainRoutes.home ||
       CaptainRoutes.assignmentAlias => _page(settings, const CaptainAppShell()),
 

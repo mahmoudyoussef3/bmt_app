@@ -6,7 +6,6 @@ import 'tokens.dart';
 class AppLayout {
   AppLayout._();
 
-  // Spacing scale
   static const double spaceXs = AppTokens.spaceXs;
   static const double spaceSm = AppTokens.spaceSm;
   static const double spaceMd = AppTokens.spaceMd;
@@ -14,7 +13,6 @@ class AppLayout {
   static const double spaceXl = AppTokens.spaceXl;
   static const double spaceXxl = AppTokens.spaceXxl;
 
-  // Border radius
   static const double radiusSm = AppTokens.radiusSmall;
   static const double radiusMd = AppTokens.radius;
   static const double radiusLg = AppTokens.radiusLarge;
@@ -25,7 +23,6 @@ class AppLayout {
   static BorderRadius get borderRadiusSheet =>
       const BorderRadius.vertical(top: Radius.circular(radiusXl));
 
-  // Page layout
   static const EdgeInsets pagePadding = EdgeInsets.symmetric(
     horizontal: spaceLg,
   );
@@ -36,11 +33,9 @@ class AppLayout {
     spaceXl,
   );
 
-  // Responsive breakpoints
-  static const double breakpointMobile = 600; // < 600 → mobile
-  static const double breakpointTablet = 1024; // 600–1024 → tablet
-  // > 1024 → desktop
-
+  static const double breakpointMobile = 600; 
+  static const double breakpointTablet = 1024; 
+  
   static bool isMobile(BuildContext context) =>
       MediaQuery.sizeOf(context).width < breakpointMobile;
   static bool isTablet(BuildContext context) {

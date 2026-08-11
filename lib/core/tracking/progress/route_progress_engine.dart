@@ -90,7 +90,7 @@ class RouteProgressEngine {
     if (_phase == TripProgressPhase.completed) return;
 
     if (_phase != TripProgressPhase.enRoute) {
-      // Heading to pickup / boarding: only watch for arrival at the origin.
+      
       if (_geometry.stops.isNotEmpty &&
           _statuses[0] == _Visit.upcoming &&
           _geometry.distanceToStop(0, latitude, longitude) <=
@@ -114,7 +114,7 @@ class RouteProgressEngine {
     if (projection == null) return;
 
     _offRoute = projection.crossTrackMeters > config.offRouteMeters;
-    if (_offRoute) return; // Freeze progress until the bus is back on route.
+    if (_offRoute) return; 
 
     if (projection.alongTrackMeters > _alongMeters) {
       _alongMeters = projection.alongTrackMeters;
@@ -131,7 +131,7 @@ class RouteProgressEngine {
         final left =
             distance > config.departRadiusMeters ||
             _alongMeters > stopAlong + config.departRadiusMeters;
-        if (!left) return; // Still at this stop.
+        if (!left) return; 
         _statuses[i] = _Visit.departed;
         continue;
       }
@@ -140,10 +140,10 @@ class RouteProgressEngine {
         return;
       }
       if (_alongMeters >= stopAlong + config.passedStopSlackMeters) {
-        _statuses[i] = _Visit.departed; // Rolled past without a dwell fix.
+        _statuses[i] = _Visit.departed; 
         continue;
       }
-      return; // First genuinely upcoming stop — nothing further can change.
+      return; 
     }
   }
 

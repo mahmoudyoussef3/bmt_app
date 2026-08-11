@@ -24,10 +24,7 @@ class BookingWizardCubit extends Cubit<BookingWizardSession> {
   }
 
   void selectTrip(RouteTripOptionData trip) {
-    // A seat/package chosen for the previous trip does not belong to this
-    // one (its id would be sent to `confirm_seat_booking_v2` alongside a
-    // `p_trip_id` it was never locked against), so switching trips must
-    // invalidate both.
+    
     emit(state.copyWith(selectedTrip: trip));
     clearSeat();
     clearPackage();

@@ -1,16 +1,10 @@
 import 'package:flutter/material.dart';
 
-/// Fades and lifts its child in on first build, staggered by [order].
-///
-/// The captain auth screens are the app's first impression after the splash;
-/// this carries the splash's motion language into them so the transition reads
-/// as one continuous arrival rather than a cut to a static form.
 class CaptainAuthReveal extends StatefulWidget {
   const CaptainAuthReveal({super.key, required this.child, this.order = 0});
 
   final Widget child;
 
-  /// Position in the stagger — each step delays the reveal by 90ms.
   final int order;
 
   @override

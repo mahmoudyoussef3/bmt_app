@@ -28,8 +28,7 @@ class RememberMeStore {
       if (email == null || password == null) return null;
       return (email, password);
     } catch (_) {
-      // A corrupted keystore entry must degrade to "nothing remembered",
-      // never crash the login screen.
+      
       return null;
     }
   }

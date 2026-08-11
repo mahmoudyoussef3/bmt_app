@@ -4,8 +4,6 @@ import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 
-/// Surfaces a failed attempt to establish the operational session (network,
-/// server) — distinct from simply not being activated yet.
 class CaptainActivationError extends StatelessWidget {
   const CaptainActivationError({
     super.key,

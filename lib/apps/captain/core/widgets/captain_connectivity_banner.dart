@@ -5,20 +5,9 @@ import '../theme/captain_colors.dart';
 import '../theme/captain_design_tokens.dart';
 import '../theme/captain_typography.dart';
 
-/// A small banner that appears only while the device really cannot reach the
-/// backend, so a captain mid-trip knows why an action might be stalling
-/// instead of wondering whether the app itself is broken.
-///
-/// The reverse mistake is worse: a captain who is told they are offline while
-/// they are not stops trusting the banner, and then ignores it on the day it
-/// is right. So the offline verdict comes from
-/// [CaptainConnectivityWatcher] — a real reachability check that keeps
-/// re-checking — rather than from a single interface reading that can be wrong
-/// and never corrected.
 class CaptainConnectivityBanner extends StatefulWidget {
   const CaptainConnectivityBanner({super.key, this.watcher});
 
-  /// Supplied by tests; in the app the banner owns its own watcher.
   final CaptainConnectivityWatcher? watcher;
 
   @override
@@ -42,9 +31,6 @@ class _CaptainConnectivityBannerState extends State<CaptainConnectivityBanner>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // A phone that slept through a network change comes back with whatever
-    // reading it had when it went away. Resuming is the moment that reading is
-    // least trustworthy, so it is re-taken here.
     if (state == AppLifecycleState.resumed) _watcher.recheck();
   }
 

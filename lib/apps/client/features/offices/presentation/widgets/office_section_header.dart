@@ -34,8 +34,7 @@ class OfficeSectionHeader extends StatelessWidget {
           height: 36,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            // The fill tone carries a white glyph in both themes; the accent
-            // tone is ink, and white on it misses contrast in the dark theme.
+            
             color: ClientColors.primaryFillFor(context),
             borderRadius: BorderRadius.circular(ClientRadius.sm),
             boxShadow: ClientElevation.sm(context),

@@ -71,8 +71,6 @@ class PlatformFeaturesScreen extends StatelessWidget {
   }
 }
 
-// ── Header ───────────────────────────────────────────────────────────────────
-
 class _CatalogHeader extends StatelessWidget {
   const _CatalogHeader({required this.state});
 
@@ -121,8 +119,6 @@ class _CatalogHeader extends StatelessWidget {
   }
 }
 
-// ── Toolbar ──────────────────────────────────────────────────────────────────
-
 /// Search, enforcement, category and status — on one line, each named.
 class _CatalogToolbar extends StatefulWidget {
   const _CatalogToolbar({required this.state});
@@ -164,9 +160,7 @@ class _CatalogToolbarState extends State<_CatalogToolbar> {
         onChanged: cubit.searchFeatures,
       ),
       filters: [
-        // The split operators actually chase: what is real, and what we listed
-        // but never built. A segmented switch says outright that these three
-        // are one axis with one answer — three loose chips did not.
+        
         SegmentedButton<String>(
           showSelectedIcon: false,
           style: SegmentedButton.styleFrom(
@@ -262,8 +256,7 @@ class _FilterDropdown extends StatelessWidget {
 
     return PopupMenuButton<String>(
       tooltip: label,
-      // A sentinel rather than null, because PopupMenuButton cannot carry a
-      // null value through onSelected.
+      
       onSelected: (picked) => onSelected(picked == '' ? null : picked),
       itemBuilder: (context) => [
         for (final option in options)
@@ -306,8 +299,6 @@ class _FilterDropdown extends StatelessWidget {
     );
   }
 }
-
-// ── Master: the list ─────────────────────────────────────────────────────────
 
 class _FeatureList extends StatelessWidget {
   const _FeatureList({required this.state});
@@ -352,9 +343,7 @@ class _FeatureList extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    // Says outright that the list is narrowed. A filtered list
-                    // that looks like the whole list is how a feature gets
-                    // reported missing.
+                    
                     state.hasFeatureFilters
                         ? '$visibleCount من $total'
                         : '$total ميزة',
@@ -493,9 +482,7 @@ class _FeatureRow extends StatelessWidget {
           decoration: BoxDecoration(
             border: BorderDirectional(
               top: BorderSide(color: DashboardColors.divider(context)),
-              // The selected row is marked on its start edge rather than by a
-              // border all round: a boxed row inside a boxed list inside a
-              // boxed card was three frames for one piece of information.
+              
               start: BorderSide(
                 color: selected ? scheme.primary : Colors.transparent,
                 width: 3,
@@ -523,8 +510,7 @@ class _FeatureRow extends StatelessWidget {
                             ),
                           ),
                         ),
-                        // Marked by exception only. Half the catalog is
-                        // healthy and a chip on every row would say nothing.
+                        
                         if (feature.isKillSwitched)
                           _RowMark(label: 'موقوفة', color: scheme.error)
                         else if (!feature.isEnforced)
@@ -627,8 +613,6 @@ class _RowMark extends StatelessWidget {
   }
 }
 
-// ── Detail ───────────────────────────────────────────────────────────────────
-
 /// Three panels, not six.
 ///
 /// The old pane split one feature across التعريف / أين تُطبَّق / التبعيات /
@@ -644,8 +628,7 @@ class _FeatureDetail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
-      // Keyed on the feature so moving to another row starts at the top rather
-      // than mid-way down the previous feature's detail.
+      
       key: PageStorageKey('feature-detail-${feature.key}'),
       padding: const EdgeInsetsDirectional.only(start: AppSpacing.medium),
       children: [
@@ -791,8 +774,7 @@ class _DefinitionPanel extends StatelessWidget {
           if (feature.isLimit)
             (
               label: 'نوع العدّاد',
-              // The distinction that decides whether deleting a row gives the
-              // quota back — and the one operators get wrong on the phone.
+              
               value: feature.isStock
                   ? 'مخزون — الحذف يعيد الحصة'
                   : 'تدفّق — الحذف لا يعيد الحصة',
@@ -837,7 +819,7 @@ class _EnforcementPanel extends StatelessWidget {
             LicensingNotice(
               color: scheme.tertiary,
               icon: DashboardIcons.attention,
-              // The honest answer, and the reason the badge exists at all.
+              
               message:
                   'لا يوجد كود يطبّق هذه الميزة بعد. يمكن إدراجها في باقة، '
                   'لكنها لن تغيّر أي سلوك لدى المكاتب.',
@@ -899,7 +881,7 @@ class _EnforcementPanel extends StatelessWidget {
             LicensingNotice(
               color: scheme.error,
               icon: DashboardIcons.attention,
-              // The warning that matters: turning this off collapses these too.
+              
               message:
                   'إيقاف هذه الميزة يُسقِط أيضًا: ${feature.requiredBy.join('، ')}',
             ),
@@ -1019,8 +1001,6 @@ class _ReachPanel extends StatelessWidget {
   Future<void> _apply(BuildContext context, String status) async {
     final cubit = context.read<PlatformLicensingCubit>();
 
-    // Rung 0 of the ladder is the most destructive switch in this console, so
-    // it is the one action here that asks first.
     if (status == 'disabled') {
       final confirmed = await showDialog<bool>(
         context: context,

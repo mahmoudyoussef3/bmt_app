@@ -60,9 +60,7 @@ class SubscriptionsRepositoryImpl implements SubscriptionsRepository {
     try {
       return await _datasource.markRideUsed(id, tripId: tripId);
     } catch (error) {
-      // The database refuses a second ride on the same trip (unique index on
-      // subscription_ride_usage). Saying so beats a generic failure, because
-      // the operator's next move is different: nothing needs doing.
+      
       if (error.toString().contains('ride_already_recorded_for_trip')) {
         throw Exception('تم تسجيل رحلة لهذا المشترك على هذه الرحلة بالفعل');
       }

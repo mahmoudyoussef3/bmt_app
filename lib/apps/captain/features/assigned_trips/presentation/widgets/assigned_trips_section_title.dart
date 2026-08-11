@@ -5,12 +5,6 @@ import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_section_label.dart';
 
-/// Names the trip list below it, and says how long it is.
-///
-/// Deliberately quiet — it is a divider between the focus card and the rest of
-/// the day, not a competing headline. It shares [CaptainSectionLabel] with the
-/// profile screen so a section heading looks the same wherever the captain
-/// meets one.
 class AssignedTripsSectionTitle extends StatelessWidget {
   const AssignedTripsSectionTitle({
     super.key,

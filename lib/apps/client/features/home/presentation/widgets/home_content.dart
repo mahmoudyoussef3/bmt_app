@@ -51,9 +51,7 @@ class HomeContent extends StatelessWidget {
     final isTablet = width >= 720;
     final horizontalPadding = isTablet ? ClientSpacing.xl : ClientSpacing.md;
     final maxWidth = AppLayout.maxContentWidth(width);
-    // One inset for every sliver below the hero: it centres the content column
-    // on a wide screen the way a ConstrainedBox would, while leaving the list
-    // slivers free to build lazily.
+    
     final sideInset = math.max(horizontalPadding, (width - maxWidth) / 2);
 
     return ColoredBox(
@@ -102,8 +100,7 @@ class HomeContent extends StatelessWidget {
                   data: data,
                   offices: switch (state) {
                     OfficesDirectoryLoaded(:final offices) => offices,
-                    // A directory that failed is silently absent: it is a
-                    // shortcut into the marketplace, not what Home is for.
+                    
                     _ => const [],
                   },
                   officesLoading: state is OfficesDirectoryLoading,

@@ -13,37 +13,9 @@ import 'package:bmt_app/apps/captain/core/widgets/captain_ticker.dart';
 import '../../domain/entities/trip_execution_state.dart';
 import '../cubit/trip_execution_cubit.dart';
 
-/// The height every docked-bar variant renders at.
-///
-/// The bar alternates between a live button, a two-line waiting panel and a
-/// terminal label, and they must agree on height or the page above reflows
-/// under the captain's thumb on every stage transition. A flat 56 held that
-/// line only at the default font: the waiting panel's two lines of text grow
-/// with the system font scale, so at an enlarged setting it stood ~23px taller
-/// than the button it alternates with and the reflow came back.
-///
-/// Scaling the height with the text instead keeps all three in agreement *and*
-/// respects the captain's font choice rather than shrinking text back down.
-/// Clamped so a very large accessibility setting cannot eat the screen.
 double dockedActionHeight(BuildContext context) =>
     MediaQuery.textScalerOf(context).scale(56).clamp(56.0, 96.0);
 
-/// The one thing the trip's current stage says to do next.
-///
-/// The stage — not the raw status — decides, because two different gates have
-/// to be satisfied before a captain can board passengers:
-///
-/// 1. **Operations** must publish the trip (`scheduled → open_for_booking`).
-///    The backend's `update_trip_status` machine rejects `scheduled →
-///    boarding` outright, so a button offered in that state could only throw
-///    "حالة الرحلة لا تسمح بهذا الانتقال" at the captain.
-/// 2. **The clock** must reach the boarding window. A trip published at dawn
-///    for an evening departure is bookable all day; that is not an invitation
-///    to start loading it.
-///
-/// Both waiting states render as a disabled panel that says what is being
-/// waited on, and the screen's live watch flips out of them on its own — the
-/// captain never has to leave and come back to see the button arm.
 class TripExecutionPrimaryAction extends StatelessWidget {
   const TripExecutionPrimaryAction({
     super.key,
@@ -76,12 +48,6 @@ class TripExecutionPrimaryAction extends StatelessWidget {
                 : Icons.hourglass_top_rounded,
           ),
 
-          // All three take the shared stage palette rather than a local
-          // literal: this button used to be `Colors.orange` for boarding and
-          // `CaptainColors.success` for underway, while the same trip was drawn
-          // amber and sky by every other screen. The palette's colours are also
-          // the ones dark enough to carry a legible label — see
-          // `CaptainTripStagePalette.accent`.
           CaptainTripStage.readyToBoard => _ActionButton(
             onPressed: () => context.read<TripExecutionCubit>().board(tripId),
             icon: Icons.people_alt_rounded,
@@ -103,9 +69,6 @@ class TripExecutionPrimaryAction extends StatelessWidget {
             color: CaptainTripStagePalette.accent(stage),
           ),
 
-          // A terminal state, not an action — disabled (not a live button that
-          // silently does nothing) so it reads as "this trip is done" rather
-          // than as a tappable control.
           CaptainTripStage.finished ||
           CaptainTripStage.cancelled => _TerminalLabel(stage: stage),
         };
@@ -113,12 +76,6 @@ class TripExecutionPrimaryAction extends StatelessWidget {
     );
   }
 
-  /// Completing a trip is a terminal, irreversible transition — confirm
-  /// before firing it so one mis-tap while driving can't end the trip.
-  ///
-  /// The `mounted` re-check matters: the captain can pop this screen while the
-  /// dialog is up, and firing `complete` at a torn-down route would drive the
-  /// cubit after it closed.
   Future<void> _confirmAndComplete(BuildContext context) async {
     final confirmed = await CaptainConfirmDialog.show(
       context,
@@ -133,12 +90,6 @@ class TripExecutionPrimaryAction extends StatelessWidget {
   }
 }
 
-/// A gate the captain cannot open, stated plainly. Deliberately not a greyed
-/// button: there is nothing to press, and the reason is the useful part.
-///
-/// Sized to the same [dockedActionHeight] as the live button so the docked bar
-/// keeps one height across every stage and the page above it never reflows on
-/// a transition.
 class _WaitingPanel extends StatelessWidget {
   const _WaitingPanel({
     required this.title,
@@ -182,10 +133,6 @@ class _WaitingPanel extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 2),
-                // One line, so the bar keeps the same height as the live
-                // button it alternates with — a docked bar that changes height
-                // on a stage transition reflows the whole page under the
-                // captain's thumb.
                 Text(
                   message,
                   maxLines: 1,
@@ -216,9 +163,7 @@ class _TerminalLabel extends StatelessWidget {
       width: double.infinity,
       height: dockedActionHeight(context),
       alignment: Alignment.center,
-      padding: const EdgeInsets.symmetric(
-        horizontal: CaptainDesignTokens.s16,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: CaptainDesignTokens.s16),
       decoration: BoxDecoration(
         color: CaptainColors.offline.withValues(alpha: 0.10),
         borderRadius: CaptainDesignTokens.br16,
@@ -250,8 +195,6 @@ class _TerminalLabel extends StatelessWidget {
   }
 }
 
-/// The live control. Full-bleed inside the docked bar, at the height every
-/// other primary control in the app uses.
 class _ActionButton extends StatelessWidget {
   const _ActionButton({
     required this.onPressed,
@@ -267,8 +210,6 @@ class _ActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Measured against the fill: boarding is amber, and a white label on it is
-    // 2:1. See `CaptainTripStagePalette.onAccent`.
     final foreground = CaptainTripStagePalette.onAccent(color);
 
     return SizedBox(

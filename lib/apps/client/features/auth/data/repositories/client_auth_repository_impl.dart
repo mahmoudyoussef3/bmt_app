@@ -22,8 +22,7 @@ class ClientAuthRepositoryImpl implements ClientAuthRepository {
     } on FormatException {
       rethrow;
     } on Exception {
-      // The datasource already maps failures to clear, user-facing messages;
-      // rethrow as-is instead of masking them behind a generic prefix.
+      
       rethrow;
     } catch (error) {
       throw Exception('Sign in failed. Please try again.');
@@ -49,8 +48,7 @@ class ClientAuthRepositoryImpl implements ClientAuthRepository {
     } on FormatException {
       rethrow;
     } on Exception {
-      // Preserve the datasource's actionable message (duplicate phone/email,
-      // etc.) instead of collapsing it into a generic prefix.
+      
       rethrow;
     } catch (error) {
       throw Exception('Sign up failed. Please try again.');
@@ -61,10 +59,6 @@ class ClientAuthRepositoryImpl implements ClientAuthRepository {
   Future<void> signOut() async {
     await _datasource.signOut();
 
-    // Session hygiene: the next rider to use this device must not inherit the
-    // previous one's remembered pickups and destinations. The session is
-    // already gone by this point, so a cache-clear failure must not turn a
-    // successful sign-out into a failed one.
     try {
       await _recentSearches.clearAll();
     } catch (_) {}
@@ -91,8 +85,7 @@ class ClientAuthRepositoryImpl implements ClientAuthRepository {
     } on FormatException {
       rethrow;
     } on Exception {
-      // Preserve the datasource's actionable message (invalid/expired
-      // recovery session, weak password, etc.).
+      
       rethrow;
     } catch (error) {
       throw Exception('Failed to update password: $error');

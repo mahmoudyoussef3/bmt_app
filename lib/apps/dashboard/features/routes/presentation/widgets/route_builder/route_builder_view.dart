@@ -110,7 +110,7 @@ class _RouteBuilderBody extends StatelessWidget {
       role: _roleAt(index, state.draft.stops.length),
       library: state.library,
       searchPlaces: _searchPlaces(state),
-      // A blank endpoint on a new route is being *set*, not edited.
+      
       isNew: !stop.isNamed,
     );
     if (result != null) cubit.applyStop(index, result);
@@ -399,8 +399,7 @@ class _DetailsSectionState extends State<_DetailsSection> {
   @override
   void didUpdateWidget(_DetailsSection oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Distance and duration are recalculated for the operator; mirror the new
-    // values into the manual fields without disturbing anything being typed.
+    
     _sync(_distance, _draft.distance);
     _sync(_duration, _draft.duration);
   }
@@ -500,9 +499,7 @@ class _DetailsSectionState extends State<_DetailsSection> {
               ),
             ],
           ),
-          // Measurements are read off the road network, so they can only be
-          // derived once every stop has a pin. Until then they are the
-          // operator's to fill in — or to leave empty, which costs nothing.
+          
           if (widget.state.metricsManual) ...[
             const SizedBox(height: AppSpacing.medium),
             Row(

@@ -74,9 +74,7 @@ class _WalletBody extends StatelessWidget {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: ClientSpacing.screen,
         children: [
-          // A rider with no wallets is the common case, and "EGP 0 — usable
-          // only at the office that granted it" describes a grant that never
-          // happened. The empty card below is the whole answer.
+          
           if (!summary.isEmpty) ...[
             _TotalCard(
               total: summary.totalBalance,

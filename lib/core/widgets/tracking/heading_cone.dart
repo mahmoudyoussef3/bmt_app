@@ -49,8 +49,7 @@ class _ConePainter extends CustomPainter {
     final bounds = Rect.fromCircle(center: center, radius: size.width / 2);
     final path = Path()
       ..moveTo(center.dx, center.dy)
-      // Canvas angles run from +x, so north is -pi/2; back off half the sweep
-      // to center the cone on the heading.
+      
       ..arcTo(bounds, -math.pi / 2 - _sweep / 2, _sweep, false)
       ..close();
 

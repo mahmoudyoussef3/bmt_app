@@ -67,8 +67,7 @@ class _LiveOpsBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Measured once per emit; the cubit re-emits every poll (~15s) so this stays
-    // fresh, and every health/age read on the page agrees on one clock.
+    
     final now = DateTime.now();
     final snapshot = state.snapshot;
     final cubit = context.read<LiveOpsCubit>();
@@ -94,9 +93,7 @@ class _LiveOpsBody extends StatelessWidget {
           const SizedBox(height: AppSpacing.medium),
           const _CriticalBanner(),
         ],
-        // The map is the fastest read of the situation, so it sits directly
-        // under the headline — but only once there is something to draw, so a
-        // quiet office is not handed an empty map of Egypt.
+        
         if (snapshot.activeTrips.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.medium),
           DashboardPanel(
@@ -167,8 +164,7 @@ class _TripsPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Overdue trips lead: the desk should meet the trip that has not left
-    // before the ones already running to plan.
+    
     final ordered = [...trips]
       ..sort((a, b) {
         final byOverdue = (b.isOverdueAt(now) ? 1 : 0).compareTo(
@@ -187,8 +183,7 @@ class _TripsPanel extends StatelessWidget {
           ? const _NoActiveTrips()
           : LayoutBuilder(
               builder: (context, constraints) {
-                // Two columns once a card can keep a comfortable width, one
-                // otherwise. Cards size themselves to the column.
+                
                 final twoCols = constraints.maxWidth >= 680;
                 final width = twoCols
                     ? (constraints.maxWidth - AppSpacing.medium) / 2

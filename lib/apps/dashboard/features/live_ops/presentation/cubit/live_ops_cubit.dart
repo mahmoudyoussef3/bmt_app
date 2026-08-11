@@ -71,8 +71,7 @@ class LiveOpsCubit extends Cubit<LiveOpsState> {
         emit(
           LiveOpsLoaded(
             snapshot: snapshot,
-            // A background refresh must not re-fire a one-shot error snackbar,
-            // but it must preserve which trip the operator is watching.
+            
             selectedTripId: current is LiveOpsLoaded
                 ? current.selectedTripId
                 : null,
@@ -80,7 +79,7 @@ class LiveOpsCubit extends Cubit<LiveOpsState> {
         );
       }
     } catch (_) {
-      // Keep the last good snapshot. The next tick retries.
+      
     } finally {
       _refreshing = false;
     }

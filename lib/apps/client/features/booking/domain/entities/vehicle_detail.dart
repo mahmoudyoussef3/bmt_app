@@ -1,6 +1,6 @@
 class VehicleDetailData {
   const VehicleDetailData({
-    required this.id, // This will be the trip_id
+    required this.id, 
     required this.name,
     required this.model,
     required this.vehicleType,

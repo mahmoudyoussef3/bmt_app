@@ -71,9 +71,7 @@ class _SeatSelectionContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
     final contentPadding = width < 380 ? 16.0 : 20.0;
-    // The per-breakpoint seat gaps that used to be computed here are gone: the
-    // shared cabin sizes itself against the width it is given, within bounds
-    // that keep the vehicle in proportion on a small phone and a tablet alike.
+    
     final maxContentWidth = width >= 900
         ? 720.0
         : (width >= 600 ? 560.0 : width);
@@ -97,8 +95,7 @@ class _SeatSelectionContent extends StatelessWidget {
                         24,
                       ),
                       children: [
-                        // The legend now travels with the cabin it explains,
-                        // instead of floating above it as its own card.
+                        
                         _buildBusLayout(context),
                         const SizedBox(height: 14),
                         if (selectedSeat == null)
@@ -106,8 +103,7 @@ class _SeatSelectionContent extends StatelessWidget {
                         else
                           _buildSelectedSeatsSummary(context, selectedSeat!),
                         const SizedBox(height: 12),
-                        //    SeatPassengerPreviewCard(selectedSeat: selectedSeat),
-                        //  const SizedBox(height: 12),
+                        
                         SeatBookingSummaryPanel(
                           selectedSeat: selectedSeat == null
                               ? null
@@ -133,8 +129,7 @@ class _SeatSelectionContent extends StatelessWidget {
                                   seatLabel: selectedSeat,
                                 ),
                         ),
-                        //const SizedBox(height: 14),
-                        //_buildHintCard(context),
+                        
                         const SizedBox(height: 20),
                       ],
                     ),
@@ -611,8 +606,7 @@ class _SeatMapGrid extends StatelessWidget {
                 : seat.isAvailable
                 ? SeatViewState.available
                 : SeatViewState.occupied,
-            // The booking rule, and the only one on this screen: a rider may
-            // tap a free seat. The renderer is told the outcome, not the rule.
+            
             enabled: seat.isAvailable,
           ),
       ],

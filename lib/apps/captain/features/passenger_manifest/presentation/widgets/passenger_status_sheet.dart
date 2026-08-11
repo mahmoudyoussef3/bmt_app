@@ -9,11 +9,6 @@ import '../../domain/entities/passenger.dart';
 import '../cubit/passenger_manifest_cubit.dart';
 import 'passenger_status_presentation.dart';
 
-/// Asks the captain for a passenger's new boarding status.
-///
-/// The cubit is resolved from [context] — the page's context, above the sheet —
-/// because the sheet is pushed onto the root navigator and so sits outside the
-/// page's provider subtree.
 Future<void> showPassengerStatusSheet(
   BuildContext context,
   Passenger passenger,
@@ -133,7 +128,6 @@ class _StatusOption extends StatelessWidget {
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          // The status already in force is not a choice to re-make.
           onTap: isActive ? null : onTap,
           borderRadius: CaptainDesignTokens.br16,
           child: Container(

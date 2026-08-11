@@ -23,8 +23,6 @@ class AppTheme {
     final colorScheme = lightColorSchemeFromPalette();
     final textTheme = AppTextThemes.textThemeFor(colorScheme);
 
-    // The one border weight the system uses. Cards, inputs and chips share it
-    // so a screen reads as one set of surfaces rather than several.
     final hairline = BorderSide(color: colorScheme.outline);
 
     OutlineInputBorder inputBorder(BorderSide side) => OutlineInputBorder(
@@ -47,8 +45,7 @@ class AppTheme {
 
       appBarTheme: AppBarTheme(
         centerTitle: false,
-        // The bar takes the page's colour rather than the card's, so a screen
-        // reads as one surface until content actually starts.
+        
         backgroundColor: AppLightColors.background,
         foregroundColor: colorScheme.onSurface,
         elevation: 0,
@@ -80,10 +77,6 @@ class AppTheme {
       iconTheme: IconThemeData(color: colorScheme.onSurface),
       primaryIconTheme: IconThemeData(color: colorScheme.onSurface),
 
-      // ── Buttons ────────────────────────────────────────────────────────────
-      // Filled buttons keep the brand fill and white label they have in dark
-      // mode; text and outlined buttons carry the brand as *ink*, which needs
-      // the darker tone to stay readable on a light page.
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: colorScheme.primary,
@@ -142,7 +135,6 @@ class AppTheme {
         splashColor: Colors.white24,
       ),
 
-      // ── Inputs ─────────────────────────────────────────────────────────────
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: colorScheme.surface,
@@ -188,7 +180,6 @@ class AppTheme {
         selectionHandleColor: AppLightColors.primary,
       ),
 
-      // ── Containers ─────────────────────────────────────────────────────────
       bottomSheetTheme: BottomSheetThemeData(
         backgroundColor: colorScheme.surface,
         modalBackgroundColor: colorScheme.surface,
@@ -246,8 +237,7 @@ class AppTheme {
         ),
       ),
       tooltipTheme: TooltipThemeData(
-        // A tooltip is the one surface that inverts: it has to separate from
-        // whatever it covers, and on a light page that means going dark.
+        
         decoration: BoxDecoration(
           color: AppLightColors.onSurface,
           borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
@@ -267,7 +257,6 @@ class AppTheme {
         ),
       ),
 
-      // ── Navigation ─────────────────────────────────────────────────────────
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: colorScheme.surface,
         surfaceTintColor: Colors.transparent,
@@ -324,7 +313,6 @@ class AppTheme {
         unselectedLabelStyle: textTheme.titleSmall,
       ),
 
-      // ── Chips, badges & selection controls ─────────────────────────────────
       chipTheme: ChipThemeData(
         backgroundColor: colorScheme.surfaceContainerHighest,
         selectedColor: AppLightColors.primaryContainer,
@@ -402,7 +390,6 @@ class AppTheme {
         overlayColor: AppLightColors.primary.withAlpha(38),
       ),
 
-      // ── Progress & loading ─────────────────────────────────────────────────
       progressIndicatorTheme: const ProgressIndicatorThemeData(
         color: AppLightColors.primary,
         linearTrackColor: AppLightColors.surfaceHighest,
@@ -426,8 +413,6 @@ class AppTheme {
     final colorScheme = darkColorSchemeFromPalette();
     final textTheme = AppTextThemes.textThemeFor(colorScheme);
 
-    // The one border weight the system uses. Cards, inputs and chips share it
-    // so a screen reads as one set of surfaces rather than several.
     final hairline = BorderSide(color: colorScheme.outline);
 
     OutlineInputBorder inputBorder(BorderSide side) => OutlineInputBorder(
@@ -450,8 +435,7 @@ class AppTheme {
 
       appBarTheme: AppBarTheme(
         centerTitle: false,
-        // The bar takes the page's colour rather than the card's, so a screen
-        // reads as one surface until content actually starts.
+        
         backgroundColor: AppDarkColors.background,
         foregroundColor: colorScheme.onSurface,
         elevation: 0,
@@ -483,10 +467,6 @@ class AppTheme {
       iconTheme: IconThemeData(color: colorScheme.onSurface),
       primaryIconTheme: IconThemeData(color: colorScheme.onSurface),
 
-      // ── Buttons ────────────────────────────────────────────────────────────
-      // Filled buttons keep the brand fill and white label they have in light
-      // mode; text and outlined buttons carry the brand as *ink*, which needs
-      // the lighter tone to stay readable on a dark page.
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: colorScheme.primary,
@@ -545,7 +525,6 @@ class AppTheme {
         splashColor: Colors.white24,
       ),
 
-      // ── Inputs ─────────────────────────────────────────────────────────────
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: colorScheme.surfaceContainerHighest,
@@ -555,8 +534,7 @@ class AppTheme {
           BorderSide(color: colorScheme.outlineVariant),
         ),
         focusedBorder: inputBorder(
-          // The focus ring is ink, not fill: the brand's fill tone on a dark
-          // input is too close in value to read as a state change.
+          
           const BorderSide(color: AppDarkColors.primaryAccent, width: 2),
         ),
         errorBorder: inputBorder(
@@ -593,7 +571,6 @@ class AppTheme {
         selectionHandleColor: AppDarkColors.primaryAccent,
       ),
 
-      // ── Containers ─────────────────────────────────────────────────────────
       bottomSheetTheme: BottomSheetThemeData(
         backgroundColor: colorScheme.surface,
         modalBackgroundColor: colorScheme.surface,
@@ -674,7 +651,6 @@ class AppTheme {
         ),
       ),
 
-      // ── Navigation ─────────────────────────────────────────────────────────
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: colorScheme.surface,
         surfaceTintColor: Colors.transparent,
@@ -731,7 +707,6 @@ class AppTheme {
         unselectedLabelStyle: textTheme.titleSmall,
       ),
 
-      // ── Chips, badges & selection controls ─────────────────────────────────
       chipTheme: ChipThemeData(
         backgroundColor: colorScheme.surfaceContainerHighest,
         selectedColor: AppDarkColors.primaryContainer,
@@ -809,7 +784,6 @@ class AppTheme {
         overlayColor: AppDarkColors.primaryAccent.withAlpha(38),
       ),
 
-      // ── Progress & loading ─────────────────────────────────────────────────
       progressIndicatorTheme: const ProgressIndicatorThemeData(
         color: AppDarkColors.primaryAccent,
         linearTrackColor: AppDarkColors.surfaceHighest,

@@ -55,9 +55,7 @@ class _PlatformOfficeFiltersState extends State<PlatformOfficeFilters> {
   @override
   void didUpdateWidget(PlatformOfficeFilters oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Only when the filter was reset from outside (the clear button), never on
-    // every rebuild — writing the controller while the operator is typing would
-    // fight the cursor.
+    
     if (widget.filter.query != _searchController.text &&
         widget.filter.query.isEmpty) {
       _searchController.clear();
@@ -135,8 +133,7 @@ class _PlatformOfficeFiltersState extends State<PlatformOfficeFilters> {
                 onChanged: widget.onListingStatus,
               ),
               if (widget.hasMetrics) ...[
-                // The third axis: how the office is actually behaving, as
-                // opposed to how it is configured.
+                
                 SizedBox(
                   width: 180,
                   child: DropdownButtonFormField<ActivityLevel?>(

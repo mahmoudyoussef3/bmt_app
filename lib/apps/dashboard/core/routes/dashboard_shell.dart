@@ -75,16 +75,6 @@ import '../theme/dashboard_theme_cubit.dart';
 import 'dashboard_routes.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
 
-// Sidebar section labels (dashboard is Arabic-only, consistent with the
-// literal-Arabic convention already used on the home screen).
-//
-// The groups follow the operator's day, not the database: what is moving now
-// (التشغيل), what customers bought (المبيعات), what runs the trips (الأسطول),
-// the money (المالية), the people complaining (الدعم), then the console itself
-// (النظام). Note that no group shares a name with an item inside it — "المالية"
-// used to be both a section and the payments screen within it, so the sidebar
-// appeared to contain itself. That is also why the bookings section is called
-// "المبيعات" and not "الحجوزات": the latter is the screen inside it.
 const String _navOperations = 'التشغيل';
 const String _navSales = 'المبيعات';
 const String _navFleet = 'الأسطول';
@@ -142,8 +132,7 @@ class DashboardShell extends StatefulWidget {
 }
 
 class _DashboardShellState extends State<DashboardShell> {
-  // Role comes from the authenticated office context. It is no longer defaulted to
-  // admin: with multiple offices, guessing full access is exactly the wrong default.
+  
   late DashboardRole _role = widget.office.role;
   late String _route = widget.initialRoute ?? DashboardRoutes.home;
 
@@ -221,9 +210,7 @@ class _DashboardShellState extends State<DashboardShell> {
   void _onEntitlementsChanged() {
     if (!mounted) return;
     setState(() {
-      // A plan change or a suspension can remove the module the operator is
-      // standing in. Falling back to home is kinder than leaving them on a
-      // screen whose every action now fails.
+      
       if (!_canOpenRoute(_route)) _route = DashboardRoutes.home;
     });
   }
@@ -240,14 +227,7 @@ class _DashboardShellState extends State<DashboardShell> {
       icon: DashboardIcons.home,
       selectedIcon: DashboardIcons.homeActive,
     ),
-    // Top-level beside الرئيسية rather than inside a group: the two are the
-    // console's two landing pages — one for the operator working the day, one
-    // for the owner reading the business — and burying either under a section
-    // heading would make the sidebar imply a hierarchy that does not exist.
-    //
-    // No `feature`: this is a lens over modules that are each licensed on their
-    // own, so an office on a smaller plan sees the page with the sections it
-    // has and a note naming the ones it does not, rather than a locked tab.
+    
     _DashboardNavItem(
       label: 'نظرة تنفيذية',
       route: DashboardRoutes.businessOverview,
@@ -301,8 +281,7 @@ class _DashboardShellState extends State<DashboardShell> {
       group: _navSales,
     ),
     _DashboardNavItem(
-      // Not "الأسطول": that is this item's *section*, and a section that
-      // contains an item of the same name reads as a broken menu.
+      
       label: 'إدارة الأسطول',
       route: DashboardRoutes.fleet,
       icon: DashboardIcons.fleet,
@@ -317,9 +296,7 @@ class _DashboardShellState extends State<DashboardShell> {
       icon: DashboardIcons.captainRequests,
       selectedIcon: DashboardIcons.captainRequestsActive,
       permission: DashboardPermission.captainRequests,
-      // Onboarding a captain only means something if the office is licensed for
-      // the captain app at all; approving a request is what binds the account
-      // that `max_captains` then meters.
+      
       feature: FeatureKeys.driverApp,
       group: _navFleet,
     ),
@@ -333,9 +310,7 @@ class _DashboardShellState extends State<DashboardShell> {
       group: _navFinance,
     ),
     _DashboardNavItem(
-      // "محفظة العملاء" and not "المحفظة": the code name is generic (§3A.8)
-      // because the schema is owner-agnostic, but in V1 every wallet does
-      // belong to a customer and the operator's label should say so.
+      
       label: 'محفظة العملاء',
       route: DashboardRoutes.wallet,
       icon: DashboardIcons.wallet,
@@ -393,8 +368,7 @@ class _DashboardShellState extends State<DashboardShell> {
       icon: DashboardIcons.platformOffices,
       selectedIcon: DashboardIcons.platformOfficesActive,
       permission: DashboardPermission.platformOffices,
-      // Not about the signed-in office, so the office role alone cannot
-      // authorise it — see [_DashboardNavItem.platformOnly].
+      
       platformOnly: true,
       group: _navPlatform,
     ),
@@ -481,8 +455,7 @@ class _DashboardShellState extends State<DashboardShell> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final useDrawer = constraints.maxWidth < _drawerBreakpoint;
-        // The rail is the default on laptops; the operator's own choice, once
-        // made, wins at every width above the drawer breakpoint.
+        
         final collapsed =
             _navCollapsed ?? (constraints.maxWidth < _railBreakpoint);
 
@@ -490,9 +463,7 @@ class _DashboardShellState extends State<DashboardShell> {
           return Scaffold(
             drawer: Drawer(
               child: SafeArea(
-                // A drawer is already an overlay the operator opened on
-                // purpose — collapsing it to icons there would hide labels for
-                // no gain in space.
+                
                 child: _DashboardSidebar(
                   items: visibleItems,
                   lockedRoutes: lockedRoutes,
@@ -577,9 +548,7 @@ class _DashboardShellState extends State<DashboardShell> {
 
   bool _isItemAllowed(_DashboardNavItem item) {
     if (!_passesRoleGate(item)) return false;
-    // The only new clause. Role first, entitlement second — and while the
-    // platform is not enforcing, `allows` answers true for everything, so the
-    // sidebar never hides a module the server would happily serve.
+    
     return _entitlementContext.allows(item.feature);
   }
 
@@ -602,7 +571,6 @@ class _DashboardShellState extends State<DashboardShell> {
 
   String get _activeTitle => _activeItem.label;
 
-
   String? get _activeGroup => _activeItem.group;
 
   void _setRole(DashboardRole role) {
@@ -616,10 +584,7 @@ class _DashboardShellState extends State<DashboardShell> {
 
   bool _openRoute(String route) {
     if (!_canOpenRoute(route)) {
-      // Which predicate said no decides what the operator is shown. A locked
-      // module is a commercial fact with a named feature and a plan behind it,
-      // so it earns the upgrade card; "ليس لديك صلاحية" would be both wrong and
-      // a dead end. Anything else is a role refusal and keeps the snackbar.
+      
       final locked = _items.firstWhere(
         (item) => item.route == route && _isItemLocked(item),
         orElse: () => _items.first,
@@ -696,11 +661,9 @@ class _DashboardShellState extends State<DashboardShell> {
         create: (_) => dashboardDi<BusinessOverviewCubit>()..load(),
         child: BusinessOverviewScreen(
           office: widget.office,
-          // The live licence, not a copy taken at load: a plan change while the
-          // tab is open must move the plan-limit warnings with it.
+          
           entitlements: _entitlementContext,
-          // The shell's own gate, handed over rather than reimplemented, so a
-          // quick action can never offer a module the sidebar refuses.
+          
           canOpenRoute: _canOpenRoute,
           onOpenModule: _openRoute,
           onCreateTrip: _startTripPlanner,
@@ -709,9 +672,7 @@ class _DashboardShellState extends State<DashboardShell> {
       DashboardRoutes.liveOps => BlocProvider(
         create: (_) => dashboardDi<LiveOpsCubit>()..startWatching(),
         child: LiveOpsScreen(
-          // The signed-in role, not the locally switched `_role`: closing a
-          // report writes a permanent audit trail, so the capability must follow
-          // the real account and not a debug role selector.
+          
           canResolveIncidents: DashboardPermissions.canAccess(
             widget.office.role,
             DashboardPermission.liveOpsIncidentAction,
@@ -769,11 +730,7 @@ class _DashboardShellState extends State<DashboardShell> {
       ),
       DashboardRoutes.wallet => BlocProvider(
         create: (_) => dashboardDi<WalletCubit>()..load(),
-        // The signed-in role, not the locally switched `_role`: every one of
-        // these actions writes a permanent, attributed ledger entry, so the
-        // capability must follow the real account rather than a debug selector.
-        // The server checks the same thing again in `office_can` — this only
-        // decides what is worth rendering.
+        
         child: WalletScreen(
           canAdjust: DashboardPermissions.canAccess(
             widget.office.role,
@@ -813,8 +770,7 @@ class _DashboardShellState extends State<DashboardShell> {
       DashboardRoutes.officeProfile => BlocProvider(
         create: (_) => dashboardDi<OfficeProfileCubit>()..load(),
         child: OfficeProfileScreen(
-          // The signed-in role, not the locally switched `_role`: only the
-          // former is what RLS will actually honour on the update.
+          
           canEdit: widget.office.role == DashboardRole.admin,
         ),
       ),
@@ -851,8 +807,7 @@ class _DashboardShellState extends State<DashboardShell> {
         child: const OfficeBillingScreen(),
       ),
       DashboardRoutes.settings => const SettingsScreen(),
-      // Access control *is* user administration: one screen listing every
-      // dashboard account with its role, rather than a separate matrix page.
+      
       DashboardRoutes.permissions => const UsersScreen(),
       _ => MultiBlocProvider(
         providers: [
@@ -956,10 +911,7 @@ class _DashboardSidebar extends StatelessWidget {
           end: BorderSide(color: DashboardColors.border(context)),
         ),
       ),
-      // The contents lay out at the *target* width for the whole animation and
-      // are clipped to the width the frame is currently at. Letting them size
-      // to the animating box instead makes every nav label overflow its row for
-      // the ~180ms the sidebar is between the two widths.
+      
       child: ClipRect(
         child: OverflowBox(
           alignment: AlignmentDirectional.topStart,
@@ -990,9 +942,7 @@ class _DashboardSidebar extends StatelessWidget {
           const SizedBox(height: AppSpacing.small),
           Divider(height: 1, color: DashboardColors.divider(context)),
           const SizedBox(height: AppSpacing.small),
-          // Role switching is a debug affordance, not part of the product —
-          // it now sits with the account block at the bottom instead of
-          // above the navigation, where it read as a real setting.
+          
           if (kDebugMode && !collapsed) ...[
             _RoleSelector(role: role, onChanged: onRoleChanged),
             const SizedBox(height: AppSpacing.small),
@@ -1414,8 +1364,7 @@ class _NotificationsBell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // The badge cubit is a lazy singleton — provide by value so it is not
-    // closed when this transient top bar rebuilds.
+    
     return BlocProvider.value(
       value: dashboardDi<OperationalAlertsBadgeCubit>(),
       child: BlocBuilder<OperationalAlertsBadgeCubit, int>(
@@ -1486,7 +1435,7 @@ class _NavButton extends StatelessWidget {
     final baseInk = selected
         ? DashboardColors.sidebarSelectedInk(context)
         : DashboardColors.sidebarInk(context);
-    // Dimmed, not disabled: it reads as "not yours yet" while staying legible.
+    
     final ink = locked ? baseInk.withValues(alpha: 0.55) : baseInk;
     final radius = BorderRadius.circular(AppTokens.radiusSmall);
 
@@ -1504,8 +1453,7 @@ class _NavButton extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: radius,
-        // A visible hover wash: without it the only way to tell a nav row is
-        // clickable is to click it.
+        
         hoverColor: DashboardColors.tableRowHover(context),
         child: Padding(
           padding: EdgeInsets.symmetric(
@@ -1539,10 +1487,6 @@ class _NavButton extends StatelessWidget {
       ),
     );
 
-    // Collapsed, the label *is* the tooltip — an icon rail with no tooltips is
-    // a guessing game, which is exactly what this redesign set out to remove.
-    // Collapsed there is no room for the lock glyph either, so the tooltip is
-    // the only place the rail can say why the row is dimmed.
     if (!collapsed && !locked) return button;
     return Tooltip(
       message: locked

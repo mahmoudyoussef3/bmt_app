@@ -107,8 +107,7 @@ class TripsAnalytics extends StatelessWidget {
         high++;
       }
     }
-    // Empty seats are the revenue problem, so an empty trip reads as negative
-    // and a full one as positive — the same direction the palette uses everywhere.
+    
     return [
       ChartDatum(
         label: 'فارغة',

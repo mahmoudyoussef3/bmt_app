@@ -263,23 +263,18 @@ class _DashboardCollapsibleSectionState
       axisAlignment: -1,
       child: FadeTransition(
         opacity: _inverseCurve,
-        // The summary occupies the body's slot, so it takes the body's inset —
-        // otherwise a section with a custom body padding would show its
-        // collapsed summary misaligned with the content it stands in for.
+        
         child: Padding(padding: widget.bodyPadding, child: summary),
       ),
     );
   }
 
   Widget _buildBody() {
-    // Never expanded in this session — the child was never constructed, so a
-    // collapsed chart or table costs nothing at all.
+    
     if (!_bodyEverBuilt) return const SizedBox.shrink();
 
     return Offstage(
-      // Offstage (not a discarded child) is the point: the body keeps its
-      // element and State while folded, so reopening restores exactly what the
-      // operator left, and while folded it is skipped by layout and paint.
+      
       offstage: _settledCollapsed,
       child: TickerMode(
         enabled: !_settledCollapsed,
@@ -331,9 +326,7 @@ class _SectionHeader extends StatelessWidget {
 
     return Semantics(
       button: true,
-      // Only the expanded flag is set here; the label comes from the title and
-      // subtitle Text beneath. Naming it again would merge into a doubled label
-      // ("تحليلات تحليلات") the moment a screen reader read the node.
+      
       expanded: expanded,
       child: Material(
         color: Colors.transparent,

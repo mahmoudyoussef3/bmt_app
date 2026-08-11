@@ -20,9 +20,7 @@ class ReportsScreen extends StatefulWidget {
 }
 
 class _ReportsScreenState extends State<ReportsScreen> {
-  // No load() here: the shell creates the cubit with `..load()` already applied.
-  // Calling it again from initState fired a second full fetch on every visit.
-
+  
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<ReportsCubit, ReportsState>(
@@ -87,7 +85,7 @@ class _LoadedView extends StatelessWidget {
         final useSplit = constraints.maxWidth > 800;
 
         if (!useSplit) {
-          // Mobile/Tablet Portrait Layout
+          
           return Column(
             children: [
               SizedBox(
@@ -103,11 +101,10 @@ class _LoadedView extends StatelessWidget {
           );
         }
 
-        // Desktop/Tablet Landscape Layout
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // 20% Sidebar for Report Categories
+            
             SizedBox(
               width: 240,
               child: Padding(
@@ -125,7 +122,7 @@ class _LoadedView extends StatelessWidget {
                 ),
               ),
             ),
-            // 80% Main Workspace
+            
             Expanded(child: ReportWorkspace(state: state)),
           ],
         );

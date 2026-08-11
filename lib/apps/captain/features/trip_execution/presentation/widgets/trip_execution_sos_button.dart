@@ -8,17 +8,6 @@ import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/features/incidents/domain/entities/incident_report.dart';
 import 'package:bmt_app/core/widgets/app_snackbar.dart';
 
-/// Raises an emergency, behind a deliberate three-second hold.
-///
-/// Stateful because it runs a hold timer and paints its own progress — local,
-/// transient interaction state with no bearing on the trip, and nothing the
-/// cubit should carry. A plain tap explains the gesture instead of firing:
-/// an SOS is not something to trip over on a bumpy road.
-///
-/// A compact square that rides in the docked action bar. It was a floating
-/// extended FAB, which the docked bar now occupies the corner of — and a
-/// square beside the primary action is reachable by the same thumb, without
-/// hovering over the content the captain is reading.
 class TripExecutionSosButton extends StatefulWidget {
   const TripExecutionSosButton({super.key, required this.tripId});
 
@@ -36,9 +25,6 @@ class _TripExecutionSosButtonState extends State<TripExecutionSosButton> {
   Timer? _progressTimer;
 
   void _onLongPressStart(LongPressStartDetails _) {
-    // A stray duplicate long-press-start (without an intervening end/cancel)
-    // would otherwise leave the previous periodic timer running unreferenced
-    // — never cancelled, ticking `_progress` up twice as fast.
     _progressTimer?.cancel();
     setState(() => _progress = 0);
     _progressTimer = Timer.periodic(_tick, (_) {
@@ -108,8 +94,6 @@ class _TripExecutionSosButtonState extends State<TripExecutionSosButton> {
                   color: Colors.white,
                 ),
               ),
-              // Fills as the hold progresses, so the captain can see the call
-              // being armed rather than guessing how long is left.
               if (_progress > 0)
                 SizedBox(
                   width: 52,

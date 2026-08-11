@@ -23,7 +23,7 @@ String? authMethodFailureMessage(
     AuthMethodFailure.invalidPhone => l10n.auth_invalidPhone,
     AuthMethodFailure.invalidCode => l10n.auth_otpInvalidCode,
     AuthMethodFailure.expiredCode => l10n.auth_otpExpiredCode,
-    // Not `auth_rateLimited` — that one is worded for password-reset links.
+    
     AuthMethodFailure.rateLimited => l10n.auth_otpRateLimited,
     AuthMethodFailure.unavailable => l10n.auth_methodUnavailable,
     AuthMethodFailure.unknown => l10n.auth_unknownError,

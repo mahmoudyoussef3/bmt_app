@@ -4,9 +4,6 @@ import '../theme/captain_colors.dart';
 import '../theme/captain_design_tokens.dart';
 import '../theme/captain_typography.dart';
 
-/// States that the captain app is listening to operations, so any screen that
-/// leaves the captain waiting on an assignment reads as live rather than
-/// stalled. Shared by the awaiting-trips view and the finished-day view.
 class CaptainLiveSyncChip extends StatelessWidget {
   const CaptainLiveSyncChip({super.key, required this.isRefreshing});
 

@@ -27,7 +27,7 @@ class ClientThemeStore {
     try {
       await _storage.write(_key, keyOf(mode));
     } catch (_) {
-      // The theme already applied in-session; it just won't survive a restart.
+      
     }
   }
 

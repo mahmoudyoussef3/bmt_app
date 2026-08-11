@@ -15,32 +15,27 @@ class FleetRepositoryImpl implements FleetRepository {
     String vehicleId,
   ) async {
     try {
-      // 1. Fetch current workspace to validate rules locally
+      
       final workspace = await _datasource.fetchWorkspace();
 
-      // Find driver
       final driver = workspace.drivers.firstWhere(
         (d) => d.id == driverId,
         orElse: () => throw Exception('السائق غير موجود في النظام.'),
       );
 
-      // Find vehicle
       final vehicle = workspace.vehicles.firstWhere(
         (v) => v.id == vehicleId,
         orElse: () => throw Exception('المركبة غير موجودة في النظام.'),
       );
 
-      // Rule: Prevent suspended driver assignment
       if (driver.status != FleetDriverStatus.active) {
         throw Exception('لا يمكن التعيين لسائق غير نشط أو موقوف.');
       }
 
-      // Rule: Prevent inactive vehicle assignment
       if (vehicle.status != FleetVehicleStatus.active) {
         throw Exception('لا يمكن التعيين لمركبة صيانة أو موقوفة.');
       }
 
-      // Rule: Prevent duplicate active assignment (Driver)
       final hasActiveDriverAssign = workspace.assignments.any(
         (a) =>
             a.driverId == driverId && a.status == FleetAssignmentStatus.active,
@@ -49,7 +44,6 @@ class FleetRepositoryImpl implements FleetRepository {
         throw Exception('السائق مرتبط بالفعل بتعيين نشط.');
       }
 
-      // Rule: Prevent duplicate active assignment (Vehicle)
       final hasActiveVehicleAssign = workspace.assignments.any(
         (a) =>
             a.vehicleId == vehicleId &&
@@ -59,7 +53,6 @@ class FleetRepositoryImpl implements FleetRepository {
         throw Exception('المركبة مرتبطة بالفعل بتعيين نشط لسائق آخر.');
       }
 
-      // Rule: Prevent expired documents assignment (Driver)
       final hasExpiredDriverDocs = driver.documents.any(
         (doc) => doc.status == FleetDocumentStatus.expired,
       );
@@ -69,7 +62,6 @@ class FleetRepositoryImpl implements FleetRepository {
         );
       }
 
-      // Rule: Prevent expired documents assignment (Vehicle)
       final hasExpiredVehicleDocs = workspace.documents.any(
         (doc) =>
             doc.ownerId == vehicleId &&
@@ -94,7 +86,7 @@ class FleetRepositoryImpl implements FleetRepository {
   @override
   Future<FleetDriver> createDriver(FleetDriver driver) async {
     try {
-      // Validate unique national ID / employee code / license if local checking is needed
+      
       final workspace = await _datasource.fetchWorkspace();
       final hasDuplicateNationalId = workspace.drivers.any(
         (d) => d.nationalId == driver.nationalId && d.id != driver.id,
@@ -128,7 +120,7 @@ class FleetRepositoryImpl implements FleetRepository {
   @override
   Future<FleetVehicle> createVehicle(FleetVehicle vehicle) async {
     try {
-      // Validate unique plate number / vehicle code
+      
       final workspace = await _datasource.fetchWorkspace();
       final hasDuplicatePlate = workspace.vehicles.any(
         (v) => v.plateNumber == vehicle.plateNumber && v.id != vehicle.id,
@@ -169,18 +161,15 @@ class FleetRepositoryImpl implements FleetRepository {
     try {
       final workspace = await _datasource.fetchWorkspace();
 
-      // Find vehicle to reassign
       final vehicle = workspace.vehicles.firstWhere(
         (v) => v.id == newVehicleId,
         orElse: () => throw Exception('المركبة غير موجودة.'),
       );
 
-      // Validate vehicle active status
       if (vehicle.status != FleetVehicleStatus.active) {
         throw Exception('لا يمكن التعيين لمركبة غير نشطة أو تحت الصيانة.');
       }
 
-      // Validate vehicle active assignments
       final hasActiveVehicleAssign = workspace.assignments.any(
         (a) =>
             a.vehicleId == newVehicleId &&
@@ -191,7 +180,6 @@ class FleetRepositoryImpl implements FleetRepository {
         throw Exception('المركبة الجديدة مرتبطة بالفعل بسائق نشط آخر.');
       }
 
-      // Validate vehicle documents
       final hasExpiredVehicleDocs = workspace.documents.any(
         (doc) =>
             doc.ownerId == newVehicleId &&
@@ -225,7 +213,7 @@ class FleetRepositoryImpl implements FleetRepository {
   @override
   Future<FleetDriver> updateDriver(FleetDriver driver) async {
     try {
-      // Validate unique national ID / employee code / license if changed
+      
       final workspace = await _datasource.fetchWorkspace();
       final hasDuplicateNationalId = workspace.drivers.any(
         (d) => d.nationalId == driver.nationalId && d.id != driver.id,
@@ -271,7 +259,7 @@ class FleetRepositoryImpl implements FleetRepository {
   @override
   Future<FleetVehicle> updateVehicle(FleetVehicle vehicle) async {
     try {
-      // Validate unique plate number / vehicle code if changed
+      
       final workspace = await _datasource.fetchWorkspace();
       final hasDuplicatePlate = workspace.vehicles.any(
         (v) => v.plateNumber == vehicle.plateNumber && v.id != vehicle.id,

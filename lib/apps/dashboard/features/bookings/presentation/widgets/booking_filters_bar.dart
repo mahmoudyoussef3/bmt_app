@@ -47,8 +47,7 @@ class BookingsToolbar extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.medium),
           Divider(height: 1, color: scheme.outline.withAlpha(60)),
-          // Only the filter row folds — the queue tabs above are navigation and
-          // stay put, because collapsing them would hide which queue is open.
+          
           DashboardCollapsibleSection.bare(
             sectionId: DashboardSectionIds.bookingsFilters,
             icon: Icons.filter_alt_outlined,
@@ -105,8 +104,7 @@ class BookingQueueTabBar extends StatelessWidget {
                 label: tab.label,
                 count: state.countForTab(tab),
                 selected: state.activeTab == tab,
-                // The review queue is the only tab that represents outstanding
-                // work, so it stays visually distinct even when unselected.
+                
                 urgent: tab == BookingQueueTab.needsReview,
                 onTap: () => onSelected(tab),
               ),
@@ -218,8 +216,7 @@ class _FiltersBar extends StatelessWidget {
       builder: (context, constraints) {
         final full = constraints.maxWidth;
         final compact = full < 720;
-        // Two fields per row on mid widths, one per row on phones: a Wrap of
-        // fixed 220px fields left ragged half-empty rows at tablet size.
+        
         final double fieldWidth = compact
             ? full
             : full < 1080
@@ -234,9 +231,7 @@ class _FiltersBar extends StatelessWidget {
             SizedBox(
               width: compact ? full : (full < 1080 ? fieldWidth : 280),
               child: DebouncedSearchField(
-                // Keyed on the filter value so "clear filters" actually empties
-                // the box: the field owns its controller, and without a rebuilt
-                // element it would keep showing the stale query.
+                
                 key: ValueKey('booking-search-${filters.search}'),
                 initialValue: filters.search,
                 hintText: 'اسم، هاتف، رقم حجز، مقعد',
@@ -351,9 +346,7 @@ class _RouteFilter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // A route can disappear from the data (last booking on it approved away)
-    // while still selected; keeping it in the item list prevents a dropdown
-    // assertion on a value with no matching item.
+    
     final items = {...routes, ?value}.toList()..sort();
 
     return DropdownButtonFormField<String?>(
@@ -393,9 +386,7 @@ class _TripDateFilter extends StatelessWidget {
 
   static String _iso(DateTime date) {
     String two(int v) => v.toString().padLeft(2, '0');
-    // Written by hand rather than through MaterialLocalizations: under the
-    // dashboard's `ar` locale those formatters emit Arabic-Indic digits, which
-    // would never match the ASCII `trip_date` values being filtered.
+    
     return '${date.year}-${two(date.month)}-${two(date.day)}';
   }
 

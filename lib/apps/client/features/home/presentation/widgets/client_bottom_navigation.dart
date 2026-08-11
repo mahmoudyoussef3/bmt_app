@@ -39,9 +39,6 @@ class ClientBottomNavigation extends StatelessWidget {
         .indexWhere((d) => d.id == activeTab)
         .clamp(0, destinations.length - 1);
 
-    // The island needs a canvas to float on: the shell Scaffold is near-white,
-    // which would swallow a white bar. Painting the strip with the app canvas
-    // color also lines it up exactly with the home tab's background.
     return ColoredBox(
       color: ClientColors.backgroundFor(context),
       child: SafeArea(

@@ -71,8 +71,7 @@ class FleetVehiclesTable extends StatelessWidget {
             onChanged: (_) => cubit.toggleSelection(vehicle.id),
           ),
           _VehicleIdentityCell(vehicle: vehicle),
-          // A bus with no driver cannot be dispatched: trips are scheduled onto the
-          // driver, and this vehicle is not on the end of any driver's assignment.
+          
           driverName.isEmpty
               ? StatusChip(
                   label: 'غير مخصص',

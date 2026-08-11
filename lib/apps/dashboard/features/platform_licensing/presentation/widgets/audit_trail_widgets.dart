@@ -24,9 +24,7 @@ class AuditLabels {
     required List<CatalogFeature> features,
     required List<LicensingPlan> plans,
   }) : _featureNames = {for (final f in features) f.key: f.nameAr},
-       // Plans are indexed by both id and key: a `plan_feature` row references
-       // the key, a `license` change references the uuid, and the operator
-       // should read the same plan name either way.
+       
        _planNames = {
          for (final p in plans) ...{p.id: p.nameAr, p.key: p.nameAr},
        };
@@ -44,8 +42,7 @@ class AuditLabels {
     final ref = entry.entityRef.trim();
     switch (entry.entityType) {
       case 'settings':
-        // entity_ref is the boolean primary key of the singleton row. It is
-        // never worth showing, and showing it is why this column read "true".
+        
         return 'إعدادات المنصة';
       case 'feature':
       case 'override':
@@ -524,9 +521,7 @@ class _AuditEntryTileState extends State<AuditEntryTile> {
                           width: 150,
                           child: Text(
                             office == null || office.isEmpty
-                                // Catalog and plan changes have no office: they
-                                // are platform-wide, and a dash reads like
-                                // missing data rather than "everyone".
+                                
                                 ? 'المنصة'
                                 : office,
                             maxLines: 1,
@@ -563,9 +558,7 @@ class _AuditEntryTileState extends State<AuditEntryTile> {
                       ),
                     ],
                   ),
-                  // Built only while open. A cross-fade would keep a hundred
-                  // detail panels alive in the tree for the sake of a
-                  // transition nobody asked for.
+                  
                   AnimatedSize(
                     duration: AppTokens.motionBase,
                     alignment: Alignment.topCenter,
@@ -627,8 +620,7 @@ class _AuditDetail extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      // Indented to clear the time and the action badge, so the evidence sits
-      // under the sentence it belongs to rather than under the whole row.
+      
       margin: const EdgeInsetsDirectional.only(
         top: AppSpacing.small,
         start: 84,
@@ -723,8 +715,7 @@ class _ChangeRow extends StatelessWidget {
               if (change.before != null)
                 _ValueBox(value: change.before!, muted: true),
               if (change.before != null && change.after != null)
-                // arrow_forward carries matchTextDirection, so under RTL it
-                // already points from the old value to the new one.
+                
                 Icon(
                   Icons.arrow_forward_rounded,
                   size: 14,

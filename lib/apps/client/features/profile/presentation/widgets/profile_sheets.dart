@@ -22,14 +22,10 @@ abstract final class ProfileSheets {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      // The keyboard inset is read from the sheet's own context: read from the
-      // screen's it would be captured once, and the sheet would sit under the
-      // keyboard instead of riding above it.
+      
       builder: (sheetContext) => BlocProvider.value(
         value: cubit,
-        // Closes the sheet itself on a successful save, so the confirmation
-        // snackbar (shown by the screen underneath) is actually visible
-        // instead of hiding behind a sheet nobody dismissed yet.
+        
         child: BlocListener<ProfileCubit, ProfileState>(
           listenWhen: (previous, current) =>
               current is ProfileLoaded &&

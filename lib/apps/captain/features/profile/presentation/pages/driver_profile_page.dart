@@ -1,16 +1,20 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/apps/captain/core/routes/captain_nav.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_bottom_nav.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_button.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_dev_mode_sheet.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_root_header.dart';
 import 'package:bmt_app/core/widgets/widgets.dart';
 
 import '../../domain/entities/driver_profile.dart';
 import '../cubit/driver_profile_cubit.dart';
 import '../cubit/driver_profile_state.dart';
-import '../widgets/driver_profile_header.dart';
+import '../widgets/driver_profile_identity_card.dart';
 import '../widgets/driver_profile_info_card.dart';
 import '../widgets/driver_profile_settings_card.dart';
 import '../widgets/driver_profile_sign_out_button.dart';
@@ -48,19 +52,25 @@ class _ProfileBody extends StatelessWidget {
       child: CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
-          DriverProfileHeader(profile: profile),
+          CaptainRootHeader(
+            title: CaptainRootHeader.titleSubtitle(
+              context,
+              title: profile.name,
+              subtitle: profile.officeName.isNotEmpty
+                  ? profile.officeName
+                  : null,
+            ),
+            onNotificationsTap: () => context.openNotifications(),
+          ),
           SliverPadding(
- 
             padding: EdgeInsetsDirectional.fromSTEB(
               CaptainDesignTokens.s20,
               CaptainDesignTokens.s24,
               CaptainDesignTokens.s20,
-              // Cleared for the shell's floating nav bar.
               CaptainBottomNav.reservedSpace(context),
             ),
             sliver: SliverList.list(
               children: [
-   
                 if (profile.hasVehicle) ...[
                   DriverProfileVehicleCard(profile: profile),
                   const SizedBox(height: CaptainDesignTokens.s24),

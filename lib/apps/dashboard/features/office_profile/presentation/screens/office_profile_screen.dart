@@ -33,8 +33,7 @@ class OfficeProfileScreen extends StatelessWidget {
         final messenger = ScaffoldMessenger.of(context);
         if (state is OfficeProfileActionSuccess) {
           messenger.showSnackBar(SnackBar(content: Text(state.message)));
-          // The shell renders the office name and logo from the context read at
-          // sign-in, so a saved rename has to be pushed back into it.
+          
           dashboardDi<DashboardAuthCubit>().refreshContext();
         } else if (state is OfficeProfileActionFailure) {
           messenger.showSnackBar(
@@ -115,8 +114,7 @@ class _Body extends StatelessWidget {
         OfficeJoinCodeCard(profile: profile),
         const SizedBox(height: AppSpacing.medium),
         OfficeIdentityForm(
-          // Rebuilds the form from the stored row after every successful save,
-          // so server-side trimming is reflected instead of the raw input.
+          
           key: ValueKey(profile.updatedAt),
           profile: profile,
           isSaving: isSaving,

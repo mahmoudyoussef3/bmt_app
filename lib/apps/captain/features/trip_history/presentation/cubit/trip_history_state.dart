@@ -8,12 +8,6 @@ class TripHistoryLoading extends TripHistoryState {
   const TripHistoryLoading();
 }
 
-/// The history, already filtered and bucketed for display.
-///
-/// The derived fields are computed by the cubit whenever the trips or the
-/// filters change, rather than in `build`: this screen rebuilds on every
-/// keystroke of the search field, and re-filtering plus re-grouping the whole
-/// history on each of those was the expensive part.
 class TripHistoryLoaded extends TripHistoryState {
   const TripHistoryLoaded({
     required this.totalTrips,
@@ -25,28 +19,18 @@ class TripHistoryLoaded extends TripHistoryState {
     required this.dateFilter,
   });
 
-  /// Counts across the whole history, before filtering — the headline
-  /// "N رحلة مكتملة" and the summary tiles must not move when the captain
-  /// narrows the view.
   final int totalTrips;
   final int totalPassengers;
 
-  /// The filtered trips, bucketed by recency. Empty when nothing matches.
   final List<TripHistoryGroup> groups;
 
-  /// How many trips survived the filters. The list itself only ever exists as
-  /// buckets, so this is the one place the flat number is available to report.
   final int matchCount;
 
-  /// Trips per date range, before the search query — the filter chips show
-  /// these so an empty range can say so before the captain opens it.
   final Map<TripHistoryDateFilter, int> filterCounts;
 
   final String query;
   final TripHistoryDateFilter dateFilter;
 
-  /// No completed trips at all, as opposed to none matching the current
-  /// filters — the two read differently to a captain.
   bool get hasNoTrips => totalTrips == 0;
 
   bool get hasNoMatches => groups.isEmpty;
@@ -54,7 +38,6 @@ class TripHistoryLoaded extends TripHistoryState {
   bool get isFiltering =>
       query.trim().isNotEmpty || dateFilter != TripHistoryDateFilter.all;
 
-  /// Passengers carried per trip across the whole history, rounded.
   int get averagePassengers =>
       totalTrips == 0 ? 0 : (totalPassengers / totalTrips).round();
 }

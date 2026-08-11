@@ -30,8 +30,7 @@ class FinanceLedgerTab extends StatelessWidget {
     final pageCount = (entries.length / FinanceLoaded.ledgerPageSize)
         .ceil()
         .clamp(1, 9999);
-    // Filters can shrink the result under the current page; clamp rather than
-    // render an empty page the operator cannot explain.
+    
     final page = state.ledgerPage.clamp(0, pageCount - 1);
     final pageEntries = entries
         .skip(page * FinanceLoaded.ledgerPageSize)
@@ -108,8 +107,7 @@ class FinanceLedgerTab extends StatelessWidget {
         overflow: TextOverflow.ellipsis,
         style: TextStyle(
           fontWeight: FontWeight.w900,
-          // A reversed row still shows what it was worth, struck through, so it
-          // is never mistaken for revenue while scanning the column.
+          
           decoration: entry.status == PaymentStatus.refunded
               ? TextDecoration.lineThrough
               : null,

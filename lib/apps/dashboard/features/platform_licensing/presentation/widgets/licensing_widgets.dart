@@ -22,9 +22,7 @@ class LicenseStatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    // past_due and grace are WARNING, not danger: both are fully operational
-    // states, and colouring them like a suspension would misreport what has
-    // actually happened to the office.
+    
     final color = switch (status) {
       'active' => scheme.secondary,
       'trialing' => scheme.tertiary,
@@ -216,9 +214,7 @@ class FeatureValueField extends StatelessWidget {
               label: const Text('بلا حدود'),
               selected: unlimited,
               onSelected: enabled
-                  // Never -1 and never null: the only permitted "no ceiling"
-                  // value is the literal string, which survives every layer
-                  // unambiguously.
+                  
                   ? (on) => onChanged(on ? FeatureValue.unlimited : 0)
                   : null,
             ),
@@ -289,9 +285,7 @@ class FeatureSourceChip extends StatelessWidget {
         if (blockedBy != null) ...[
           const SizedBox(width: AppSpacing.xSmall),
           Tooltip(
-            // Both facts at once. The override WAS honoured and then defeated
-            // by a missing prerequisite; showing only one of them looks like
-            // the system ignored the operator.
+            
             message: 'مُعطَّلة لأن «$blockedBy» غير مفعّلة',
             child: Icon(DashboardIcons.locked, size: 16, color: scheme.error),
           ),
@@ -678,8 +672,7 @@ class OverrideTile extends StatelessWidget {
                 if (entry.expiresAt != null)
                   Text(
                     entry.expired
-                        // Kept, not deleted: the row is the record that the
-                        // concession happened.
+                        
                         ? 'انتهى في ${licensingDate(entry.expiresAt)} — لم يعد ساريًا'
                         : 'ينتهي في ${licensingDate(entry.expiresAt)}',
                     style: text.labelSmall?.copyWith(

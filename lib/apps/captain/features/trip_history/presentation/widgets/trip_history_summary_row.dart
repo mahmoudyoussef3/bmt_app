@@ -7,11 +7,6 @@ import 'package:bmt_app/apps/captain/core/widgets/captain_card.dart';
 
 import '../utils/trip_history_palette.dart';
 
-/// Lifetime totals for the history tab. Always whole-history, never filtered.
-///
-/// One strip rather than the two separate cards it used to be: these are three
-/// readings of the same record and they compare at a glance side by side, which
-/// is also the shape the day summary already uses on the trips tab.
 class TripHistorySummaryRow extends StatelessWidget {
   const TripHistorySummaryRow({
     super.key,

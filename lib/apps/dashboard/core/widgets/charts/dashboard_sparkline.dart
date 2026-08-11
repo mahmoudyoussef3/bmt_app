@@ -56,12 +56,9 @@ class _SparklinePainter extends CustomPainter {
       if (value > max) max = value;
     }
 
-    // A flat series has no range to normalise against. Pinning it to the middle
-    // draws the truth — "this did not move" — instead of dividing by zero.
     final range = max - min;
     final stepX = size.width / (values.length - 1);
-    // Inset by the stroke so the first and last points are not clipped in half
-    // by the widget's own bounds.
+    
     const inset = 1.5;
     final usable = size.height - inset * 2;
 
@@ -79,8 +76,6 @@ class _SparklinePainter extends CustomPainter {
       path.lineTo(point.dx, point.dy);
     }
 
-    // The wash under the line carries the shape at a glance even where the
-    // 1.6px stroke is too thin to register against a tinted tile.
     final fill = Path.from(path)
       ..lineTo(size.width, size.height)
       ..lineTo(0, size.height)
@@ -105,8 +100,6 @@ class _SparklinePainter extends CustomPainter {
         ..strokeJoin = StrokeJoin.round,
     );
 
-    // The last point gets a dot: it is "now", and it is the one the printed
-    // value beside the line refers to.
     canvas.drawCircle(
       pointAt(values.length - 1),
       2.4,

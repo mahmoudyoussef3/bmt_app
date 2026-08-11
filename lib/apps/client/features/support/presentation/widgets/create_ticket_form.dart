@@ -122,8 +122,7 @@ class _CreateTicketFormState extends State<CreateTicketForm> {
             onRetry: cubit.loadOfficeOptions,
           ),
           const SizedBox(height: 24),
-          // Hidden entirely when the client has no bookings: an empty picker
-          // would only add noise to a form that must stay easy to file.
+          
           if (bookingOptions.isNotEmpty) ...[
             SupportFieldLabel(
               label: context.l10n.support_relatedBookingLabel,

@@ -47,25 +47,20 @@ extension TripAttentionPolicy on TripData {
   /// than as a payment still under review.
   TripAttention get attention {
     if (bookingState == BookingState.cancelled) {
-      // Cancelled after the money was approved (or already sent back) is a
-      // refund conversation. Cancelled while payment was still pending is just
-      // a cancelled booking — nothing is owed.
+      
       if (paymentStatus == PaymentStatus.paid) return TripAttention.refundDue;
       return TripAttention.none;
     }
 
     if (bookingState == BookingState.completed ||
         status == TripStatus.completed) {
-      // A journey cannot have been travelled on a seat that was never paid for.
+      
       if (bookingState == BookingState.reserved) {
         return TripAttention.needsSupport;
       }
       return TripAttention.none;
     }
 
-    // The trip is off but this booking is still open — the operator cancelled
-    // the departure. Paid riders are owed money; unpaid riders just need to know
-    // it is not happening.
     if (status == TripStatus.cancelled) {
       return paymentStatus == PaymentStatus.paid
           ? TripAttention.refundDue
@@ -77,16 +72,13 @@ extension TripAttentionPolicy on TripData {
         PaymentStatus.failed => TripAttention.paymentRejected,
         PaymentStatus.underReview => TripAttention.awaitingPaymentReview,
         PaymentStatus.pending => TripAttention.paymentIncomplete,
-        // An approved payment on a still-reserved booking means the operator's
-        // approval did not carry the booking forward. Nothing the rider can fix.
+        
         PaymentStatus.paid => TripAttention.needsSupport,
         PaymentStatus.refunded ||
         PaymentStatus.cancelled => TripAttention.needsSupport,
       };
     }
 
-    // Confirmed booking. Only a payment that went backwards afterwards is worth
-    // raising.
     if (paymentStatus == PaymentStatus.failed) {
       return TripAttention.paymentRejected;
     }

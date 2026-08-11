@@ -35,10 +35,6 @@ class BookingNextActionBanner extends StatelessWidget {
       hasReceipt: booking.hasReceipt,
     );
 
-    // When the next action *is* resolving a contradiction, the issue tiles below
-    // already state the problem verbatim. Repeating it in the action tile put the
-    // same sentence on screen twice, which reads as a rendering fault rather than
-    // emphasis — so the action tile gives the directive and defers the detail.
     final isContradiction =
         action.kind == BookingActionKind.resolveContradiction;
 
@@ -60,9 +56,7 @@ class BookingNextActionBanner extends StatelessWidget {
               ? context.status(AppStatusTone.info).ink
               : context.status(AppStatusTone.neutral).ink,
         ),
-        // Contradictions are listed in full rather than summarised: each one is a
-        // different remedy (refund, collect, document), so collapsing them would
-        // hide the very distinction the operator needs.
+        
         for (final issue in issues) ...[
           const SizedBox(height: AppSpacing.small),
           _Tile(
@@ -115,8 +109,7 @@ class _Tile extends StatelessWidget {
         children: [
           Icon(icon, size: 20, color: onContainer),
           const SizedBox(width: AppSpacing.small),
-          // Expanded + wrapping body: the reason lines are full sentences and
-          // must never be clipped in a narrow inspector or at a large text scale.
+          
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

@@ -25,10 +25,6 @@ import '../../../../core/theme/dashboard_colors.dart';
 /// - **A card grid, not a squeezed pane.** Plans are products; they are read the
 ///   way a pricing page is read.
 
-// ═══════════════════════════════════════════════════════════════════════════
-// Stats
-// ═══════════════════════════════════════════════════════════════════════════
-
 /// One figure in a [LicensingStatStrip].
 class LicensingStat {
   const LicensingStat({
@@ -98,10 +94,6 @@ class LicensingStatStrip extends StatelessWidget {
     );
   }
 }
-
-// ═══════════════════════════════════════════════════════════════════════════
-// Grid
-// ═══════════════════════════════════════════════════════════════════════════
 
 /// Cards laid out in equal-height rows.
 ///
@@ -173,10 +165,6 @@ class LicensingCardGrid extends StatelessWidget {
     );
   }
 }
-
-// ═══════════════════════════════════════════════════════════════════════════
-// Small marks
-// ═══════════════════════════════════════════════════════════════════════════
 
 /// A bordered fact — «١٢ مكتب مشترك», «تجربة ١٤ يوم». Reads as data, not as a
 /// control, which is why it is not a chip.
@@ -273,10 +261,6 @@ class LicensingNotice extends StatelessWidget {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// Fields
-// ═══════════════════════════════════════════════════════════════════════════
-
 /// One labelled read-only value.
 typedef LicensingFieldEntry = ({String label, String value});
 
@@ -361,10 +345,6 @@ class _Field extends StatelessWidget {
     );
   }
 }
-
-// ═══════════════════════════════════════════════════════════════════════════
-// Tabs
-// ═══════════════════════════════════════════════════════════════════════════
 
 class LicensingTab {
   const LicensingTab({required this.label, required this.icon, this.count});
@@ -490,10 +470,6 @@ class _TabPill extends StatelessWidget {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// The save bar
-// ═══════════════════════════════════════════════════════════════════════════
-
 /// The unsaved-changes bar that floats over the plan workspace.
 ///
 /// It carries the note field *inline* rather than opening a modal on save. The
@@ -608,10 +584,6 @@ class LicensingSaveBar extends StatelessWidget {
     );
   }
 }
-
-// ═══════════════════════════════════════════════════════════════════════════
-// Toolbar
-// ═══════════════════════════════════════════════════════════════════════════
 
 /// A search field and its filters on one line.
 ///

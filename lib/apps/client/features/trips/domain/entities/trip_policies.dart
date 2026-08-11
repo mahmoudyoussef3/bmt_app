@@ -10,9 +10,7 @@ extension TripPolicies on TripData {
   /// the same rule on the seat and the money.
   bool get canBeCancelled {
     if (status != TripStatus.upcoming) return false;
-    // Read off the booking axis, not the journey one: `reserved` is precisely
-    // the state `cancel_booking_by_client` still accepts. Gating on the trip's
-    // status alone offered the button on bookings the RPC would refuse.
+    
     if (bookingState != BookingState.reserved) return false;
     return paymentStatus == PaymentStatus.pending ||
         paymentStatus == PaymentStatus.underReview;

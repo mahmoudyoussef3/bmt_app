@@ -85,8 +85,7 @@ class _OtpCodeFieldState extends State<OtpCodeField> {
     return Stack(
       alignment: Alignment.center,
       children: [
-        // The real input, invisible but focusable and full-width so a tap
-        // anywhere on the row opens the keyboard.
+        
         SizedBox(
           height: 60,
           child: Opacity(
@@ -98,8 +97,7 @@ class _OtpCodeFieldState extends State<OtpCodeField> {
               autofocus: widget.enabled,
               keyboardType: TextInputType.number,
               textInputAction: TextInputAction.done,
-              // The one hint that lets the OS offer the code straight from the
-              // SMS it just received.
+              
               autofillHints: const [AutofillHints.oneTimeCode],
               showCursor: false,
               enableInteractiveSelection: false,

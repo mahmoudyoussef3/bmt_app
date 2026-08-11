@@ -78,7 +78,6 @@ NotificationDestination? resolveNotificationDestination(
   final ticketId = _string(data['ticket_id']);
   final type = notification.type.trim().toLowerCase();
 
-  // A ticket update is about the ticket, whatever else the row carries.
   if (ticketId != null) {
     return NotificationDestination(
       NotificationRoutePaths.ticketDetails,
@@ -94,12 +93,7 @@ NotificationDestination? resolveNotificationDestination(
   }
 
   if (bookingId != null) {
-    // "Your vehicle is on the way" is only actionable as a map. Everything else
-    // about a booking — received, approved, rejected, cancelled, rescheduled —
-    // is answered by the ticket itself, which is also where the rider re-pays or
-    // cancels. Trip Details keys on the *booking* id (see
-    // `SupabaseTripsDatasource.getTripById`), which is what `data.booking_id`
-    // holds.
+    
     if (_isTrackingEvent(type)) {
       return NotificationDestination(NotificationRoutePaths.tracking, {
         'bookingId': bookingId,
@@ -110,9 +104,6 @@ NotificationDestination? resolveNotificationDestination(
     });
   }
 
-  // A trip-level event with no booking id (an operator broadcast to everyone on
-  // a trip). The rider's own booking is the only thing they can act on, so send
-  // them to the list rather than to a trip they cannot open.
   if (_string(data['trip_id']) != null || type.startsWith('trip')) {
     return const NotificationDestination(NotificationRoutePaths.myTrips);
   }

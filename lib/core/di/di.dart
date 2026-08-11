@@ -5,6 +5,6 @@ final GetIt getIt = GetIt.instance;
 
 /// Call this at app start to register shared auth services used by legacy entrypoints.
 void setupLocator() {
-  // Secure storage for tokens
+  
   getIt.registerLazySingleton<SecureStorage>(() => SecureStorage());
 }

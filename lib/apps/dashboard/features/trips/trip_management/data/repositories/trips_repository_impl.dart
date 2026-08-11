@@ -44,8 +44,7 @@ class TripsRepositoryImpl implements TripsRepository {
           'لا يمكن نقل الرحلة من "${trip.status.label}" إلى "${status.label}". استخدم الخطوة التشغيلية التالية فقط.',
         );
       }
-      // Explained before the round trip so the operator gets an instruction rather
-      // than a refusal. The server runs the same gate regardless.
+      
       if (status == OperationTripStatus.openForBooking) {
         final blocker = TripPublishBlocker.evaluate(trip);
         if (blocker != null) {
@@ -116,7 +115,7 @@ class TripsRepositoryImpl implements TripsRepository {
   @override
   Future<OperationTrip> createTrip(CreateTripInput input) async {
     try {
-      // 1. Basic field validations
+      
       if (input.routeId.trim().isEmpty || input.route.trim().isEmpty) {
         throw Exception('المسار مطلوب لإنشاء رحلة.');
       }
@@ -136,28 +135,11 @@ class TripsRepositoryImpl implements TripsRepository {
         throw Exception('سعر التذكرة مطلوب ويجب أن يكون أكبر من صفر.');
       }
 
-      // 2. Cannot create trip with archived route.
-      //    Kept client-side because it is the one rule the server does not run:
-      //    office_create_trip checks the route's office, not its lifecycle.
       final routeStatus = await _datasource.getRouteStatus(input.routeId);
       if (routeStatus == 'archived') {
         throw Exception('لا يمكن جدولة رحلة لمسار مؤرشف.');
       }
 
-      // 3. The driver must actually have a bus, and it must be in service.
-      //
-      //    Re-read here rather than trusted from the form: the planner can sit open
-      //    while another operator reassigns the fleet. The server refuses the same
-      //    cases (`driver_has_no_vehicle`, `vehicle_unavailable`) and is the authority;
-      //    this exists so the operator is told which driver to fix and can be sent to
-      //    the assignment screen, instead of reading a database error.
-      //
-      //    Driver *availability* (overlapping trips) is deliberately not pre-checked
-      //    here any more. It used to be two queries comparing an exact date + departure
-      //    time, which stopped matching reality when the fleet-authority migration
-      //    replaced same-instant duplicates with service-window overlap. The wizard
-      //    pre-filters busy drivers from `getResourceConflicts`, which mirrors the
-      //    exclusion constraints exactly, and the server has the final word.
       final assignment = await _datasource.fetchDriverAssignment(
         input.driverId,
       );
@@ -189,10 +171,7 @@ class TripsRepositoryImpl implements TripsRepository {
   @override
   Future<void> deleteTrip(String tripId) async {
     try {
-      // Deleting a trip that carries bookings used to leave paid bookings pointing at
-      // nothing — operation_bookings.trip_id is ON DELETE SET NULL — with no refund
-      // trail and no word to the rider. Checked here so the operator is told to cancel
-      // instead; `trg_enforce_trip_delete_guard` refuses it regardless.
+      
       final trip = await _datasource.fetchTripById(tripId);
       if (!TripLifecycle.canDelete(trip)) {
         throw Exception(
@@ -221,13 +200,6 @@ class TripsRepositoryImpl implements TripsRepository {
 
       final current = await _datasource.fetchTripById(trip.id);
 
-      // Changing the driver changes the bus with them — the pairing is what dispatch
-      // means, and the server refuses a trip whose driver and vehicle contradict it.
-      //
-      // Leaving the driver alone leaves the vehicle *exactly* as recorded, even if that
-      // driver has since been reassigned. The trip's vehicle is a snapshot of who was
-      // paired with whom on the day it was created; re-deriving it on every save would
-      // quietly rewrite which bus carried which passengers.
       final OperationTrip outgoing;
       if (trip.driverId == current.driverId) {
         outgoing = trip.copyWith(
@@ -325,7 +297,7 @@ class TripsRepositoryImpl implements TripsRepository {
   @override
   Future<TripPricing> upsertTripPricing(TripPricing pricing) async {
     try {
-      // Validation rules
+      
       if (pricing.tripId.trim().isEmpty) {
         throw Exception('معرف الرحلة مطلوب.');
       }

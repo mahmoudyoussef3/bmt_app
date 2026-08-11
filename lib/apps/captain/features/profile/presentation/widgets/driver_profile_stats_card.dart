@@ -7,12 +7,6 @@ import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 import '../../domain/entities/driver_profile.dart';
 import 'driver_profile_metrics.dart';
 
-/// The captain's lifetime totals, carried at the foot of the identity hero.
-///
-/// They belong to the person, so they ride the hero rather than sitting below
-/// it as yet another framed card — and stating them as two glass tiles instead
-/// of stat columns split by vertical rules is what stops the profile opening on
-/// an analytics panel.
 class DriverProfileStatsCard extends StatelessWidget {
   const DriverProfileStatsCard({super.key, required this.profile});
 
@@ -57,9 +51,9 @@ class _Tile extends StatelessWidget {
           vertical: CaptainDesignTokens.s12,
         ),
         decoration: BoxDecoration(
-          color: Colors.white.withAlpha(36),
+          color: CaptainColors.primary.withAlpha(14),
           borderRadius: CaptainDesignTokens.br20,
-          border: Border.all(color: Colors.white.withAlpha(46)),
+          border: Border.all(color: CaptainColors.primary.withAlpha(30)),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -67,7 +61,7 @@ class _Tile extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(icon, size: 15, color: Colors.white.withAlpha(200)),
+                Icon(icon, size: 15, color: CaptainColors.primary),
                 const SizedBox(width: 6),
                 Flexible(
                   child: Text(
@@ -75,7 +69,7 @@ class _Tile extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: CaptainTypography.labelSmall(context).copyWith(
-                      color: Colors.white.withAlpha(215),
+                      color: CaptainColors.textSecondaryFor(context),
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -91,7 +85,7 @@ class _Tile extends StatelessWidget {
                 maxLines: 1,
                 style: CaptainTypography.headlineSmall(context).copyWith(
                   fontWeight: FontWeight.w900,
-                  color: CaptainColors.onPrimary,
+                  color: CaptainColors.textPrimaryFor(context),
                 ),
               ),
             ),

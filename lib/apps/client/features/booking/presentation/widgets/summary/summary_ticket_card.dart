@@ -84,8 +84,7 @@ class _Header extends StatelessWidget {
                     context,
                   ).copyWith(color: Colors.white, fontWeight: FontWeight.w800),
                 ),
-                // The ticket names its operator: on a marketplace the rider is
-                // buying from an office, not from the app.
+                
                 if (session.route.office.isKnown) ...[
                   const SizedBox(height: 3),
                   Row(

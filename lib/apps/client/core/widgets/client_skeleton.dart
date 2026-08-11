@@ -92,8 +92,6 @@ class _ClientSkeletonState extends State<ClientSkeleton>
   }
 }
 
-// ── Pre-built skeleton cards ───────────────────────────────────────────────
-
 class _SkeletonTripCard extends StatelessWidget {
   const _SkeletonTripCard();
 

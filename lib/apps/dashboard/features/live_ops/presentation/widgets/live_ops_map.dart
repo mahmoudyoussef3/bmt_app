@@ -98,8 +98,7 @@ class _LiveOpsMapState extends State<LiveOpsMap>
 
   void _onReady() {
     _ready = true;
-    // Fitting inside the ready callback is a frame too early for flutter_map to
-    // have a sized camera; one post-frame hop makes the first fit land.
+    
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       widget.selectedTripId != null ? _applySelection() : _fitAll();
@@ -118,8 +117,7 @@ class _LiveOpsMapState extends State<LiveOpsMap>
     }
     final fix = target?.lastFix;
     if (fix == null) {
-      // Selected a trip with no position: keep the wide view rather than
-      // flying somewhere arbitrary.
+      
       _fitAll();
       return;
     }
@@ -174,8 +172,7 @@ class _LiveOpsMapState extends State<LiveOpsMap>
                           ),
                     initialZoom: 11,
                     onMapReady: _onReady,
-                    // Tapping empty map clears the focus — the same gesture
-                    // users expect from every mapping tool.
+                    
                     onTap: (_, _) => widget.onSelect(null),
                     interactionOptions: const InteractionOptions(
                       flags:
@@ -217,8 +214,7 @@ class _LiveOpsMapState extends State<LiveOpsMap>
   Marker _vehicleMarker(LiveTrip trip, {required bool selected}) {
     final fix = trip.lastFix!;
     final health = trip.trackingHealthAt(widget.now);
-    // A selected marker needs room for its label; sizing every marker for the
-    // widest case would make a busy map unreadable.
+    
     final size = selected ? 132.0 : 44.0;
 
     return Marker(
@@ -274,8 +270,7 @@ class _VehicleMarker extends StatelessWidget {
 
     return Semantics(
       button: true,
-      // The marker's meaning must survive without colour vision: route, health
-      // and lateness are all spoken.
+      
       label:
           '${trip.routeName}، التتبّع ${health.label}'
           '${overdue ? '، متأخرة عن الانطلاق' : ''}',
@@ -364,8 +359,7 @@ class _MapLegend extends StatelessWidget {
           border: Border.all(color: MapStyle.border(context)),
           boxShadow: MapStyle.shadow(context),
         ),
-        // Wrap, not Row: at large text scales or a narrow panel the key must
-        // stack instead of overflowing the map.
+        
         child: Wrap(
           spacing: 10,
           runSpacing: 4,

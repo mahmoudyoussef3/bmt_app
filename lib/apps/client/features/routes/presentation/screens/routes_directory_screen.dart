@@ -43,8 +43,7 @@ class RoutesDirectoryScreen extends StatelessWidget {
               count: loaded == null
                   ? null
                   : l10n.routes_countLabel(loaded.routes.length),
-              // A catalog with nothing in it has nothing to search: the box
-              // would only ever return the same empty list.
+              
               searchBand: loaded != null && loaded.routes.isNotEmpty
                   ? _SearchBand(state: loaded)
                   : null,

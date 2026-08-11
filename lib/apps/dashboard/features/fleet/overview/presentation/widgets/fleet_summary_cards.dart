@@ -49,7 +49,7 @@ class FleetSummaryCards extends StatelessWidget {
           detail: 'منتهية أو تقارب الانتهاء',
           value: '$followUp',
           icon: Icons.fact_check_rounded,
-          // Only reads as an alert when there is actually something to chase.
+          
           color: followUp > 0 ? palette.negative : palette.neutral,
         ),
       ],

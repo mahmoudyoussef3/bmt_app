@@ -14,9 +14,6 @@ import 'package:bmt_app/core/widgets/tracking/live_vehicle_layer.dart';
 import 'captain_map_stop_markers.dart';
 import 'captain_map_vehicle.dart';
 
-/// The captain map's stack of layers: the shared EasyWay basemap, the route
-/// split into covered/remaining, the ordered stop markers with the active
-/// pickup raised, and the captain's own vehicle.
 List<Widget> buildCaptainMapLayers({
   required BuildContext context,
   required List<LatLng> route,
@@ -65,8 +62,6 @@ List<Widget> buildCaptainMapLayers({
   ];
 }
 
-/// Splits the drawn path at the engine's route fraction so the covered part
-/// recedes and the road ahead stands out.
 (List<LatLng>, List<LatLng>) _split(
   List<LatLng> route,
   RouteProgressSnapshot? progress,

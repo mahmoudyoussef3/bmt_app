@@ -6,7 +6,6 @@ import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 import '../../domain/entities/passenger.dart';
 import 'passenger_status_presentation.dart';
 
-/// Status filters for the manifest. Selecting the active chip clears it.
 class PassengerFilterChips extends StatelessWidget {
   const PassengerFilterChips({
     super.key,

@@ -33,8 +33,6 @@ abstract final class DashboardColors {
   static bool _isDark(BuildContext context) =>
       Theme.of(context).brightness == Brightness.dark;
 
-  // ── Chrome ─────────────────────────────────────────────────────────────────
-
   /// The page behind every module.
   static Color page(BuildContext context) =>
       _isDark(context) ? AppDarkColors.background : AppLightColors.background;
@@ -96,8 +94,6 @@ abstract final class DashboardColors {
   /// to carry it at AA.
   static Color onHero(BuildContext context) => AppLightColors.onFilled;
 
-  // ── Lines ──────────────────────────────────────────────────────────────────
-
   static Color border(BuildContext context) =>
       _isDark(context) ? AppDarkColors.border : AppLightColors.border;
 
@@ -112,8 +108,6 @@ abstract final class DashboardColors {
   static Color borderStrong(BuildContext context) => _isDark(context)
       ? AppDarkColors.borderStrong
       : AppLightColors.borderStrong;
-
-  // ── Ink ────────────────────────────────────────────────────────────────────
 
   static Color ink(BuildContext context) =>
       _isDark(context) ? AppDarkColors.onSurface : AppLightColors.onSurface;
@@ -138,8 +132,6 @@ abstract final class DashboardColors {
   static Color accentFill(BuildContext context) =>
       _isDark(context) ? AppDarkColors.primary : AppLightColors.primary;
 
-  // ── Tables ─────────────────────────────────────────────────────────────────
-
   /// The sticky header band of a data table.
   static Color tableHeader(BuildContext context) => _isDark(context)
       ? AppDarkColors.surfaceHighest
@@ -155,8 +147,6 @@ abstract final class DashboardColors {
   /// The hairline between two table rows.
   static Color tableDivider(BuildContext context) => divider(context);
 
-  // ── Depth ──────────────────────────────────────────────────────────────────
-
   /// A panel lifted off the page.
   static List<BoxShadow> panelShadow(BuildContext context) =>
       _isDark(context) ? AppDarkColors.softShadow : AppLightColors.softShadow;
@@ -166,8 +156,6 @@ abstract final class DashboardColors {
       _isDark(context)
       ? AppDarkColors.floatingShadow
       : AppLightColors.floatingShadow;
-
-  // ── Status ─────────────────────────────────────────────────────────────────
 
   /// The brightness-correct colours for one of the six semantic status roles.
   ///

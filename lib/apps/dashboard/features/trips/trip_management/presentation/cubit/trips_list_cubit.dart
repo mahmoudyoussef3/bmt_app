@@ -402,8 +402,6 @@ class TripsListCubit extends Cubit<TripsListState> {
     }
   }
 
-  // ── realtime sync ──────────────────────────────────────────────────────
-
   void _subscribeToChanges() {
     _tripsSub?.cancel();
     _tripsSub = _watchTrips().listen((_) {
@@ -415,8 +413,6 @@ class TripsListCubit extends Cubit<TripsListState> {
     }, onError: (_) {});
   }
 
-  // Refresh the full trips list every 30 s as a fallback in case a realtime
-  // event is missed (matches live_trips_cubit's periodic safety net).
   void _startPeriodicRefresh() {
     _refreshTimer?.cancel();
     _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) async {
@@ -433,7 +429,7 @@ class TripsListCubit extends Cubit<TripsListState> {
       if (current is! TripsListLoaded) return;
       emit(current.copyWith(trips: trips));
     } catch (_) {
-      // Preserve the last loaded list if a background refresh fails.
+      
     } finally {
       _refreshingFromSource = false;
     }

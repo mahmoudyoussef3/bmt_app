@@ -60,9 +60,7 @@ class _AuthTextFieldState extends State<AuthTextField> {
       obscureText: widget.isPassword && _obscured,
       autocorrect: !_isEmail && !widget.isPassword,
       enableSuggestions: !_isEmail && !widget.isPassword,
-      // Emails and passwords are read left to right whatever the app's
-      // language; inheriting Arabic RTL puts an `@` or a trailing symbol at the
-      // wrong end of what the rider typed.
+      
       textDirection: _isEmail || widget.isPassword ? TextDirection.ltr : null,
       validator: widget.validator,
       onChanged: widget.onChanged,

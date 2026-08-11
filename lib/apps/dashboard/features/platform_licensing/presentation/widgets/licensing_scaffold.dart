@@ -51,9 +51,7 @@ class LicensingScreenFrame extends StatelessWidget {
               padding: const EdgeInsets.all(AppSpacing.large),
               child: builder(context, state),
             ),
-            // A thin top-edge bar rather than a blocking overlay: a plan save
-            // takes under a second, and greying the console out for it makes
-            // the operator lose their place in a long feature list.
+            
             if (state.isBusy)
               const Positioned(
                 top: 0,

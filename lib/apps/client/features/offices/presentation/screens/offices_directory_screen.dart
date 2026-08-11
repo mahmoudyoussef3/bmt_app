@@ -43,8 +43,7 @@ class OfficesDirectoryScreen extends StatelessWidget {
                 count: loaded == null
                     ? null
                     : l10n.offices_countLabel(loaded.offices.length),
-                // A directory with nothing in it has nothing to search: the box
-                // would only ever return the same empty list.
+                
                 searchBand: loaded != null && loaded.offices.isNotEmpty
                     ? OfficesSearchBand(state: loaded)
                     : null,

@@ -33,8 +33,7 @@ class HomeUpcomingTripCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // A departure the rider already holds a seat on is outlined in its booking
-    // status colour, so they spot it in the feed before they read a word.
+    
     final borderColor = trip.isBooked
         ? trip.bookedStatus!.accent.withAlpha(80)
         : ClientColors.borderFor(context);

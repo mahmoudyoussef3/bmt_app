@@ -156,9 +156,7 @@ class _DirectoryTile extends StatelessWidget {
                               color: palette.active,
                             ),
                           ],
-                          // A waiting request is surfaced in the list, not only
-                          // on the detail screen: an operator scanning the
-                          // directory must be able to see where the queue is.
+                          
                           if (entry.pendingRefunds > 0) ...[
                             const SizedBox(width: 6),
                             Container(

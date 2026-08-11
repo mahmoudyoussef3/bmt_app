@@ -71,8 +71,7 @@ class PlatformOfficeDetailsPanel extends StatelessWidget {
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
-                // A refresh that failed while the panel already had content:
-                // say so, but keep showing what we have.
+                
                 if (error != null) ...[
                   _InlineNotice(message: error!, isError: true),
                   const SizedBox(height: AppSpacing.small),
@@ -81,8 +80,7 @@ class PlatformOfficeDetailsPanel extends StatelessWidget {
                 const SizedBox(height: AppSpacing.medium),
                 _OperationalSection(details: loaded),
                 const SizedBox(height: AppSpacing.medium),
-                // Sits directly under the inventory counts, because "6 vehicles"
-                // and "0 bookings in 30 days" only mean something read together.
+                
                 if (metrics case final m?) ...[
                   _PerformanceSection(
                     metrics: m,
@@ -154,8 +152,6 @@ class _PanelHeader extends StatelessWidget {
     );
   }
 }
-
-// ── 1. Identity ─────────────────────────────────────────────────────────────
 
 class _IdentitySection extends StatelessWidget {
   const _IdentitySection({required this.details});
@@ -299,8 +295,6 @@ class _ProfileCompleteness extends StatelessWidget {
   }
 }
 
-// ── 2. Operational ──────────────────────────────────────────────────────────
-
 class _OperationalSection extends StatelessWidget {
   const _OperationalSection({required this.details});
 
@@ -442,10 +436,7 @@ class _PerformanceSection extends StatelessWidget {
           ),
           _KeyValue(label: 'أول حجز', value: _date(metrics.firstBookingAt)),
           const SizedBox(height: AppSpacing.small),
-          // The workload the office owes someone. Grouped apart from the
-          // performance figures because these are not results — they are things
-          // still waiting on a human, and the office's own dashboard is where
-          // they get cleared.
+          
           Wrap(
             spacing: AppSpacing.large,
             runSpacing: AppSpacing.xSmall,
@@ -527,8 +518,6 @@ class _Pending extends StatelessWidget {
   }
 }
 
-// ── 3 + 4. Marketplace, and the card passengers actually see ────────────────
-
 class _MarketplaceSection extends StatelessWidget {
   const _MarketplaceSection({
     required this.details,
@@ -578,8 +567,6 @@ class _MarketplaceSection extends StatelessWidget {
           _KeyValue(label: 'تاريخ العرض', value: _date(office.listedAt)),
           const SizedBox(height: AppSpacing.medium),
 
-          // The preview, or the explanation of its absence. Both are read from
-          // the same sanitised view the Client app reads.
           Text(
             'كما يراه العميل',
             style: Theme.of(
@@ -811,8 +798,6 @@ class _ListingActions extends StatelessWidget {
   }
 }
 
-// ── 5. Operators ────────────────────────────────────────────────────────────
-
 /// Who can sign in to this office's dashboard.
 ///
 /// Read-only, and carries no email or password field — see
@@ -890,8 +875,6 @@ class _OperatorsSection extends StatelessWidget {
     );
   }
 }
-
-// ── Shared bits ─────────────────────────────────────────────────────────────
 
 class _Section extends StatelessWidget {
   const _Section({

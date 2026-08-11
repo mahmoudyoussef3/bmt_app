@@ -35,8 +35,7 @@ class MySubscriptionScreen extends StatelessWidget {
       body: BlocBuilder<MySubscriptionCubit, MySubscriptionState>(
         builder: (context, state) {
           return switch (state) {
-            // A skeleton in the shape of the loaded stack, so the screen does
-            // not jump from a centred spinner to a full list.
+            
             MySubscriptionLoading() => ListView(
               padding: const EdgeInsets.all(ClientSpacing.md),
               children: const [

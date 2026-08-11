@@ -22,8 +22,7 @@ enum BookingSortField {
     BookingSortField.passenger => a.passengerName.compareTo(b.passengerName),
     BookingSortField.route => a.route.compareTo(b.route),
     BookingSortField.amount => a.paymentAmount.compareTo(b.paymentAmount),
-    // Trip dates are ISO `yyyy-MM-dd` strings, so lexical order is chronological
-    // order; the departure time breaks ties within the same day.
+    
     BookingSortField.tripDate => '${a.date} ${a.tripTime}'.compareTo(
       '${b.date} ${b.tripTime}',
     ),

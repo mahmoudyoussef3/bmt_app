@@ -5,7 +5,6 @@ import '../../features/notifications/presentation/cubit/captain_notification_bad
 import '../theme/captain_colors.dart';
 import '../theme/captain_typography.dart';
 
-/// Bell with the live unread count from [CaptainNotificationBadgeCubit].
 class CaptainNotificationBell extends StatelessWidget {
   const CaptainNotificationBell({
     super.key,

@@ -100,15 +100,12 @@ class DashboardWebApp extends StatelessWidget {
             title: AppFlavorConfig.current.appName,
             localizationsDelegates: AppLocalizations.localizationsDelegates,
             supportedLocales: AppLocalizations.supportedLocales,
-            // Pinned, not read from LocaleCubit: the shared flavor bootstrap
-            // provides that cubit with an English default, and the dashboard
-            // must stay Arabic regardless of it.
+            
             locale: const Locale(_dashboardLocale),
             theme: DashboardAppTheme.light(),
             darkTheme: DashboardAppTheme.dark(),
             themeMode: themeState.themeMode,
-            // Also covers overlays that mount above the locale-derived
-            // Directionality — dialogs, menus, tooltips, snack bars.
+            
             builder: (context, child) => Directionality(
               textDirection: TextDirection.rtl,
               child: child ?? const SizedBox.shrink(),

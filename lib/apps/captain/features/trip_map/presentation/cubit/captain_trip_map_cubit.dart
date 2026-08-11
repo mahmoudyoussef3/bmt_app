@@ -23,13 +23,6 @@ import '../../domain/usecases/ensure_location_ready_usecase.dart';
 import '../../domain/usecases/watch_captain_position_usecase.dart';
 import 'captain_trip_map_state.dart';
 
-/// Drives the captain's live trip map.
-///
-/// It composes four live inputs — the device's own GPS, the manifest, the
-/// trip's status/arrival snapshot, and the shared route-progress engine — into
-/// one state: where the captain is, who they are picking up next, and how far
-/// that is. It writes nothing to `trip_live_locations`; the trip-execution
-/// screen underneath remains the sole publisher that feeds the client's map.
 class CaptainTripMapCubit extends Cubit<CaptainTripMapState> {
   CaptainTripMapCubit({
     required EnsureLocationReadyUseCase ensureLocationReady,
@@ -46,9 +39,7 @@ class CaptainTripMapCubit extends Cubit<CaptainTripMapState> {
        _updatePassengerStatus = updatePassengerStatus,
        _watchTripSnapshot = watchTripSnapshot,
        _markStationArrived = markStationArrived,
-       super(
-         CaptainTripMapState.initial('', CaptainMapPhase.boarding),
-       );
+       super(CaptainTripMapState.initial('', CaptainMapPhase.boarding));
 
   final EnsureLocationReadyUseCase _ensureLocationReady;
   final WatchCaptainPositionUseCase _watchCaptainPosition;
@@ -81,8 +72,6 @@ class CaptainTripMapCubit extends Cubit<CaptainTripMapState> {
     _watchPassengers(trip.id);
     _startTicker();
   }
-
-  // ── Location ──────────────────────────────────────────────────────────────
 
   Future<void> _startLocation() async {
     final gate = await _ensureLocationReady();
@@ -129,9 +118,6 @@ class CaptainTripMapCubit extends Cubit<CaptainTripMapState> {
 
   void _onLocationError() {
     if (isClosed) return;
-    // A feed that was flowing and stopped is "lost"; one that never started is
-    // "unavailable". Either way the captain is told, not left believing the
-    // map is tracking when it isn't.
     emit(
       state.copyWith(
         gpsHealth: _hadFix ? GpsHealth.lost : GpsHealth.unavailable,
@@ -142,26 +128,21 @@ class CaptainTripMapCubit extends Cubit<CaptainTripMapState> {
     );
   }
 
-  /// Lets the captain re-arm the feed after fixing a denied permission or a
-  /// switched-off service, without leaving and reopening the map.
   Future<void> retryLocation() => _startLocation();
-
-  // ── Manifest / pickup plan ─────────────────────────────────────────────────
 
   Future<void> _loadPassengers() async {
     try {
       _passengers = await _getTripPassengers(_trip.id);
       if (isClosed) return;
       _emitPlan();
-    } catch (_) {
-      // The map still works without the manifest; the pickup panel simply says
-      // it is loading, and the passenger watch below will fill it in.
-    }
+    } catch (_) {}
   }
 
   void _watchPassengers(String tripId) {
     _passengersSub?.cancel();
-    _passengersSub = _watchTripPassengers(tripId).listen((_) => _reloadPassengers());
+    _passengersSub = _watchTripPassengers(
+      tripId,
+    ).listen((_) => _reloadPassengers());
   }
 
   Future<void> _reloadPassengers() async {
@@ -170,13 +151,14 @@ class CaptainTripMapCubit extends Cubit<CaptainTripMapState> {
       if (isClosed) return;
       _passengers = passengers;
       _emitPlan();
-    } catch (_) {
-      // A dropped refresh keeps the current plan on screen.
-    }
+    } catch (_) {}
   }
 
   void _emitPlan() {
-    final plan = PickupPlanner.plan(stops: _trip.stops, passengers: _passengers);
+    final plan = PickupPlanner.plan(
+      stops: _trip.stops,
+      passengers: _passengers,
+    );
     emit(
       state.copyWith(
         pickup: plan,
@@ -187,24 +169,17 @@ class CaptainTripMapCubit extends Cubit<CaptainTripMapState> {
     );
   }
 
-  /// Distance/ETA to the active pickup stop, read from [snapshot] by the stop's
-  /// name — the shared engine's own `stopByName`. Explicitly parameterised so a
-  /// caller that just produced a fresh snapshot reads the new one, not the state
-  /// object it is about to replace.
   StopProgress? _activePickupProgress(
     RouteProgressSnapshot? snapshot,
     PickupPlan plan,
   ) => snapshot?.stopByName(plan.active?.name);
 
-  // ── Trip snapshot (status + arrival floor) ─────────────────────────────────
-
   void _watchSnapshot(AssignedTrip trip) {
     _snapshotSub?.cancel();
-    _snapshotSub =
-        _watchTripSnapshot(
-          tripId: trip.id,
-          routePointCount: trip.stops.length,
-        ).listen(_onSnapshot, onError: (_) {});
+    _snapshotSub = _watchTripSnapshot(
+      tripId: trip.id,
+      routePointCount: trip.stops.length,
+    ).listen(_onSnapshot, onError: (_) {});
   }
 
   void _onSnapshot(TripExecutionSnapshot snapshot) {
@@ -215,8 +190,6 @@ class CaptainTripMapCubit extends Cubit<CaptainTripMapState> {
       _engine.seedVisited(snapshot.arrivedStationsCount);
     }
 
-    // A finished trip stops tracking: the vehicle no longer publishes and no
-    // longer needs the device sensor. Matches the trip-execution lifecycle.
     if (phase.isFinished) _positionSub?.cancel();
 
     final progress = _engine.snapshot(DateTime.now());
@@ -231,19 +204,12 @@ class CaptainTripMapCubit extends Cubit<CaptainTripMapState> {
     );
   }
 
-  // ── Pickup actions ─────────────────────────────────────────────────────────
-
-  /// Confirms a rider has boarded (`reserved → confirmed`). Optimistic, then
-  /// reconciled by the manifest watch; the derivation re-runs, so resolving the
-  /// last pending rider at a stop promotes the next stop automatically.
   Future<void> confirmBoarded(String tripPassengerId) =>
       _writeStatus(tripPassengerId, PassengerBoardingStatus.boarded);
 
-  /// Marks a rider a no-show after they were waited for (`reserved → no_show`).
   Future<void> markAbsent(String tripPassengerId) =>
       _writeStatus(tripPassengerId, PassengerBoardingStatus.absent);
 
-  /// Returns a rider to the waiting list (`no_show/confirmed → reserved`).
   Future<void> markPending(String tripPassengerId) =>
       _writeStatus(tripPassengerId, PassengerBoardingStatus.pending);
 
@@ -269,16 +235,11 @@ class CaptainTripMapCubit extends Cubit<CaptainTripMapState> {
     } catch (error) {
       if (isClosed) return;
       _passengers = rollback;
-      emit(
-        state.copyWith(pendingRiderId: null, actionError: _readable(error)),
-      );
+      emit(state.copyWith(pendingRiderId: null, actionError: _readable(error)));
       _emitPlan();
     }
   }
 
-  /// Reports the captain has reached the active pickup stop, writing the shared
-  /// `trip_events` arrival so the client and dashboard see it too. Silent on the
-  /// main flow: the snapshot watch folds the arrival back in as the floor.
   Future<void> markArrivedAtActivePickup() async {
     final active = state.pickup.active;
     if (active == null || active.stopId == null) return;
@@ -299,10 +260,6 @@ class CaptainTripMapCubit extends Cubit<CaptainTripMapState> {
 
   void clearActionError() => emit(state.copyWith(actionError: null));
 
-  // ── Ticker ──────────────────────────────────────────────────────────────────
-
-  /// Re-reads the engine so ETAs stay honest between fixes (a distance-filtered
-  /// feed goes quiet at a stop). Touches no network.
   void _startTicker() {
     _ticker?.cancel();
     _ticker = Timer.periodic(const Duration(seconds: 20), (_) {
@@ -316,8 +273,6 @@ class CaptainTripMapCubit extends Cubit<CaptainTripMapState> {
       );
     });
   }
-
-  // ── Helpers ──────────────────────────────────────────────────────────────────
 
   RouteProgressEngine _buildEngine(AssignedTrip trip, CaptainMapPhase phase) {
     final stops = <RouteStop>[
@@ -342,7 +297,6 @@ class CaptainTripMapCubit extends Cubit<CaptainTripMapState> {
     AssignedTripStatus.inProgress => CaptainMapPhase.underway,
     AssignedTripStatus.completed => CaptainMapPhase.completed,
     AssignedTripStatus.boarding => CaptainMapPhase.boarding,
-    // The map is only opened on a live trip; anything earlier reads as boarding.
     AssignedTripStatus.scheduled ||
     AssignedTripStatus.openForBooking => CaptainMapPhase.boarding,
   };
@@ -352,10 +306,7 @@ class CaptainTripMapCubit extends Cubit<CaptainTripMapState> {
         TripExecutionStatus.inProgress => AssignedTripStatus.inProgress,
         TripExecutionStatus.completed => AssignedTripStatus.completed,
         TripExecutionStatus.boarding => AssignedTripStatus.boarding,
-        TripExecutionStatus.openForBooking =>
-          AssignedTripStatus.openForBooking,
-        // A cancelled trip has no assigned-status peer; freeze it as completed
-        // so the map stops tracking and reads as finished.
+        TripExecutionStatus.openForBooking => AssignedTripStatus.openForBooking,
         TripExecutionStatus.cancelled => AssignedTripStatus.completed,
         TripExecutionStatus.scheduled => AssignedTripStatus.scheduled,
       };
@@ -368,7 +319,8 @@ class CaptainTripMapCubit extends Cubit<CaptainTripMapState> {
   };
 
   String _gateMessage(LocationGate gate) => switch (gate) {
-    LocationGate.serviceDisabled => 'خدمة الموقع متوقفة. فعّلها من إعدادات الهاتف.',
+    LocationGate.serviceDisabled =>
+      'خدمة الموقع متوقفة. فعّلها من إعدادات الهاتف.',
     LocationGate.denied => 'يلزم السماح بالوصول للموقع لعرض موقعك على الخريطة.',
     LocationGate.deniedForever =>
       'صلاحية الموقع مرفوضة نهائياً. فعّلها من إعدادات التطبيق.',

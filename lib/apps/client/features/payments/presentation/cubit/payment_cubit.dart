@@ -55,9 +55,6 @@ class PaymentCubit extends Cubit<PaymentState> {
       ),
     );
 
-    // A code that fails to validate is a rejected code, not a broken checkout:
-    // the rider can still pay full fare, so this never surfaces as an error
-    // state that would take the pay button away.
     var discount = 0;
     try {
       discount = await _applyPromoCode(normalized);
@@ -65,7 +62,6 @@ class PaymentCubit extends Cubit<PaymentState> {
       discount = 0;
     }
 
-    // Re-read after the async gap in case the rider moved on.
     final latest = state;
     if (latest is! PaymentCheckoutLoaded) return;
     if (latest.promoCode != normalized) return;

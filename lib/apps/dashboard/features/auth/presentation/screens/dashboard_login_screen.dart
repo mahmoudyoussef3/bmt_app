@@ -114,9 +114,7 @@ class _DashboardLoginScreenState extends State<DashboardLoginScreen> {
                           textInputAction: TextInputAction.next,
                           autofillHints: const [AutofillHints.username],
                           decoration: const InputDecoration(
-                            // Self-registered owners never chose a name — the server
-                            // derived one from their email — so the address they signed
-                            // up with is also a valid login.
+                            
                             labelText: 'الاسم أو البريد الإلكتروني',
                             prefixIcon: Icon(Icons.person_outline_rounded),
                           ),

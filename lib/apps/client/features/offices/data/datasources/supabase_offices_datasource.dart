@@ -68,9 +68,6 @@ class SupabaseOfficesDatasource implements OfficesDatasource {
         .order('departure_time')
         .limit(30);
 
-    // Re-applied client-side like every other trip surface: the server filter
-    // is the fast path, the predicate is the guarantee. A row whose status
-    // drifted between the query and the render can never reach a tile.
     return rows
         .where(BookableTrip.isOffered)
         .map((row) => OfficeTripModel.fromJson(row))

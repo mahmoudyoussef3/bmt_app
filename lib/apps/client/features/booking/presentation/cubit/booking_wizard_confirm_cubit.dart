@@ -105,9 +105,7 @@ class BookingWizardConfirmCubit extends Cubit<BookingWizardConfirmState> {
     }
 
     _emit(const BookingWizardVerifyingPayment());
-    // A rider who walked away from the gateway gets one check, not a wait:
-    // there is no callback coming to wait for. Only a claimed success is
-    // worth holding the screen for while Paymob's callback catches up.
+    
     final settlement = await _awaitCardSettlement(
       bookingId,
       timeout: reportedPaid ? null : Duration.zero,
@@ -125,11 +123,6 @@ class BookingWizardConfirmCubit extends Cubit<BookingWizardConfirmState> {
       return;
     }
 
-    // Neither settled nor declined. If the rider was sent back on a success
-    // redirect, their card may well have been charged and Paymob's callback is
-    // simply late — telling them the payment failed would be a lie that costs
-    // them their seat. Confirm the booking as pending verification instead,
-    // and let the callback finish the job.
     if (reportedPaid) {
       _emit(BookingWizardConfirmed(record: record, requiresVerification: true));
       return;

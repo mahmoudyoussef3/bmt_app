@@ -72,7 +72,7 @@ class _HealthDotState extends State<_HealthDot>
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1100),
-      // A non-pulsing dot must render fully opaque, so the resting value is 1.
+      
       value: 1,
     );
     if (widget.pulsing) _controller.repeat(reverse: true);

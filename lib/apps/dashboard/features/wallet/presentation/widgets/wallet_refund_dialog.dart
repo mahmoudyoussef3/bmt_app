@@ -59,9 +59,7 @@ class _WalletRefundDialogState extends State<WalletRefundDialog> {
   @override
   void initState() {
     super.initState();
-    // Selecting the first booking is a state change, so it happens here rather
-    // than inside `build` — a `_booking ??= …` in a FutureBuilder mutates state
-    // during layout and re-runs on every rebuild.
+    
     _bookingsFuture = widget.cubit
         .refundableBookings(widget.customer.id)
         .then((bookings) {

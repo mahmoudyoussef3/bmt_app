@@ -24,8 +24,7 @@ class FinanceScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // No load() here: the shell creates the cubit with `..load()` already
-    // applied. Calling it again fired a second full fetch on every visit.
+    
     return BlocConsumer<FinanceCubit, FinanceState>(
       listenWhen: (previous, current) =>
           current is FinanceLoaded && current.actionMessage != null,

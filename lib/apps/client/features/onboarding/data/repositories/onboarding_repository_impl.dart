@@ -11,7 +11,7 @@ class OnboardingRepositoryImpl implements OnboardingRepository {
     try {
       return await _localDataSource.hasSeenOnboarding();
     } catch (_) {
-      return false; // Default to false if error occurs
+      return false; 
     }
   }
 

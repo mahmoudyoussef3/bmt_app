@@ -49,8 +49,7 @@ class TrackingSubscriptions {
     _changesTripId = tripId;
     _changesSub = _watchTrackingTrip(tripId).listen(
       (_) {
-        // One operator action can touch several tables at once; debounce so a
-        // single logical change costs one refetch, not five.
+        
         _debounce?.cancel();
         _debounce = Timer(const Duration(milliseconds: 250), onTripChanged);
       },

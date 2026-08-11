@@ -67,8 +67,7 @@ class _RoutePlaceFieldState extends State<RoutePlaceField> {
   @override
   void didUpdateWidget(RoutePlaceField oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Only adopt external changes; echoing the operator's own keystrokes back
-    // would move the caret to the end of the line on every character.
+    
     if (widget.value != _controller.text) {
       _appliedExternally = widget.value;
       _controller.value = TextEditingValue(
@@ -93,7 +92,6 @@ class _RoutePlaceFieldState extends State<RoutePlaceField> {
     final query = value.text.trim();
     if (query.length < 3) return const <GeoPlace>[];
 
-    // Debounce: pause, then drop this lookup if a newer keystroke replaced it.
     await Future<void>.delayed(const Duration(milliseconds: 320));
     if (_latestQuery != value.text) return const <GeoPlace>[];
     try {

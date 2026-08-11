@@ -31,10 +31,7 @@ List<Marker> buildTrackingStopMarkers({
     if (!stop.stop.hasCoordinates) continue;
 
     final isDestination = i == stops.length - 1;
-    // The stops that anchor the rider's mental picture of the trip: where it
-    // began, where it ends, and where the bus is or is going. Everything else
-    // — including stops already behind the bus — is detail that only earns
-    // its pixels once you zoom in.
+    
     final isAnchor = i == 0 ||
         isDestination ||
         stop.status == StopVisitStatus.next ||

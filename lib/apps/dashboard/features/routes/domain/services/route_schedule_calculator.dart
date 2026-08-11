@@ -31,8 +31,7 @@ class RouteScheduleCalculator {
     var previousDeparture = 0.0;
 
     for (var i = 0; i < stops; i++) {
-      // Arrival = departure from the previous point + travel on the leg into
-      // this one. The first point has no preceding leg (arrival 00:00).
+      
       final travel = (i > 0 && i - 1 < legs.length)
           ? legs[i - 1].durationSeconds
           : 0;

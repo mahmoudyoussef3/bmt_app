@@ -32,7 +32,7 @@ class LocaleCubit extends Cubit<Locale> {
         code = stored;
       }
     } catch (_) {
-      // Unreadable store — fall through to the default.
+      
     }
     Intl.defaultLocale = code;
     emit(Locale(code));
@@ -47,7 +47,7 @@ class LocaleCubit extends Cubit<Locale> {
     try {
       await _storage.write(key: _storageKey, value: languageCode);
     } catch (_) {
-      // The switch already applied in-session; it just won't survive a restart.
+      
     }
   }
 }

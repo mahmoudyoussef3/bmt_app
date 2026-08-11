@@ -210,8 +210,7 @@ class _RefundTile extends StatelessWidget {
                   icon: Icons.account_balance_rounded,
                   label: refund.settlement!.label,
                 ),
-              // A batch refund is auditable and reversible as a unit, so its
-              // membership is worth showing on the row.
+              
               if (refund.batchId != null)
                 _Meta(icon: Icons.layers_outlined, label: 'ضمن استرداد جماعي'),
             ],

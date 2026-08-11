@@ -114,17 +114,12 @@ void registerCaptainDependencies() {
     );
   }
 
-  // Register Core Networking (Dio, Retrofit ApiService)
-  // Registered before every datasource: they are lazy singletons built before
-  // sign-in, so they hold this and read the office per query.
   if (!captainGetIt.isRegistered<CaptainOfficeSession>()) {
     captainGetIt.registerLazySingleton<CaptainOfficeSession>(
       CaptainOfficeSession.new,
     );
   }
 
-  // The single resolution point for "who is this captain". Registered next to the
-  // session it fills, and before every datasource that reads it.
   if (!captainGetIt.isRegistered<CaptainIdentityProvider>()) {
     captainGetIt.registerLazySingleton<CaptainIdentityProvider>(
       () => CaptainIdentityProvider(
@@ -157,8 +152,6 @@ void _registerThemeDependencies() {
       () => const CaptainThemeRepository(),
     );
   }
-  // Singleton — the root MaterialApp and the Profile settings sheet must
-  // share one instance so changing the theme there updates the app live.
   if (!captainGetIt.isRegistered<CaptainThemeCubit>()) {
     captainGetIt.registerLazySingleton<CaptainThemeCubit>(
       () => CaptainThemeCubit(captainGetIt<CaptainThemeRepository>()),
@@ -473,8 +466,6 @@ void _registerTripMapDependencies() {
       ),
     );
   }
-  // Composition-root cubit: pulls the manifest and trip-execution use cases
-  // already registered above rather than duplicating their data access.
   if (!captainGetIt.isRegistered<CaptainTripMapCubit>()) {
     captainGetIt.registerFactory<CaptainTripMapCubit>(
       () => CaptainTripMapCubit(
@@ -509,14 +500,6 @@ void _registerLiveLocationDependencies() {
       () => SendLocationUpdateUseCase(captainGetIt<LocationRepository>()),
     );
   }
-  // A singleton, unlike every other cubit here, and deliberately so: this one
-  // owns the trip's position-reporting timer. A factory registration handed a
-  // fresh timer to every widget that asked, so two live publishers could exist
-  // at once (double the GPS wake-ups, double the inserts), and the running one
-  // died with whichever widget happened to be holding it. Position reporting
-  // belongs to the trip, so it is registered for the app's lifetime and the
-  // screen only ever borrows it — `TripLocationAutoShare` provides it with
-  // `BlocProvider.value` so no disposal can close it.
   if (!captainGetIt.isRegistered<LiveLocationCubit>()) {
     captainGetIt.registerLazySingleton<LiveLocationCubit>(
       () => LiveLocationCubit(
@@ -621,7 +604,6 @@ void _registerNotificationsDependencies() {
       ),
     );
   }
-  // Singleton badge cubit — always alive.
   if (!captainGetIt.isRegistered<CaptainNotificationBadgeCubit>()) {
     captainGetIt.registerLazySingleton<CaptainNotificationBadgeCubit>(
       () => CaptainNotificationBadgeCubit(

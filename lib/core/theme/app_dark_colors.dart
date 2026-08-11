@@ -39,21 +39,20 @@ import 'package:flutter/material.dart';
 /// contrast test its role is actually held to. [danger]/[dangerInk] split for
 /// the same reason.
 abstract final class AppDarkColors {
-  // ── Surfaces ───────────────────────────────────────────────────────────────
-
+  
   /// Deeper than the page. For content that should read as cut *into* the
   /// surface — map backdrops, progress tracks, inset wells.
   static const Color canvas = Color(0xFF0B1220);
 
   /// The page. Everything else in this file is measured against it.
-  static const Color background = Color(0xFF0F172A); // Slate 900
+  static const Color background = Color(0xFF0F172A); 
 
   /// A half-step above [background], for quiet bands and gradient tails that
   /// should separate from the page without becoming a card.
   static const Color surfaceLow = Color(0xFF172033);
 
   /// Cards, grouped lists, bottom sheets, dialogs, app bars, nav bars.
-  static const Color surface = Color(0xFF1E293B); // Slate 800
+  static const Color surface = Color(0xFF1E293B); 
 
   /// A tile nested inside a [surface] card, which cannot repeat its parent's
   /// colour without disappearing into it.
@@ -61,25 +60,21 @@ abstract final class AppDarkColors {
 
   /// The top of the ladder: input fills, secondary buttons, skeleton bases,
   /// neutral chips.
-  static const Color surfaceHighest = Color(0xFF334155); // Slate 700
-
-  // ── Ink ────────────────────────────────────────────────────────────────────
+  static const Color surfaceHighest = Color(0xFF334155); 
 
   /// Titles, values, anything the user came to the screen to read.
-  static const Color onSurface = Color(0xFFF8FAFC); // Slate 50
+  static const Color onSurface = Color(0xFFF8FAFC); 
 
   /// Labels, captions, supporting detail. 5.97:1 on [surface] — muted, still
   /// comfortably readable.
-  static const Color onSurfaceMuted = Color(0xFF94A3B8); // Slate 400
+  static const Color onSurfaceMuted = Color(0xFF94A3B8); 
 
   /// Disabled text, placeholders, and the third line of a row. Below the AA
   /// floor by design: never use it for information the user must read.
-  static const Color onSurfaceFaint = Color(0xFF64748B); // Slate 500
-
-  // ── Lines ──────────────────────────────────────────────────────────────────
+  static const Color onSurfaceFaint = Color(0xFF64748B); 
 
   /// Card borders and the hairline between rows in a grouped list.
-  static const Color border = Color(0xFF334155); // Slate 700
+  static const Color border = Color(0xFF334155); 
 
   /// For a line inside an already-bordered surface, which would otherwise
   /// compete with the border around it.
@@ -88,30 +83,28 @@ abstract final class AppDarkColors {
   /// A border that has to carry weight on its own — the outline of a selected
   /// tile, a divider between two same-coloured surfaces, the edge of an input
   /// that is doing the separating rather than the fill behind it.
-  static const Color borderStrong = Color(0xFF475569); // Slate 600
-
-  // ── Brand ──────────────────────────────────────────────────────────────────
+  static const Color borderStrong = Color(0xFF475569); 
 
   /// Brand blue, unchanged from light mode. The **fill** tone: white on it is
   /// 4.87:1. Buttons, FABs, selected states, gradients.
-  static const Color primary = Color(0xFF2563EB); // Blue 600
+  static const Color primary = Color(0xFF2563EB); 
 
   static const Color onPrimary = Color(0xFFFFFFFF);
 
   /// The **ink** tone of the same blue: 7.0:1 on [background]. Links, active
   /// nav items, tinted icons, focus rings, progress indicators — anywhere the
   /// brand appears as text or a thin mark rather than as a filled shape.
-  static const Color primaryAccent = Color(0xFF60A5FA); // Blue 400
+  static const Color primaryAccent = Color(0xFF60A5FA); 
 
   /// A brand-tinted fill that is still a surface: selected rows, brand chips,
   /// the "current step" of a progression.
-  static const Color primaryContainer = Color(0xFF1E3A8A); // Blue 900
+  static const Color primaryContainer = Color(0xFF1E3A8A); 
 
-  static const Color onPrimaryContainer = Color(0xFFDBEAFE); // Blue 100
+  static const Color onPrimaryContainer = Color(0xFFDBEAFE); 
 
   /// The deep end of the brand gradient. Pairs with [primary] for the profile
   /// hero, the splash mark and the auth lockup.
-  static const Color primaryDeep = Color(0xFF4338CA); // Indigo 700
+  static const Color primaryDeep = Color(0xFF4338CA); 
 
   /// The gradient the profile hero is built on, and the reason the dark theme
   /// looks the way it does. Deep enough that white text on it clears AA.
@@ -121,33 +114,26 @@ abstract final class AppDarkColors {
     end: AlignmentDirectional.bottomEnd,
   );
 
-  // ── Status ─────────────────────────────────────────────────────────────────
-  //
-  // Neither app uses green: "confirmed / on-time / done" is a cyan that sits in
-  // the brand's own family, so a positive state reads as part of the product
-  // rather than as a foreign accent. Amber and red survive because a warning
-  // that shares the brand hue stops registering as a warning.
-
   /// Confirmed, on-time, completed, online. The fill tone.
-  static const Color success = Color(0xFF0EA5E9); // Sky 500
+  static const Color success = Color(0xFF0EA5E9); 
 
   /// Success as ink on a dark surface.
-  static const Color successInk = Color(0xFF22D3EE); // Cyan 400
+  static const Color successInk = Color(0xFF22D3EE); 
   static const Color successContainer = Color(0xFF0C3946);
   static const Color onSuccessContainer = Color(0xFFA5F3FC);
 
   /// Departing soon, scarcity, action needed.
-  static const Color warning = Color(0xFFF59E0B); // Amber 500
-  static const Color warningInk = Color(0xFFFBBF24); // Amber 400
+  static const Color warning = Color(0xFFF59E0B); 
+  static const Color warningInk = Color(0xFFFBBF24); 
   static const Color warningContainer = Color(0xFF3A2A0A);
   static const Color onWarningContainer = Color(0xFFFDE68A);
 
   /// Cancelled, failed, destructive. The fill tone — white on it is 4.83:1.
-  static const Color danger = Color(0xFFDC2626); // Red 600
+  static const Color danger = Color(0xFFDC2626); 
   static const Color onDanger = Color(0xFFFFFFFF);
 
   /// Danger as ink: error messages, failed-state labels and icons.
-  static const Color dangerInk = Color(0xFFF87171); // Red 400
+  static const Color dangerInk = Color(0xFFF87171); 
   static const Color dangerContainer = Color(0xFF3A1518);
   static const Color onDangerContainer = Color(0xFFFECACA);
 
@@ -159,19 +145,17 @@ abstract final class AppDarkColors {
   /// Inactive, historical, dimmed — a state with no urgency attached.
   static const Color neutral = onSurfaceMuted;
   static const Color neutralContainer = Color(0xFF24314A);
-  static const Color onNeutralContainer = Color(0xFFCBD5E1); // Slate 300
+  static const Color onNeutralContainer = Color(0xFFCBD5E1); 
 
   /// Packages, subscriptions, premium. The one hue outside the blue family, and
   /// it is spent deliberately.
-  static const Color special = Color(0xFFA78BFA); // Violet 400
+  static const Color special = Color(0xFFA78BFA); 
   static const Color specialContainer = Color(0xFF2E1F4D);
   static const Color onSpecialContainer = Color(0xFFDDD6FE);
 
   /// Star ratings. Kept apart from [warning] on purpose: a rating is not a
   /// caution, and the two have to stay independently tunable.
-  static const Color rating = Color(0xFFFBBF24); // Amber 400
-
-  // ── Depth ──────────────────────────────────────────────────────────────────
+  static const Color rating = Color(0xFFFBBF24); 
 
   /// Dark mode reads elevation from lightness, so shadows here are for
   /// separation only — near-black and soft, never the heavy drop shadow that

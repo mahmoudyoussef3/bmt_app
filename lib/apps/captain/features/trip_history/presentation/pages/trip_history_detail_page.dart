@@ -21,8 +21,6 @@ import '../utils/trip_history_palette.dart';
 import '../widgets/trip_history_boarding_bar.dart';
 import '../widgets/trip_history_time_strip.dart';
 
-/// A completed trip's detail: the journey's real, saved stations in order
-/// (the "timeline"), plus the same facts already on its history card.
 class TripHistoryDetailPage extends StatelessWidget {
   const TripHistoryDetailPage({super.key, required this.trip});
 
@@ -33,15 +31,9 @@ class TripHistoryDetailPage extends StatelessWidget {
     return BlocProvider<TripHistoryDetailCubit>(
       create: (_) => captainGetIt<TripHistoryDetailCubit>()..load(trip.id),
       child: Scaffold(
-         //     backgroundColor: CaptainColors.backgroundFor(context),
-
         backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
         body: CustomScrollView(
           slivers: [
-            // The same header the rest of the captain's sub-screens use, rather
-            // than a bare AppBar carrying the route as a title: the date is a
-            // fact about *this* trip and belongs beside its name, not buried in
-            // the first card.
             CaptainSliverHeader(
               title: trip.route,
               subtitle: CaptainFormats.fullDate(trip.tripDate),
@@ -55,10 +47,6 @@ class TripHistoryDetailPage extends StatelessWidget {
               ),
               sliver: SliverList.list(
                 children: [
-                  // Named from the background like the two blocks under it. It
-                  // used to be the one section on the page with no heading at
-                  // all, which read as a stray card rather than as the first of
-                  // three parts.
                   const _SectionTitle(title: 'ملخص الرحلة'),
                   const SizedBox(height: CaptainDesignTokens.s12),
                   _JourneyCard(trip: trip),
@@ -76,8 +64,6 @@ class TripHistoryDetailPage extends StatelessWidget {
   }
 }
 
-/// When the trip ran, how long it took, who was actually on it — and, at its
-/// foot, what all of that adds up to.
 class _JourneyCard extends StatelessWidget {
   const _JourneyCard({required this.trip});
 
@@ -111,8 +97,6 @@ class _JourneyCard extends StatelessWidget {
                   boarded: trip.boardedCount,
                   total: trip.passengerCount,
                 ),
-                const SizedBox(height: CaptainDesignTokens.s16),
-                _OutcomeLine(trip: trip),
               ],
             ),
           ),
@@ -122,77 +106,6 @@ class _JourneyCard extends StatelessWidget {
   }
 }
 
-/// The trip's result, said outright.
-///
-/// The card above it states a booked count, a boarded count and a bar, and
-/// leaves the captain to work out whether that was a good trip. This is the
-/// answer those three were circling, in the tinted-panel shape the focus card
-/// already uses for "here is where this stands".
-class _OutcomeLine extends StatelessWidget {
-  const _OutcomeLine({required this.trip});
-
-  final TripHistoryItem trip;
-
-  @override
-  Widget build(BuildContext context) {
-    final missing = trip.passengerCount - trip.boardedCount;
-    // Nobody booked means nobody failed to board — a quiet fact, not a
-    // shortfall, so it must not take the attention colour.
-    final Color color;
-    final IconData icon;
-    if (trip.passengerCount == 0) {
-      color = TripHistoryPalette.neutral(context);
-      icon = Icons.person_off_rounded;
-    } else if (missing > 0) {
-      color = TripHistoryPalette.attention;
-      icon = Icons.error_outline_rounded;
-    } else {
-      color = TripHistoryPalette.accent;
-      icon = Icons.check_circle_rounded;
-    }
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(CaptainDesignTokens.s12),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: CaptainDesignTokens.br16,
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: color),
-          const SizedBox(width: CaptainDesignTokens.s8),
-          Expanded(
-            child: Text(
-              TripHistoryLabels.outcome(
-                boarded: trip.boardedCount,
-                total: trip.passengerCount,
-              ),
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: CaptainTypography.bodySmall(context).copyWith(
-                color: CaptainColors.textPrimaryFor(context),
-                fontWeight: FontWeight.w700,
-                height: 1.4,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// The bus the trip ran on.
-///
-/// The plate is new here — the entity always carried it and the screen never
-/// showed it, which is the one identifier a captain would come back to a
-/// finished trip to check.
-///
-/// Its heading sits outside the card, the way the route section's already did.
-/// The page used to name this one section from *inside* its own card and the
-/// other from above it, so two adjacent blocks stated their titles in two
-/// different places on the same screen.
 class _VehicleSection extends StatelessWidget {
   const _VehicleSection({required this.trip});
 
@@ -278,15 +191,11 @@ class _StopsSection extends StatelessWidget {
   }
 }
 
-/// Names the block beneath it, from the page background rather than from inside
-/// the card. The inset is carried here rather than at each call site so the
-/// screen's headings line up with each other by construction.
 class _SectionTitle extends StatelessWidget {
   const _SectionTitle({required this.title, this.trailing});
 
   final String title;
 
-  /// A count or aside, aligned to the heading's trailing edge.
   final String? trailing;
 
   @override
@@ -318,12 +227,6 @@ class _SectionTitle extends StatelessWidget {
   }
 }
 
-/// The stations in the order the trip drove them.
-///
-/// The ends of the line are what a captain looks for first, so they carry the
-/// filled marks and the icons; the stations between them are steps on the way
-/// and are drawn as hollow marks, in the same family, so the line reads as one
-/// journey instead of a stack of equal rows.
 class _StopsTimeline extends StatelessWidget {
   const _StopsTimeline({required this.stops});
 
@@ -505,9 +408,6 @@ class _NoStopsRecorded extends StatelessWidget {
   }
 }
 
-/// Placeholder rows shaped like the timeline they stand in for, rather than a
-/// spinner: the stops arrive in one shot, and a bare spinner here made a fast
-/// load flash an empty page between two full ones.
 class _StopsSkeleton extends StatelessWidget {
   const _StopsSkeleton();
 

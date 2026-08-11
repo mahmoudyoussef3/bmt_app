@@ -135,9 +135,7 @@ class PlatformOfficeFilter {
           (a, b) => _bookings(b, metrics).compareTo(_bookings(a, metrics)),
         );
       case PlatformOfficeSort.idle:
-        // Longest silence first. An office that has never taken a booking has
-        // no silence to measure and sorts last, not first: "never started" is a
-        // different problem from "stopped", and mixing them buries the churn.
+        
         sorted.sort(
           (a, b) => _idleDays(a, metrics).compareTo(_idleDays(b, metrics)),
         );
@@ -179,16 +177,11 @@ class PlatformOfficeFilter {
     }
     if (activity != null) {
       final level = metrics[office.id]?.activityLevel;
-      // Only excludes when the office's activity is actually known to differ.
-      // An unmeasured office stays visible: hiding it would report it as "not
-      // matching" when the truth is "not yet measured".
+      
       if (level != null && level != activity) return false;
     }
     if (needle.isEmpty) return true;
 
-    // Slug and owner are searchable alongside the name because they are how an
-    // office is actually referred to elsewhere: the slug appears in support
-    // threads and URLs, the owner is who the platform spoke to.
     return office.name.toLowerCase().contains(needle) ||
         office.slug.toLowerCase().contains(needle) ||
         (office.ownerName ?? '').toLowerCase().contains(needle) ||

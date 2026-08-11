@@ -27,9 +27,7 @@ class RoutesScreen extends StatelessWidget {
           AppSnackbar.success(context, state.flashMessage);
           return;
         }
-        // A failure while the builder is open is shown inside it, next to the
-        // save button that produced it — a toast would vanish before the
-        // operator could act on it.
+        
         if (state.view != RoutesView.form) {
           AppSnackbar.error(context, state.actionError);
         }
@@ -65,9 +63,6 @@ class _RouteBuilderHost extends StatelessWidget {
     final editing = state.editingRoute;
     final reverseOf = state.reverseOf;
 
-    // The return leg is a *new* route built from an existing one's stops in the
-    // opposite order — assembled here so the builder itself stays a plain
-    // editor over one draft.
     final draft = reverseOf == null
         ? null
         : RouteDraft.fromRoute(reverseOf).reversedLeg(
@@ -75,7 +70,7 @@ class _RouteBuilderHost extends StatelessWidget {
           );
 
     return RouteBuilderView(
-      // A fresh builder per route, so an open draft is never carried over.
+      
       key: ValueKey(
         'route-builder-${editing?.id ?? (reverseOf == null ? 'new' : 'return-${reverseOf.id}')}',
       ),

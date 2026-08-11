@@ -51,9 +51,6 @@ class AnimatedVehicleMarker extends StatelessWidget {
               color: tone.withAlpha(haloAlpha),
             ),
 
-
-
-            
           ),
         if (live && sample.isMoving)
           HeadingCone(

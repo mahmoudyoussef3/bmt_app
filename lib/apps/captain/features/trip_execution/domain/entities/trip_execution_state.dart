@@ -1,13 +1,5 @@
 import 'package:bmt_app/apps/captain/core/trips/captain_trip_stage.dart';
 
-/// Mirrors `operation_trips.status`.
-///
-/// [scheduled] (ops draft, invisible to clients) and [openForBooking]
-/// (published, clients are booking) are separate states in the backend's
-/// transition machine — `scheduled → open_for_booking → boarding` — and the
-/// captain can only act on the second. Collapsing them let the execution
-/// screen offer "بدء صعود الركاب" on a trip whose next legal transition was
-/// operations publishing it, so the tap could only ever fail.
 enum TripExecutionStatus {
   scheduled,
   openForBooking,
@@ -18,7 +10,6 @@ enum TripExecutionStatus {
 }
 
 extension TripExecutionStatusX on TripExecutionStatus {
-  /// Where the captain stands, combining this status with the departure clock.
   CaptainTripStage stageAt({
     required DateTime departureTime,
     required DateTime now,
@@ -44,13 +35,6 @@ class TripExecutionStateData {
   final TripExecutionStatus status;
 }
 
-/// The captain's most recently stored position for this trip.
-///
-/// A running trip reports automatically every minute (see
-/// `TripLocationAutoShare`), but never treat [recordedAt] as current: the
-/// send can fail on a dead signal or a denied permission. The GPS status card
-/// shows its age explicitly so a fix that stopped updating is visible as
-/// exactly that, rather than a number that quietly goes stale.
 class TripLastLocationFix {
   const TripLastLocationFix({
     required this.latitude,
@@ -63,11 +47,6 @@ class TripLastLocationFix {
   final DateTime recordedAt;
 }
 
-/// Live snapshot of a trip's execution progress.
-///
-/// Watched continuously for the lifetime of the execution screen, so the
-/// counts move as passengers actually check in and stations are reported
-/// arrived — never frozen at whatever they were when the screen was opened.
 class TripExecutionSnapshot {
   const TripExecutionSnapshot({
     required this.status,

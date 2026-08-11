@@ -3,8 +3,6 @@ import '../theme/captain_design_tokens.dart';
 
 enum CaptainButtonVariant { primary, secondary, danger, outline }
 
-/// The button's leading icon, flipped when it points somewhere and the layout
-/// runs right-to-left.
 class _Icon extends StatelessWidget {
   const _Icon({
     required this.icon,
@@ -34,6 +32,7 @@ class CaptainButton extends StatelessWidget {
     this.isLoading = false,
     this.isFullWidth = true,
     this.mirrorIconInRtl = false,
+    this.height = 56,
   });
 
   final String label;
@@ -43,11 +42,8 @@ class CaptainButton extends StatelessWidget {
   final bool isLoading;
   final bool isFullWidth;
 
-  /// Set for icons that point somewhere — an arrow leaving a door, a caret
-  /// moving forward. Material ships those drawn for LTR and does not mirror
-  /// them, so in this Arabic app they end up pointing the wrong way. Leave it
-  /// off for symmetric or pictorial icons (a bus, a seat, a star), which read
-  /// the same either way and would only look wrong flipped.
+  final double height;
+
   final bool mirrorIconInRtl;
 
   @override
@@ -120,7 +116,7 @@ class CaptainButton extends StatelessWidget {
       borderRadius: CaptainDesignTokens.br16,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        height: 56,
+        height: height,
         padding: const EdgeInsets.symmetric(
           horizontal: CaptainDesignTokens.s16,
         ),

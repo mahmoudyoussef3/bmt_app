@@ -58,11 +58,9 @@ class _PlatformPlansScreenState extends State<PlatformPlansScreen> {
   /// The optional line that goes into the revision the save creates.
   final TextEditingController _note = TextEditingController();
 
-  // Gallery.
   String _planQuery = '';
   String? _planStatusFilter;
 
-  // Workspace.
   int _tab = 0;
   String _featureQuery = '';
   String? _featureCategory;
@@ -127,8 +125,6 @@ class _PlatformPlansScreenState extends State<PlatformPlansScreen> {
     );
   }
 
-  // ── Draft bookkeeping ──────────────────────────────────────────────────────
-
   /// Re-points the buffer when — and only when — the operator moved to a
   /// different plan, so a background refresh of the console cannot silently
   /// discard unsaved edits.
@@ -169,8 +165,6 @@ class _PlatformPlansScreenState extends State<PlatformPlansScreen> {
         .toSet();
   }
 
-  // ── Actions ────────────────────────────────────────────────────────────────
-
   Future<void> _closePlan(BuildContext context, int changedCount) async {
     final cubit = context.read<PlatformLicensingCubit>();
     if (changedCount > 0) {
@@ -206,15 +200,11 @@ class _PlatformPlansScreenState extends State<PlatformPlansScreen> {
     await cubit.savePlanValues(
       detail.plan.id,
       _draft,
-      // The RPC stores this on the revision it just wrote. An empty note is
-      // legal — the snapshot, the actor and the diff are recorded regardless,
-      // so demanding prose was friction that bought nothing.
+      
       note.isEmpty ? 'تعديل قيم الباقة من وحدة التحكم' : note,
     );
     if (!mounted) return;
 
-    // Re-seed the buffer from what the server actually stored, so a value it
-    // normalised does not read as an unsaved edit for the rest of the session.
     final next = cubit.state;
     if (next is PlatformLicensingLoaded &&
         next.selectedPlan?.plan.id == detail.plan.id) {
@@ -257,8 +247,7 @@ class _PlatformPlansScreenState extends State<PlatformPlansScreen> {
     final (title, description, confirm, danger) = switch (status) {
       'archived' => (
         'أرشفة «${plan.nameAr}»',
-        // Archiving is not deletion, and the difference is the whole reason an
-        // operator hesitates over this button.
+        
         plan.officeCount == 0
             ? 'لن تعود قابلة للتعيين لمكتب جديد. لا مكتب عليها الآن، فلا يتأثر أحد.'
             : 'المكاتب الـ${plan.officeCount} المشتركة تكمل عليها بلا أي تغيير، '
@@ -363,10 +352,6 @@ const Map<String, String> _planStatusLabels = {
   'draft': 'مسودات',
   'archived': 'مؤرشفة',
 };
-
-// ═══════════════════════════════════════════════════════════════════════════
-// The gallery
-// ═══════════════════════════════════════════════════════════════════════════
 
 class _PlanGallery extends StatelessWidget {
   const _PlanGallery({
@@ -504,9 +489,6 @@ class _GalleryHeader extends StatelessWidget {
     final active = plans.where((p) => p.status == 'active').length;
     final offices = plans.fold<int>(0, (sum, p) => sum + p.officeCount);
 
-    // Only offices on a plan with a published price can be counted: a
-    // negotiated contract has no figure here to add, and inventing one would
-    // make this a guess wearing a currency symbol.
     final contracted = plans
         .where((p) => p.priceMonthly != null)
         .fold<num>(0, (sum, p) => sum + p.priceMonthly! * p.officeCount);
@@ -586,8 +568,7 @@ class _PlanCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // A status band rather than a chip: three cards side by side are
-          // scanned by colour, and a pill in a corner is not a scan target.
+          
           Container(
             height: 4,
             decoration: BoxDecoration(
@@ -616,9 +597,7 @@ class _PlanCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                      // Only the states worth flagging get a pill: five
-                      // identical "نشطة" chips are noise that hides the one
-                      // draft.
+                      
                       if (plan.status != 'active')
                         StatusChip(
                           label: plan.statusLabelAr,
@@ -802,10 +781,6 @@ class _PlanPrice extends StatelessWidget {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════
-// The workspace
-// ═══════════════════════════════════════════════════════════════════════════
-
 /// One plan, full width.
 ///
 /// The whole pane scrolls and the save bar floats over it. There is no fixed
@@ -869,9 +844,7 @@ class _PlanWorkspace extends StatelessWidget {
         children: [
           ListView(
             padding: EdgeInsets.only(
-              // Room for the floating save bar, so the last feature row is
-              // never parked underneath it. The bar stacks its note field under
-              // its heading on a narrow pane, so it needs the taller reserve.
+              
               bottom: isDirty
                   ? (constraints.maxWidth < 720 ? 220.0 : 132.0)
                   : 0.0,
@@ -980,8 +953,7 @@ class _WorkspaceHeader extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // In RTL the start edge is the right one, so a "back" affordance
-          // points right. The label carries the meaning either way.
+          
           TextButton.icon(
             onPressed: onBack,
             icon: const Icon(Icons.arrow_forward_rounded, size: 18),
@@ -1173,8 +1145,7 @@ class _WorkspaceHeader extends StatelessWidget {
             LicensingNotice(
               icon: Icons.archive_outlined,
               color: scheme.error,
-              // Archiving is not deletion: the offices already on it keep
-              // resolving exactly as before.
+              
               message:
                   'باقة مؤرشفة — المكاتب المشتركة تعمل كما هي، ولا يمكن '
                   'تعيينها لمكتب جديد.',
@@ -1185,10 +1156,6 @@ class _WorkspaceHeader extends StatelessWidget {
     );
   }
 }
-
-// ═══════════════════════════════════════════════════════════════════════════
-// Feature editor
-// ═══════════════════════════════════════════════════════════════════════════
 
 class _FeatureEditor extends StatelessWidget {
   const _FeatureEditor({
@@ -1242,8 +1209,6 @@ class _FeatureEditor extends StatelessWidget {
         .toList();
     final visible = catalog.features.where(_matches).toList();
 
-    // Grouped by the catalog's own category order, with anything whose category
-    // is unknown collected at the end instead of silently dropped.
     final grouped = <String, List<CatalogFeature>>{};
     for (final feature in visible) {
       grouped.putIfAbsent(feature.categoryKey, () => []).add(feature);
@@ -1351,7 +1316,7 @@ class _FeatureEditor extends StatelessWidget {
           ),
         const SizedBox(height: AppSpacing.small),
         Text(
-          // The distinction that trips everybody up, said once, in place.
+          
           'ميزة بلا قيمة في الباقة ترجع إلى الافتراضي المسجَّل في الكتالوج — '
           'وهذا ليس نفس معنى «مُعطَّلة».',
           style: text.bodySmall?.copyWith(
@@ -1554,10 +1519,7 @@ class _FeatureEditRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: AppSpacing.small),
-          // A lane for the control, so a column of switches, number fields and
-          // dropdowns lines up instead of stepping in and out with the length
-          // of each feature's name. A minimum rather than a fixed width: the
-          // limit control is wider than the rest, and clamping it would clip.
+          
           ConstrainedBox(
             constraints: const BoxConstraints(minWidth: 216),
             child: Align(
@@ -1669,10 +1631,6 @@ class _PreviewPill extends StatelessWidget {
     );
   }
 }
-
-// ═══════════════════════════════════════════════════════════════════════════
-// Offices + revisions
-// ═══════════════════════════════════════════════════════════════════════════
 
 class _PlanOffices extends StatelessWidget {
   const _PlanOffices({required this.detail});

@@ -2,10 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 
-/// A slow, breathing radial glow rendered behind the splash brand.
-///
-/// Driven by an external repeating controller so the intro sequence and the
-/// ambient loop advance independently of each other.
 class CaptainSplashBackdrop extends StatelessWidget {
   const CaptainSplashBackdrop({super.key, required this.animation});
 

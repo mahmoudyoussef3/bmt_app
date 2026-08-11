@@ -57,7 +57,6 @@ abstract final class VehicleTypeParser {
       if (normalized == _normalize(type.dbValue)) return type;
     }
 
-    // Brand-prefixed and Arabic spellings operators actually type.
     return switch (normalized) {
       'toyotahiace' || 'hiace' || 'هايس' => VehicleType.hiace,
       'toyotacoaster' || 'coaster' || 'كوستر' => VehicleType.coaster,

@@ -341,8 +341,7 @@ class _Direction extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 6),
           child: Icon(
-            // U+2190-style arrow: in an RTL layout the journey reads
-            // right-to-left, so the arrowhead has to point left.
+            
             Icons.arrow_back_rounded,
             size: 16,
             color: scheme.onSurfaceVariant,

@@ -55,10 +55,7 @@ class _PlatformLicensesScreenState extends State<PlatformLicensesScreen> {
   @override
   Widget build(BuildContext context) {
     return LicensingScreenFrame(
-      // The page scrolls as one — the same shape the offices and wallet screens
-      // use. A viewport-height column cannot hold a signal strip, a full office
-      // list and a licence panel at once, and squeezing them into it is what
-      // clipped all three.
+      
       builder: (context, state) => ListView(
         padding: EdgeInsets.zero,
         children: [
@@ -91,10 +88,6 @@ class _PlatformLicensesScreenState extends State<PlatformLicensesScreen> {
     );
   }
 }
-
-// ═══════════════════════════════════════════════════════════════════════════
-// Header
-// ═══════════════════════════════════════════════════════════════════════════
 
 class _LicensesHeader extends StatelessWidget {
   const _LicensesHeader({required this.state});
@@ -212,7 +205,7 @@ class _EnforcementModeBar extends StatelessWidget {
                 ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
               Text(
-                // The kill switch, described where it lives.
+                
                 'الإرجاع إلى «معطّل» يعيد سلوك المنصة كما كان فورًا وبلا نشر '
                 'إصدار جديد.',
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -245,10 +238,6 @@ class _EnforcementModeBar extends StatelessWidget {
     );
   }
 }
-
-// ═══════════════════════════════════════════════════════════════════════════
-// Alerts
-// ═══════════════════════════════════════════════════════════════════════════
 
 /// One thing worth chasing today.
 typedef _Alert = ({
@@ -334,8 +323,7 @@ class _AlertStrip extends StatelessWidget {
         rows: health.soldButDeclared,
         tone: (s) => s.tertiary,
         describe: (r) => '${r['plan_key']} — ${r['name_ar']}',
-        // A plan-level defect, not an office-level one: there is no office to
-        // open from this row.
+        
         selectable: false,
       ),
     ];
@@ -411,7 +399,7 @@ class _AlertStrip extends StatelessWidget {
           ],
           const SizedBox(height: AppSpacing.small),
           Text(
-            // The line that stops an over-limit being read as an accusation.
+            
             'تجاوز الحد حالة حقيقية وليست خطأ: الحدود تمنع الإنشاء الجديد ولا '
             'تمسّ ما هو قائم، فالمكتب الذي خُفِّضت باقته يحتفظ بكل صفوفه.',
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -529,8 +517,7 @@ class _AlertRows extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.small),
-          // Every row, never a "and N more": the card listing eleven offices is
-          // precisely the one the operator opened this screen for.
+          
           for (final row in alert.rows)
             InkWell(
               onTap: onSelect == null || row['office_id'] == null
@@ -563,10 +550,6 @@ class _AlertRows extends StatelessWidget {
     );
   }
 }
-
-// ═══════════════════════════════════════════════════════════════════════════
-// Master — the office list
-// ═══════════════════════════════════════════════════════════════════════════
 
 class _OfficeList extends StatelessWidget {
   const _OfficeList({
@@ -621,8 +604,7 @@ class _OfficeList extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // The list had no search at all: finding an office meant scrolling
-            // past every other one, or knowing its status by heart.
+            
             DebouncedSearchField(
               initialValue: query,
               hintText: 'ابحث باسم المكتب أو باقته',
@@ -768,10 +750,6 @@ class _OfficeTile extends StatelessWidget {
     );
   }
 }
-
-// ═══════════════════════════════════════════════════════════════════════════
-// Detail — one office
-// ═══════════════════════════════════════════════════════════════════════════
 
 class _OfficeLicensePanel extends StatelessWidget {
   const _OfficeLicensePanel({required this.state});
@@ -985,8 +963,7 @@ class _OfficeHeader extends StatelessWidget {
     final reason = await promptForReason(
       context,
       title: 'إيقاف ترخيص «${detail.officeName}» مؤقتًا',
-      // Said at the moment of the decision, because this is the action most
-      // often assumed to be a blackout.
+      
       description:
           'المكتب سيتحوّل إلى وضع القراءة فقط: لا إنشاء رحلات أو سائقين أو '
           'خطوط، ويختفي من سوق العملاء. التذاكر المُباعة والرحلات الجارية '
@@ -1362,7 +1339,7 @@ class _OverrideDialogState extends State<_OverrideDialog> {
                       child: LicensingNotice(
                         icon: DashboardIcons.attention,
                         color: Theme.of(context).colorScheme.tertiary,
-                        // The trap worth naming before they hit it.
+                        
                         message:
                             'تتطلب: ${_feature!.requires.join('، ')}. الاستثناء '
                             'يُحترم لكن التبعية تُسقِطه إن لم تكن مفعّلة.',
@@ -1505,7 +1482,7 @@ class _ActivitySection extends StatelessWidget {
     return DashboardPanel(
       sectionId: DashboardSectionIds.platformLicenseActivity,
       icon: DashboardIcons.audit,
-      // Reference material, not a decision: it opens only when asked for.
+      
       initiallyExpanded: false,
       title: 'النشاط',
       subtitle: 'شريحة هذا المكتب من سجل التغييرات.',

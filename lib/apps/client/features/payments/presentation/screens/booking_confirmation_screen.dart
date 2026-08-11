@@ -102,7 +102,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
         _statusPollTimer?.cancel();
       }
     } catch (_) {
-      // Best-effort refresh — keep showing the last known status.
+      
     } finally {
       _statusFetchInFlight = false;
     }
@@ -119,9 +119,7 @@ class _BookingConfirmationScreenState extends State<BookingConfirmationScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: ClientColors.surfaceSubtleFor(context),
-      // The booking is already written by the time this screen shows: there is
-      // nothing left mid-flow to abandon back into, so the arrow is drawn but
-      // inert rather than popping into the wizard/route screens underneath.
+      
       appBar: ClientAppBar(
         title: context.l10n.payments_bookingTitle,
         navigationIcon: Icons.close_rounded,

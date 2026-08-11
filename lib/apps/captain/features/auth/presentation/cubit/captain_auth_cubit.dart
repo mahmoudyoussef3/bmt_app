@@ -49,9 +49,6 @@ class CaptainAuthCubit extends Cubit<CaptainAuthState> {
   final GetRememberedPhoneUseCase _getRememberedPhone;
   final ClearRememberedPhoneUseCase _clearRememberedPhone;
 
-  /// Prefills the login form: reads whatever "Remember Me" previously saved.
-  /// A read failure must render as "nothing remembered" rather than block
-  /// the login screen from opening.
   Future<String?> loadRememberedPhone() async {
     try {
       return await _getRememberedPhone();
@@ -85,10 +82,6 @@ class CaptainAuthCubit extends Cubit<CaptainAuthState> {
     }
   }
 
-  /// Signing out must always land the captain back at idle. The local identity
-  /// is cleared by the datasource either way, so a network failure in Supabase's
-  /// sign-out is not something to strand the captain on a half-signed-out screen
-  /// over — reporting it would offer them no action but to try again.
   Future<void> signOut() async {
     try {
       await _signOut();
@@ -98,10 +91,10 @@ class CaptainAuthCubit extends Cubit<CaptainAuthState> {
     }
   }
 
-  /// Persisting (or clearing) the remembered phone is a device-storage
-  /// side-effect, not part of authentication proper — a write failure here
-  /// must never turn a successful sign-in into a reported failure.
-  Future<void> _applyRememberMe(bool rememberMe, {required String phone}) async {
+  Future<void> _applyRememberMe(
+    bool rememberMe, {
+    required String phone,
+  }) async {
     try {
       if (rememberMe) {
         await _saveRememberedPhone(phone);

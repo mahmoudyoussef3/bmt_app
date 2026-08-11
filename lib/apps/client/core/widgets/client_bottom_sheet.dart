@@ -27,7 +27,7 @@ class ClientBottomSheet extends StatelessWidget {
       decoration: BoxDecoration(
         color: ClientColors.surfaceFor(context),
         borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(ClientRadius.sheet), // 32px
+          top: Radius.circular(ClientRadius.sheet), 
         ),
       ),
       child: SafeArea(

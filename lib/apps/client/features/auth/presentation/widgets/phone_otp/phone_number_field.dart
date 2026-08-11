@@ -51,10 +51,7 @@ class PhoneNumberField extends StatelessWidget {
       onFieldSubmitted: onSubmitted,
       validator: (value) => AuthValidators.phone(value, l10n),
       inputFormatters: [
-        // Egyptian mobiles are ten national digits (`10 1234 5678`). Anything
-        // else — spaces, a pasted `+20`, Arabic-Indic numerals — is stripped
-        // as it is typed so the field can never hold a value the validator
-        // would have to explain.
+        
         FilteringTextInputFormatter.digitsOnly,
         LengthLimitingTextInputFormatter(11),
       ],

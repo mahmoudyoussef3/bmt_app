@@ -10,15 +10,12 @@ class SupabaseReferralRewardsDatasource {
     final user = _supabase.auth.currentUser;
     if (user == null) throw Exception('User not authenticated');
 
-    // Loyalty account holds the wallet balance (core data).
     final accountData = await _supabase
         .from('loyalty_accounts')
         .select()
         .eq('client_id', user.id)
         .maybeSingle();
 
-    // Rewards catalog is optional — degrade to no vouchers if the table is
-    // not yet provisioned instead of failing the whole screen.
     List<dynamic> rewardsData = const [];
     try {
       rewardsData = await _supabase
@@ -33,7 +30,6 @@ class SupabaseReferralRewardsDatasource {
 
     final walletBalance = accountData?['wallet_balance'] as int? ?? 0;
 
-    // Referral history — safe fetch; table may not exist yet.
     List<ReferralHistoryItem> history = [];
     int totalInvites = 0;
     int successfulReferrals = 0;
@@ -72,10 +68,9 @@ class SupabaseReferralRewardsDatasource {
         );
       }
     } catch (_) {
-      // referrals table not provisioned yet — show empty state
+      
     }
 
-    // Top referrers leaderboard — backed by the `referral_leaderboard` view.
     List<ReferralLeaderboardEntry> leaderboard = [];
     try {
       final rows = await _supabase
@@ -96,15 +91,12 @@ class SupabaseReferralRewardsDatasource {
         );
       }
     } catch (_) {
-      // leaderboard view not provisioned yet — hide the section
+      
     }
 
-    // Derive a deterministic referral code from the user's UUID.
     final codeBase = user.id.replaceAll('-', '').toUpperCase().substring(0, 8);
     final referralCode = 'BMT-$codeBase';
 
-    // Map loyalty_rewards catalog items to scratch vouchers so the
-    // vouchers section shows real redeemable offers.
     final vouchers = rewardsData.map<ScratchVoucher>((r) {
       return ScratchVoucher(
         id: r['id']?.toString() ?? '',

@@ -6,7 +6,6 @@ import '../widgets/welcome_actions.dart';
 import '../widgets/welcome_hero.dart';
 import '../widgets/welcome_language_toggle.dart';
 
-
 class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
 

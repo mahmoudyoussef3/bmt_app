@@ -69,8 +69,7 @@ class TripOptionTile extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  // Two offices can run the same corridor at the same times, so
-                  // every selectable departure says who operates it.
+                  
                   if (office.isKnown) ...[
                     const SizedBox(height: 4),
                     RouteOfficeChip(office: office, compact: true),

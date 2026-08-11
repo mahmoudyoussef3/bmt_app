@@ -155,9 +155,7 @@ class PlatformLicensingLoaded extends PlatformLicensingState {
         ));
       }
     }
-    // A feature whose category row is missing still has to appear. Dropping it
-    // silently would be the worst failure this screen has: a flag nobody can
-    // find is a flag nobody can turn off.
+    
     for (final key in byCategory.keys.toList()..sort()) {
       groups.add((
         key: key,
@@ -254,8 +252,7 @@ class PlatformLicensingLoaded extends PlatformLicensingState {
           : (selectedOffice ?? this.selectedOffice),
       planPreview: clearPlanPreview ? null : (planPreview ?? this.planPreview),
       isBusy: isBusy ?? this.isBusy,
-      // Not carried forward: a message describes the action that just ran, so
-      // re-emitting it on the next unrelated change would be a stale claim.
+      
       actionError: actionError,
       actionMessage: actionMessage,
       featureSearch: featureSearch ?? this.featureSearch,

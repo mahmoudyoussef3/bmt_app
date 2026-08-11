@@ -49,8 +49,7 @@ class AuthAlternativeMethods extends StatelessWidget {
         AuthDivider(label: l10n.auth_or),
         const SizedBox(height: ClientSpacing.md),
         if (compact) _tiles() else _rows(),
-        // Only claimed while it is true. The moment a provider is switched on,
-        // this collapses on its own rather than lingering as a stale promise.
+        
         if (methods.every((method) => !method.isAvailable)) ...[
           const SizedBox(height: ClientSpacing.sm),
           Text(
@@ -95,9 +94,7 @@ class AuthAlternativeMethods extends StatelessWidget {
       }
       children.add(Expanded(child: _buttonFor(method, compact: true)));
     }
-    // No `CrossAxisAlignment.stretch`: the parent column already stretches, so
-    // this row has no bounded height to stretch into and would demand an
-    // infinite one. The tiles carry their own 52pt minimum instead.
+    
     return Row(children: children);
   }
 

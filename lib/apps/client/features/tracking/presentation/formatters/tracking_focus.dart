@@ -37,9 +37,6 @@ class TrackingFocus {
 
     final rider = trip.rider;
 
-    // Still waiting to be picked up: count down to the rider's own boarding
-    // stop — but only while the bus has not already left it behind, otherwise
-    // we would be counting down to a moment that has passed.
     if (!rider.hasBoarded) {
       final boarding = _stopAt(stops, rider.boardingIndex);
       if (boarding != null && !boarding.isVisited) {
@@ -47,8 +44,6 @@ class TrackingFocus {
       }
     }
 
-    // On board (or past the boarding point): count down to where they get off,
-    // falling back to the end of the line when the manifest didn't say.
     final dropoff = _stopAt(stops, rider.dropoffIndex);
     return TrackingFocus(
       target: dropoff ?? stops.last,

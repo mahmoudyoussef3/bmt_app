@@ -164,9 +164,7 @@ class DashboardKpiCard extends StatelessWidget {
             ),
           if (spark != null && spark.length >= 2) ...[
             const SizedBox(height: AppSpacing.xSmall),
-            // Takes whatever height is left rather than a fixed band, so the
-            // tile never overflows when a caller gives the grid a tighter
-            // extent than the stacked form would like.
+            
             Expanded(
               child: Align(
                 alignment: Alignment.bottomCenter,
@@ -184,10 +182,7 @@ class DashboardKpiCard extends StatelessWidget {
     final tint = color ?? scheme.primary;
     return Container(
       padding: const EdgeInsets.all(AppSpacing.medium),
-      // The fill and border alphas come from the token layer rather than being
-      // fixed: 16/255 of a mid-tone reads as a tint over a white card and as
-      // nothing at all over a slate one, so the tile lost its identity in dark
-      // mode. [DashboardColors] scales them per brightness.
+      
       decoration: BoxDecoration(
         color: DashboardColors.kpiTint(context, tint),
         borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
@@ -223,9 +218,7 @@ class DashboardKpiCard extends StatelessWidget {
             ),
           ),
           const SizedBox(width: AppSpacing.small),
-          // Flexible + ellipsis: most values are short numbers, but some
-          // callers (e.g. marketplace listing status) pass a full phrase —
-          // it must shrink instead of overflowing the row at narrower widths.
+          
           Flexible(
             child: Text(
               value,

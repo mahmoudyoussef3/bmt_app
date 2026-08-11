@@ -44,7 +44,7 @@ class SubscriptionsToolbar extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.medium),
           Divider(height: 1, color: scheme.outline.withAlpha(60)),
-          // Matches the Bookings board: tabs stay, filters fold.
+          
           DashboardCollapsibleSection.bare(
             sectionId: DashboardSectionIds.subscriptionsFilters,
             icon: Icons.filter_alt_outlined,
@@ -218,9 +218,7 @@ class _FiltersBar extends StatelessWidget {
             SizedBox(
               width: compact ? full : (full < 1080 ? fieldWidth : 280),
               child: DebouncedSearchField(
-                // Keyed on the value so "clear filters" empties the box: the
-                // field owns its controller and would otherwise keep the
-                // stale query on screen.
+                
                 key: ValueKey('subscription-search-${filters.search}'),
                 initialValue: filters.search,
                 hintText: 'اسم، هاتف، باقة، خط سير',
@@ -236,8 +234,7 @@ class _FiltersBar extends StatelessWidget {
               child: _RouteFilter(
                 routes: state.availableRoutes,
                 value: filters.routeId.isEmpty ? null : filters.routeId,
-                // A trip already pins the route; offering both invites them to
-                // disagree.
+                
                 enabled: !filters.hasTrip,
                 onChanged: (value) =>
                     update(filters.copyWith(routeId: value ?? '')),
@@ -479,8 +476,7 @@ class _SortControl extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // A trip board is ordered by check-in state, which is more useful there
-    // than any column sort — so the control steps aside rather than lying.
+    
     if (state.tripBoard != null) return const SizedBox.shrink();
 
     return PopupMenuButton<SubscriptionSortField>(
@@ -506,8 +502,7 @@ class _SortControl extends StatelessWidget {
             ),
           ),
       ],
-      // Styled as a button but not one: PopupMenuButton owns the tap, so
-      // nesting a real button here would swallow it.
+      
       child: Container(
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.medium,

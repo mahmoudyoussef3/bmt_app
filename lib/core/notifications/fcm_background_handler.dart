@@ -6,6 +6,5 @@ import 'package:bmt_app/firebase_options.dart';
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  // FCM automatically displays the system notification from the payload.
-  // Data-only background work (e.g. silent sync) would go here.
+  
 }

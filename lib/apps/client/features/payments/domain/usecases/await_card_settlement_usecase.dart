@@ -42,8 +42,7 @@ class AwaitCardSettlementUseCase {
         last = state;
         if (!state.pending) return state;
       } catch (_) {
-        // A dropped poll is not an answer — keep asking until the deadline
-        // rather than reporting a network blip as an unpaid booking.
+        
       }
       if (!DateTime.now().add(pollInterval).isBefore(deadline)) break;
       await Future<void>.delayed(pollInterval);

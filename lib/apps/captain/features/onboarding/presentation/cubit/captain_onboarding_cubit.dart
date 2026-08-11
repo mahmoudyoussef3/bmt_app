@@ -27,8 +27,6 @@ class CaptainOnboardingCubit extends Cubit<CaptainOnboardingState> {
        _store = store,
        super(const OnboardingForm());
 
-  /// Resumes into the pending/poll state when a request was already submitted
-  /// on this device; otherwise starts at the form and loads the office list.
   void init(String? pendingPhone) {
     if (pendingPhone != null && pendingPhone.isNotEmpty) {
       _beginPolling(pendingPhone);
@@ -72,8 +70,6 @@ class CaptainOnboardingCubit extends Cubit<CaptainOnboardingState> {
           _beginPolling(result.phone);
       }
     } catch (e) {
-      // Carry the office list back into the form: re-fetching it would clear
-      // the picker under the applicant while they read the error.
       emit(
         OnboardingForm(
           error: e.toString().replaceFirst('Exception: ', ''),
@@ -117,8 +113,6 @@ class CaptainOnboardingCubit extends Cubit<CaptainOnboardingState> {
     }
   }
 
-  /// Persists the approved captain's local session so the gate can route them
-  /// to their home. Returns the saved session.
   Future<CaptainLocalSession> establishSession(OnboardingApproved a) async {
     final session = CaptainLocalSession(
       driverId: a.driverId,

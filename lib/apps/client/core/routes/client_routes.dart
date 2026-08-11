@@ -12,8 +12,6 @@ class ClientRoutes {
   /// The authenticated shell that hosts the bottom navigation.
   static const home = '/home';
 
-  // Legal. Reachable from the profile hub; both documents share one screen and
-  // differ only by which document they render.
   static const terms = '/legal/terms';
   static const privacy = '/legal/privacy';
 }

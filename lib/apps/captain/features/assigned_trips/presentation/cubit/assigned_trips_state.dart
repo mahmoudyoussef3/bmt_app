@@ -17,17 +17,8 @@ class AssignedTripsLoaded extends AssignedTripsState {
 
   final List<AssignedTrip> trips;
 
-  /// Trips assigned since the captain last acknowledged the home screen's
-  /// "new assignment" notice — a purely local, device-side notion (see
-  /// [SeenTripsRepository]), not a backend field.
   final Set<String> newTripIds;
 
-  /// A captain-initiated refresh is in flight.
-  ///
-  /// Only ever true for an explicit refresh, never for the realtime-triggered
-  /// background poll: the empty-state view turns this into a visible spinner
-  /// and a "جاري التحديث…" label, and that should answer the captain's tap
-  /// rather than flicker on its own whenever operations touches the schedule.
   final bool isRefreshing;
 
   AssignedTripsLoaded copyWith({bool? isRefreshing}) => AssignedTripsLoaded(

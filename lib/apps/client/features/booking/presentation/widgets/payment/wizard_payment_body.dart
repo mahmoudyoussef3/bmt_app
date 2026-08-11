@@ -78,9 +78,7 @@ class WizardPaymentBody extends StatelessWidget {
               CheckoutFareCard(
                 data: data,
                 promoDiscount: 0,
-                // Promo codes belong to the standalone checkout: the booking
-                // RPCs this wizard calls take no promo code, so offering a
-                // field here would take a code we could never redeem.
+                
                 promoField: const SizedBox.shrink(),
               ),
               const SizedBox(height: 22),

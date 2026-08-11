@@ -113,8 +113,7 @@ class _LicensingRefusalDialog extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.medium),
             Text(
-              // The honest sentence, and the one §5.4 exists to protect: a limit
-              // blocks the NEXT one. Nothing already created is affected.
+              
               failure.isQuota
                   ? 'لم يُحذف أو يُعطَّل أي عنصر قائم — الحد يمنع الإضافة الجديدة فقط. '
                         'للحصول على حد أعلى تواصل مع إدارة المنصة.'
@@ -243,8 +242,7 @@ class LicenseBanner extends StatelessWidget {
     'past_due' => 'الحساب يعمل بالكامل. سدّد الفاتورة لتجنّب التقييد.',
     'grace' =>
       'سيتحوّل الحساب إلى وضع القراءة فقط قريبًا إن لم تُسدَّد الفاتورة.',
-    // The sentence that keeps the promise: a hold stops new commitments, never
-    // the ones already made.
+    
     'suspended' || 'cancelled' =>
       'لا يمكن إنشاء رحلات أو سائقين أو خطوط جديدة. التذاكر المُباعة والرحلات '
           'الجارية ودخول الكباتن تعمل كالمعتاد.',

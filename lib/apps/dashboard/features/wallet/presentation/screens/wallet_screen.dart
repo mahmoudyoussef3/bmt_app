@@ -207,11 +207,6 @@ class _WalletBody extends StatelessWidget {
     );
   }
 
-  // ── Dialog launchers ─────────────────────────────────────────────────────
-  //
-  // Each takes the summary from state rather than re-reading it, so a dialog can
-  // never open against a customer other than the one on screen.
-
   WalletSummary? get _summary => state.summary;
 
   void _adjust(BuildContext context, WalletCubit cubit, WalletKind kind) {

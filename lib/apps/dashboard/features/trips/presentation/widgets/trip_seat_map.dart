@@ -39,8 +39,6 @@ class _TripSeatMapState extends State<TripSeatMap> {
   Widget build(BuildContext context) {
     final trip = widget.trip;
 
-    // Seat data is stored per (row, column); the blueprint pours seats into its
-    // slots in that same reading order, so the two must be sorted alike.
     final ordered = [...trip.seats]
       ..sort((a, b) {
         final byRow = a.row.compareTo(b.row);
@@ -65,8 +63,7 @@ class _TripSeatMapState extends State<TripSeatMap> {
             density: SeatLayoutDensity.compact,
             showLegend: true,
             labels: const VehicleSeatLabels(
-              // The operator's vocabulary, not the rider's: these are the same
-              // words the seat-state menu uses.
+              
               occupied: 'مدفوع',
               reserved: 'محجوز',
               disabled: 'محظور',

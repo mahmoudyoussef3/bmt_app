@@ -102,8 +102,7 @@ abstract final class ClientRouter {
   /// are resolved here rather than by rewriting historical data.
   static Map<String, WidgetBuilder> get _serverAliases =>
       <String, WidgetBuilder>{
-        // Sent when a package expires or is exhausted ("renew now"), which is
-        // what My Subscription is for.
+        
         PackagesRoutes.legacyExpiryAlias: (_) =>
             ClientCubitScopes.mySubscription(const MySubscriptionScreen()),
       };
@@ -136,17 +135,13 @@ abstract final class ClientRouter {
   static Object? _args(BuildContext context) =>
       ModalRoute.of(context)?.settings.arguments;
 
-  // --- Auth -----------------------------------------------------------------
-
   static Map<String, WidgetBuilder> get _auth => <String, WidgetBuilder>{
     AuthRoutes.welcome: (_) => ClientCubitScopes.auth(const WelcomeScreen()),
     AuthRoutes.signIn: (_) => ClientCubitScopes.auth(const SignInScreen()),
     AuthRoutes.signUp: (_) => ClientCubitScopes.auth(const SignUpScreen()),
     AuthRoutes.forgotPassword: (_) =>
         ClientCubitScopes.forgotPassword(const ForgotPasswordScreen()),
-    // Reached only via the `easyway://reset-password/` deep link handled in
-    // `ClientApp`. The recovery tokens travel through Supabase's own session
-    // (see `ResetPasswordCubit`), not through this route's arguments.
+    
     AuthRoutes.resetPassword: (_) =>
         ClientCubitScopes.resetPassword(const ResetPasswordScreen()),
     AuthRoutes.success: (context) {
@@ -155,24 +150,18 @@ abstract final class ClientRouter {
         email: args is Map ? args['email']?.toString() : null,
       );
     },
-    // Passwordless sign-in by SMS. Both screens are registered and navigable,
-    // but nothing live points at them yet: the provider buttons that open
-    // `phoneLogin` are inert while `AuthMethod.phoneOtp.isAvailable` is false.
+    
     AuthRoutes.phoneLogin: (_) =>
         ClientCubitScopes.socialAuth(const PhoneLoginScreen()),
     AuthRoutes.otpVerification: (context) {
       final args = OtpVerificationArguments.fromArguments(_args(context));
-      // Reached without a number means reached out of order — a stale link, a
-      // restored stack. Six boxes for a code that was never sent is a dead end,
-      // so send the rider back to the step that produces one.
+      
       if (!args.isValid) {
         return ClientCubitScopes.socialAuth(const PhoneLoginScreen());
       }
       return ClientCubitScopes.socialAuth(OtpVerificationScreen(args: args));
     },
   };
-
-  // --- Booking --------------------------------------------------------------
 
   static Map<String, WidgetBuilder> get _booking => <String, WidgetBuilder>{
     BookingRoutes.search: (context) {
@@ -191,8 +180,7 @@ abstract final class ClientRouter {
           BlocProvider(
             create: (_) => clientGetIt<RouteResultsCubit>()..load(query),
           ),
-          // Not loaded here: which office sells this corridor is only known
-          // once the results land, so the packages shelf asks for itself.
+          
           BlocProvider(create: (_) => clientGetIt<RoutePackagesCubit>()),
         ],
         child: RouteSelectionScreen(query: query),
@@ -229,11 +217,6 @@ abstract final class ClientRouter {
     BookingRoutes.dailyBooking: (_) =>
         ClientCubitScopes.dailyBooking(const DailyBookingFlowScreen()),
 
-    // The wizard and overview are driven by a route object rather than a cubit
-    // fetch, so they render nothing if handed the wrong argument type. The
-    // wizard also accepts a map wrapping the route alongside a package the
-    // rider reviewed before searching, so its package step can open with it
-    // pre-selected.
     BookingRoutes.wizard: (context) {
       final args = _args(context);
       final route = args is Map ? args['route'] : args;
@@ -254,41 +237,15 @@ abstract final class ClientRouter {
     },
   };
 
-  // --- Seats ----------------------------------------------------------------
-
-  // `SeatSelectionRoutes.seatSelection` is deliberately absent. It fronted a
-  // second, older booking funnel (seat map → PaymentCheckoutScreen →
-  // PaymentProcessingScreen) that nothing navigates to and that no longer works:
-  // its confirm call omits `p_package_id` / `p_plan_start_date`, which the live
-  // `confirm_seat_booking_v2` requires, so PostgREST cannot resolve the function
-  // at all. It also called confirm *without* first taking a seat lock, and
-  // rendered "Payment submitted" after a card checkout the rider had cancelled.
-  //
-  // Seats are chosen in the booking wizard (`BookingRoutes.wizard`), which locks
-  // and confirms as one unit through `PlaceSeatBookingUseCase`. Registering the
-  // old path here made a broken money flow one `action_url` away from a rider.
   static Map<String, WidgetBuilder> get _seats => <String, WidgetBuilder>{
     SeatReleaseRoutes.seatRelease: (_) =>
         ClientCubitScopes.seatRelease(const SeatReleaseScreen()),
   };
 
-  // --- Payments & packages --------------------------------------------------
-
-  // `PaymentRoutes.checkout` is deliberately absent — see the note on [_seats].
-  // It was the second half of the dead funnel, and the only caller left
-  // (the package catalogue) reached it with no trip and no seat, so its pay bar
-  // could never unblock: a screen a rider could open but never finish.
-  //
-  // The plan catalogue itself is gone too: it re-listed what an office profile
-  // already shows, and packages are paid for inside the wizard's package +
-  // payment steps, which is also the only place a subscription can be bound to
-  // the route it is sold for.
   static Map<String, WidgetBuilder> get _payments => <String, WidgetBuilder>{
     PackagesRoutes.mySubscription: (_) =>
         ClientCubitScopes.mySubscription(const MySubscriptionScreen()),
   };
-
-  // --- Trips & tracking -----------------------------------------------------
 
   static Map<String, WidgetBuilder> get _trips => <String, WidgetBuilder>{
     TripsRoutes.myTrips: (context) => ClientCubitScopes.trips(
@@ -313,8 +270,6 @@ abstract final class ClientRouter {
     },
   };
 
-  // --- Routes catalog ---------------------------------------------------------
-
   static Map<String, WidgetBuilder> get _routesCatalog =>
       <String, WidgetBuilder>{
         RoutesFeatureRoutes.details: (context) {
@@ -330,16 +285,12 @@ abstract final class ClientRouter {
         },
       };
 
-  // --- Support --------------------------------------------------------------
-
   static Map<String, WidgetBuilder> get _support => <String, WidgetBuilder>{
     SupportRoutes.center: (_) =>
         ClientCubitScopes.support(const SupportCenterScreen()),
     SupportRoutes.createTicket: (_) =>
         ClientCubitScopes.support(const CreateSupportTicketScreen()),
-    // A notification tap or a stale `action_url` can reach this path without an
-    // id. Falling back to the ticket list is the honest answer; the previous
-    // `_args(context)! as String` crashed on the null-check operator instead.
+    
     SupportRoutes.ticketDetails: (context) {
       final ticketId = _args(context);
       if (ticketId is! String || ticketId.trim().isEmpty) {
@@ -352,16 +303,12 @@ abstract final class ClientRouter {
     },
   };
 
-  // --- Engagement -----------------------------------------------------------
-
   static Map<String, WidgetBuilder> get _engagement => <String, WidgetBuilder>{
     CommunicationRoutes.communication: (_) =>
         ClientCubitScopes.communication(const CommunicationScreen()),
     CommunicationRoutes.chatThread: (context) {
       final args = ChatThreadArguments.fromArguments(_args(context));
-      // A stale notification/deep link can reach this without a valid
-      // conversation id. Falling back to the thread list is the honest
-      // answer; a blank SizedBox with no app bar or back button is a dead end.
+      
       if (!args.isValid) {
         return ClientCubitScopes.communication(const CommunicationScreen());
       }
@@ -384,14 +331,10 @@ abstract final class ClientRouter {
         ClientCubitScopes.referralRewards(const ReferralRewardsScreen()),
     LoyaltyRoutes.loyalty: (_) =>
         ClientCubitScopes.loyalty(const LoyaltyScreen()),
-    // Also the destination every wallet and refund notification deep-links to:
-    // the backend stamps `action_url = '/wallet'`, which
-    // `resolveNotificationDestination` passes through unchanged.
+    
     WalletRoutes.wallet: (_) =>
         ClientCubitScopes.wallet(const ClientWalletScreen()),
   };
-
-  // --- Profile & legal ------------------------------------------------------
 
   static Map<String, WidgetBuilder> get _profile => <String, WidgetBuilder>{
     ProfileRoutes.profile: (context) =>

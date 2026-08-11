@@ -34,9 +34,7 @@ class LandingApp extends StatelessWidget {
       title: 'EWT — Easy Way Transportation',
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      // The dashboard this page markets is Arabic-only and RTL; the landing
-      // page pitching it stays in the same language rather than picking up
-      // the client app's language switcher.
+      
       locale: const Locale('ar'),
       theme: DashboardAppTheme.light(),
       darkTheme: DashboardAppTheme.dark(),

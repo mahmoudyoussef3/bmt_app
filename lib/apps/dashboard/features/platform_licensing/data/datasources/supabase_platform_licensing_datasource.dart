@@ -32,8 +32,6 @@ class SupabasePlatformLicensingDatasource
       Map<String, dynamic>.from(e as Map),
   ];
 
-  // ── Catalog ─────────────────────────────────────────────────────────────────
-
   @override
   Future<FeatureCatalog> catalog() async =>
       FeatureCatalog.fromJson(_map(await _rpc('platform_feature_catalog')));
@@ -50,8 +48,6 @@ class SupabasePlatformLicensingDatasource
       'p_status': status,
     });
   }
-
-  // ── Plans ───────────────────────────────────────────────────────────────────
 
   @override
   Future<List<LicensingPlan>> plans() async => [
@@ -92,8 +88,6 @@ class SupabasePlatformLicensingDatasource
   @override
   Future<Map<String, dynamic>> previewPlan(String planId) async =>
       _map(await _rpc('platform_preview_plan', {'p_plan_id': planId}));
-
-  // ── Licenses ────────────────────────────────────────────────────────────────
 
   @override
   Future<List<OfficeLicenseRow>> licenses() async => [
@@ -169,8 +163,6 @@ class SupabasePlatformLicensingDatasource
     ),
   );
 
-  // ── Overrides ───────────────────────────────────────────────────────────────
-
   @override
   Future<OfficeLicenseDetail> setOverride(
     String officeId,
@@ -204,8 +196,6 @@ class SupabasePlatformLicensingDatasource
       }),
     ),
   );
-
-  // ── Billing ─────────────────────────────────────────────────────────────────
 
   @override
   Future<BillingOverview> billing({String? officeId, String? status}) async =>
@@ -248,8 +238,6 @@ class SupabasePlatformLicensingDatasource
       'p_reason': reason,
     });
   }
-
-  // ── Ops ─────────────────────────────────────────────────────────────────────
 
   @override
   Future<List<OfficeUsageRow>> usage() async => [

@@ -43,10 +43,6 @@ class SupabaseSupportDatasource {
     final ticketNumber =
         '#TK-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}';
 
-    // `office_id` is the office the ticket should reach. The server has the last
-    // word: a linked booking/trip overrides it with that trip's office, and an
-    // office that isn't a real, pickable one is discarded — so this is a routing
-    // hint the backend validates, never a trusted grant.
     final insertData = {
       'client_id': _currentUserId,
       'ticket_number': ticketNumber,

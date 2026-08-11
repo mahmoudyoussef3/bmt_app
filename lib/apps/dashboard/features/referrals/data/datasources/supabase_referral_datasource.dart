@@ -22,7 +22,6 @@ class SupabaseReferralDatasource implements ReferralDatasource {
           error.code == 'PGRST205' ||
           error.code == '42703');
 
-  // ── Config ────────────────────────────────────────────────────────────────
   @override
   Future<ReferralRewardConfig> getRewardConfig() async {
     try {
@@ -59,7 +58,6 @@ class SupabaseReferralDatasource implements ReferralDatasource {
     return _mapConfig(row);
   }
 
-  // ── Analytics ───────────────────────────────────────────────────────────────
   @override
   Future<ReferralAnalytics> getAnalytics() async {
     try {
@@ -116,7 +114,6 @@ class SupabaseReferralDatasource implements ReferralDatasource {
     }
   }
 
-  // ── Leaderboard ─────────────────────────────────────────────────────────────
   @override
   Future<List<ReferralLeaderboardItem>> getLeaderboard() async {
     try {
@@ -131,7 +128,6 @@ class SupabaseReferralDatasource implements ReferralDatasource {
           .where((id) => id.isNotEmpty)
           .toList();
 
-      // Per-referrer aggregates (total / pending / last referral date).
       final agg = <String, _ReferrerAgg>{};
       final aggRows = await _client
           .from('referrals')
@@ -185,7 +181,6 @@ class SupabaseReferralDatasource implements ReferralDatasource {
     }
   }
 
-  // ── History ─────────────────────────────────────────────────────────────────
   @override
   Future<List<ReferralRecord>> getHistory() async {
     try {
@@ -240,7 +235,6 @@ class SupabaseReferralDatasource implements ReferralDatasource {
     }
   }
 
-  // ── Reward transactions (immutable ledger) ──────────────────────────────────
   @override
   Future<List<ReferralRewardTransaction>> getRewardTransactions() async {
     try {
@@ -279,7 +273,6 @@ class SupabaseReferralDatasource implements ReferralDatasource {
     }
   }
 
-  // ── Helpers ─────────────────────────────────────────────────────────────────
   Future<Map<String, String>> _batchLookup(
     String table,
     String keyColumn,

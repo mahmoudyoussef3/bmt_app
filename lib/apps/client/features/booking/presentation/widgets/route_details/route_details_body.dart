@@ -77,10 +77,7 @@ class RouteDetailsBody extends StatelessWidget {
           maxChildSize: 0.96,
           snap: true,
           snapSizes: const [0.30, 0.48, 0.96],
-          // Not wrapped in AnimatedSwitcher: this ListView shares a single
-          // ScrollController with DraggableScrollableSheet, and keeping two
-          // copies mounted mid-crossfade would attach that controller to two
-          // Scrollables at once and crash.
+          
           builder: (context, scrollController) {
             return RouteDetailsSheetSurface(
               child: RouteDetailsSheetContent(

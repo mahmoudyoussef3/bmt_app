@@ -30,7 +30,6 @@ class DriverProfileDataSource {
         .single();
     final driver = Map<String, dynamic>.from(driverRow);
 
-    // Completed trips count + total passengers
     final completedTrips = await _supabase
         .from('operation_trips')
         .select('id, trip_passengers(id)')
@@ -43,7 +42,6 @@ class DriverProfileDataSource {
       (sum, t) => sum + ((t['trip_passengers'] as List?)?.length ?? 0),
     );
 
-    // Most recent vehicle via latest trip
     final recentTrip = await _supabase
         .from('operation_trips')
         .select('vehicles(vehicle_code, plate_number, capacity, model)')
@@ -56,9 +54,6 @@ class DriverProfileDataSource {
         ? recentTrip['vehicles'] as Map<String, dynamic>?
         : null;
 
-    // The captain's public average, maintained on `drivers` by the trip_reviews
-    // trigger. They see the number, never the individual reviews behind it —
-    // those belong to operations.
     final avgRating = (driver['rating'] as num?)?.toDouble() ?? 0;
 
     return DriverProfile(

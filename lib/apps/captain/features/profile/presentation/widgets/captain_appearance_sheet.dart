@@ -4,9 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_theme_cubit.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 
-/// Lets the captain pick light / dark / system appearance. Reads and writes
-/// through the app-wide `CaptainThemeCubit` singleton, so the choice applies
-/// immediately and survives a restart.
 Future<void> showCaptainAppearanceSheet(BuildContext context) {
   return showModalBottomSheet<void>(
     context: context,

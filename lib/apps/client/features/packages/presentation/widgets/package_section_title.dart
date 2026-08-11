@@ -28,8 +28,7 @@ class PackageSectionTitle extends StatelessWidget {
           height: 34,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            // The fill tone, not the ink tone: the glyph is white, and white on
-            // the dark theme's accent blue misses contrast.
+            
             color: ClientColors.primaryFillFor(context),
             borderRadius: BorderRadius.circular(ClientRadius.sm),
             boxShadow: ClientElevation.sm(context),

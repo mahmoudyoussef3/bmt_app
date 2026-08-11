@@ -16,7 +16,7 @@ class SupportCubit extends Cubit<SupportState> {
   final GetRelatedBookingOptionsUseCase _getRelatedBookingOptions;
   final GetSupportOfficeOptionsUseCase _getOfficeOptions;
   final GetTicketDetailsUseCase _getTicketDetails;
-  final SupportRepository _supportRepository; // To get attachments
+  final SupportRepository _supportRepository; 
 
   SupportCubit({
     required GetMySupportTicketsUseCase getMySupportTickets,
@@ -65,7 +65,7 @@ class SupportCubit extends Cubit<SupportState> {
         emit(const SupportRelatedBookingsLoaded());
       }
     } catch (_) {
-      // Optional nicety — the ticket form works without it.
+      
     }
   }
 
@@ -133,9 +133,6 @@ class SupportCubit extends Cubit<SupportState> {
         relatedTripId: relatedTripId,
       );
 
-      // The ticket already exists at this point — an attachment failure must
-      // not surface as a hard error, or the client would resubmit and file a
-      // duplicate ticket. Treat it as a soft success instead.
       var attachmentFailed = false;
       if (attachment != null) {
         try {

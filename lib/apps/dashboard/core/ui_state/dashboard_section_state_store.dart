@@ -54,7 +54,6 @@ class DashboardSectionStateStore {
 class DashboardSectionIds {
   DashboardSectionIds._();
 
-  // Home
   static const homeActionRequired = 'home.actionRequired';
   static const homeRevenueTrend = 'home.revenueTrend';
   static const homeTodayTrips = 'home.todayTrips';
@@ -63,9 +62,6 @@ class DashboardSectionIds {
   static const homeFleetTeam = 'home.fleetTeam';
   static const homeRecentActivity = 'home.recentActivity';
 
-  // Business Overview — the executive tab. Eight sections, each folding
-  // independently, so an owner who only cares about money can collapse the
-  // rest once and have that layout waiting for them tomorrow.
   static const businessKpis = 'business.kpis';
   static const businessHealth = 'business.health';
   static const businessInsights = 'business.insights';
@@ -75,20 +71,17 @@ class DashboardSectionIds {
   static const businessQuickActions = 'business.quickActions';
   static const businessAttention = 'business.attention';
 
-  // Trips
   static const tripsFilters = 'trips.filters';
   static const tripsStatusMix = 'trips.statusMix';
   static const tripsOccupancy = 'trips.occupancy';
   static const tripsTopRoutes = 'trips.topRoutes';
 
-  // Bookings
   static const bookingsFilters = 'bookings.filters';
   static const bookingsStatusMix = 'bookings.statusMix';
   static const bookingsPaymentMix = 'bookings.paymentMix';
   static const bookingsDailyTrend = 'bookings.dailyTrend';
   static const bookingsTopRoutes = 'bookings.topRoutes';
 
-  // Subscriptions
   static const subscriptionsFilters = 'subscriptions.filters';
   static const subscriptionsStatus = 'subscriptions.status';
   static const subscriptionsRevenueTrend = 'subscriptions.revenueTrend';
@@ -101,11 +94,9 @@ class DashboardSectionIds {
   static const subscriptionDetailOrigin = 'subscriptions.detail.origin';
   static const subscriptionDetailActions = 'subscriptions.detail.actions';
 
-  // Fleet
   static const fleetDriverReadiness = 'fleet.driverReadiness';
   static const fleetVehicleStatus = 'fleet.vehicleStatus';
 
-  // Finance
   static const financeRevenueTrend = 'finance.revenueTrend';
   static const financeRevenueSources = 'finance.revenueSources';
   static const financePaymentMethods = 'finance.paymentMethods';
@@ -122,42 +113,33 @@ class DashboardSectionIds {
   static const financeRefundRequests = 'finance.refundRequests';
   static const financeIncomeStatement = 'finance.incomeStatement';
 
-  // Users
   static const usersFilters = 'users.filters';
 
-  // Payment verification
   static const paymentVerificationFilters = 'paymentVerification.filters';
 
-  // Reviews
   static const reviewsFilters = 'reviews.filters';
   static const reviewsDriverStandings = 'reviews.driverStandings';
 
-  // Wallet
   static const walletDirectory = 'wallet.directory';
   static const walletActivity = 'wallet.activity';
   static const walletRefundQueue = 'wallet.refundQueue';
   static const walletDetailLedger = 'wallet.detail.ledger';
 
-  // Owner overview
   static const ownerRevenueTrend = 'ownerOverview.revenueTrend';
   static const ownerClientStatus = 'ownerOverview.clientStatus';
   static const ownerClientsByPlan = 'ownerOverview.clientsByPlan';
 
-  // Live ops
   static const liveOpsMap = 'liveOps.map';
   static const liveOpsTrips = 'liveOps.trips';
   static const liveOpsIncidents = 'liveOps.incidents';
 
-  // Referrals
   static const referralsStatusMix = 'referrals.statusMix';
   static const referralsRewardMix = 'referrals.rewardMix';
 
-  // Office billing
   static const officeBillingUsage = 'officeBilling.usage';
   static const officeBillingPlan = 'officeBilling.plan';
   static const officeBillingInvoices = 'officeBilling.invoices';
 
-  // Platform licensing
   static const platformAuditLog = 'platform.audit.log';
   static const platformBillingRenewals = 'platform.billing.renewals';
   static const platformBillingInvoices = 'platform.billing.invoices';
@@ -167,11 +149,6 @@ class DashboardSectionIds {
   static const platformLicenseOverrides = 'platform.licenses.overrides';
   static const platformLicenseBilling = 'platform.licenses.billing';
   static const platformLicenseActivity = 'platform.licenses.activity';
-
-  // الخطط والباقات and كتالوج الميزات fold almost nothing by design: they were
-  // rebuilt around a gallery, a workspace and a single toolbar, and a header
-  // that folds is a header that was too big. The revision history is the one
-  // survivor — a stack of diffs genuinely wants to stay shut.
 
   /// One entry in a plan's revision history, keyed by the revision's own id.
   /// Per-row sections need an id derived from the row's own identity — a shared

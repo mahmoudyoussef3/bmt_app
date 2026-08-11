@@ -9,12 +9,6 @@ import 'package:bmt_app/apps/captain/core/widgets/captain_section_label.dart';
 import 'captain_appearance_sheet.dart';
 import 'driver_profile_sign_out_button.dart';
 
-/// Captain-facing settings, closing with the way out of the app.
-///
-/// Sign-out lives here as a destructive row rather than as the full-width red
-/// button that used to sit alone under the last card. Ending a shift is not the
-/// profile screen's headline action, and giving it the loudest control on the
-/// page invited exactly the mis-tap the confirmation dialog then had to catch.
 class DriverProfileSettingsCard extends StatelessWidget {
   const DriverProfileSettingsCard({super.key});
 
@@ -26,8 +20,6 @@ class DriverProfileSettingsCard extends StatelessWidget {
         const CaptainSectionLabel('الإعدادات'),
         CaptainListGroup(
           children: [
-            // Scoped to themeMode: nothing else on this card reads the theme
-            // state, so an unrelated emission must not rebuild the row.
             BlocBuilder<CaptainThemeCubit, CaptainThemeState>(
               buildWhen: (previous, current) =>
                   previous.themeMode != current.themeMode,

@@ -65,9 +65,7 @@ class NotificationsScreen extends StatelessWidget {
                   ),
               ],
             ),
-            // The category strip only appears once there is something to
-            // filter — an empty inbox with seven filter chips over it is
-            // noise, not navigation.
+            
             if (state case NotificationsLoaded(:final notifications)
                 when notifications.isNotEmpty)
               SliverToBoxAdapter(

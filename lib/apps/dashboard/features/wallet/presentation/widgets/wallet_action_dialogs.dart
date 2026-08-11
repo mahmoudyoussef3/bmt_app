@@ -22,10 +22,6 @@ import 'wallet_format.dart';
 /// reason it is mandatory on the ledger: these rows are read months later by
 /// someone who was not in the room.
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// Reversal
-// ═══════════════════════════════════════════════════════════════════════════════
-
 class WalletReverseDialog extends StatefulWidget {
   const WalletReverseDialog({
     super.key,
@@ -68,8 +64,7 @@ class _WalletReverseDialogState extends State<WalletReverseDialog> {
             mainAxisSize: MainAxisSize.min,
             children: [
               _Callout(
-                // Says what a reversal *is*, because the intuition is "undo" and
-                // the reality is "a second, opposite entry".
+                
                 message:
                     'سيتم تسجيل حركة معاكسة بقيمة ${WalletFormat.signed(-entry.amount)} '
                     'وتُعلَّم العملية الأصلية كمعكوسة. لا يُحذف أي سجل.',
@@ -151,10 +146,6 @@ class _WalletReverseDialogState extends State<WalletReverseDialog> {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// Freeze / unfreeze
-// ═══════════════════════════════════════════════════════════════════════════════
-
 class WalletFreezeDialog extends StatefulWidget {
   const WalletFreezeDialog({
     super.key,
@@ -197,9 +188,7 @@ class _WalletFreezeDialogState extends State<WalletFreezeDialog> {
           children: [
             _Callout(
               message: _freezing
-                  // The exact behaviour, because "frozen" reads as "blocked" and
-                  // an operator who believes a refund will bounce will not issue
-                  // one.
+                  
                   ? 'التجميد يمنع الخصم من محفظة ${widget.customer.displayName} فقط. '
                         'الإضافات والمرتجعات تظل ممكنة — يجب أن تبقى قادرًا على رد أموال العميل.'
                   : 'سيعود الخصم من محفظة ${widget.customer.displayName} متاحًا.',
@@ -266,10 +255,6 @@ class _WalletFreezeDialogState extends State<WalletFreezeDialog> {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// Refund decision
-// ═══════════════════════════════════════════════════════════════════════════════
-
 /// Approve (with an editable amount and a destination) or reject (with a
 /// reason). The approval path is where the agent → owner pipeline closes.
 class RefundDecisionDialog extends StatefulWidget {
@@ -301,8 +286,7 @@ class _RefundDecisionDialogState extends State<RefundDecisionDialog> {
   @override
   void initState() {
     super.initState();
-    // A guest booking has no wallet to refund into, so the option is not merely
-    // disabled — it is never the default.
+    
     if (widget.refund.clientId == null) _settlement = RefundSettlement.cash;
   }
 
@@ -434,10 +418,6 @@ class _RefundDecisionDialogState extends State<RefundDecisionDialog> {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// Cancelled-trip batch refund (§9.4)
-// ═══════════════════════════════════════════════════════════════════════════════
-
 /// Refunding a 14-seat cancelled bus one customer at a time is not a product.
 /// This picks a cancelled trip that still owes money and refunds every seat on
 /// it in one transaction, under one batch key.
@@ -462,8 +442,7 @@ class _TripBatchRefundDialogState extends State<TripBatchRefundDialog> {
   @override
   void initState() {
     super.initState();
-    // Default selection is a state change; making it here keeps `build` free of
-    // side effects (see the same note in WalletRefundDialog).
+    
     _tripsFuture = widget.cubit.cancelledTrips().then((trips) {
       if (mounted && trips.isNotEmpty) {
         setState(() => _trip = trips.first);
@@ -620,10 +599,6 @@ class _TripBatchRefundDialogState extends State<TripBatchRefundDialog> {
     });
   }
 }
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// Shared bits
-// ═══════════════════════════════════════════════════════════════════════════════
 
 class _Callout extends StatelessWidget {
   const _Callout({required this.message});

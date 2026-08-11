@@ -72,8 +72,7 @@ class _IncidentResolutionDialogState extends State<_IncidentResolutionDialog> {
 
     return AlertDialog(
       title: Text(_isDismissal ? 'استبعاد البلاغ' : 'إغلاق البلاغ'),
-      // Constrained + scrollable so the dialog never overflows on a short
-      // window or at a large text scale.
+      
       content: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 420),
         child: SingleChildScrollView(

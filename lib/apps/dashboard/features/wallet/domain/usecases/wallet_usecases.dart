@@ -146,9 +146,6 @@ class AdjustWalletUseCase {
       throw const WalletRuleViolation('التصنيف غير صالح لهذا النوع.');
     }
 
-    // A debit is the one adjustment that takes money away from a customer who is
-    // not in the room, so it gets the extra checks: the balance must cover it,
-    // and a frozen wallet refuses it outright.
     if (kind == WalletKind.manualDebit && wallet != null) {
       if (wallet.isFrozen) {
         throw const WalletRuleViolation(
@@ -249,8 +246,7 @@ class SetWalletStatusUseCase {
     required WalletStatus status,
     required String reason,
   }) {
-    // Both directions require a reason. Unfreezing is as much a decision as
-    // freezing, and the ledger's readers deserve to know why either happened.
+    
     if (reason.trim().isEmpty) {
       throw const WalletRuleViolation('سبب تغيير حالة المحفظة مطلوب.');
     }
@@ -301,8 +297,7 @@ class CreateRefundUseCase {
     if (!WalletCategories.refund.any((c) => c.code == category)) {
       throw const WalletRuleViolation('تصنيف الاسترداد غير صالح.');
     }
-    // A guest booking has no customer, so it has no wallet to refund into
-    // (§14 case 10). Cash is the first-class path there, not a fallback.
+    
     if (settlement == RefundSettlement.wallet && !hasClient) {
       throw const WalletRuleViolation(
         'هذا الحجز بدون حساب عميل — لا توجد محفظة. اختر طريقة تسوية أخرى.',
