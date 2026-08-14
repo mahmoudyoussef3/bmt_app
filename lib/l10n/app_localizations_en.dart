@@ -5246,7 +5246,12 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get routes_searchHint => 'Search by route, city, or company';
+  String get routes_searchHint => 'Search by route, city, station, or company';
+
+  @override
+  String routes_viaStation(String stationName) {
+    return 'Passing through $stationName';
+  }
 
   @override
   String routes_noSearchResults(String query) {

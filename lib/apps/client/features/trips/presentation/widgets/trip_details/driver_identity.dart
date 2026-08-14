@@ -36,23 +36,25 @@ class DriverIdentity extends StatelessWidget {
             context,
           ).copyWith(color: ClientColors.textPrimaryFor(context)),
         ),
-        const SizedBox(height: 5),
+        const SizedBox(height: 4),
         Row(
           children: [
             Icon(
               _isRated ? Icons.star_rounded : Icons.star_outline_rounded,
-              size: 17,
-              color: ClientColors.journeyAmber,
+              size: 15,
+              // Gold is the rating color; amber is reserved for warnings.
+              color: ClientColors.ratingFor(context),
             ),
             const SizedBox(width: 4),
             Text(
-              _isRated ? rating.toStringAsFixed(1) : context.l10n.trips_newCaptain,
-              style: ClientTypography.bodySmall(context).copyWith(
-                fontWeight: FontWeight.w900,
+              _isRated
+                  ? rating.toStringAsFixed(1)
+                  : context.l10n.trips_newCaptain,
+              style: ClientTypography.labelMedium(context).copyWith(
+                fontWeight: FontWeight.w800,
                 color: ClientColors.textPrimaryFor(context),
               ),
             ),
-            
             Flexible(
               child: Text(
                 _isRated
@@ -62,7 +64,7 @@ class DriverIdentity extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: ClientTypography.bodySmall(
                   context,
-                ).copyWith(color: ClientColors.textSecondaryFor(context)),
+                ).copyWith(color: ClientColors.textTertiaryFor(context)),
               ),
             ),
           ],

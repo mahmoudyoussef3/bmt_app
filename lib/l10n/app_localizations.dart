@@ -9263,8 +9263,14 @@ abstract class AppLocalizations {
   /// No description provided for @routes_searchHint.
   ///
   /// In en, this message translates to:
-  /// **'Search by route, city, or company'**
+  /// **'Search by route, city, station, or company'**
   String get routes_searchHint;
+
+  /// No description provided for @routes_viaStation.
+  ///
+  /// In en, this message translates to:
+  /// **'Passing through {stationName}'**
+  String routes_viaStation(String stationName);
 
   /// No description provided for @routes_noSearchResults.
   ///

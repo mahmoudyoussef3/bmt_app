@@ -26,18 +26,15 @@ class _FakeRoutesDirectoryDatasource implements RoutesDirectoryDatasource {
 
   @override
   Future<RouteDetailsModel> fetchRouteDetails(String routeId) async {
-    return RouteDetailsModel.fromJson(
-      {
-        'id': routeId,
-        'name': 'Cairo Express',
-        'start_city': 'Cairo',
-        'end_city': 'Alexandria',
-        'route_code': 'CAI-ALX',
-        'status': 'active',
-        'office': {'id': 'o1', 'name': 'Nile Express', 'rating': 4.5},
-      },
-      stops: const [],
-    );
+    return RouteDetailsModel.fromJson({
+      'id': routeId,
+      'name': 'Cairo Express',
+      'start_city': 'Cairo',
+      'end_city': 'Alexandria',
+      'route_code': 'CAI-ALX',
+      'status': 'active',
+      'office': {'id': 'o1', 'name': 'Nile Express', 'rating': 4.5},
+    }, stops: const []);
   }
 }
 
@@ -92,6 +89,58 @@ void main() {
       expect(model.officeId, '');
       expect(model.officeName, '');
       expect(model.officeLogoUrl, isNull);
+      expect(model.stops, isEmpty);
+    });
+
+    test('orders the embedded stations by sort_order', () {
+      final model = RouteSummaryModel.fromJson({
+        'id': 'r1',
+        'name': 'Cairo Express',
+        'start_city': 'Cairo',
+        'end_city': 'Mansoura',
+        'stops': [
+          {'id': 's3', 'name': 'Banha', 'sort_order': 3},
+          {'id': 's1', 'name': 'Cairo', 'sort_order': 1},
+          {'id': 's2', 'name': 'Shibin El Kom', 'sort_order': 2},
+        ],
+      });
+
+      expect(model.stops.map((stop) => stop.name), [
+        'Cairo',
+        'Shibin El Kom',
+        'Banha',
+      ]);
+    });
+
+    test('drops unnamed stations so the ends of the list stay meaningful', () {
+      final model = RouteSummaryModel.fromJson({
+        'id': 'r1',
+        'name': 'Cairo Express',
+        'start_city': 'Cairo',
+        'end_city': 'Mansoura',
+        'stops': [
+          {'id': 's1', 'name': 'Cairo', 'sort_order': 1},
+          {'id': 's2', 'sort_order': 2},
+          {'id': 's3', 'name': '  ', 'sort_order': 3},
+          {'id': 's4', 'name': 'Mansoura', 'sort_order': 4},
+        ],
+      });
+
+      expect(model.stops.map((stop) => stop.name), ['Cairo', 'Mansoura']);
+    });
+
+    test('survives a missing or malformed stations relation', () {
+      Map<String, dynamic> row(Object? stops) => {
+        'id': 'r1',
+        'name': 'Cairo Express',
+        'start_city': 'Cairo',
+        'end_city': 'Mansoura',
+        'stops': stops,
+      };
+
+      expect(RouteSummaryModel.fromJson(row(null)).stops, isEmpty);
+      expect(RouteSummaryModel.fromJson(row('nonsense')).stops, isEmpty);
+      expect(RouteSummaryModel.fromJson(row(const [])).stops, isEmpty);
     });
   });
 

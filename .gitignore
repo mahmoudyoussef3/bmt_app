@@ -46,3 +46,9 @@ app.*.map.json
 
 # Throwaway seat-map visual captures (see docs/architecture/VEHICLE_SEAT_BLUEPRINTS.md)
 test/core/widgets/vehicle_seats/_captures/
+
+# Throwaway routes-catalog visual captures (routes_catalog_visual_capture.dart)
+test/apps/client/features/routes/_captures/
+
+# Throwaway trip-details visual captures (trip_detail_sections_visual_capture.dart)
+test/apps/client/features/trips/_captures/

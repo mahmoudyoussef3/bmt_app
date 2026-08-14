@@ -5222,7 +5222,13 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get routes_searchHint => 'ابحث باسم الخط أو المدينة أو الشركة';
+  String get routes_searchHint =>
+      'ابحث باسم الخط أو المدينة أو المحطة أو الشركة';
+
+  @override
+  String routes_viaStation(String stationName) {
+    return 'يمر عبر $stationName';
+  }
 
   @override
   String routes_noSearchResults(String query) {

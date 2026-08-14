@@ -4,6 +4,7 @@ import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
+import 'package:bmt_app/core/localization/l10n_context.dart';
 import 'package:bmt_app/core/widgets/directional_icon.dart';
 
 import '../../domain/entities/route_summary.dart';
@@ -15,9 +16,20 @@ import '../../domain/entities/route_summary.dart';
 /// two lines, not one ellipsised "A → B" that loses the destination on a
 /// narrow phone with long Arabic city names.
 class RouteCard extends StatelessWidget {
-  const RouteCard({super.key, required this.route, required this.onTap});
+  const RouteCard({
+    super.key,
+    required this.route,
+    required this.onTap,
+    this.viaStop = '',
+  });
 
   final RouteSummary route;
+
+  /// An intermediate stop the rider's search matched — captioned under the
+  /// endpoints so the corridor explains itself. Empty when the route matched
+  /// on something the card already shows, or when nothing was searched at all.
+  final String viaStop;
+
   final VoidCallback onTap;
 
   bool get _hasEndpoints =>
@@ -74,6 +86,10 @@ class RouteCard extends StatelessWidget {
               ),
             ],
           ),
+          if (viaStop.isNotEmpty) ...[
+            const SizedBox(height: ClientSpacing.sm),
+            _ViaStopTag(stopName: viaStop),
+          ],
           if (_hasMeta || route.officeName.isNotEmpty) ...[
             const SizedBox(height: ClientSpacing.sm),
             Row(
@@ -106,6 +122,52 @@ class RouteCard extends StatelessWidget {
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+/// "يمر عبر بنها" — why this corridor is in the results when neither of its
+/// endpoints is what the rider typed.
+///
+/// Sits below the endpoints rather than beside them: a stop on the way is a
+/// fact about the journey, not a third terminus, and putting it on the spine
+/// would read as one. Hugs its text so it reads as a tag on the card, not as
+/// another field.
+class _ViaStopTag extends StatelessWidget {
+  const _ViaStopTag({required this.stopName});
+
+  final String stopName;
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = ClientColors.primaryFor(context);
+
+    return Align(
+      alignment: AlignmentDirectional.centerStart,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: accent.withAlpha(20),
+          borderRadius: BorderRadius.circular(ClientRadius.pill),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.place_outlined, size: 14, color: accent),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                context.l10n.routes_viaStation(stopName),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: ClientTypography.labelMedium(
+                  context,
+                ).copyWith(color: accent, fontWeight: FontWeight.w700),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

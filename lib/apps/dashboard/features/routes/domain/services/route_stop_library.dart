@@ -1,4 +1,5 @@
 import 'package:bmt_app/core/geo/geo_models.dart';
+import 'package:bmt_app/core/search/place_search_text.dart';
 
 import '../entities/operation_route.dart';
 import '../entities/route_draft.dart';
@@ -64,7 +65,6 @@ class RouteStopLibrary {
   bool get isEmpty => stops.isEmpty;
 
   factory RouteStopLibrary.fromRoutes(Iterable<OperationRoute> routes) {
-    
     final byKey = <String, RouteStopSuggestion>{};
     for (final route in routes) {
       for (final station in route.stations) {
@@ -134,57 +134,8 @@ class RouteStopLibrary {
   }
 
   /// Folds away every difference that makes two spellings of one Egyptian place
-  /// look like two places: Arabic diacritics and tatweel, the hamza forms of
-  /// alef, ta marbuta vs ha, alef maqsura vs ya, the definite article, Arabic
-  /// vs Latin digits, Latin case and accents, and punctuation.
-  ///
-  /// Latin text is folded rather than transliterated, so "Shibin El Qanater"
-  /// matches a stop whose *address* was saved in Latin — the geocoder writes
-  /// those — but not one saved only as "شبين القناطر". Cross-script matching
-  /// would need a transliteration table this does not pretend to have.
-  static String normalize(String value) {
-    final buffer = StringBuffer();
-    for (final rune in value.toLowerCase().runes) {
-      final char = String.fromCharCode(rune);
-      
-      if (rune >= 0x064B && rune <= 0x0652) continue;
-      if (rune == 0x0640) continue;
-      buffer.write(switch (char) {
-        'أ' || 'إ' || 'آ' || 'ٱ' => 'ا',
-        'ة' => 'ه',
-        'ى' => 'ي',
-        'ؤ' => 'و',
-        'ئ' => 'ي',
-        'گ' => 'ك',
-        'پ' => 'ب',
-        'چ' => 'ج',
-        'ڤ' => 'ف',
-        'é' || 'è' || 'ê' || 'ë' => 'e',
-        'á' || 'à' || 'â' || 'ä' => 'a',
-        'í' || 'ì' || 'î' || 'ï' => 'i',
-        'ó' || 'ò' || 'ô' || 'ö' => 'o',
-        'ú' || 'ù' || 'û' || 'ü' => 'u',
-        _ => rune >= 0x0660 && rune <= 0x0669
-            
-            ? String.fromCharCode(rune - 0x0660 + 0x30)
-            : char,
-      });
-    }
-
-    var text = buffer.toString().replaceAll(RegExp(r'[^\p{L}\p{N}]+', unicode: true), ' ').trim();
-    
-    text = text
-        .split(' ')
-        .where((word) => word.isNotEmpty)
-        .map(_stripArticle)
-        .where((word) => word.isNotEmpty)
-        .join(' ');
-    return text;
-  }
-
-  static String _stripArticle(String word) {
-    if (word.length > 3 && word.startsWith('ال')) return word.substring(2);
-    if (word == 'el' || word == 'al') return '';
-    return word;
-  }
+  /// look like two places. Delegates to [PlaceSearchText.normalize], which the
+  /// rider's route-catalog search folds by too — an operator's saved stop and a
+  /// rider's typed one have to meet under the same rules.
+  static String normalize(String value) => PlaceSearchText.normalize(value);
 }

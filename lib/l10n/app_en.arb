@@ -2737,7 +2737,15 @@
       }
     }
   },
-  "routes_searchHint": "Search by route, city, or company",
+  "routes_searchHint": "Search by route, city, station, or company",
+  "routes_viaStation": "Passing through {stationName}",
+  "@routes_viaStation": {
+    "placeholders": {
+      "stationName": {
+        "type": "String"
+      }
+    }
+  },
   "routes_noSearchResults": "No route matches \"{query}\"",
   "@routes_noSearchResults": {
     "placeholders": {

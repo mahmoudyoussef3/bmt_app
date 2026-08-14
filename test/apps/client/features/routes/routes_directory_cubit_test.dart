@@ -1,18 +1,25 @@
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:bmt_app/apps/client/features/routes/domain/entities/route_stop.dart';
 import 'package:bmt_app/apps/client/features/routes/domain/entities/route_summary.dart';
 import 'package:bmt_app/apps/client/features/routes/domain/repositories/routes_directory_repository.dart';
 import 'package:bmt_app/apps/client/features/routes/domain/usecases/get_routes_usecase.dart';
 import 'package:bmt_app/apps/client/features/routes/presentation/cubit/routes_directory_cubit.dart';
 import 'package:bmt_app/apps/client/features/routes/presentation/cubit/routes_directory_state.dart';
 
-const _routes = <RouteSummary>[
+List<RouteStop> _stops(List<String> names) => [
+  for (var i = 0; i < names.length; i++)
+    RouteStop(id: 's${i + 1}', name: names[i], order: i + 1),
+];
+
+final _routes = <RouteSummary>[
   RouteSummary(
     id: 'r1',
     name: 'Cairo Express',
     startCity: 'Cairo',
     endCity: 'Alexandria',
     officeName: 'Nile Express',
+    stops: _stops(['Cairo', 'Banha', 'Tanta', 'Alexandria']),
   ),
   RouteSummary(
     id: 'r2',
@@ -20,6 +27,7 @@ const _routes = <RouteSummary>[
     startCity: 'Tanta',
     endCity: 'Mansoura',
     officeName: 'Delta Lines',
+    stops: _stops(['Tanta', 'Mahalla', 'Mansoura']),
   ),
   RouteSummary(
     id: 'r3',
@@ -49,46 +57,56 @@ class _FakeRoutesDirectoryRepository implements RoutesDirectoryRepository {
   noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-RoutesDirectoryCubit _cubit([List<RouteSummary>? routes = _routes]) {
+RoutesDirectoryCubit _cubit([List<RouteSummary>? routes]) {
   return RoutesDirectoryCubit(
-    GetRoutesUseCase(_FakeRoutesDirectoryRepository([routes])),
+    GetRoutesUseCase(_FakeRoutesDirectoryRepository([routes ?? _routes])),
   );
 }
 
 void main() {
   group('RoutesDirectoryLoaded filtering', () {
     test('an empty query lists every route', () {
-      const state = RoutesDirectoryLoaded(_routes);
+      final state = RoutesDirectoryLoaded(_routes);
 
       expect(state.visibleRoutes, hasLength(3));
       expect(state.isFilteredEmpty, isFalse);
     });
 
     test('matches a route by name, case-insensitively', () {
-      const state = RoutesDirectoryLoaded(_routes, query: 'delta');
+      final state = RoutesDirectoryLoaded(_routes, query: 'delta');
 
       expect(state.visibleRoutes.single.name, 'Delta Line');
     });
 
     test('matches a route by an endpoint city', () {
-      const state = RoutesDirectoryLoaded(_routes, query: 'hurghada');
+      final state = RoutesDirectoryLoaded(_routes, query: 'hurghada');
 
       expect(state.visibleRoutes.single.name, 'Red Sea Line');
     });
 
     test('matches a route by its operating office', () {
-      const state = RoutesDirectoryLoaded(_routes, query: 'nile express');
+      final state = RoutesDirectoryLoaded(_routes, query: 'nile express');
 
       expect(state.visibleRoutes.single.name, 'Cairo Express');
     });
 
-    test('a query matching nothing is distinguishable from an empty catalog', () {
-      const searched = RoutesDirectoryLoaded(_routes, query: 'zzz');
-      const empty = RoutesDirectoryLoaded(<RouteSummary>[]);
+    test('matches a route by a station it only passes through', () {
+      final state = RoutesDirectoryLoaded(_routes, query: 'banha');
 
-      expect(searched.isFilteredEmpty, isTrue);
-      expect(empty.isFilteredEmpty, isFalse);
+      expect(state.visibleRoutes.single.name, 'Cairo Express');
+      expect(state.visibleMatches.single.viaStop, 'Banha');
     });
+
+    test(
+      'a query matching nothing is distinguishable from an empty catalog',
+      () {
+        final searched = RoutesDirectoryLoaded(_routes, query: 'zzz');
+        final empty = RoutesDirectoryLoaded(const <RouteSummary>[]);
+
+        expect(searched.isFilteredEmpty, isTrue);
+        expect(empty.isFilteredEmpty, isFalse);
+      },
+    );
   });
 
   group('RoutesDirectoryCubit.load', () {
@@ -122,6 +140,29 @@ void main() {
       cubit.setQuery('delta');
 
       expect(cubit.state, isA<RoutesDirectoryLoading>());
+    });
+
+    test('narrows the loaded catalog to a station along the way', () async {
+      final cubit = _cubit();
+      await cubit.load();
+
+      cubit.setQuery('banha');
+
+      final state = cubit.state as RoutesDirectoryLoaded;
+      expect(state.visibleRoutes.single.id, 'r1');
+      await cubit.close();
+    });
+
+    test('clearing the query restores the whole catalog', () async {
+      final cubit = _cubit();
+      await cubit.load();
+      cubit.setQuery('banha');
+
+      cubit.setQuery('');
+
+      final state = cubit.state as RoutesDirectoryLoaded;
+      expect(state.visibleRoutes, hasLength(3));
+      await cubit.close();
     });
   });
 

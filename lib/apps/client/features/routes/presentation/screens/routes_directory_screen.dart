@@ -16,7 +16,8 @@ import '../widgets/routes_empty_view.dart';
 import '../widgets/routes_search_field.dart';
 
 /// The routes tab: every active route on the marketplace, searchable by
-/// name, endpoint city, or operator. Tapping one opens its full details.
+/// name, endpoint city, operator, or any station along the way. Tapping one
+/// opens its full details.
 class RoutesDirectoryScreen extends StatelessWidget {
   const RoutesDirectoryScreen({super.key, required this.onOpenRoute});
 
@@ -43,7 +44,7 @@ class RoutesDirectoryScreen extends StatelessWidget {
               count: loaded == null
                   ? null
                   : l10n.routes_countLabel(loaded.routes.length),
-              
+
               searchBand: loaded != null && loaded.routes.isNotEmpty
                   ? _SearchBand(state: loaded)
                   : null,
@@ -71,7 +72,7 @@ class RoutesDirectoryScreen extends StatelessWidget {
                           onRefresh: () =>
                               context.read<RoutesDirectoryCubit>().refresh(),
                           child: RoutesDirectoryList(
-                            routes: loadedState.visibleRoutes,
+                            matches: loadedState.visibleMatches,
                             onOpenRoute: _openRoute,
                           ),
                         ),
@@ -117,7 +118,7 @@ class _SearchBand extends StatelessWidget {
                 const SizedBox(width: 6),
                 Flexible(
                   child: Text(
-                    l10n.routes_matchesLabel(state.visibleRoutes.length),
+                    l10n.routes_matchesLabel(state.visibleMatches.length),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: ClientTypography.labelMedium(context).copyWith(

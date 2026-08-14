@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/widgets/dashed_divider.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/payment_row.dart';
-import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_status_mapping.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_inline_badge.dart';
+import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_status_mapping.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
-/// The fare breakdown and payment status for this trip.
+/// The fare breakdown and payment status for this trip, read as a receipt:
+/// where the money stands, what it is made of, then what it comes to.
 class TripPaymentCard extends StatelessWidget {
   const TripPaymentCard({super.key, required this.trip});
 
@@ -20,59 +23,77 @@ class TripPaymentCard extends StatelessWidget {
 
     return Column(
       children: [
-        Container(
-          padding: const EdgeInsets.all(14),
-          decoration: BoxDecoration(
-            color: color.withAlpha(20),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Row(
-            children: [
-              Icon(_paymentIcon(trip.paymentStatus), size: 20, color: color),
-              const SizedBox(width: 10),
-              
-              Expanded(
-                child: Text(
-                  _paymentNote(context, trip.paymentStatus),
-                  style: ClientTypography.bodySmall(
-                    context,
-                  ).copyWith(color: ClientColors.textSecondaryFor(context)),
-                ),
-              ),
-              const SizedBox(width: 10),
-              TripInlineBadge(
-                label: paymentLabelFor(context, trip.paymentStatus),
-                color: color,
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 18),
+        _PaymentStatusStrip(trip: trip, color: color),
+        const SizedBox(height: 16),
         PaymentRow(label: context.l10n.payments_ticketFare, value: trip.fare),
         const SizedBox(height: 8),
-        PaymentRow(label: context.l10n.payments_serviceFee, value: '0'),
-        const SizedBox(height: 8),
-        PaymentRow(label: context.l10n.trips_discountLabel, value: '0'),
-        Divider(height: 26, color: ClientColors.borderFor(context)),
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                context.l10n.payments_total,
-                style: ClientTypography.headingSmall(
-                  context,
-                ).copyWith(color: ClientColors.textPrimaryFor(context)),
-              ),
-            ),
-            Text(
-              trip.fare,
-              style: ClientTypography.priceHero(
-                context,
-              ).copyWith(fontSize: 22, color: ClientColors.primaryFor(context)),
-            ),
-          ],
+        PaymentRow(
+          label: context.l10n.payments_serviceFee,
+          value: '0',
+          muted: true,
         ),
+        const SizedBox(height: 8),
+        PaymentRow(
+          label: context.l10n.trips_discountLabel,
+          value: '0',
+          muted: true,
+        ),
+        const SizedBox(height: 12),
+        DashedDivider(color: ClientColors.borderFor(context)),
+        const SizedBox(height: 12),
+        _PaymentTotal(fare: trip.fare, color: color),
       ],
+    );
+  }
+
+  Color _paymentColor(BuildContext context, PaymentStatus status) {
+    return switch (status) {
+      PaymentStatus.paid => ClientColors.journeyCyanFor(context),
+      PaymentStatus.pending => ClientColors.journeyAmberFor(context),
+      PaymentStatus.underReview => ClientColors.journeyAmberFor(context),
+      PaymentStatus.refunded => ClientColors.primaryFor(context),
+      PaymentStatus.failed => ClientColors.journeyRedFor(context),
+      PaymentStatus.cancelled => ClientColors.textSecondaryFor(context),
+    };
+  }
+}
+
+/// Where the money stands, in one line: state icon, what that means, and the
+/// state itself as a pill.
+class _PaymentStatusStrip extends StatelessWidget {
+  const _PaymentStatusStrip({required this.trip, required this.color});
+
+  final TripData trip;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: color.withAlpha(18),
+        borderRadius: BorderRadius.circular(ClientRadius.md),
+        border: Border.all(color: color.withAlpha(40)),
+      ),
+      child: Row(
+        children: [
+          Icon(_paymentIcon(trip.paymentStatus), size: 18, color: color),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              _paymentNote(context, trip.paymentStatus),
+              style: ClientTypography.bodySmall(
+                context,
+              ).copyWith(color: ClientColors.textSecondaryFor(context)),
+            ),
+          ),
+          const SizedBox(width: 10),
+          TripInlineBadge(
+            label: paymentLabelFor(context, trip.paymentStatus),
+            color: color,
+          ),
+        ],
+      ),
     );
   }
 
@@ -97,15 +118,48 @@ class TripPaymentCard extends StatelessWidget {
       PaymentStatus.cancelled => Icons.cancel_rounded,
     };
   }
+}
 
-  Color _paymentColor(BuildContext context, PaymentStatus status) {
-    return switch (status) {
-      PaymentStatus.paid => ClientColors.journeyCyan,
-      PaymentStatus.pending => ClientColors.journeyAmber,
-      PaymentStatus.underReview => ClientColors.journeyAmber,
-      PaymentStatus.refunded => ClientColors.primary,
-      PaymentStatus.failed => ClientColors.journeyRed,
-      PaymentStatus.cancelled => ClientColors.textSecondaryFor(context),
-    };
+/// The bottom line, tinted by the payment state so the amount and its status
+/// are never read apart.
+class _PaymentTotal extends StatelessWidget {
+  const _PaymentTotal({required this.fare, required this.color});
+
+  final String fare;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: color.withAlpha(15),
+        borderRadius: BorderRadius.circular(ClientRadius.md),
+        border: Border.all(color: color.withAlpha(30)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              context.l10n.payments_total,
+              style: ClientTypography.headingSmall(
+                context,
+              ).copyWith(color: ClientColors.textPrimaryFor(context)),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Text(
+            fare,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: ClientTypography.priceMedium(context).copyWith(
+              fontSize: 22,
+              color: color,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }

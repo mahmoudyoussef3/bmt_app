@@ -1,4 +1,6 @@
+import '../../domain/entities/route_search_match.dart';
 import '../../domain/entities/route_summary.dart';
+import '../../domain/services/route_catalog_search.dart';
 
 sealed class RoutesDirectoryState {
   const RoutesDirectoryState();
@@ -9,7 +11,7 @@ class RoutesDirectoryLoading extends RoutesDirectoryState {
 }
 
 class RoutesDirectoryLoaded extends RoutesDirectoryState {
-  const RoutesDirectoryLoaded(this.routes, {this.query = ''});
+  RoutesDirectoryLoaded(this.routes, {this.query = ''});
 
   /// Every active route on the marketplace — the unfiltered catalog.
   final List<RouteSummary> routes;
@@ -17,26 +19,26 @@ class RoutesDirectoryLoaded extends RoutesDirectoryState {
   /// What the rider has typed into the catalog search.
   final String query;
 
-  /// The routes actually listed.
+  /// The routes actually listed, each with the reason it matched.
   ///
-  /// Matches the route's name, either endpoint city, or the office running
-  /// it — a rider browsing "all routes" is as likely to search a city or a
-  /// company as the corridor's own label.
-  List<RouteSummary> get visibleRoutes {
-    final needle = query.trim().toLowerCase();
-    if (needle.isEmpty) return routes;
-    return routes.where((route) {
-      if (route.name.toLowerCase().contains(needle)) return true;
-      if (route.startCity.toLowerCase().contains(needle)) return true;
-      if (route.endCity.toLowerCase().contains(needle)) return true;
-      return route.officeName.toLowerCase().contains(needle);
-    }).toList();
-  }
+  /// Computed once per state rather than per read: the screen asks for the
+  /// results three times in a build (the match count, the empty check, the
+  /// list itself), and a keystroke rebuilds all three.
+  late final List<RouteSearchMatch> visibleMatches = RouteCatalogSearch.apply(
+    routes,
+    query,
+  );
+
+  /// The same results without their match reasons, for callers that only need
+  /// the corridors.
+  List<RouteSummary> get visibleRoutes => [
+    for (final match in visibleMatches) match.route,
+  ];
 
   /// True when the catalog has routes but the query hides all of them —
   /// "nothing matched your search" is a different message from "no routes
   /// are running yet", and only one of the two is the rider's to fix.
-  bool get isFilteredEmpty => routes.isNotEmpty && visibleRoutes.isEmpty;
+  bool get isFilteredEmpty => routes.isNotEmpty && visibleMatches.isEmpty;
 
   RoutesDirectoryLoaded copyWith({List<RouteSummary>? routes, String? query}) {
     return RoutesDirectoryLoaded(

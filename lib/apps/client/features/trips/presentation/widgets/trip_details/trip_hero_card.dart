@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
@@ -13,11 +12,7 @@ import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_ide
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_status_mapping.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
-/// Trip Details' hero: status, reference, the pickup → drop-off rail, and the
-/// date/departure/seat strip.
-///
-/// It carries the whole journey, so the screen no longer repeats pickup and
-/// destination again in a separate Route section further down.
+
 class TripHeroCard extends StatelessWidget {
   const TripHeroCard({super.key, required this.trip});
 

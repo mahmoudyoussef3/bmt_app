@@ -13,12 +13,19 @@ class SupabaseRoutesDirectoryDatasource implements RoutesDirectoryDatasource {
   /// Every active route, across every active office — the marketplace RLS
   /// policy on `operation_routes` already constrains anon/client reads this
   /// way; the filter here mirrors it rather than relaxes it.
+  ///
+  /// Each row carries its stations' names, embedded the same way
+  /// `SupabaseBookingSearchDatasource.getPopularRoutes` embeds them. That is
+  /// what lets the catalog answer "which routes pass through Banha?" without a
+  /// query per keystroke: the whole corridor list is a few dozen rows, and the
+  /// station names are the only extra columns it costs.
   @override
   Future<List<RouteSummaryModel>> fetchRoutes() async {
     final rows = await _supabase
         .from('operation_routes')
         .select(
           'id, name, start_city, end_city, distance, duration, '
+          'stops:route_stations(id, name, sort_order), '
           'office:public_offices(id, name, logo_url)',
         )
         .eq('status', 'active')
