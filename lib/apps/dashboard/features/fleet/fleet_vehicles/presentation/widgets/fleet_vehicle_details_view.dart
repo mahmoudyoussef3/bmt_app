@@ -8,6 +8,7 @@ import 'package:bmt_app/core/vehicles/vehicles.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
+import 'package:bmt_app/core/widgets/status_chip.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
 class FleetVehicleDetailsView extends StatelessWidget {
@@ -15,6 +16,7 @@ class FleetVehicleDetailsView extends StatelessWidget {
   final FleetWorkspace workspace;
   final VoidCallback onBack;
   final VoidCallback onEdit;
+  final ScrollController? scrollController;
 
   const FleetVehicleDetailsView({
     super.key,
@@ -22,6 +24,7 @@ class FleetVehicleDetailsView extends StatelessWidget {
     required this.workspace,
     required this.onBack,
     required this.onEdit,
+    this.scrollController,
   });
 
   String _driverName(String driverId) {
@@ -33,81 +36,28 @@ class FleetVehicleDetailsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final vehicleDocs = workspace.documents
         .where((d) => d.ownerId == vehicle.id)
         .toList();
     final driverName = _driverName(vehicle.currentDriverId);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        FleetBreadcrumbs(
-          currentLabel: 'تفاصيل المركبة: ${vehicle.vehicleNumber}',
-          onBack: onBack,
-        ),
-        const SizedBox(height: AppSpacing.large),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final isCompact = constraints.maxWidth < 600;
-            final headerWidgets = [
-              Container(
-                width: 56,
-                height: 42,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: scheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-                  border: Border.all(color: scheme.outline.withAlpha(90)),
-                ),
-                child: Icon(
-                  Icons.directions_bus_rounded,
-                  color: scheme.primary,
-                  size: 28,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.medium),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${vehicle.brand} ${vehicle.model} (${vehicle.vehicleNumber})',
-                      style: Theme.of(context).textTheme.headlineSmall
-                          ?.copyWith(fontWeight: FontWeight.bold),
-                    ),
-                    Text(
-                      'رقم اللوحة: ${vehicle.plateNumber} | السعة الركابية: ${vehicle.capacity} مقعد',
-                    ),
-                  ],
-                ),
-              ),
-              if (isCompact) const SizedBox(height: AppSpacing.medium),
-              FilledButton.icon(
-                onPressed: onEdit,
-                icon: const Icon(Icons.edit_rounded),
-                label: const Text('تعديل البيانات'),
-              ),
-            ];
-
-            return isCompact
-                ? Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      Align(
-                        alignment: AlignmentDirectional.centerStart,
-                        child: headerWidgets[0],
-                      ),
-                      const SizedBox(height: AppSpacing.small),
-                      (headerWidgets[2] as Expanded).child,
-                      const SizedBox(height: AppSpacing.medium),
-                      headerWidgets.last,
-                    ],
-                  )
-                : Row(children: headerWidgets);
-          },
-        ),
-        const SizedBox(height: AppSpacing.large),
+    return SingleChildScrollView(
+      controller: scrollController,
+      padding: const EdgeInsets.all(AppSpacing.xLarge),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          FleetBreadcrumbs(
+            currentLabel: 'تفاصيل المركبة: ${vehicle.vehicleNumber}',
+            onBack: onBack,
+          ),
+          const SizedBox(height: AppSpacing.medium),
+          _VehicleHeroCard(
+            vehicle: vehicle,
+            driverName: driverName,
+            onEdit: onEdit,
+          ),
+          const SizedBox(height: AppSpacing.large),
         LayoutBuilder(
           builder: (context, constraints) {
             final isDesktop = constraints.maxWidth >= 900;
@@ -208,8 +158,9 @@ class FleetVehicleDetailsView extends StatelessWidget {
           },
         ),
       ],
-    );
-  }
+    ),
+  );
+}
 
   Widget _infoCard(
     BuildContext context,
@@ -545,6 +496,256 @@ class _VehicleImageGalleryState extends State<_VehicleImageGallery> {
           ],
         ],
       ),
+    );
+  }
+}
+
+class _VehicleHeroCard extends StatelessWidget {
+  const _VehicleHeroCard({
+    required this.vehicle,
+    required this.driverName,
+    required this.onEdit,
+  });
+
+  final FleetVehicle vehicle;
+  final String driverName;
+  final VoidCallback onEdit;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final status = context.status(
+      vehicle.status == FleetVehicleStatus.active
+          ? AppStatusTone.success
+          : vehicle.status == FleetVehicleStatus.maintenance
+              ? AppStatusTone.warning
+              : AppStatusTone.error,
+    );
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            scheme.primaryContainer.withAlpha(38),
+            scheme.surface,
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
+        border: Border.all(
+          color: scheme.primary.withAlpha(51),
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: scheme.shadow.withAlpha(13),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(AppSpacing.xLarge),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = constraints.maxWidth < 720;
+
+          final identity = Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: scheme.primary.withAlpha(76), width: 2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: scheme.primary.withAlpha(51),
+                      blurRadius: 12,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: SizedBox(
+                  width: 80,
+                  height: 80,
+                  child: CircleAvatar(
+                    backgroundColor: scheme.surfaceContainerHighest,
+                    child: Icon(
+                      Icons.directions_bus_filled_rounded,
+                      size: 40,
+                      color: scheme.primary,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.large),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      '${vehicle.brand} ${vehicle.model}',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -0.5,
+                          ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: AppSpacing.small,
+                      runSpacing: 8,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        StatusChip(
+                          label: vehicle.status.label,
+                          color: status.tint,
+                          textColor: status.ink,
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: scheme.surfaceContainerHighest.withAlpha(100),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: scheme.outlineVariant),
+                          ),
+                          child: Text(
+                            vehicle.vehicleNumber,
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: scheme.onSurfaceVariant,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: scheme.surfaceContainerHighest.withAlpha(100),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: scheme.outlineVariant),
+                          ),
+                          child: Text(
+                            vehicle.plateNumber,
+                            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                  color: scheme.onSurfaceVariant,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
+
+          final metrics = Row(
+            mainAxisAlignment: compact ? MainAxisAlignment.start : MainAxisAlignment.end,
+            children: [
+              _MetricBlock(
+                label: 'المقاعد',
+                value: '${vehicle.capacity}',
+                icon: Icons.event_seat_rounded,
+              ),
+              const SizedBox(width: AppSpacing.large),
+              _MetricBlock(
+                label: 'سنة الصنع',
+                value: '${vehicle.manufactureYear}',
+                icon: Icons.calendar_today_rounded,
+              ),
+            ],
+          );
+
+          final actions = FilledButton.icon(
+            onPressed: onEdit,
+            icon: const Icon(Icons.edit_rounded, size: 18),
+            label: const Text('تعديل البيانات'),
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+              ),
+            ),
+          );
+
+          if (compact) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                identity,
+                const SizedBox(height: AppSpacing.large),
+                metrics,
+                const SizedBox(height: AppSpacing.large),
+                actions,
+              ],
+            );
+          }
+
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(flex: 3, child: identity),
+              Expanded(
+                flex: 2,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    actions,
+                    const SizedBox(height: AppSpacing.large),
+                    metrics,
+                  ],
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _MetricBlock extends StatelessWidget {
+  const _MetricBlock({
+    required this.label,
+    required this.value,
+    required this.icon,
+  });
+
+  final String label;
+  final String value;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 14, color: scheme.onSurfaceVariant),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                    fontWeight: FontWeight.bold,
+                  ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.w900,
+                color: scheme.onSurface,
+              ),
+        ),
+      ],
     );
   }
 }

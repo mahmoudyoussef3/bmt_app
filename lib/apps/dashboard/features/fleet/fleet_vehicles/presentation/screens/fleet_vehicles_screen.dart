@@ -11,15 +11,12 @@ import 'package:bmt_app/apps/dashboard/features/fleet/fleet_documents/presentati
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/utils/fleet_pending_docs_uploader.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/overview/presentation/cubit/fleet_overview_cubit.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/overview/presentation/cubit/fleet_overview_state.dart';
-import 'package:bmt_app/apps/dashboard/core/widgets/master_detail_layout.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
-import 'package:bmt_app/core/theme/app_layout.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_snackbar.dart';
 import 'package:bmt_app/core/widgets/debounced_search_field.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 
-enum _VehiclesViewState { list, details }
 
 /// The filters an operator actually reaches for. The first group asks what a bus
 /// is *doing* (answered from `operation_trips`), the second what state its record
@@ -39,32 +36,23 @@ enum _VehicleOpsFilter {
 }
 
 class FleetVehiclesScreen extends StatefulWidget {
-  final ValueChanged<bool>? onViewStateChanged;
-  const FleetVehiclesScreen({super.key, this.onViewStateChanged});
+  const FleetVehiclesScreen({
+    super.key,
+    this.onViewStateChanged,
+  });
+
+  final void Function(bool isList)? onViewStateChanged;
 
   @override
   State<FleetVehiclesScreen> createState() => _FleetVehiclesScreenState();
 }
 
 class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
-  _VehiclesViewState _viewState = _VehiclesViewState.list;
-  FleetVehicle? _activeVehicle;
-  FleetVehicle? _selectedVehicle;
   int _page = 0;
   final int _pageSize = 8;
   FleetSortField _sortField = FleetSortField.name;
   bool _sortAscending = true;
   _VehicleOpsFilter _opsFilter = _VehicleOpsFilter.all;
-
-  void _setView(_VehiclesViewState state, [FleetVehicle? vehicle]) {
-    setState(() {
-      _viewState = state;
-      _activeVehicle = vehicle;
-    });
-    if (widget.onViewStateChanged != null) {
-      widget.onViewStateChanged!(state == _VehiclesViewState.list);
-    }
-  }
 
   List<FleetVehicle> _sortVehicles(List<FleetVehicle> list) {
     final sorted = [...list];
@@ -113,11 +101,76 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
     });
   }
 
-  void _openVehicle(FleetVehicle vehicle, bool isSplit) {
-    if (isSplit) {
-      setState(() => _selectedVehicle = vehicle);
+  void _openVehicle(
+    BuildContext context,
+    FleetVehiclesLoaded state,
+    FleetWorkspace workspace,
+    FleetVehicle vehicle,
+    FleetVehiclesCubit cubit,
+    bool isDesktop,
+  ) {
+    if (isDesktop) {
+      showDialog(
+        context: context,
+        builder: (context) => Dialog(
+          clipBehavior: Clip.antiAlias,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
+          ),
+          child: SizedBox(
+            width: 800,
+            height: 800,
+            child: _detailsView(
+              context,
+              state,
+              workspace,
+              vehicle,
+              cubit,
+              onBack: () => Navigator.pop(context),
+            ),
+          ),
+        ),
+      );
     } else {
-      _setView(_VehiclesViewState.details, vehicle);
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        builder: (context) => DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.9,
+          builder: (context, controller) {
+            return Column(
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.symmetric(vertical: AppSpacing.medium),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant.withAlpha(100),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                Expanded(
+                  child: _detailsView(
+                    context,
+                    state,
+                    workspace,
+                    vehicle,
+                    cubit,
+                    onBack: () => Navigator.pop(context),
+                    scrollController: controller,
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      );
     }
   }
 
@@ -152,23 +205,9 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
 
           return LayoutBuilder(
             builder: (context, constraints) {
-              final isSplit =
-                  constraints.maxWidth >= AppLayout.breakpointTablet;
+              final isDesktop = constraints.maxWidth >= 980;
 
-              if (!isSplit &&
-                  _viewState == _VehiclesViewState.details &&
-                  _activeVehicle != null) {
-                return _detailsView(
-                  context,
-                  state,
-                  workspace,
-                  _activeVehicle!,
-                  cubit,
-                  onBack: () => _setView(_VehiclesViewState.list),
-                );
-              }
-
-              final master = Column(
+              final browsing = Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   _buildReadinessSummary(context, state.vehicles, workspace),
@@ -181,29 +220,14 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
                     sorted,
                     workspace,
                     cubit,
-                    isSplit,
+                    isDesktop,
                   ),
                 ],
               );
 
-              if (!isSplit || _selectedVehicle == null) return master;
-
-              final detail = _detailsView(
-                context,
-                state,
-                workspace,
-                _selectedVehicle!,
-                cubit,
-                onBack: () => setState(() => _selectedVehicle = null),
-              );
-
-              return MasterDetailLayout(
-                master: master,
-                detail: detail,
-                placeholderTitle: 'اختر مركبة لعرض الجاهزية',
-                placeholderSubtitle:
-                    'حدد مركبة من القائمة لمراجعة السائق، الوثائق، والسعة.',
-              );
+              return constraints.maxHeight.isFinite
+                  ? SingleChildScrollView(child: browsing)
+                  : browsing;
             },
           );
         }
@@ -220,6 +244,7 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
     FleetVehicle vehicle,
     FleetVehiclesCubit cubit, {
     required VoidCallback onBack,
+    ScrollController? scrollController,
   }) {
     final updatedVehicle = state.vehicles.firstWhere(
       (v) => v.id == vehicle.id,
@@ -230,6 +255,7 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
       workspace: workspace,
       onBack: onBack,
       onEdit: () => _showVehicleForm(context, cubit, workspace, updatedVehicle),
+      scrollController: scrollController,
     );
   }
 
@@ -239,16 +265,16 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
     List<FleetVehicle> sorted,
     FleetWorkspace workspace,
     FleetVehiclesCubit cubit,
-    bool isSplit,
+    bool isDesktop,
   ) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final useCards = isSplit || constraints.maxWidth < 1200;
+        final useCards = !isDesktop || constraints.maxWidth < 1200;
         if (useCards) {
           return FleetVehiclesCardList(
             vehicles: sorted,
             workspace: workspace,
-            onViewDetails: (v) => _openVehicle(v, isSplit),
+            onViewDetails: (v) => _openVehicle(context, state, workspace, v, cubit, isDesktop),
             onEdit: (v) => _showVehicleForm(context, cubit, workspace, v),
             onDelete: _confirmDeleteVehicle,
             page: _page,
@@ -260,7 +286,7 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
         return FleetVehiclesTable(
           vehicles: sorted,
           workspace: workspace,
-          onView: (v) => _openVehicle(v, isSplit),
+          onView: (v) => _openVehicle(context, state, workspace, v, cubit, isDesktop),
           onEdit: (v) => _showVehicleForm(context, cubit, workspace, v),
           selectedIds: state.selectedIds,
           page: _page,
@@ -508,9 +534,7 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
       ),
     );
     if (confirmed != true || !mounted) return;
-    if (_selectedVehicle?.id == vehicle.id) {
-      setState(() => _selectedVehicle = null);
-    }
+    
     final error = await vehiclesCubit.deleteVehicle(vehicle.id);
     if (!mounted) return;
     if (error == null) {

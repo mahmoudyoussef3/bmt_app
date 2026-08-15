@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_empty_state.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_document.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/widgets/fleet_shared_widgets.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
@@ -14,6 +13,7 @@ class FleetDocumentsCardList extends StatelessWidget {
   final int pageSize;
   final ValueChanged<int> onPageChanged;
   final ValueChanged<FleetDocument> onDelete;
+  final ValueChanged<FleetDocument> onView;
 
   const FleetDocumentsCardList({
     super.key,
@@ -22,6 +22,7 @@ class FleetDocumentsCardList extends StatelessWidget {
     required this.pageSize,
     required this.onPageChanged,
     required this.onDelete,
+    required this.onView,
   });
 
   Color _documentColor(BuildContext context, FleetDocumentStatus status) {
@@ -64,99 +65,100 @@ class FleetDocumentsCardList extends StatelessWidget {
             final document = paged[index];
             final docColor = _documentColor(context, document.status);
 
-            return AppCard(
-              padding: const EdgeInsets.all(AppSpacing.medium),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        document.type.label,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      StatusChip(
-                        label: document.status.label,
-                        color: docColor.withAlpha(30),
-                        textColor: docColor,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppSpacing.medium),
-                  const Divider(),
-                  const SizedBox(height: AppSpacing.small),
-                  FleetMetaRow(
-                    icon: Icons.person_outline_rounded,
-                    label: 'صاحب الوثيقة',
-                    value: document.ownerName,
-                  ),
-                  FleetMetaRow(
-                    icon: Icons.confirmation_number_outlined,
-                    label: 'رقم المرجع',
-                    value: document.referenceNumber,
-                  ),
-                  FleetMetaRow(
-                    icon: Icons.calendar_today_rounded,
-                    label: 'تاريخ الانتهاء',
-                    value: document.expiryDate,
-                  ),
-                  if (document.fileUrl.isNotEmpty) ...[
+            return GestureDetector(
+              onTap: () => onView(document),
+              behavior: HitTestBehavior.opaque,
+              child: AppCard(
+                padding: const EdgeInsets.all(AppSpacing.medium),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          document.type.label,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        StatusChip(
+                          label: document.status.label,
+                          color: docColor.withAlpha(30),
+                          textColor: docColor,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.medium),
+                    const Divider(),
                     const SizedBox(height: AppSpacing.small),
-                    Align(
-                      alignment: AlignmentDirectional.centerStart,
-                      child: Wrap(
-                        spacing: AppSpacing.small,
-                        children: [
-                          TextButton.icon(
-                            icon: const Icon(
-                              Icons.open_in_new_rounded,
-                              size: 16,
+                    FleetMetaRow(
+                      icon: Icons.person_outline_rounded,
+                      label: 'صاحب الوثيقة',
+                      value: document.ownerName,
+                    ),
+                    FleetMetaRow(
+                      icon: Icons.confirmation_number_outlined,
+                      label: 'رقم المرجع',
+                      value: document.referenceNumber,
+                    ),
+                    FleetMetaRow(
+                      icon: Icons.calendar_today_rounded,
+                      label: 'تاريخ الانتهاء',
+                      value: document.expiryDate,
+                    ),
+                    if (document.fileUrl.isNotEmpty) ...[
+                      const SizedBox(height: AppSpacing.small),
+                      Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: Wrap(
+                          spacing: AppSpacing.small,
+                          children: [
+                            TextButton.icon(
+                              icon: const Icon(
+                                Icons.open_in_new_rounded,
+                                size: 16,
+                              ),
+                              label: const Text('فتح الملف'),
+                              onPressed: () => onView(document),
                             ),
-                            label: const Text('فتح الملف'),
-                            onPressed: () => launchUrl(
-                              Uri.parse(document.fileUrl),
-                              mode: LaunchMode.externalApplication,
-                            ),
-                          ),
-                          TextButton.icon(
-                            icon: Icon(
-                              Icons.delete_outline_rounded,
-                              size: 16,
-                              color: Theme.of(context).colorScheme.error,
-                            ),
-                            label: Text(
-                              'حذف',
-                              style: TextStyle(
+                            TextButton.icon(
+                              icon: Icon(
+                                Icons.delete_outline_rounded,
+                                size: 16,
                                 color: Theme.of(context).colorScheme.error,
                               ),
+                              label: Text(
+                                'حذف',
+                                style: TextStyle(
+                                  color: Theme.of(context).colorScheme.error,
+                                ),
+                              ),
+                              onPressed: () => onDelete(document),
                             ),
-                            onPressed: () => onDelete(document),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ] else ...[
-                    const SizedBox(height: AppSpacing.small),
-                    Align(
-                      alignment: AlignmentDirectional.centerStart,
-                      child: TextButton.icon(
-                        icon: Icon(
-                          Icons.delete_outline_rounded,
-                          size: 16,
-                          color: Theme.of(context).colorScheme.error,
+                          ],
                         ),
-                        label: Text(
-                          'حذف',
-                          style: TextStyle(
+                      ),
+                    ] else ...[
+                      const SizedBox(height: AppSpacing.small),
+                      Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: TextButton.icon(
+                          icon: Icon(
+                            Icons.delete_outline_rounded,
+                            size: 16,
                             color: Theme.of(context).colorScheme.error,
                           ),
+                          label: Text(
+                            'حذف',
+                            style: TextStyle(
+                              color: Theme.of(context).colorScheme.error,
+                            ),
+                          ),
+                          onPressed: () => onDelete(document),
                         ),
-                        onPressed: () => onDelete(document),
                       ),
-                    ),
+                    ],
                   ],
-                ],
+                ),
               ),
             );
           },

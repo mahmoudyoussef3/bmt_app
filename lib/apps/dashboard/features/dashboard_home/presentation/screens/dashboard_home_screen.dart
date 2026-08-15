@@ -4,8 +4,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/apps/dashboard/core/routes/dashboard_routes.dart';
 import 'package:bmt_app/apps/dashboard/core/session/office_context.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
-import 'package:bmt_app/core/theme/spacing.dart';
-
 import '../../domain/entities/dashboard_home_summary.dart';
 import '../cubit/dashboard_home_cubit.dart';
 import '../cubit/dashboard_home_state.dart';
@@ -98,7 +96,7 @@ class _LoadedView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
-      padding: const EdgeInsets.all(AppSpacing.large),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
       children: [
         HomeHeaderBanner(
           office: office,
@@ -107,14 +105,14 @@ class _LoadedView extends StatelessWidget {
           onOpenBookings: () => onOpenModule(DashboardRoutes.bookings),
         ),
         if (summary.unavailable.isNotEmpty) ...[
-          const SizedBox(height: AppSpacing.small),
+          const SizedBox(height: 16),
           DashboardPartialDataNotice(sources: summary.unavailable),
         ],
-        const SizedBox(height: AppSpacing.medium),
+        const SizedBox(height: 32),
         HomeKpiGrid(summary: summary, onOpenModule: onOpenModule),
-        const SizedBox(height: AppSpacing.medium),
+        const SizedBox(height: 32),
         ActionRequiredSection(summary: summary, onOpenModule: onOpenModule),
-        const SizedBox(height: AppSpacing.medium),
+        const SizedBox(height: 32),
         _Band(
           main: TodayTripsSection(
             summary: summary,
@@ -126,12 +124,12 @@ class _LoadedView extends StatelessWidget {
             onOpenModule: onOpenModule,
           ),
         ),
-        const SizedBox(height: AppSpacing.medium),
+        const SizedBox(height: 32),
         _Band(
           main: RevenueTrendSection(summary: summary),
           side: TopRoutesSection(summary: summary, onOpenModule: onOpenModule),
         ),
-        const SizedBox(height: AppSpacing.medium),
+        const SizedBox(height: 32),
         _Band(
           main: FleetTeamSection(summary: summary, onOpenModule: onOpenModule),
           side: RecentActivitySection(onOpenModule: onOpenModule),
@@ -157,7 +155,7 @@ class _Band extends StatelessWidget {
           return Column(
             children: [
               main,
-              const SizedBox(height: AppSpacing.medium),
+              const SizedBox(height: 24),
               side,
             ],
           );
@@ -166,7 +164,7 @@ class _Band extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(flex: 3, child: main),
-            const SizedBox(width: AppSpacing.medium),
+            const SizedBox(width: 24),
             Expanded(flex: 2, child: side),
           ],
         );

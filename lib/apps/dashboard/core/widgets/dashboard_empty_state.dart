@@ -28,8 +28,6 @@ class DashboardEmptyState extends StatelessWidget {
   final IconData icon;
   final String title;
   final String? message;
-
-  /// Optional next step — usually a `TextButton.icon` or `FilledButton.tonal`.
   final Widget? action;
 
   @override
@@ -37,39 +35,66 @@ class DashboardEmptyState extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
 
-    return Padding(
+    return Container(
+      width: double.infinity,
       padding: const EdgeInsets.symmetric(
-        vertical: AppSpacing.large,
-        horizontal: AppSpacing.medium,
+        vertical: 40.0,
+        horizontal: AppSpacing.large,
+      ),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest.withAlpha(50),
+        borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
+        border: Border.all(
+          color: scheme.outlineVariant.withAlpha(80),
+        ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 44,
-            height: 44,
+            padding: const EdgeInsets.all(AppSpacing.large),
             decoration: BoxDecoration(
-              color: scheme.surfaceContainerHighest,
-              borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+              shape: BoxShape.circle,
+              color: scheme.primaryContainer.withAlpha(80),
+              border: Border.all(
+                color: scheme.primary.withAlpha(40),
+                width: 6,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: scheme.primary.withAlpha(20),
+                  blurRadius: 24,
+                  spreadRadius: 4,
+                ),
+              ],
             ),
-            child: Icon(icon, size: 22, color: scheme.onSurfaceVariant),
+            child: Icon(icon, size: 36, color: scheme.primary),
           ),
-          const SizedBox(height: AppSpacing.small),
+          const SizedBox(height: AppSpacing.xLarge),
           Text(
             title,
             textAlign: TextAlign.center,
-            style: text.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+            style: text.titleMedium?.copyWith(
+              fontWeight: FontWeight.w800,
+              color: scheme.onSurface,
+            ),
           ),
           if (message != null) ...[
-            const SizedBox(height: AppSpacing.xSmall),
-            Text(
-              message!,
-              textAlign: TextAlign.center,
-              style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+            const SizedBox(height: AppSpacing.small),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xLarge),
+              child: Text(
+                message!,
+                textAlign: TextAlign.center,
+                style: text.bodyMedium?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                  height: 1.6,
+                ),
+              ),
             ),
           ],
           if (action != null) ...[
-            const SizedBox(height: AppSpacing.small),
+            const SizedBox(height: AppSpacing.xLarge),
             action!,
           ],
         ],

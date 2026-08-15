@@ -10,6 +10,7 @@ class FleetDocumentsTable extends StatelessWidget {
   final int pageSize;
   final ValueChanged<int> onPageChanged;
   final ValueChanged<FleetDocument> onDelete;
+  final ValueChanged<FleetDocument> onView;
 
   const FleetDocumentsTable({
     super.key,
@@ -18,6 +19,7 @@ class FleetDocumentsTable extends StatelessWidget {
     required this.pageSize,
     required this.onPageChanged,
     required this.onDelete,
+    required this.onView,
   });
 
   Color _documentColor(BuildContext context, FleetDocumentStatus status) {
@@ -52,29 +54,58 @@ class FleetDocumentsTable extends StatelessWidget {
       rows: paged.map((document) {
         final docColor = _documentColor(context, document.status);
         return [
-          _DocumentIdentityCell(document: document),
-          Text(
-            document.ownerName,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+          GestureDetector(
+            onTap: () => onView(document),
+            behavior: HitTestBehavior.opaque,
+            child: _DocumentIdentityCell(document: document),
           ),
-          Text(
-            document.expiryDate,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          StatusChip(
-            label: document.status.label,
-            color: docColor.withAlpha(30),
-            textColor: docColor,
-          ),
-          IconButton(
-            tooltip: 'حذف الوثيقة',
-            onPressed: () => onDelete(document),
-            icon: Icon(
-              Icons.delete_outline_rounded,
-              color: Theme.of(context).colorScheme.error,
+          GestureDetector(
+            onTap: () => onView(document),
+            behavior: HitTestBehavior.opaque,
+            child: Text(
+              document.ownerName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
+          ),
+          GestureDetector(
+            onTap: () => onView(document),
+            behavior: HitTestBehavior.opaque,
+            child: Text(
+              document.expiryDate,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          GestureDetector(
+            onTap: () => onView(document),
+            behavior: HitTestBehavior.opaque,
+            child: StatusChip(
+              label: document.status.label,
+              color: docColor.withAlpha(30),
+              textColor: docColor,
+            ),
+          ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              IconButton(
+                tooltip: 'عرض الوثيقة',
+                onPressed: () => onView(document),
+                icon: Icon(
+                  Icons.open_in_new_rounded,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+              IconButton(
+                tooltip: 'حذف الوثيقة',
+                onPressed: () => onDelete(document),
+                icon: Icon(
+                  Icons.delete_outline_rounded,
+                  color: Theme.of(context).colorScheme.error,
+                ),
+              ),
+            ],
           ),
         ];
       }).toList(),

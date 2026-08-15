@@ -8,6 +8,8 @@ import 'package:bmt_app/apps/dashboard/features/fleet/fleet_documents/presentati
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
+import 'package:bmt_app/core/widgets/app_snackbar.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class FleetDocumentsScreen extends StatefulWidget {
   const FleetDocumentsScreen({super.key});
@@ -65,6 +67,7 @@ class _FleetDocumentsScreenState extends State<FleetDocumentsScreen> {
                       onPageChanged: (newPage) =>
                           setState(() => _page = newPage),
                       onDelete: _deleteDocument,
+                      onView: _viewDocument,
                     );
                   } else {
                     return FleetDocumentsTable(
@@ -74,6 +77,7 @@ class _FleetDocumentsScreenState extends State<FleetDocumentsScreen> {
                       onPageChanged: (newPage) =>
                           setState(() => _page = newPage),
                       onDelete: _deleteDocument,
+                      onView: _viewDocument,
                     );
                   }
                 },
@@ -84,6 +88,114 @@ class _FleetDocumentsScreenState extends State<FleetDocumentsScreen> {
 
         return const SizedBox.shrink();
       },
+    );
+  }
+
+  void _viewDocument(FleetDocument document) {
+    if (document.fileUrl.isEmpty) {
+      AppSnackbar.error(context, 'لا يوجد ملف مرفق بهذه الوثيقة');
+      return;
+    }
+
+    final isPdf = document.fileUrl.toLowerCase().contains('.pdf');
+    if (isPdf) {
+      // PDFs are tricky to preview natively without heavy plugins, so we fallback to external launch
+      launchUrl(Uri.parse(document.fileUrl), mode: LaunchMode.externalApplication);
+      return;
+    }
+
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        clipBehavior: Clip.antiAlias,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+        ),
+        insetPadding: const EdgeInsets.all(AppSpacing.large),
+        child: SizedBox(
+          width: 800,
+          height: 800,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              InteractiveViewer(
+                minScale: 0.5,
+                maxScale: 4.0,
+                child: Image.network(
+                  document.fileUrl,
+                  fit: BoxFit.contain,
+                  loadingBuilder: (context, child, loadingProgress) {
+                    if (loadingProgress == null) return child;
+                    final total = loadingProgress.expectedTotalBytes;
+                    final current = loadingProgress.cumulativeBytesLoaded;
+                    return Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          CircularProgressIndicator(
+                            value: total != null ? current / total : null,
+                          ),
+                          const SizedBox(height: AppSpacing.medium),
+                          Text(
+                            'جاري تحميل الوثيقة...',
+                            style: TextStyle(
+                              color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                  errorBuilder: (context, error, stackTrace) {
+                    return Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.broken_image_rounded,
+                            size: 64,
+                            color: Theme.of(ctx).colorScheme.onSurfaceVariant,
+                          ),
+                          const SizedBox(height: AppSpacing.large),
+                          const Text(
+                            'عذراً، لم نتمكن من عرض الملف أو أنه ليس صورة.',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          const SizedBox(height: AppSpacing.medium),
+                          FilledButton.icon(
+                            onPressed: () => launchUrl(
+                              Uri.parse(document.fileUrl),
+                              mode: LaunchMode.externalApplication,
+                            ),
+                            icon: const Icon(Icons.open_in_new_rounded),
+                            label: const Text('فتح في تطبيق خارجي'),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ),
+              Positioned(
+                top: AppSpacing.small,
+                left: AppSpacing.small, // since it's RTL, left is visually correct for the 'end' or 'start', let's use directionality
+                child: Directionality(
+                  textDirection: TextDirection.ltr,
+                  child: IconButton.filled(
+                    onPressed: () => Navigator.pop(ctx),
+                    icon: const Icon(Icons.close_rounded),
+                    style: IconButton.styleFrom(
+                      backgroundColor: Theme.of(ctx).colorScheme.surface.withAlpha(200),
+                      foregroundColor: Theme.of(ctx).colorScheme.onSurface,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
