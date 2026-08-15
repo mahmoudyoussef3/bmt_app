@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_empty_state.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_document.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/widgets/fleet_shared_widgets.dart';
@@ -40,11 +42,12 @@ class FleetDocumentsCardList extends StatelessWidget {
         : documents.sublist(start, end);
 
     if (paged.isEmpty) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.all(AppSpacing.large),
-          child: Text('لا توجد بيانات مطابقة'),
-        ),
+      return const DashboardEmptyState(
+        icon: DashboardIcons.document,
+        title: 'لا توجد مستندات مطابقة',
+        message:
+            'لا يطابق أي مستند البحث أو الفلاتر الحالية. تُسجَّل هنا رخص '
+            'السائقين وتراخيص المركبات وتواريخ انتهائها.',
       );
     }
 
@@ -165,14 +168,14 @@ class FleetDocumentsCardList extends StatelessWidget {
             children: [
               IconButton(
                 onPressed: page == 0 ? null : () => onPageChanged(page - 1),
-                icon: const Icon(Icons.chevron_left_rounded),
+                icon: const Icon(DashboardIcons.paginationPrevious),
               ),
               Text('صفحة ${page + 1} من $pages'),
               IconButton(
                 onPressed: page >= pages - 1
                     ? null
                     : () => onPageChanged(page + 1),
-                icon: const Icon(Icons.chevron_right_rounded),
+                icon: const Icon(DashboardIcons.paginationNext),
               ),
             ],
           ),

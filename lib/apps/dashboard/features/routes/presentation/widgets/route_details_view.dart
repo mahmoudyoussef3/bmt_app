@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:latlong2/latlong.dart';
 
@@ -123,7 +125,7 @@ class _DetailsHeader extends StatelessWidget {
             children: [
               OutlinedButton.icon(
                 onPressed: cubit.showOperations,
-                icon: const Icon(Icons.arrow_forward_rounded),
+                icon: const Icon(DashboardIcons.back),
                 label: const Text('رجوع'),
               ),
               FilledButton.icon(

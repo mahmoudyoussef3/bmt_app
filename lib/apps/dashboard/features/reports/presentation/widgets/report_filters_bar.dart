@@ -20,6 +20,32 @@ class ReportFiltersBar extends StatelessWidget {
 
     final presetDateLabels = ['اليوم', 'آخر 7 أيام', 'آخر 30 يوم'];
 
+    final supported = state.activeReportType.supportedFilters;
+    final scopeNote = state.activeReportType.scopeNote;
+
+    // Every control this bar can draw is unavailable for at least one report.
+    // When none apply, the card would be a title over nothing.
+    if (supported.isEmpty) {
+      return AppCard(
+        child: Row(
+          children: [
+            Icon(
+              Icons.info_outline_rounded,
+              size: 18,
+              color: context.status(AppStatusTone.neutral).ink,
+            ),
+            const SizedBox(width: AppSpacing.small),
+            Expanded(
+              child: Text(
+                scopeNote ?? 'لا تتوفر فلاتر لهذا التقرير.',
+                style: const TextStyle(fontSize: 12),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -28,6 +54,16 @@ class ReportFiltersBar extends StatelessWidget {
             'فلاتر التقرير النشطة',
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
           ),
+          if (scopeNote != null) ...[
+            const SizedBox(height: AppSpacing.xSmall),
+            Text(
+              scopeNote,
+              style: TextStyle(
+                fontSize: 11,
+                color: context.status(AppStatusTone.neutral).ink,
+              ),
+            ),
+          ],
           const SizedBox(height: AppSpacing.medium),
           LayoutBuilder(
             builder: (context, box) {
@@ -35,8 +71,9 @@ class ReportFiltersBar extends StatelessWidget {
 
               return Column(
                 children: [
-                  
-                  if (isCompact)
+                  if (!supported.contains(ReportFilterField.dateRange))
+                    const SizedBox.shrink()
+                  else if (isCompact)
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -127,10 +164,10 @@ class ReportFiltersBar extends StatelessWidget {
                   const SizedBox(height: AppSpacing.small),
 
                   if (isCompact)
-                    Column(children: _buildDropdownFilters(context))
+                    Column(children: _buildDropdownFilters(context, supported))
                   else
                     Row(
-                      children: _buildDropdownFilters(context)
+                      children: _buildDropdownFilters(context, supported)
                           .map(
                             (w) => Expanded(
                               child: Padding(
@@ -152,106 +189,115 @@ class ReportFiltersBar extends StatelessWidget {
     );
   }
 
-  List<Widget> _buildDropdownFilters(BuildContext context) {
+  /// Only the controls the active report can actually apply.
+  ///
+  /// All four used to be drawn for every report and the datasource read none
+  /// of them, so picking a driver on the revenue report reloaded the page and
+  /// changed nothing. A control that cannot reach the query is not a control.
+  List<Widget> _buildDropdownFilters(
+    BuildContext context,
+    Set<ReportFilterField> supported,
+  ) {
     final cubit = context.read<ReportsCubit>();
     final filter = state.filter;
 
     return [
-      DropdownButtonFormField<String>(
-        initialValue: filter.routeCode,
-        isExpanded: true,
-        decoration: const InputDecoration(
-          labelText: 'المسار',
-          border: OutlineInputBorder(),
-          contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-        ),
-        items: [
-          const DropdownMenuItem(
-            value: null,
-            child: Text('الكل (المسار)', overflow: TextOverflow.ellipsis),
+      if (supported.contains(ReportFilterField.route))
+        DropdownButtonFormField<String>(
+          initialValue: filter.routeCode,
+          isExpanded: true,
+          decoration: const InputDecoration(
+            labelText: 'المسار',
+            border: OutlineInputBorder(),
+            contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           ),
-          ...state.availableRoutes.map(
-            (r) => DropdownMenuItem(
-              value: r,
-              child: Text(r, overflow: TextOverflow.ellipsis),
+          items: [
+            const DropdownMenuItem(
+              value: null,
+              child: Text('الكل (المسار)', overflow: TextOverflow.ellipsis),
             ),
-          ),
-        ],
-        onChanged: (val) =>
-            cubit.updateFilter(route: val, clearRoute: val == null),
-      ),
-      const SizedBox(height: AppSpacing.xSmall),
-      DropdownButtonFormField<String>(
-        initialValue: filter.driverName,
-        isExpanded: true,
-        decoration: const InputDecoration(
-          labelText: 'السائق',
-          border: OutlineInputBorder(),
-          contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-        ),
-        items: [
-          const DropdownMenuItem(
-            value: null,
-            child: Text('الكل (السائق)', overflow: TextOverflow.ellipsis),
-          ),
-          ...state.availableDrivers.map(
-            (d) => DropdownMenuItem(
-              value: d,
-              child: Text(d, overflow: TextOverflow.ellipsis),
+            ...state.availableRoutes.map(
+              (r) => DropdownMenuItem(
+                value: r,
+                child: Text(r, overflow: TextOverflow.ellipsis),
+              ),
             ),
-          ),
-        ],
-        onChanged: (val) =>
-            cubit.updateFilter(driver: val, clearDriver: val == null),
-      ),
-      const SizedBox(height: AppSpacing.xSmall),
-      DropdownButtonFormField<String>(
-        initialValue: filter.vehiclePlate,
-        isExpanded: true,
-        decoration: const InputDecoration(
-          labelText: 'المركبة',
-          border: OutlineInputBorder(),
-          contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          ],
+          onChanged: (val) =>
+              cubit.updateFilter(route: val, clearRoute: val == null),
         ),
-        items: [
-          const DropdownMenuItem(
-            value: null,
-            child: Text('الكل (المركبة)', overflow: TextOverflow.ellipsis),
+      if (supported.contains(ReportFilterField.driver))
+        DropdownButtonFormField<String>(
+          initialValue: filter.driverName,
+          isExpanded: true,
+          decoration: const InputDecoration(
+            labelText: 'السائق',
+            border: OutlineInputBorder(),
+            contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           ),
-          ...state.availableVehicles.map(
-            (v) => DropdownMenuItem(
-              value: v,
-              child: Text(v, overflow: TextOverflow.ellipsis),
+          items: [
+            const DropdownMenuItem(
+              value: null,
+              child: Text('الكل (السائق)', overflow: TextOverflow.ellipsis),
             ),
-          ),
-        ],
-        onChanged: (val) =>
-            cubit.updateFilter(vehicle: val, clearVehicle: val == null),
-      ),
-      const SizedBox(height: AppSpacing.xSmall),
-      DropdownButtonFormField<String>(
-        initialValue: filter.packageName,
-        isExpanded: true,
-        decoration: const InputDecoration(
-          labelText: 'الاشتراك',
-          border: OutlineInputBorder(),
-          contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+            ...state.availableDrivers.map(
+              (d) => DropdownMenuItem(
+                value: d,
+                child: Text(d, overflow: TextOverflow.ellipsis),
+              ),
+            ),
+          ],
+          onChanged: (val) =>
+              cubit.updateFilter(driver: val, clearDriver: val == null),
         ),
-        items: [
-          const DropdownMenuItem(
-            value: null,
-            child: Text('الكل (الاشتراك)', overflow: TextOverflow.ellipsis),
+      if (supported.contains(ReportFilterField.vehicle))
+        DropdownButtonFormField<String>(
+          initialValue: filter.vehiclePlate,
+          isExpanded: true,
+          decoration: const InputDecoration(
+            labelText: 'المركبة',
+            border: OutlineInputBorder(),
+            contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           ),
-          ...state.availablePackages.map(
-            (p) => DropdownMenuItem(
-              value: p,
-              child: Text(p, overflow: TextOverflow.ellipsis),
+          items: [
+            const DropdownMenuItem(
+              value: null,
+              child: Text('الكل (المركبة)', overflow: TextOverflow.ellipsis),
             ),
+            ...state.availableVehicles.map(
+              (v) => DropdownMenuItem(
+                value: v,
+                child: Text(v, overflow: TextOverflow.ellipsis),
+              ),
+            ),
+          ],
+          onChanged: (val) =>
+              cubit.updateFilter(vehicle: val, clearVehicle: val == null),
+        ),
+      if (supported.contains(ReportFilterField.package))
+        DropdownButtonFormField<String>(
+          initialValue: filter.packageName,
+          isExpanded: true,
+          decoration: const InputDecoration(
+            labelText: 'الاشتراك',
+            border: OutlineInputBorder(),
+            contentPadding: EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           ),
-        ],
-        onChanged: (val) =>
-            cubit.updateFilter(pkg: val, clearPackage: val == null),
-      ),
+          items: [
+            const DropdownMenuItem(
+              value: null,
+              child: Text('الكل (الاشتراك)', overflow: TextOverflow.ellipsis),
+            ),
+            ...state.availablePackages.map(
+              (p) => DropdownMenuItem(
+                value: p,
+                child: Text(p, overflow: TextOverflow.ellipsis),
+              ),
+            ),
+          ],
+          onChanged: (val) =>
+              cubit.updateFilter(pkg: val, clearPackage: val == null),
+        ),
     ];
   }
 

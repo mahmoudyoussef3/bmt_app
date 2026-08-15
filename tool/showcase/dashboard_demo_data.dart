@@ -95,8 +95,7 @@ const List<String> _passengers = [
 /// Written as one unbroken digit run on purpose: a grouped number ("0100 123
 /// 4567") is three separate numeric runs to the bidi algorithm, which reorders
 /// them right-to-left and renders the phone backwards.
-String _phone(int i) =>
-    '0100000${(i % 10000).toString().padLeft(4, '0')}';
+String _phone(int i) => '0100000${(i % 10000).toString().padLeft(4, '0')}';
 
 /// Spreads [count] events evenly across the part of today that has already
 /// happened, so a capture run at 04:00 still produces a populated "today"
@@ -591,9 +590,24 @@ BookingPaymentVerification _verification({
 }
 
 final List<BookingPaymentVerification> verifications = [
-  _verification(id: '10428', passengerIndex: 0, routeIndex: 0, amount: '180 ج.م'),
-  _verification(id: '10427', passengerIndex: 1, routeIndex: 1, amount: '420 ج.م'),
-  _verification(id: '10419', passengerIndex: 9, routeIndex: 0, amount: '180 ج.م'),
+  _verification(
+    id: '10428',
+    passengerIndex: 0,
+    routeIndex: 0,
+    amount: '180 ج.م',
+  ),
+  _verification(
+    id: '10427',
+    passengerIndex: 1,
+    routeIndex: 1,
+    amount: '420 ج.م',
+  ),
+  _verification(
+    id: '10419',
+    passengerIndex: 9,
+    routeIndex: 0,
+    amount: '180 ج.م',
+  ),
 ];
 
 // ── Fleet ───────────────────────────────────────────────────────────────────
@@ -661,14 +675,78 @@ final FleetWorkspace fleet = FleetWorkspace(
       ),
   ],
   vehicles: [
-    _vehicle('veh-1', 'ن ص ٤٢٧', 'تويوتا', 'هايس', 2021, 14, FleetVehicleStatus.active),
-    _vehicle('veh-2', 'ب ط ١٩٣', 'مرسيدس', 'سبرنتر', 2022, 14, FleetVehicleStatus.active),
-    _vehicle('veh-3', 'ق ر ٦٥٨', 'هيونداي', 'H1', 2020, 16, FleetVehicleStatus.active),
-    _vehicle('veh-4', 'د ل ٣٠٢', 'تويوتا', 'هايس', 2019, 14, FleetVehicleStatus.active),
-    _vehicle('veh-5', 'س ع ٨٧٤', 'مرسيدس', 'سبرنتر', 2023, 14, FleetVehicleStatus.active),
-    _vehicle('veh-6', 'ع ح ٥١٦', 'تويوتا', 'هايس', 2022, 14, FleetVehicleStatus.active),
-    _vehicle('veh-7', 'ط ك ٢٤٩', 'هيونداي', 'H1', 2021, 16, FleetVehicleStatus.active),
-    _vehicle('veh-8', 'ف م ٧٣٥', 'مرسيدس', 'سبرنتر', 2018, 14, FleetVehicleStatus.maintenance),
+    _vehicle(
+      'veh-1',
+      'ن ص ٤٢٧',
+      'تويوتا',
+      'هايس',
+      2021,
+      14,
+      FleetVehicleStatus.active,
+    ),
+    _vehicle(
+      'veh-2',
+      'ب ط ١٩٣',
+      'مرسيدس',
+      'سبرنتر',
+      2022,
+      14,
+      FleetVehicleStatus.active,
+    ),
+    _vehicle(
+      'veh-3',
+      'ق ر ٦٥٨',
+      'هيونداي',
+      'H1',
+      2020,
+      16,
+      FleetVehicleStatus.active,
+    ),
+    _vehicle(
+      'veh-4',
+      'د ل ٣٠٢',
+      'تويوتا',
+      'هايس',
+      2019,
+      14,
+      FleetVehicleStatus.active,
+    ),
+    _vehicle(
+      'veh-5',
+      'س ع ٨٧٤',
+      'مرسيدس',
+      'سبرنتر',
+      2023,
+      14,
+      FleetVehicleStatus.active,
+    ),
+    _vehicle(
+      'veh-6',
+      'ع ح ٥١٦',
+      'تويوتا',
+      'هايس',
+      2022,
+      14,
+      FleetVehicleStatus.active,
+    ),
+    _vehicle(
+      'veh-7',
+      'ط ك ٢٤٩',
+      'هيونداي',
+      'H1',
+      2021,
+      16,
+      FleetVehicleStatus.active,
+    ),
+    _vehicle(
+      'veh-8',
+      'ف م ٧٣٥',
+      'مرسيدس',
+      'سبرنتر',
+      2018,
+      14,
+      FleetVehicleStatus.maintenance,
+    ),
   ],
   assignments: _assignments,
   documents: _fleetDocuments,
@@ -746,7 +824,8 @@ final List<finance.PaymentRecord> payments = [
       amount: bookings[i].paymentAmount,
       paymentMethod: switch (bookings[i].paymentMethod) {
         BookingPaymentMethod.cash => finance.FinancePaymentMethod.cash,
-        BookingPaymentMethod.vodafoneCash => finance.FinancePaymentMethod.vodafoneCash,
+        BookingPaymentMethod.vodafoneCash =>
+          finance.FinancePaymentMethod.vodafoneCash,
         _ => finance.FinancePaymentMethod.card,
       },
       status: switch (bookings[i].paymentStatus) {
@@ -867,7 +946,20 @@ final WalletDirectoryPage walletDirectory = WalletDirectoryPage(
         clientId: 'client-$i',
         fullName: _passengers[i],
         phone: _phone(i),
-        balance: <double>[420, 260, 0, 180, 95, 640, 0, 320, 55, 210, 0, 130][i],
+        balance: <double>[
+          420,
+          260,
+          0,
+          180,
+          95,
+          640,
+          0,
+          320,
+          55,
+          210,
+          0,
+          130,
+        ][i],
         walletStatus: i == 6 ? WalletStatus.frozen : WalletStatus.active,
         entryCount: 4 + i * 2,
         pendingRefunds: i == 0 ? 1 : 0,
@@ -1067,7 +1159,13 @@ final OfficeProfile officeProfile = OfficeProfile(
   description:
       'خدمة نقل جماعي بين المحافظات منذ 2016 — رحلات يومية مجدولة بأسطول مكيّف '
       'وكباتن معتمدين.',
-  serviceAreas: const ['القاهرة', 'الجيزة', 'الإسكندرية', 'الدقهلية', 'الغردقة'],
+  serviceAreas: const [
+    'القاهرة',
+    'الجيزة',
+    'الإسكندرية',
+    'الدقهلية',
+    'الغردقة',
+  ],
   status: 'active',
   listingStatus: 'listed',
   rating: 4.7,
@@ -1184,7 +1282,8 @@ final LiveOpsSnapshot liveOps = LiveOpsSnapshot(
       id: 'inc-1',
       tripId: 'T-2421',
       type: IncidentType.routeBlockage,
-      description: 'كثافة مرورية شديدة عند مدخل الزعفرانة — تأخير متوقع 25 دقيقة.',
+      description:
+          'كثافة مرورية شديدة عند مدخل الزعفرانة — تأخير متوقع 25 دقيقة.',
       status: IncidentStatus.pending,
       createdAt: now.subtract(const Duration(minutes: 12)),
       routeName: _routeNames[1],
@@ -1252,7 +1351,6 @@ final DashboardHomeSummary homeSummary = DashboardHomeSummary(
   fleet: fleet,
   captainRequests: captainRequests,
   reviews: reviews,
-  officeProfile: officeProfile,
   tickets: tickets,
   subscriptions: subscriptions,
 );
@@ -1279,8 +1377,30 @@ final ReportData tripsReport = ReportData(
         driverName: _drivers[i % _drivers.length],
         vehiclePlate: ['ن ص ٤٢٧', 'ب ط ١٩٣', 'ق ر ٦٥٨', 'د ل ٣٠٢'][i % 4],
         passengerCount: [14, 12, 16, 11, 14, 9, 13, 14, 10, 12][i],
-        occupancyRate: [100, 86, 94, 79, 100, 64, 93, 100, 71, 86][i].toDouble(),
-        revenue: <double>[2520, 5040, 4160, 1320, 2520, 3780, 2340, 2520, 2600, 1440][i],
+        occupancyRate: [
+          100,
+          86,
+          94,
+          79,
+          100,
+          64,
+          93,
+          100,
+          71,
+          86,
+        ][i].toDouble(),
+        revenue: <double>[
+          2520,
+          5040,
+          4160,
+          1320,
+          2520,
+          3780,
+          2340,
+          2520,
+          2600,
+          1440,
+        ][i],
         date: now.subtract(Duration(days: i)),
         status: i < 8 ? 'مكتملة' : 'ملغاة',
       ),
@@ -1289,14 +1409,30 @@ final ReportData tripsReport = ReportData(
     for (var i = 13; i >= 0; i--)
       MapEntry(
         _date(now.subtract(Duration(days: i))),
-        <double>[5200, 6100, 4800, 7300, 8100, 6900, 5400, 7700, 8600, 9200, 7100, 6400, 8900, 8460][13 - i],
+        <double>[
+          5200,
+          6100,
+          4800,
+          7300,
+          8100,
+          6900,
+          5400,
+          7700,
+          8600,
+          9200,
+          7100,
+          6400,
+          8900,
+          8460,
+        ][13 - i],
       ),
   ],
   occupancyTrends: [
     for (var i = 13; i >= 0; i--)
       MapEntry(
         _date(now.subtract(Duration(days: i))),
-        <double>[72, 78, 69, 84, 88, 81, 74, 86, 91, 94, 83, 77, 92, 82][13 - i],
+        <double>[72, 78, 69, 84, 88, 81, 74, 86, 91, 94, 83, 77, 92, 82][13 -
+            i],
       ),
   ],
 );

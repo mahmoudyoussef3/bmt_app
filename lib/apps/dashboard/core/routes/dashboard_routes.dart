@@ -4,8 +4,11 @@ class DashboardRoutes {
   static const home = '/';
 
   /// The executive tab: how the business is performing, and what needs the
-  /// owner. Distinct from [home], which is the operator's working console, and
-  /// from [ownerOverview], which is a revenue aggregate.
+  /// owner. Distinct from [home], which is the operator's working console.
+  ///
+  /// It replaced `/owner-overview`, a second revenue aggregate that no nav item
+  /// and no screen ever linked to. Every figure that screen carried is here or
+  /// in [payments], derived from the same use cases the modules use.
   static const businessOverview = '/business-overview';
 
   static const liveOps = '/live-ops';
@@ -26,7 +29,6 @@ class DashboardRoutes {
   static const tickets = '/tickets';
   static const reviews = '/reviews';
   static const reports = '/reports';
-  static const ownerOverview = '/owner-overview';
   static const officeProfile = '/office-profile';
   static const platformOffices = '/platform-offices';
 

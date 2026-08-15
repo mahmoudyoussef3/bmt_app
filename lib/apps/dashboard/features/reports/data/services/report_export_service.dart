@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 import 'package:csv/csv.dart';
 import 'package:excel/excel.dart';
@@ -14,7 +15,6 @@ class ReportExportService {
     ReportType type,
     String format,
   ) async {
-    
     await LicensedExport.consume(format);
 
     final List<List<dynamic>> rowsAsList = _mapDataToList(data.rows, type);
@@ -31,11 +31,17 @@ class ReportExportService {
     }
   }
 
+  /// CSV with a UTF-8 BOM, so Excel opens Arabic correctly.
+  ///
+  /// The BOM was already here; the body was not UTF-8. `String.codeUnits`
+  /// yields UTF-16 units, and `Uint8List.fromList` truncates each to its low
+  /// byte — every Arabic character in an exported report came out as mojibake.
+  /// `addBom: true` on the encoder emits the mark, and `utf8.encode` emits the
+  /// bytes it promises. This is what the wallet and finance exporters already
+  /// do; reports was the one that did not.
   Uint8List _generateCsv(List<List<dynamic>> rows) {
-    
-    final List<int> utf8BOM = [0xEF, 0xBB, 0xBF];
-    final String csvData = const CsvEncoder().convert(rows);
-    return Uint8List.fromList([...utf8BOM, ...csvData.codeUnits]);
+    final csv = const CsvEncoder(addBom: true).convert(rows);
+    return Uint8List.fromList(utf8.encode(csv));
   }
 
   Uint8List _generateExcel(List<List<dynamic>> rows, String sheetName) {
@@ -176,8 +182,6 @@ class ReportExportService {
           'رقم السائق',
           'الاسم',
           'الرحلات المكتملة',
-          'ساعات العمل',
-          'التقييم',
           'إيرادات محققة',
           'الحالة',
         ]);
@@ -186,8 +190,6 @@ class ReportExportService {
             row.driverId,
             row.name,
             row.completedTrips,
-            row.totalWorkingHours,
-            row.rating,
             row.totalRevenue,
             row.status,
           ]);
@@ -199,7 +201,7 @@ class ReportExportService {
           'رقم اللوحة',
           'الموديل',
           'الرحلات المنجزة',
-          'معدل الوقود',
+          'متوسط الإشغال',
           'حالة الصيانة',
           'حالة التشغيل',
         ]);
@@ -209,7 +211,7 @@ class ReportExportService {
             row.plateNumber,
             row.model,
             row.completedTrips,
-            row.fuelConsumption,
+            '${(row.avgOccupancyRate * 100).toStringAsFixed(0)}%',
             row.maintenanceStatus,
             row.status,
           ]);
@@ -234,19 +236,12 @@ class ReportExportService {
         }
         break;
       case ReportType.complaints:
-        result.add([
-          'التصنيف',
-          'إجمالي الشكاوى',
-          'تم حلها',
-          'متوسط وقت الحل',
-          'معلقة',
-        ]);
+        result.add(['التصنيف', 'إجمالي الشكاوى', 'تم حلها', 'معلقة']);
         for (final row in rows.cast<ComplaintReportRow>()) {
           result.add([
             row.category,
             row.totalComplaints,
             row.resolvedComplaints,
-            row.avgResolutionTime,
             row.pendingComplaints,
           ]);
         }

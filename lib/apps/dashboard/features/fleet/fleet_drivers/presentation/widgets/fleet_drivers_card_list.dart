@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_empty_state.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/driver_operations.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_workspace.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/widgets/fleet_shared_widgets.dart';
@@ -54,11 +56,12 @@ class FleetDriversCardList extends StatelessWidget {
         : drivers.sublist(start, end);
 
     if (paged.isEmpty) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.all(AppSpacing.large),
-          child: Text('لا توجد بيانات مطابقة'),
-        ),
+      return const DashboardEmptyState(
+        icon: DashboardIcons.captains,
+        title: 'لا يوجد سائقون مطابقون',
+        message:
+            'لا يطابق أي سائق البحث أو الفلاتر الحالية. وسّع الفلاتر، أو أضف '
+            'سائقاً جديداً إلى الأسطول.',
       );
     }
 
@@ -223,7 +226,8 @@ class _DriverListCard extends StatelessWidget {
                       : driver.isLicenseExpiringSoon
                       ? scheme.tertiary
                       : scheme.onSurfaceVariant,
-                  fontWeight: driver.isLicenseExpired || driver.isLicenseExpiringSoon
+                  fontWeight:
+                      driver.isLicenseExpired || driver.isLicenseExpiringSoon
                       ? FontWeight.w800
                       : null,
                 ),
@@ -400,14 +404,14 @@ class _FleetCardsPagination extends StatelessWidget {
             onPressed: currentPage == 0
                 ? null
                 : () => onPageChanged(currentPage - 1),
-            icon: const Icon(Icons.chevron_left_rounded),
+            icon: const Icon(DashboardIcons.paginationPrevious),
           ),
           IconButton(
             tooltip: 'التالي',
             onPressed: currentPage >= pages - 1
                 ? null
                 : () => onPageChanged(currentPage + 1),
-            icon: const Icon(Icons.chevron_right_rounded),
+            icon: const Icon(DashboardIcons.paginationNext),
           ),
         ],
       ),

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_operational_status.dart';
 import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
@@ -326,7 +328,7 @@ class FleetBreadcrumbs extends StatelessWidget {
       children: [
         IconButton(
           onPressed: onBack,
-          icon: const Icon(Icons.arrow_back_rounded),
+          icon: const Icon(DashboardIcons.back),
           tooltip: 'رجوع',
         ),
         const SizedBox(width: AppSpacing.small),
@@ -338,7 +340,7 @@ class FleetBreadcrumbs extends StatelessWidget {
           ),
         ),
         Icon(
-          Icons.chevron_right_rounded,
+          DashboardIcons.breadcrumbSeparator,
           size: 16,
           color: scheme.onSurfaceVariant,
         ),

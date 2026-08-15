@@ -1155,7 +1155,7 @@ class _OverviewTab extends StatelessWidget {
                             ),
                             Expanded(child: Divider(color: scheme.primary)),
                             Icon(
-                              Icons.arrow_forward_rounded,
+                              DashboardIcons.transition,
                               size: 18,
                               color: scheme.primary,
                             ),

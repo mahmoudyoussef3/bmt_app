@@ -81,8 +81,6 @@ abstract final class DashboardIcons {
   static const reportsActive = Icons.assessment_rounded;
 
   /// The owner's business read of the office.
-  static const ownerOverview = Icons.insights_outlined;
-  static const ownerOverviewActive = Icons.insights_rounded;
 
   /// The referral programme.
   static const referrals = Icons.card_giftcard_outlined;
@@ -226,7 +224,41 @@ abstract final class DashboardIcons {
   static const collapseNav = Icons.menu_open_rounded;
   static const expandNav = Icons.menu_rounded;
 
-  /// "Go to this module." Directional: Material mirrors it under RTL, so this
-  /// must stay the LTR-semantic glyph (see `dashboard_rtl_test.dart`).
+  // ## Directional glyphs — name the intent, never the glyph
+  //
+  // Material's arrows and chevrons carry `matchTextDirection: true`, so the
+  // framework mirrors them itself under RTL. That makes them this console's
+  // most reliable trap: a developer who wants a "back" button — which points
+  // *right* in Arabic — reaches for `chevron_right`, the framework flips it,
+  // and it renders pointing left. The rule is to always name the
+  // **LTR-semantic** glyph and let the framework do the flip.
+  //
+  // The rule is one sentence long and was still broken at eight call sites,
+  // because at the call site nobody is thinking about mirroring — they are
+  // thinking "this button goes back". So the tokens below are named for the
+  // *intent*. Say what the control does; the right glyph follows.
+  // `dashboard_rtl_test.dart` fails the build if a raw directional glyph
+  // appears anywhere in the dashboard outside this file.
+
+  /// "Go to this module." The sidebar/overview affordance into a whole screen.
   static const openModule = Icons.chevron_right_rounded;
+
+  /// Advance: drill into a row's details, or move to the next step of a flow.
+  static const forward = Icons.arrow_forward_rounded;
+
+  /// Retreat: return to the list, or to the previous step of a flow.
+  static const back = Icons.arrow_back_rounded;
+
+  /// Pagination controls. Chevrons rather than arrows because they sit in a
+  /// dense bar where an arrow reads as an action rather than a step.
+  static const paginationPrevious = Icons.chevron_left_rounded;
+  static const paginationNext = Icons.chevron_right_rounded;
+
+  /// The separator between breadcrumb crumbs, and the marker on a selected row.
+  /// Points the way the eye travels, so it mirrors with everything else.
+  static const breadcrumbSeparator = Icons.chevron_right_rounded;
+
+  /// A transition between two values — a journey's origin → destination, or an
+  /// audit entry's before → after. Not navigation: nothing is clickable here.
+  static const transition = Icons.arrow_forward_rounded;
 }

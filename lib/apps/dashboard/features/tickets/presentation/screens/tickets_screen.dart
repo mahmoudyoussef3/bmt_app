@@ -8,6 +8,7 @@ import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/debounced_search_field.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
 
+import '../../domain/entities/complaint.dart';
 import '../cubit/tickets_cubit.dart';
 import '../cubit/tickets_state.dart';
 
@@ -77,19 +78,100 @@ class _LoadedView extends StatelessWidget {
             ],
             sectionId: DashboardSectionIds.ticketsHeader,
             summary: SummaryStats(state: state),
-            // Search stays out of the fold: it is the only way to reach a
-            // ticket that is not on the first page.
-            pinned: DebouncedSearchField(
-              hintText: 'ابحث برقم التذكرة أو اسم العميل أو الهاتف...',
-              initialValue: state.searchQuery,
-              onChanged: (value) =>
-                  context.read<TicketsCubit>().setSearchQuery(value),
-            ),
+            // The toolbar stays out of the fold: search and the two filters are
+            // the only way to reach a ticket that is not on the first page.
+            pinned: _TicketsToolbar(state: state),
           ),
           const SizedBox(height: AppSpacing.medium),
-          Expanded(child: TicketsTable(state: state)),
+          Expanded(
+            child: SingleChildScrollView(child: TicketsTable(state: state)),
+          ),
         ],
       ),
+    );
+  }
+}
+
+/// Search plus the two queue filters, on one line where there is room for it.
+///
+/// The status and priority filters existed in the cubit and in
+/// [TicketsLoaded.filteredTickets] from the start, but nothing on screen ever
+/// called them — the queue could only be searched, never narrowed.
+class _TicketsToolbar extends StatelessWidget {
+  final TicketsLoaded state;
+
+  const _TicketsToolbar({required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    final cubit = context.read<TicketsCubit>();
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final compact = constraints.maxWidth < 760;
+
+        final search = DebouncedSearchField(
+          hintText: 'ابحث برقم التذكرة أو اسم العميل أو الهاتف...',
+          initialValue: state.searchQuery,
+          onChanged: cubit.setSearchQuery,
+        );
+
+        final statusFilter = DropdownButtonFormField<TicketStatus?>(
+          initialValue: state.filterStatus,
+          decoration: const InputDecoration(labelText: 'الحالة'),
+          items: [
+            const DropdownMenuItem(value: null, child: Text('كل الحالات')),
+            ...TicketStatus.values.map(
+              (s) => DropdownMenuItem(value: s, child: Text(s.label)),
+            ),
+          ],
+          onChanged: cubit.setFilterStatus,
+        );
+
+        final priorityFilter = DropdownButtonFormField<TicketPriority?>(
+          initialValue: state.filterPriority,
+          decoration: const InputDecoration(labelText: 'الأولوية'),
+          items: [
+            const DropdownMenuItem(value: null, child: Text('كل الأولويات')),
+            ...TicketPriority.values.map(
+              (p) => DropdownMenuItem(value: p, child: Text(p.label)),
+            ),
+          ],
+          onChanged: cubit.setFilterPriority,
+        );
+
+        final chip = StatusChip(
+          label:
+              '${state.filteredTickets.length}/${state.tickets.length} تذكرة',
+        );
+
+        if (compact) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              search,
+              const SizedBox(height: AppSpacing.small),
+              statusFilter,
+              const SizedBox(height: AppSpacing.small),
+              priorityFilter,
+              const SizedBox(height: AppSpacing.small),
+              Align(alignment: AlignmentDirectional.centerStart, child: chip),
+            ],
+          );
+        }
+
+        return Row(
+          children: [
+            Expanded(flex: 2, child: search),
+            const SizedBox(width: AppSpacing.medium),
+            SizedBox(width: 190, child: statusFilter),
+            const SizedBox(width: AppSpacing.medium),
+            SizedBox(width: 170, child: priorityFilter),
+            const SizedBox(width: AppSpacing.medium),
+            chip,
+          ],
+        );
+      },
     );
   }
 }

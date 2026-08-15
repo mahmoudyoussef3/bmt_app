@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 
@@ -39,6 +40,18 @@ class OpsDataTable extends StatelessWidget {
   final ValueChanged<int>? onSort;
   final String emptyLabel;
 
+  /// Tap handler per row, parallel to [rows]. A row whose entry is null (or when
+  /// the whole list is omitted) stays inert, so existing call sites are unchanged.
+  final List<VoidCallback?>? onRowTap;
+
+  /// Background tint per row, parallel to [rows] — for flagging a row that needs
+  /// attention (a breached SLA, an overdue payment). Hover still wins over it.
+  final List<Color?>? rowTints;
+
+  /// Replaces the plain [emptyLabel] text when the table has no rows — pass a
+  /// [DashboardEmptyState] to say *why* it is empty and what to do about it.
+  final Widget? emptyState;
+
   const OpsDataTable({
     super.key,
     required this.columns,
@@ -51,6 +64,9 @@ class OpsDataTable extends StatelessWidget {
     this.sortDirection = OpsSort.none,
     this.onSort,
     this.emptyLabel = 'لا توجد بيانات مطابقة',
+    this.onRowTap,
+    this.rowTints,
+    this.emptyState,
   });
 
   @override
@@ -88,10 +104,11 @@ class OpsDataTable extends StatelessWidget {
                       if (rows.isEmpty)
                         Padding(
                           padding: const EdgeInsets.all(AppSpacing.xLarge),
-                          child: Text(emptyLabel),
+                          child:
+                              emptyState ??
+                              Text(emptyLabel, textAlign: TextAlign.center),
                         )
                       else
-                        
                         ...rows.asMap().entries.expand((entry) sync* {
                           if (entry.key > 0) {
                             yield Divider(
@@ -102,6 +119,12 @@ class OpsDataTable extends StatelessWidget {
                           yield _HoverableOpsBodyRow(
                             columns: columns,
                             cells: entry.value,
+                            onTap: entry.key < (onRowTap?.length ?? 0)
+                                ? onRowTap![entry.key]
+                                : null,
+                            tint: entry.key < (rowTints?.length ?? 0)
+                                ? rowTints![entry.key]
+                                : null,
                           );
                         }),
                     ],
@@ -213,8 +236,15 @@ class _OpsHeaderRow extends StatelessWidget {
 class _HoverableOpsBodyRow extends StatefulWidget {
   final List<OpsColumn> columns;
   final List<Widget> cells;
+  final VoidCallback? onTap;
+  final Color? tint;
 
-  const _HoverableOpsBodyRow({required this.columns, required this.cells});
+  const _HoverableOpsBodyRow({
+    required this.columns,
+    required this.cells,
+    this.onTap,
+    this.tint,
+  });
 
   @override
   State<_HoverableOpsBodyRow> createState() => _HoverableOpsBodyRowState();
@@ -225,14 +255,17 @@ class _HoverableOpsBodyRowState extends State<_HoverableOpsBodyRow> {
 
   @override
   Widget build(BuildContext context) {
-    return MouseRegion(
+    final row = MouseRegion(
+      cursor: widget.onTap == null
+          ? MouseCursor.defer
+          : SystemMouseCursors.click,
       onEnter: (_) => setState(() => _isHovered = true),
       onExit: (_) => setState(() => _isHovered = false),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         color: _isHovered
             ? DashboardColors.tableRowHover(context)
-            : Colors.transparent,
+            : (widget.tint ?? Colors.transparent),
         padding: const EdgeInsets.symmetric(
           horizontal: AppSpacing.large,
           vertical: AppSpacing.medium,
@@ -260,6 +293,13 @@ class _HoverableOpsBodyRowState extends State<_HoverableOpsBodyRow> {
         ),
       ),
     );
+
+    if (widget.onTap == null) return row;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: widget.onTap,
+      child: row,
+    );
   }
 }
 
@@ -278,29 +318,56 @@ class _OpsPaginationBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // A [Wrap] rather than a `Row` with a `Spacer`.
+    //
+    // The row version overflowed at the console's own narrowest declared
+    // breakpoint (360px) and got worse with every step of text scale, because
+    // nothing in it could yield: two unbounded `Text`s and two fixed 48px
+    // buttons in a lane that does not grow. Adding `Flexible` + ellipsis would
+    // have stopped the overflow by *deleting the numbers* — and the totals are
+    // the entire content of this bar.
+    //
+    // Wrapping lets the counts drop onto their own lines instead, so a narrow
+    // window or 1.6× text costs vertical space rather than information. At
+    // normal widths everything still sits on one line, `spaceBetween` holding
+    // the total at the start edge and the controls at the end, which is what
+    // the row produced.
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.medium),
-      child: Row(
-        children: [
-          Text('الإجمالي $total'),
-          const Spacer(),
-          Text('صفحة ${currentPage + 1} من $pages'),
-          const SizedBox(width: AppSpacing.small),
-          IconButton(
-            tooltip: 'السابق',
-            onPressed: currentPage == 0
-                ? null
-                : () => onPageChanged(currentPage - 1),
-            icon: const Icon(Icons.chevron_left_rounded),
-          ),
-          IconButton(
-            tooltip: 'التالي',
-            onPressed: currentPage >= pages - 1
-                ? null
-                : () => onPageChanged(currentPage + 1),
-            icon: const Icon(Icons.chevron_right_rounded),
-          ),
-        ],
+      // The bar must fill the row for `spaceBetween` to mean anything: a Wrap
+      // under a Column's loose constraints shrink-wraps to its children and
+      // then centres the lot, which reads as an accident at desktop widths.
+      child: SizedBox(
+        width: double.infinity,
+        child: Wrap(
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: AppSpacing.small,
+          runSpacing: AppSpacing.xSmall,
+          children: [
+            Text('الإجمالي $total'),
+            Text('صفحة ${currentPage + 1} من $pages'),
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  tooltip: 'السابق',
+                  onPressed: currentPage == 0
+                      ? null
+                      : () => onPageChanged(currentPage - 1),
+                  icon: const Icon(DashboardIcons.paginationPrevious),
+                ),
+                IconButton(
+                  tooltip: 'التالي',
+                  onPressed: currentPage >= pages - 1
+                      ? null
+                      : () => onPageChanged(currentPage + 1),
+                  icon: const Icon(DashboardIcons.paginationNext),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

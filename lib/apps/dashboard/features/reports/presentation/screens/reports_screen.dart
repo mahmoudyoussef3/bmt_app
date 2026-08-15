@@ -20,16 +20,37 @@ class ReportsScreen extends StatefulWidget {
 }
 
 class _ReportsScreenState extends State<ReportsScreen> {
-  
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<ReportsCubit, ReportsState>(
       listenWhen: (previous, current) {
-        return current is ReportsLoaded && current.exportedFileName != null;
+        return current is ReportsLoaded &&
+            (current.exportedFileName != null || current.actionError != null);
       },
+      // Action outcomes are notices over the report, never replacements for
+      // it: a refused export or a failed refetch must leave the filters the
+      // operator built exactly where they were.
       listener: (context, state) {
-        if (state is ReportsLoaded && state.exportedFileName != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
+        if (state is! ReportsLoaded) return;
+        final cubit = context.read<ReportsCubit>();
+        final messenger = ScaffoldMessenger.of(context);
+
+        if (state.actionError != null) {
+          messenger
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              SnackBar(
+                content: Text(state.actionError!),
+                backgroundColor: Theme.of(context).colorScheme.error,
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          cubit.clearActionError();
+          return;
+        }
+
+        if (state.exportedFileName != null) {
+          messenger.showSnackBar(
             SnackBar(
               content: Text(
                 'تم تصدير التقرير بنجاح: ${state.exportedFileName}',
@@ -37,7 +58,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               behavior: SnackBarBehavior.floating,
             ),
           );
-          context.read<ReportsCubit>().clearExport();
+          cubit.clearExport();
         }
       },
       builder: (context, state) {
@@ -85,7 +106,6 @@ class _LoadedView extends StatelessWidget {
         final useSplit = constraints.maxWidth > 800;
 
         if (!useSplit) {
-          
           return Column(
             children: [
               SizedBox(
@@ -104,7 +124,6 @@ class _LoadedView extends StatelessWidget {
         return Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            
             SizedBox(
               width: 240,
               child: Padding(
@@ -122,7 +141,7 @@ class _LoadedView extends StatelessWidget {
                 ),
               ),
             ),
-            
+
             Expanded(child: ReportWorkspace(state: state)),
           ],
         );

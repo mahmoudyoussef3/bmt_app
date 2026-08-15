@@ -25,7 +25,6 @@ class SupportTicketModel extends SupportTicket {
   });
 
   factory SupportTicketModel.fromJson(Map<String, dynamic> json) {
-    
     String clientName = 'Unknown User';
     String clientPhone = '';
 

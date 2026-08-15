@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_filter_memory.dart';
+
 import '../../domain/entities/operation_booking.dart';
 import '../../domain/entities/reassignment_target.dart';
 import '../../domain/usecases/approve_booking_usecase.dart';
@@ -55,7 +57,20 @@ class BookingsCubit extends Cubit<BookingsState> {
     emit(const BookingsLoading());
     try {
       final bookings = await _getBookings();
-      emit(BookingsLoaded(bookings: bookings, filters: const BookingFilters()));
+      // The operator filtered this queue, opened a booking, and came back —
+      // the shell built a new cubit, but their filter is still the one they
+      // want. The filter bar shows its active count either way, so restoring
+      // it cannot leave them reading a narrowed queue as the whole queue.
+      emit(
+        BookingsLoaded(
+          bookings: bookings,
+          filters:
+              DashboardFilterMemory.instance.read<BookingFilters>(
+                DashboardFilterIds.bookings,
+              ) ??
+              const BookingFilters(),
+        ),
+      );
       _bookingsSubscription?.cancel();
       
       _bookingsSubscription = _watchBookings().listen(
@@ -161,12 +176,16 @@ class BookingsCubit extends Cubit<BookingsState> {
   void updateFilters(BookingFilters filters) {
     final current = state;
     if (current is! BookingsLoaded) return;
+    DashboardFilterMemory.instance.write(DashboardFilterIds.bookings, filters);
     emit(current.copyWith(filters: filters, selectedIds: const {}, page: 0));
   }
 
   void clearFilters() {
     final current = state;
     if (current is! BookingsLoaded) return;
+    // Forget rather than remember an empty filter: "I cleared this" has to
+    // survive navigation exactly as a selection does.
+    DashboardFilterMemory.instance.forget(DashboardFilterIds.bookings);
     emit(
       current.copyWith(
         filters: const BookingFilters(),

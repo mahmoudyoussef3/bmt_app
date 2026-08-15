@@ -252,7 +252,6 @@ DashboardHomeSummary buildSummary({
     fleet: fleet ?? emptyFleetWorkspace,
     captainRequests: captainRequests ?? const [],
     reviews: reviews ?? const [],
-    officeProfile: officeProfile ?? officeProfileListed,
     tickets: tickets ?? const [],
     subscriptions: subscriptions ?? const [],
   );

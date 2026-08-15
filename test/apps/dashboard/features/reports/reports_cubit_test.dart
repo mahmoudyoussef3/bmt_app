@@ -40,7 +40,10 @@ void main() {
       await cubit.load();
       expect(cubit.state, isA<ReportsLoaded>());
       final state = cubit.state as ReportsLoaded;
-      expect(state.activeReportType, ReportType.trips);
+      // Opens on revenue, not trips: trips used to be the default while it was
+      // a stub returning "قيد التطوير الفعلي" as its only KPI.
+      expect(state.activeReportType, ReportsCubit.defaultReportType);
+      expect(state.activeReportType, ReportType.revenue);
       expect(state.availableRoutes, contains('ROUTE-1'));
       expect(state.availableDrivers, contains('DRIVER-1'));
       expect(state.availableVehicles, contains('VEHICLE-1'));
@@ -120,12 +123,71 @@ void main() {
       expect(state.exportingFormat, isNull);
       expect(state.exportedFileName, isNull);
     });
+
+    test(
+      'a failed refetch keeps the report and its filters on screen',
+      () async {
+        await cubit.load();
+        await cubit.updateFilter(route: 'ROUTE-2');
+
+        repository.failNextReport = true;
+        await cubit.switchReportType(ReportType.drivers);
+
+        // The old whole-page ReportsError discarded everything the operator had
+        // built. The page survives; the failure is a notice on top of it.
+        expect(cubit.state, isA<ReportsLoaded>());
+        final state = cubit.state as ReportsLoaded;
+        expect(state.actionError, isNotNull);
+        expect(state.isRefreshing, isFalse);
+        expect(state.filter.routeCode, 'ROUTE-2');
+        expect(state.reportData.kpis, isNotEmpty);
+      },
+    );
+
+    test(
+      'a failed export reports the failure instead of going quiet',
+      () async {
+        await cubit.load();
+        repository.failNextExport = true;
+
+        await cubit.triggerExport('pdf');
+
+        final state = cubit.state as ReportsLoaded;
+        expect(state.actionLoading, isFalse);
+        expect(state.actionError, isNotNull);
+        expect(state.exportedFileName, isNull);
+      },
+    );
+
+    test('each report only offers filters it can actually apply', () {
+      // The bar used to draw all four dropdowns for every report while the
+      // datasource read none of them.
+      expect(ReportType.revenue.supportedFilters, {
+        ReportFilterField.dateRange,
+      });
+      expect(ReportType.drivers.supportedFilters, {ReportFilterField.driver});
+      expect(ReportType.complaints.supportedFilters, isEmpty);
+
+      // A report with no date dimension says so rather than showing a range it
+      // silently ignores.
+      expect(ReportType.revenue.usesDateRange, isTrue);
+      expect(ReportType.drivers.usesDateRange, isFalse);
+      expect(ReportType.drivers.scopeNote, isNotNull);
+      expect(ReportType.revenue.scopeNote, isNull);
+    });
   });
 }
 
 class _MockReportsRepository implements ReportsRepository {
+  bool failNextReport = false;
+  bool failNextExport = false;
+
   @override
   Future<ReportData> getReportData(ReportType type, ReportFilter filter) async {
+    if (failNextReport) {
+      failNextReport = false;
+      throw StateError('report unavailable');
+    }
     return ReportData(
       kpis: {'type': type.name, 'إجمالي': '100'},
       rows: const [],
@@ -139,6 +201,10 @@ class _MockReportsRepository implements ReportsRepository {
     ReportFilter filter,
     String format,
   ) async {
+    if (failNextExport) {
+      failNextExport = false;
+      throw StateError('export refused');
+    }
     return 'report_${type.name}_export.$format';
   }
 

@@ -1111,7 +1111,7 @@ class _OfficeHeader extends StatelessWidget {
         children: [
           TextButton.icon(
             onPressed: onBack,
-            icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+            icon: const Icon(DashboardIcons.back, size: 18),
             label: const Text('كل المكاتب'),
             style: TextButton.styleFrom(padding: EdgeInsets.zero),
           ),

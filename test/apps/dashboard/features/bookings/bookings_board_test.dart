@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_app_theme.dart';
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_filter_memory.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/ops_data_table.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/domain/entities/operation_booking.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/domain/entities/reassignment_target.dart';
@@ -141,6 +142,12 @@ Future<BookingsCubit> _pumpScreen(
 }
 
 void main() {
+  // Filters are remembered per session in a process-wide store, so one test's
+  // search term would otherwise narrow the next test's board to nothing —
+  // which is precisely the behaviour operators want and tests must not inherit.
+  setUp(DashboardFilterMemory.instance.clear);
+  tearDown(DashboardFilterMemory.instance.clear);
+
   group('Queue tabs', () {
     test('the board opens on the review queue, not on a status', () async {
       final cubit = _cubit([

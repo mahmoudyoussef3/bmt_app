@@ -35,6 +35,20 @@ class _FleetOverviewScreenState extends State<FleetOverviewScreen> {
   late FleetTab _activeTab;
   bool _isListMode = true;
 
+  /// One identity per tab, kept across the browse↔focus layout flip below.
+  ///
+  /// Focusing a driver swaps this screen's entire layout (scrolling page →
+  /// bounded pane), so the tab sits under a different widget before and after.
+  /// Without a stable identity its element is thrown away on that flip —
+  /// together with the very selection that asked for it — and the tab comes
+  /// back in list mode inside a box with no scroll of its own, overflowing the
+  /// viewport by the height of the list. A global key lets the same element
+  /// move between the two branches instead, so the selection (and the tab's
+  /// cubits, unreloaded) survives the swap.
+  final Map<FleetTab, GlobalKey> _tabKeys = {
+    for (final tab in FleetTab.values) tab: GlobalKey(),
+  };
+
   @override
   void initState() {
     super.initState();
@@ -69,7 +83,7 @@ class _FleetOverviewScreenState extends State<FleetOverviewScreen> {
           final tabContent = AnimatedSwitcher(
             duration: const Duration(milliseconds: 200),
             child: KeyedSubtree(
-              key: ValueKey('tab-$_activeTab-list-$_isListMode'),
+              key: _tabKeys[_activeTab],
               child: switch (_activeTab) {
                 FleetTab.drivers => MultiBlocProvider(
                   providers: [
@@ -77,8 +91,7 @@ class _FleetOverviewScreenState extends State<FleetOverviewScreen> {
                       create: (_) => dashboardDi<FleetDriversCubit>()..load(),
                     ),
                     BlocProvider<FleetDocumentsCubit>(
-                      create: (_) =>
-                          dashboardDi<FleetDocumentsCubit>()..load(),
+                      create: (_) => dashboardDi<FleetDocumentsCubit>()..load(),
                     ),
                   ],
                   child: FleetDriversScreen(
@@ -89,12 +102,10 @@ class _FleetOverviewScreenState extends State<FleetOverviewScreen> {
                 FleetTab.vehicles => MultiBlocProvider(
                   providers: [
                     BlocProvider<FleetVehiclesCubit>(
-                      create: (_) =>
-                          dashboardDi<FleetVehiclesCubit>()..load(),
+                      create: (_) => dashboardDi<FleetVehiclesCubit>()..load(),
                     ),
                     BlocProvider<FleetDocumentsCubit>(
-                      create: (_) =>
-                          dashboardDi<FleetDocumentsCubit>()..load(),
+                      create: (_) => dashboardDi<FleetDocumentsCubit>()..load(),
                     ),
                   ],
                   child: FleetVehiclesScreen(
@@ -127,7 +138,7 @@ class _FleetOverviewScreenState extends State<FleetOverviewScreen> {
           }
 
           return SingleChildScrollView(
-            key: ValueKey('scroll-${_activeTab.name}-list-$_isListMode'),
+            key: ValueKey('scroll-${_activeTab.name}'),
             padding: const EdgeInsets.all(AppSpacing.large),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,

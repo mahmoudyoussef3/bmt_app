@@ -106,6 +106,10 @@ class _LoadedView extends StatelessWidget {
           onCreateTrip: onCreateTrip,
           onOpenBookings: () => onOpenModule(DashboardRoutes.bookings),
         ),
+        if (summary.unavailable.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.small),
+          DashboardPartialDataNotice(sources: summary.unavailable),
+        ],
         const SizedBox(height: AppSpacing.medium),
         HomeKpiGrid(summary: summary, onOpenModule: onOpenModule),
         const SizedBox(height: AppSpacing.medium),

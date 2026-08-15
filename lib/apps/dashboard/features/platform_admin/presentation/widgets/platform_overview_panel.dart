@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
+
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_models.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/dashboard_line_chart.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/dashboard_ranked_bars.dart';
@@ -409,7 +411,7 @@ class _AttentionRow extends StatelessWidget {
               ),
             ),
             Icon(
-              Icons.chevron_left_rounded,
+              DashboardIcons.openModule,
               size: 18,
               color: scheme.onSurfaceVariant,
             ),

@@ -1373,54 +1373,66 @@ class _InteractiveTimeTile extends StatelessWidget {
 
     return Material(
       color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppTokens.radius),
-        child: Ink(
-          width: 220,
-          padding: const EdgeInsets.all(AppSpacing.medium),
-          decoration: BoxDecoration(
-            color: hasValue
-                ? scheme.primaryContainer.withAlpha(30)
-                : scheme.surfaceContainerHighest.withAlpha(50),
-            borderRadius: BorderRadius.circular(AppTokens.radius),
-            border: Border.all(
+      // A minimum, not a fixed lane: at 1.3x+ text scale the Arabic label is wider
+      // than 220 and a hard width clipped it. The tiles sit in a Wrap, so letting
+      // one grow past the minimum costs nothing but a reflow.
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minWidth: 220),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppTokens.radius),
+          child: Ink(
+            padding: const EdgeInsets.all(AppSpacing.medium),
+            decoration: BoxDecoration(
               color: hasValue
-                  ? scheme.primary.withAlpha(80)
-                  : scheme.outline.withAlpha(40),
+                  ? scheme.primaryContainer.withAlpha(30)
+                  : scheme.surfaceContainerHighest.withAlpha(50),
+              borderRadius: BorderRadius.circular(AppTokens.radius),
+              border: Border.all(
+                color: hasValue
+                    ? scheme.primary.withAlpha(80)
+                    : scheme.outline.withAlpha(40),
+              ),
             ),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Icon(
-                    icon,
-                    size: 18,
-                    color: hasValue ? scheme.primary : scheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: AppSpacing.small),
-                  Text(
-                    label,
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: scheme.onSurfaceVariant,
-                      fontWeight: FontWeight.w600,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      icon,
+                      size: 18,
+                      color: hasValue
+                          ? scheme.primary
+                          : scheme.onSurfaceVariant,
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.small),
-              Text(
-                hasValue ? value : placeholder,
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: hasValue
-                      ? scheme.onSurface
-                      : scheme.onSurfaceVariant.withAlpha(150),
-                  fontWeight: hasValue ? FontWeight.bold : FontWeight.normal,
+                    const SizedBox(width: AppSpacing.small),
+                    Flexible(
+                      child: Text(
+                        label,
+                        style: Theme.of(context).textTheme.labelMedium
+                            ?.copyWith(
+                              color: scheme.onSurfaceVariant,
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
+                const SizedBox(height: AppSpacing.small),
+                Text(
+                  hasValue ? value : placeholder,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: hasValue
+                        ? scheme.onSurface
+                        : scheme.onSurfaceVariant.withAlpha(150),
+                    fontWeight: hasValue ? FontWeight.bold : FontWeight.normal,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

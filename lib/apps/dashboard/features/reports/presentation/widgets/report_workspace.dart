@@ -19,27 +19,38 @@ class ReportWorkspace extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          
           ReportExportToolbar(state: state),
           const SizedBox(height: AppSpacing.medium),
 
           ReportFiltersBar(state: state),
           const SizedBox(height: AppSpacing.medium),
 
+          if (state.isRefreshing)
+            const Padding(
+              padding: EdgeInsets.only(bottom: AppSpacing.small),
+              child: LinearProgressIndicator(minHeight: 2),
+            ),
+
           Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  
-                  ReportKpiGrid(state: state),
-                  const SizedBox(height: AppSpacing.medium),
+            // Only the results dim while a refetch is in flight. The selector,
+            // the filter bar and the export toolbar stay live and stay put —
+            // switching report type used to tear the whole page down.
+            child: AnimatedOpacity(
+              duration: const Duration(milliseconds: 150),
+              opacity: state.isRefreshing ? 0.45 : 1,
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    ReportKpiGrid(state: state),
+                    const SizedBox(height: AppSpacing.medium),
 
-                  ReportTrendChart(state: state),
-                  const SizedBox(height: AppSpacing.medium),
+                    ReportTrendChart(state: state),
+                    const SizedBox(height: AppSpacing.medium),
 
-                  ReportDataTable(state: state),
-                ],
+                    ReportDataTable(state: state),
+                  ],
+                ),
               ),
             ),
           ),

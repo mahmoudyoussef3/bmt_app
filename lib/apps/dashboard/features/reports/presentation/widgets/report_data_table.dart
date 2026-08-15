@@ -58,9 +58,9 @@ class ReportDataTable extends StatelessWidget {
     final rows = state.reportData.rows;
 
     return Theme(
-      data: Theme.of(context).copyWith(
-        dividerColor: scheme.outlineVariant.withValues(alpha: 0.2), 
-      ),
+      data: Theme.of(
+        context,
+      ).copyWith(dividerColor: scheme.outlineVariant.withValues(alpha: 0.2)),
       child: switch (state.activeReportType) {
         ReportType.trips => DataTable(
           columns: const [
@@ -188,8 +188,6 @@ class ReportDataTable extends StatelessWidget {
             DataColumn(label: Text('رقم السائق')),
             DataColumn(label: Text('الاسم')),
             DataColumn(label: Text('الرحلات المكتملة')),
-            DataColumn(label: Text('ساعات العمل')),
-            DataColumn(label: Text('التقييم')),
             DataColumn(label: Text('إيرادات محققة')),
             DataColumn(label: Text('الحالة')),
           ],
@@ -204,18 +202,6 @@ class ReportDataTable extends StatelessWidget {
                 ),
                 DataCell(Text(r.name)),
                 DataCell(Text('${r.completedTrips} رحلة')),
-                DataCell(
-                  Text('${r.totalWorkingHours.toStringAsFixed(0)} ساعة'),
-                ),
-                DataCell(
-                  Text(
-                    '${r.rating.toStringAsFixed(1)} ★',
-                    style: TextStyle(
-                      color: context.status(AppStatusTone.warning).ink,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
                 DataCell(Text('${r.totalRevenue.toStringAsFixed(0)} ج.م')),
                 DataCell(
                   Text(
@@ -238,7 +224,7 @@ class ReportDataTable extends StatelessWidget {
             DataColumn(label: Text('رقم اللوحة')),
             DataColumn(label: Text('الموديل')),
             DataColumn(label: Text('الرحلات المنجزة')),
-            DataColumn(label: Text('معدل الوقود')),
+            DataColumn(label: Text('متوسط الإشغال')),
             DataColumn(label: Text('حالة الصيانة')),
             DataColumn(label: Text('حالة التشغيل')),
           ],
@@ -255,7 +241,7 @@ class ReportDataTable extends StatelessWidget {
                 DataCell(Text(r.model)),
                 DataCell(Text('${r.completedTrips} رحلة')),
                 DataCell(
-                  Text('${r.fuelConsumption.toStringAsFixed(1)} لتر/100كم'),
+                  Text('${(r.avgOccupancyRate * 100).toStringAsFixed(0)}%'),
                 ),
                 DataCell(
                   Text(
@@ -303,7 +289,6 @@ class ReportDataTable extends StatelessWidget {
             DataColumn(label: Text('التصنيف')),
             DataColumn(label: Text('إجمالي الشكاوى')),
             DataColumn(label: Text('تم حلها')),
-            DataColumn(label: Text('متوسط وقت الحل')),
             DataColumn(label: Text('معلقة')),
           ],
           rows: rows.cast<ComplaintReportRow>().take(50).map((r) {
@@ -317,9 +302,6 @@ class ReportDataTable extends StatelessWidget {
                 ),
                 DataCell(Text('${r.totalComplaints} شكوى')),
                 DataCell(Text('${r.resolvedComplaints} شكوى')),
-                DataCell(
-                  Text('${r.avgResolutionTime.toStringAsFixed(1)} ساعة'),
-                ),
                 DataCell(
                   Text(
                     '${r.pendingComplaints} شكوى معلقة',

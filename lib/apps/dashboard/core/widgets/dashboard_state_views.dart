@@ -25,41 +25,41 @@ class DashboardLoading extends StatelessWidget {
   Widget build(BuildContext context) {
     final children = <Widget>[
       if (showHeader) ...[
-          AppCard(
-            padding: const EdgeInsets.all(AppSpacing.large),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                SkeletonBox(width: 220, height: 22),
-                SizedBox(height: AppSpacing.small),
-                SkeletonBox(width: 420, height: 14),
-              ],
-            ),
+        AppCard(
+          padding: const EdgeInsets.all(AppSpacing.large),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: const [
+              SkeletonBox(width: 220, height: 22),
+              SizedBox(height: AppSpacing.small),
+              SkeletonBox(width: 420, height: 14),
+            ],
           ),
-          const SizedBox(height: AppSpacing.medium),
-        ],
-        for (var index = 0; index < rows; index++) ...[
-          AppCard(
-            padding: const EdgeInsets.all(AppSpacing.medium),
-            child: Row(
-              children: const [
-                SkeletonBox(width: 44, height: 44),
-                SizedBox(width: AppSpacing.medium),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      SkeletonBox(width: double.infinity, height: 14),
-                      SizedBox(height: AppSpacing.small),
-                      SkeletonBox(width: 220, height: 12),
-                    ],
-                  ),
+        ),
+        const SizedBox(height: AppSpacing.medium),
+      ],
+      for (var index = 0; index < rows; index++) ...[
+        AppCard(
+          padding: const EdgeInsets.all(AppSpacing.medium),
+          child: Row(
+            children: const [
+              SkeletonBox(width: 44, height: 44),
+              SizedBox(width: AppSpacing.medium),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SkeletonBox(width: double.infinity, height: 14),
+                    SizedBox(height: AppSpacing.small),
+                    SkeletonBox(width: 220, height: 12),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-          const SizedBox(height: AppSpacing.small),
-        ],
+        ),
+        const SizedBox(height: AppSpacing.small),
+      ],
     ];
 
     if (!scrollable) {
@@ -138,6 +138,53 @@ class DashboardErrorState extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// "These figures are incomplete, and here is exactly what is missing."
+///
+/// A composition screen reads a dozen independent feeds. Failing the whole page
+/// because one of them did is the wrong trade — the other eleven still answer
+/// the operator's question — but so is silently rendering zeros for the feed
+/// that did not, because a zero is a claim. This is the third option: show what
+/// arrived, and name what did not.
+class DashboardPartialDataNotice extends StatelessWidget {
+  const DashboardPartialDataNotice({super.key, required this.sources});
+
+  /// Human-readable names of the feeds that failed, e.g. `['الإيرادات']`.
+  final List<String> sources;
+
+  @override
+  Widget build(BuildContext context) {
+    if (sources.isEmpty) return const SizedBox.shrink();
+
+    final scheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(AppSpacing.medium),
+      decoration: BoxDecoration(
+        color: scheme.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+        border: Border.all(color: scheme.outlineVariant),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.info_outline_rounded,
+            size: 18,
+            color: scheme.onSurfaceVariant,
+          ),
+          const SizedBox(width: AppSpacing.small),
+          Expanded(
+            child: Text(
+              'تعذّر تحميل: ${sources.join('، ')}. باقي الأرقام محدّثة.',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+            ),
+          ),
+        ],
       ),
     );
   }

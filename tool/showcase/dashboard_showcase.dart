@@ -79,7 +79,8 @@ class _Storage implements SecureStorage {
 
 class _FakeBusinessOverview extends Cubit<BusinessOverviewState>
     implements BusinessOverviewCubit {
-  _FakeBusinessOverview() : super(BusinessOverviewLoaded(demo.businessOverview));
+  _FakeBusinessOverview()
+    : super(BusinessOverviewLoaded(demo.businessOverview));
   @override
   Future<void> load() async {}
   @override
@@ -88,7 +89,8 @@ class _FakeBusinessOverview extends Cubit<BusinessOverviewState>
   dynamic noSuchMethod(Invocation i) => null;
 }
 
-class _FakeHome extends Cubit<DashboardHomeState> implements DashboardHomeCubit {
+class _FakeHome extends Cubit<DashboardHomeState>
+    implements DashboardHomeCubit {
   _FakeHome() : super(DashboardHomeLoaded(demo.homeSummary));
   @override
   Future<void> load() async {}
@@ -157,7 +159,10 @@ class _FakeTripPassengers extends Cubit<TripPassengersState>
 class _FakeRoutes extends Cubit<RoutesState> implements RoutesCubit {
   _FakeRoutes()
     : super(
-        RoutesLoaded(routes: demo.routes, selectedRouteId: demo.routes.first.id),
+        RoutesLoaded(
+          routes: demo.routes,
+          selectedRouteId: demo.routes.first.id,
+        ),
       );
   @override
   Future<void> load() async {}
@@ -390,7 +395,13 @@ const Map<String, String> dashboardScreens = {
   'dashboard-reports': DashboardRoutes.reports,
   'dashboard-reviews': DashboardRoutes.reviews,
   'dashboard-office-profile': DashboardRoutes.officeProfile,
-  'dashboard-licensing-plans': DashboardRoutes.platformPlans,
+
+  // «الخطط والباقات» folded into «الباقات والميزات» when the platform console
+  // went from seven sidebar rows to four; the old `platformPlans` constant went
+  // with it, and this map still named it — which broke the whole harness build,
+  // not just this one screen.
+  'dashboard-licensing-plans': DashboardRoutes.platformCatalog,
+  'dashboard-licensing-licenses': DashboardRoutes.platformLicenses,
 };
 
 Widget buildDashboardShowcase(String screenId, {bool dark = false}) {

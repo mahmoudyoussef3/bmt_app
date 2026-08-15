@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
+
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
@@ -70,7 +72,7 @@ class PlatformOfficeCard extends StatelessWidget {
                       children: [
                         if (isSelected) ...[
                           Icon(
-                            Icons.chevron_left_rounded,
+                            DashboardIcons.breadcrumbSeparator,
                             size: 18,
                             color: scheme.primary,
                           ),

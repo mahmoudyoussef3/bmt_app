@@ -10,7 +10,21 @@ import '../../domain/usecases/save_internal_note_usecase.dart';
 import '../../domain/usecases/mark_customer_contacted_usecase.dart';
 import '../../domain/usecases/close_ticket_usecase.dart';
 import '../../domain/usecases/get_ticket_attachments_usecase.dart';
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_filter_memory.dart';
+
 import 'tickets_state.dart';
+
+/// The support queue's three filter axes as one remembered value.
+///
+/// Tickets keeps its filters as separate fields on the state rather than in a
+/// value object like `BookingFilters`, so this record is what gets handed to
+/// [DashboardFilterMemory] — enough to restore the operator's view, and
+/// nothing else from the state comes with it.
+typedef TicketFilterSnapshot = ({
+  String search,
+  TicketStatus? status,
+  TicketPriority? priority,
+});
 
 class TicketsCubit extends Cubit<TicketsState> {
   final GetTicketsUseCase _getTickets;
@@ -45,10 +59,18 @@ class TicketsCubit extends Cubit<TicketsState> {
     emit(const TicketsLoading());
     try {
       final results = await Future.wait([_getTickets(), _getAgents()]);
+      // Restores the triage the agent was working in — "الطلبات العاجلة
+      // المفتوحة" — after they opened a ticket and came back. The toolbar
+      // shows the selected chips, so the narrowed queue never looks whole.
+      final remembered = DashboardFilterMemory.instance
+          .read<TicketFilterSnapshot>(DashboardFilterIds.tickets);
       emit(
         TicketsLoaded(
           tickets: results[0] as List<SupportTicket>,
           agents: results[1] as List<Map<String, dynamic>>,
+          searchQuery: remembered?.search ?? '',
+          filterStatus: remembered?.status,
+          filterPriority: remembered?.priority,
         ),
       );
     } catch (error) {
@@ -67,7 +89,7 @@ class TicketsCubit extends Cubit<TicketsState> {
       _emitUpdated(
         current.copyWith(agents: current.agents),
         updated,
-        'Assigned to $agentName',
+        'تم إسناد التذكرة إلى $agentName',
       );
     } catch (error) {
       emit(
@@ -105,7 +127,7 @@ class TicketsCubit extends Cubit<TicketsState> {
   void setFilterStatus(TicketStatus? status) {
     final current = state;
     if (current is! TicketsLoaded) return;
-    emit(
+    _remember(
       current.copyWith(filterStatus: status, clearFilterStatus: status == null),
     );
   }
@@ -113,7 +135,7 @@ class TicketsCubit extends Cubit<TicketsState> {
   void setFilterPriority(TicketPriority? priority) {
     final current = state;
     if (current is! TicketsLoaded) return;
-    emit(
+    _remember(
       current.copyWith(
         filterPriority: priority,
         clearFilterPriority: priority == null,
@@ -124,7 +146,36 @@ class TicketsCubit extends Cubit<TicketsState> {
   void setSearchQuery(String query) {
     final current = state;
     if (current is! TicketsLoaded) return;
-    emit(current.copyWith(searchQuery: query));
+    _remember(current.copyWith(searchQuery: query));
+  }
+
+  /// Emits [next] and files its filters away for the operator's next visit.
+  /// Every filter setter goes through here so none can be added later that
+  /// silently forgets.
+  void _remember(TicketsLoaded next) {
+    DashboardFilterMemory.instance.write(DashboardFilterIds.tickets, (
+      search: next.searchQuery,
+      status: next.filterStatus,
+      priority: next.filterPriority,
+    ));
+    emit(next);
+  }
+
+  /// Drops every filter at once, including the search text — what the empty
+  /// state's "مسح الفلاتر" offers when a filtered queue comes back with nothing.
+  void clearFilters() {
+    final current = state;
+    if (current is! TicketsLoaded) return;
+    // Forget rather than remember an empty snapshot, so "cleared" survives
+    // navigation the same way a selection does.
+    DashboardFilterMemory.instance.forget(DashboardFilterIds.tickets);
+    emit(
+      current.copyWith(
+        searchQuery: '',
+        clearFilterStatus: true,
+        clearFilterPriority: true,
+      ),
+    );
   }
 
   Future<void> updateStatus(TicketStatus status) async {
@@ -139,7 +190,7 @@ class TicketsCubit extends Cubit<TicketsState> {
       _emitUpdated(
         current,
         updated,
-        'Ticket status updated to ${status.label}',
+        'تم تحديث حالة التذكرة إلى «${status.label}»',
       );
     } catch (error) {
       emit(
@@ -157,7 +208,7 @@ class TicketsCubit extends Cubit<TicketsState> {
     emit(current.copyWith(actionLoading: true));
     try {
       final updated = await _saveInternalNote(selectedId, note);
-      _emitUpdated(current, updated, 'Internal note saved');
+      _emitUpdated(current, updated, 'تم حفظ الملاحظة الداخلية');
     } catch (error) {
       emit(
         current.copyWith(actionLoading: false, actionMessage: error.toString()),
@@ -174,7 +225,7 @@ class TicketsCubit extends Cubit<TicketsState> {
     emit(current.copyWith(actionLoading: true));
     try {
       final updated = await _markCustomerContacted(selectedId);
-      _emitUpdated(current, updated, 'Marked as contacted');
+      _emitUpdated(current, updated, 'تم تسجيل التواصل مع العميل');
     } catch (error) {
       emit(
         current.copyWith(actionLoading: false, actionMessage: error.toString()),
@@ -191,7 +242,7 @@ class TicketsCubit extends Cubit<TicketsState> {
     emit(current.copyWith(actionLoading: true));
     try {
       final updated = await _closeTicket(selectedId);
-      _emitUpdated(current, updated, 'Ticket closed');
+      _emitUpdated(current, updated, 'تم إغلاق التذكرة');
     } catch (error) {
       emit(
         current.copyWith(actionLoading: false, actionMessage: error.toString()),

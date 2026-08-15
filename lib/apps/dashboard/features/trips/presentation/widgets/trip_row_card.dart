@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/dashboard/core/di/dashboard_di.dart';
@@ -155,7 +157,7 @@ class TripRowCard extends StatelessWidget {
                 children: [
                   TextButton.icon(
                     onPressed: onOpenDetails,
-                    icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+                    icon: const Icon(DashboardIcons.forward, size: 18),
                     label: const Text('عرض التفاصيل'),
                   ),
                   PopupMenuButton<String>(

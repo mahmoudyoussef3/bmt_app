@@ -33,8 +33,6 @@ import '../../features/office_profile/presentation/cubit/office_profile_cubit.da
 import '../../features/office_profile/presentation/screens/office_profile_screen.dart';
 import '../../features/platform_admin/presentation/cubit/platform_admin_cubit.dart';
 import '../../features/platform_admin/presentation/screens/platform_offices_screen.dart';
-import '../../features/owner_overview/presentation/cubit/owner_overview_cubit.dart';
-import '../../features/owner_overview/presentation/screens/owner_overview_screen.dart';
 import '../../features/subscriptions/presentation/cubit/subscriptions_cubit.dart';
 import '../../features/subscriptions/presentation/screens/subscriptions_screen.dart';
 import '../../features/referrals/presentation/cubit/referral_cubit.dart';
@@ -233,6 +231,14 @@ class _DashboardShellState extends State<DashboardShell> {
       permission: DashboardPermission.businessOverview,
     ),
     _DashboardNavItem(
+      label: 'التقارير',
+      route: DashboardRoutes.reports,
+      icon: DashboardIcons.reports,
+      selectedIcon: DashboardIcons.reportsActive,
+      permission: DashboardPermission.reports,
+      feature: FeatureKeys.reports,
+    ),
+    _DashboardNavItem(
       label: 'العمليات المباشرة',
       route: DashboardRoutes.liveOps,
       icon: DashboardIcons.liveOps,
@@ -411,6 +417,80 @@ class _DashboardShellState extends State<DashboardShell> {
       permission: DashboardPermission.settings,
       group: _navSystem,
     ),
+
+    _DashboardNavItem(
+      label: 'برنامج الإحالة',
+      route: DashboardRoutes.referrals,
+      icon: DashboardIcons.referrals,
+      selectedIcon: DashboardIcons.referralsActive,
+      permission: DashboardPermission.referrals,
+
+      /// The referral programme carries no `office_id` — `referrals`,
+      /// `referral_codes` and `referral_rewards` are platform-wide, and
+      /// `referral_rewards` only accepts writes from `is_platform_admin()`.
+      /// An office owner opening this would be reading the whole platform's
+      /// numbers, so it belongs to EWT's own console and nowhere else.
+      platformOnly: true,
+      group: _navPlatform,
+    ),
+
+    // ── Reachable, but not sidebar destinations ──────────────────────────────
+    //
+    // Every route [_buildContent] can render must appear in this list, whether
+    // or not it is drawn. The role and licensing gates are keyed on it, and a
+    // route missing from it used to fall back to the *home* item — which
+    // permits everything, so an unlisted route was reachable by any role. The
+    // ones below are drilled into from cards on Home and نظرة تنفيذية rather
+    // than navigated to, so they are registered and hidden, not omitted.
+    _DashboardNavItem(
+      label: 'السائقون',
+      route: DashboardRoutes.drivers,
+      icon: DashboardIcons.captains,
+      selectedIcon: DashboardIcons.captainsActive,
+      permission: DashboardPermission.drivers,
+      feature: FeatureKeys.drivers,
+      group: _navFleet,
+      inSidebar: false,
+    ),
+    _DashboardNavItem(
+      label: 'المركبات',
+      route: DashboardRoutes.vehicles,
+      icon: DashboardIcons.fleet,
+      selectedIcon: DashboardIcons.fleetActive,
+      permission: DashboardPermission.vehicles,
+      feature: FeatureKeys.drivers,
+      group: _navFleet,
+      inSidebar: false,
+    ),
+    _DashboardNavItem(
+      label: 'مهام الأسطول',
+      route: DashboardRoutes.assignments,
+      icon: DashboardIcons.routes,
+      selectedIcon: DashboardIcons.routesActive,
+      permission: DashboardPermission.assignments,
+      feature: FeatureKeys.drivers,
+      group: _navFleet,
+      inSidebar: false,
+    ),
+    _DashboardNavItem(
+      label: 'مراجعة المدفوعات',
+      route: DashboardRoutes.paymentVerification,
+      icon: DashboardIcons.paymentReview,
+      selectedIcon: DashboardIcons.paymentReviewActive,
+      permission: DashboardPermission.paymentVerification,
+      feature: FeatureKeys.bookings,
+      group: _navFinance,
+      inSidebar: false,
+    ),
+    _DashboardNavItem(
+      label: 'المستخدمون والصلاحيات',
+      route: DashboardRoutes.users,
+      icon: DashboardIcons.users,
+      selectedIcon: DashboardIcons.usersActive,
+      permission: DashboardPermission.permissions,
+      group: _navSystem,
+      inSidebar: false,
+    ),
   ];
 
   @override
@@ -510,8 +590,20 @@ class _DashboardShellState extends State<DashboardShell> {
   /// office cannot buy, plus the ones it can (drawn locked — see [_isItemLocked]).
   List<_DashboardNavItem> get _visibleItems {
     return _items
-        .where((item) => _isItemAllowed(item) || _isItemLocked(item))
+        .where(
+          (item) =>
+              item.inSidebar && (_isItemAllowed(item) || _isItemLocked(item)),
+        )
         .toList();
+  }
+
+  /// The registered item for [route], or null when the console has no such
+  /// destination. Null is a refusal, never a fallback — see [_canOpenRoute].
+  _DashboardNavItem? _itemFor(String route) {
+    for (final item in _items) {
+      if (item.route == route) return item;
+    }
+    return null;
   }
 
   bool _isItemAllowed(_DashboardNavItem item) {
@@ -532,10 +624,10 @@ class _DashboardShellState extends State<DashboardShell> {
         DashboardPermissions.canAccess(_role, permission);
   }
 
-  _DashboardNavItem get _activeItem => _items.firstWhere(
-    (item) => item.route == _route,
-    orElse: () => _items.first,
-  );
+  /// The open module, or the home item when the route is somehow unregistered —
+  /// which [_openRoute] no longer allows, so this is a render-time backstop for
+  /// [widget.initialRoute] rather than a path the console can navigate into.
+  _DashboardNavItem get _activeItem => _itemFor(_route) ?? _items.first;
 
   String get _activeTitle => _activeItem.label;
 
@@ -552,18 +644,15 @@ class _DashboardShellState extends State<DashboardShell> {
 
   bool _openRoute(String route) {
     if (!_canOpenRoute(route)) {
-      final locked = _items.firstWhere(
-        (item) => item.route == route && _isItemLocked(item),
-        orElse: () => _items.first,
-      );
-      if (locked.route == route && _isItemLocked(locked)) {
+      final target = _itemFor(route);
+      if (target != null && _isItemLocked(target)) {
         showLicensingRefusal(
           context,
           failure: LicensingFailure(
             code: LicensingFailure.featureNotLicensed,
             message:
                 LicensingFailure.messages[LicensingFailure.featureNotLicensed]!,
-            featureKey: locked.feature,
+            featureKey: target.feature,
           ),
           entitlements: _entitlementContext,
         );
@@ -611,13 +700,27 @@ class _DashboardShellState extends State<DashboardShell> {
     unawaited(_licensing.openOffice(officeId));
   }
 
+  /// The console's gate, and it fails **closed**.
+  ///
+  /// It used to resolve an unknown route to `_items.first` — the home item,
+  /// which carries no permission and no feature and therefore allows everyone.
+  /// Every route the shell could render but the sidebar did not list (السائقون,
+  /// المركبات, مراجعة المدفوعات, التقارير …) inherited that verdict, so a
+  /// support agent tapping the drivers tile on Home walked straight into the
+  /// fleet module their role forbids. Unregistered now means refused.
   bool _canOpenRoute(String route) {
-    final item = _items.firstWhere(
-      (item) => item.route == route,
-      orElse: () => _items.first,
-    );
-    return _isItemAllowed(item);
+    final item = _itemFor(route);
+    return item != null && _isItemAllowed(item);
   }
+
+  /// The gate and the title table, reachable without rendering the module
+  /// behind them — mounting Reports or Fleet to assert who may open them would
+  /// mean standing up those modules' whole cubit graphs.
+  @visibleForTesting
+  bool canOpenRouteForTest(String route) => _canOpenRoute(route);
+
+  @visibleForTesting
+  String? titleForRouteForTest(String route) => _itemFor(route)?.label;
 
   Widget _buildContent() {
     return switch (_route) {
@@ -698,10 +801,6 @@ class _DashboardShellState extends State<DashboardShell> {
       DashboardRoutes.referrals => BlocProvider(
         create: (_) => dashboardDi<ReferralCubit>()..load(),
         child: const ReferralManagementScreen(),
-      ),
-      DashboardRoutes.ownerOverview => BlocProvider(
-        create: (_) => dashboardDi<OwnerOverviewCubit>()..load(),
-        child: const OwnerOverviewScreen(),
       ),
       DashboardRoutes.payments => BlocProvider(
         create: (_) => dashboardDi<FinanceCubit>()..load(),
@@ -825,6 +924,15 @@ class _DashboardNavItem {
   /// rather than on a role a debug switch can change.
   final bool platformOnly;
 
+  /// Whether the sidebar draws a row for this route.
+  ///
+  /// `false` marks a destination the console can open but does not advertise —
+  /// reached by drilling into a card on Home or نظرة تنفيذية. It is still
+  /// listed, because [_items] is what the role and licensing gates are keyed
+  /// on and what the top bar reads its title from; omitting it is what made an
+  /// unlisted route both ungated and mistitled.
+  final bool inSidebar;
+
   const _DashboardNavItem({
     required this.label,
     required this.route,
@@ -834,6 +942,7 @@ class _DashboardNavItem {
     this.feature,
     this.group,
     this.platformOnly = false,
+    this.inSidebar = true,
   });
 }
 

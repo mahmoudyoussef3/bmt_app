@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/core/theme/spacing.dart';
@@ -183,7 +185,7 @@ class _RouteTimeline extends StatelessWidget {
                           horizontal: AppSpacing.small,
                         ),
                         child: Icon(
-                          Icons.arrow_forward_rounded,
+                          DashboardIcons.transition,
                           color: scheme.onSurfaceVariant,
                         ),
                       ),

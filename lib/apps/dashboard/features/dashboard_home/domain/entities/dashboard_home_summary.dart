@@ -3,7 +3,6 @@ import 'package:bmt_app/apps/dashboard/features/captain_requests/domain/entities
 import 'package:bmt_app/apps/dashboard/features/finance/domain/entities/finance_entities.dart'
     show RevenueMetrics;
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_workspace.dart';
-import 'package:bmt_app/apps/dashboard/features/office_profile/domain/entities/office_profile.dart';
 import 'package:bmt_app/apps/dashboard/features/payment_verification/domain/entities/booking_payment_verification.dart';
 import 'package:bmt_app/apps/dashboard/features/reviews/domain/entities/reviews_summary.dart';
 import 'package:bmt_app/apps/dashboard/features/reviews/domain/entities/trip_review_entry.dart';
@@ -25,9 +24,17 @@ class DashboardHomeSummary {
   final FleetWorkspace fleet;
   final List<CaptainRequest> captainRequests;
   final List<TripReviewEntry> reviews;
-  final OfficeProfile officeProfile;
   final List<SupportTicket> tickets;
   final List<UserSubscription> subscriptions;
+
+  /// Arabic names of the feeds that did not answer this load.
+  ///
+  /// Home composes ten independent queries, and it used to fail all of them if
+  /// any one threw — a single flaky feed left the console's landing page
+  /// showing nothing but an error, on every role, for a business that was
+  /// otherwise running fine. The page renders what arrived and names what did
+  /// not; only a total failure is still an error state.
+  final List<String> unavailable;
 
   DashboardHomeSummary({
     required this.trips,
@@ -37,10 +44,16 @@ class DashboardHomeSummary {
     required this.fleet,
     required this.captainRequests,
     required this.reviews,
-    required this.officeProfile,
     required this.tickets,
     required this.subscriptions,
+    this.unavailable = const [],
   });
+
+  /// Nothing at all came back — a dead session or a dead network, where there
+  /// is genuinely nothing to render.
+  bool get isEmptyShell => unavailable.length >= _feedCount;
+
+  static const _feedCount = 9;
 
   late final List<OperationTrip> todayTrips = trips.where((trip) {
     final at = trip.scheduledAt;

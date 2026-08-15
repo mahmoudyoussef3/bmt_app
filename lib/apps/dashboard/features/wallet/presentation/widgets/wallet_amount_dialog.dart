@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 import 'package:flutter/services.dart';
 import 'package:uuid/uuid.dart';
 
@@ -121,7 +123,7 @@ class _WalletAmountDialogState extends State<WalletAmountDialog> {
                   height: 16,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
-              : Icon(_confirming ? Icons.check_rounded : Icons.arrow_back_rounded),
+              : Icon(_confirming ? Icons.check_rounded : DashboardIcons.forward),
           label: Text(_confirming ? 'تأكيد التنفيذ' : 'متابعة'),
         ),
       ],

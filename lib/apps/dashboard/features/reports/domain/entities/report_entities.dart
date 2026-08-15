@@ -9,7 +9,44 @@ enum ReportType {
 
   final String label;
   const ReportType(this.label);
+
+  /// Which controls the filter bar may draw for this report.
+  ///
+  /// Every report used to draw all four dropdowns and a date range, and the
+  /// datasource read **none** of them: an operator could pick a driver, watch
+  /// the page reload, and get back exactly the same rows. A filter that cannot
+  /// reach the query must not be offered, so each report declares what it can
+  /// actually honour and the bar renders only that.
+  Set<ReportFilterField> get supportedFilters => switch (this) {
+    ReportType.trips => const {
+      ReportFilterField.dateRange,
+      ReportFilterField.route,
+      ReportFilterField.driver,
+      ReportFilterField.vehicle,
+    },
+    ReportType.bookings => const {
+      ReportFilterField.dateRange,
+      ReportFilterField.route,
+    },
+    ReportType.revenue => const {ReportFilterField.dateRange},
+    ReportType.drivers => const {ReportFilterField.driver},
+    ReportType.vehicles => const {ReportFilterField.vehicle},
+    ReportType.subscriptions => const {ReportFilterField.package},
+    ReportType.complaints => const {},
+  };
+
+  bool get usesDateRange =>
+      supportedFilters.contains(ReportFilterField.dateRange);
+
+  /// Said out loud on the page when the report cannot be bounded by a period,
+  /// because a stale date range above lifetime totals reads as a date-filtered
+  /// answer and is not one.
+  String? get scopeNote => usesDateRange
+      ? null
+      : 'هذا التقرير يعرض الإجماليات التراكمية، ولا يتأثر بالفترة الزمنية المحددة.';
 }
+
+enum ReportFilterField { dateRange, route, driver, vehicle, package }
 
 class ReportFilter {
   final DateTime startDate;
@@ -57,7 +94,7 @@ class TripReportRow {
   final String driverName;
   final String vehiclePlate;
   final int passengerCount;
-  final double occupancyRate; 
+  final double occupancyRate;
   final double revenue;
   final DateTime date;
   final String status;
@@ -113,12 +150,17 @@ class RevenueReportRow {
   });
 }
 
+/// One row of `drivers_performance_view`.
+///
+/// `totalWorkingHours` and `rating` used to live here and were read out of the
+/// view by name — but the view has never had either column, so both arrived as
+/// null, parsed to 0, and were printed as "0 ساعة" and "0.0 ★" next to real
+/// figures. Two fabricated columns are worse than two missing ones, so they are
+/// gone until the view can answer them.
 class DriverReportRow {
   final String driverId;
   final String name;
   final int completedTrips;
-  final double totalWorkingHours;
-  final double rating;
   final double totalRevenue;
   final String status;
 
@@ -126,19 +168,25 @@ class DriverReportRow {
     required this.driverId,
     required this.name,
     required this.completedTrips,
-    required this.totalWorkingHours,
-    required this.rating,
     required this.totalRevenue,
     required this.status,
   });
 }
 
+/// One row of `vehicles_efficiency_view`.
+///
+/// Carried `fuelConsumption` for the same reason and with the same problem —
+/// the view has no such column and never did. What it *does* have is
+/// `avg_occupancy_rate`, which is a real operational number, so that is what
+/// this now reports.
 class VehicleReportRow {
   final String vehicleId;
   final String plateNumber;
   final String model;
   final int completedTrips;
-  final double fuelConsumption; 
+
+  /// Mean seat occupancy across this vehicle's completed trips, 0–1.
+  final double avgOccupancyRate;
   final String maintenanceStatus;
   final String status;
 
@@ -147,7 +195,7 @@ class VehicleReportRow {
     required this.plateNumber,
     required this.model,
     required this.completedTrips,
-    required this.fuelConsumption,
+    required this.avgOccupancyRate,
     required this.maintenanceStatus,
     required this.status,
   });
@@ -169,27 +217,30 @@ class SubscriptionReportRow {
   });
 }
 
+/// One row of `complaints_summary_view`.
+///
+/// `avgResolutionTime` is gone for the third time in this file's history of the
+/// same mistake: the view groups by category and counts statuses, and has no
+/// timing column to average.
 class ComplaintReportRow {
   final String category;
   final int totalComplaints;
   final int resolvedComplaints;
-  final double avgResolutionTime; 
   final int pendingComplaints;
 
   const ComplaintReportRow({
     required this.category,
     required this.totalComplaints,
     required this.resolvedComplaints,
-    required this.avgResolutionTime,
     required this.pendingComplaints,
   });
 }
 
 class ReportData {
   final Map<String, String> kpis;
-  final List<dynamic> rows; 
-  final List<MapEntry<String, double>> trends; 
-  final List<MapEntry<String, double>> occupancyTrends; 
+  final List<dynamic> rows;
+  final List<MapEntry<String, double>> trends;
+  final List<MapEntry<String, double>> occupancyTrends;
 
   const ReportData({
     required this.kpis,

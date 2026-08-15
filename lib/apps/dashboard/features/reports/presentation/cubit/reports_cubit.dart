@@ -32,55 +32,52 @@ class ReportsCubit extends Cubit<ReportsState> {
        _getAvailablePackages = getAvailablePackages,
        super(const ReportsLoading());
 
+  /// The report the module opens on.
+  ///
+  /// Was [ReportType.trips] while trips returned a single KPI reading
+  /// "قيد التطوير الفعلي" — so the first thing anyone saw of the reports module
+  /// was a placeholder. Both work now; revenue leads because it is the question
+  /// the module is opened to answer.
+  static const defaultReportType = ReportType.revenue;
+
   Future<void> load() async {
     emit(const ReportsLoading());
     try {
-      final routes = await _getAvailableRoutes();
-      final drivers = await _getAvailableDrivers();
-      final vehicles = await _getAvailableVehicles();
-      final packages = await _getAvailablePackages();
+      final results = await Future.wait([
+        _getAvailableRoutes(),
+        _getAvailableDrivers(),
+        _getAvailableVehicles(),
+        _getAvailablePackages(),
+      ]);
 
       final end = DateTime.now();
       final start = end.subtract(const Duration(days: 30));
-
       final defaultFilter = ReportFilter(startDate: start, endDate: end);
 
-      final reportData = await _getReportData(ReportType.trips, defaultFilter);
+      final reportData = await _getReportData(defaultReportType, defaultFilter);
 
+      if (isClosed) return;
       emit(
         ReportsLoaded(
-          activeReportType: ReportType.trips,
+          activeReportType: defaultReportType,
           filter: defaultFilter,
           reportData: reportData,
-          availableRoutes: routes,
-          availableDrivers: drivers,
-          availableVehicles: vehicles,
-          availablePackages: packages,
+          availableRoutes: results[0],
+          availableDrivers: results[1],
+          availableVehicles: results[2],
+          availablePackages: results[3],
         ),
       );
     } catch (error) {
+      if (isClosed) return;
       emit(ReportsError(error.toString()));
     }
   }
 
-  Future<void> switchReportType(ReportType type) async {
+  Future<void> switchReportType(ReportType type) {
     final current = state;
-    if (current is! ReportsLoaded) return;
-
-    emit(const ReportsLoading());
-    try {
-      final reportData = await _getReportData(type, current.filter);
-      emit(
-        current.copyWith(
-          activeReportType: type,
-          reportData: reportData,
-          clearExportingFormat: true,
-          clearExportedFileName: true,
-        ),
-      );
-    } catch (error) {
-      emit(ReportsError(error.toString()));
-    }
+    if (current is! ReportsLoaded) return Future.value();
+    return _refetch(current.copyWith(activeReportType: type));
   }
 
   Future<void> updateFilter({
@@ -94,53 +91,74 @@ class ReportsCubit extends Cubit<ReportsState> {
     bool clearVehicle = false,
     String? pkg,
     bool clearPackage = false,
-  }) async {
+  }) {
     final current = state;
-    if (current is! ReportsLoaded) return;
+    if (current is! ReportsLoaded) return Future.value();
 
-    final updatedFilter = current.filter.copyWith(
-      startDate: start,
-      endDate: end,
-      routeCode: route,
-      clearRoute: clearRoute,
-      driverName: driver,
-      clearDriver: clearDriver,
-      vehiclePlate: vehicle,
-      clearVehicle: clearVehicle,
-      packageName: pkg,
-      clearPackage: clearPackage,
+    return _refetch(
+      current.copyWith(
+        filter: current.filter.copyWith(
+          startDate: start,
+          endDate: end,
+          routeCode: route,
+          clearRoute: clearRoute,
+          driverName: driver,
+          clearDriver: clearDriver,
+          vehiclePlate: vehicle,
+          clearVehicle: clearVehicle,
+          packageName: pkg,
+          clearPackage: clearPackage,
+        ),
+      ),
     );
-
-    emit(const ReportsLoading());
-    try {
-      final reportData = await _getReportData(
-        current.activeReportType,
-        updatedFilter,
-      );
-      emit(current.copyWith(filter: updatedFilter, reportData: reportData));
-    } catch (error) {
-      emit(ReportsError(error.toString()));
-    }
   }
 
-  Future<void> clearFilters() async {
+  Future<void> clearFilters() {
     final current = state;
-    if (current is! ReportsLoaded) return;
+    if (current is! ReportsLoaded) return Future.value();
 
     final end = DateTime.now();
-    final start = end.subtract(const Duration(days: 30));
+    return _refetch(
+      current.copyWith(
+        filter: ReportFilter(
+          startDate: end.subtract(const Duration(days: 30)),
+          endDate: end,
+        ),
+      ),
+    );
+  }
 
-    final clearedFilter = ReportFilter(startDate: start, endDate: end);
+  /// Refetches [next]'s report **over** the screen the operator is reading.
+  ///
+  /// The selection is applied immediately so the control the operator just
+  /// touched shows what they chose, the table dims via `isRefreshing`, and a
+  /// failure lands as a notice on the still-valid page rather than replacing it
+  /// with a full-screen error that discards the filters they built.
+  Future<void> _refetch(ReportsLoaded next) async {
+    emit(
+      next.copyWith(
+        isRefreshing: true,
+        clearActionError: true,
+        clearExportingFormat: true,
+        clearExportedFileName: true,
+      ),
+    );
 
-    emit(const ReportsLoading());
     try {
       final reportData = await _getReportData(
-        current.activeReportType,
-        clearedFilter,
+        next.activeReportType,
+        next.filter,
       );
-      emit(current.copyWith(filter: clearedFilter, reportData: reportData));
+      if (isClosed) return;
+      emit(next.copyWith(reportData: reportData, isRefreshing: false));
     } catch (error) {
-      emit(ReportsError(error.toString()));
+      if (isClosed) return;
+      emit(
+        next.copyWith(
+          isRefreshing: false,
+          actionError: 'تعذّر تحديث التقرير: $error',
+        ),
+      );
     }
   }
 
@@ -148,13 +166,14 @@ class ReportsCubit extends Cubit<ReportsState> {
     final current = state;
     if (current is! ReportsLoaded) return;
 
-    emit(current.copyWith(actionLoading: true));
+    emit(current.copyWith(actionLoading: true, clearActionError: true));
     try {
       final fileName = await _exportReport(
         current.activeReportType,
         current.filter,
         format,
       );
+      if (isClosed) return;
       emit(
         current.copyWith(
           actionLoading: false,
@@ -163,7 +182,15 @@ class ReportsCubit extends Cubit<ReportsState> {
         ),
       );
     } catch (error) {
-      emit(current.copyWith(actionLoading: false));
+      if (isClosed) return;
+      // Swallowing this is how an operator ends up clicking "PDF" four times
+      // and never learning the office is not licensed to export.
+      emit(
+        current.copyWith(
+          actionLoading: false,
+          actionError: 'تعذّر تصدير التقرير: $error',
+        ),
+      );
     }
   }
 
@@ -173,5 +200,11 @@ class ReportsCubit extends Cubit<ReportsState> {
     emit(
       current.copyWith(clearExportingFormat: true, clearExportedFileName: true),
     );
+  }
+
+  void clearActionError() {
+    final current = state;
+    if (current is! ReportsLoaded) return;
+    emit(current.copyWith(clearActionError: true));
   }
 }

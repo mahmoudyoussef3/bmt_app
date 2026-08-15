@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_empty_state.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_workspace.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/widgets/fleet_shared_widgets.dart';
 import 'package:bmt_app/core/theme/colors.dart';
@@ -47,11 +49,12 @@ class FleetVehiclesCardList extends StatelessWidget {
         : vehicles.sublist(start, end);
 
     if (paged.isEmpty) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.all(AppSpacing.large),
-          child: Text('لا توجد بيانات مطابقة'),
-        ),
+      return const DashboardEmptyState(
+        icon: DashboardIcons.vehicle,
+        title: 'لا توجد مركبات مطابقة',
+        message:
+            'لا تطابق أي مركبة البحث أو الفلاتر الحالية. وسّع الفلاتر، أو أضف '
+            'مركبة جديدة إلى الأسطول.',
       );
     }
 
@@ -128,7 +131,7 @@ class FleetVehiclesCardList extends StatelessWidget {
                                 ),
                               ),
                               const SizedBox(width: AppSpacing.small),
-                              
+
                               Wrap(
                                 spacing: AppSpacing.xSmall,
                                 runSpacing: AppSpacing.xSmall,
@@ -527,14 +530,14 @@ class _FleetCardsPagination extends StatelessWidget {
             onPressed: currentPage == 0
                 ? null
                 : () => onPageChanged(currentPage - 1),
-            icon: const Icon(Icons.chevron_left_rounded),
+            icon: const Icon(DashboardIcons.paginationPrevious),
           ),
           IconButton(
             tooltip: 'التالي',
             onPressed: currentPage >= pages - 1
                 ? null
                 : () => onPageChanged(currentPage + 1),
-            icon: const Icon(Icons.chevron_right_rounded),
+            icon: const Icon(DashboardIcons.paginationNext),
           ),
         ],
       ),

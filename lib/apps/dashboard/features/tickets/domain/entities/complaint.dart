@@ -1,20 +1,23 @@
+/// `label` is display text only, and the console is Arabic-only — it used to carry
+/// the English enum name and printed straight onto the queue badges. The wire value
+/// is `.name`, which is what every read and write actually uses.
 enum TicketStatus {
-  submitted('Submitted'),
-  underReview('Under Review'),
-  contacted('Contacted'),
-  resolved('Resolved'),
-  closed('Closed'),
-  rejected('Rejected');
+  submitted('جديدة'),
+  underReview('قيد المراجعة'),
+  contacted('تم التواصل'),
+  resolved('تم الحل'),
+  closed('مغلقة'),
+  rejected('مرفوضة');
 
   final String label;
   const TicketStatus(this.label);
 }
 
 enum TicketPriority {
-  low('Low'),
-  medium('Medium'),
-  high('High'),
-  urgent('Urgent');
+  low('منخفضة'),
+  medium('متوسطة'),
+  high('عالية'),
+  urgent('عاجلة');
 
   final String label;
   const TicketPriority(this.label);

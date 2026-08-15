@@ -12,7 +12,6 @@ import 'package:bmt_app/apps/dashboard/features/fleet/fleet_documents/presentati
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/utils/fleet_pending_docs_uploader.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/overview/presentation/cubit/fleet_overview_cubit.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/overview/presentation/cubit/fleet_overview_state.dart';
-import 'package:bmt_app/apps/dashboard/core/widgets/master_detail_layout.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 import 'package:bmt_app/core/theme/app_layout.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
@@ -20,8 +19,6 @@ import 'package:bmt_app/core/widgets/async_state_view.dart';
 import 'package:bmt_app/core/widgets/app_snackbar.dart';
 import 'package:bmt_app/core/widgets/debounced_search_field.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
-
-enum _DriversViewState { list, details }
 
 enum _DriverOpsFilter {
   all('الكل'),
@@ -45,24 +42,11 @@ class FleetDriversScreen extends StatefulWidget {
 }
 
 class _FleetDriversScreenState extends State<FleetDriversScreen> {
-  _DriversViewState _viewState = _DriversViewState.list;
-  FleetDriver? _activeDriver;
-  FleetDriver? _selectedDriver;
   int _page = 0;
   final int _pageSize = 8;
   FleetSortField _sortField = FleetSortField.name;
   bool _sortAscending = true;
   _DriverOpsFilter _opsFilter = _DriverOpsFilter.all;
-
-  void _setView(_DriversViewState state, [FleetDriver? driver]) {
-    setState(() {
-      _viewState = state;
-      _activeDriver = driver;
-    });
-    if (widget.onViewStateChanged != null) {
-      widget.onViewStateChanged!(state == _DriversViewState.list);
-    }
-  }
 
   List<FleetDriver> _sortDrivers(List<FleetDriver> list) {
     final sorted = [...list];
@@ -110,23 +94,77 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
     });
   }
 
-  /// Opens a driver: side-by-side detail pane on desktop, full screen on narrow.
-  void _openDriver(FleetDriver driver, bool isSplit) {
-    if (isSplit) {
-      setState(() => _selectedDriver = driver);
-      // Tell the overview screen a driver is now focused so it drops the
-      // page-level scroll and gives this split view real bounded height —
-      // otherwise the master list and the detail pane share one long page
-      // scroll instead of each scrolling independently.
-      widget.onViewStateChanged?.call(false);
+  void _openDriver(
+    BuildContext context,
+    FleetDriversLoaded state,
+    FleetWorkspace workspace,
+    FleetDriver driver,
+    FleetDriversCubit cubit,
+    bool isDesktop,
+  ) {
+    if (isDesktop) {
+      showDialog(
+        context: context,
+        builder: (context) => Dialog(
+          clipBehavior: Clip.antiAlias,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
+          ),
+          child: SizedBox(
+            width: 800,
+            height: 800,
+            child: _detailsView(
+              context,
+              state,
+              workspace,
+              driver,
+              cubit,
+              onBack: () => Navigator.pop(context),
+            ),
+          ),
+        ),
+      );
     } else {
-      _setView(_DriversViewState.details, driver);
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        useSafeArea: true,
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        builder: (context) => DraggableScrollableSheet(
+          expand: false,
+          initialChildSize: 0.9,
+          builder: (context, controller) {
+            return Column(
+              children: [
+                Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.symmetric(vertical: AppSpacing.medium),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant.withAlpha(100),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                Expanded(
+                  child: _detailsView(
+                    context,
+                    state,
+                    workspace,
+                    driver,
+                    cubit,
+                    onBack: () => Navigator.pop(context),
+                    scrollController: controller,
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      );
     }
-  }
-
-  void _closeSplitDetail() {
-    setState(() => _selectedDriver = null);
-    widget.onViewStateChanged?.call(true);
   }
 
   @override
@@ -174,88 +212,22 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isSplit = constraints.maxWidth >= AppLayout.breakpointTablet;
+        final isDesktop = constraints.maxWidth >= AppLayout.breakpointTablet;
 
-        if (!isSplit &&
-            _viewState == _DriversViewState.details &&
-            _activeDriver != null) {
-          return _detailsView(
-            context,
-            state,
-            workspace,
-            _activeDriver!,
-            cubit,
-            onBack: () => _setView(_DriversViewState.list),
-          );
-        }
-
-        final showDetail = isSplit && _selectedDriver != null;
-
-        if (!showDetail) {
-          // Plain browsing: no bounded ancestor to lean on (this sits inside
-          // the overview screen's page scroll), so the list body lays out at
-          // its natural height like everything else on the page.
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildReadinessSummary(context, state.drivers, workspace),
-              const SizedBox(height: AppSpacing.large),
-              _buildToolbar(context, state, cubit, workspace),
-              const SizedBox(height: AppSpacing.medium),
-              _buildListBody(
-                context,
-                state,
-                sorted,
-                workspace,
-                cubit,
-                isSplit,
-              ),
-            ],
-          );
-        }
-
-        // A driver is focused: the overview screen now hands this a real
-        // bounded height (see FleetOverviewScreen's !_isListMode branch), so
-        // the toolbar stays put and only the list body scrolls beneath it —
-        // independently of the detail pane on the other side.
-        final master = Column(
+        final browsing = Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _buildReadinessSummary(context, state.drivers, workspace),
             const SizedBox(height: AppSpacing.large),
             _buildToolbar(context, state, cubit, workspace),
             const SizedBox(height: AppSpacing.medium),
-            Expanded(
-              child: SingleChildScrollView(
-                child: _buildListBody(
-                  context,
-                  state,
-                  sorted,
-                  workspace,
-                  cubit,
-                  isSplit,
-                ),
-              ),
-            ),
+            _buildListBody(context, state, sorted, workspace, cubit, isDesktop),
           ],
         );
 
-        final detail = _detailsView(
-          context,
-          state,
-          workspace,
-          _selectedDriver!,
-          cubit,
-          onBack: _closeSplitDetail,
-        );
-
-        return MasterDetailLayout(
-          master: master,
-          detail: detail,
-          placeholderTitle: 'اختر سائقاً لعرض الجاهزية',
-          placeholderSubtitle:
-              'حدد سائقاً من القائمة لمراجعة حالته التشغيلية وتفاصيله.',
-        );
+        return constraints.maxHeight.isFinite
+            ? SingleChildScrollView(child: browsing)
+            : browsing;
       },
     );
   }
@@ -267,6 +239,7 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
     FleetDriver driver,
     FleetDriversCubit cubit, {
     required VoidCallback onBack,
+    ScrollController? scrollController,
   }) {
     final updatedDriver = state.drivers.firstWhere(
       (d) => d.id == driver.id,
@@ -277,6 +250,7 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
       workspace: workspace,
       onBack: onBack,
       onEdit: () => _showDriverForm(context, cubit, workspace, updatedDriver),
+      scrollController: scrollController,
     );
   }
 
@@ -286,16 +260,16 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
     List<FleetDriver> sorted,
     FleetWorkspace workspace,
     FleetDriversCubit cubit,
-    bool isSplit,
+    bool isDesktop,
   ) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final useCards = isSplit || constraints.maxWidth < 1200;
+        final useCards = !isDesktop || constraints.maxWidth < 1200;
         if (useCards) {
           return FleetDriversCardList(
             drivers: sorted,
             workspace: workspace,
-            onViewDetails: (d) => _openDriver(d, isSplit),
+            onViewDetails: (d) => _openDriver(context, state, workspace, d, cubit, isDesktop),
             onEdit: (d) => _showDriverForm(context, cubit, workspace, d),
             onDelete: _confirmDeleteDriver,
             page: _page,
@@ -306,10 +280,10 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
         return FleetDriversTable(
           drivers: sorted,
           workspace: workspace,
-          onView: (d) => _openDriver(d, isSplit),
+          onView: (d) => _openDriver(context, state, workspace, d, cubit, isDesktop),
           onEdit: (d) => _showDriverForm(context, cubit, workspace, d),
           selectedIds: state.selectedIds,
-          selectedId: _selectedDriver?.id,
+          selectedId: null,
           page: _page,
           pageSize: _pageSize,
           onPageChanged: (newPage) => setState(() => _page = newPage),
@@ -455,7 +429,6 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
               await overviewCubit.loadWorkspace();
               return null;
             } catch (error) {
-              
               return error.toString().replaceAll('Exception: ', '');
             }
           },
@@ -491,9 +464,6 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
       ),
     );
     if (confirmed != true || !mounted) return;
-    if (_selectedDriver?.id == driver.id) {
-      _closeSplitDetail();
-    }
     final error = await driversCubit.deleteDriver(driver.id);
     if (!mounted) return;
     if (error == null) {

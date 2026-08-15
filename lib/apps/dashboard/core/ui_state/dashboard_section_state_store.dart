@@ -132,10 +132,6 @@ class DashboardSectionIds {
   static const walletRefundQueue = 'wallet.refundQueue';
   static const walletDetailLedger = 'wallet.detail.ledger';
 
-  static const ownerRevenueTrend = 'ownerOverview.revenueTrend';
-  static const ownerClientStatus = 'ownerOverview.clientStatus';
-  static const ownerClientsByPlan = 'ownerOverview.clientsByPlan';
-
   static const liveOpsHeader = 'liveOps.header';
   static const liveOpsMap = 'liveOps.map';
   static const liveOpsTrips = 'liveOps.trips';

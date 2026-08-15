@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/ops_data_table.dart';
 import 'package:bmt_app/apps/dashboard/features/notifications/domain/entities/notification_draft.dart';
 import 'package:bmt_app/core/widgets/progress_bar.dart';
@@ -74,6 +75,76 @@ void main() {
       final prevX = tester.getCenter(find.byTooltip('السابق')).dx;
       final nextX = tester.getCenter(find.byTooltip('التالي')).dx;
       expect(prevX, greaterThan(nextX));
+    });
+  });
+
+  group('directional glyphs live in one file', () {
+    // The mirroring rule above is one sentence long and was still broken at
+    // eight call sites — a "back" button drawn with a forward arrow in
+    // routes, a "متابعة" button pointing backwards in the wallet, two
+    // "عرض التفاصيل" actions in bookings and trips pointing opposite ways,
+    // and bookings' pagination inverted against every other pager.
+    //
+    // Restating the rule in a comment would not have caught any of them. What
+    // catches them is removing the choice: call sites name an intent
+    // (DashboardIcons.back / .forward / .paginationPrevious / …) and only
+    // this one file is allowed to know which glyph that is.
+    test('no dashboard file names a raw directional glyph', () {
+      const directional = [
+        'Icons.chevron_left',
+        'Icons.chevron_right',
+        'Icons.arrow_back',
+        'Icons.arrow_forward',
+        'Icons.keyboard_arrow_left',
+        'Icons.keyboard_arrow_right',
+        'Icons.navigate_before',
+        'Icons.navigate_next',
+      ];
+      const vocabulary = 'lib/apps/dashboard/core/theme/dashboard_icons.dart';
+
+      final offenders = <String>[];
+      for (final entity in Directory(
+        'lib/apps/dashboard',
+      ).listSync(recursive: true)) {
+        if (entity is! File || !entity.path.endsWith('.dart')) continue;
+        final path = entity.path.replaceAll(r'\', '/');
+        if (path == vocabulary) continue;
+        final source = entity.readAsStringSync();
+        for (final glyph in directional) {
+          if (source.contains(glyph)) offenders.add('$path → $glyph');
+        }
+      }
+
+      expect(
+        offenders,
+        isEmpty,
+        reason:
+            'Directional icons self-mirror under RTL. Name the intent from '
+            'DashboardIcons instead of the glyph.',
+      );
+    });
+
+    test('every directional token is self-mirroring and LTR-semantic', () {
+      // If one of these were swapped to its already-flipped twin it would
+      // render backwards everywhere at once — which is the trade this
+      // centralisation makes, so it is worth one assertion.
+      expect(DashboardIcons.back, Icons.arrow_back_rounded);
+      expect(DashboardIcons.forward, Icons.arrow_forward_rounded);
+      expect(DashboardIcons.paginationPrevious, Icons.chevron_left_rounded);
+      expect(DashboardIcons.paginationNext, Icons.chevron_right_rounded);
+      expect(DashboardIcons.openModule, Icons.chevron_right_rounded);
+
+      for (final icon in [
+        DashboardIcons.back,
+        DashboardIcons.forward,
+        DashboardIcons.paginationPrevious,
+        DashboardIcons.paginationNext,
+        DashboardIcons.openModule,
+        DashboardIcons.breadcrumbSeparator,
+        DashboardIcons.transition,
+      ]) {
+        expect(icon.matchTextDirection, isTrue);
+      }
     });
   });
 

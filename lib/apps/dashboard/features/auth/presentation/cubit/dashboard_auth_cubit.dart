@@ -5,6 +5,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/entitlements/entitlement_service.dart';
 import '../../../../core/session/dashboard_session.dart';
 import '../../../../core/session/office_context.dart';
+import '../../../../core/ui_state/dashboard_filter_memory.dart';
 import '../../../../core/ui_state/dashboard_section_state_store.dart';
 import '../../data/datasources/dashboard_auth_datasource.dart';
 
@@ -65,6 +66,9 @@ class DashboardAuthCubit extends Cubit<DashboardAuthState> {
     _entitlements?.clear();
     
     DashboardSectionStateStore.instance.clear();
+    // Both session-scoped UI stores clear together: a filter left behind would
+    // show the next operator a narrowed queue they never chose.
+    DashboardFilterMemory.instance.clear();
   }
 
   /// Restores a cached Supabase session on app start, so a reload does not force a

@@ -5,6 +5,7 @@ import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/empty_state.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/ops_data_table.dart';
 
 import '../../domain/entities/booking_lifecycle.dart';
@@ -472,7 +473,7 @@ class _RowActions extends StatelessWidget {
           ),
         ],
         IconButton(
-          icon: const Icon(Icons.chevron_left_rounded, size: 20),
+          icon: const Icon(DashboardIcons.forward, size: 20),
           tooltip: 'عرض التفاصيل',
           visualDensity: VisualDensity.compact,
           padding: EdgeInsets.zero,
@@ -607,14 +608,14 @@ class _CardsPagination extends StatelessWidget {
           IconButton(
             tooltip: 'السابق',
             onPressed: page == 0 ? null : () => onPageChanged(page - 1),
-            icon: const Icon(Icons.chevron_right_rounded),
+            icon: const Icon(DashboardIcons.paginationPrevious),
           ),
           IconButton(
             tooltip: 'التالي',
             onPressed: page >= state.pageCount - 1
                 ? null
                 : () => onPageChanged(page + 1),
-            icon: const Icon(Icons.chevron_left_rounded),
+            icon: const Icon(DashboardIcons.paginationNext),
           ),
         ],
       ),

@@ -177,11 +177,6 @@ import '../../features/finance/domain/usecases/get_subscriptions_usecase.dart';
 import '../../features/finance/data/datasources/finance_datasource.dart';
 import '../../features/finance/data/datasources/supabase_finance_datasource.dart';
 import '../../features/finance/presentation/cubit/finance_cubit.dart';
-import '../../features/owner_overview/data/datasources/owner_overview_datasource.dart';
-import '../../features/owner_overview/data/repositories/owner_overview_repository_impl.dart';
-import '../../features/owner_overview/domain/repositories/owner_overview_repository.dart';
-import '../../features/owner_overview/domain/usecases/get_owner_overview_usecase.dart';
-import '../../features/owner_overview/presentation/cubit/owner_overview_cubit.dart';
 import '../../features/reports/data/datasources/reports_datasource.dart';
 import '../../features/reports/data/datasources/supabase_reports_datasource.dart';
 import '../../features/reports/data/repositories/reports_repository_impl.dart';
@@ -248,7 +243,6 @@ void registerDashboardDependencies() {
         getFleetWorkspace: dashboardDi<GetFleetWorkspaceUseCase>(),
         getCaptainRequests: dashboardDi<GetCaptainRequestsUseCase>(),
         getReviews: dashboardDi<GetReviewsUseCase>(),
-        getOfficeProfile: dashboardDi<GetOfficeProfileUseCase>(),
         getTickets: dashboardDi<GetTicketsUseCase>(),
         getSubscriptions: dashboardDi<GetSubscriptionsUseCase>(),
       ),
@@ -1071,29 +1065,6 @@ void registerDashboardDependencies() {
     );
   }
 
-  if (!dashboardDi.isRegistered<OwnerOverviewDatasource>()) {
-    dashboardDi.registerLazySingleton(
-      () => OwnerOverviewDatasource(dashboardDi<SupabaseClient>()),
-    );
-  }
-  if (!dashboardDi.isRegistered<OwnerOverviewRepository>()) {
-    dashboardDi.registerLazySingleton<OwnerOverviewRepository>(
-      () => OwnerOverviewRepositoryImpl(dashboardDi<OwnerOverviewDatasource>()),
-    );
-  }
-  if (!dashboardDi.isRegistered<GetOwnerOverviewUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () => GetOwnerOverviewUseCase(dashboardDi<OwnerOverviewRepository>()),
-    );
-  }
-  if (!dashboardDi.isRegistered<OwnerOverviewCubit>()) {
-    dashboardDi.registerFactory(
-      () => OwnerOverviewCubit(
-        getOverview: dashboardDi<GetOwnerOverviewUseCase>(),
-      ),
-    );
-  }
-
   if (!dashboardDi.isRegistered<ReportsDatasource>()) {
     dashboardDi.registerLazySingleton<ReportsDatasource>(
       () => SupabaseReportsDatasource(dashboardDi<SupabaseClient>()),
@@ -1268,7 +1239,6 @@ void registerDashboardDependencies() {
 void _registerPlatformAdminDependencies() {
   if (!dashboardDi.isRegistered<PlatformAdminDatasource>()) {
     dashboardDi.registerLazySingleton<PlatformAdminDatasource>(
-      
       () => SupabasePlatformAdminDatasource(dashboardDi<SupabaseClient>()),
     );
   }
@@ -1478,7 +1448,7 @@ void _registerNotificationsDispatchDependencies() {
       () => DashboardAuthDatasource(dashboardDi<SupabaseClient>()),
     );
   }
-  
+
   if (!dashboardDi.isRegistered<DashboardAuthCubit>()) {
     dashboardDi.registerLazySingleton<DashboardAuthCubit>(
       () => DashboardAuthCubit(

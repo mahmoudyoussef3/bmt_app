@@ -10,6 +10,8 @@ import 'package:bmt_app/apps/dashboard/features/bookings/domain/usecases/reassig
 import 'package:bmt_app/apps/dashboard/features/bookings/domain/usecases/reject_booking_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/domain/usecases/request_reupload_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/domain/usecases/watch_bookings_usecase.dart';
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_filter_memory.dart';
+import 'package:bmt_app/apps/dashboard/features/bookings/presentation/models/booking_filters.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/presentation/cubit/bookings_cubit.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/presentation/cubit/bookings_state.dart';
 
@@ -239,6 +241,77 @@ void main() {
       expect(state.countByStatus(BookingStatus.cancelled), 1);
       expect(state.countByStatus(BookingStatus.completed), 0);
       await cubit.close();
+    });
+  });
+
+  group('filters survive the shell rebuilding the module', () {
+    // The shell disposes a module on every navigation and calls
+    // `dashboardDi<BookingsCubit>()..load()` on return, so "a second cubit
+    // over the same repo" is exactly what going to a booking and back does.
+    setUp(DashboardFilterMemory.instance.clear);
+    tearDown(DashboardFilterMemory.instance.clear);
+
+    test('a filter set before navigating away is restored on return', () async {
+      final repo = _FakeRepo([_booking('1')]);
+      final before = _cubit(repo);
+      await before.load();
+      before.updateFilters(const BookingFilters(search: 'محمد'));
+      await before.close();
+
+      final after = _cubit(repo);
+      await after.load();
+
+      expect((after.state as BookingsLoaded).filters.search, 'محمد');
+      await after.close();
+    });
+
+    test('clearing filters also survives, rather than reappearing', () async {
+      final repo = _FakeRepo([_booking('1')]);
+      final before = _cubit(repo);
+      await before.load();
+      before.updateFilters(const BookingFilters(search: 'محمد'));
+      before.clearFilters();
+      await before.close();
+
+      final after = _cubit(repo);
+      await after.load();
+
+      expect((after.state as BookingsLoaded).filters.isActive, isFalse);
+      await after.close();
+    });
+
+    test('a restored filter still reports its active count', () async {
+      // Persistence is only safe because the bar keeps saying it is filtered.
+      final repo = _FakeRepo([_booking('1')]);
+      final before = _cubit(repo);
+      await before.load();
+      before.updateFilters(
+        const BookingFilters(search: 'محمد', route: 'القاهرة'),
+      );
+      await before.close();
+
+      final after = _cubit(repo);
+      await after.load();
+
+      expect((after.state as BookingsLoaded).filters.activeCount, 2);
+      await after.close();
+    });
+
+    test('signing out drops filters for the next operator', () async {
+      final repo = _FakeRepo([_booking('1')]);
+      final before = _cubit(repo);
+      await before.load();
+      before.updateFilters(const BookingFilters(search: 'محمد'));
+      await before.close();
+
+      // What DashboardAuthCubit._clearSession does.
+      DashboardFilterMemory.instance.clear();
+
+      final after = _cubit(repo);
+      await after.load();
+
+      expect((after.state as BookingsLoaded).filters.isActive, isFalse);
+      await after.close();
     });
   });
 }

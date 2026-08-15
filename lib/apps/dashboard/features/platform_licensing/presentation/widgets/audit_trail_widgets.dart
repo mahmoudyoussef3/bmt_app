@@ -714,7 +714,7 @@ class _ChangeRow extends StatelessWidget {
                 _ValueBox(value: change.before!, muted: true),
               if (change.before != null && change.after != null)
                 Icon(
-                  Icons.arrow_forward_rounded,
+                  DashboardIcons.transition,
                   size: 14,
                   color: DashboardColors.faintInk(context),
                 ),

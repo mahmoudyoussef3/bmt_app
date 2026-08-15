@@ -343,7 +343,7 @@ class _Direction extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 6),
           child: Icon(
-            Icons.arrow_back_rounded,
+            DashboardIcons.transition,
             size: 16,
             color: scheme.onSurfaceVariant,
           ),
