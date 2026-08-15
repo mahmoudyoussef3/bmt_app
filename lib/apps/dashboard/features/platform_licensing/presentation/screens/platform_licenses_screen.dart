@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
@@ -10,19 +9,18 @@ import 'package:bmt_app/core/widgets/status_chip.dart';
 
 import '../../../../core/theme/dashboard_colors.dart';
 import '../../../../core/theme/dashboard_icons.dart';
-import '../../../../core/widgets/dashboard_collapsible_section.dart';
 import '../../../../core/widgets/dashboard_empty_state.dart';
-import '../../../../core/widgets/dashboard_module_header.dart';
 import '../../../../core/widgets/dashboard_panel.dart';
-import '../../../../core/widgets/master_detail_layout.dart';
 import '../../domain/entities/licensing_catalog.dart';
 import '../../domain/entities/office_license.dart';
 import '../cubit/platform_licensing_cubit.dart';
 import '../cubit/platform_licensing_state.dart';
+import '../sections/usage_section.dart';
 import '../widgets/assign_plan_dialog.dart';
 import '../widgets/licensing_layout.dart';
 import '../widgets/licensing_scaffold.dart';
 import '../widgets/licensing_widgets.dart';
+import '../widgets/office_feature_board.dart';
 
 /// التراخيص — every office's licence, and the one screen that answers
 /// "why does this office have this?".
@@ -31,13 +29,30 @@ import '../widgets/licensing_widgets.dart';
 /// ladder produced the value. That single field is the difference between a
 /// two-minute support conversation and a twenty-minute one.
 ///
-/// **What changed, and why.** The screen used to open with six health cards —
-/// all six, always, most of them saying "لا يوجد" — before the office list was
-/// even reachable. Signals now appear only when they have something to say, as
-/// a row of counts that expands into its offices on tap. The office list gained
-/// the search field it never had. And the licence actions came out of a `⋯`
-/// menu buried in a panel header and onto a visible bar: assigning a plan is
-/// the most common thing done on this screen and it was the hardest to find.
+/// **Directory → workspace, not master/detail.** The office used to open into a
+/// pane worth three fifths of the window, holding six stacked panels — limits,
+/// overrides, effective features, invoices, activity — each with its own folding
+/// header. Reaching the invoices meant scrolling past everything above them, in
+/// a column too narrow for any of it. It now opens full width, and those panels
+/// are four tabs: the operator picks the question instead of scrolling past the
+/// other three.
+///
+/// This is the same shape the plan gallery uses, and for the same reason: browse
+/// in a grid, work full width. Master/detail is kept only for the feature
+/// catalog, which is read, not edited.
+///
+/// **الاستخدام came home.** The platform-wide usage screen drew the same meters
+/// this workspace already had, one office per panel, as its own sidebar row.
+/// It is now this workspace's «الاستخدام» tab, and the platform-wide question it
+/// used to answer — who is over a limit — is the «تجاوزت حدًّا» signal below,
+/// which names the offices and the metrics instead of asking anyone to scan.
+///
+/// **The office opens on its features.** «الميزات والحدود» is the first tab and
+/// the reason most operators come here: every catalogued feature, a switch, and
+/// the numeric ceilings editable in place. It replaced a read-only «الميزات
+/// الفعّالة» list beside an «الاستثناءات» tab whose only way to change anything
+/// was a dialog with a forty-seven-item dropdown — two tabs to answer one
+/// question, and neither of them where the answer was acted on.
 class PlatformLicensesScreen extends StatefulWidget {
   const PlatformLicensesScreen({super.key});
 
@@ -49,48 +64,289 @@ class _PlatformLicensesScreenState extends State<PlatformLicensesScreen> {
   String _query = '';
 
   /// The alert whose office list is open, if any. One at a time: two open lists
-  /// push the office list off the screen, which is the problem the strip had.
+  /// push the directory off the screen, which is the problem the strip had.
   String? _openAlert;
+
+  /// The open tab of the office workspace, and the office it belongs to — so
+  /// moving to a different office starts on «الميزات والحدود» rather than on
+  /// whichever tab the previous office was left on.
+  int _tab = 0;
+  String? _openOfficeId;
+
+  /// The feature board's unsaved edits, keyed by feature key.
+  ///
+  /// Held here rather than inside the board for the reason the plan editor's
+  /// buffer is held in its section: this widget owns the navigation away from
+  /// the office, and a draft owned by the board is a draft that navigation can
+  /// only discard silently.
+  Map<String, OfficeFeatureEdit> _featureDraft = {};
+
+  /// The one reason the whole batch is saved under. `platform_set_override`
+  /// refuses anything under eight characters, so this is required rather than
+  /// the optional note the plan editor carries.
+  final TextEditingController _reason = TextEditingController();
+  bool _showReasonError = false;
+
+  /// Bumped whenever the buffer is dropped, so the board's text fields rebuild
+  /// from the office's real values instead of keeping what was typed into a
+  /// draft that no longer exists.
+  int _draftGeneration = 0;
+
+  @override
+  void dispose() {
+    _reason.dispose();
+    super.dispose();
+  }
+
+  /// Re-points the workspace when — and only when — the operator moved to a
+  /// different office, so a background refresh cannot silently discard edits.
+  ///
+  /// Assigns during build without `setState` deliberately, the same way the plan
+  /// section re-points its buffer: the frame being built is the one that needs
+  /// the new value, and the assignment is idempotent for a given selection.
+  void _syncOffice(OfficeLicenseDetail? detail) {
+    if (detail == null) {
+      _openOfficeId = null;
+      return;
+    }
+    if (detail.officeId != _openOfficeId) {
+      _openOfficeId = detail.officeId;
+      _tab = 0;
+      _dropDraft();
+    }
+  }
+
+  void _dropDraft() {
+    _featureDraft = {};
+    _reason.clear();
+    _showReasonError = false;
+    _draftGeneration++;
+  }
 
   @override
   Widget build(BuildContext context) {
     return LicensingScreenFrame(
-      
-      builder: (context, state) => ListView(
-        padding: EdgeInsets.zero,
-        children: [
-          _LicensesHeader(state: state),
-          const SizedBox(height: AppSpacing.medium),
-          _AlertStrip(
+      builder: (context, state) {
+        final detail = state.selectedOffice;
+        _syncOffice(detail);
+
+        if (detail == null) {
+          return _LicenseDirectory(
             state: state,
-            openKey: _openAlert,
-            onToggle: (key) =>
+            query: _query,
+            openAlert: _openAlert,
+            onQuery: (q) => setState(() => _query = q),
+            onToggleAlert: (key) =>
                 setState(() => _openAlert = _openAlert == key ? null : key),
+          );
+        }
+
+        return _OfficeWorkspace(
+          state: state,
+          detail: detail,
+          tab: _tab,
+          draft: _featureDraft,
+          generation: _draftGeneration,
+          reason: _reason,
+          showReasonError: _showReasonError,
+          onTab: (index) => setState(() => _tab = index),
+          onEdit: (edit) =>
+              setState(() => _featureDraft[edit.featureKey] = edit),
+          onDropEdit: (key) => setState(() => _featureDraft.remove(key)),
+          onDiscard: () => setState(_dropDraft),
+          onApply: (changes) => _apply(context, detail, changes),
+          onReasonChanged: (value) {
+            if (_showReasonError && value.trim().length >= 8) {
+              setState(() => _showReasonError = false);
+            }
+          },
+          onBack: () => _closeOffice(context, detail, state),
+        );
+      },
+    );
+  }
+
+  Future<void> _apply(
+    BuildContext context,
+    OfficeLicenseDetail detail,
+    OfficeFeatureChanges changes,
+  ) async {
+    final cubit = context.read<PlatformLicensingCubit>();
+    final reason = _reason.text.trim();
+    if (reason.length < 8) {
+      setState(() => _showReasonError = true);
+      return;
+    }
+
+    // Dropped before the call, not after: every RPC returns the office's whole
+    // resolved document, so once the batch is away the board draws the server's
+    // answer — including the rows a partial failure did not reach.
+    setState(_dropDraft);
+    await cubit.applyFeatureEdits(detail.officeId, changes.edits, reason);
+  }
+
+  Future<void> _closeOffice(
+    BuildContext context,
+    OfficeLicenseDetail detail,
+    PlatformLicensingLoaded state,
+  ) async {
+    final cubit = context.read<PlatformLicensingCubit>();
+    final pending = resolveOfficeFeatureChanges(
+      detail: detail,
+      catalog: state.catalog,
+      draft: _featureDraft,
+    );
+
+    if (pending.isNotEmpty) {
+      final leave = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('تغييرات غير محفوظة'),
+          content: Text(
+            'على «${detail.officeName}» ${pending.edits.length} تغيير لم '
+            'يُطبَّق. الخروج من المكتب يتخلّى عنها.',
           ),
-          const SizedBox(height: AppSpacing.medium),
-          MasterDetailLayout(
-            masterFlex: 2,
-            detailFlex: 3,
-            placeholderTitle: 'اختر مكتبًا لعرض ترخيصه',
-            placeholderSubtitle:
-                'كل قيمة تظهر ومعها مصدرها: باقة، استثناء، أو حالة ترخيص.',
-            master: _OfficeList(
-              state: state,
-              query: _query,
-              onQuery: (q) => setState(() => _query = q),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('البقاء هنا'),
             ),
-            detail: state.selectedOffice == null
-                ? null
-                : _OfficeLicensePanel(state: state),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('تجاهل والخروج'),
+            ),
+          ],
+        ),
+      );
+      if (leave != true) return;
+    }
+
+    if (!mounted) return;
+    setState(_dropDraft);
+    cubit.clearOfficeSelection();
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Directory
+// ---------------------------------------------------------------------------
+
+const Map<String?, String> _statusLabels = {
+  null: 'الكل',
+  'active': 'نشطة',
+  'trialing': 'تجريبية',
+  'past_due': 'متأخرة',
+  'grace': 'مهلة',
+  'suspended': 'موقوفة',
+  'expired': 'منتهية',
+};
+
+class _LicenseDirectory extends StatelessWidget {
+  const _LicenseDirectory({
+    required this.state,
+    required this.query,
+    required this.openAlert,
+    required this.onQuery,
+    required this.onToggleAlert,
+  });
+
+  final PlatformLicensingLoaded state;
+  final String query;
+  final String? openAlert;
+  final ValueChanged<String> onQuery;
+  final ValueChanged<String> onToggleAlert;
+
+  List<OfficeLicenseRow> get _visible {
+    final q = query.trim().toLowerCase();
+    return state.visibleLicenses.where((row) {
+      if (q.isEmpty) return true;
+      return row.officeName.toLowerCase().contains(q) ||
+          row.planNameAr.contains(q) ||
+          row.officeSlug.toLowerCase().contains(q);
+    }).toList();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cubit = context.read<PlatformLicensingCubit>();
+    final rows = _visible;
+    final total = state.licenses.length;
+
+    return ListView(
+      padding: EdgeInsets.zero,
+      children: [
+        _DirectoryHeader(state: state),
+        const SizedBox(height: AppSpacing.medium),
+        _AlertStrip(state: state, openKey: openAlert, onToggle: onToggleAlert),
+        const SizedBox(height: AppSpacing.medium),
+        LicensingToolbar(
+          search: DebouncedSearchField(
+            initialValue: query,
+            hintText: 'ابحث باسم المكتب أو باقته',
+            onChanged: onQuery,
           ),
-        ],
-      ),
+          filters: [
+            for (final entry in _statusLabels.entries)
+              if (entry.key == null ||
+                  state.licenses.any((l) => l.status == entry.key))
+                FilterChip(
+                  label: Text(
+                    entry.key == null
+                        ? '${entry.value} ($total)'
+                        : '${entry.value} '
+                              '(${state.licenses.where((l) => l.status == entry.key).length})',
+                  ),
+                  selected: state.licenseStatusFilter == entry.key,
+                  onSelected: (_) => cubit.filterLicenses(entry.key),
+                ),
+          ],
+          trailing: Text(
+            rows.length == total ? '$total مكتب' : '${rows.length} من $total',
+            style: Theme.of(context).textTheme.labelMedium?.copyWith(
+              color: DashboardColors.mutedInk(context),
+            ),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.medium),
+        if (rows.isEmpty)
+          AppCard(
+            padding: const EdgeInsets.all(AppSpacing.large),
+            child: DashboardEmptyState(
+              icon: DashboardIcons.licenses,
+              title: total == 0 ? 'لا يوجد مكتب مرخَّص' : 'لا مكتب مطابق',
+              message: total == 0
+                  ? 'يظهر المكتب هنا فور إنشائه من «مكاتب المنصة».'
+                  : 'جرّب اسمًا آخر أو أزل تصفية الحالة.',
+              action: total == 0
+                  ? null
+                  : TextButton(
+                      onPressed: () {
+                        onQuery('');
+                        cubit.filterLicenses(null);
+                      },
+                      child: const Text('عرض كل المكاتب'),
+                    ),
+            ),
+          )
+        else
+          LicensingCardGrid(
+            minCardWidth: 330,
+            maxColumns: 3,
+            children: [
+              for (final row in rows)
+                _OfficeCard(
+                  row: row,
+                  onOpen: () => cubit.selectOffice(row.officeId),
+                ),
+            ],
+          ),
+      ],
     );
   }
 }
 
-class _LicensesHeader extends StatelessWidget {
-  const _LicensesHeader({required this.state});
+class _DirectoryHeader extends StatelessWidget {
+  const _DirectoryHeader({required this.state});
 
   final PlatformLicensingLoaded state;
 
@@ -102,10 +358,12 @@ class _LicensesHeader extends StatelessWidget {
     final active = licenses.where((l) => l.status == 'active').length;
     final trialing = licenses.where((l) => l.status == 'trialing').length;
 
-    return DashboardModuleHeader(
+    return LicensingConsoleHeader(
       icon: DashboardIcons.licenses,
       title: 'التراخيص',
-      subtitle: 'الحالة التجارية لكل مكتب، وما تسمح به فعليًا.',
+      subtitle:
+          'الحالة التجارية لكل مكتب، وما تسمح به فعليًا. افتح مكتبًا لترى '
+          'حدوده واستهلاكه واستثناءاته وفواتيره في مكان واحد.',
       actions: [
         OutlinedButton.icon(
           onPressed: cubit.runLifecycle,
@@ -113,45 +371,37 @@ class _LicensesHeader extends StatelessWidget {
           label: const Text('تشغيل دورة الحياة'),
         ),
       ],
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          LicensingStatStrip(
-            stats: [
-              LicensingStat(
-                icon: DashboardIcons.platformOffices,
-                value: '${licenses.length}',
-                label: 'مكتب مرخَّص',
-              ),
-              LicensingStat(
-                icon: DashboardIcons.allClear,
-                value: '$active',
-                label: 'ترخيص نشط',
-                color: scheme.secondary,
-              ),
-              LicensingStat(
-                icon: DashboardIcons.time,
-                value: '$trialing',
-                label: 'فترة تجريبية',
-              ),
-              LicensingStat(
-                icon: DashboardIcons.usage,
-                value: '${state.overLimitOffices}',
-                label: 'تجاوز حدًّا',
-                color: state.overLimitOffices > 0 ? scheme.error : null,
-              ),
-              LicensingStat(
-                icon: DashboardIcons.locked,
-                value: '${state.delistedOffices}',
-                label: 'محجوب عن السوق',
-                color: state.delistedOffices > 0 ? scheme.error : null,
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.medium),
-          _EnforcementModeBar(state: state),
-        ],
-      ),
+      stats: [
+        LicensingStat(
+          icon: DashboardIcons.platformOffices,
+          value: '${licenses.length}',
+          label: 'مكتب مرخَّص',
+        ),
+        LicensingStat(
+          icon: DashboardIcons.allClear,
+          value: '$active',
+          label: 'ترخيص نشط',
+          color: scheme.secondary,
+        ),
+        LicensingStat(
+          icon: DashboardIcons.time,
+          value: '$trialing',
+          label: 'فترة تجريبية',
+        ),
+        LicensingStat(
+          icon: DashboardIcons.usage,
+          value: '${state.overLimitOffices}',
+          label: 'تجاوز حدًّا',
+          color: state.overLimitOffices > 0 ? scheme.error : null,
+        ),
+        LicensingStat(
+          icon: DashboardIcons.locked,
+          value: '${state.delistedOffices}',
+          label: 'محجوب عن السوق',
+          color: state.delistedOffices > 0 ? scheme.error : null,
+        ),
+      ],
+      child: _EnforcementModeBar(state: state),
     );
   }
 }
@@ -205,7 +455,6 @@ class _EnforcementModeBar extends StatelessWidget {
                 ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
               ),
               Text(
-                
                 'الإرجاع إلى «معطّل» يعيد سلوك المنصة كما كان فورًا وبلا نشر '
                 'إصدار جديد.',
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -238,6 +487,141 @@ class _EnforcementModeBar extends StatelessWidget {
     );
   }
 }
+
+/// One office, the way the plan gallery shows one plan.
+///
+/// The row it replaced carried a name, a plan and a status chip; everything
+/// else about the licence — what it costs, when it renews, whether it is
+/// trialing out this week — needed the detail pane. The card carries the
+/// commercial facts, so the directory answers most questions without opening
+/// anything.
+class _OfficeCard extends StatelessWidget {
+  const _OfficeCard({required this.row, required this.onOpen});
+
+  final OfficeLicenseRow row;
+  final VoidCallback onOpen;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final color = switch (row.status) {
+      'active' => scheme.secondary,
+      'trialing' || 'past_due' || 'grace' => scheme.tertiary,
+      'suspended' || 'cancelled' || 'expired' => scheme.error,
+      _ => scheme.outline,
+    };
+
+    return AppCard(
+      padding: EdgeInsets.zero,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Container(
+            height: 4,
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(AppTokens.radius),
+                topRight: Radius.circular(AppTokens.radius),
+              ),
+            ),
+          ),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.medium),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          row.officeName,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                      LicenseStatusChip(
+                        status: row.status,
+                        label: row.statusLabelAr,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    row.planNameAr.isEmpty ? 'بلا باقة' : row.planNameAr,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: row.planNameAr.isEmpty
+                          ? scheme.error
+                          : DashboardColors.mutedInk(context),
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.medium),
+                  Text(
+                    licensingMoney(row.price, row.currency),
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.medium),
+                  Wrap(
+                    spacing: AppSpacing.xSmall,
+                    runSpacing: AppSpacing.xSmall,
+                    children: [
+                      LicensingFact(
+                        icon: DashboardIcons.time,
+                        label:
+                            row.trialEndsAt != null && row.status == 'trialing'
+                            ? 'التجربة حتى ${licensingDate(row.trialEndsAt)}'
+                            : 'حتى ${licensingDate(row.periodEnd)}',
+                      ),
+                      if (row.overrideCount > 0)
+                        LicensingFact(
+                          icon: DashboardIcons.locked,
+                          label: '${row.overrideCount} استثناء',
+                        ),
+                      if (row.overLimitCount > 0)
+                        LicensingFact(
+                          icon: DashboardIcons.usage,
+                          label: 'تجاوز ${row.overLimitCount} حدًّا',
+                          color: scheme.error,
+                        ),
+                      if (row.isDelisted)
+                        LicensingFact(
+                          icon: DashboardIcons.locked,
+                          label: 'محجوب عن العملاء',
+                          color: scheme.error,
+                        ),
+                    ],
+                  ),
+                  const Spacer(),
+                  const SizedBox(height: AppSpacing.medium),
+                  Divider(height: 1, color: DashboardColors.divider(context)),
+                  const SizedBox(height: AppSpacing.small),
+                  FilledButton.tonalIcon(
+                    onPressed: onOpen,
+                    icon: const Icon(Icons.tune_rounded, size: 18),
+                    label: const Text('فتح الترخيص'),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Alerts
+// ---------------------------------------------------------------------------
 
 /// One thing worth chasing today.
 typedef _Alert = ({
@@ -323,7 +707,7 @@ class _AlertStrip extends StatelessWidget {
         rows: health.soldButDeclared,
         tone: (s) => s.tertiary,
         describe: (r) => '${r['plan_key']} — ${r['name_ar']}',
-        
+
         selectable: false,
       ),
     ];
@@ -399,7 +783,6 @@ class _AlertStrip extends StatelessWidget {
           ],
           const SizedBox(height: AppSpacing.small),
           Text(
-            
             'تجاوز الحد حالة حقيقية وليست خطأ: الحدود تمنع الإنشاء الجديد ولا '
             'تمسّ ما هو قائم، فالمكتب الذي خُفِّضت باقته يحتفظ بكل صفوفه.',
             style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -517,7 +900,7 @@ class _AlertRows extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppSpacing.small),
-          
+
           for (final row in alert.rows)
             InkWell(
               onTap: onSelect == null || row['office_id'] == null
@@ -551,230 +934,146 @@ class _AlertRows extends StatelessWidget {
   }
 }
 
-class _OfficeList extends StatelessWidget {
-  const _OfficeList({
+// ---------------------------------------------------------------------------
+// Workspace
+// ---------------------------------------------------------------------------
+
+/// One office, full width: identity and every action always visible, and the
+/// four bodies of evidence behind four tabs.
+///
+/// The save bar floats over all four rather than living inside the board's tab.
+/// Unsaved feature edits survive a look at the invoices, and a change buffer
+/// that disappears the moment the operator checks something else is a change
+/// buffer that loses work.
+class _OfficeWorkspace extends StatelessWidget {
+  const _OfficeWorkspace({
     required this.state,
-    required this.query,
-    required this.onQuery,
+    required this.detail,
+    required this.tab,
+    required this.draft,
+    required this.generation,
+    required this.reason,
+    required this.showReasonError,
+    required this.onTab,
+    required this.onEdit,
+    required this.onDropEdit,
+    required this.onDiscard,
+    required this.onApply,
+    required this.onReasonChanged,
+    required this.onBack,
   });
 
   final PlatformLicensingLoaded state;
-  final String query;
-  final ValueChanged<String> onQuery;
-
-  static const _statuses = <String?, String>{
-    null: 'الكل',
-    'active': 'نشطة',
-    'trialing': 'تجريبية',
-    'past_due': 'متأخرة',
-    'grace': 'مهلة',
-    'suspended': 'موقوفة',
-    'expired': 'منتهية',
-  };
+  final OfficeLicenseDetail detail;
+  final int tab;
+  final Map<String, OfficeFeatureEdit> draft;
+  final int generation;
+  final TextEditingController reason;
+  final bool showReasonError;
+  final ValueChanged<int> onTab;
+  final void Function(OfficeFeatureEdit edit) onEdit;
+  final ValueChanged<String> onDropEdit;
+  final VoidCallback onDiscard;
+  final ValueChanged<OfficeFeatureChanges> onApply;
+  final ValueChanged<String> onReasonChanged;
+  final VoidCallback onBack;
 
   @override
   Widget build(BuildContext context) {
-    final cubit = context.read<PlatformLicensingCubit>();
-    final q = query.trim().toLowerCase();
-    final rows = state.visibleLicenses.where((row) {
-      if (q.isEmpty) return true;
-      return row.officeName.toLowerCase().contains(q) ||
-          row.planNameAr.contains(q) ||
-          row.officeSlug.toLowerCase().contains(q);
-    }).toList();
-
-    return Padding(
-      padding: const EdgeInsetsDirectional.only(end: AppSpacing.small),
-      child: DashboardPanel(
-        sectionId: DashboardSectionIds.platformLicenseOffices,
-        icon: DashboardIcons.licenses,
-        title: 'المكاتب',
-        subtitle: rows.length == state.licenses.length
-            ? '${state.licenses.length} مكتب'
-            : '${rows.length} من ${state.licenses.length} مكتب',
-        collapsedSummary: DashboardSectionSummary(
-          items: [
-            '${rows.length} مكتب',
-            if (state.licenseStatusFilter != null)
-              _statuses[state.licenseStatusFilter] ??
-                  state.licenseStatusFilter!,
-            if (q.isNotEmpty) 'بحث: $q',
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            
-            DebouncedSearchField(
-              initialValue: query,
-              hintText: 'ابحث باسم المكتب أو باقته',
-              onChanged: onQuery,
-            ),
-            const SizedBox(height: AppSpacing.small),
-            Wrap(
-              spacing: AppSpacing.xSmall,
-              runSpacing: AppSpacing.xSmall,
-              children: [
-                for (final entry in _statuses.entries)
-                  if (entry.key == null ||
-                      state.licenses.any((l) => l.status == entry.key))
-                    FilterChip(
-                      label: Text(
-                        entry.key == null
-                            ? entry.value
-                            : '${entry.value} '
-                                  '(${state.licenses.where((l) => l.status == entry.key).length})',
-                      ),
-                      selected: state.licenseStatusFilter == entry.key,
-                      onSelected: (_) => cubit.filterLicenses(entry.key),
-                    ),
-              ],
-            ),
-            const SizedBox(height: AppSpacing.medium),
-            if (rows.isEmpty)
-              DashboardEmptyState(
-                icon: DashboardIcons.licenses,
-                title: 'لا يوجد مكتب مطابق',
-                message: 'جرّب اسمًا آخر أو أزل تصفية الحالة.',
-                action: TextButton(
-                  onPressed: () {
-                    onQuery('');
-                    cubit.filterLicenses(null);
-                  },
-                  child: const Text('عرض كل المكاتب'),
-                ),
-              )
-            else
-              for (final row in rows)
-                _OfficeTile(
-                  row: row,
-                  selected: state.selectedOffice?.officeId == row.officeId,
-                  onTap: () => cubit.selectOffice(row.officeId),
-                ),
-          ],
-        ),
-      ),
+    final usageRow = state.usage
+        .where((row) => row.officeId == detail.officeId)
+        .firstOrNull;
+    final enabled = detail.entitlements.features.values
+        .where((f) => f.isOn)
+        .length;
+    final changes = resolveOfficeFeatureChanges(
+      detail: detail,
+      catalog: state.catalog,
+      draft: draft,
     );
-  }
-}
 
-class _OfficeTile extends StatelessWidget {
-  const _OfficeTile({
-    required this.row,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final OfficeLicenseRow row;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
-    final scheme = Theme.of(context).colorScheme;
-    final radius = BorderRadius.circular(AppTokens.radiusSmall);
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.small),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: radius,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: radius,
-          child: Container(
-            padding: const EdgeInsets.all(AppSpacing.medium),
-            decoration: BoxDecoration(
-              color: selected
-                  ? scheme.primary.withAlpha(20)
-                  : DashboardColors.well(context),
-              borderRadius: radius,
-              border: Border.all(
-                color: selected
-                    ? scheme.primary.withAlpha(140)
-                    : DashboardColors.border(context),
-                width: selected ? 1.5 : 1,
+    return LayoutBuilder(
+      builder: (context, constraints) => Stack(
+        children: [
+          ListView(
+            padding: EdgeInsets.only(
+              bottom: changes.isEmpty
+                  ? 0.0
+                  : (constraints.maxWidth < 780 ? 236.0 : 140.0),
+            ),
+            children: [
+              _OfficeHeader(state: state, detail: detail, onBack: onBack),
+              const SizedBox(height: AppSpacing.medium),
+              LicensingTabs(
+                selected: tab,
+                onChanged: onTab,
+                tabs: [
+                  LicensingTab(
+                    label: 'الميزات والحدود',
+                    icon: DashboardIcons.featureCatalog,
+                    count: enabled,
+                  ),
+                  LicensingTab(
+                    label: 'الاستخدام',
+                    icon: DashboardIcons.usage,
+                    count:
+                        usageRow?.metrics.length ??
+                        detail.entitlements.limits.length,
+                  ),
+                  LicensingTab(
+                    label: 'الاستثناءات',
+                    icon: DashboardIcons.locked,
+                    count: detail.overrides.length,
+                  ),
+                  LicensingTab(
+                    label: 'الفوترة والنشاط',
+                    icon: DashboardIcons.billing,
+                    count: detail.invoices.length,
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.medium),
+              switch (tab) {
+                1 => DashboardPanel(
+                  icon: DashboardIcons.usage,
+                  title: 'الاستخدام',
+                  subtitle: detail.overLimits.isEmpty
+                      ? 'لا تجاوز على أي حد'
+                      : 'تجاوز ${detail.overLimits.length} حدًّا',
+                  child: OfficeUsagePanel(detail: detail, row: usageRow),
+                ),
+                2 => _OverridesTab(state: state, detail: detail),
+                3 => _BillingAndActivityTab(detail: detail),
+                _ => OfficeFeatureBoard(
+                  detail: detail,
+                  catalog: state.catalog,
+                  usage: usageRow,
+                  draft: draft,
+                  generation: generation,
+                  onEdit: onEdit,
+                  onDropEdit: onDropEdit,
+                ),
+              },
+            ],
+          ),
+          if (changes.isNotEmpty)
+            Positioned(
+              left: 0,
+              right: 0,
+              bottom: AppSpacing.medium,
+              child: OfficeFeatureSaveBar(
+                edits: changes.edits,
+                summary: changes.summary,
+                reasonController: reason,
+                showReasonError: showReasonError,
+                isBusy: state.isBusy,
+                onDiscard: onDiscard,
+                onApply: () => onApply(changes),
+                onReasonChanged: onReasonChanged,
               ),
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        row.officeName,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: text.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                      Text(
-                        row.planNameAr.isEmpty ? 'بلا باقة' : row.planNameAr,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: text.bodySmall?.copyWith(
-                          color: DashboardColors.mutedInk(context),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                if (row.overLimitCount > 0) ...[
-                  StatusChip(
-                    label: 'تجاوز ${row.overLimitCount}',
-                    color: scheme.error.withAlpha(24),
-                    textColor: scheme.error,
-                  ),
-                  const SizedBox(width: AppSpacing.xSmall),
-                ],
-                if (row.isDelisted) ...[
-                  Tooltip(
-                    message: 'محجوب عن سوق العملاء',
-                    child: Icon(
-                      DashboardIcons.locked,
-                      size: 16,
-                      color: scheme.error,
-                    ),
-                  ),
-                  const SizedBox(width: AppSpacing.xSmall),
-                ],
-                LicenseStatusChip(status: row.status, label: row.statusLabelAr),
-              ],
-            ),
-          ),
-        ),
+        ],
       ),
-    );
-  }
-}
-
-class _OfficeLicensePanel extends StatelessWidget {
-  const _OfficeLicensePanel({required this.state});
-
-  final PlatformLicensingLoaded state;
-
-  @override
-  Widget build(BuildContext context) {
-    final detail = state.selectedOffice!;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _OfficeHeader(state: state, detail: detail),
-        const SizedBox(height: AppSpacing.medium),
-        _LimitsSection(detail: detail),
-        const SizedBox(height: AppSpacing.medium),
-        _OverridesSection(state: state, detail: detail),
-        const SizedBox(height: AppSpacing.medium),
-        _EffectiveFeaturesSection(detail: detail),
-        const SizedBox(height: AppSpacing.medium),
-        _InvoicesSection(detail: detail),
-        const SizedBox(height: AppSpacing.medium),
-        _ActivitySection(detail: detail),
-      ],
     );
   }
 }
@@ -785,10 +1084,18 @@ class _OfficeLicensePanel extends StatelessWidget {
 /// single most common operation on this screen, took two clicks and prior
 /// knowledge of where it hid.
 class _OfficeHeader extends StatelessWidget {
-  const _OfficeHeader({required this.state, required this.detail});
+  const _OfficeHeader({
+    required this.state,
+    required this.detail,
+    required this.onBack,
+  });
 
   final PlatformLicensingLoaded state;
   final OfficeLicenseDetail detail;
+
+  /// Routed through the screen rather than straight to the cubit: leaving with
+  /// unsaved feature edits has to ask first.
+  final VoidCallback onBack;
 
   @override
   Widget build(BuildContext context) {
@@ -802,6 +1109,13 @@ class _OfficeHeader extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          TextButton.icon(
+            onPressed: onBack,
+            icon: const Icon(Icons.arrow_forward_rounded, size: 18),
+            label: const Text('كل المكاتب'),
+            style: TextButton.styleFrom(padding: EdgeInsets.zero),
+          ),
+          const SizedBox(height: AppSpacing.small),
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -858,11 +1172,6 @@ class _OfficeHeader extends StatelessWidget {
                     ),
                   ],
                 ),
-              ),
-              IconButton(
-                tooltip: 'إغلاق',
-                icon: const Icon(Icons.close_rounded),
-                onPressed: cubit.clearOfficeSelection,
               ),
             ],
           ),
@@ -963,7 +1272,7 @@ class _OfficeHeader extends StatelessWidget {
     final reason = await promptForReason(
       context,
       title: 'إيقاف ترخيص «${detail.officeName}» مؤقتًا',
-      
+
       description:
           'المكتب سيتحوّل إلى وضع القراءة فقط: لا إنشاء رحلات أو سائقين أو '
           'خطوط، ويختفي من سوق العملاء. التذاكر المُباعة والرحلات الجارية '
@@ -1015,149 +1324,15 @@ class _OfficeHeader extends StatelessWidget {
   }
 }
 
-class _LimitsSection extends StatelessWidget {
-  const _LimitsSection({required this.detail});
-
-  final OfficeLicenseDetail detail;
-
-  @override
-  Widget build(BuildContext context) {
-    final limits = detail.entitlements.limits;
-
-    return DashboardPanel(
-      sectionId: DashboardSectionIds.platformLicenseLimits,
-      icon: DashboardIcons.usage,
-      title: 'الحدود والاستخدام',
-      subtitle: detail.overLimits.isEmpty
-          ? 'لا تجاوز على أي حد'
-          : 'تجاوز ${detail.overLimits.length} حدًّا',
-      collapsedSummary: DashboardSectionSummary(
-        items: [
-          '${limits.length} حد',
-          if (detail.overLimits.isNotEmpty) '${detail.overLimits.length} تجاوز',
-        ],
-      ),
-      child: limits.isEmpty
-          ? const DashboardEmptyState(
-              icon: DashboardIcons.usage,
-              title: 'لا توجد حدود على هذه الباقة',
-            )
-          : Column(
-              children: [
-                for (final limit in limits)
-                  UsageBar(
-                    label: limit.nameAr,
-                    used: limit.used ?? 0,
-                    limit: limit.limit,
-                    unit: limit.unitAr,
-                    dense: true,
-                  ),
-              ],
-            ),
-    );
-  }
-}
-
-/// Every resolved value and the rung that produced it.
+/// The record of this office's exceptions: who granted what, why, and until
+/// when.
 ///
-/// Defaults are hidden by default. An office resolves the whole catalog, and a
-/// list where forty rows say «الافتراضي» buries the three that say «استثناء» —
-/// which are the only rows anyone opens this panel to find.
-class _EffectiveFeaturesSection extends StatefulWidget {
-  const _EffectiveFeaturesSection({required this.detail});
-
-  final OfficeLicenseDetail detail;
-
-  @override
-  State<_EffectiveFeaturesSection> createState() =>
-      _EffectiveFeaturesSectionState();
-}
-
-class _EffectiveFeaturesSectionState extends State<_EffectiveFeaturesSection> {
-  bool _decisionsOnly = true;
-
-  @override
-  Widget build(BuildContext context) {
-    final all = widget.detail.entitlements.features.values.toList()
-      ..sort((a, b) {
-        final byCategory = a.categoryKey.compareTo(b.categoryKey);
-        return byCategory != 0
-            ? byCategory
-            : a.sortOrder.compareTo(b.sortOrder);
-      });
-    final decided = all.where((f) => f.source != 'default').toList();
-    final shown = _decisionsOnly ? decided : all;
-
-    return DashboardPanel(
-      sectionId: DashboardSectionIds.platformLicenseFeatures,
-      icon: DashboardIcons.featureCatalog,
-      title: 'الميزات الفعّالة',
-      subtitle: 'كل قيمة ومصدرها — أي رتبة في السلم أنتجتها.',
-      collapsedSummary: DashboardSectionSummary(
-        items: ['${all.length} ميزة', '${decided.length} بقرار صريح'],
-      ),
-      trailing: FilterChip(
-        label: Text('بقرار صريح فقط (${decided.length})'),
-        selected: _decisionsOnly,
-        onSelected: (on) => setState(() => _decisionsOnly = on),
-      ),
-      child: shown.isEmpty
-          ? DashboardEmptyState(
-              icon: DashboardIcons.featureCatalog,
-              title: _decisionsOnly
-                  ? 'المكتب يتبع باقته والافتراضيات بالكامل'
-                  : 'لا توجد ميزات محلولة',
-              message: _decisionsOnly
-                  ? 'لا قيمة هنا جاءت من استثناء أو من حالة ترخيص.'
-                  : null,
-              action: _decisionsOnly
-                  ? TextButton(
-                      onPressed: () => setState(() => _decisionsOnly = false),
-                      child: const Text('عرض كل الميزات'),
-                    )
-                  : null,
-            )
-          : Column(
-              children: [
-                for (final feature in shown)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 3),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          flex: 3,
-                          child: Text(
-                            feature.nameAr,
-                            style: Theme.of(context).textTheme.bodySmall,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        Expanded(
-                          flex: 2,
-                          child: Text(
-                            FeatureValue.label(
-                              feature.value,
-                              unit: feature.unitAr,
-                            ),
-                            style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        FeatureSourceChip(
-                          source: feature.source,
-                          blockedBy: feature.blockedBy,
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-    );
-  }
-}
-
-class _OverridesSection extends StatelessWidget {
-  const _OverridesSection({required this.state, required this.detail});
+/// It survived the feature board because the board answers a different
+/// question. The board says *what this office has right now* and changes it;
+/// this says *what was decided about it*, including the expired concessions
+/// that no longer apply and are kept precisely because they happened.
+class _OverridesTab extends StatelessWidget {
+  const _OverridesTab({required this.state, required this.detail});
 
   final PlatformLicensingLoaded state;
   final OfficeLicenseDetail detail;
@@ -1167,18 +1342,10 @@ class _OverridesSection extends StatelessWidget {
     final cubit = context.read<PlatformLicensingCubit>();
 
     return DashboardPanel(
-      sectionId: DashboardSectionIds.platformLicenseOverrides,
       icon: DashboardIcons.locked,
       title: 'الاستثناءات',
       subtitle:
           'استثناءات هذا المكتب وحده. لا تُنشأ باقة جديدة لكل تفاوض — يُنشأ صف.',
-      collapsedSummary: DashboardSectionSummary(
-        items: [
-          detail.overrides.isEmpty
-              ? 'لا استثناءات'
-              : '${detail.overrides.length} استثناء',
-        ],
-      ),
       trailing: FilledButton.tonalIcon(
         onPressed: () => _add(context, cubit),
         icon: const Icon(DashboardIcons.add, size: 18),
@@ -1339,7 +1506,7 @@ class _OverrideDialogState extends State<_OverrideDialog> {
                       child: LicensingNotice(
                         icon: DashboardIcons.attention,
                         color: Theme.of(context).colorScheme.tertiary,
-                        
+
                         message:
                             'تتطلب: ${_feature!.requires.join('، ')}. الاستثناء '
                             'يُحترم لكن التبعية تُسقِطه إن لم تكن مفعّلة.',
@@ -1421,57 +1588,11 @@ class _OverrideDialogState extends State<_OverrideDialog> {
   }
 }
 
-class _InvoicesSection extends StatelessWidget {
-  const _InvoicesSection({required this.detail});
-
-  final OfficeLicenseDetail detail;
-
-  @override
-  Widget build(BuildContext context) {
-    return DashboardPanel(
-      sectionId: DashboardSectionIds.platformLicenseBilling,
-      icon: DashboardIcons.billing,
-      title: 'الفوترة',
-      subtitle: detail.invoices.isEmpty
-          ? 'لا فواتير بعد'
-          : '${detail.invoices.length} فاتورة',
-      collapsedSummary: DashboardSectionSummary(
-        items: ['${detail.invoices.length} فاتورة'],
-      ),
-      child: detail.invoices.isEmpty
-          ? const DashboardEmptyState(
-              icon: DashboardIcons.billing,
-              title: 'لا توجد فواتير',
-              message: 'التحصيل يدوي في هذا الإصدار — أصدر فاتورة من الأعلى.',
-            )
-          : Column(
-              children: [
-                for (final invoice in detail.invoices)
-                  ListTile(
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(invoice.invoiceNumber),
-                    subtitle: Text(
-                      '${licensingDate(invoice.periodStart)} → '
-                      '${licensingDate(invoice.periodEnd)}',
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(licensingMoney(invoice.total, invoice.currency)),
-                        const SizedBox(width: AppSpacing.small),
-                        StatusChip(label: invoice.statusLabelAr),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-    );
-  }
-}
-
-class _ActivitySection extends StatelessWidget {
-  const _ActivitySection({required this.detail});
+/// What this office was charged, and what was decided about it — the two
+/// histories, side by side, because a question about one is usually answered by
+/// the other.
+class _BillingAndActivityTab extends StatelessWidget {
+  const _BillingAndActivityTab({required this.detail});
 
   final OfficeLicenseDetail detail;
 
@@ -1479,63 +1600,95 @@ class _ActivitySection extends StatelessWidget {
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
 
-    return DashboardPanel(
-      sectionId: DashboardSectionIds.platformLicenseActivity,
-      icon: DashboardIcons.audit,
-      
-      initiallyExpanded: false,
-      title: 'النشاط',
-      subtitle: 'شريحة هذا المكتب من سجل التغييرات.',
-      collapsedSummary: DashboardSectionSummary(
-        items: [
-          detail.activity.isEmpty
-              ? 'لا تغييرات'
-              : '${detail.activity.length} تغيير',
-          if (detail.activity.isNotEmpty)
-            'آخرها ${licensingDate(detail.activity.first.createdAt)}',
-        ],
-      ),
-      child: detail.activity.isEmpty
-          ? const DashboardEmptyState(
-              icon: DashboardIcons.audit,
-              title: 'لا توجد تغييرات مسجّلة',
-            )
-          : Column(
-              children: [
-                for (final entry in detail.activity.take(20))
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 3),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SizedBox(
-                          width: 92,
-                          child: Text(
-                            licensingDate(entry.createdAt),
-                            style: text.labelSmall?.copyWith(
-                              color: DashboardColors.mutedInk(context),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        DashboardPanel(
+          icon: DashboardIcons.billing,
+          title: 'الفوترة',
+          subtitle: detail.invoices.isEmpty
+              ? 'لا فواتير بعد'
+              : '${detail.invoices.length} فاتورة',
+          child: detail.invoices.isEmpty
+              ? const DashboardEmptyState(
+                  icon: DashboardIcons.billing,
+                  title: 'لا توجد فواتير',
+                  message:
+                      'التحصيل يدوي في هذا الإصدار — أصدر فاتورة من الأعلى.',
+                )
+              : Column(
+                  children: [
+                    for (final invoice in detail.invoices)
+                      ListTile(
+                        dense: true,
+                        contentPadding: EdgeInsets.zero,
+                        title: Text(invoice.invoiceNumber),
+                        subtitle: Text(
+                          '${licensingDate(invoice.periodStart)} → '
+                          '${licensingDate(invoice.periodEnd)}',
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              licensingMoney(invoice.total, invoice.currency),
                             ),
-                          ),
+                            const SizedBox(width: AppSpacing.small),
+                            StatusChip(label: invoice.statusLabelAr),
+                          ],
                         ),
-                        Expanded(
-                          child: Text(
-                            '${entry.actionLabelAr} — ${entry.entityLabelAr} '
-                            '«${entry.entityRef}»'
-                            '${entry.reason.isEmpty ? '' : ' · ${entry.reason}'}',
-                            style: text.bodySmall,
-                          ),
+                      ),
+                  ],
+                ),
+        ),
+        const SizedBox(height: AppSpacing.medium),
+        DashboardPanel(
+          icon: DashboardIcons.audit,
+          title: 'النشاط',
+          subtitle: 'شريحة هذا المكتب من سجل التغييرات.',
+          child: detail.activity.isEmpty
+              ? const DashboardEmptyState(
+                  icon: DashboardIcons.audit,
+                  title: 'لا توجد تغييرات مسجّلة',
+                )
+              : Column(
+                  children: [
+                    for (final entry in detail.activity.take(20))
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 3),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            SizedBox(
+                              width: 92,
+                              child: Text(
+                                licensingDate(entry.createdAt),
+                                style: text.labelSmall?.copyWith(
+                                  color: DashboardColors.mutedInk(context),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Text(
+                                '${entry.actionLabelAr} — ${entry.entityLabelAr} '
+                                '«${entry.entityRef}»'
+                                '${entry.reason.isEmpty ? '' : ' · ${entry.reason}'}',
+                                style: text.bodySmall,
+                              ),
+                            ),
+                            Text(
+                              entry.actorLabel,
+                              style: text.labelSmall?.copyWith(
+                                color: DashboardColors.mutedInk(context),
+                              ),
+                            ),
+                          ],
                         ),
-                        Text(
-                          entry.actorLabel,
-                          style: text.labelSmall?.copyWith(
-                            color: DashboardColors.mutedInk(context),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
+                      ),
+                  ],
+                ),
+        ),
+      ],
     );
   }
 }

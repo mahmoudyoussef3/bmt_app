@@ -1358,6 +1358,18 @@
   "trips_vehicleSubtitle": "The bus on this trip",
   "trips_seatsSubtitle": "Your seats on the cabin map",
   "trips_paymentSubtitle": "Status and fare breakdown",
+  "trips_totalPaid": "Total paid",
+  "trips_totalDue": "Total due",
+  "trips_vehiclePhotosCount": "{count} photos",
+  "@trips_vehiclePhotosCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trips_crewSubtitle": "Who is driving, and which bus",
+  "trips_vehicleNumberLabel": "Vehicle number",
   "trips_paymentNotePaid": "Your payment is confirmed.",
   "trips_paymentNotePending": "Waiting for your payment.",
   "trips_paymentNoteUnderReview": "Our team is reviewing your payment.",

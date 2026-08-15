@@ -2853,6 +2853,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trips_paymentSubtitle => 'Status and fare breakdown';
 
   @override
+  String get trips_totalPaid => 'Total paid';
+
+  @override
+  String get trips_totalDue => 'Total due';
+
+  @override
+  String trips_vehiclePhotosCount(int count) {
+    return '$count photos';
+  }
+
+  @override
+  String get trips_crewSubtitle => 'Who is driving, and which bus';
+
+  @override
+  String get trips_vehicleNumberLabel => 'Vehicle number';
+
+  @override
   String get trips_paymentNotePaid => 'Your payment is confirmed.';
 
   @override

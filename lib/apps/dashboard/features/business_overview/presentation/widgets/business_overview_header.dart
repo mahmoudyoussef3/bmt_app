@@ -55,19 +55,20 @@ class BusinessOverviewHeader extends StatelessWidget {
           'نظرة تنفيذية · $officeName',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: text.headlineSmall?.copyWith(
+          style: text.titleLarge?.copyWith(
             color: onHero,
             fontWeight: FontWeight.w800,
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 2),
         Text(
           'إيراد اليوم ${money(overview.revenueToday)}'
           ' · ${_verdict(offTarget, pending)}',
           maxLines: 2,
-          style: text.bodyMedium?.copyWith(color: onHero.withAlpha(210)),
+          style: text.bodySmall?.copyWith(color: onHero.withAlpha(210)),
         ),
-        const SizedBox(height: 2),
+        // The as-of time joins the verdict line rather than claiming a third
+        // row of its own — it qualifies those figures, it is not a heading.
         Text(
           'آخر تحديث ${_clock(overview.generatedAt)}',
           style: text.labelSmall?.copyWith(color: onHero.withAlpha(170)),
@@ -100,7 +101,10 @@ class BusinessOverviewHeader extends StatelessWidget {
     );
 
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.large),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.large,
+        vertical: AppSpacing.medium,
+      ),
       decoration: BoxDecoration(
         gradient: DashboardColors.heroGradient(context),
         borderRadius: BorderRadius.circular(AppTokens.radius),

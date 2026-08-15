@@ -6,40 +6,42 @@ import 'package:bmt_app/core/theme/colors.dart';
 /// Centralises SnackBar styling so every screen confirms the outcome of an
 /// action the same way — the user always sees whether their request
 /// succeeded, partially succeeded, or failed.
+///
+/// The three tones resolve through [AppStatusStyle] rather than reading
+/// [AppStatusColors] directly: those constants are the **light** halves, so a
+/// failed action used to float a `#FEE2E2` pastel card over a slate page — the
+/// brightest thing on the screen, and the one the operator sees when something
+/// has gone wrong.
 class AppSnackbar {
   const AppSnackbar._();
 
   static void success(BuildContext context, String message) => _show(
     context,
     message,
-    icon: Icons.check_circle_rounded,
-    background: AppStatusColors.successContainer,
-    foreground: AppStatusColors.onSuccessContainer,
+    Icons.check_circle_rounded,
+    AppStatusTone.success,
   );
 
   static void warning(BuildContext context, String message) => _show(
     context,
     message,
-    icon: Icons.warning_amber_rounded,
-    background: AppStatusColors.warningContainer,
-    foreground: AppStatusColors.onWarningContainer,
+    Icons.warning_amber_rounded,
+    AppStatusTone.warning,
   );
 
-  static void error(BuildContext context, String message) => _show(
-    context,
-    message,
-    icon: Icons.error_outline_rounded,
-    background: AppStatusColors.errorContainer,
-    foreground: AppStatusColors.onErrorContainer,
-  );
+  static void error(BuildContext context, String message) =>
+      _show(context, message, Icons.error_outline_rounded, AppStatusTone.error);
 
   static void _show(
     BuildContext context,
-    String message, {
-    required IconData icon,
-    required Color background,
-    required Color foreground,
-  }) {
+    String message,
+    IconData icon,
+    AppStatusTone tone,
+  ) {
+    final style = AppStatusStyle.of(context, tone);
+    final background = style.tint;
+    final foreground = style.ink;
+
     ScaffoldMessenger.of(context)
       ..clearSnackBars()
       ..showSnackBar(

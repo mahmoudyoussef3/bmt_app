@@ -2,100 +2,114 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/core/pricing/package_tier_pricing.dart';
 
+import '../../domain/entities/trip_pricable_package.dart';
 import '../../domain/entities/trip_pricing.dart';
 
-/// Owns the five fare text fields (base + four package tiers) and the rule
-/// that keeps the tiers in sync with the base fare.
+/// Owns the fare text fields — the base ticket price plus one field per the
+/// office's own multi-ride packages — and the rule that keeps the package
+/// fields in sync with the base fare.
 ///
 /// Shared by trip creation and trip-pricing editing so a fare is configured
-/// in exactly ONE way: type the ticket price, and the package tiers derive
-/// themselves. Editing a tier by hand pins it (the base stops overwriting it).
+/// in exactly ONE way: type the ticket price, and every package's suggested
+/// price derives itself from [PackageTierPricing]. Editing a package's price
+/// by hand pins it (the base stops overwriting it).
 class TripFareControllers {
-  TripFareControllers();
+  TripFareControllers(this.packages)
+    : _packagePrices = {
+        for (final package in packages) package.id: TextEditingController(),
+      };
+
+  /// The office's own pricable packages, in display order. Fixed for the
+  /// lifetime of these controllers — the trip planner/editor fetches this
+  /// list once before building the fare form.
+  final List<TripPricablePackage> packages;
 
   final oneTime = TextEditingController();
-  final _tiers = {
-    for (final tier in PackageTierPricing.tiers)
-      tier.key: TextEditingController(),
-  };
+  final Map<String, TextEditingController> _packagePrices;
 
-  /// Set once the operator hand-edits any tier, so we stop auto-deriving and
-  /// silently overwriting their intent.
-  bool _tiersEdited = false;
+  /// Set once the operator hand-edits any package price, so we stop
+  /// auto-deriving and silently overwriting their intent.
+  bool _pricesEdited = false;
 
-  TextEditingController tierController(PackageTier tier) => _tiers[tier.key]!;
+  TextEditingController controllerFor(TripPricablePackage package) =>
+      _packagePrices[package.id]!;
 
   double get baseFare => parseFare(oneTime.text);
 
-  double tierValue(PackageTier tier) => parseFare(tierController(tier).text);
+  double priceFor(TripPricablePackage package) =>
+      parseFare(controllerFor(package).text);
 
-  /// The configured tier totals, keyed by [PackageTier.key], ready to hand to
-  /// `CreateTripInput.packageTierPrices`.
-  Map<String, double> get tierPrices => {
-    for (final tier in PackageTierPricing.tiers) tier.key: tierValue(tier),
+  /// The configured package prices, keyed by package id, ready to hand to
+  /// `CreateTripInput.packagePrices` / `TripPricing.packagePrices`. A
+  /// package left blank (0) is omitted rather than saved as a zero price.
+  Map<String, double> get packagePrices => {
+    for (final package in packages)
+      if (priceFor(package) > 0) package.id: priceFor(package),
   };
 
-  void markTiersEdited() => _tiersEdited = true;
+  void markPricesEdited() => _pricesEdited = true;
 
-  /// Recompute every tier from the base fare, unless the operator has taken
-  /// manual control of the tiers.
-  void syncTiersFromBase({bool force = false}) {
-    if (_tiersEdited && !force) return;
+  /// Recompute every package's suggested price from the base fare, unless
+  /// the operator has taken manual control of the prices.
+  void syncPricesFromBase({bool force = false}) {
+    if (_pricesEdited && !force) return;
     final base = baseFare;
-    for (final tier in PackageTierPricing.tiers) {
-      final price = PackageTierPricing.priceFor(tier, base);
-      tierController(tier).text = price <= 0 ? '' : formatFare(price);
+    for (final package in packages) {
+      final price = PackageTierPricing.priceForRideCount(
+        package.rideCount,
+        base,
+      );
+      controllerFor(package).text = price <= 0 ? '' : formatFare(price);
     }
   }
 
   /// Seed the fields from an existing `trip_pricing` row (the edit path).
-  /// Tiers that already diverge from the derived defaults are treated as
+  /// Packages that already diverge from the derived defaults are treated as
   /// hand-set so we don't clobber them on the next base-fare keystroke.
   void loadFrom(TripPricing pricing) {
     oneTime.text = formatFare(pricing.oneTimePrice);
-    _tiers['five_days']!.text = formatFare(pricing.fiveDaysPrice);
-    _tiers['ten_days']!.text = formatFare(pricing.tenDaysPrice);
-    _tiers['monthly']!.text = formatFare(pricing.monthlyPrice);
-    _tiers['three_months']!.text = formatFare(pricing.threeMonthsPrice);
-    _tiersEdited = !_matchesDerivedTiers(pricing.oneTimePrice);
+    for (final package in packages) {
+      final price = pricing.packagePrices[package.id] ?? 0;
+      controllerFor(package).text = formatFare(price);
+    }
+    _pricesEdited = !_matchesDerivedPrices(pricing.oneTimePrice);
   }
 
-  bool _matchesDerivedTiers(double base) {
-    for (final tier in PackageTierPricing.tiers) {
-      final derived = PackageTierPricing.priceFor(tier, base);
-      if ((tierValue(tier) - derived).abs() > 0.01) return false;
+  bool _matchesDerivedPrices(double base) {
+    for (final package in packages) {
+      final derived = PackageTierPricing.priceForRideCount(
+        package.rideCount,
+        base,
+      );
+      if ((priceFor(package) - derived).abs() > 0.01) return false;
     }
     return true;
   }
 
-  /// True once the fare is usable: a positive base and positive tiers.
-  bool get isValid {
-    if (baseFare <= 0) return false;
-    return PackageTierPricing.tiers.every((tier) => tierValue(tier) > 0);
-  }
+  /// True once the fare is usable: a positive base price. Package prices are
+  /// each optional (an office may not have priced every package on every
+  /// stop pair yet).
+  bool get isValid => baseFare > 0;
 
   /// Apply the current fares onto [pricing], which carries the stop pair.
   TripPricing applyTo(TripPricing pricing) {
     return pricing.copyWith(
       oneTimePrice: baseFare,
-      fiveDaysPrice: tierValue(PackageTierPricing.fiveDays),
-      tenDaysPrice: tierValue(PackageTierPricing.tenDays),
-      monthlyPrice: tierValue(PackageTierPricing.monthly),
-      threeMonthsPrice: tierValue(PackageTierPricing.threeMonths),
+      packagePrices: packagePrices,
     );
   }
 
   void clear() {
     oneTime.clear();
-    for (final controller in _tiers.values) {
+    for (final controller in _packagePrices.values) {
       controller.clear();
     }
-    _tiersEdited = false;
+    _pricesEdited = false;
   }
 
   void dispose() {
     oneTime.dispose();
-    for (final controller in _tiers.values) {
+    for (final controller in _packagePrices.values) {
       controller.dispose();
     }
   }

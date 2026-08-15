@@ -68,7 +68,6 @@ class PlatformAnalytics {
     PlatformOffice office,
     PlatformOfficeMetrics? metrics,
   ) {
-    
     if (metrics == null) return null;
     final flags = <OfficeAttention>[];
 

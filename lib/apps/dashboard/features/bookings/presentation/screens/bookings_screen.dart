@@ -7,6 +7,7 @@ import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_snackbar.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_kpi_card.dart';
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 
@@ -33,7 +34,6 @@ class BookingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    
     return BlocConsumer<BookingsCubit, BookingsState>(
       listenWhen: (previous, current) =>
           current is BookingsLoaded && current.actionError != null,
@@ -116,7 +116,7 @@ class _LoadedView extends StatelessWidget {
               width: opened == null
                   ? 0
                   : panelWidth.clamp(380.0, 460.0).toDouble(),
-              
+
               child: opened == null
                   ? const SizedBox.shrink()
                   : ClipRect(
@@ -216,7 +216,8 @@ class _Header extends StatelessWidget {
           icon: const Icon(Icons.refresh_rounded),
         ),
       ],
-      child: _SummaryCards(state: state),
+      sectionId: DashboardSectionIds.bookingsHeader,
+      summary: _SummaryCards(state: state),
     );
   }
 }
@@ -225,6 +226,11 @@ class _Header extends StatelessWidget {
 /// tile, and reporting what an office is asked about — the review backlog and
 /// the money accepted — rather than six raw status tallies (the per-status
 /// counts now live on the queue tabs, next to the tab that opens them).
+///
+/// Tinted with each tone's `accent`, not its `ink`: a tile's fill is that same
+/// colour at low alpha, so the glyph on it is a standalone mark. `ink` is the
+/// *container* ink — `#164E63` for success — and on a near-white tile it read as
+/// black type rather than as a status.
 class _SummaryCards extends StatelessWidget {
   const _SummaryCards({required this.state});
 
@@ -249,35 +255,35 @@ class _SummaryCards extends StatelessWidget {
           value: '${state.awaitingReviewCount}',
           detail: 'إيصالات تنتظر قراراً',
           icon: Icons.hourglass_top_rounded,
-          color: context.status(AppStatusTone.warning).ink,
+          color: context.status(AppStatusTone.warning).accent,
         ),
         DashboardKpiCard(
           label: 'محجوزة',
           value: '${state.countByStatus(BookingStatus.reserved)}',
           detail: 'مقاعد محجوزة لم تُؤكد',
           icon: Icons.event_seat_rounded,
-          color: context.status(AppStatusTone.info).ink,
+          color: context.status(AppStatusTone.info).accent,
         ),
         DashboardKpiCard(
           label: 'مؤكدة',
           value: '${state.countByStatus(BookingStatus.confirmed)}',
           detail: 'دفع معتمد وحجز مؤكد',
           icon: Icons.verified_rounded,
-          color: context.status(AppStatusTone.success).ink,
+          color: context.status(AppStatusTone.success).accent,
         ),
         DashboardKpiCard(
           label: 'إيرادات معتمدة',
           value: '${state.approvedRevenue.toStringAsFixed(0)} ج.م',
           detail: 'مجموع المدفوعات المقبولة',
           icon: Icons.payments_rounded,
-          color: context.status(AppStatusTone.success).ink,
+          color: context.status(AppStatusTone.success).accent,
         ),
         DashboardKpiCard(
           label: 'مرفوضة أو ملغاة',
           value: '${state.settledOutCount}',
           detail: 'دفع مرفوض أو حجز ملغى',
           icon: Icons.block_rounded,
-          color: context.status(AppStatusTone.error).ink,
+          color: context.status(AppStatusTone.error).accent,
         ),
       ],
     );

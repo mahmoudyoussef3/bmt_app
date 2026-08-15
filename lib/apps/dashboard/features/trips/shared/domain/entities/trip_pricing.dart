@@ -8,10 +8,12 @@ class TripPricing {
   final int fromPointOrder;
   final int toPointOrder;
   final double oneTimePrice;
-  final double fiveDaysPrice;
-  final double tenDaysPrice;
-  final double monthlyPrice;
-  final double threeMonthsPrice;
+
+  /// This stop pair's price for each of the office's multi-ride packages,
+  /// keyed by `transport_packages.id`. Backs `trip_package_prices` — see
+  /// `20260815091000_per_package_trip_pricing.sql`. A package with no entry
+  /// here has not been priced for this pair yet.
+  final Map<String, double> packagePrices;
   final String currency;
   final bool isActive;
   final DateTime createdAt;
@@ -27,10 +29,7 @@ class TripPricing {
     required this.fromPointOrder,
     required this.toPointOrder,
     required this.oneTimePrice,
-    required this.fiveDaysPrice,
-    required this.tenDaysPrice,
-    required this.monthlyPrice,
-    required this.threeMonthsPrice,
+    this.packagePrices = const {},
     required this.currency,
     required this.isActive,
     required this.createdAt,
@@ -47,10 +46,7 @@ class TripPricing {
     int? fromPointOrder,
     int? toPointOrder,
     double? oneTimePrice,
-    double? fiveDaysPrice,
-    double? tenDaysPrice,
-    double? monthlyPrice,
-    double? threeMonthsPrice,
+    Map<String, double>? packagePrices,
     String? currency,
     bool? isActive,
     DateTime? createdAt,
@@ -66,10 +62,7 @@ class TripPricing {
       fromPointOrder: fromPointOrder ?? this.fromPointOrder,
       toPointOrder: toPointOrder ?? this.toPointOrder,
       oneTimePrice: oneTimePrice ?? this.oneTimePrice,
-      fiveDaysPrice: fiveDaysPrice ?? this.fiveDaysPrice,
-      tenDaysPrice: tenDaysPrice ?? this.tenDaysPrice,
-      monthlyPrice: monthlyPrice ?? this.monthlyPrice,
-      threeMonthsPrice: threeMonthsPrice ?? this.threeMonthsPrice,
+      packagePrices: packagePrices ?? this.packagePrices,
       currency: currency ?? this.currency,
       isActive: isActive ?? this.isActive,
       createdAt: createdAt ?? this.createdAt,

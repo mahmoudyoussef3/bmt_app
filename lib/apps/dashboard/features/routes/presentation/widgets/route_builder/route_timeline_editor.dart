@@ -52,40 +52,24 @@ class RouteTimelineEditor extends StatelessWidget {
           stop: stops.first,
           role: RouteTimelineRole.origin,
           position: 1,
-          
+
           roleLabel: 'من',
           active: activeIndex == 0,
           flagged: issueIndex == 0,
           emptyPrompt: 'اضغط لتحديد نقطة الانطلاق',
           onTap: () => onEditStop(0),
-          
+
           onAddBelow: () => onAddStopAt(1),
         ),
         if (waypoints.isNotEmpty)
-          ReorderableListView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            buildDefaultDragHandles: false,
-            itemCount: waypoints.length,
-            
-            onReorder: (oldIndex, newIndex) =>
-                onReorder(oldIndex + 1, newIndex + 1),
-            itemBuilder: (context, position) {
-              final entry = waypoints[position];
-              return _StopRow(
-                key: ValueKey(entry.stop.key),
-                stop: entry.stop,
-                role: RouteTimelineRole.waypoint,
-                position: entry.index + 1,
-                dragIndex: position,
-                active: activeIndex == entry.index,
-                flagged: issueIndex == entry.index,
-                emptyPrompt: 'اضغط لتسمية هذه النقطة',
-                onTap: () => onEditStop(entry.index),
-                onRemove: () => onRemoveStop(entry.index),
-                onAddBelow: () => onAddStopAt(entry.index + 1),
-              );
-            },
+          _WaypointColumn(
+            waypoints: waypoints,
+            activeIndex: activeIndex,
+            issueIndex: issueIndex,
+            onEditStop: onEditStop,
+            onAddStopAt: onAddStopAt,
+            onRemoveStop: onRemoveStop,
+            onReorder: onReorder,
           ),
         _StopRow(
           stop: stops.last,
@@ -102,6 +86,188 @@ class RouteTimelineEditor extends StatelessWidget {
   }
 }
 
+/// The reorderable middle of the journey: the stops between the two endpoints.
+///
+/// These are ordinary [Column] children carrying their own drag-and-drop, not a
+/// `ReorderableListView`. That widget is a *scroll view*, and mounting one here
+/// put a second viewport inside the page's own — with `shrinkWrap` and
+/// [NeverScrollableScrollPhysics] to hide the fact. Two things followed from
+/// it: its drag proxy moves the item's global key into the app overlay and back
+/// while the dashboard shell rebuilds this whole subtree from inside layout,
+/// which asserts with *"a _RenderLayoutBuilder was mutated in
+/// _RenderLayoutBuilder.performLayout"*; and its auto-scroller binds to the
+/// nearest [Scrollable] — the inner, unscrollable one — so a stop could never
+/// be dragged past the bottom of the window on a route with several stops.
+///
+/// A drag here carries a label chip, and the row it is over is outlined: the
+/// dropped stop takes that row's place.
+class _WaypointColumn extends StatefulWidget {
+  final List<({int index, RouteStopDraft stop})> waypoints;
+  final int activeIndex;
+  final int? issueIndex;
+  final ValueChanged<int> onEditStop;
+  final ValueChanged<int> onAddStopAt;
+  final ValueChanged<int> onRemoveStop;
+  final void Function(int oldIndex, int newIndex) onReorder;
+
+  const _WaypointColumn({
+    required this.waypoints,
+    required this.activeIndex,
+    required this.issueIndex,
+    required this.onEditStop,
+    required this.onAddStopAt,
+    required this.onRemoveStop,
+    required this.onReorder,
+  });
+
+  @override
+  State<_WaypointColumn> createState() => _WaypointColumnState();
+}
+
+class _WaypointColumnState extends State<_WaypointColumn> {
+  /// Position within [_WaypointColumn.waypoints], not within the route's stops.
+  int? _dragging;
+  int? _hovering;
+
+  void _clearDrag() {
+    if (_dragging == null && _hovering == null) return;
+    setState(() {
+      _dragging = null;
+      _hovering = null;
+    });
+  }
+
+  /// Translates "put the stop at [from] where the stop at [to] is" into the
+  /// insert-before indices the draft reorders by.
+  void _drop(int from, int to) {
+    _clearDrag();
+    if (from == to) return;
+    widget.onReorder(from + 1, (to > from ? to + 1 : to) + 1);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (var position = 0; position < widget.waypoints.length; position++)
+          _row(position),
+      ],
+    );
+  }
+
+  Widget _row(int position) {
+    final entry = widget.waypoints[position];
+    final dragged = _dragging == position;
+
+    return DragTarget<int>(
+      key: ValueKey(entry.stop.key),
+      onWillAcceptWithDetails: (details) => details.data != position,
+      onMove: (_) {
+        if (_hovering == position) return;
+        setState(() => _hovering = position);
+      },
+      onLeave: (_) {
+        if (_hovering != position) return;
+        setState(() => _hovering = null);
+      },
+      onAcceptWithDetails: (details) => _drop(details.data, position),
+      builder: (context, candidate, rejected) => Opacity(
+        opacity: dragged ? 0.4 : 1,
+        child: _StopRow(
+          stop: entry.stop,
+          role: RouteTimelineRole.waypoint,
+          position: entry.index + 1,
+          active: widget.activeIndex == entry.index,
+          flagged: widget.issueIndex == entry.index,
+          dropTarget: _hovering == position && !dragged,
+          emptyPrompt: 'اضغط لتسمية هذه النقطة',
+          onTap: () => widget.onEditStop(entry.index),
+          onRemove: () => widget.onRemoveStop(entry.index),
+          onAddBelow: () => widget.onAddStopAt(entry.index + 1),
+          handle: Draggable<int>(
+            data: position,
+            affinity: Axis.vertical,
+            onDragStarted: () => setState(() => _dragging = position),
+            onDraggableCanceled: (_, _) => _clearDrag(),
+            onDragEnd: (_) => _clearDrag(),
+            feedback: _DragChip(stop: entry.stop, position: entry.index + 1),
+            child: const _DragHandle(),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The grip itself — the only part of a row that starts a drag.
+class _DragHandle extends StatelessWidget {
+  const _DragHandle();
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: 'اسحب لتغيير الترتيب',
+      child: MouseRegion(
+        cursor: SystemMouseCursors.grab,
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.small),
+          child: Icon(
+            Icons.drag_indicator_rounded,
+            size: 20,
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// What the pointer carries during a drag: the stop, named, so the operator can
+/// see which point they are moving while the rows shift under it.
+class _DragChip extends StatelessWidget {
+  final RouteStopDraft stop;
+  final int position;
+
+  const _DragChip({required this.stop, required this.position});
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      elevation: AppTokens.cardElevation,
+      borderRadius: BorderRadius.circular(AppTokens.radius),
+      color: scheme.surface,
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.medium,
+          vertical: AppSpacing.small,
+        ),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(AppTokens.radius),
+          border: Border.all(color: scheme.primary, width: 1.5),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            RouteTimelineDot(
+              role: RouteTimelineRole.waypoint,
+              position: position,
+            ),
+            const SizedBox(width: AppSpacing.small),
+            Text(
+              stop.isNamed ? stop.name.trim() : 'نقطة بلا اسم',
+              style: Theme.of(
+                context,
+              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// One point of the journey plus the gap beneath it.
 ///
 /// Keeping the "+" inside the row above the gap it fills is what makes the
@@ -111,9 +277,14 @@ class _StopRow extends StatelessWidget {
   final RouteStopDraft stop;
   final RouteTimelineRole role;
   final int position;
-  final int? dragIndex;
+
+  /// The grip that starts a reorder; endpoints have none.
+  final Widget? handle;
   final bool active;
   final bool flagged;
+
+  /// A stop is being dragged over this row and would take its place.
+  final bool dropTarget;
   final String emptyPrompt;
 
   /// "من" / "إلى" for the endpoints; waypoints are identified by their number.
@@ -123,7 +294,6 @@ class _StopRow extends StatelessWidget {
   final VoidCallback? onAddBelow;
 
   const _StopRow({
-    super.key,
     required this.stop,
     required this.role,
     required this.position,
@@ -132,7 +302,8 @@ class _StopRow extends StatelessWidget {
     required this.emptyPrompt,
     required this.onTap,
     this.roleLabel,
-    this.dragIndex,
+    this.handle,
+    this.dropTarget = false,
     this.onRemove,
     this.onAddBelow,
   });
@@ -172,15 +343,15 @@ class _StopRow extends StatelessWidget {
                     duration: AppTokens.motionBase,
                     padding: const EdgeInsets.all(AppSpacing.medium),
                     decoration: BoxDecoration(
-                      color: active
+                      color: active || dropTarget
                           ? scheme.primaryContainer.withAlpha(40)
                           : Colors.transparent,
                       borderRadius: BorderRadius.circular(AppTokens.radius),
                       border: Border.all(
-                        color: active || flagged
+                        color: active || flagged || dropTarget
                             ? scheme.primary
                             : scheme.outline.withAlpha(60),
-                        width: active || flagged ? 1.5 : 1,
+                        width: active || flagged || dropTarget ? 1.5 : 1,
                       ),
                     ),
                     child: Row(
@@ -192,9 +363,7 @@ class _StopRow extends StatelessWidget {
                               if (roleLabel != null) ...[
                                 Text(
                                   roleLabel!,
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .labelSmall
+                                  style: Theme.of(context).textTheme.labelSmall
                                       ?.copyWith(
                                         color: routeRoleColor(context, role),
                                         fontWeight: FontWeight.bold,
@@ -256,21 +425,7 @@ class _StopRow extends StatelessWidget {
                               color: scheme.error,
                             ),
                           ),
-                        if (dragIndex != null)
-                          ReorderableDragStartListener(
-                            index: dragIndex!,
-                            child: Tooltip(
-                              message: 'اسحب لتغيير الترتيب',
-                              child: Padding(
-                                padding: const EdgeInsets.all(AppSpacing.small),
-                                child: Icon(
-                                  Icons.drag_indicator_rounded,
-                                  size: 20,
-                                  color: scheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ),
-                          ),
+                        ?handle,
                       ],
                     ),
                   ),
@@ -303,9 +458,7 @@ class _AddStopGap extends StatelessWidget {
             onPressed: onAdd,
             style: TextButton.styleFrom(
               visualDensity: VisualDensity.compact,
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.small,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.small),
             ),
             icon: const Icon(Icons.add_rounded, size: 18),
             label: const Text('إضافة نقطة'),

@@ -122,17 +122,41 @@ enum AppStatusTone { success, warning, error, info, neutral, special }
 /// [tint] is the chip/container fill, [ink] the text and icon on it, and
 /// [accent] the standalone mark — a dot, a border, a bare status label with no
 /// container behind it.
+///
+/// [fill] / [onFill] are the fourth and fifth members, and they exist because
+/// call sites kept reaching for the wrong one. A semantic **filled button** —
+/// the green "approve payment", the red "reject" — was being drawn as
+/// `backgroundColor: ink, foregroundColor: Colors.white`, which is a light-mode
+/// reading of `ink`: in dark mode `ink` is the *pale* half of the pair
+/// (`#A5F3FC` for success, `#FECACA` for error), so those buttons rendered as a
+/// pastel slab with white text on it at roughly **1.2:1**. Unreadable, and the
+/// approve button on the bookings queue is the most-pressed control in the
+/// product.
+///
+/// Each pair below is the one the [ColorScheme] already declares for the same
+/// role (dark `secondary`/`onSecondary` is exactly `successInk` on
+/// `background`); naming them by *tone* is what lets a button ask for "the
+/// positive fill" without hard-coding which Material slot that happens to be.
 @immutable
 class AppStatusStyle {
   const AppStatusStyle({
     required this.tint,
     required this.ink,
     required this.accent,
+    required this.fill,
+    required this.onFill,
   });
 
   final Color tint;
   final Color ink;
   final Color accent;
+
+  /// A saturated, *filled* surface for this tone — a semantic primary button.
+  /// Always paired with [onFill], never with a hard-coded white.
+  final Color fill;
+
+  /// Ink on [fill]. AA on it in both themes.
+  final Color onFill;
 
   static AppStatusStyle of(BuildContext context, AppStatusTone tone) {
     return resolve(Theme.of(context).brightness, tone);
@@ -142,36 +166,58 @@ class AppStatusStyle {
     return brightness == Brightness.dark ? _dark(tone) : _light(tone);
   }
 
+  /// Both themes fill with the tone's own **fill** constant; only the ink on it
+  /// differs. Cyan and amber are light enough that white on them fails (`#0EA5E9`
+  /// under white is 2.7:1) so dark mode inks them with the page colour instead —
+  /// 6.5:1 and 8.4:1. Red and blue are dark enough to keep white in both themes,
+  /// which is also what `ColorScheme.error` and `.primary` already do.
+  ///
+  /// Filling with the *ink* tone was the alternative, and it is what the first
+  /// version of this did; a `#22D3EE` approve button is legible but reads as
+  /// neon beside the same button's deep teal in light mode. One constant per
+  /// tone keeps the two themes the same design at two brightnesses.
   static AppStatusStyle _dark(AppStatusTone tone) => switch (tone) {
     AppStatusTone.success => const AppStatusStyle(
       tint: AppDarkColors.successContainer,
       ink: AppDarkColors.onSuccessContainer,
       accent: AppDarkColors.successInk,
+      fill: AppDarkColors.success,
+      onFill: AppDarkColors.background,
     ),
     AppStatusTone.warning => const AppStatusStyle(
       tint: AppDarkColors.warningContainer,
       ink: AppDarkColors.onWarningContainer,
       accent: AppDarkColors.warningInk,
+      fill: AppDarkColors.warning,
+      onFill: AppDarkColors.background,
     ),
     AppStatusTone.error => const AppStatusStyle(
       tint: AppDarkColors.dangerContainer,
       ink: AppDarkColors.onDangerContainer,
       accent: AppDarkColors.dangerInk,
+      fill: AppDarkColors.danger,
+      onFill: AppDarkColors.onDanger,
     ),
     AppStatusTone.info => const AppStatusStyle(
       tint: AppDarkColors.infoContainer,
       ink: AppDarkColors.onInfoContainer,
       accent: AppDarkColors.primaryAccent,
+      fill: AppDarkColors.primary,
+      onFill: AppDarkColors.onPrimary,
     ),
     AppStatusTone.neutral => const AppStatusStyle(
       tint: AppDarkColors.neutralContainer,
       ink: AppDarkColors.onNeutralContainer,
       accent: AppDarkColors.onSurfaceMuted,
+      fill: AppDarkColors.surfaceHighest,
+      onFill: AppDarkColors.onSurface,
     ),
     AppStatusTone.special => const AppStatusStyle(
       tint: AppDarkColors.specialContainer,
       ink: AppDarkColors.onSpecialContainer,
       accent: AppDarkColors.special,
+      fill: AppDarkColors.special,
+      onFill: AppDarkColors.background,
     ),
   };
 
@@ -184,31 +230,43 @@ class AppStatusStyle {
       tint: AppLightColors.successContainer,
       ink: AppLightColors.onSuccessContainer,
       accent: AppLightColors.successInk,
+      fill: AppLightColors.success,
+      onFill: AppLightColors.onFilled,
     ),
     AppStatusTone.warning => const AppStatusStyle(
       tint: AppLightColors.warningContainer,
       ink: AppLightColors.onWarningContainer,
       accent: AppLightColors.warningInk,
+      fill: AppLightColors.warning,
+      onFill: AppLightColors.onFilled,
     ),
     AppStatusTone.error => const AppStatusStyle(
       tint: AppLightColors.dangerContainer,
       ink: AppLightColors.onDangerContainer,
       accent: AppLightColors.dangerInk,
+      fill: AppLightColors.danger,
+      onFill: AppLightColors.onDanger,
     ),
     AppStatusTone.info => const AppStatusStyle(
       tint: AppLightColors.infoContainer,
       ink: AppLightColors.onInfoContainer,
       accent: AppLightColors.primaryAccent,
+      fill: AppLightColors.primary,
+      onFill: AppLightColors.onPrimary,
     ),
     AppStatusTone.neutral => const AppStatusStyle(
       tint: AppLightColors.neutralContainer,
       ink: AppLightColors.onNeutralContainer,
       accent: AppLightColors.onSurfaceMuted,
+      fill: AppLightColors.surfaceHighest,
+      onFill: AppLightColors.onSurface,
     ),
     AppStatusTone.special => const AppStatusStyle(
       tint: AppLightColors.specialContainer,
       ink: AppLightColors.onSpecialContainer,
       accent: AppLightColors.special,
+      fill: AppLightColors.special,
+      onFill: AppLightColors.onFilled,
     ),
   };
 }

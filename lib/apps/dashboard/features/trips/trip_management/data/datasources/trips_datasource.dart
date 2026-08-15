@@ -1,5 +1,6 @@
 import '../../../shared/domain/entities/operation_trip.dart';
 import '../../../shared/domain/entities/trip_lifecycle.dart';
+import '../../../shared/domain/entities/trip_pricable_package.dart';
 import '../../../shared/domain/entities/trip_pricing.dart';
 import '../../../shared/data/models/operation_trip_model.dart';
 import '../../../shared/data/models/trip_pricing_model.dart';
@@ -49,6 +50,7 @@ abstract class TripsDatasource {
     String pricingId,
     bool isActive,
   );
+  Future<List<TripPricablePackage>> fetchOfficePricablePackages();
   Future<List<TripEventModel>> fetchTripEvents(String tripId);
 
   /// Schedulable drivers, each carrying the vehicle they are assigned to. There is no

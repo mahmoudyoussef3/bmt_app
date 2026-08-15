@@ -109,7 +109,7 @@ One visual language across every module (`core/widgets/`):
 
 | Widget | Use |
 |---|---|
-| `DashboardModuleHeader` | Page banner: icon, title, subtitle, actions, optional `child` for a KPI/filter strip. |
+| `DashboardModuleHeader` | Compact page bar: icon, title, subtitle, actions — plus `summary` (KPI/stat strip, **folded by default**, opened with «الملخص» and remembered per `sectionId` for the session) and `pinned` (tabs, period bars, search — never folds). If hiding it would break the screen it is `pinned`, otherwise it is `summary`. |
 | `DashboardKpiCard` + `DashboardKpiGrid` | Stat tiles, responsive 4 / 2 / 1 columns. |
 | `DashboardPanel` | Titled content section (charts, detail blocks). |
 | `DashboardTableFrame`, `OpsDataTable` | Tabular data with a consistent shell and pagination. |
@@ -473,7 +473,20 @@ Every RPC re-checks `is_platform_admin()` server-side.
 `features/users/` · permission: `permissions` · **owner only**
 
 Dashboard account administration for the office: list users (via `get_dashboard_users`),
-change a user's role, remove access. Search by email, user id or role; filter by role.
+**create a login for a colleague**, change a user's role, reset a password, and disable
+or re-enable an account. Search by name, login name or role; filter by role.
+
+Creating an account is split the same way platform onboarding is: the `office-manage-user`
+Edge Function writes the `auth.users` row (the only step needing the service-role key),
+and `office_create_staff` writes the membership under the *caller's* JWT — so the office
+is `current_office_id()` and never a parameter. A generated password is revealed exactly
+once, full-screen, and is recoverable from nowhere.
+
+Three rules in `20260815100000_office_staff_provisioning.sql` keep an office from locking
+itself out: an owner may not change their own role, may not disable themselves, and the
+last active owner may not be stripped. Removal is a **status change, not a delete** — a
+deleted row would orphan an `auth.users` row that still holds the (platform-unique)
+username, and lose the audit trail.
 
 This screen *is* the access-control surface — there is no separate permissions matrix
 page. (One previously existed as a hardcoded placeholder and was removed.)

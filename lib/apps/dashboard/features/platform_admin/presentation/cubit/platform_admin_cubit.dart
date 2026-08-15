@@ -51,7 +51,7 @@ class PlatformAdminCubit extends Cubit<PlatformAdminState> {
     emit(const PlatformAdminLoading());
     try {
       final offices = await _getOffices();
-      
+
       _isAnalyticsLoading = true;
       emit(_loaded(offices));
       await _loadAnalytics();
@@ -180,7 +180,7 @@ class PlatformAdminCubit extends Cubit<PlatformAdminState> {
     emit(_loaded(offices, isSubmitting: true));
     try {
       final result = await _onboardOffice(request);
-      
+
       List<PlatformOffice> refreshed;
       try {
         refreshed = await _getOffices();
@@ -245,11 +245,11 @@ class PlatformAdminCubit extends Cubit<PlatformAdminState> {
     try {
       await action();
       final refreshed = await _getOffices();
-      
+
       await _refreshSelection();
       emit(PlatformAdminActionSuccess(successMessage, refreshed));
       emit(_loaded(refreshed));
-      
+
       await _loadAnalytics();
     } catch (error) {
       emit(PlatformAdminActionFailure(_message(error), offices));
@@ -270,9 +270,7 @@ class PlatformAdminCubit extends Cubit<PlatformAdminState> {
         officeId: officeId,
         details: details,
       );
-    } catch (_) {
-      
-    }
+    } catch (_) {}
   }
 
   /// The one place `PlatformAdminLoaded` is built, so the filter and the open

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/dashboard/core/di/dashboard_di.dart';
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 import 'package:bmt_app/apps/dashboard/features/auth/presentation/cubit/dashboard_auth_cubit.dart';
@@ -33,7 +34,7 @@ class OfficeProfileScreen extends StatelessWidget {
         final messenger = ScaffoldMessenger.of(context);
         if (state is OfficeProfileActionSuccess) {
           messenger.showSnackBar(SnackBar(content: Text(state.message)));
-          
+
           dashboardDi<DashboardAuthCubit>().refreshContext();
         } else if (state is OfficeProfileActionFailure) {
           messenger.showSnackBar(
@@ -108,13 +109,13 @@ class _Body extends StatelessWidget {
               label: const Text('تحديث'),
             ),
           ],
-          child: OfficeMarketplaceSummary(profile: profile),
+          sectionId: DashboardSectionIds.officeProfileHeader,
+          summary: OfficeMarketplaceSummary(profile: profile),
         ),
         const SizedBox(height: AppSpacing.medium),
         OfficeJoinCodeCard(profile: profile),
         const SizedBox(height: AppSpacing.medium),
         OfficeIdentityForm(
-          
           key: ValueKey(profile.updatedAt),
           profile: profile,
           isSaving: isSaving,

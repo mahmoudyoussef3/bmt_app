@@ -8,6 +8,8 @@ class PackagePlan {
     required this.durationDays,
     required this.rideCount,
     required this.price,
+    this.descriptionAr = '',
+    this.descriptionEn = '',
     this.officeId = '',
     this.officeName = '',
     this.officeLogoUrl,
@@ -23,6 +25,11 @@ class PackagePlan {
   final String packageType;
   final int durationDays;
   final int rideCount;
+
+  /// The office's own description of this package, bilingual. Empty when
+  /// the office hasn't written one yet.
+  final String descriptionAr;
+  final String descriptionEn;
 
   /// The catalogue's flat price, kept only as the booking wizard's fallback
   /// when a corridor has no dedicated package tier (see
@@ -61,4 +68,9 @@ class PackagePlan {
   /// The name to show riders: English when the Dashboard has set one, and the
   /// Arabic name otherwise — never a blank plan on a checkout screen.
   String get displayName => nameEn.trim().isEmpty ? nameAr : nameEn;
+
+  /// The description to show riders, same EN-falls-back-to-AR rule as
+  /// [displayName]. Empty when the office hasn't written either.
+  String get displayDescription =>
+      descriptionEn.trim().isEmpty ? descriptionAr : descriptionEn;
 }

@@ -24,6 +24,7 @@ double? routePackageFromPrice(RouteOptionData route, PackagePlan plan) {
       if (!row.isActive) continue;
       final tier = TripPricingResolver.tierPriceOf(
         row,
+        plan.id,
         plan.durationDays,
         plan.rideCount,
       );

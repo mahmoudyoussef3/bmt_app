@@ -10,10 +10,7 @@ class TripStopPairPrice {
     required this.fromPointId,
     required this.toPointId,
     required this.oneTimePrice,
-    required this.fiveDaysPrice,
-    required this.tenDaysPrice,
-    required this.monthlyPrice,
-    required this.threeMonthsPrice,
+    this.packagePrices = const {},
     this.currency = 'EGP',
     this.isActive = true,
   });
@@ -21,10 +18,10 @@ class TripStopPairPrice {
   final String fromPointId;
   final String toPointId;
   final double oneTimePrice;
-  final double fiveDaysPrice;
-  final double tenDaysPrice;
-  final double monthlyPrice;
-  final double threeMonthsPrice;
+
+  /// This stop pair's price for each of the office's multi-ride packages,
+  /// keyed by `transport_packages.id`. Backs `trip_package_prices`.
+  final Map<String, double> packagePrices;
   final String currency;
   final bool isActive;
 

@@ -12,7 +12,8 @@ class SubscriptionPlansDatasource {
   const SubscriptionPlansDatasource(this._client, this._session);
 
   static const _columns =
-      'id, name_ar, name_en, package_type, price, duration_days, ride_count, active, display_order';
+      'id, name_ar, name_en, package_type, price, duration_days, ride_count, '
+      'description_ar, description_en, active, display_order';
 
   Future<List<SubscriptionPlan>> getPlans() async {
     final rows = await _client
@@ -70,7 +71,8 @@ class SubscriptionPlansDatasource {
       tripsCount: int.tryParse(r['ride_count']?.toString() ?? '0') ?? 0,
       discountPercent: 0,
       savingsAmount: 0,
-      description: '',
+      descriptionAr: r['description_ar']?.toString() ?? '',
+      descriptionEn: r['description_en']?.toString() ?? '',
       status: r['active'] == true ? PlanStatus.active : PlanStatus.paused,
       packageType: r['package_type']?.toString() ?? '',
     );

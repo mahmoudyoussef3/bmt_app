@@ -1,5 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../shared/domain/entities/trip_pricable_package.dart';
 import '../../../shared/domain/entities/trip_pricing.dart';
+import '../../../trip_creation/domain/usecases/trip_creation_usecases.dart';
 import '../../domain/usecases/trip_pricing_usecases.dart';
 
 sealed class TripPricingState {
@@ -21,23 +23,30 @@ class TripPricingError extends TripPricingState {
 
 class TripPricingLoaded extends TripPricingState {
   final List<TripPricing> pricing;
+
+  /// The office's own pricable packages — passed to the fare editor so it
+  /// can render one price field per package.
+  final List<TripPricablePackage> packages;
   final bool isSaving;
   final String? error;
 
   const TripPricingLoaded({
     required this.pricing,
+    required this.packages,
     this.isSaving = false,
     this.error,
   });
 
   TripPricingLoaded copyWith({
     List<TripPricing>? pricing,
+    List<TripPricablePackage>? packages,
     bool? isSaving,
     String? error,
     bool clearError = false,
   }) {
     return TripPricingLoaded(
       pricing: pricing ?? this.pricing,
+      packages: packages ?? this.packages,
       isSaving: isSaving ?? this.isSaving,
       error: clearError ? null : error ?? this.error,
     );
@@ -48,21 +57,32 @@ class TripPricingCubit extends Cubit<TripPricingState> {
   final GetTripPricingUseCase _getTripPricing;
   final SaveTripPricingUseCase _saveTripPricing;
   final ToggleTripPricingUseCase _toggleTripPricing;
+  final GetOfficePricablePackagesUseCase _getPricablePackages;
 
   TripPricingCubit({
     required GetTripPricingUseCase getTripPricing,
     required SaveTripPricingUseCase saveTripPricing,
     required ToggleTripPricingUseCase toggleTripPricing,
+    required GetOfficePricablePackagesUseCase getPricablePackages,
   }) : _getTripPricing = getTripPricing,
        _saveTripPricing = saveTripPricing,
        _toggleTripPricing = toggleTripPricing,
+       _getPricablePackages = getPricablePackages,
        super(const TripPricingInitial());
 
   Future<void> loadPricing(String tripId) async {
     emit(const TripPricingLoading());
     try {
-      final list = await _getTripPricing(tripId);
-      emit(TripPricingLoaded(pricing: list));
+      final results = await Future.wait([
+        _getTripPricing(tripId),
+        _getPricablePackages(),
+      ]);
+      emit(
+        TripPricingLoaded(
+          pricing: results[0] as List<TripPricing>,
+          packages: results[1] as List<TripPricablePackage>,
+        ),
+      );
     } catch (e) {
       emit(TripPricingError(e.toString()));
     }
@@ -83,7 +103,7 @@ class TripPricingCubit extends Cubit<TripPricingState> {
             if (fromOrder != 0) return fromOrder;
             return a.toPointOrder.compareTo(b.toPointOrder);
           });
-      emit(TripPricingLoaded(pricing: list));
+      emit(TripPricingLoaded(pricing: list, packages: current.packages));
       return null;
     } catch (e) {
       emit(current.copyWith(isSaving: false, error: e.toString()));

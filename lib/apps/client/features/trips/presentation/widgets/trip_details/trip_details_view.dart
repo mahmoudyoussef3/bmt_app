@@ -7,7 +7,6 @@ import 'package:bmt_app/apps/client/features/trips/presentation/cubit/trips_cubi
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_attention_banner.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_cancellation_flow.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_actions_bar.dart';
-import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_boarding_card.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_brand_app_bar.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_detail_sections.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_hero_card.dart';
@@ -16,7 +15,6 @@ import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_rev
 import 'package:bmt_app/core/localization/l10n_context.dart';
 import 'package:bmt_app/core/theme/app_layout.dart';
 
-/// The fully-loaded Trip Details screen body.
 class TripDetailsView extends StatelessWidget {
   const TripDetailsView({
     super.key,
@@ -29,8 +27,7 @@ class TripDetailsView extends StatelessWidget {
   final VoidCallback? onRefresh;
   final bool cancelInFlight;
 
-  /// Asks for a reason, then actually cancels — releasing the seat and pulling
-  /// the payment out of the dashboard's review queue.
+
   Future<void> _confirmCancel(BuildContext context) async {
     final cubit = context.read<TripsCubit>();
     final reason = await showTripCancellationFlow(
@@ -41,8 +38,7 @@ class TripDetailsView extends StatelessWidget {
     await cubit.cancelTrip(trip, reason);
   }
 
-  /// Opens the review sheet, then re-reads the booking so a trip that has just
-  /// been rated stops offering to be rated.
+
   Future<void> _rateTrip(BuildContext context) async {
     final cubit = context.read<TripsCubit>();
     await showTripReviewFlow(context, trip: trip.reviewable);
@@ -54,7 +50,6 @@ class TripDetailsView extends StatelessWidget {
     final canCancel = trip.canBeCancelled;
     final canReview = trip.canBeReviewed;
     final canTrack = trip.canBeTracked;
-    final showBoarding = canCancel || canTrack;
 
     return Scaffold(
       backgroundColor: ClientColors.backgroundFor(context),
@@ -85,10 +80,6 @@ class TripDetailsView extends StatelessWidget {
                 const SizedBox(height: 14),
               TripHeroCard(trip: trip),
               const SizedBox(height: 14),
-              if (showBoarding) ...[
-                TripBoardingCard(trip: trip),
-                const SizedBox(height: 14),
-              ],
               if (canTrack) ...[
                 TripLiveTrackingCard(trip: trip),
                 const SizedBox(height: 14),

@@ -73,6 +73,7 @@ class BookingWizardSession {
       selectedTrip?.stopPricing ?? const [],
       pickupStop?.id,
       dropoffStop?.id,
+      package.id,
       package.durationDays,
       package.rideCount,
     );

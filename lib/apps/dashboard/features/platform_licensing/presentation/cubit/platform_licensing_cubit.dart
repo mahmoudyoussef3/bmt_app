@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import '../../domain/entities/office_license.dart';
 import '../../domain/usecases/platform_licensing_usecases.dart';
 import 'platform_licensing_state.dart';
 
@@ -255,7 +256,7 @@ class PlatformLicensingCubit extends Cubit<PlatformLicensingState> {
       selectedPlan: detail,
       plans: await _getPlans(),
       health: await _getHealth(),
-      
+
       actionMessage:
           'تم الحفظ. سرى التغيير فورًا على كل مكتب مشترك في هذه الباقة، '
           'وحُفظت النسخة السابقة في السجل.',
@@ -309,6 +310,23 @@ class PlatformLicensingCubit extends Cubit<PlatformLicensingState> {
     return _loaded?.copyWith(selectedOffice: await _getLicense(officeId));
   });
 
+  /// Opens an office's workspace from *outside* the licensing console — the
+  /// «مكاتب المنصة» screen hands over an office id and expects to land on it.
+  ///
+  /// The console may not have loaded yet at that moment, and every mutating
+  /// method here refuses to run without a loaded state. Waiting on the load
+  /// already in flight is what makes the hand-off land on the office instead of
+  /// on the directory; calling [load] again would fetch the whole console twice.
+  Future<void> openOffice(String officeId) async {
+    if (state is PlatformLicensingInitial) {
+      await load();
+    } else if (state is PlatformLicensingLoading) {
+      await stream.firstWhere((s) => s is! PlatformLicensingLoading);
+    }
+    if (_loaded == null) return;
+    await selectOffice(officeId);
+  }
+
   void clearOfficeSelection() {
     final loaded = _loaded;
     if (loaded == null) return;
@@ -346,7 +364,6 @@ class PlatformLicensingCubit extends Cubit<PlatformLicensingState> {
       licenses: await _getLicenses(),
       health: await _getHealth(),
       actionMessage: status == 'suspended'
-          
           ? 'تم الإيقاف. المكتب الآن في وضع القراءة فقط: التذاكر المُباعة '
                 'والرحلات الجارية ودخول الكباتن تكمل كالمعتاد.'
           : 'تم تحديث حالة الترخيص.',
@@ -395,6 +412,59 @@ class PlatformLicensingCubit extends Cubit<PlatformLicensingState> {
       selectedOffice: detail,
       licenses: await _getLicenses(),
       actionMessage: 'تمت إزالة الاستثناء.',
+    );
+  });
+
+  /// Applies a whole board of feature decisions to one office under one reason.
+  ///
+  /// There is no bulk RPC and there should not be: each row is its own audited
+  /// decision, and a server that took them as one blob could not tell the trail
+  /// which of them the operator meant. So the batching is here — one reason,
+  /// one refresh, one message — while the record downstream stays per feature.
+  ///
+  /// It stops at the first refusal and says how far it got. Reporting "failed"
+  /// after four of seven rows were written would send the operator back to a
+  /// board that has already changed underneath them.
+  Future<void> applyFeatureEdits(
+    String officeId,
+    List<OfficeFeatureEdit> edits,
+    String reason,
+  ) => _action(() async {
+    if (edits.isEmpty) return _loaded;
+
+    var applied = 0;
+    String? failure;
+    for (final edit in edits) {
+      try {
+        if (edit.isReset) {
+          await _clearOverride(officeId, edit.featureKey, reason);
+        } else {
+          await _setOverride(
+            officeId,
+            edit.featureKey,
+            edit.value,
+            reason,
+            expiresAt: edit.expiresAt,
+          );
+        }
+        applied++;
+      } catch (error) {
+        failure = '«${edit.nameAr}» — ${_message(error)}';
+        break;
+      }
+    }
+
+    return _loaded?.copyWith(
+      selectedOffice: await _getLicense(officeId),
+      licenses: await _getLicenses(),
+      health: await _getHealth(),
+      actionError: failure == null
+          ? null
+          : 'طُبِّق $applied من ${edits.length} ثم توقّف عند $failure',
+      actionMessage: failure != null
+          ? null
+          : 'تم تطبيق $applied ${applied == 1 ? 'تغيير' : 'تغييرًا'} على '
+                'ميزات هذا المكتب، وسرى فورًا.',
     );
   });
 
@@ -496,9 +566,7 @@ class PlatformLicensingCubit extends Cubit<PlatformLicensingState> {
     try {
       final next = await run();
       if (next != null) emit(next);
-    } catch (_) {
-      
-    }
+    } catch (_) {}
   }
 
   Future<void> _action(Future<PlatformLicensingLoaded?> Function() run) async {
@@ -507,7 +575,7 @@ class PlatformLicensingCubit extends Cubit<PlatformLicensingState> {
     emit(loaded.copyWith(isBusy: true));
     try {
       final next = (await run()) ?? _loaded ?? loaded;
-      
+
       emit(
         next.copyWith(
           isBusy: false,

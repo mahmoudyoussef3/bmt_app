@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 
-import 'package:bmt_app/core/pricing/package_tier_pricing.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 
+import '../../domain/entities/trip_pricable_package.dart';
 import 'trip_fare_controllers.dart';
 
 /// The ONE fare editor used by both trip creation (the planner's pricing
 /// panel) and trip editing (the trip-pricing dialog): a single base ticket
-/// fare that auto-derives the four package tiers, each still overridable.
+/// fare, plus one field per the office's own active packages, each still
+/// overridable.
 ///
-/// Package tiers are TOTAL package prices, not per-ride — see
-/// [PackageTierPricing].
+/// Package fields are TOTAL package prices, not per-ride.
 class TripFareFields extends StatelessWidget {
   const TripFareFields({
     super.key,
@@ -38,18 +38,18 @@ class TripFareFields extends StatelessWidget {
               label: 'سعر التذكرة (رحلة واحدة)',
               controller: controllers.oneTime,
               onChanged: () {
-                controllers.syncTiersFromBase();
+                controllers.syncPricesFromBase();
                 onChanged();
               },
             ),
-            for (final tier in PackageTierPricing.tiers)
+            for (final package in controllers.packages)
               _FareField(
                 width: width,
-                label: _tierLabel(tier),
-                controller: controllers.tierController(tier),
-                helper: _tierHelper(tier, base),
+                label: package.name,
+                controller: controllers.controllerFor(package),
+                helper: _packageHelper(package, base),
                 onChanged: () {
-                  controllers.markTiersEdited();
+                  controllers.markPricesEdited();
                   onChanged();
                 },
               ),
@@ -59,21 +59,12 @@ class TripFareFields extends StatelessWidget {
     );
   }
 
-  static String _tierLabel(PackageTier tier) {
-    return switch (tier.key) {
-      'five_days' => 'باقة ٥ رحلات',
-      'ten_days' => 'باقة ١٠ رحلات',
-      'monthly' => 'باقة شهرية (٢٢ رحلة)',
-      _ => 'باقة ٣ شهور (٦٦ رحلة)',
-    };
-  }
-
   /// Shows the operator what the rider saves versus paying per ride — the
   /// same comparison the Client app's package card renders.
-  static String _tierHelper(PackageTier tier, double base) {
-    if (base <= 0) return '${tier.rides} رحلات';
-    final regular = tier.regularTotalFor(base);
-    return '${tier.rides} رحلات • بدون باقة: ${regular.toStringAsFixed(0)} ج.م';
+  static String _packageHelper(TripPricablePackage package, double base) {
+    if (base <= 0) return '${package.rideCount} رحلات';
+    final regular = base * package.rideCount;
+    return '${package.rideCount} رحلات • بدون باقة: ${regular.toStringAsFixed(0)} ج.م';
   }
 }
 

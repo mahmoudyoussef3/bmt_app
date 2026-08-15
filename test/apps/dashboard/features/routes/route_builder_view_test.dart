@@ -326,6 +326,76 @@ void main() {
     expect(cancelled, isFalse, reason: 'cancel is disabled mid-save');
   });
 
+  testWidgets('a stop in the middle is dragged into a new place in the order', (
+    tester,
+  ) async {
+    await pumpBuilder(
+      tester,
+      route: OperationRoute(
+        id: 'route-2',
+        routeCode: 'RT-08',
+        name: 'بنها - القاهرة',
+        startCity: 'بنها',
+        endCity: 'القاهرة',
+        duration: '',
+        distance: '',
+        status: OperationRouteStatus.active,
+        stations: [
+          for (final (index, name) in [
+            'بنها',
+            'شبين',
+            'قليوب',
+            'القاهرة',
+          ].indexed)
+            RouteStation(
+              id: 's$index',
+              name: name,
+              area: 'القليوبية',
+              arrivalOffset: '',
+              order: index + 1,
+            ),
+        ],
+        notes: const [],
+      ),
+    );
+
+    // Only the two stops in the middle can be dragged; the endpoints are
+    // rendered outside the reorderable region and have no grip at all.
+    final handles = find.byIcon(Icons.drag_indicator_rounded);
+    expect(handles, findsNWidgets(2));
+
+    final first = tester.getCenter(handles.at(0));
+    final second = tester.getCenter(handles.at(1));
+
+    Future<void> dragHandle(Offset from, Offset to) async {
+      final gesture = await tester.startGesture(from);
+      await tester.pump();
+      for (var step = 1; step <= 8; step++) {
+        await gesture.moveTo(Offset.lerp(from, to, step / 8)!);
+        await tester.pump(const Duration(milliseconds: 16));
+      }
+      await gesture.up();
+      await tester.pumpAndSettle();
+    }
+
+    await dragHandle(first, second);
+    expect(cubit.state.draft.stops.map((stop) => stop.name).toList(), [
+      'بنها',
+      'قليوب',
+      'شبين',
+      'القاهرة',
+    ]);
+
+    // ...and back up again, which is the other half of the index arithmetic.
+    await dragHandle(second, first);
+    expect(cubit.state.draft.stops.map((stop) => stop.name).toList(), [
+      'بنها',
+      'شبين',
+      'قليوب',
+      'القاهرة',
+    ]);
+  });
+
   testWidgets('editing loads the route and offers to save the changes', (
     tester,
   ) async {

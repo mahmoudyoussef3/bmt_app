@@ -119,6 +119,7 @@ Widget _harness(
             body: TripCreationWizard(
               routes: [_route],
               drivers: drivers,
+              packages: const [],
               onOpenModule: onOpenModule,
             ),
           ),

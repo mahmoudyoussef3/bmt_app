@@ -155,7 +155,7 @@ class PlatformLicensingLoaded extends PlatformLicensingState {
         ));
       }
     }
-    
+
     for (final key in byCategory.keys.toList()..sort()) {
       groups.add((
         key: key,
@@ -252,7 +252,7 @@ class PlatformLicensingLoaded extends PlatformLicensingState {
           : (selectedOffice ?? this.selectedOffice),
       planPreview: clearPlanPreview ? null : (planPreview ?? this.planPreview),
       isBusy: isBusy ?? this.isBusy,
-      
+
       actionError: actionError,
       actionMessage: actionMessage,
       featureSearch: featureSearch ?? this.featureSearch,

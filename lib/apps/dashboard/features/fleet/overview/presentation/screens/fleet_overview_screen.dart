@@ -66,77 +66,85 @@ class _FleetOverviewScreenState extends State<FleetOverviewScreen> {
         if (state is FleetOverviewLoaded) {
           final workspace = state.workspace;
 
+          final tabContent = AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            child: KeyedSubtree(
+              key: ValueKey('tab-$_activeTab-list-$_isListMode'),
+              child: switch (_activeTab) {
+                FleetTab.drivers => MultiBlocProvider(
+                  providers: [
+                    BlocProvider<FleetDriversCubit>(
+                      create: (_) => dashboardDi<FleetDriversCubit>()..load(),
+                    ),
+                    BlocProvider<FleetDocumentsCubit>(
+                      create: (_) =>
+                          dashboardDi<FleetDocumentsCubit>()..load(),
+                    ),
+                  ],
+                  child: FleetDriversScreen(
+                    onViewStateChanged: (isList) =>
+                        setState(() => _isListMode = isList),
+                  ),
+                ),
+                FleetTab.vehicles => MultiBlocProvider(
+                  providers: [
+                    BlocProvider<FleetVehiclesCubit>(
+                      create: (_) =>
+                          dashboardDi<FleetVehiclesCubit>()..load(),
+                    ),
+                    BlocProvider<FleetDocumentsCubit>(
+                      create: (_) =>
+                          dashboardDi<FleetDocumentsCubit>()..load(),
+                    ),
+                  ],
+                  child: FleetVehiclesScreen(
+                    onViewStateChanged: (isList) =>
+                        setState(() => _isListMode = isList),
+                  ),
+                ),
+                FleetTab.assignments => BlocProvider<FleetAssignmentsCubit>(
+                  create: (_) => dashboardDi<FleetAssignmentsCubit>()..load(),
+                  child: const FleetAssignmentsScreen(),
+                ),
+                FleetTab.documents => BlocProvider<FleetDocumentsCubit>(
+                  create: (_) => dashboardDi<FleetDocumentsCubit>()..load(),
+                  child: const FleetDocumentsScreen(),
+                ),
+              },
+            ),
+          );
+
+          if (!_isListMode) {
+            // A driver/vehicle is focused (full screen on mobile, split pane
+            // on desktop): drop the page-level scroll and hand the tab its
+            // real bounded height instead, so the master list and the detail
+            // pane can each scroll on their own rather than being dragged
+            // along a single shared page scroll.
+            return Padding(
+              padding: const EdgeInsets.all(AppSpacing.large),
+              child: tabContent,
+            );
+          }
+
           return SingleChildScrollView(
             key: ValueKey('scroll-${_activeTab.name}-list-$_isListMode'),
             padding: const EdgeInsets.all(AppSpacing.large),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (_isListMode) ...[
-                  _buildHeader(context),
-                  const SizedBox(height: AppSpacing.large),
-                  FleetSummaryCards(summary: workspace.summary),
-                  const SizedBox(height: AppSpacing.large),
-                  FleetAnalyticsCharts(workspace: workspace),
-                  const SizedBox(height: AppSpacing.large),
-                  FleetTabBar(
-                    active: _activeTab,
-                    summary: workspace.summary,
-                    onTabChanged: _changeTab,
-                  ),
-                  const SizedBox(height: AppSpacing.medium),
-                ],
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 200),
-                  child: KeyedSubtree(
-                    key: ValueKey('tab-$_activeTab-list-$_isListMode'),
-                    child: switch (_activeTab) {
-                      FleetTab.drivers => MultiBlocProvider(
-                        providers: [
-                          BlocProvider<FleetDriversCubit>(
-                            create: (_) =>
-                                dashboardDi<FleetDriversCubit>()..load(),
-                          ),
-                          BlocProvider<FleetDocumentsCubit>(
-                            create: (_) =>
-                                dashboardDi<FleetDocumentsCubit>()..load(),
-                          ),
-                        ],
-                        child: FleetDriversScreen(
-                          onViewStateChanged: (isList) =>
-                              setState(() => _isListMode = isList),
-                        ),
-                      ),
-                      FleetTab.vehicles => MultiBlocProvider(
-                        providers: [
-                          BlocProvider<FleetVehiclesCubit>(
-                            create: (_) =>
-                                dashboardDi<FleetVehiclesCubit>()..load(),
-                          ),
-                          BlocProvider<FleetDocumentsCubit>(
-                            create: (_) =>
-                                dashboardDi<FleetDocumentsCubit>()..load(),
-                          ),
-                        ],
-                        child: FleetVehiclesScreen(
-                          onViewStateChanged: (isList) =>
-                              setState(() => _isListMode = isList),
-                        ),
-                      ),
-                      FleetTab.assignments =>
-                        BlocProvider<FleetAssignmentsCubit>(
-                          create: (_) =>
-                              dashboardDi<FleetAssignmentsCubit>()..load(),
-                          child: const FleetAssignmentsScreen(),
-                        ),
-                      FleetTab.documents => BlocProvider<FleetDocumentsCubit>(
-                        create: (_) =>
-                            dashboardDi<FleetDocumentsCubit>()..load(),
-                        child: const FleetDocumentsScreen(),
-                      ),
-                    },
-                  ),
+                _buildHeader(context),
+                const SizedBox(height: AppSpacing.large),
+                FleetSummaryCards(summary: workspace.summary),
+                const SizedBox(height: AppSpacing.large),
+                FleetAnalyticsCharts(workspace: workspace),
+                const SizedBox(height: AppSpacing.large),
+                FleetTabBar(
+                  active: _activeTab,
+                  summary: workspace.summary,
+                  onTabChanged: _changeTab,
                 ),
+                const SizedBox(height: AppSpacing.medium),
+                tabContent,
               ],
             ),
           );

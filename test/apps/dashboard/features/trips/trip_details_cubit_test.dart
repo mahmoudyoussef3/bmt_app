@@ -4,6 +4,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/operation_trip.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/trip_lifecycle.dart';
+import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/trip_pricable_package.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/trip_pricing.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/trip_creation/domain/entities/trip_driver_option.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/trip_management/domain/repositories/trips_repository.dart';
@@ -183,6 +184,10 @@ class _FakeRepo implements TripsRepository {
     required String departureTime,
     required String arrivalTime,
   }) => throw UnimplementedError();
+
+  @override
+  Future<List<TripPricablePackage>> getOfficePricablePackages() =>
+      throw UnimplementedError();
 }
 
 TripDetailsCubit _cubit(_FakeRepo repo) {

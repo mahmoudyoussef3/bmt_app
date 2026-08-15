@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/operation_trip.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/trip_lifecycle.dart';
+import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/trip_pricable_package.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/trip_pricing.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/shared/data/models/operation_trip_model.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/shared/data/models/trip_pricing_model.dart';
@@ -88,7 +89,7 @@ void main() {
     test('a driver with an assigned vehicle can be scheduled', () async {
       final createTrip = CreateTripUseCase(repository);
 
-      final created = await createTrip(_input(driverId: 'driver-active'), []);
+      final created = await createTrip(_input(driverId: 'driver-active'), [], []);
 
       expect(created.id, isNotEmpty);
       expect(created.driver, 'أحمد حسن');
@@ -101,7 +102,7 @@ void main() {
       'the vehicle and capacity come from the fleet, not from the planner',
       () async {
         final createTrip = CreateTripUseCase(repository);
-        final created = await createTrip(_input(driverId: 'driver-active'), []);
+        final created = await createTrip(_input(driverId: 'driver-active'), [], []);
 
         // `CreateTripInput` has no vehicle or capacity field to carry — that is enforced
         // by the compiler. What this asserts is the consequence: the trip still comes
@@ -116,7 +117,7 @@ void main() {
       final createTrip = CreateTripUseCase(repository);
 
       expect(
-        () => createTrip(_input(driverId: 'driver-no-vehicle'), []),
+        () => createTrip(_input(driverId: 'driver-no-vehicle'), [], []),
         throwsA(
           isA<Exception>().having(
             (e) => e.toString(),
@@ -131,7 +132,7 @@ void main() {
       final createTrip = CreateTripUseCase(repository);
 
       expect(
-        () => createTrip(_input(driverId: 'driver-vehicle-maintenance'), []),
+        () => createTrip(_input(driverId: 'driver-vehicle-maintenance'), [], []),
         throwsA(
           isA<Exception>().having(
             (e) => e.toString(),
@@ -146,7 +147,7 @@ void main() {
       final createTrip = CreateTripUseCase(repository);
 
       expect(
-        () => createTrip(_input(driverId: 'driver-other-office'), []),
+        () => createTrip(_input(driverId: 'driver-other-office'), [], []),
         throwsA(
           isA<Exception>().having(
             (e) => e.toString(),
@@ -163,6 +164,7 @@ void main() {
       expect(
         () => createTrip(
           _input(driverId: 'driver-active', routeId: 'route-archived'),
+          [],
           [],
         ),
         throwsA(
@@ -235,10 +237,7 @@ void main() {
         fromPointOrder: 1,
         toPointOrder: 2,
         oneTimePrice: 50.0,
-        fiveDaysPrice: 220.0,
-        tenDaysPrice: 400.0,
-        monthlyPrice: 1000.0,
-        threeMonthsPrice: 2800.0,
+        packagePrices: const {'pkg-1': 220.0, 'pkg-2': 400.0},
         currency: 'ج.م',
         isActive: true,
         createdAt: DateTime.now(),
@@ -707,6 +706,11 @@ class _MockTripsDatasource implements TripsDatasource {
 
   @override
   Stream<void> watchTripChanges(String tripId) => const Stream.empty();
+
+  @override
+  Future<List<TripPricablePackage>> fetchOfficePricablePackages() async {
+    return const [];
+  }
 }
 
 class _FailingTripsDatasource implements TripsDatasource {
@@ -851,6 +855,11 @@ class _FailingTripsDatasource implements TripsDatasource {
 
   @override
   Stream<void> watchTripChanges(String tripId) {
+    throw StateError('failure');
+  }
+
+  @override
+  Future<List<TripPricablePackage>> fetchOfficePricablePackages() {
     throw StateError('failure');
   }
 }

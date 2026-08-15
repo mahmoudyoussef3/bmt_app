@@ -18,6 +18,7 @@ import 'package:bmt_app/apps/client/features/seat_selection/domain/entities/seat
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip_seat.dart';
 import 'package:bmt_app/apps/client/features/wallet/domain/entities/client_wallet.dart';
+import 'package:bmt_app/core/pricing/package_tier_pricing.dart';
 import 'package:bmt_app/core/pricing/trip_stop_pair_price.dart';
 
 final DateTime now = DateTime.now();
@@ -769,10 +770,13 @@ List<TripStopPairPrice> _pairPrices(double fare) => [
           fromPointId: from.id,
           toPointId: to.id,
           oneTimePrice: fare,
-          fiveDaysPrice: fare * 3.5,
-          tenDaysPrice: fare * 3.75,
-          monthlyPrice: fare * 4,
-          threeMonthsPrice: fare * 4.5,
+          packagePrices: {
+            for (final package in packages)
+              package.id: PackageTierPricing.priceForRideCount(
+                package.rideCount,
+                fare,
+              ),
+          },
         ),
 ];
 

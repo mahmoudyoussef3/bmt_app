@@ -6,6 +6,8 @@ import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 
 import '../../../../core/theme/dashboard_colors.dart';
+import '../../../../core/ui_state/dashboard_section_state_store.dart';
+import '../../../../core/widgets/dashboard_module_header.dart';
 
 /// The layout vocabulary the platform console screens share.
 ///
@@ -24,6 +26,91 @@ import '../../../../core/theme/dashboard_colors.dart';
 /// - **An action is visible.** Nothing important hides behind `⋯`.
 /// - **A card grid, not a squeezed pane.** Plans are products; they are read the
 ///   way a pricing page is read.
+
+/// The one header every platform console screen opens with.
+///
+/// Four screens under «المنصة» used to be seven, each with its own banner, its
+/// own stat block and its own filter bar stacked on top of one another. The
+/// console now has four destinations, and the sections that used to be separate
+/// destinations are a [tabBar] *inside* this header — so switching «الباقات»
+/// and «الميزات» costs one press in the place the operator is already looking,
+/// instead of a trip back to the sidebar.
+///
+/// Order is deliberate: identity, then the figures, then the switch. The
+/// figures fold away with the rest of the module summaries, and the switch sits
+/// on the card's bottom edge — against the section it opens, and in a place
+/// that does not move when the figures are folded.
+class LicensingConsoleHeader extends StatelessWidget {
+  const LicensingConsoleHeader({
+    super.key,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    this.actions = const [],
+    this.tabBar,
+    this.stats = const [],
+    this.child,
+  });
+
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final List<Widget> actions;
+
+  /// The section switch for this destination — a [LicensingTabs] built by the
+  /// screen and handed to whichever section is on show, so every section of a
+  /// destination renders the identical control in the identical place.
+  final Widget? tabBar;
+
+  /// Figures for the selected section.
+  final List<LicensingStat> stats;
+
+  /// Anything the selected section wants directly under its figures — an
+  /// enforcement-mode bar, a notice. Kept to one slot so a header cannot grow
+  /// back into the wall of chrome this replaced.
+  final Widget? child;
+
+  @override
+  Widget build(BuildContext context) {
+    final tabs = tabBar;
+    if (tabs == null && stats.isEmpty && child == null) {
+      return DashboardModuleHeader(
+        icon: icon,
+        title: title,
+        subtitle: subtitle,
+        actions: actions,
+      );
+    }
+
+    // Order still runs identity → switch → figures, but the figures now fold:
+    // they *describe* the selected section, and a console read all day should
+    // not re-state its four totals above every table.
+    return DashboardModuleHeader(
+      icon: icon,
+      title: title,
+      subtitle: subtitle,
+      actions: actions,
+      sectionId: DashboardSectionIds.platformLicensingHeader,
+      summary: stats.isEmpty ? null : LicensingStatStrip(stats: stats),
+      pinned: tabs == null && child == null
+          ? null
+          : Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (child != null) ...[
+                  child!,
+                  if (tabs != null) const SizedBox(height: AppSpacing.medium),
+                ],
+                if (tabs != null)
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: tabs,
+                  ),
+              ],
+            ),
+    );
+  }
+}
 
 /// One figure in a [LicensingStatStrip].
 class LicensingStat {

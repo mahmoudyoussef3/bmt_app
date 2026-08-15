@@ -291,8 +291,9 @@ Reuses the shared `core/widgets/maps` stack (`EasyWayTileLayer`, `RouteCameraAni
 
 | Case | Behaviour |
 |---|---|
-| No active trips (current DB state) | Calm empty state: *"لا توجد رحلات على الطريق حالياً…"* — not an error. |
-| No open incidents | Positive empty state: *"لا توجد بلاغات مفتوحة"*. |
+| Nothing running **and** nothing reported | One all-clear card («الوضع هادئ») replaces both panels, naming each fact once and stating the refresh cadence and how current the read is — a blank live board with no timestamp is indistinguishable from a frozen one. Driven by `LiveOpsSnapshot.isQuiet`. |
+| No active trips, reports open | Calm panel empty state: *"لا توجد رحلات على الطريق حالياً…"* — not an error. |
+| No open incidents, trips running | Positive panel empty state: *"لا توجد بلاغات مفتوحة"*. Both use the shared `DashboardEmptyState`, so the two panels never speak in two different shapes side by side. |
 | Captain never shared location | `unknown` badge + *"لم يُشارك الموقع بعد"* — never a fake "live". |
 | Dropped socket / failed poll | Last good snapshot stays; next tick retries silently. |
 | First-load failure | Full error card with **إعادة المحاولة**. |

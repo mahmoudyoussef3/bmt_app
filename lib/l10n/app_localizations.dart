@@ -5186,6 +5186,36 @@ abstract class AppLocalizations {
   /// **'Status and fare breakdown'**
   String get trips_paymentSubtitle;
 
+  /// No description provided for @trips_totalPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Total paid'**
+  String get trips_totalPaid;
+
+  /// No description provided for @trips_totalDue.
+  ///
+  /// In en, this message translates to:
+  /// **'Total due'**
+  String get trips_totalDue;
+
+  /// No description provided for @trips_vehiclePhotosCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} photos'**
+  String trips_vehiclePhotosCount(int count);
+
+  /// No description provided for @trips_crewSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Who is driving, and which bus'**
+  String get trips_crewSubtitle;
+
+  /// No description provided for @trips_vehicleNumberLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Vehicle number'**
+  String get trips_vehicleNumberLabel;
+
   /// No description provided for @trips_paymentNotePaid.
   ///
   /// In en, this message translates to:

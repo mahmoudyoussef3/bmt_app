@@ -43,6 +43,11 @@ class SubscriptionCard extends StatelessWidget {
     final statusColor = subscriptionStatusColor(context, subscription.status);
 
     return Stack(
+      // Passes the grid's row height straight through to the card, so cards
+      // sharing a row end at the same edge instead of floating at their own
+      // content heights. Outside a stretching row the constraints are loose and
+      // the card still sizes to its content.
+      fit: StackFit.passthrough,
       children: [
         AppCard(
           padding: const EdgeInsets.all(AppSpacing.medium),

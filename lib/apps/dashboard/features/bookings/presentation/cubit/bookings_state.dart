@@ -1,3 +1,4 @@
+import '../../domain/entities/booking_lifecycle.dart';
 import '../../domain/entities/operation_booking.dart';
 import '../models/booking_filters.dart';
 import '../models/booking_queue_tab.dart';
@@ -128,10 +129,11 @@ class BookingsLoaded extends BookingsState {
 
   /// Rows on the current page that a bulk review can actually act on. Bulk
   /// approve/reject run the per-booking payment RPCs, which reject a booking
-  /// whose payment is not awaiting a decision — so selecting one is a guaranteed
-  /// failure, and the board never offers it.
+  /// whose payment is not awaiting a decision — *and* one whose booking is no
+  /// longer `reserved` — so selecting one is a guaranteed failure, and the board
+  /// never offers it.
   late final List<OperationBooking> selectablePageBookings = pageBookings
-      .where((booking) => booking.awaitingReview)
+      .where((booking) => booking.canReviewPayment)
       .toList();
 
   bool get allPageSelected =>
@@ -183,11 +185,11 @@ class BookingsLoaded extends BookingsState {
   /// from what exists beats typing a substring that may match nothing.
   late final List<String> availableRoutes =
       (bookings
-              .map((booking) => booking.route.trim())
-              .where((route) => route.isNotEmpty)
-              .toSet()
-              .toList()
-            ..sort());
+          .map((booking) => booking.route.trim())
+          .where((route) => route.isNotEmpty)
+          .toSet()
+          .toList()
+        ..sort());
 
   /// Number of bookings the given client has ever made — a real cross-booking
   /// relationship derived from the loaded dataset (no extra query, no PII join).

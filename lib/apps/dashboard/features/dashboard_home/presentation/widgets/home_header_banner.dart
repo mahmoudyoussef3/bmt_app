@@ -46,7 +46,13 @@ class HomeHeaderBanner extends StatelessWidget {
     final onHero = DashboardColors.onHero(context);
 
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.large),
+      // Deliberately shorter than a hero: the banner says who and when, and
+      // every pixel it takes is a pixel of today's numbers pushed down. Same
+      // trim the module headers took.
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.large,
+        vertical: AppSpacing.medium,
+      ),
       decoration: BoxDecoration(
         gradient: DashboardColors.heroGradient(context),
         borderRadius: BorderRadius.circular(AppTokens.radius),
@@ -116,17 +122,17 @@ class _Identity extends StatelessWidget {
           '$greeting، $name',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: text.headlineSmall?.copyWith(
+          style: text.titleLarge?.copyWith(
             color: onHero,
             fontWeight: FontWeight.w800,
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 2),
         Text(
           '$officeName · $date',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: text.bodyMedium?.copyWith(color: onHero.withAlpha(200)),
+          style: text.bodySmall?.copyWith(color: onHero.withAlpha(200)),
         ),
       ],
     );

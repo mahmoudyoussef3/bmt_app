@@ -22,7 +22,7 @@ class LicenseStatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    
+
     final color = switch (status) {
       'active' => scheme.secondary,
       'trialing' => scheme.tertiary,
@@ -214,7 +214,6 @@ class FeatureValueField extends StatelessWidget {
               label: const Text('بلا حدود'),
               selected: unlimited,
               onSelected: enabled
-                  
                   ? (on) => onChanged(on ? FeatureValue.unlimited : 0)
                   : null,
             ),
@@ -285,7 +284,6 @@ class FeatureSourceChip extends StatelessWidget {
         if (blockedBy != null) ...[
           const SizedBox(width: AppSpacing.xSmall),
           Tooltip(
-            
             message: 'مُعطَّلة لأن «$blockedBy» غير مفعّلة',
             child: Icon(DashboardIcons.locked, size: 16, color: scheme.error),
           ),
@@ -672,7 +670,6 @@ class OverrideTile extends StatelessWidget {
                 if (entry.expiresAt != null)
                   Text(
                     entry.expired
-                        
                         ? 'انتهى في ${licensingDate(entry.expiresAt)} — لم يعد ساريًا'
                         : 'ينتهي في ${licensingDate(entry.expiresAt)}',
                     style: text.labelSmall?.copyWith(

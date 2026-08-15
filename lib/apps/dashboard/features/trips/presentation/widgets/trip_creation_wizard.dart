@@ -9,6 +9,7 @@ import 'package:bmt_app/apps/dashboard/core/routes/dashboard_routes.dart';
 
 import '../../../routes/domain/entities/operation_route.dart';
 import '../../shared/domain/entities/operation_trip.dart';
+import '../../shared/domain/entities/trip_pricable_package.dart';
 import '../../shared/presentation/widgets/trip_fare_controllers.dart';
 import '../../shared/presentation/widgets/trip_fare_fields.dart';
 import '../../trip_creation/domain/entities/trip_driver_option.dart';
@@ -43,9 +44,14 @@ class TripCreationWizardDialog extends StatelessWidget {
           Navigator.of(context).pop();
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text('تم إنشاء الرحلة بنجاح'),
-              backgroundColor: context.status(AppStatusTone.success).ink,
-              duration: Duration(seconds: 4),
+              content: Text(
+                'تم إنشاء الرحلة بنجاح',
+                style: TextStyle(
+                  color: context.status(AppStatusTone.success).onFill,
+                ),
+              ),
+              backgroundColor: context.status(AppStatusTone.success).fill,
+              duration: const Duration(seconds: 4),
             ),
           );
         }
@@ -91,6 +97,7 @@ class TripCreationWizardDialog extends StatelessWidget {
           return TripCreationWizard(
             routes: state.routes.map(_parseRoute).toList(),
             drivers: state.drivers,
+            packages: state.packages,
             prefillTrip: prefillTrip,
             onOpenModule: onOpenModule,
           );
@@ -141,6 +148,9 @@ class TripCreationWizard extends StatefulWidget {
   /// picks a driver and the vehicle comes with them.
   final List<TripDriverOption> drivers;
 
+  /// The office's own pricable packages — one fare field renders per entry.
+  final List<TripPricablePackage> packages;
+
   final OperationTrip? prefillTrip;
   final ValueChanged<String>? onOpenModule;
 
@@ -148,6 +158,7 @@ class TripCreationWizard extends StatefulWidget {
     super.key,
     required this.routes,
     required this.drivers,
+    required this.packages,
     this.prefillTrip,
     this.onOpenModule,
   });
@@ -157,22 +168,22 @@ class TripCreationWizard extends StatefulWidget {
 }
 
 class _TripCreationWizardState extends State<TripCreationWizard> {
-  
   OperationRoute? _selectedRoute;
   TripDriverOption? _selectedDriver;
 
   final _dateController = TextEditingController();
   final _timeController = TextEditingController();
   final _arrivalController = TextEditingController();
-  Map<String, int> _stopWaits = {}; 
-  final Map<String, String> _customArrivals = {}; 
-  final Map<String, String> _customDepartures = {}; 
+  Map<String, int> _stopWaits = {};
+  final Map<String, String> _customArrivals = {};
+  final Map<String, String> _customDepartures = {};
 
-  /// The ONE fare configured for this trip: the ticket price plus the four
-  /// package tiers derived from it. Applied to every boarding -> dropoff pair
-  /// on submit, so `trip_pricing` is fully populated the moment the trip
-  /// exists and the Client app never has to fall back to a guessed price.
-  final _fare = TripFareControllers();
+  /// The ONE fare configured for this trip: the ticket price plus one price
+  /// per the office's own packages, derived from it. Applied to every
+  /// boarding -> dropoff pair on submit, so `trip_pricing` is fully
+  /// populated the moment the trip exists and the Client app never has to
+  /// fall back to a guessed price.
+  late final _fare = TripFareControllers(widget.packages);
 
   /// Driver/vehicle ids already committed to an overlapping trip for the
   /// currently chosen date/departure/arrival, keyed to the conflicting row so
@@ -194,7 +205,7 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
       _selectedRoute = widget.routes
           .where((r) => r.id == prefill.routeId)
           .firstOrNull;
-      
+
       _selectedDriver = widget.drivers
           .where((d) => d.id == prefill.driverId)
           .firstOrNull;
@@ -205,7 +216,7 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
         _fare.oneTime.text = TripFareControllers.formatFare(
           prefill.ticketPrice,
         );
-        _fare.syncTiersFromBase();
+        _fare.syncPricesFromBase();
       }
       if (_selectedRoute != null) _initializeWizardData();
     }
@@ -342,7 +353,10 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
 
   Widget _buildPlannerHeader(ColorScheme scheme) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.large, vertical: AppSpacing.medium),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.large,
+        vertical: AppSpacing.medium,
+      ),
       decoration: BoxDecoration(
         color: scheme.surface,
         borderRadius: const BorderRadius.only(
@@ -376,7 +390,11 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
                 ),
               ],
             ),
-            child: Icon(Icons.rocket_launch_rounded, color: scheme.onPrimary, size: 28),
+            child: Icon(
+              Icons.rocket_launch_rounded,
+              color: scheme.onPrimary,
+              size: 28,
+            ),
           ),
           const SizedBox(width: AppSpacing.medium),
           Expanded(
@@ -387,9 +405,10 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
                   widget.prefillTrip == null
                       ? 'مخطط رحلة جديد'
                       : 'نسخ رحلة وتشغيلها',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800, letterSpacing: -0.5),
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.5,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -456,7 +475,10 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
   Widget _buildPlannerFooter(ColorScheme scheme) {
     final ready = _isTripReady();
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.large, vertical: AppSpacing.medium),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.large,
+        vertical: AppSpacing.medium,
+      ),
       decoration: BoxDecoration(
         color: scheme.surface,
         borderRadius: const BorderRadius.only(
@@ -499,8 +521,13 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
               icon: const Icon(Icons.check_circle_rounded),
               label: const Text('إنشاء الرحلة'),
               style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.large, vertical: AppSpacing.medium),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTokens.radius)),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.large,
+                  vertical: AppSpacing.medium,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppTokens.radius),
+                ),
               ),
             ),
           ];
@@ -619,7 +646,7 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
       children: [
         DropdownButtonFormField<String>(
           initialValue: _selectedRoute?.id,
-          
+
           isExpanded: true,
           decoration: const InputDecoration(
             labelText: 'اختر المسار',
@@ -687,7 +714,7 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
           ),
           items: drivers.map((driver) {
             final conflict = _driverConflict(driver);
-            
+
             return DropdownMenuItem(
               value: driver.id,
               enabled: conflict == null,
@@ -800,7 +827,7 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
               ],
             ),
           ),
-          
+
           Flexible(
             child: Wrap(
               alignment: WrapAlignment.end,
@@ -812,7 +839,7 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
                   label: 'سائق',
                   done: _selectedDriver != null,
                 ),
-                
+
                 _PlannerStatusChip(
                   label: 'سيارة',
                   done: _selectedDriver?.isSchedulable ?? false,
@@ -1158,17 +1185,17 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
       departure: _timeController.text,
       arrival: _arrivalController.text,
       ticketPrice: _fare.baseFare,
-      packageTierPrices: _fare.tierPrices,
+      packagePrices: _fare.packagePrices,
       currency: 'ج.م',
       customStationTimes: customStationTimesList,
     );
 
     final cubit = context.read<TripCreationCubit>();
-    
-    final created = await cubit.submitTrip(input, const []);
+
+    final created = await cubit.submitTrip(input, const [], widget.packages);
 
     if (mounted && created != null) {
-      Navigator.of(context).pop(); 
+      Navigator.of(context).pop();
     }
   }
 }
@@ -1194,7 +1221,9 @@ class _PlannerSectionCard extends StatelessWidget {
         color: scheme.surface,
         borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
         border: Border.all(
-          color: done ? scheme.primary.withAlpha(40) : scheme.outline.withAlpha(40),
+          color: done
+              ? scheme.primary.withAlpha(40)
+              : scheme.outline.withAlpha(40),
           width: 1,
         ),
         boxShadow: [
@@ -1227,26 +1256,37 @@ class _PlannerSectionCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: done ? scheme.primaryContainer.withAlpha(100) : scheme.surfaceContainerHighest.withAlpha(100),
-                        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+                        color: done
+                            ? scheme.primaryContainer.withAlpha(100)
+                            : scheme.surfaceContainerHighest.withAlpha(100),
+                        borderRadius: BorderRadius.circular(
+                          AppTokens.radiusSmall,
+                        ),
                       ),
-                      child: Icon(icon, color: done ? scheme.primary : scheme.onSurfaceVariant, size: 20),
+                      child: Icon(
+                        icon,
+                        color: done ? scheme.primary : scheme.onSurfaceVariant,
+                        size: 20,
+                      ),
                     ),
                     const SizedBox(width: AppSpacing.medium),
                     Expanded(
                       child: Text(
                         title,
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.w700),
                       ),
                     ),
                     AnimatedSwitcher(
                       duration: AppTokens.motionBase,
                       child: Icon(
-                        done ? Icons.check_circle_rounded : Icons.radio_button_unchecked,
+                        done
+                            ? Icons.check_circle_rounded
+                            : Icons.radio_button_unchecked,
                         key: ValueKey(done),
-                        color: done ? scheme.primary : scheme.outline.withAlpha(100),
+                        color: done
+                            ? scheme.primary
+                            : scheme.outline.withAlpha(100),
                         size: 24,
                       ),
                     ),
@@ -1330,7 +1370,7 @@ class _InteractiveTimeTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final hasValue = value.isNotEmpty;
-    
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -1340,10 +1380,14 @@ class _InteractiveTimeTile extends StatelessWidget {
           width: 220,
           padding: const EdgeInsets.all(AppSpacing.medium),
           decoration: BoxDecoration(
-            color: hasValue ? scheme.primaryContainer.withAlpha(30) : scheme.surfaceContainerHighest.withAlpha(50),
+            color: hasValue
+                ? scheme.primaryContainer.withAlpha(30)
+                : scheme.surfaceContainerHighest.withAlpha(50),
             borderRadius: BorderRadius.circular(AppTokens.radius),
             border: Border.all(
-              color: hasValue ? scheme.primary.withAlpha(80) : scheme.outline.withAlpha(40),
+              color: hasValue
+                  ? scheme.primary.withAlpha(80)
+                  : scheme.outline.withAlpha(40),
             ),
           ),
           child: Column(
@@ -1352,9 +1396,9 @@ class _InteractiveTimeTile extends StatelessWidget {
               Row(
                 children: [
                   Icon(
-                    icon, 
-                    size: 18, 
-                    color: hasValue ? scheme.primary : scheme.onSurfaceVariant
+                    icon,
+                    size: 18,
+                    color: hasValue ? scheme.primary : scheme.onSurfaceVariant,
                   ),
                   const SizedBox(width: AppSpacing.small),
                   Text(
@@ -1370,7 +1414,9 @@ class _InteractiveTimeTile extends StatelessWidget {
               Text(
                 hasValue ? value : placeholder,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  color: hasValue ? scheme.onSurface : scheme.onSurfaceVariant.withAlpha(150),
+                  color: hasValue
+                      ? scheme.onSurface
+                      : scheme.onSurfaceVariant.withAlpha(150),
                   fontWeight: hasValue ? FontWeight.bold : FontWeight.normal,
                 ),
               ),
@@ -1496,12 +1542,7 @@ class _AssignedVehicleCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
         child: Container(
           decoration: BoxDecoration(
-            border: BorderDirectional(
-              start: BorderSide(
-                color: line,
-                width: 4,
-              ),
-            ),
+            border: BorderDirectional(start: BorderSide(color: line, width: 4)),
           ),
           child: Padding(
             padding: const EdgeInsets.all(AppSpacing.large),
@@ -1514,7 +1555,9 @@ class _AssignedVehicleCard extends StatelessWidget {
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
                         color: tint.withAlpha(100),
-                        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+                        borderRadius: BorderRadius.circular(
+                          AppTokens.radiusSmall,
+                        ),
                       ),
                       child: Icon(icon, color: line, size: 20),
                     ),
@@ -1527,7 +1570,11 @@ class _AssignedVehicleCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    Icon(Icons.lock_rounded, size: 18, color: scheme.outline.withAlpha(150)),
+                    Icon(
+                      Icons.lock_rounded,
+                      size: 18,
+                      color: scheme.outline.withAlpha(150),
+                    ),
                   ],
                 ),
                 const SizedBox(height: AppSpacing.medium),
@@ -1603,7 +1650,7 @@ class _AssignedVehicleCard extends StatelessWidget {
           style: text.titleMedium?.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: AppSpacing.small),
-        
+
         Wrap(
           spacing: AppSpacing.small,
           runSpacing: AppSpacing.xSmall,

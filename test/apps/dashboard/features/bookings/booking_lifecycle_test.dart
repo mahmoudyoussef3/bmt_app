@@ -340,4 +340,74 @@ void main() {
       }
     });
   });
+
+  group('Reviewability', () {
+    OperationBooking booking(BookingStatus status, PaymentStatus payment) =>
+        OperationBooking(
+          id: 'b1',
+          bookingNumber: 'BK-1',
+          clientId: 'c1',
+          passengerName: 'راكب',
+          phone: '0100',
+          route: 'المنصورة - القاهرة',
+          tripTime: '08:00',
+          date: '2026-07-04',
+          seat: 'A1',
+          paymentMethod: BookingPaymentMethod.instaPay,
+          status: status,
+          paymentStatus: payment,
+          paymentAmount: 100,
+          packageName: '',
+          createdAt: DateTime(2026, 7, 1),
+          tripDetails: BookingTripDetails.empty,
+          notes: const [],
+          timeline: const [],
+        );
+
+    test('a reserved booking with a submitted receipt is reviewable', () {
+      final b = booking(BookingStatus.reserved, PaymentStatus.submitted);
+      expect(b.awaitingReview, isTrue);
+      expect(b.canReviewPayment, isTrue);
+    });
+
+    test('a cancelled booking is never reviewable, receipt or not', () {
+      // The board used to key its approve/reject/reupload controls off
+      // `awaitingReview` alone, so this row showed three enabled buttons that
+      // `approve_payment` answers `booking_not_pending` to.
+      for (final payment in [
+        PaymentStatus.submitted,
+        PaymentStatus.underReview,
+      ]) {
+        final b = booking(BookingStatus.cancelled, payment);
+        expect(b.awaitingReview, isTrue);
+        expect(b.canReviewPayment, isFalse);
+      }
+    });
+
+    test('a completed booking is never reviewable', () {
+      final b = booking(BookingStatus.completed, PaymentStatus.submitted);
+      expect(b.canReviewPayment, isFalse);
+    });
+
+    test('reviewable implies the desk has something to do', () {
+      // The two models must not disagree: anything this getter calls
+      // reviewable has to resolve to an actionable next step.
+      for (final status in BookingStatus.values) {
+        for (final payment in PaymentStatus.values) {
+          final b = booking(status, payment);
+          if (!b.canReviewPayment) continue;
+          final action = resolveNextAction(
+            status: status,
+            paymentStatus: payment,
+            hasReceipt: true,
+          );
+          expect(
+            action.isActionable,
+            isTrue,
+            reason: '$status + $payment is reviewable but has no next action',
+          );
+        }
+      }
+    });
+  });
 }

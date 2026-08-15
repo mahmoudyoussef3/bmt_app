@@ -84,7 +84,6 @@ class SupabasePlatformAdminDatasource implements PlatformAdminDatasource {
         body: request.toPayload(),
       );
     } on FunctionException catch (error) {
-      
       throw Exception(_messageForCode(_codeFromBody(error.details)));
     } catch (_) {
       throw Exception('تعذر الاتصال بالخادم. تحقق من الشبكة وحاول مرة أخرى.');
@@ -117,7 +116,7 @@ class SupabasePlatformAdminDatasource implements PlatformAdminDatasource {
           office['username']?.toString() ??
           '',
       listingStatus: office['listing_status']?.toString() ?? 'draft',
-      
+
       temporaryPassword: _nullIfBlank(data['temporary_password']?.toString()),
     );
   }
@@ -289,7 +288,7 @@ class SupabasePlatformAdminDatasource implements PlatformAdminDatasource {
           for (final item in row['operators'] as List)
             if (item is Map) _mapOperator(Map<String, dynamic>.from(item)),
       ],
-      
+
       marketplace: marketplace is Map
           ? _mapMarketplace(Map<String, dynamic>.from(marketplace))
           : null,
@@ -358,7 +357,6 @@ class SupabasePlatformAdminDatasource implements PlatformAdminDatasource {
 
   PlatformTrendPoint _mapTrendPoint(Map<String, dynamic> row) {
     return PlatformTrendPoint(
-      
       day: DateTime.tryParse(row['day']?.toString() ?? '') ?? DateTime.now(),
       bookings: _toInt(row['bookings']),
       revenue: _toDouble(row['revenue']),
@@ -394,7 +392,7 @@ class SupabasePlatformAdminDatasource implements PlatformAdminDatasource {
       recentReviews: _toInt(row['reviews_recent']),
       activeOperators: _toInt(row['active_operators']),
       activeAdmins: _toInt(row['active_admins']),
-      
+
       averageRating: row['avg_office_rating'] == null
           ? null
           : _toDouble(row['avg_office_rating']),

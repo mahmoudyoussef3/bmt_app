@@ -81,7 +81,7 @@ class _ReferralTabs extends StatelessWidget {
                   label: const Text('تحديث'),
                 ),
               ],
-              child: const TabBar(
+              pinned: const TabBar(
                 isScrollable: true,
                 tabAlignment: TabAlignment.start,
                 tabs: [

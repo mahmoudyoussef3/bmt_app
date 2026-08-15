@@ -7,6 +7,7 @@ import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/app_snackbar.dart';
 
+import '../../domain/entities/booking_lifecycle.dart';
 import '../../domain/entities/operation_booking.dart';
 import '../cubit/bookings_cubit.dart';
 import 'booking_next_action_banner.dart';
@@ -35,7 +36,7 @@ class BookingDetailsPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<BookingsCubit>();
-    final hasActions = booking.awaitingReview || booking.canBeReassigned;
+    final hasActions = booking.canReviewPayment || booking.canBeReassigned;
 
     return AppCard(
       padding: EdgeInsets.zero,
@@ -180,7 +181,7 @@ class _Header extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppSpacing.small),
-              
+
               Text(
                 booking.amountLabel,
                 style: text.titleLarge?.copyWith(
@@ -286,7 +287,7 @@ class _ActionBar extends StatelessWidget {
             const LinearProgressIndicator(minHeight: 2),
             const SizedBox(height: AppSpacing.small),
           ],
-          if (booking.awaitingReview) ...[
+          if (booking.canReviewPayment) ...[
             Row(
               children: [
                 Expanded(
@@ -295,8 +296,8 @@ class _ActionBar extends StatelessWidget {
                         ? null
                         : () => intents.approveBooking(context, cubit, booking),
                     style: FilledButton.styleFrom(
-                      backgroundColor: approved.ink,
-                      foregroundColor: Colors.white,
+                      backgroundColor: approved.fill,
+                      foregroundColor: approved.onFill,
                     ),
                     icon: const Icon(Icons.check_rounded, size: 18),
                     label: const Text('قبول الدفع'),
@@ -309,7 +310,8 @@ class _ActionBar extends StatelessWidget {
                         ? null
                         : () => intents.rejectBooking(context, cubit, booking),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: rejected.ink,
+                      foregroundColor: rejected.accent,
+                      side: BorderSide(color: rejected.accent.withAlpha(110)),
                     ),
                     icon: const Icon(Icons.close_rounded, size: 18),
                     label: const Text('رفض'),
@@ -323,7 +325,7 @@ class _ActionBar extends StatelessWidget {
             spacing: AppSpacing.small,
             runSpacing: AppSpacing.small,
             children: [
-              if (booking.awaitingReview)
+              if (booking.canReviewPayment)
                 TextButton.icon(
                   onPressed: busy
                       ? null

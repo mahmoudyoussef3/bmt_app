@@ -1,6 +1,7 @@
 import 'package:bmt_app/core/pricing/package_tier_pricing.dart';
 
 import '../../../shared/domain/entities/operation_trip.dart';
+import '../../../shared/domain/entities/trip_pricable_package.dart';
 import '../../../shared/domain/entities/trip_pricing.dart';
 import '../../../trip_management/domain/repositories/trips_repository.dart';
 import '../entities/trip_driver_option.dart';
@@ -10,15 +11,19 @@ class CreateTripUseCase {
 
   const CreateTripUseCase(this._repository);
 
+  /// [packages] is the office's own pricable package list (the same one the
+  /// planner's fare panel offered fields for) — needed here again to derive
+  /// a default price for any package the operator left blank.
   Future<OperationTrip> call(
     CreateTripInput input,
     List<TripPricing> pricing,
+    List<TripPricablePackage> packages,
   ) async {
     final trip = await _repository.createTrip(input);
-    
+
     final pricingRows = pricing.isNotEmpty
         ? pricing
-        : _standardPricingFromTrip(trip, input);
+        : _standardPricingFromTrip(trip, input, packages);
     for (final p in pricingRows) {
       await _repository.upsertTripPricing(p.copyWith(tripId: trip.id));
     }
@@ -26,13 +31,15 @@ class CreateTripUseCase {
   }
 
   /// Every boarding -> dropoff pair gets the operator's ticket price and the
-  /// package tiers they configured next to it. A tier left blank falls back to
-  /// the standard derivation rather than to the ticket price itself — copying
-  /// the flat ticket price into every tier (the old behaviour) made a monthly
-  /// subscription cost the same as a single ride in the Client app.
+  /// package prices they configured next to it. A package left blank falls
+  /// back to the standard derivation rather than to the ticket price itself
+  /// — copying the flat ticket price into every package (the old behaviour)
+  /// made a monthly subscription cost the same as a single ride in the
+  /// Client app.
   List<TripPricing> _standardPricingFromTrip(
     OperationTrip trip,
     CreateTripInput input,
+    List<TripPricablePackage> packages,
   ) {
     final points = trip.routePoints;
     final fare = input.ticketPrice;
@@ -51,10 +58,10 @@ class CreateTripUseCase {
             fromPointOrder: points[i].order,
             toPointOrder: points[j].order,
             oneTimePrice: fare,
-            fiveDaysPrice: _tierPrice(input, PackageTierPricing.fiveDays),
-            tenDaysPrice: _tierPrice(input, PackageTierPricing.tenDays),
-            monthlyPrice: _tierPrice(input, PackageTierPricing.monthly),
-            threeMonthsPrice: _tierPrice(input, PackageTierPricing.threeMonths),
+            packagePrices: {
+              for (final package in packages)
+                package.id: _packagePrice(input, package),
+            },
             currency: input.currency,
             isActive: true,
             createdAt: now,
@@ -66,10 +73,13 @@ class CreateTripUseCase {
     return rows;
   }
 
-  double _tierPrice(CreateTripInput input, PackageTier tier) {
-    final configured = input.packageTierPrices[tier.key] ?? 0;
+  double _packagePrice(CreateTripInput input, TripPricablePackage package) {
+    final configured = input.packagePrices[package.id] ?? 0;
     if (configured > 0) return configured;
-    return PackageTierPricing.priceFor(tier, input.ticketPrice);
+    return PackageTierPricing.priceForRideCount(
+      package.rideCount,
+      input.ticketPrice,
+    );
   }
 }
 
@@ -96,6 +106,17 @@ class GetActiveDriversUseCase {
 
   Future<List<TripDriverOption>> call() {
     return _repository.getActiveDrivers();
+  }
+}
+
+/// The office's own pricable packages, for the trip planner's fare panel.
+class GetOfficePricablePackagesUseCase {
+  final TripsRepository _repository;
+
+  const GetOfficePricablePackagesUseCase(this._repository);
+
+  Future<List<TripPricablePackage>> call() {
+    return _repository.getOfficePricablePackages();
   }
 }
 

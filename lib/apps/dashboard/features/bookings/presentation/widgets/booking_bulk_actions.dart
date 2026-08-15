@@ -51,7 +51,6 @@ class BookingBulkActions extends StatelessWidget {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                
                 if (busy)
                   const Padding(
                     padding: EdgeInsetsDirectional.only(end: AppSpacing.small),
@@ -90,15 +89,18 @@ class BookingBulkActions extends StatelessWidget {
             FilledButton.icon(
               onPressed: busy ? null : () => _bulkApprove(context, cubit),
               style: FilledButton.styleFrom(
-                backgroundColor: approved.ink,
-                foregroundColor: Colors.white,
+                backgroundColor: approved.fill,
+                foregroundColor: approved.onFill,
               ),
               icon: const Icon(Icons.check_rounded, size: 18),
               label: Text('اعتماد الدفع ($selectedCount)'),
             ),
             OutlinedButton.icon(
               onPressed: busy ? null : () => _bulkReject(context, cubit),
-              style: OutlinedButton.styleFrom(foregroundColor: rejected.ink),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: rejected.accent,
+                side: BorderSide(color: rejected.accent.withAlpha(110)),
+              ),
               icon: const Icon(Icons.close_rounded, size: 18),
               label: Text('رفض الدفع ($selectedCount)'),
             ),

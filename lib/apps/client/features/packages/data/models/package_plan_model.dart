@@ -11,6 +11,8 @@ class PackagePlanModel {
     required this.durationDays,
     required this.rideCount,
     required this.price,
+    this.descriptionAr = '',
+    this.descriptionEn = '',
     this.officeId = '',
     this.officeName = '',
     this.officeLogoUrl,
@@ -27,6 +29,8 @@ class PackagePlanModel {
   final int durationDays;
   final int rideCount;
   final double price;
+  final String descriptionAr;
+  final String descriptionEn;
 
   /// Provider identity, embedded from the anon-safe `public_offices` view via
   /// the `office_id` foreign key. Absent when the seller is unlisted/paused —
@@ -54,6 +58,8 @@ class PackagePlanModel {
       durationDays: (json['duration_days'] as num?)?.toInt() ?? 1,
       rideCount: (json['ride_count'] as num?)?.toInt() ?? 1,
       price: (json['price'] as num?)?.toDouble() ?? 0.0,
+      descriptionAr: json['description_ar'] as String? ?? '',
+      descriptionEn: json['description_en'] as String? ?? '',
       officeId: office?['id']?.toString() ?? '',
       officeName: office?['name']?.toString() ?? '',
       officeLogoUrl: office?['logo_url'] as String?,

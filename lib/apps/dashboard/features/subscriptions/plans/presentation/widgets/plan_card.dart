@@ -42,6 +42,15 @@ class PlanCard extends StatelessWidget {
             const SizedBox(height: AppSpacing.xSmall),
             Text(plan.subtitle, style: theme.textTheme.bodyMedium),
           ],
+          if (plan.descriptionAr.isNotEmpty) ...[
+            const SizedBox(height: AppSpacing.xSmall),
+            Text(
+              plan.descriptionAr,
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: theme.colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
           const Divider(height: AppSpacing.large),
           Wrap(
             spacing: AppSpacing.large,

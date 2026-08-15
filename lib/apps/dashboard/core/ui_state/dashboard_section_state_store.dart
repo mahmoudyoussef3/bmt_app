@@ -71,17 +71,21 @@ class DashboardSectionIds {
   static const businessQuickActions = 'business.quickActions';
   static const businessAttention = 'business.attention';
 
+  static const tripsHeader = 'trips.header';
   static const tripsFilters = 'trips.filters';
   static const tripsStatusMix = 'trips.statusMix';
   static const tripsOccupancy = 'trips.occupancy';
   static const tripsTopRoutes = 'trips.topRoutes';
 
+  static const bookingsHeader = 'bookings.header';
   static const bookingsFilters = 'bookings.filters';
+  static const bookingsAnalytics = 'bookings.analytics';
   static const bookingsStatusMix = 'bookings.statusMix';
   static const bookingsPaymentMix = 'bookings.paymentMix';
   static const bookingsDailyTrend = 'bookings.dailyTrend';
   static const bookingsTopRoutes = 'bookings.topRoutes';
 
+  static const subscriptionsHeader = 'subscriptions.header';
   static const subscriptionsFilters = 'subscriptions.filters';
   static const subscriptionsStatus = 'subscriptions.status';
   static const subscriptionsRevenueTrend = 'subscriptions.revenueTrend';
@@ -97,6 +101,7 @@ class DashboardSectionIds {
   static const fleetDriverReadiness = 'fleet.driverReadiness';
   static const fleetVehicleStatus = 'fleet.vehicleStatus';
 
+  static const financeHeader = 'finance.header';
   static const financeRevenueTrend = 'finance.revenueTrend';
   static const financeRevenueSources = 'finance.revenueSources';
   static const financePaymentMethods = 'finance.paymentMethods';
@@ -117,9 +122,11 @@ class DashboardSectionIds {
 
   static const paymentVerificationFilters = 'paymentVerification.filters';
 
+  static const reviewsHeader = 'reviews.header';
   static const reviewsFilters = 'reviews.filters';
   static const reviewsDriverStandings = 'reviews.driverStandings';
 
+  static const walletHeader = 'wallet.header';
   static const walletDirectory = 'wallet.directory';
   static const walletActivity = 'wallet.activity';
   static const walletRefundQueue = 'wallet.refundQueue';
@@ -129,26 +136,29 @@ class DashboardSectionIds {
   static const ownerClientStatus = 'ownerOverview.clientStatus';
   static const ownerClientsByPlan = 'ownerOverview.clientsByPlan';
 
+  static const liveOpsHeader = 'liveOps.header';
   static const liveOpsMap = 'liveOps.map';
   static const liveOpsTrips = 'liveOps.trips';
   static const liveOpsIncidents = 'liveOps.incidents';
 
+  static const referralsHeader = 'referrals.header';
   static const referralsStatusMix = 'referrals.statusMix';
   static const referralsRewardMix = 'referrals.rewardMix';
 
+  static const officeBillingHeader = 'officeBilling.header';
   static const officeBillingUsage = 'officeBilling.usage';
   static const officeBillingPlan = 'officeBilling.plan';
   static const officeBillingInvoices = 'officeBilling.invoices';
 
+  static const platformLicensingHeader = 'platform.licensing.header';
   static const platformAuditLog = 'platform.audit.log';
   static const platformBillingRenewals = 'platform.billing.renewals';
   static const platformBillingInvoices = 'platform.billing.invoices';
-  static const platformLicenseOffices = 'platform.licenses.offices';
-  static const platformLicenseLimits = 'platform.licenses.limits';
-  static const platformLicenseFeatures = 'platform.licenses.features';
-  static const platformLicenseOverrides = 'platform.licenses.overrides';
-  static const platformLicenseBilling = 'platform.licenses.billing';
-  static const platformLicenseActivity = 'platform.licenses.activity';
+  // The six `platform.licenses.*` ids are gone: the office workspace's panels
+  // are tabs now, and a tab that also folds is a control that hides a control.
+
+  static const ticketsHeader = 'tickets.header';
+  static const officeProfileHeader = 'officeProfile.header';
 
   /// One entry in a plan's revision history, keyed by the revision's own id.
   /// Per-row sections need an id derived from the row's own identity — a shared

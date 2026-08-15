@@ -341,12 +341,12 @@ class CreateTripInput {
   final String arrival;
   final double ticketPrice;
 
-  /// Package tier totals configured alongside [ticketPrice] in the planner's
-  /// pricing panel. Keyed by [PackageTier.key] (`five_days`, `ten_days`,
-  /// `monthly`, `three_months`). Any tier missing or <= 0 is derived from
-  /// [ticketPrice] by `PackageTierPricing`, so a trip can never end up with a
-  /// monthly package priced the same as a single ride.
-  final Map<String, double> packageTierPrices;
+  /// Package prices configured alongside [ticketPrice] in the planner's
+  /// pricing panel, keyed by `transport_packages.id`. Any package missing or
+  /// <= 0 is derived from [ticketPrice] by `PackageTierPricing`, so a trip
+  /// can never end up with a subscription package priced the same as a
+  /// single ride.
+  final Map<String, double> packagePrices;
 
   final String currency;
   final List<Map<String, String>> customStationTimes;
@@ -360,7 +360,7 @@ class CreateTripInput {
     required this.departure,
     this.arrival = '',
     this.ticketPrice = 0,
-    this.packageTierPrices = const {},
+    this.packagePrices = const {},
     this.currency = 'ج.م',
     this.customStationTimes = const [],
   });

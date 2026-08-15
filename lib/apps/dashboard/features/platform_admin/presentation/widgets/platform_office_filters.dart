@@ -55,7 +55,7 @@ class _PlatformOfficeFiltersState extends State<PlatformOfficeFilters> {
   @override
   void didUpdateWidget(PlatformOfficeFilters oldWidget) {
     super.didUpdateWidget(oldWidget);
-    
+
     if (widget.filter.query != _searchController.text &&
         widget.filter.query.isEmpty) {
       _searchController.clear();
@@ -133,7 +133,6 @@ class _PlatformOfficeFiltersState extends State<PlatformOfficeFilters> {
                 onChanged: widget.onListingStatus,
               ),
               if (widget.hasMetrics) ...[
-                
                 SizedBox(
                   width: 180,
                   child: DropdownButtonFormField<ActivityLevel?>(
@@ -223,6 +222,10 @@ class _FilterDropdown extends StatelessWidget {
       child: DropdownButtonFormField<String?>(
         initialValue: value,
         isDense: true,
+        // Without this the selected label lays out at its natural width inside
+        // a 200px box and the row overflows — «مسحوبة من السوق» is wider than
+        // the field it is chosen in. Expanded, it ellipsizes instead.
+        isExpanded: true,
         decoration: InputDecoration(
           isDense: true,
           labelText: label,

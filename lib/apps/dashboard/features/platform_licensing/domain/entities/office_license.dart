@@ -162,6 +162,44 @@ class FeatureOverride {
       );
 }
 
+/// One decision the operator made about one feature on one office, on its way
+/// to the server.
+///
+/// The feature board edits many rows before saving, so a save is a *list* of
+/// these rather than one call per switch. That is what lets the reason be
+/// stated once for the decision that was actually taken — "عقد سنوي موقّع مع
+/// المكتب" — instead of eight times for the eight rows it happened to touch.
+class OfficeFeatureEdit {
+  const OfficeFeatureEdit.set({
+    required this.featureKey,
+    required this.nameAr,
+    required this.value,
+    this.expiresAt,
+  }) : isReset = false;
+
+  /// Hand this feature back to the office's plan by removing its override row.
+  ///
+  /// Not the same statement as writing `false`: one says "this office has no
+  /// exception here", the other says "this office has an exception, and it says
+  /// no". They diverge the moment the plan changes.
+  const OfficeFeatureEdit.reset({
+    required this.featureKey,
+    required this.nameAr,
+  }) : value = null,
+       expiresAt = null,
+       isReset = true;
+
+  final String featureKey;
+
+  /// Carried so a failure halfway through a batch can name the row it stopped
+  /// on in the operator's own words rather than as `max_drivers`.
+  final String nameAr;
+
+  final Object? value;
+  final DateTime? expiresAt;
+  final bool isReset;
+}
+
 class PlatformInvoice {
   const PlatformInvoice({
     required this.id,

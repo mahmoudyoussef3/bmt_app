@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/core/theme/spacing.dart';
-import 'package:bmt_app/core/theme/tokens.dart';
-import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_collapsible_section.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_panel.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_models.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
@@ -18,71 +17,33 @@ import 'booking_status_chips.dart';
 ///
 /// Four charts used to sit *above* the queue, so every visit to the busiest
 /// screen in the dashboard began by scrolling past them. They are reporting,
-/// not operating: the section now lives under the board and starts closed, one
-/// tap away for whoever wants it.
-class BookingsAnalyticsSection extends StatefulWidget {
+/// not operating: the section lives under the board and starts closed, one tap
+/// away for whoever wants it.
+///
+/// It used to hand-roll that fold with a private `bool _expanded` and its own
+/// card header, which made it the one section in the dashboard that forgot the
+/// operator's choice the moment the shell rebuilt the module — and gave it a
+/// chevron that animated differently from every other section on the screen.
+/// [DashboardCollapsibleSection] is the single implementation; the collapsed
+/// summary states what the charts cover so a folded section still answers
+/// "do I need to open this?".
+class BookingsAnalyticsSection extends StatelessWidget {
   const BookingsAnalyticsSection({super.key, required this.bookings});
 
   final List<OperationBooking> bookings;
 
   @override
-  State<BookingsAnalyticsSection> createState() =>
-      _BookingsAnalyticsSectionState();
-}
-
-class _BookingsAnalyticsSectionState extends State<BookingsAnalyticsSection> {
-  bool _expanded = false;
-
-  @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final text = Theme.of(context).textTheme;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        AppCard(
-          onTap: () => setState(() => _expanded = !_expanded),
-          padding: const EdgeInsets.all(AppSpacing.medium),
-          child: Row(
-            children: [
-              Icon(Icons.insights_rounded, color: scheme.primary, size: 20),
-              const SizedBox(width: AppSpacing.small),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'تحليلات الحجوزات',
-                      style: text.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      'توزيع الحالات، اتجاه الطلبات، وأكثر المسارات حجزاً',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: text.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: AppSpacing.small),
-              AnimatedRotation(
-                turns: _expanded ? 0.5 : 0,
-                duration: AppTokens.motionBase,
-                child: const Icon(Icons.expand_more_rounded),
-              ),
-            ],
-          ),
-        ),
-        if (_expanded) ...[
-          const SizedBox(height: AppSpacing.medium),
-          BookingsAnalytics(bookings: widget.bookings),
-        ],
-      ],
+    return DashboardCollapsibleSection(
+      sectionId: DashboardSectionIds.bookingsAnalytics,
+      icon: Icons.insights_rounded,
+      title: 'تحليلات الحجوزات',
+      subtitle: 'توزيع الحالات، اتجاه الطلبات، وأكثر المسارات حجزاً',
+      initiallyExpanded: false,
+      collapsedSummary: DashboardSectionSummary(
+        items: ['${bookings.length} حجز', 'حسب الحالة', 'حسب المسار'],
+      ),
+      child: BookingsAnalytics(bookings: bookings),
     );
   }
 }
@@ -182,7 +143,7 @@ class BookingsAnalytics extends StatelessWidget {
           ChartDatum(
             label: status.label,
             value: counts[status]!.toDouble(),
-            
+
             color: bookingStatusStyle(status).resolve(context).accent,
           ),
     ];

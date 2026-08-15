@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
@@ -74,17 +75,15 @@ class _LoadedView extends StatelessWidget {
                 label: const Text('تحديث'),
               ),
             ],
-            child: Column(
-              children: [
-                SummaryStats(state: state),
-                const SizedBox(height: AppSpacing.medium),
-                DebouncedSearchField(
-                  hintText: 'ابحث برقم التذكرة أو اسم العميل أو الهاتف...',
-                  initialValue: state.searchQuery,
-                  onChanged: (value) =>
-                      context.read<TicketsCubit>().setSearchQuery(value),
-                ),
-              ],
+            sectionId: DashboardSectionIds.ticketsHeader,
+            summary: SummaryStats(state: state),
+            // Search stays out of the fold: it is the only way to reach a
+            // ticket that is not on the first page.
+            pinned: DebouncedSearchField(
+              hintText: 'ابحث برقم التذكرة أو اسم العميل أو الهاتف...',
+              initialValue: state.searchQuery,
+              onChanged: (value) =>
+                  context.read<TicketsCubit>().setSearchQuery(value),
             ),
           ),
           const SizedBox(height: AppSpacing.medium),

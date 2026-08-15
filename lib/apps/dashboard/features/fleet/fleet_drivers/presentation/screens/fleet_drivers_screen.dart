@@ -114,9 +114,19 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
   void _openDriver(FleetDriver driver, bool isSplit) {
     if (isSplit) {
       setState(() => _selectedDriver = driver);
+      // Tell the overview screen a driver is now focused so it drops the
+      // page-level scroll and gives this split view real bounded height —
+      // otherwise the master list and the detail pane share one long page
+      // scroll instead of each scrolling independently.
+      widget.onViewStateChanged?.call(false);
     } else {
       _setView(_DriversViewState.details, driver);
     }
+  }
+
+  void _closeSplitDetail() {
+    setState(() => _selectedDriver = null);
+    widget.onViewStateChanged?.call(true);
   }
 
   @override
@@ -179,6 +189,35 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
           );
         }
 
+        final showDetail = isSplit && _selectedDriver != null;
+
+        if (!showDetail) {
+          // Plain browsing: no bounded ancestor to lean on (this sits inside
+          // the overview screen's page scroll), so the list body lays out at
+          // its natural height like everything else on the page.
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _buildReadinessSummary(context, state.drivers, workspace),
+              const SizedBox(height: AppSpacing.large),
+              _buildToolbar(context, state, cubit, workspace),
+              const SizedBox(height: AppSpacing.medium),
+              _buildListBody(
+                context,
+                state,
+                sorted,
+                workspace,
+                cubit,
+                isSplit,
+              ),
+            ],
+          );
+        }
+
+        // A driver is focused: the overview screen now hands this a real
+        // bounded height (see FleetOverviewScreen's !_isListMode branch), so
+        // the toolbar stays put and only the list body scrolls beneath it —
+        // independently of the detail pane on the other side.
         final master = Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -186,11 +225,20 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
             const SizedBox(height: AppSpacing.large),
             _buildToolbar(context, state, cubit, workspace),
             const SizedBox(height: AppSpacing.medium),
-            _buildListBody(context, state, sorted, workspace, cubit, isSplit),
+            Expanded(
+              child: SingleChildScrollView(
+                child: _buildListBody(
+                  context,
+                  state,
+                  sorted,
+                  workspace,
+                  cubit,
+                  isSplit,
+                ),
+              ),
+            ),
           ],
         );
-
-        if (!isSplit || _selectedDriver == null) return master;
 
         final detail = _detailsView(
           context,
@@ -198,7 +246,7 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
           workspace,
           _selectedDriver!,
           cubit,
-          onBack: () => setState(() => _selectedDriver = null),
+          onBack: _closeSplitDetail,
         );
 
         return MasterDetailLayout(
@@ -444,7 +492,7 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
     );
     if (confirmed != true || !mounted) return;
     if (_selectedDriver?.id == driver.id) {
-      setState(() => _selectedDriver = null);
+      _closeSplitDetail();
     }
     final error = await driversCubit.deleteDriver(driver.id);
     if (!mounted) return;

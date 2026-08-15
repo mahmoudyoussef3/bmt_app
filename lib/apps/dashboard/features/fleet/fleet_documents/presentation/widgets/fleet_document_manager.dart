@@ -252,6 +252,10 @@ class _FleetDocumentManagerState extends State<FleetDocumentManager> {
                   );
                 }
 
+                // The grid gives every tile the same height, so the cards there
+                // push their actions to the bottom edge. The stacked list above
+                // cannot: it is measured inside a page that scrolls, so a card
+                // that tries to fill its height has no height to fill.
                 return GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
@@ -268,6 +272,7 @@ class _FleetDocumentManagerState extends State<FleetDocumentManager> {
                       doc: doc,
                       onDelete: () => _deleteDoc(doc),
                       docColor: _documentColor(context, doc.status),
+                      fillHeight: true,
                     );
                   },
                 );
@@ -289,6 +294,11 @@ class _FleetDocumentManagerState extends State<FleetDocumentManager> {
                 final fields = [
                   DropdownButtonFormField<FleetDocumentType>(
                     initialValue: selectedType,
+                    // The field is measured against its widest item label, and
+                    // 'الرقم القومي (أمام)' is wider than the half-row it gets
+                    // beside the expiry date. Expanded, it ellipsizes instead of
+                    // overflowing the row.
+                    isExpanded: true,
                     decoration: const InputDecoration(
                       labelText: 'نوع الوثيقة',
                       prefixIcon: Icon(Icons.category_outlined),
@@ -424,11 +434,17 @@ class _DocumentCard extends StatelessWidget {
     required this.doc,
     required this.onDelete,
     required this.docColor,
+    this.fillHeight = false,
   });
 
   final FleetDocument doc;
   final VoidCallback onDelete;
   final Color docColor;
+
+  /// Whether the card was given a height to fill (the grid tiles were), which
+  /// is what lets it push its actions to the bottom edge. Off by default: in a
+  /// scrolling column the card only has the height of its own content.
+  final bool fillHeight;
 
   @override
   Widget build(BuildContext context) {
@@ -482,7 +498,10 @@ class _DocumentCard extends StatelessWidget {
               ),
             ],
           ),
-          const Spacer(),
+          if (fillHeight)
+            const Spacer()
+          else
+            const SizedBox(height: AppSpacing.xSmall),
           Row(
             children: [
               TextButton.icon(

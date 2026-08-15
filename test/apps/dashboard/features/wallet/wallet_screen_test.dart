@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/features/wallet/domain/entities/refund_request.dart';
 import 'package:bmt_app/apps/dashboard/features/wallet/domain/entities/wallet.dart';
 import 'package:bmt_app/apps/dashboard/features/wallet/domain/entities/wallet_transaction.dart';
@@ -108,33 +109,52 @@ Finder _button(String label) => find.ancestor(
   ),
 );
 
+/// Opens the module summary, which every dashboard header now starts folded.
+///
+/// The overview strip is behind that fold, so a test that wants its figures
+/// does what the operator does: press «الملخص».
+Future<void> _openSummary(WidgetTester tester) async {
+  await tester.tap(find.text('الملخص'));
+  await tester.pumpAndSettle();
+}
+
 void main() {
+  // The fold is remembered process-wide for the session, so without this one
+  // test's press would decide the next test's starting state.
+  setUp(DashboardSectionStateStore.instance.clear);
+
   group('module chrome', () {
     testWidgets('the header names the balance as a liability', (tester) async {
       await _pump(tester, _loaded());
+      expect(find.text('محفظة العملاء'), findsOneWidget);
+
+      await _openSummary(tester);
 
       // The §2.2 correction, made visible: a wallet balance is money owed back,
       // not money earned. If this label ever reads "إيراد" the report is lying.
       expect(find.text('الأرصدة القائمة'), findsOneWidget);
-      expect(find.text('محفظة العملاء'), findsOneWidget);
     });
 
     testWidgets('the pending-refund KPI carries a count', (tester) async {
       await _pump(tester, _loaded());
+      await _openSummary(tester);
+
       expect(find.text('طلبات معلّقة'), findsOneWidget);
     });
   });
 
   group('directory and detail', () {
-    testWidgets('with no customer chosen the detail pane explains itself',
-        (tester) async {
+    testWidgets('with no customer chosen the detail pane explains itself', (
+      tester,
+    ) async {
       await _pump(tester, _loaded());
 
       expect(find.text('اختر عميلاً لعرض محفظته'), findsOneWidget);
     });
 
-    testWidgets('a chosen customer shows the balance and the ledger',
-        (tester) async {
+    testWidgets('a chosen customer shows the balance and the ledger', (
+      tester,
+    ) async {
       await _pump(tester, _loaded(withSelection: true));
 
       expect(find.text('الرصيد الحالي'), findsOneWidget);
@@ -144,8 +164,9 @@ void main() {
       expect(find.textContaining('الرصيد 250.00'), findsWidgets);
     });
 
-    testWidgets('a pending refund is surfaced inline, not hidden in a tab',
-        (tester) async {
+    testWidgets('a pending refund is surfaced inline, not hidden in a tab', (
+      tester,
+    ) async {
       await _pump(
         tester,
         _loaded(withSelection: true, pendingRefunds: [refundFixture()]),
@@ -157,8 +178,9 @@ void main() {
       expect(find.text('مراجعة واعتماد'), findsOneWidget);
     });
 
-    testWidgets('a frozen wallet says so and disables only the debit',
-        (tester) async {
+    testWidgets('a frozen wallet says so and disables only the debit', (
+      tester,
+    ) async {
       await _pump(
         tester,
         _loaded(withSelection: true, walletStatus: WalletStatus.frozen),
@@ -199,8 +221,9 @@ void main() {
       expect(find.text('سجل الحركات'), findsOneWidget);
     });
 
-    testWidgets('a support agent gets no adjustment control at all',
-        (tester) async {
+    testWidgets('a support agent gets no adjustment control at all', (
+      tester,
+    ) async {
       await _pump(
         tester,
         _loaded(withSelection: true),
@@ -219,8 +242,9 @@ void main() {
       expect(_button('عكس'), findsNothing);
     });
 
-    testWidgets('a support agent gets a refund *request*, not a refund',
-        (tester) async {
+    testWidgets('a support agent gets a refund *request*, not a refund', (
+      tester,
+    ) async {
       await _pump(
         tester,
         _loaded(withSelection: true),
@@ -257,8 +281,9 @@ void main() {
       expect(find.text('تصدير'), findsNothing);
     });
 
-    testWidgets('a support agent cannot decide a queued refund',
-        (tester) async {
+    testWidgets('a support agent cannot decide a queued refund', (
+      tester,
+    ) async {
       await _pump(
         tester,
         _loaded(tab: WalletTab.refunds, queue: [refundFixture()]),
@@ -272,8 +297,9 @@ void main() {
       expect(find.text('أحمد محمود'), findsWidgets);
     });
 
-    testWidgets('an owner can decide and can start a batch refund',
-        (tester) async {
+    testWidgets('an owner can decide and can start a batch refund', (
+      tester,
+    ) async {
       await _pump(
         tester,
         _loaded(tab: WalletTab.refunds, queue: [refundFixture()]),
@@ -285,8 +311,9 @@ void main() {
   });
 
   group('activity', () {
-    testWidgets('the ledger shows the customer column and the totals',
-        (tester) async {
+    testWidgets('the ledger shows the customer column and the totals', (
+      tester,
+    ) async {
       await _pump(tester, _loaded(tab: WalletTab.activity));
 
       expect(find.text('الحركات المالية'), findsWidgets);

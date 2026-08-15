@@ -4,10 +4,13 @@
 //   flutter test test/apps/client/features/trips/trip_detail_sections_visual_capture.dart \
 //     --update-goldens
 //
-// Writes PNGs of the Captain / Vehicle / Seats / Payment sections across the
-// states that change their shape — a held seat awaiting approval, a paid trip
-// under way, a finished trip with no captain to reach — in Arabic RTL, English
-// LTR, and dark mode, so the density can be judged by eye.
+// Writes PNGs of the crew (captain + bus) and payment cards across the states
+// that change their shape — a booking awaiting approval, a paid trip under way,
+// a finished trip inviting a rating — in Arabic RTL, English LTR, and dark mode,
+// so the density can be judged by eye.
+//
+// Vehicle photos resolve to the placeholder here: flutter_test answers every
+// network image with a 400, which is exactly the fallback path worth seeing.
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -83,6 +86,11 @@ TripData _trip({
   List<String> seats = const ['A3'],
   double rating = 4.8,
   int ratingCount = 126,
+  List<String> vehicleImageUrls = const [
+    'https://example.test/bus-1.png',
+    'https://example.test/bus-2.png',
+    'https://example.test/bus-3.png',
+  ],
 }) {
   return TripData(
     id: 'b1',
@@ -99,7 +107,9 @@ TripData _trip({
     driverRatingCount: ratingCount,
     vehicleName: arabic ? 'تويوتا هايس 2022' : 'Toyota Hiace 2022',
     vehicleType: 'Hiace',
-    vehicleId: 'ب ن ط 4821',
+    vehicleId: 'v1',
+    vehiclePlate: 'ب ن ط 4821',
+    vehicleImageUrls: vehicleImageUrls,
     seats: seats,
     seatMap: seatMap,
     paymentStatus: paymentStatus,
@@ -197,9 +207,11 @@ void main() {
       ),
     );
 
+    // A thin fleet record: no photos of the bus, so the row must not offer a
+    // gallery — and an unrated captain, who must not read as zero stars.
     await _capture(
       tester,
-      'sections_4_ar_no_seat_map',
+      'sections_4_ar_no_photos',
       locale: arabic,
       trip: _trip(
         arabic: true,
@@ -207,6 +219,9 @@ void main() {
         paymentStatus: PaymentStatus.pending,
         bookingState: BookingState.reserved,
         seats: const [],
+        rating: 0,
+        ratingCount: 0,
+        vehicleImageUrls: const [],
       ),
     );
 

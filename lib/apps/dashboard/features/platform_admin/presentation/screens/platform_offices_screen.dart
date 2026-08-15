@@ -1,17 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_empty_state.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/master_detail_layout.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
+import 'package:bmt_app/core/widgets/app_card.dart';
 
 import '../../domain/entities/platform_analytics.dart';
 import '../../domain/entities/platform_office.dart';
 import '../../domain/entities/platform_office_filter.dart';
 import '../cubit/platform_admin_cubit.dart';
 import '../cubit/platform_admin_state.dart';
-import '../widgets/office_onboarding_form.dart';
+import '../widgets/office_onboarding_dialog.dart';
 import '../widgets/onboarding_credentials_panel.dart';
 import '../widgets/platform_office_card.dart';
 import '../widgets/platform_office_details_panel.dart';
@@ -26,7 +28,16 @@ import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 /// flag is a hint for the shell — every RPC behind this screen re-checks it
 /// server-side, so a forged one lands here and then fails on contact.
 class PlatformOfficesScreen extends StatelessWidget {
-  const PlatformOfficesScreen({super.key});
+  const PlatformOfficesScreen({super.key, this.onOpenFeatures});
+
+  /// Hands an office over to التراخيص, which opens it on «الميزات والحدود».
+  ///
+  /// This screen answers "is this office real and should passengers see it";
+  /// what the office is *allowed to use* is one module across, and an operator
+  /// who has just looked at an office should not have to re-find it there.
+  /// Null when the console cannot switch modules — a harness mounting this
+  /// screen alone still renders.
+  final ValueChanged<String>? onOpenFeatures;
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +63,7 @@ class PlatformOfficesScreen extends StatelessWidget {
             message: message,
             onRetry: () => context.read<PlatformAdminCubit>().load(),
           ),
-          
+
           PlatformAdminOnboarded(:final result) => OnboardingCredentialsPanel(
             result: result,
             onDone: () =>
@@ -77,18 +88,21 @@ class PlatformOfficesScreen extends StatelessWidget {
               analytics: analytics,
               isAnalyticsLoading: isAnalyticsLoading,
               analyticsError: analyticsError,
+              onOpenFeatures: onOpenFeatures,
             ),
-          
+
           PlatformAdminActionSuccess(:final offices) => _Body(
             offices: offices,
             isSubmitting: false,
             fieldErrors: const {},
+            onOpenFeatures: onOpenFeatures,
           ),
           PlatformAdminActionFailure(:final offices, :final fieldErrors) =>
             _Body(
               offices: offices,
               isSubmitting: false,
               fieldErrors: fieldErrors,
+              onOpenFeatures: onOpenFeatures,
             ),
         };
       },
@@ -106,6 +120,7 @@ class _Body extends StatelessWidget {
     this.analytics,
     this.isAnalyticsLoading = false,
     this.analyticsError,
+    this.onOpenFeatures,
   });
 
   final List<PlatformOffice> offices;
@@ -116,6 +131,7 @@ class _Body extends StatelessWidget {
   final PlatformAnalytics? analytics;
   final bool isAnalyticsLoading;
   final String? analyticsError;
+  final ValueChanged<String>? onOpenFeatures;
 
   @override
   Widget build(BuildContext context) {
@@ -128,6 +144,7 @@ class _Body extends StatelessWidget {
       analytics: analytics,
       isAnalyticsLoading: isAnalyticsLoading,
       analyticsError: analyticsError,
+      onOpenFeatures: onOpenFeatures,
     );
 
     final open = selection;
@@ -144,6 +161,9 @@ class _Body extends StatelessWidget {
         child: PlatformOfficeDetailsPanel(
           officeName: office?.name ?? 'المكتب',
           details: open.details,
+          onOpenFeatures: onOpenFeatures == null
+              ? null
+              : () => onOpenFeatures!(open.officeId),
           metrics: analytics?.metricsFor(open.officeId),
           windowDays: analytics?.windowDays ?? 30,
           isLoading: open.isLoading,
@@ -175,6 +195,7 @@ class _OfficeList extends StatelessWidget {
     required this.analytics,
     required this.isAnalyticsLoading,
     required this.analyticsError,
+    required this.onOpenFeatures,
   });
 
   final List<PlatformOffice> offices;
@@ -185,6 +206,7 @@ class _OfficeList extends StatelessWidget {
   final PlatformAnalytics? analytics;
   final bool isAnalyticsLoading;
   final String? analyticsError;
+  final ValueChanged<String>? onOpenFeatures;
 
   @override
   Widget build(BuildContext context) {
@@ -203,14 +225,21 @@ class _OfficeList extends StatelessWidget {
               'الأول، والتحكم في ظهوره داخل سوق العملاء.',
           actions: [
             FilledButton.icon(
+              onPressed: isSubmitting
+                  ? null
+                  : () => showOfficeOnboardingDialog(context),
+              icon: const Icon(Icons.add_business_outlined, size: 18),
+              label: const Text('مكتب جديد'),
+            ),
+            OutlinedButton.icon(
               onPressed: isSubmitting ? null : cubit.load,
-              icon: const Icon(Icons.refresh_rounded),
+              icon: const Icon(Icons.refresh_rounded, size: 18),
               label: const Text('تحديث'),
             ),
           ],
         ),
         const SizedBox(height: AppSpacing.medium),
-        
+
         PlatformOverviewPanel(
           analytics: analytics,
           offices: offices,
@@ -219,12 +248,6 @@ class _OfficeList extends StatelessWidget {
           onWindowChanged: cubit.setWindow,
           onRetry: cubit.retryAnalytics,
           onOpenOffice: cubit.openDetails,
-        ),
-        const SizedBox(height: AppSpacing.medium),
-        OfficeOnboardingForm(
-          isSubmitting: isSubmitting,
-          fieldErrors: fieldErrors,
-          onSubmit: cubit.onboard,
         ),
         const SizedBox(height: AppSpacing.medium),
         PlatformOfficeFilters(
@@ -240,31 +263,37 @@ class _OfficeList extends StatelessWidget {
           onClear: cubit.clearFilters,
         ),
         const SizedBox(height: AppSpacing.medium),
-        Text(
-          'المكاتب المسجلة (${visible.length})',
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: AppSpacing.small),
+        // No «المكاتب المسجلة (N)» heading: the filter bar directly above already
+        // reports the count, and repeating it was a line of chrome saying what
+        // the line above it just said.
         if (offices.isEmpty)
-          const Padding(
-            padding: EdgeInsets.all(AppSpacing.large),
-            child: Text('لا توجد مكاتب بعد.'),
+          AppCard(
+            padding: const EdgeInsets.all(AppSpacing.large),
+            child: DashboardEmptyState(
+              icon: DashboardIcons.platformOffices,
+              title: 'لا توجد مكاتب بعد',
+              message:
+                  'أنشئ أول مكتب نقل بحساب مسؤوله الأول، ثم عيّن له باقة من '
+                  'شاشة التراخيص.',
+              action: FilledButton.icon(
+                onPressed: () => showOfficeOnboardingDialog(context),
+                icon: const Icon(Icons.add_business_outlined, size: 18),
+                label: const Text('مكتب جديد'),
+              ),
+            ),
           )
         else if (visible.isEmpty)
-          Padding(
+          AppCard(
             padding: const EdgeInsets.all(AppSpacing.large),
-            child: Column(
-              children: [
-                const Text('لا توجد مكاتب مطابقة لعوامل التصفية الحالية.'),
-                const SizedBox(height: AppSpacing.small),
-                TextButton.icon(
-                  onPressed: cubit.clearFilters,
-                  icon: const Icon(Icons.filter_alt_off_outlined, size: 18),
-                  label: const Text('مسح عوامل التصفية'),
-                ),
-              ],
+            child: DashboardEmptyState(
+              icon: DashboardIcons.platformOffices,
+              title: 'لا مكتب يطابق التصفية',
+              message: 'جرّب اسمًا آخر أو أزل عوامل التصفية الحالية.',
+              action: TextButton.icon(
+                onPressed: cubit.clearFilters,
+                icon: const Icon(Icons.filter_alt_off_outlined, size: 18),
+                label: const Text('مسح عوامل التصفية'),
+              ),
             ),
           )
         else
@@ -275,6 +304,9 @@ class _OfficeList extends StatelessWidget {
               isBusy: isSubmitting,
               isSelected: office.id == selectedId,
               onOpen: () => cubit.openDetails(office.id),
+              onOpenFeatures: onOpenFeatures == null
+                  ? null
+                  : () => onOpenFeatures!(office.id),
               onSetListing: (status) => cubit.setListing(office.id, status),
               onSetStatus: (status) => cubit.setStatus(office.id, status),
             ),

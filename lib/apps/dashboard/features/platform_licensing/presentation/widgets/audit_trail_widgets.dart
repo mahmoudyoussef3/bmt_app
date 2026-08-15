@@ -24,7 +24,7 @@ class AuditLabels {
     required List<CatalogFeature> features,
     required List<LicensingPlan> plans,
   }) : _featureNames = {for (final f in features) f.key: f.nameAr},
-       
+
        _planNames = {
          for (final p in plans) ...{p.id: p.nameAr, p.key: p.nameAr},
        };
@@ -42,7 +42,6 @@ class AuditLabels {
     final ref = entry.entityRef.trim();
     switch (entry.entityType) {
       case 'settings':
-        
         return 'إعدادات المنصة';
       case 'feature':
       case 'override':
@@ -521,7 +520,6 @@ class _AuditEntryTileState extends State<AuditEntryTile> {
                           width: 150,
                           child: Text(
                             office == null || office.isEmpty
-                                
                                 ? 'المنصة'
                                 : office,
                             maxLines: 1,
@@ -558,7 +556,7 @@ class _AuditEntryTileState extends State<AuditEntryTile> {
                       ),
                     ],
                   ),
-                  
+
                   AnimatedSize(
                     duration: AppTokens.motionBase,
                     alignment: Alignment.topCenter,
@@ -620,7 +618,7 @@ class _AuditDetail extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      
+
       margin: const EdgeInsetsDirectional.only(
         top: AppSpacing.small,
         start: 84,
@@ -715,7 +713,6 @@ class _ChangeRow extends StatelessWidget {
               if (change.before != null)
                 _ValueBox(value: change.before!, muted: true),
               if (change.before != null && change.after != null)
-                
                 Icon(
                   Icons.arrow_forward_rounded,
                   size: 14,

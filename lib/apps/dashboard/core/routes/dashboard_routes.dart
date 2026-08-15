@@ -30,12 +30,14 @@ class DashboardRoutes {
   static const officeProfile = '/office-profile';
   static const platformOffices = '/platform-offices';
 
-  static const platformPlans = '/platform-plans';
-  static const platformFeatures = '/platform-features';
+  /// The platform console, four destinations rather than the seven it opened
+  /// with. «كتالوج الميزات» folded into [platformCatalog], «الاستخدام» into the
+  /// office workspace on [platformLicenses], and «سجل التغييرات» into
+  /// [platformBilling] — each was a sidebar row for a section of a job, not a
+  /// job.
+  static const platformCatalog = '/platform-catalog';
   static const platformLicenses = '/platform-licenses';
   static const platformBilling = '/platform-billing';
-  static const platformUsage = '/platform-usage';
-  static const platformAudit = '/platform-audit';
 
   /// The office's own plan and invoices. Owner only.
   static const officeBilling = '/office-billing';

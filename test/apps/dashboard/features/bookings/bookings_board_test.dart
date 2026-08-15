@@ -72,8 +72,10 @@ class _FakeRepo implements BookingsRepository {
       seed.firstWhere((b) => b.id == id);
 
   @override
-  Future<List<OperationBooking>> bulkApprove(List<String> ids, String? n) async
-  => [for (final id in ids) await approveBooking(id, n)];
+  Future<List<OperationBooking>> bulkApprove(
+    List<String> ids,
+    String? n,
+  ) async => [for (final id in ids) await approveBooking(id, n)];
 
   @override
   Future<List<OperationBooking>> bulkReject(List<String> ids, String r) async =>
@@ -172,26 +174,29 @@ void main() {
   });
 
   group('Sorting and pagination', () {
-    test('a page never exceeds the page size and clamps when it shrinks', () async {
-      final cubit = _cubit([for (var i = 0; i < 20; i++) _booking(i)]);
-      await cubit.load();
+    test(
+      'a page never exceeds the page size and clamps when it shrinks',
+      () async {
+        final cubit = _cubit([for (var i = 0; i < 20; i++) _booking(i)]);
+        await cubit.load();
 
-      expect((cubit.state as BookingsLoaded).pageBookings.length, 12);
-      expect((cubit.state as BookingsLoaded).pageCount, 2);
+        expect((cubit.state as BookingsLoaded).pageBookings.length, 12);
+        expect((cubit.state as BookingsLoaded).pageCount, 2);
 
-      cubit.goToPage(1);
-      expect((cubit.state as BookingsLoaded).pageBookings.length, 8);
+        cubit.goToPage(1);
+        expect((cubit.state as BookingsLoaded).pageBookings.length, 8);
 
-      // Filtering down to a single page while parked on page 2 must not leave
-      // the operator staring at an empty board.
-      cubit.updateFilters(
-        (cubit.state as BookingsLoaded).filters.copyWith(search: 'BK-1000'),
-      );
-      final filtered = cubit.state as BookingsLoaded;
-      expect(filtered.currentPage, 0);
-      expect(filtered.pageBookings, isNotEmpty);
-      await cubit.close();
-    });
+        // Filtering down to a single page while parked on page 2 must not leave
+        // the operator staring at an empty board.
+        cubit.updateFilters(
+          (cubit.state as BookingsLoaded).filters.copyWith(search: 'BK-1000'),
+        );
+        final filtered = cubit.state as BookingsLoaded;
+        expect(filtered.currentPage, 0);
+        expect(filtered.pageBookings, isNotEmpty);
+        await cubit.close();
+      },
+    );
 
     test('sorting by the active field flips direction', () async {
       final cubit = _cubit([
@@ -226,6 +231,10 @@ void main() {
         _booking(1),
         _booking(2),
         _booking(3, paymentStatus: PaymentStatus.approved),
+        // Submitted receipt, but the seat was released: `approve_payment`
+        // refuses anything that is not `reserved`, so this is not selectable
+        // either even though its payment is "awaiting review".
+        _booking(4, status: BookingStatus.cancelled),
       ]);
       await cubit.load();
       cubit.switchTab(BookingQueueTab.all);
@@ -240,6 +249,32 @@ void main() {
       cubit.toggleSelectAllOnPage();
       expect((cubit.state as BookingsLoaded).selectedIds, isEmpty);
       await cubit.close();
+    });
+
+    testWidgets('a released seat offers no decision, and says why', (
+      tester,
+    ) async {
+      await _pumpScreen(tester, [
+        _booking(1, status: BookingStatus.cancelled),
+      ], width: 760);
+
+      // It still belongs on the review queue — the payment is genuinely
+      // unresolved — but the three controls the server would refuse are gone,
+      // replaced by the reason.
+      expect(find.byType(BookingCard), findsOneWidget);
+      expect(find.text('قبول'), findsNothing);
+      expect(find.text('رفض'), findsNothing);
+      expect(find.text('إعادة رفع'), findsNothing);
+      expect(find.byType(Checkbox), findsNothing);
+      expect(find.textContaining('الحجز ملغى'), findsOneWidget);
+    });
+
+    testWidgets('a reviewable card keeps both decisions', (tester) async {
+      await _pumpScreen(tester, [_booking(1)], width: 760);
+
+      expect(find.text('قبول'), findsOneWidget);
+      expect(find.text('رفض'), findsOneWidget);
+      expect(find.byType(Checkbox), findsOneWidget);
     });
   });
 
@@ -304,18 +339,14 @@ void main() {
     testWidgets('narrow layouts render cards, wide layouts render the table', (
       tester,
     ) async {
-      await _pumpScreen(
-        tester,
-        [for (var i = 0; i < 4; i++) _booking(i)],
-        width: 760,
-      );
+      await _pumpScreen(tester, [
+        for (var i = 0; i < 4; i++) _booking(i),
+      ], width: 760);
       expect(find.byType(BookingCard), findsWidgets);
 
-      await _pumpScreen(
-        tester,
-        [for (var i = 0; i < 4; i++) _booking(i)],
-        width: 1500,
-      );
+      await _pumpScreen(tester, [
+        for (var i = 0; i < 4; i++) _booking(i),
+      ], width: 1500);
       expect(find.byType(BookingCard), findsNothing);
       expect(find.byType(OpsDataTable), findsOneWidget);
     });
@@ -326,11 +357,9 @@ void main() {
       testWidgets('the open inspector never overflows @ ${width}px', (
         tester,
       ) async {
-        final cubit = await _pumpScreen(
-          tester,
-          [for (var i = 0; i < 6; i++) _booking(i)],
-          width: width,
-        );
+        final cubit = await _pumpScreen(tester, [
+          for (var i = 0; i < 6; i++) _booking(i),
+        ], width: width);
         cubit.openBooking(_booking(1));
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 400));
@@ -340,14 +369,15 @@ void main() {
       });
     }
 
-    testWidgets('an empty review queue says so instead of showing a blank list', (
-      tester,
-    ) async {
-      await _pumpScreen(tester, [
-        _booking(1, paymentStatus: PaymentStatus.approved),
-      ], width: 1100);
+    testWidgets(
+      'an empty review queue says so instead of showing a blank list',
+      (tester) async {
+        await _pumpScreen(tester, [
+          _booking(1, paymentStatus: PaymentStatus.approved),
+        ], width: 1100);
 
-      expect(find.text('لا توجد مدفوعات بانتظار المراجعة'), findsOneWidget);
-    });
+        expect(find.text('لا توجد مدفوعات بانتظار المراجعة'), findsOneWidget);
+      },
+    );
   });
 }

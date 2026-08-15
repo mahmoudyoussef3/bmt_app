@@ -54,9 +54,13 @@ abstract final class TripMapper {
       driverInitials: _initials(driverObj?['full_name']?.toString()),
       driverRating: (driverObj?['rating'] as num?)?.toDouble() ?? 0.0,
       driverRatingCount: (driverObj?['rating_count'] as num?)?.toInt() ?? 0,
+      driverPhotoUrl: driverObj?['profile_image_url']?.toString().trim() ?? '',
       vehicleName: vehicleObj?['brand']?.toString() ?? '',
       vehicleType: vehicleObj?['vehicle_type']?.toString() ?? 'Vehicle',
       vehicleId: vehicleObj?['id']?.toString() ?? '',
+      vehiclePlate: vehicleObj?['plate_number']?.toString().trim() ?? '',
+      vehicleCode: vehicleObj?['vehicle_code']?.toString().trim() ?? '',
+      vehicleImageUrls: _imageUrls(vehicleObj?['image_url']),
       seats: _seats(data['seat']),
       paymentStatus: TripStatusMapper.paymentStatus(dbPaymentStatus),
       fare: 'EGP $fare',
@@ -77,6 +81,19 @@ abstract final class TripMapper {
   static List<String> _seats(Object? rawSeat) {
     final seat = rawSeat?.toString().trim();
     return seat == null || seat.isEmpty ? const [] : [seat];
+  }
+
+  /// `vehicles.image_url` holds the whole gallery as one comma-joined string —
+  /// the shape the Dashboard's fleet form writes — so it is split back apart
+  /// here, same as the booking search does.
+  static List<String> _imageUrls(Object? raw) {
+    final value = raw?.toString() ?? '';
+    if (value.trim().isEmpty) return const [];
+    return value
+        .split(',')
+        .map((url) => url.trim())
+        .where((url) => url.isNotEmpty)
+        .toList();
   }
 
   static String _reference(String id) {

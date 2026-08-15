@@ -21,9 +21,13 @@ class TripData {
     required this.driverInitials,
     required this.driverRating,
     this.driverRatingCount = 0,
+    this.driverPhotoUrl = '',
     required this.vehicleName,
     required this.vehicleType,
     required this.vehicleId,
+    this.vehiclePlate = '',
+    this.vehicleCode = '',
+    this.vehicleImageUrls = const [],
     required this.seats,
     required this.paymentStatus,
     required this.fare,
@@ -76,11 +80,34 @@ class TripData {
   /// a brand-new captain must not be shown as a 0.0-star one.
   final int driverRatingCount;
 
+  /// The captain's photo, when the office uploaded one. Empty falls back to
+  /// [driverInitials].
+  final String driverPhotoUrl;
+
   bool get hasDriverRating => driverRatingCount > 0 && driverRating > 0;
 
   final String vehicleName;
   final String vehicleType;
   final String vehicleId;
+
+  /// The plate on the outside of the bus — what a passenger matches against at
+  /// the curb.
+  final String vehiclePlate;
+
+  /// The office's own fleet label ("bus 1"). Shown only when there is no plate
+  /// on file, so the vehicle is never left without an identifier.
+  final String vehicleCode;
+
+  /// Photos of this bus, as uploaded against the fleet record.
+  final List<String> vehicleImageUrls;
+
+  /// How a passenger names this bus: its plate, else the fleet code, else
+  /// nothing at all (never a placeholder dash — the presentation layer decides
+  /// what a blank looks like).
+  String get vehicleNumber =>
+      vehiclePlate.trim().isNotEmpty ? vehiclePlate.trim() : vehicleCode.trim();
+
+  bool get hasVehiclePhotos => vehicleImageUrls.isNotEmpty;
   final List<String> seats;
   final PaymentStatus paymentStatus;
   final String fare;

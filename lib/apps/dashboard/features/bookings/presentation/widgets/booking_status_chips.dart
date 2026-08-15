@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 
+import '../../domain/entities/booking_lifecycle.dart';
 import '../../domain/entities/operation_booking.dart';
 
 /// The colour + icon a booking or payment state is drawn with, everywhere.
@@ -89,6 +90,25 @@ BookingStatusStyle paymentStatusStyle(PaymentStatus status) => switch (status) {
   ),
 };
 
+/// The one tone that answers "what is this booking to me right now", for the
+/// marks that colour a whole row or card rather than a single state.
+///
+/// It is deliberately *not* either status chip: a card carries two state
+/// machines and the operator wants one colour to scan down a column by. Order is
+/// the same priority [resolveNextAction] uses — a contradiction outranks routine
+/// work, and work outranks a settled row.
+AppStatusTone bookingAccentTone(OperationBooking booking) {
+  final critical = detectBookingIssues(
+    status: booking.status,
+    paymentStatus: booking.paymentStatus,
+  ).any((issue) => issue.severity == BookingIssueSeverity.critical);
+  if (critical) return AppStatusTone.error;
+  if (booking.canReviewPayment) return AppStatusTone.warning;
+  if (booking.status.isClosed) return AppStatusTone.neutral;
+  if (booking.paymentStatus.isSettled) return AppStatusTone.success;
+  return AppStatusTone.info;
+}
+
 /// A state pill: tinted background, matching icon, matching label.
 ///
 /// The board previously merged both states into one neutral grey chip reading
@@ -134,7 +154,7 @@ class BookingStateChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(999),
         border: Border.all(color: tone.ink.withAlpha(45)),
       ),
-      
+
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

@@ -62,7 +62,9 @@ class _RoutesToolbar extends StatelessWidget {
           label: const Text('إضافة مسار جديد'),
         ),
       ],
-      child: LayoutBuilder(
+      // Search and the status filter are pinned: on an office with forty
+      // routes they are the only way to reach a specific one.
+      pinned: LayoutBuilder(
         builder: (context, constraints) {
           final search = DebouncedSearchField(
             hintText: 'ابحث باسم المسار أو مدينة أو محطة',
@@ -341,7 +343,6 @@ class _Direction extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 6),
           child: Icon(
-            
             Icons.arrow_back_rounded,
             size: 16,
             color: scheme.onSurfaceVariant,

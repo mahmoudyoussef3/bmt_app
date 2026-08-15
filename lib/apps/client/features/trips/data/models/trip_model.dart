@@ -15,9 +15,13 @@ class TripModel {
     required this.driverInitials,
     required this.driverRating,
     this.driverRatingCount = 0,
+    this.driverPhotoUrl = '',
     required this.vehicleName,
     required this.vehicleType,
     required this.vehicleId,
+    this.vehiclePlate = '',
+    this.vehicleCode = '',
+    this.vehicleImageUrls = const [],
     required this.seats,
     required this.paymentStatus,
     required this.fare,
@@ -46,9 +50,13 @@ class TripModel {
   final String driverInitials;
   final double driverRating;
   final int driverRatingCount;
+  final String driverPhotoUrl;
   final String vehicleName;
   final String vehicleType;
   final String vehicleId;
+  final String vehiclePlate;
+  final String vehicleCode;
+  final List<String> vehicleImageUrls;
   final List<String> seats;
   final PaymentStatus paymentStatus;
   final String fare;
@@ -73,9 +81,13 @@ class TripModel {
       driverInitials: driverInitials,
       driverRating: driverRating,
       driverRatingCount: driverRatingCount,
+      driverPhotoUrl: driverPhotoUrl,
       vehicleName: vehicleName,
       vehicleType: vehicleType,
       vehicleId: vehicleId,
+      vehiclePlate: vehiclePlate,
+      vehicleCode: vehicleCode,
+      vehicleImageUrls: vehicleImageUrls,
       seats: seats,
       paymentStatus: paymentStatus,
       fare: fare,

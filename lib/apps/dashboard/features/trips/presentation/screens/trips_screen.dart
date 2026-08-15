@@ -162,10 +162,24 @@ class _LoadedTrips extends StatelessWidget {
               label: const Text('رحلة جديدة'),
             ),
           ],
-          child: _SummaryStrip(state: state),
+          sectionId: DashboardSectionIds.tripsHeader,
+          // Folded, the counts still show — a trip that has passed its
+          // departure time is the one thing on this screen nobody may miss
+          // because a panel happened to be closed.
+          collapsedSummary: DashboardSectionSummary(
+            items: [
+              // The warning leads the row, where a right-to-left reader starts.
+              if (state.staleTrips > 0) 'فات موعدها ${state.staleTrips}',
+              'اليوم ${state.todayTrips}',
+              'قيد التشغيل ${state.runningTrips}',
+              'قادمة ${state.upcomingTrips}',
+              'مكتملة ${state.completedTrips}',
+            ],
+          ),
+          summary: _SummaryStrip(state: state),
         ),
         const SizedBox(height: AppSpacing.medium),
-        
+
         TripsAnalytics(state: state),
         const SizedBox(height: AppSpacing.medium),
         _SimpleToolbar(state: state),
@@ -411,7 +425,7 @@ class _SimpleToolbar extends StatelessWidget {
       sectionId: DashboardSectionIds.tripsFilters,
       icon: Icons.tune_rounded,
       title: 'البحث والتصفية',
-      
+
       collapsedSummary: DashboardSectionSummary(items: _summaryItems()),
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -655,9 +669,9 @@ class _DetailsHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final trip = state.trip;
     final isStale = trip.isStaleBooking();
-    
+
     final next = isStale ? null : TripLifecycle.nextStep(trip.status);
-    
+
     final publishBlocker = next == OperationTripStatus.openForBooking
         ? TripPublishBlocker.evaluate(trip)
         : null;
@@ -749,7 +763,7 @@ class _DetailsHeader extends StatelessWidget {
                 ),
               if (canCancel && !isStale) ...[
                 const SizedBox(width: 8),
-                
+
                 OutlinedButton.icon(
                   onPressed: state.isSaving
                       ? null
@@ -799,7 +813,6 @@ class _DetailsHeader extends StatelessWidget {
                   spacing: 8,
                   runSpacing: 8,
                   children: [
-                    
                     if (trip.status == OperationTripStatus.openForBooking)
                       FilledButton.tonalIcon(
                         onPressed: state.isSaving
@@ -870,7 +883,6 @@ class _DetailsHeader extends StatelessWidget {
     String fallback,
     Future<OperationTrip?> Function(TripDetailsCubit cubit) action,
   ) async {
-    
     final details = context.read<TripDetailsCubit>();
     final list = context.read<TripsListCubit>();
     final messenger = ScaffoldMessenger.of(context);

@@ -7,7 +7,6 @@ import '../../domain/entities/office_license.dart';
 /// server-side, so this interface carries no authorisation of its own — the
 /// nav item that reveals it is a hint, and the boundary is in Postgres.
 abstract class PlatformLicensingDatasource {
-  
   Future<FeatureCatalog> catalog();
   Future<void> upsertFeature(Map<String, dynamic> payload);
   Future<void> setFeatureStatus(String key, String status);

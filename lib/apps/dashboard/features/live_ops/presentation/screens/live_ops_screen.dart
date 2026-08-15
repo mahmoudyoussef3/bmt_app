@@ -7,12 +7,14 @@ import 'package:bmt_app/core/theme/tokens.dart';
 
 import '../../../../core/widgets/dashboard_module_header.dart';
 import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
+import '../../../../core/widgets/dashboard_empty_state.dart';
 import '../../../../core/widgets/dashboard_panel.dart';
 import '../../../../core/widgets/dashboard_state_views.dart';
 import '../../domain/entities/live_ops_snapshot.dart';
 import '../cubit/live_ops_cubit.dart';
 import '../cubit/live_ops_state.dart';
 import '../widgets/incident_queue_section.dart';
+import '../widgets/live_ops_all_clear.dart';
 import '../widgets/live_ops_map.dart';
 import '../widgets/live_ops_summary_bar.dart';
 import '../widgets/live_trip_card.dart';
@@ -67,7 +69,6 @@ class _LiveOpsBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    
     final now = DateTime.now();
     final snapshot = state.snapshot;
     final cubit = context.read<LiveOpsCubit>();
@@ -87,13 +88,14 @@ class _LiveOpsBody extends StatelessWidget {
               label: const Text('تحديث'),
             ),
           ],
-          child: LiveOpsSummaryBar(snapshot: snapshot, now: now),
+          sectionId: DashboardSectionIds.liveOpsHeader,
+          summary: LiveOpsSummaryBar(snapshot: snapshot, now: now),
         ),
         if (snapshot.hasCriticalIncident) ...[
           const SizedBox(height: AppSpacing.medium),
           const _CriticalBanner(),
         ],
-        
+
         if (snapshot.activeTrips.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.medium),
           DashboardPanel(
@@ -110,40 +112,45 @@ class _LiveOpsBody extends StatelessWidget {
           ),
         ],
         const SizedBox(height: AppSpacing.medium),
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final trips = _TripsPanel(
-              trips: snapshot.activeTrips,
-              now: now,
-              selectedTripId: state.selectedTripId,
-              onSelect: cubit.selectTrip,
-            );
-            final incidents = _IncidentsPanel(
-              snapshot: snapshot,
-              now: now,
-              canAct: canResolveIncidents,
-            );
+        // Nothing running and nothing reported is one fact, not two empty
+        // panels: the all-clear card states both in a quarter of the height.
+        if (snapshot.isQuiet)
+          LiveOpsAllClear(generatedAt: snapshot.generatedAt, now: now)
+        else
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final trips = _TripsPanel(
+                trips: snapshot.activeTrips,
+                now: now,
+                selectedTripId: state.selectedTripId,
+                onSelect: cubit.selectTrip,
+              );
+              final incidents = _IncidentsPanel(
+                snapshot: snapshot,
+                now: now,
+                canAct: canResolveIncidents,
+              );
 
-            if (constraints.maxWidth >= 1080) {
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              if (constraints.maxWidth >= 1080) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(flex: 3, child: trips),
+                    const SizedBox(width: AppSpacing.medium),
+                    Expanded(flex: 2, child: incidents),
+                  ],
+                );
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Expanded(flex: 3, child: trips),
-                  const SizedBox(width: AppSpacing.medium),
-                  Expanded(flex: 2, child: incidents),
+                  trips,
+                  const SizedBox(height: AppSpacing.medium),
+                  incidents,
                 ],
               );
-            }
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                trips,
-                const SizedBox(height: AppSpacing.medium),
-                incidents,
-              ],
-            );
-          },
-        ),
+            },
+          ),
       ],
     );
   }
@@ -164,7 +171,6 @@ class _TripsPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    
     final ordered = [...trips]
       ..sort((a, b) {
         final byOverdue = (b.isOverdueAt(now) ? 1 : 0).compareTo(
@@ -180,10 +186,14 @@ class _TripsPanel extends StatelessWidget {
       title: 'الرحلات على الطريق',
       subtitle: trips.isEmpty ? null : '${trips.length} رحلة نشطة',
       child: trips.isEmpty
-          ? const _NoActiveTrips()
+          ? const DashboardEmptyState(
+              icon: DashboardIcons.trips,
+              title: 'لا توجد رحلات على الطريق حالياً',
+              message:
+                  'ستظهر الرحلات هنا فور أن يبدأ الكباتن تنفيذها، مع تتبّع مباشر لكل مركبة.',
+            )
           : LayoutBuilder(
               builder: (context, constraints) {
-                
                 final twoCols = constraints.maxWidth >= 680;
                 final width = twoCols
                     ? (constraints.maxWidth - AppSpacing.medium) / 2
@@ -241,39 +251,6 @@ class _IncidentsPanel extends StatelessWidget {
         onAction: (incident, next, {note}) => context
             .read<LiveOpsCubit>()
             .updateIncident(incident, next, note: note),
-      ),
-    );
-  }
-}
-
-class _NoActiveTrips extends StatelessWidget {
-  const _NoActiveTrips();
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final text = Theme.of(context).textTheme;
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.large),
-      child: Column(
-        children: [
-          Icon(
-            Icons.nightlight_round,
-            size: 40,
-            color: scheme.onSurfaceVariant.withAlpha(140),
-          ),
-          const SizedBox(height: AppSpacing.small),
-          Text(
-            'لا توجد رحلات على الطريق حالياً',
-            style: text.titleSmall?.copyWith(fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'ستظهر الرحلات هنا فور أن يبدأ الكباتن تنفيذها، مع تتبّع مباشر لكل مركبة.',
-            textAlign: TextAlign.center,
-            style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
-          ),
-        ],
       ),
     );
   }

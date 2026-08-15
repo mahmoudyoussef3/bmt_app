@@ -67,7 +67,8 @@
       "Bash(python3 /private/tmp/claude-501/-Users-mahmoud-bmt-app/9933e7c4-aeb6-496a-8f4b-8d134efada0f/scratchpad/scan_overflow.py)",
       "Bash(grep -rA2 --include='*.dart' -E \"\\\\.rpc\\\\\\($\" .)",
       "Bash(cd /Users/mahmoud/bmt_app/lib/apps/dashboard *)",
-      "Bash(timeout 90 supabase db query --linked \"select vehicle_type, capacity, count\\(*\\) from public.vehicles group by 1,2 order by 3 desc;\")"
+      "Bash(timeout 90 supabase db query --linked \"select vehicle_type, capacity, count\\(*\\) from public.vehicles group by 1,2 order by 3 desc;\")",
+      "Bash(supabase migration *)"
     ],
     "additionalDirectories": [
       "/Users/mahmoud/bmt_app/lib/apps/dashboard/features/office_profile/presentation/test/apps/dashboard/features/office_profile",

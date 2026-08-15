@@ -109,7 +109,6 @@ class _PlanEditorDialogState extends State<_PlanEditorDialog> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(
-                  
                   'هذه بيانات البيع فقط: الاسم والسعر والعرض. ميزات الباقة '
                   'تُحرَّر من لوحة الميزات ولا يمسّها الحفظ هنا.',
                   style: text.bodySmall?.copyWith(
@@ -179,7 +178,7 @@ class _PlanEditorDialogState extends State<_PlanEditorDialog> {
                           labelText: 'السعر الشهري',
                           suffixText: 'ج.م',
                           border: OutlineInputBorder(),
-                          
+
                           helperText: 'اتركه فارغًا لسعر تفاوضي',
                           helperMaxLines: 2,
                         ),
@@ -259,7 +258,7 @@ class _PlanEditorDialogState extends State<_PlanEditorDialog> {
                 TextFormField(
                   controller: _reason,
                   maxLines: 2,
-                  
+
                   decoration: const InputDecoration(
                     labelText: 'ملاحظة للسجل (اختيارية)',
                     hintText: 'ما الذي تغيّر، ولماذا',
@@ -299,7 +298,7 @@ class _PlanEditorDialogState extends State<_PlanEditorDialog> {
       'tagline_ar': _tagline.text.trim(),
       'status': _status,
       'is_public': _isPublic,
-      
+
       'price_monthly': _priceMonthly.text.trim(),
       'price_yearly': _priceYearly.text.trim(),
       'trial_days': int.tryParse(_trialDays.text.trim()) ?? 0,

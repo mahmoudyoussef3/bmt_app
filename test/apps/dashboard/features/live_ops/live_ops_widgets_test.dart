@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_app_theme.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_empty_state.dart';
+import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/apps/dashboard/features/live_ops/domain/entities/live_ops_snapshot.dart';
 import 'package:bmt_app/apps/dashboard/features/live_ops/domain/entities/trip_incident.dart';
 import 'package:bmt_app/apps/dashboard/features/live_ops/presentation/widgets/departure_status_badge.dart';
+import 'package:bmt_app/apps/dashboard/features/live_ops/presentation/cubit/live_ops_cubit.dart';
 import 'package:bmt_app/apps/dashboard/features/live_ops/presentation/widgets/incident_queue_section.dart';
+import 'package:bmt_app/apps/dashboard/features/live_ops/presentation/widgets/live_ops_all_clear.dart';
 import 'package:bmt_app/apps/dashboard/features/live_ops/presentation/widgets/live_ops_summary_bar.dart';
 import 'package:bmt_app/apps/dashboard/features/live_ops/presentation/widgets/live_trip_card.dart';
 
@@ -369,8 +373,82 @@ void main() {
             textScale: scale,
           );
         });
+
+        testWidgets('all-clear @ ${width}px ${scale}x', (tester) async {
+          await _expectNoOverflow(
+            tester,
+            LiveOpsAllClear(
+              generatedAt: _now.subtract(const Duration(seconds: 8)),
+              now: _now,
+            ),
+            width: width,
+            textScale: scale,
+          );
+        });
       }
     }
+  });
+
+  group('the quiet board', () {
+    testWidgets('the all-clear names both facts, not just "nothing here"', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        LiveOpsAllClear(
+          generatedAt: _now.subtract(const Duration(seconds: 8)),
+          now: _now,
+        ),
+        width: 900,
+      );
+
+      expect(find.text('الوضع هادئ'), findsOneWidget);
+      // Both halves of the board are accounted for; a single «لا يوجد» would
+      // leave the operator guessing which one it meant.
+      expect(find.text('لا رحلات على الطريق'), findsOneWidget);
+      expect(find.text('لا بلاغات مفتوحة'), findsOneWidget);
+    });
+
+    testWidgets('it says the board is live and how current it is', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        LiveOpsAllClear(
+          generatedAt: _now.subtract(const Duration(minutes: 3)),
+          now: _now,
+        ),
+        width: 900,
+      );
+
+      // The cadence is read off the cubit's timer rather than typed into the
+      // string, so this assertion fails if the two ever drift apart.
+      expect(
+        find.textContaining('كل ${LiveOpsCubit.pollInterval.inSeconds} ثانية'),
+        findsOneWidget,
+      );
+      expect(find.textContaining('منذ 3 د'), findsOneWidget);
+    });
+
+    testWidgets('a cleared queue draws the panel empty state, not a card', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        IncidentQueueSection(
+          incidents: const [],
+          now: _now,
+          onAction: (_, _, {note}) async => null,
+        ),
+        width: 360,
+      );
+
+      expect(find.byType(DashboardEmptyState), findsOneWidget);
+      expect(find.text('لا توجد بلاغات مفتوحة'), findsOneWidget);
+      // A card inside the panel card it already sits in is the one arrangement
+      // this queue used to get wrong.
+      expect(find.byType(AppCard), findsNothing);
+    });
   });
 
   group('RTL correctness', () {

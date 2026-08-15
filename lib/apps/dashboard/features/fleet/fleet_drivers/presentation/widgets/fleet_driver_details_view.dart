@@ -47,17 +47,11 @@ class FleetDriverDetailsView extends StatelessWidget {
             onBack: onBack,
           ),
           const SizedBox(height: AppSpacing.medium),
-          _DriverProfileHero(
+          _DriverHeroCard(
             driver: driver,
             snapshot: snapshot,
             vehicleLabel: vehicle,
             onEdit: onEdit,
-          ),
-          const SizedBox(height: AppSpacing.medium),
-          _ReadinessPanel(
-            driver: driver,
-            snapshot: snapshot,
-            vehicleLabel: vehicle,
           ),
           const SizedBox(height: AppSpacing.medium),
           _PerformanceMetricsCard(driver: driver),
@@ -131,8 +125,18 @@ class FleetDriverDetailsView extends StatelessWidget {
   }
 }
 
-class _DriverProfileHero extends StatelessWidget {
-  const _DriverProfileHero({
+/// Identity + a single, unambiguous readiness signal.
+///
+/// The old layout spread status across three separate chips (account status,
+/// health, operational status) plus a second card repeating health and
+/// status again next to three bordered metric tiles. Those three vocabularies
+/// always agreed in practice — `driver.status` folds straight into
+/// [DriverOperationsSnapshot.status] — so showing all of them just made the
+/// operator re-read the same fact three times. This card says it once: one
+/// pill (operational status, tinted by health) with the reason right next to
+/// it, and any *additional* issues beyond that reason as small trailing tags.
+class _DriverHeroCard extends StatelessWidget {
+  const _DriverHeroCard({
     required this.driver,
     required this.snapshot,
     required this.vehicleLabel,
@@ -144,176 +148,184 @@ class _DriverProfileHero extends StatelessWidget {
   final String vehicleLabel;
   final VoidCallback onEdit;
 
+  static AppStatusTone _healthTone(DriverHealthLevel health) =>
+      switch (health) {
+        DriverHealthLevel.healthy => AppStatusTone.success,
+        DriverHealthLevel.warning => AppStatusTone.warning,
+        DriverHealthLevel.critical => AppStatusTone.error,
+      };
+
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final healthColor = switch (snapshot.health) {
-      DriverHealthLevel.healthy => scheme.primary,
-      DriverHealthLevel.warning => scheme.tertiary,
-      DriverHealthLevel.critical => scheme.error,
-    };
+    final status = context.status(_healthTone(snapshot.health));
+    final extraIssues = snapshot.attentionReasons.skip(1).toList();
 
     return AppCard(
-      padding: EdgeInsets.zero,
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.large),
-        decoration: BoxDecoration(
-          color: scheme.primary.withAlpha(12),
-          borderRadius: BorderRadius.circular(AppTokens.radius),
-          border: Border.all(color: scheme.primary.withAlpha(28)),
-        ),
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final compact = constraints.maxWidth < 720;
-            final identity = Row(
-              children: [
-                SizedBox(
-                  width: 68,
-                  height: 68,
-                  child: FleetAvatar(
-                    label: driver.imageLabel,
-                    profileImageUrl: driver.profileImageUrl,
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.medium),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        driver.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.headlineSmall
-                            ?.copyWith(fontWeight: FontWeight.w900),
-                      ),
-                      const SizedBox(height: 4),
-                      Wrap(
-                        spacing: AppSpacing.small,
-                        runSpacing: AppSpacing.xSmall,
-                        children: [
-                          StatusChip(label: driver.status.label),
-                          StatusChip(
-                            label: snapshot.health.label,
-                            color: healthColor.withAlpha(24),
-                            textColor: healthColor,
-                          ),
-                          StatusChip(label: snapshot.status.label),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            );
+      padding: const EdgeInsets.all(AppSpacing.large),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final compact = constraints.maxWidth < 720;
 
-            final action = FilledButton.icon(
-              onPressed: onEdit,
-              icon: const Icon(Icons.edit_rounded),
-              label: const Text('تعديل بيانات السائق'),
-            );
+          final identity = Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 64,
+                height: 64,
+                child: FleetAvatar(
+                  label: driver.imageLabel,
+                  profileImageUrl: driver.profileImageUrl,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.medium),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      driver.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.w900),
+                    ),
+                    const SizedBox(height: 6),
+                    Wrap(
+                      spacing: AppSpacing.small,
+                      runSpacing: 4,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        StatusChip(
+                          label: snapshot.status.label,
+                          color: status.tint,
+                          textColor: status.ink,
+                        ),
+                        Text(
+                          snapshot.primaryReason,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: status.ink,
+                                fontWeight: FontWeight.w800,
+                              ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          );
 
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (compact) ...[
-                  identity,
-                  const SizedBox(height: AppSpacing.medium),
-                  action,
-                ] else
-                  Row(
-                    children: [
-                      Expanded(child: identity),
-                      const SizedBox(width: AppSpacing.medium),
-                      action,
-                    ],
+          final action = FilledButton.icon(
+            onPressed: onEdit,
+            icon: const Icon(Icons.edit_rounded),
+            label: const Text('تعديل بيانات السائق'),
+          );
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (compact) ...[
+                identity,
+                const SizedBox(height: AppSpacing.medium),
+                action,
+              ] else
+                Row(
+                  children: [
+                    Expanded(child: identity),
+                    const SizedBox(width: AppSpacing.medium),
+                    action,
+                  ],
+                ),
+              const SizedBox(height: AppSpacing.medium),
+              Divider(height: 1, color: scheme.outlineVariant.withAlpha(120)),
+              const SizedBox(height: AppSpacing.medium),
+              Wrap(
+                spacing: AppSpacing.large,
+                runSpacing: AppSpacing.small,
+                children: [
+                  _InlineFact(
+                    icon: Icons.badge_outlined,
+                    label: 'كود الموظف',
+                    value: driver.employeeCode,
                   ),
+                  _InlineFact(
+                    icon: Icons.phone_android_rounded,
+                    label: 'الهاتف',
+                    value: driver.phone,
+                  ),
+                  _InlineFact(
+                    icon: Icons.directions_bus_outlined,
+                    label: 'المركبة الحالية',
+                    value: vehicleLabel.isEmpty
+                        ? 'بدون مركبة'
+                        : vehicleLabel,
+                    valueColor: vehicleLabel.isEmpty
+                        ? context.status(AppStatusTone.warning).ink
+                        : null,
+                  ),
+                ],
+              ),
+              if (extraIssues.isNotEmpty) ...[
                 const SizedBox(height: AppSpacing.medium),
                 Wrap(
                   spacing: AppSpacing.small,
                   runSpacing: AppSpacing.small,
-                  children: [
-                    _HeroFact(
-                      icon: Icons.badge_outlined,
-                      label: 'كود الموظف',
-                      value: driver.employeeCode,
-                    ),
-                    _HeroFact(
-                      icon: Icons.phone_android_rounded,
-                      label: 'الهاتف',
-                      value: driver.phone,
-                    ),
-                    _HeroFact(
-                      icon: Icons.directions_bus_outlined,
-                      label: 'المركبة الحالية',
-                      value: vehicleLabel.isEmpty ? 'بدون مركبة' : vehicleLabel,
-                    ),
-                  ],
+                  children: extraIssues
+                      .map(
+                        (reason) => StatusChip(
+                          label: reason,
+                          color: status.tint,
+                          textColor: status.ink,
+                        ),
+                      )
+                      .toList(),
                 ),
               ],
-            );
-          },
-        ),
+            ],
+          );
+        },
       ),
     );
   }
 }
 
-class _HeroFact extends StatelessWidget {
-  const _HeroFact({
+class _InlineFact extends StatelessWidget {
+  const _InlineFact({
     required this.icon,
     required this.label,
     required this.value,
+    this.valueColor,
   });
 
   final IconData icon;
   final String label;
   final String value;
+  final Color? valueColor;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Container(
-      constraints: const BoxConstraints(minWidth: 170, maxWidth: 260),
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.medium,
-        vertical: AppSpacing.small,
-      ),
-      decoration: BoxDecoration(
-        color: scheme.surface.withAlpha(170),
-        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-        border: Border.all(color: scheme.outline.withAlpha(45)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: scheme.primary, size: 18),
-          const SizedBox(width: AppSpacing.small),
-          Flexible(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-                Text(
-                  value.isEmpty ? 'غير محدد' : value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w900),
-                ),
-              ],
-            ),
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 16, color: scheme.onSurfaceVariant),
+        const SizedBox(width: 6),
+        Text(
+          '$label  ',
+          style: Theme.of(
+            context,
+          ).textTheme.labelMedium?.copyWith(color: scheme.onSurfaceVariant),
+        ),
+        Text(
+          value.isEmpty ? 'غير محدد' : value,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: valueColor,
+            fontWeight: FontWeight.w800,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -336,50 +348,50 @@ class _DriverInfoCard extends StatelessWidget {
             title: 'البيانات الأساسية والمهنية',
             subtitle: 'معلومات التواصل والرخصة والتعيين التشغيلي للسائق.',
           ),
-          const SizedBox(height: AppSpacing.medium),
+          const SizedBox(height: AppSpacing.small),
           LayoutBuilder(
             builder: (context, constraints) {
               final twoColumns = constraints.maxWidth >= 620;
               final width = twoColumns
-                  ? (constraints.maxWidth - AppSpacing.small) / 2
+                  ? (constraints.maxWidth - AppSpacing.medium) / 2
                   : constraints.maxWidth;
-              final details = [
-                _DetailTile(
+              final fields = [
+                _InfoField(
                   icon: Icons.person_outline_rounded,
                   label: 'الاسم الكامل',
                   value: driver.fullName,
                 ),
-                _DetailTile(
+                _InfoField(
                   icon: Icons.badge_outlined,
                   label: 'كود الموظف',
                   value: driver.employeeCode,
                 ),
-                _DetailTile(
+                _InfoField(
                   icon: Icons.credit_card_outlined,
                   label: 'الرقم القومي',
                   value: driver.nationalId,
                 ),
-                _DetailTile(
+                _InfoField(
                   icon: Icons.phone_android_rounded,
                   label: 'رقم الهاتف الأساسي',
                   value: driver.phone,
                 ),
-                _DetailTile(
+                _InfoField(
                   icon: Icons.contact_phone_outlined,
                   label: 'رقم هاتف الطوارئ',
                   value: driver.emergencyPhone,
                 ),
-                _DetailTile(
+                _InfoField(
                   icon: Icons.work_outline_rounded,
                   label: 'تاريخ التعيين',
                   value: driver.hireDate,
                 ),
-                _DetailTile(
+                _InfoField(
                   icon: Icons.assignment_ind_outlined,
                   label: 'رقم رخصة القيادة',
                   value: driver.licenseNumber,
                 ),
-                _DetailTile(
+                _InfoField(
                   icon: Icons.event_available_outlined,
                   label: 'تاريخ انتهاء الرخصة',
                   value: driver.licenseExpiryDate,
@@ -389,17 +401,17 @@ class _DriverInfoCard extends StatelessWidget {
                       ? Theme.of(context).colorScheme.tertiary
                       : null,
                 ),
-                _DetailTile(
+                _InfoField(
                   icon: Icons.directions_bus_outlined,
                   label: 'المركبة الحالية',
                   value: vehicle.isEmpty ? 'بدون مركبة حالياً' : vehicle,
                 ),
-                _DetailTile(
+                _InfoField(
                   icon: Icons.verified_outlined,
                   label: 'حالة الحساب',
                   value: driver.status.label,
                 ),
-                _DetailTile(
+                _InfoField(
                   icon: Icons.home_outlined,
                   label: 'العنوان الكامل',
                   value: driver.address,
@@ -408,13 +420,11 @@ class _DriverInfoCard extends StatelessWidget {
               ];
 
               return Wrap(
-                spacing: AppSpacing.small,
-                runSpacing: AppSpacing.small,
-                children: details
+                children: fields
                     .map(
-                      (detail) => SizedBox(
-                        width: detail.wide ? constraints.maxWidth : width,
-                        child: detail,
+                      (field) => SizedBox(
+                        width: field.wide ? constraints.maxWidth : width,
+                        child: field,
                       ),
                     )
                     .toList(),
@@ -422,7 +432,7 @@ class _DriverInfoCard extends StatelessWidget {
             },
           ),
           if (driver.notes.isNotEmpty) ...[
-            const SizedBox(height: AppSpacing.medium),
+            const SizedBox(height: AppSpacing.small),
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(AppSpacing.medium),
@@ -456,8 +466,12 @@ class _DriverInfoCard extends StatelessWidget {
   }
 }
 
-class _DetailTile extends StatelessWidget {
-  const _DetailTile({
+/// A single labelled fact rendered as a plain row with a hairline underneath,
+/// instead of its own bordered/tinted box. A data sheet with a dozen facts
+/// reads as a form when each row is this light — a dozen individually boxed
+/// tiles reads as a wall of cards.
+class _InfoField extends StatelessWidget {
+  const _InfoField({
     required this.icon,
     required this.label,
     required this.value,
@@ -475,16 +489,17 @@ class _DetailTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.medium),
+      padding: const EdgeInsets.symmetric(vertical: AppSpacing.small),
+      margin: const EdgeInsets.only(bottom: AppSpacing.xSmall),
       decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withAlpha(45),
-        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-        border: Border.all(color: scheme.outline.withAlpha(35)),
+        border: Border(
+          bottom: BorderSide(color: scheme.outlineVariant.withAlpha(90)),
+        ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: scheme.primary, size: 19),
+          Icon(icon, color: scheme.onSurfaceVariant, size: 18),
           const SizedBox(width: AppSpacing.small),
           Expanded(
             child: Column(
@@ -494,7 +509,7 @@ class _DetailTile extends StatelessWidget {
                   label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
                     color: scheme.onSurfaceVariant,
                   ),
                 ),
@@ -505,190 +520,8 @@ class _DetailTile extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: valueColor,
-                    fontWeight: FontWeight.w900,
+                    fontWeight: FontWeight.w800,
                   ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ReadinessPanel extends StatelessWidget {
-  const _ReadinessPanel({
-    required this.driver,
-    required this.snapshot,
-    required this.vehicleLabel,
-  });
-
-  final FleetDriver driver;
-  final DriverOperationsSnapshot snapshot;
-  final String vehicleLabel;
-
-  /// The semantic status role a driver's health level maps to. Returning a
-  /// tone rather than a colour pair is what lets the caller resolve it against
-  /// the theme in effect — these used to be light-only constants.
-  static AppStatusTone _healthTone(DriverHealthLevel health) =>
-      switch (health) {
-        DriverHealthLevel.healthy => AppStatusTone.success,
-        DriverHealthLevel.warning => AppStatusTone.warning,
-        DriverHealthLevel.critical => AppStatusTone.error,
-      };
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final health = context.status(_healthTone(snapshot.health));
-    final healthBg = health.tint;
-    final healthFg = health.ink;
-
-    return AppCard(
-      padding: const EdgeInsets.all(AppSpacing.large),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final compact = constraints.maxWidth < 820;
-          final verdict = snapshot.canAssign
-              ? 'يمكن تعيين هذا السائق الآن'
-              : 'لا تعين هذا السائق قبل معالجة التنبيهات';
-
-          final summary = [
-            _ReadinessMetric(
-              icon: Icons.verified_user_outlined,
-              label: 'قرار التشغيل',
-              value: verdict,
-              color: snapshot.canAssign ? scheme.primary : healthFg,
-            ),
-            _ReadinessMetric(
-              icon: Icons.directions_bus_filled_outlined,
-              label: 'المركبة',
-              value: vehicleLabel.isEmpty ? 'بدون مركبة' : vehicleLabel,
-              color: vehicleLabel.isEmpty ? scheme.tertiary : scheme.primary,
-            ),
-            _ReadinessMetric(
-              icon: Icons.badge_outlined,
-              label: 'الرخصة',
-              value: driver.licenseExpiryDate,
-              color: healthFg,
-            ),
-          ];
-
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'جاهزية السائق للتشغيل',
-                          style: Theme.of(context).textTheme.titleLarge
-                              ?.copyWith(fontWeight: FontWeight.w900),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          snapshot.primaryReason,
-                          style: Theme.of(context).textTheme.bodyMedium
-                              ?.copyWith(
-                                color: healthFg,
-                                fontWeight: FontWeight.w800,
-                              ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  StatusChip(
-                    label: snapshot.health.label,
-                    color: healthBg,
-                    textColor: healthFg,
-                  ),
-                  const SizedBox(width: AppSpacing.small),
-                  StatusChip(label: snapshot.status.label),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.medium),
-              Wrap(
-                spacing: AppSpacing.small,
-                runSpacing: AppSpacing.small,
-                children: summary
-                    .map(
-                      (metric) => SizedBox(
-                        width: compact
-                            ? constraints.maxWidth
-                            : (constraints.maxWidth - AppSpacing.small * 2) / 3,
-                        child: metric,
-                      ),
-                    )
-                    .toList(),
-              ),
-              if (snapshot.attentionReasons.isNotEmpty) ...[
-                const SizedBox(height: AppSpacing.medium),
-                Wrap(
-                  spacing: AppSpacing.small,
-                  runSpacing: AppSpacing.small,
-                  children: snapshot.attentionReasons
-                      .map(
-                        (reason) => StatusChip(
-                          label: reason,
-                          color: healthBg,
-                          textColor: healthFg,
-                        ),
-                      )
-                      .toList(),
-                ),
-              ],
-            ],
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _ReadinessMetric extends StatelessWidget {
-  const _ReadinessMetric({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.color,
-  });
-
-  final IconData icon;
-  final String label;
-  final String value;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.medium),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withAlpha(70),
-        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-        border: Border.all(color: scheme.outline.withAlpha(70)),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: color),
-          const SizedBox(width: AppSpacing.small),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(label, style: Theme.of(context).textTheme.bodySmall),
-                const SizedBox(height: 2),
-                Text(
-                  value.isEmpty ? 'غير محدد' : value,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w900),
                 ),
               ],
             ),
@@ -794,6 +627,9 @@ class _HistoryTimeline extends StatelessWidget {
   }
 }
 
+/// Trip/violation/license counts as one stat bar instead of three separately
+/// tinted boxes — the numbers carry the meaning, the colour just flags the
+/// ones worth a second look.
 class _PerformanceMetricsCard extends StatelessWidget {
   const _PerformanceMetricsCard({required this.driver});
   final FleetDriver driver;
@@ -805,6 +641,35 @@ class _PerformanceMetricsCard extends StatelessWidget {
     final violationCount = driver.violations.length;
     final licenseExpired = driver.isLicenseExpired;
     final licenseWarn = driver.isLicenseExpiringSoon;
+
+    final items = [
+      _StatItem(
+        label: 'إجمالي الرحلات',
+        value: '$tripCount',
+        icon: Icons.map_outlined,
+        color: scheme.primary,
+      ),
+      _StatItem(
+        label: 'المخالفات',
+        value: '$violationCount',
+        icon: Icons.gpp_bad_outlined,
+        color: violationCount > 0 ? scheme.error : scheme.primary,
+      ),
+      _StatItem(
+        label: 'الرخصة',
+        value: licenseExpired
+            ? 'منتهية'
+            : licenseWarn
+            ? 'تنتهي قريباً'
+            : 'سارية',
+        icon: Icons.badge_outlined,
+        color: licenseExpired
+            ? scheme.error
+            : licenseWarn
+            ? scheme.tertiary
+            : scheme.primary,
+      ),
+    ];
 
     return AppCard(
       padding: const EdgeInsets.all(AppSpacing.medium),
@@ -820,44 +685,32 @@ class _PerformanceMetricsCard extends StatelessWidget {
           const SizedBox(height: AppSpacing.medium),
           LayoutBuilder(
             builder: (context, constraints) {
-              final compact = constraints.maxWidth < 620;
-              final width = compact
-                  ? constraints.maxWidth
-                  : (constraints.maxWidth - AppSpacing.small * 2) / 3;
-              final items = [
-                _PerfMetric(
-                  label: 'إجمالي الرحلات',
-                  value: '$tripCount',
-                  icon: Icons.map_outlined,
-                  color: scheme.primary,
+              final compact = constraints.maxWidth < 480;
+              if (compact) {
+                return Column(
+                  children: [
+                    for (var i = 0; i < items.length; i++) ...[
+                      items[i],
+                      if (i < items.length - 1)
+                        const SizedBox(height: AppSpacing.small),
+                    ],
+                  ],
+                );
+              }
+              return IntrinsicHeight(
+                child: Row(
+                  children: [
+                    for (var i = 0; i < items.length; i++) ...[
+                      Expanded(child: items[i]),
+                      if (i < items.length - 1)
+                        VerticalDivider(
+                          width: AppSpacing.large,
+                          thickness: 1,
+                          color: scheme.outlineVariant.withAlpha(110),
+                        ),
+                    ],
+                  ],
                 ),
-                _PerfMetric(
-                  label: 'المخالفات',
-                  value: '$violationCount',
-                  icon: Icons.gpp_bad_outlined,
-                  color: violationCount > 0 ? scheme.error : scheme.primary,
-                ),
-                _PerfMetric(
-                  label: 'الرخصة',
-                  value: licenseExpired
-                      ? 'منتهية'
-                      : licenseWarn
-                      ? 'تنتهي قريباً'
-                      : 'سارية',
-                  icon: Icons.badge_outlined,
-                  color: licenseExpired
-                      ? scheme.error
-                      : licenseWarn
-                      ? scheme.tertiary
-                      : scheme.primary,
-                ),
-              ];
-              return Wrap(
-                spacing: AppSpacing.small,
-                runSpacing: AppSpacing.small,
-                children: items
-                    .map((item) => SizedBox(width: width, child: item))
-                    .toList(),
               );
             },
           ),
@@ -867,8 +720,8 @@ class _PerformanceMetricsCard extends StatelessWidget {
   }
 }
 
-class _PerfMetric extends StatelessWidget {
-  const _PerfMetric({
+class _StatItem extends StatelessWidget {
+  const _StatItem({
     required this.label,
     required this.value,
     required this.icon,
@@ -881,35 +734,26 @@ class _PerfMetric extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: color.withAlpha(20),
-        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(height: 6),
-          Text(
-            value,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
+    return Row(
+      children: [
+        Icon(icon, color: color, size: 20),
+        const SizedBox(width: AppSpacing.small),
+        Text(
+          value,
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold, color: color),
+        ),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
             label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.bodySmall,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

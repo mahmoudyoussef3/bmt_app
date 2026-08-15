@@ -51,7 +51,7 @@ class LicensingScreenFrame extends StatelessWidget {
               padding: const EdgeInsets.all(AppSpacing.large),
               child: builder(context, state),
             ),
-            
+
             if (state.isBusy)
               const Positioned(
                 top: 0,

@@ -32,8 +32,11 @@ import '../../features/notifications/presentation/cubit/operational_alerts_cubit
 import 'package:bmt_app/apps/dashboard/features/bookings/data/datasources/bookings_datasource.dart';
 import 'package:bmt_app/apps/dashboard/features/users/data/datasources/users_datasource.dart';
 import 'package:bmt_app/apps/dashboard/features/users/domain/repositories/users_repository.dart';
+import 'package:bmt_app/apps/dashboard/features/users/domain/usecases/create_dashboard_user_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/users/domain/usecases/get_current_user_role_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/users/domain/usecases/get_users_usecase.dart';
+import 'package:bmt_app/apps/dashboard/features/users/domain/usecases/reset_dashboard_user_password_usecase.dart';
+import 'package:bmt_app/apps/dashboard/features/users/domain/usecases/set_dashboard_user_status_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/users/domain/usecases/update_user_role_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/users/presentation/cubit/users_cubit.dart';
 import 'package:get_it/get_it.dart';
@@ -1172,11 +1175,29 @@ void registerDashboardDependencies() {
       () => UpdateUserRoleUseCase(dashboardDi<UsersRepository>()),
     );
   }
+  if (!dashboardDi.isRegistered<CreateDashboardUserUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => CreateDashboardUserUseCase(dashboardDi<UsersRepository>()),
+    );
+  }
+  if (!dashboardDi.isRegistered<ResetDashboardUserPasswordUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => ResetDashboardUserPasswordUseCase(dashboardDi<UsersRepository>()),
+    );
+  }
+  if (!dashboardDi.isRegistered<SetDashboardUserStatusUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => SetDashboardUserStatusUseCase(dashboardDi<UsersRepository>()),
+    );
+  }
   if (!dashboardDi.isRegistered<UsersCubit>()) {
     dashboardDi.registerFactory(
       () => UsersCubit(
         getUsers: dashboardDi<GetUsersUseCase>(),
         updateRole: dashboardDi<UpdateUserRoleUseCase>(),
+        createUser: dashboardDi<CreateDashboardUserUseCase>(),
+        resetPassword: dashboardDi<ResetDashboardUserPasswordUseCase>(),
+        setStatus: dashboardDi<SetDashboardUserStatusUseCase>(),
       ),
     );
   }

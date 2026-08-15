@@ -24,7 +24,6 @@ class FinanceScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    
     return BlocConsumer<FinanceCubit, FinanceState>(
       listenWhen: (previous, current) =>
           current is FinanceLoaded && current.actionMessage != null,
@@ -79,7 +78,9 @@ class _FinanceWorkspace extends StatelessWidget {
                 label: const Text('تحديث'),
               ),
             ],
-            child: FinancePeriodBar(
+            // The period bar is pinned: every figure on the page is scoped by
+            // it, so an operator who cannot see it cannot read the page.
+            pinned: FinancePeriodBar(
               selected: state.period,
               onSelected: cubit.setPeriod,
               loadedAt: state.loadedAt,

@@ -12,7 +12,7 @@ import 'live_ops_state.dart';
 /// the client tracking layer uses:
 ///  - a realtime trigger ([WatchLiveOpsUseCase]) that refreshes the instant a
 ///    trip status flips or an incident is filed, and
-///  - a steady poll ([_pollInterval]) that both catches anything the socket
+///  - a steady poll ([pollInterval]) that both catches anything the socket
 ///    missed and re-stamps the snapshot clock so tracking-health badges age
 ///    correctly even when nothing else changes.
 ///
@@ -36,14 +36,16 @@ class LiveOpsCubit extends Cubit<LiveOpsState> {
        _updateIncident = updateIncident,
        super(const LiveOpsLoading());
 
-  static const Duration _pollInterval = Duration(seconds: 15);
+  /// Public so the screen can *state* the cadence it refreshes at instead of
+  /// repeating the number in a string that would quietly drift from the timer.
+  static const Duration pollInterval = Duration(seconds: 15);
 
   Future<void> startWatching() async {
     await load();
     _sub?.cancel();
     _sub = _watch().listen((_) => _refresh(), onError: (_) {});
     _poll?.cancel();
-    _poll = Timer.periodic(_pollInterval, (_) => _refresh());
+    _poll = Timer.periodic(pollInterval, (_) => _refresh());
   }
 
   Future<void> load() async {
@@ -71,7 +73,7 @@ class LiveOpsCubit extends Cubit<LiveOpsState> {
         emit(
           LiveOpsLoaded(
             snapshot: snapshot,
-            
+
             selectedTripId: current is LiveOpsLoaded
                 ? current.selectedTripId
                 : null,
@@ -79,7 +81,6 @@ class LiveOpsCubit extends Cubit<LiveOpsState> {
         );
       }
     } catch (_) {
-      
     } finally {
       _refreshing = false;
     }

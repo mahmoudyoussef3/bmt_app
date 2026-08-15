@@ -6,6 +6,7 @@ import '../../../../../core/session/dashboard_session.dart';
 import '../../../trip_creation/domain/entities/trip_driver_option.dart';
 import '../../../shared/domain/entities/operation_trip.dart';
 import '../../../shared/domain/entities/trip_lifecycle.dart';
+import '../../../shared/domain/entities/trip_pricable_package.dart';
 import '../../../shared/domain/entities/trip_pricing.dart';
 import '../../../shared/data/models/operation_trip_model.dart';
 import '../../../shared/data/models/trip_pricing_model.dart';
@@ -402,12 +403,15 @@ class SupabaseTripsDatasource implements TripsDatasource {
     }
   }
 
+  /// `trip_pricing` plus its per-package prices, joined in one round trip.
+  static const _pricingSelect = '*, trip_package_prices(package_id, price)';
+
   @override
   Future<List<TripPricingModel>> fetchTripPricing(String tripId) async {
     try {
       final response = await _client
           .from('trip_pricing')
-          .select()
+          .select(_pricingSelect)
           .eq('trip_id', tripId)
           .order('from_point_order', ascending: true);
 
@@ -426,24 +430,46 @@ class SupabaseTripsDatasource implements TripsDatasource {
     try {
       final data = TripPricingModel.fromEntity(pricing).toJson();
 
-      Map<String, dynamic> response;
+      String pricingId;
       if (pricing.id.trim().isEmpty) {
-        
         data['trip_id'] = pricing.tripId;
-        response = await _client
+        final response = await _client
             .from('trip_pricing')
             .insert(data)
             .select()
             .single();
+        pricingId = response['id'] as String;
       } else {
-        
-        response = await _client
+        await _client
             .from('trip_pricing')
             .update(data)
-            .eq('id', pricing.id)
-            .select()
-            .single();
+            .eq('id', pricing.id);
+        pricingId = pricing.id;
       }
+
+      // Replace this pair's package prices wholesale — simpler and just as
+      // correct as diffing, since nothing else references a
+      // trip_package_prices row by its own id.
+      await _client
+          .from('trip_package_prices')
+          .delete()
+          .eq('trip_pricing_id', pricingId);
+      if (pricing.packagePrices.isNotEmpty) {
+        await _client.from('trip_package_prices').insert([
+          for (final entry in pricing.packagePrices.entries)
+            {
+              'trip_pricing_id': pricingId,
+              'package_id': entry.key,
+              'price': entry.value,
+            },
+        ]);
+      }
+
+      final saved = await _client
+          .from('trip_pricing')
+          .select(_pricingSelect)
+          .eq('id', pricingId)
+          .single();
 
       await logEvent(
         pricing.tripId,
@@ -451,7 +477,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
         'تم تحديث أو إضافة تسعير للقطاع: ${pricing.fromPointName} إلى ${pricing.toPointName}.',
       );
 
-      return TripPricingModel.fromJson(response);
+      return TripPricingModel.fromJson(saved);
     } catch (e) {
       throw _handleError(e);
     }
@@ -467,7 +493,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
           .from('trip_pricing')
           .update({'is_active': isActive})
           .eq('id', pricingId)
-          .select()
+          .select(_pricingSelect)
           .single();
 
       final pricing = TripPricingModel.fromJson(response);
@@ -479,6 +505,39 @@ class SupabaseTripsDatasource implements TripsDatasource {
       );
 
       return pricing;
+    } catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  @override
+  Future<List<TripPricablePackage>> fetchOfficePricablePackages() async {
+    try {
+      final response = await _client
+          .from('transport_packages')
+          .select('id, name_ar, name_en, ride_count, duration_days')
+          .eq('office_id', _session.officeId)
+          .eq('active', true)
+          .order('display_order', ascending: true);
+
+      return (response as List)
+          .map((row) => row as Map<String, dynamic>)
+          .where((row) {
+            final rideCount = (row['ride_count'] as num?)?.toInt() ?? 1;
+            final durationDays = (row['duration_days'] as num?)?.toInt() ?? 1;
+            return !(durationDays <= 1 && rideCount <= 1);
+          })
+          .map((row) {
+            final nameAr = row['name_ar']?.toString() ?? '';
+            final nameEn = row['name_en']?.toString() ?? '';
+            return TripPricablePackage(
+              id: row['id'].toString(),
+              name: nameAr.trim().isEmpty ? nameEn : nameAr,
+              rideCount: (row['ride_count'] as num?)?.toInt() ?? 1,
+              durationDays: (row['duration_days'] as num?)?.toInt() ?? 1,
+            );
+          })
+          .toList();
     } catch (e) {
       throw _handleError(e);
     }

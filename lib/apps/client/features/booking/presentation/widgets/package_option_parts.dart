@@ -66,6 +66,17 @@ class PackagePlanHeader extends StatelessWidget {
                   context,
                 ).copyWith(color: ClientColors.textSecondaryFor(context)),
               ),
+              if (plan.displayDescription.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  plan.displayDescription,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: ClientTypography.labelSmall(
+                    context,
+                  ).copyWith(color: ClientColors.textSecondaryFor(context)),
+                ),
+              ],
             ],
           ),
         ),

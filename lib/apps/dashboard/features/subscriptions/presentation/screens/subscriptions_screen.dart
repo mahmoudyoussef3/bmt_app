@@ -3,9 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/dashboard/core/di/dashboard_di.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_kpi_card.dart';
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
-import 'package:bmt_app/apps/dashboard/core/widgets/master_detail_layout.dart';
 import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
@@ -17,7 +17,7 @@ import '../cubit/subscriptions_cubit.dart';
 import '../cubit/subscriptions_state.dart';
 import '../widgets/create_subscription_sheet.dart';
 import '../widgets/subscription_card.dart';
-import '../widgets/subscription_details_panel.dart';
+import '../widgets/subscription_details_sheet.dart';
 import '../widgets/subscription_formatting.dart';
 import '../widgets/subscriptions_analytics.dart';
 import '../widgets/subscriptions_toolbar.dart';
@@ -33,6 +33,12 @@ import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 ///   * a trip selected — that departure's board: who is riding on it, on which
 ///     package, why they are entitled to, and what the office still needs to do
 ///     about them.
+///
+/// Both modes render across the **whole page width**, like every other module.
+/// The subscriber file used to hold a permanent detail pane beside the list:
+/// empty most of the day, and the rest of the time it left the board a single
+/// narrow column of cards. It now opens as a sheet over the board instead
+/// ([openSubscriptionDetails]).
 class SubscriptionsScreen extends StatelessWidget {
   const SubscriptionsScreen({super.key});
 
@@ -48,10 +54,11 @@ class SubscriptionsScreen extends StatelessWidget {
         final error = state.actionError;
         final message = state.actionMessage;
         if (error != null) {
+          final tone = context.status(AppStatusTone.error);
           messenger.showSnackBar(
             SnackBar(
-              content: Text(error),
-              backgroundColor: context.status(AppStatusTone.error).ink,
+              content: Text(error, style: TextStyle(color: tone.onFill)),
+              backgroundColor: tone.fill,
             ),
           );
         } else if (message != null) {
@@ -90,129 +97,187 @@ class _SubscriptionsWorkspace extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cubit = context.read<SubscriptionsCubit>();
-    final selected = state.selected;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final isCompact = constraints.maxWidth < 760;
+        final padding = isCompact ? AppSpacing.medium : AppSpacing.large;
 
-    final master = ListView(
-      padding: const EdgeInsets.all(AppSpacing.large),
-      children: [
-        DashboardModuleHeader(
-          icon: DashboardIcons.subscriptionsActive,
-          title: 'الاشتراكات',
-          subtitle:
-              'كل مشتركي المكتب — اختر رحلة لمعرفة من يركبها باشتراك وبأي باقة.',
-          actions: [
-            if (state.isProcessing)
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: AppSpacing.small),
-                child: SizedBox(
-                  width: 22,
-                  height: 22,
-                  child: CircularProgressIndicator(strokeWidth: 2.4),
-                ),
-              ),
-            OutlinedButton.icon(
-              onPressed: cubit.load,
-              icon: const Icon(Icons.refresh_rounded),
-              label: const Text('تحديث'),
-            ),
-            OutlinedButton.icon(
-              onPressed: () => openPlansManagement(context),
-              icon: const Icon(Icons.inventory_2_outlined),
-              label: const Text('إدارة الباقات'),
-            ),
-            FilledButton.icon(
-              onPressed: () => openCreateSubscription(context, state),
-              icon: const Icon(Icons.add_rounded),
-              label: const Text('اشتراك جديد'),
-            ),
-          ],
-          child: _OfficeKpis(state: state),
-        ),
-        const SizedBox(height: AppSpacing.medium),
-        if (state.tripBoard != null) ...[
-          TripFocusPanel(
-            board: state.tripBoard!,
-            isProcessing: state.isProcessing,
+        return ListView(
+          padding: EdgeInsets.all(padding),
+          children: _content(
+            context,
+            boardWidth: constraints.maxWidth - padding * 2,
           ),
-          const SizedBox(height: AppSpacing.medium),
-        ],
-        SubscriptionsToolbar(state: state),
-        const SizedBox(height: AppSpacing.medium),
-        _ResultsHeader(state: state),
-        const SizedBox(height: AppSpacing.small),
-        ..._buildRows(context),
-        if (state.tripBoard == null && state.subscriptions.isNotEmpty) ...[
-          const SizedBox(height: AppSpacing.large),
-          SubscriptionsAnalytics(subscriptions: state.subscriptions),
-        ],
-      ],
-    );
-
-    return MasterDetailLayout(
-      master: master,
-      detail: selected == null
-          ? null
-          : SubscriptionDetailsPanel(
-              subscription: selected,
-              state: state,
-              onClose: () => cubit.select(null),
-            ),
-      placeholderTitle: 'اختر مشتركًا لعرض تفاصيله',
-      placeholderSubtitle:
-          'تظهر هنا بيانات الاشتراك وسجل الرحلات المستهلكة وكل عمليات المكتب.',
+        );
+      },
     );
   }
 
-  List<Widget> _buildRows(BuildContext context) {
+  List<Widget> _content(BuildContext context, {required double boardWidth}) {
     final cubit = context.read<SubscriptionsCubit>();
 
-    if (state.filteredSubscriptions.isEmpty) {
-      return [
-        AppCard(
-          padding: EdgeInsets.zero,
-          child: EmptyState(
-            emoji: state.filters.hasTrip ? '🚌' : '📭',
-            title: state.filters.hasTrip
-                ? 'لا يوجد مشتركون على هذه الرحلة'
-                : 'لا توجد اشتراكات مطابقة',
-            subtitle: state.filters.hasTrip
-                ? 'لم يشترِ أحد باقة على هذه الرحلة، ولا يوجد اشتراك سارٍ على خط سيرها في هذا التاريخ.'
-                : 'جرّب تغيير التبويب أو مسح الفلاتر.',
+    return [
+      DashboardModuleHeader(
+        icon: DashboardIcons.subscriptionsActive,
+        title: 'الاشتراكات',
+        subtitle:
+            'كل مشتركي المكتب — اختر رحلة لمعرفة من يركبها باشتراك وبأي باقة.',
+        actions: [
+          if (state.isProcessing)
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: AppSpacing.small),
+              child: SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(strokeWidth: 2.4),
+              ),
+            ),
+          OutlinedButton.icon(
+            onPressed: cubit.load,
+            icon: const Icon(Icons.refresh_rounded),
+            label: const Text('تحديث'),
           ),
+          OutlinedButton.icon(
+            onPressed: () => openPlansManagement(context),
+            icon: const Icon(Icons.inventory_2_outlined),
+            label: const Text('إدارة الباقات'),
+          ),
+          FilledButton.icon(
+            onPressed: () => openCreateSubscription(context, state),
+            icon: const Icon(Icons.add_rounded),
+            label: const Text('اشتراك جديد'),
+          ),
+        ],
+        sectionId: DashboardSectionIds.subscriptionsHeader,
+        summary: _OfficeKpis(state: state),
+      ),
+      const SizedBox(height: AppSpacing.medium),
+      if (state.tripBoard != null) ...[
+        TripFocusPanel(
+          board: state.tripBoard!,
+          isProcessing: state.isProcessing,
         ),
-      ];
-    }
+        const SizedBox(height: AppSpacing.medium),
+      ],
+      SubscriptionsToolbar(state: state),
+      const SizedBox(height: AppSpacing.medium),
+      _ResultsHeader(state: state),
+      const SizedBox(height: AppSpacing.small),
+      _SubscriberBoard(state: state, width: boardWidth),
+      if (state.tripBoard == null && state.subscriptions.isNotEmpty) ...[
+        const SizedBox(height: AppSpacing.large),
+        SubscriptionsAnalytics(subscriptions: state.subscriptions),
+      ],
+    ];
+  }
+}
 
+/// The subscriber list as a card grid that uses the whole page.
+///
+/// One column per ~500px: a subscriber card carries a name, a package, a route,
+/// a validity window and a money block, and stretching that across a 2000px
+/// screen leaves the reader's eye travelling between two facts that belong
+/// together.
+class _SubscriberBoard extends StatelessWidget {
+  const _SubscriberBoard({required this.state, required this.width});
+
+  final SubscriptionsLoaded state;
+  final double width;
+
+  static int columnsFor(double width) {
+    if (width >= 1560) return 3;
+    if (width >= 940) return 2;
+    return 1;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (state.filteredSubscriptions.isEmpty) return _EmptyBoard(state: state);
+
+    final cards = _cards(context);
+    final columns = columnsFor(width);
+    final rows = <List<Widget>>[
+      for (var index = 0; index < cards.length; index += columns)
+        cards.skip(index).take(columns).toList(),
+    ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final (index, row) in rows.indexed) ...[
+          if (index > 0) const SizedBox(height: AppSpacing.medium),
+          // One IntrinsicHeight row per set of neighbours squares them off; a
+          // Wrap let each card size to its own content and the grid read as
+          // ragged. The cost is bounded — a row is at most three cards.
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (final (position, card) in row.indexed) ...[
+                  if (position > 0) const SizedBox(width: AppSpacing.medium),
+                  Expanded(child: card),
+                ],
+                // Keeps a lone card on the final row at one column's width
+                // instead of letting it stretch across the whole grid.
+                for (var slot = row.length; slot < columns; slot++) ...[
+                  const SizedBox(width: AppSpacing.medium),
+                  const Expanded(child: SizedBox.shrink()),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  List<Widget> _cards(BuildContext context) {
     if (state.tripBoard != null) {
       return [
         for (final subscriber in state.visibleTripSubscribers)
-          Padding(
-            padding: const EdgeInsets.only(bottom: AppSpacing.medium),
-            child: SubscriptionCard(
-              subscription: subscriber.subscription,
-              tripSubscriber: subscriber,
-              tripId: state.filters.tripId,
-              isProcessing: state.isProcessing,
-              selected: state.selectedId == subscriber.subscription.id,
-              onTap: () => cubit.loadDetails(subscriber.subscription.id),
-            ),
+          SubscriptionCard(
+            subscription: subscriber.subscription,
+            tripSubscriber: subscriber,
+            tripId: state.filters.tripId,
+            isProcessing: state.isProcessing,
+            selected: state.selectedId == subscriber.subscription.id,
+            onTap: () =>
+                openSubscriptionDetails(context, subscriber.subscription.id),
           ),
       ];
     }
 
     return [
       for (final subscription in state.visibleSubscriptions)
-        Padding(
-          padding: const EdgeInsets.only(bottom: AppSpacing.medium),
-          child: SubscriptionCard(
-            subscription: subscription,
-            selected: state.selectedId == subscription.id,
-            isProcessing: state.isProcessing,
-            onTap: () => cubit.loadDetails(subscription.id),
-          ),
+        SubscriptionCard(
+          subscription: subscription,
+          selected: state.selectedId == subscription.id,
+          isProcessing: state.isProcessing,
+          onTap: () => openSubscriptionDetails(context, subscription.id),
         ),
     ];
+  }
+}
+
+class _EmptyBoard extends StatelessWidget {
+  const _EmptyBoard({required this.state});
+
+  final SubscriptionsLoaded state;
+
+  @override
+  Widget build(BuildContext context) {
+    return AppCard(
+      padding: EdgeInsets.zero,
+      child: EmptyState(
+        emoji: state.filters.hasTrip ? '🚌' : '📭',
+        title: state.filters.hasTrip
+            ? 'لا يوجد مشتركون على هذه الرحلة'
+            : 'لا توجد اشتراكات مطابقة',
+        subtitle: state.filters.hasTrip
+            ? 'لم يشترِ أحد باقة على هذه الرحلة، ولا يوجد اشتراك سارٍ على خط سيرها في هذا التاريخ.'
+            : 'جرّب تغيير التبويب أو مسح الفلاتر.',
+      ),
+    );
   }
 }
 

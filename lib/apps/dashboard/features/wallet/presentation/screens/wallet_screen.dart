@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/master_detail_layout.dart';
@@ -123,19 +124,18 @@ class _WalletBody extends StatelessWidget {
               label: const Text('تحديث'),
             ),
           ],
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              WalletOverviewStrip(
-                overview: state.overview,
-                onOpenRefunds: () => cubit.setTab(WalletTab.refunds),
-              ),
-              WalletTabBar(
-                current: state.tab,
-                openRefundCount: state.openRefundCount,
-                onChanged: cubit.setTab,
-              ),
-            ],
+          sectionId: DashboardSectionIds.walletHeader,
+          summary: WalletOverviewStrip(
+            overview: state.overview,
+            onOpenRefunds: () => cubit.setTab(WalletTab.refunds),
+          ),
+          // The tab bar is pinned and sits at the card's bottom edge, against
+          // the panel it switches — folding the balances must never take the
+          // navigation with it.
+          pinned: WalletTabBar(
+            current: state.tab,
+            openRefundCount: state.openRefundCount,
+            onChanged: cubit.setTab,
           ),
         ),
         const SizedBox(height: AppSpacing.medium),
@@ -191,8 +191,7 @@ class _WalletBody extends StatelessWidget {
                 canApprove: canApprove,
                 chainVerification: state.chainVerification,
                 onRefund: () => _refund(context, cubit),
-                onCashback: () =>
-                    _adjust(context, cubit, WalletKind.cashback),
+                onCashback: () => _adjust(context, cubit, WalletKind.cashback),
                 onCredit: () =>
                     _adjust(context, cubit, WalletKind.manualCredit),
                 onDebit: () => _adjust(context, cubit, WalletKind.manualDebit),
@@ -269,11 +268,8 @@ class _WalletBody extends StatelessWidget {
   ) {
     showDialog<bool>(
       context: context,
-      builder: (_) => RefundDecisionDialog(
-        cubit: cubit,
-        refund: refund,
-        approve: approve,
-      ),
+      builder: (_) =>
+          RefundDecisionDialog(cubit: cubit, refund: refund, approve: approve),
     );
   }
 

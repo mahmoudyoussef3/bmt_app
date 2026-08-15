@@ -3,19 +3,16 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_cancellation_reason_card.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_completed_card.dart';
-import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_detail_section.dart';
-import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_driver_card.dart';
+import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_crew_card.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_payment_card.dart';
-import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_seats_card.dart';
-import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_vehicle_card.dart';
-import 'package:bmt_app/core/localization/l10n_context.dart';
 
-/// The Driver/Vehicle/Seats/Payment sections, plus a trailing
-/// cancellation-reason or rate-this-trip card when relevant.
+/// Everything below the hero: the crew and the bus, what the trip cost, then —
+/// when there is one — the cancellation reason or the rate-this-trip card.
 ///
-/// There is deliberately no Route section: pickup, drop-off and departure now
-/// live once, in the hero. The old Route card restated all three a screen
-/// below them.
+/// Captain, vehicle and seats used to own a titled card each, and every one of
+/// them spent a full screen on one or two facts. The captain and the bus now
+/// share a single card, and the seat map is gone entirely: the hero already
+/// names the seat.
 class TripDetailSections extends StatelessWidget {
   const TripDetailSections({super.key, required this.trip});
 
@@ -23,42 +20,15 @@ class TripDetailSections extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    
     final isCompleted =
         trip.status == TripStatus.completed &&
         (trip.isReviewed || trip.canBeReviewed);
 
     return Column(
       children: [
-        TripDetailSection(
-          title: context.l10n.tracking_captain,
-          subtitle: trip.isFinished
-              ? context.l10n.trips_captainSubtitleFinished
-              : context.l10n.trips_captainSubtitleActive,
-          icon: Icons.person_pin_circle_rounded,
-          child: TripDriverCard(trip: trip),
-        ),
+        TripCrewCard(trip: trip),
         const SizedBox(height: 14),
-        TripDetailSection(
-          title: context.l10n.tracking_vehicle,
-          subtitle: context.l10n.trips_vehicleSubtitle,
-          icon: Icons.directions_bus_filled_rounded,
-          child: TripVehicleCard(trip: trip),
-        ),
-        const SizedBox(height: 14),
-        TripDetailSection(
-          title: context.l10n.common_seats,
-          subtitle: context.l10n.trips_seatsSubtitle,
-          icon: Icons.event_seat_rounded,
-          child: TripSeatsCard(trip: trip),
-        ),
-        const SizedBox(height: 14),
-        TripDetailSection(
-          title: context.l10n.payments_stepPayment,
-          subtitle: context.l10n.trips_paymentSubtitle,
-          icon: Icons.payments_rounded,
-          child: TripPaymentCard(trip: trip),
-        ),
+        TripPaymentCard(trip: trip),
         if (trip.cancellationReason != null) ...[
           const SizedBox(height: 14),
           TripCancellationReasonCard(reason: trip.cancellationReason!),

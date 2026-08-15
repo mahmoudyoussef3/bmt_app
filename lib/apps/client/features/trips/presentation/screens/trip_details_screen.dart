@@ -9,9 +9,7 @@ import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_det
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_error_view.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_details/trip_loading_view.dart';
 
-/// Premium trip details screen with a branded boarding pass, route timeline,
-/// driver actions, vehicle info, a live seat map, payment summary, and the
-/// cancel/track/review flows — with loading, empty, and error states.
+
 class TripDetailsScreen extends StatelessWidget {
   const TripDetailsScreen({super.key, this.tripId});
 

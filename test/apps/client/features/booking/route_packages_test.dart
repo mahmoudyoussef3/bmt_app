@@ -36,10 +36,8 @@ TripStopPairPrice _pair({
     fromPointId: from,
     toPointId: to,
     oneTimePrice: oneTime,
-    fiveDaysPrice: oneTime * 4,
-    tenDaysPrice: oneTime * 8,
-    monthlyPrice: monthly,
-    threeMonthsPrice: monthly * 3,
+    // Keyed to `_monthlyPlan.id` — the only plan these tests price by tier.
+    packagePrices: {'p-month': monthly},
     isActive: active,
   );
 }

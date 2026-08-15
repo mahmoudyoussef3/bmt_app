@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../shared/domain/entities/operation_trip.dart';
+import '../../../shared/domain/entities/trip_pricable_package.dart';
 import '../../../shared/domain/entities/trip_pricing.dart';
 import '../../domain/entities/trip_driver_option.dart';
 import '../../domain/usecases/trip_creation_usecases.dart';
@@ -28,9 +29,13 @@ class TripCreationWizardDataLoaded extends TripCreationState {
   /// the planner offers one resource choice and derives the bus from it.
   final List<TripDriverOption> drivers;
 
+  /// The office's own pricable packages, for the fare panel.
+  final List<TripPricablePackage> packages;
+
   const TripCreationWizardDataLoaded({
     required this.routes,
     required this.drivers,
+    required this.packages,
   });
 }
 
@@ -44,32 +49,38 @@ class TripCreationCubit extends Cubit<TripCreationState> {
   final GetActiveRoutesUseCase _getActiveRoutes;
   final GetActiveDriversUseCase _getActiveDrivers;
   final GetResourceConflictsUseCase _getResourceConflicts;
+  final GetOfficePricablePackagesUseCase _getPricablePackages;
 
   TripCreationCubit({
     required CreateTripUseCase createTrip,
     required GetActiveRoutesUseCase getActiveRoutes,
     required GetActiveDriversUseCase getActiveDrivers,
     required GetResourceConflictsUseCase getResourceConflicts,
+    required GetOfficePricablePackagesUseCase getPricablePackages,
   }) : _createTrip = createTrip,
        _getActiveRoutes = getActiveRoutes,
        _getActiveDrivers = getActiveDrivers,
        _getResourceConflicts = getResourceConflicts,
+       _getPricablePackages = getPricablePackages,
        super(const TripCreationInitial());
 
-  /// Two independent reads, issued together. They used to be three, run one after the
-  /// other — routes, then drivers, then the whole vehicle list for a dropdown that no
-  /// longer exists.
+  /// Three independent reads, issued together. Routes/drivers used to be
+  /// three round trips on their own; the office's own pricable packages —
+  /// what the fare panel offers a price field for — joins them here rather
+  /// than the fare panel fetching separately.
   Future<void> loadWizardData() async {
     emit(const TripCreationLoading());
     try {
       final results = await Future.wait([
         _getActiveRoutes(),
         _getActiveDrivers(),
+        _getPricablePackages(),
       ]);
       emit(
         TripCreationWizardDataLoaded(
           routes: results[0] as List<Map<String, dynamic>>,
           drivers: results[1] as List<TripDriverOption>,
+          packages: results[2] as List<TripPricablePackage>,
         ),
       );
     } catch (e) {
@@ -80,11 +91,12 @@ class TripCreationCubit extends Cubit<TripCreationState> {
   Future<OperationTrip?> submitTrip(
     CreateTripInput input,
     List<TripPricing> pricing,
+    List<TripPricablePackage> packages,
   ) async {
     final prev = state;
     emit(const TripCreationLoading());
     try {
-      final trip = await _createTrip(input, pricing);
+      final trip = await _createTrip(input, pricing, packages);
       emit(TripCreationSuccess(trip));
       return trip;
     } catch (e) {

@@ -15,6 +15,7 @@ TripData _trip({
   required PaymentStatus paymentStatus,
   BookingState bookingState = BookingState.confirmed,
   bool isReviewed = false,
+  List<String> vehicleImageUrls = const [],
 }) {
   return TripData(
     id: 'b1',
@@ -31,6 +32,8 @@ TripData _trip({
     vehicleName: 'Coaster',
     vehicleType: 'Minibus',
     vehicleId: 'v1',
+    vehiclePlate: 'ABC 123',
+    vehicleImageUrls: vehicleImageUrls,
     seats: const ['1'],
     paymentStatus: paymentStatus,
     bookingState: bookingState,
@@ -127,7 +130,7 @@ void main() {
     expect(find.text('Book another trip'), findsOneWidget);
   });
 
-  testWidgets('an in-progress paid trip keeps its live actions', (
+  testWidgets('an in-progress paid trip keeps tracking and shows what it cost', (
     tester,
   ) async {
     await _pump(
@@ -135,15 +138,48 @@ void main() {
       _trip(status: TripStatus.inProgress, paymentStatus: PaymentStatus.paid),
     );
 
-    // Track Vehicle sits in the docked action bar; the crew controls live far
-    // enough down the (lazy) detail list that they only build once dragged
-    // into view.
+    // Track Vehicle sits in the docked action bar. Under the hero there are now
+    // exactly two cards — who is driving what, and what it cost. The boarding
+    // pass and the seat map went for restating what the hero already says.
     expect(find.text('Track Vehicle'), findsOneWidget);
+    expect(find.text('Sam'), findsOneWidget);
+    expect(find.text('ABC 123'), findsOneWidget);
+    expect(find.text('Total paid'), findsOneWidget);
+    expect(find.text('EGP 50'), findsOneWidget);
+    expect(find.text('Boarding pass'), findsNothing);
+    expect(find.text('Seats'), findsNothing);
+  });
 
-    await tester.drag(find.byType(ListView), const Offset(0, -900));
+  testWidgets('a bus with no photos on file offers no gallery', (tester) async {
+    await _pump(
+      tester,
+      _trip(status: TripStatus.inProgress, paymentStatus: PaymentStatus.paid),
+    );
+
+    expect(find.textContaining('photos'), findsNothing);
+  });
+
+  testWidgets('a photographed bus can be tapped open', (tester) async {
+    await _pump(
+      tester,
+      _trip(
+        status: TripStatus.inProgress,
+        paymentStatus: PaymentStatus.paid,
+        vehicleImageUrls: const [
+          'https://example.test/a.png',
+          'https://example.test/b.png',
+        ],
+      ),
+    );
+
+    expect(find.text('2 photos'), findsOneWidget);
+
+    await tester.tap(find.text('2 photos'));
     await tester.pumpAndSettle();
 
-    expect(find.text('Call'), findsOneWidget);
-    expect(find.text('Chat'), findsOneWidget);
+    // The sheet names the bus it is showing, so it can never be mistaken for
+    // photos of some other vehicle.
+    expect(find.text('Coaster'), findsWidgets);
+    expect(find.text('Minibus · ABC 123'), findsOneWidget);
   });
 }

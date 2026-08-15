@@ -28,11 +28,13 @@ void main() {
       'from_point_id': elMargTripPoint,
       'to_point_id': aucTripPoint,
       'one_time_price': 100,
-      'five_days_price': 200,
-      'ten_days_price': 375,
-      'monthly_price': 400,
-      'three_months_price': 450,
       'is_active': true,
+      'trip_package_prices': [
+        {'package_id': 'pkg-five-days', 'price': 200},
+        {'package_id': 'pkg-ten-days', 'price': 375},
+        {'package_id': 'pkg-monthly', 'price': 400},
+        {'package_id': 'pkg-three-months', 'price': 450},
+      ],
     },
   ];
 
@@ -69,7 +71,7 @@ void main() {
 
       expect(pricing.single.fromPointId, elMargStation);
       expect(pricing.single.toPointId, aucStation);
-      expect(pricing.single.monthlyPrice, 400);
+      expect(pricing.single.packagePrices['pkg-monthly'], 400);
     });
 
     test('resolves the Dashboard fare for the rider stop pair', () {
@@ -82,13 +84,14 @@ void main() {
         TripPricingResolver.oneTimeFareFor(pricing, elMargStation, aucStation),
         100,
       );
-      // "One Month": 30 days / 44 rides -> monthly_price, NOT the 3000 catalog
-      // price the Client used to fall back to.
+      // "One Month" package's own price, NOT the 3000 catalog price the
+      // Client used to fall back to.
       expect(
         TripPricingResolver.packageFareFor(
           pricing,
           elMargStation,
           aucStation,
+          'pkg-monthly',
           30,
           44,
         ),

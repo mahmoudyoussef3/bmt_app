@@ -1,5 +1,6 @@
 import '../../../shared/domain/entities/operation_trip.dart';
 import '../../../shared/domain/entities/trip_lifecycle.dart';
+import '../../../shared/domain/entities/trip_pricable_package.dart';
 import '../../../shared/domain/entities/trip_pricing.dart';
 import '../../../trip_creation/domain/entities/trip_driver_option.dart';
 import '../../domain/repositories/trips_repository.dart';
@@ -319,6 +320,15 @@ class TripsRepositoryImpl implements TripsRepository {
         rethrow;
       }
       throw Exception('تعذر حفظ التسعير: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<List<TripPricablePackage>> getOfficePricablePackages() async {
+    try {
+      return await _datasource.fetchOfficePricablePackages();
+    } catch (e) {
+      throw Exception('تعذر تحميل باقات المكتب: ${e.toString()}');
     }
   }
 

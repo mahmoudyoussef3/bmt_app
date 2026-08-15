@@ -7,6 +7,7 @@ import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/empty_state.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/ops_data_table.dart';
 
+import '../../domain/entities/booking_lifecycle.dart';
 import '../../domain/entities/operation_booking.dart';
 import '../cubit/bookings_cubit.dart';
 import '../cubit/bookings_state.dart';
@@ -114,7 +115,6 @@ class _BoardHeader extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (selectable > 0)
-              
               Flexible(
                 child: TextButton.icon(
                   onPressed: cubit.toggleSelectAllOnPage,
@@ -227,7 +227,7 @@ class _BoardTable extends StatelessWidget {
     OpsColumn('المبلغ', flex: 3, minWidth: 105, numeric: true, sortable: true),
     OpsColumn('حالة الحجز', flex: 3, minWidth: 110),
     OpsColumn('حالة الدفع', flex: 3, minWidth: 120),
-    
+
     OpsColumn('إجراءات', flex: 3, minWidth: 170),
   ];
 
@@ -328,8 +328,9 @@ class _SelectCell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!booking.awaitingReview) {
-      
+    // Not `awaitingReview`: a cancelled booking with a submitted receipt is a
+    // row the payment RPCs refuse, so it is never selectable for a bulk review.
+    if (!booking.canReviewPayment) {
       return const SizedBox.shrink();
     }
     return Tooltip(
@@ -444,7 +445,7 @@ class _RowActions extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (booking.awaitingReview) ...[
+        if (booking.canReviewPayment) ...[
           _ActionIcon(
             icon: Icons.check_rounded,
             tooltip: 'قبول الدفع',
@@ -524,26 +525,46 @@ class _BoardCards extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    
     final columns = width >= 720 ? 2 : 1;
-    final cardWidth = columns == 1
-        ? width
-        : (width - AppSpacing.medium) / columns;
+    final rows = <List<OperationBooking>>[
+      for (var i = 0; i < state.pageBookings.length; i += columns)
+        state.pageBookings.skip(i).take(columns).toList(),
+    ];
 
-    return Wrap(
-      spacing: AppSpacing.medium,
-      runSpacing: AppSpacing.medium,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        for (final booking in state.pageBookings)
-          SizedBox(
-            width: cardWidth,
-            child: BookingCard(
-              booking: booking,
-              selected: state.selectedIds.contains(booking.id),
-              opened: state.openedBooking?.id == booking.id,
-              isProcessing: state.isProcessing,
+        for (final (index, row) in rows.indexed) ...[
+          if (index > 0) const SizedBox(height: AppSpacing.medium),
+          // A `Wrap` let each card size to its own content, so two side-by-side
+          // cards ended at different heights and the grid read as ragged. One
+          // `IntrinsicHeight` row per pair squares them off; the cost is bounded
+          // because a page is twelve cards.
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                for (final (position, booking) in row.indexed) ...[
+                  if (position > 0) const SizedBox(width: AppSpacing.medium),
+                  Expanded(
+                    child: BookingCard(
+                      booking: booking,
+                      selected: state.selectedIds.contains(booking.id),
+                      opened: state.openedBooking?.id == booking.id,
+                      isProcessing: state.isProcessing,
+                    ),
+                  ),
+                ],
+                // Keeps a lone card on the final row at one column's width
+                // instead of letting it stretch across both.
+                for (var i = row.length; i < columns; i++) ...[
+                  const SizedBox(width: AppSpacing.medium),
+                  const Expanded(child: SizedBox.shrink()),
+                ],
+              ],
             ),
           ),
+        ],
       ],
     );
   }

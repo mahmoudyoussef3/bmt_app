@@ -6,6 +6,7 @@ import 'package:bmt_app/apps/dashboard/features/trips/shared/data/models/operati
 import 'package:bmt_app/apps/dashboard/features/trips/shared/data/models/trip_pricing_model.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/operation_trip.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/trip_lifecycle.dart';
+import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/trip_pricable_package.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/trip_pricing.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/trip_management/data/datasources/trips_datasource.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/trip_management/data/repositories/trips_repository_impl.dart';
@@ -511,4 +512,8 @@ class _Datasource implements TripsDatasource {
 
   @override
   Future<String> getRouteStatus(String routeId) => throw UnimplementedError();
+
+  @override
+  Future<List<TripPricablePackage>> fetchOfficePricablePackages() =>
+      throw UnimplementedError();
 }

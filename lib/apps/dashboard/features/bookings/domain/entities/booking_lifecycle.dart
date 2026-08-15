@@ -41,7 +41,7 @@ extension BookingStatusRules on BookingStatus {
       next == BookingStatus.confirmed || next == BookingStatus.cancelled,
     BookingStatus.confirmed =>
       next == BookingStatus.boarded || next == BookingStatus.cancelled,
-    
+
     BookingStatus.boarded => next == BookingStatus.completed,
     BookingStatus.completed || BookingStatus.cancelled => false,
   };
@@ -83,7 +83,7 @@ extension PaymentStatusRules on PaymentStatus {
       next == PaymentStatus.approved ||
           next == PaymentStatus.rejected ||
           next == PaymentStatus.cancelled,
-    
+
     PaymentStatus.rejected =>
       next == PaymentStatus.submitted || next == PaymentStatus.cancelled,
     PaymentStatus.approved => next == PaymentStatus.refunded,
@@ -108,6 +108,19 @@ extension PaymentStatusRules on PaymentStatus {
   /// Terminal — nothing further will happen to this payment.
   bool get isClosed =>
       this == PaymentStatus.refunded || this == PaymentStatus.cancelled;
+}
+
+extension BookingReviewRules on OperationBooking {
+  /// Whether the desk can actually decide this payment right now.
+  ///
+  /// [OperationBooking.awaitingReview] reads the *payment* machine alone, and
+  /// the board was offering قبول / رفض / إعادة رفع off it — so a **cancelled**
+  /// booking whose receipt happened to be uploaded still showed three enabled
+  /// review buttons. Pressing one is a guaranteed round trip to a server
+  /// refusal: `approve_payment` requires the booking to be `reserved` and
+  /// answers `booking_not_pending` otherwise. Pre-empting that refusal instead
+  /// of surfacing it is the entire point of this file.
+  bool get canReviewPayment => awaitingReview && !status.isClosed;
 }
 
 /// How serious a detected inconsistency is.
@@ -271,7 +284,6 @@ BookingNextAction resolveNextAction({
   }
 
   if (paymentStatus.needsReview) {
-    
     if (!hasReceipt) {
       return const BookingNextAction(
         kind: BookingActionKind.requestReview,

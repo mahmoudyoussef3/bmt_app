@@ -59,6 +59,9 @@ void registerTripsDependencies(GetIt di) {
   di.registerLazySingleton(
     () => GetResourceConflictsUseCase(di<TripsRepository>()),
   );
+  di.registerLazySingleton(
+    () => GetOfficePricablePackagesUseCase(di<TripsRepository>()),
+  );
 
   di.registerLazySingleton(() => UpdateSeatStateUseCase(di<TripsRepository>()));
 
@@ -97,6 +100,7 @@ void registerTripsDependencies(GetIt di) {
       getActiveRoutes: di<GetActiveRoutesUseCase>(),
       getActiveDrivers: di<GetActiveDriversUseCase>(),
       getResourceConflicts: di<GetResourceConflictsUseCase>(),
+      getPricablePackages: di<GetOfficePricablePackagesUseCase>(),
     ),
   );
   di.registerFactory(() => TripSeatsCubit(di<UpdateSeatStateUseCase>()));
@@ -105,6 +109,7 @@ void registerTripsDependencies(GetIt di) {
       getTripPricing: di<GetTripPricingUseCase>(),
       saveTripPricing: di<SaveTripPricingUseCase>(),
       toggleTripPricing: di<ToggleTripPricingUseCase>(),
+      getPricablePackages: di<GetOfficePricablePackagesUseCase>(),
     ),
   );
   di.registerFactory(

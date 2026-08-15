@@ -7,6 +7,7 @@ import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
 
 import '../../shared/domain/entities/operation_trip.dart';
+import '../../shared/domain/entities/trip_pricable_package.dart';
 import '../../shared/domain/entities/trip_pricing.dart';
 import '../../trip_pricing/presentation/cubit/trip_pricing_cubit.dart';
 import 'trip_pricing_editor_dialog.dart';
@@ -56,7 +57,7 @@ class _TripPricingTabState extends State<TripPricingTab> {
                 ),
               ),
               FilledButton.icon(
-                onPressed: () => _openEditor(context),
+                onPressed: () => _openEditor(context, _currentPackages(context)),
                 icon: const Icon(Icons.add_rounded),
                 label: const Text('إضافة تسعير جديد'),
               ),
@@ -91,7 +92,9 @@ class _TripPricingTabState extends State<TripPricingTab> {
               }
               return _PricingCards(
                 pricing: state.pricing,
-                onEdit: (pricing) => _openEditor(context, pricing),
+                packages: state.packages,
+                onEdit: (pricing) =>
+                    _openEditor(context, state.packages, pricing),
                 onToggle: (pricing) => context
                     .read<TripPricingCubit>()
                     .togglePricingStatus(pricing),
@@ -104,12 +107,25 @@ class _TripPricingTabState extends State<TripPricingTab> {
     );
   }
 
-  void _openEditor(BuildContext context, [TripPricing? pricing]) {
+  List<TripPricablePackage> _currentPackages(BuildContext context) {
+    final state = context.read<TripPricingCubit>().state;
+    return state is TripPricingLoaded ? state.packages : const [];
+  }
+
+  void _openEditor(
+    BuildContext context,
+    List<TripPricablePackage> packages, [
+    TripPricing? pricing,
+  ]) {
     showDialog<void>(
       context: context,
       builder: (_) => BlocProvider.value(
         value: context.read<TripPricingCubit>(),
-        child: TripPricingEditorDialog(trip: widget.trip, pricing: pricing),
+        child: TripPricingEditorDialog(
+          trip: widget.trip,
+          packages: packages,
+          pricing: pricing,
+        ),
       ),
     );
   }
@@ -184,11 +200,13 @@ class _RouteTimeline extends StatelessWidget {
 
 class _PricingCards extends StatelessWidget {
   final List<TripPricing> pricing;
+  final List<TripPricablePackage> packages;
   final ValueChanged<TripPricing> onEdit;
   final ValueChanged<TripPricing> onToggle;
 
   const _PricingCards({
     required this.pricing,
+    required this.packages,
     required this.onEdit,
     required this.onToggle,
   });
@@ -215,6 +233,7 @@ class _PricingCards extends StatelessWidget {
           itemBuilder: (context, index) {
             return _PricingCard(
               pricing: pricing[index],
+              packages: packages,
               onEdit: onEdit,
               onToggle: onToggle,
             );
@@ -227,11 +246,13 @@ class _PricingCards extends StatelessWidget {
 
 class _PricingCard extends StatelessWidget {
   final TripPricing pricing;
+  final List<TripPricablePackage> packages;
   final ValueChanged<TripPricing> onEdit;
   final ValueChanged<TripPricing> onToggle;
 
   const _PricingCard({
     required this.pricing,
+    required this.packages,
     required this.onEdit,
     required this.onToggle,
   });
@@ -256,12 +277,22 @@ class _PricingCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.medium),
-          _PriceRow(label: 'رحلة واحدة', value: pricing.oneTimePrice),
-          _PriceRow(label: '٥ أيام', value: pricing.fiveDaysPrice),
-          _PriceRow(label: '١٠ أيام شهريًا', value: pricing.tenDaysPrice),
-          _PriceRow(label: 'شهري', value: pricing.monthlyPrice),
-          _PriceRow(label: '٣ شهور', value: pricing.threeMonthsPrice),
-          const Spacer(),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _PriceRow(label: 'رحلة واحدة', value: pricing.oneTimePrice),
+                  for (final package in packages)
+                    if (pricing.packagePrices[package.id] != null)
+                      _PriceRow(
+                        label: package.name,
+                        value: pricing.packagePrices[package.id]!,
+                      ),
+                ],
+              ),
+            ),
+          ),
           Row(
             children: [
               FilledButton.tonalIcon(

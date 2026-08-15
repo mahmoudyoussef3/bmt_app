@@ -31,6 +31,8 @@ class _PlanFormDialogState extends State<_PlanFormDialog> {
   late final TextEditingController _price;
   late final TextEditingController _days;
   late final TextEditingController _trips;
+  late final TextEditingController _descriptionAr;
+  late final TextEditingController _descriptionEn;
   late PlanStatus _status;
 
   @override
@@ -43,12 +45,23 @@ class _PlanFormDialogState extends State<_PlanFormDialog> {
     _price = TextEditingController(text: e?.price.toStringAsFixed(0) ?? '');
     _days = TextEditingController(text: (e?.days ?? 30).toString());
     _trips = TextEditingController(text: (e?.tripsCount ?? 0).toString());
+    _descriptionAr = TextEditingController(text: e?.descriptionAr ?? '');
+    _descriptionEn = TextEditingController(text: e?.descriptionEn ?? '');
     _status = e?.status ?? PlanStatus.active;
   }
 
   @override
   void dispose() {
-    for (final c in [_title, _subtitle, _packageType, _price, _days, _trips]) {
+    for (final c in [
+      _title,
+      _subtitle,
+      _packageType,
+      _price,
+      _days,
+      _trips,
+      _descriptionAr,
+      _descriptionEn,
+    ]) {
       c.dispose();
     }
     super.dispose();
@@ -83,6 +96,8 @@ class _PlanFormDialogState extends State<_PlanFormDialog> {
                     ),
                   ],
                 ),
+                _field(_descriptionAr, 'الوصف بالعربية', lines: 3),
+                _field(_descriptionEn, 'الوصف بالإنجليزية', lines: 3),
                 const SizedBox(height: AppSpacing.small),
                 DropdownButtonFormField<PlanStatus>(
                   initialValue: _status,
@@ -146,7 +161,8 @@ class _PlanFormDialogState extends State<_PlanFormDialog> {
       tripsCount: int.tryParse(_trips.text.trim()) ?? 0,
       discountPercent: 0,
       savingsAmount: widget.existing?.savingsAmount ?? 0,
-      description: '',
+      descriptionAr: _descriptionAr.text.trim(),
+      descriptionEn: _descriptionEn.text.trim(),
       status: _status,
       packageType: _packageType.text.trim().toLowerCase().replaceAll(
         RegExp(r'[^a-z0-9_]+'),

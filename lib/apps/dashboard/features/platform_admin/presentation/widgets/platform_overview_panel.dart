@@ -244,7 +244,7 @@ class _HeadlineKpis extends StatelessWidget {
       ),
       DashboardKpiCard(
         label: 'إشغال المقاعد',
-        
+
         value: occupancy == null
             ? '—'
             : '${(occupancy * 100).toStringAsFixed(0)}%',
@@ -255,7 +255,6 @@ class _HeadlineKpis extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        
         final columns = constraints.maxWidth >= 900 ? 3 : 2;
         return GridView.count(
           crossAxisCount: columns,

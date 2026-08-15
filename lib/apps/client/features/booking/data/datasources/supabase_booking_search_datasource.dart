@@ -200,7 +200,7 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
           id, trip_date, departure_time, arrival_time, capacity, booked_seats,
           ticket_price, currency, status, route_id,
           drivers, vehicles,
-          trip_pricing(from_point_id, to_point_id, one_time_price, five_days_price, ten_days_price, monthly_price, three_months_price, currency, is_active),
+          trip_pricing(from_point_id, to_point_id, one_time_price, currency, is_active, trip_package_prices(package_id, price)),
           trip_route_points(id, route_point_id),
           ${BookableTrip.seatsEmbed}
         ''')

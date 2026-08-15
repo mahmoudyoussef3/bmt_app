@@ -29,6 +29,7 @@ class PlatformOfficeDetailsPanel extends StatelessWidget {
     required this.onSetStatus,
     this.metrics,
     this.windowDays = 30,
+    this.onOpenFeatures,
   });
 
   /// Shown while [details] is still null, so the panel names the office the
@@ -49,6 +50,10 @@ class PlatformOfficeDetailsPanel extends StatelessWidget {
   final ValueChanged<String> onSetListing;
   final ValueChanged<String> onSetStatus;
 
+  /// Opens this office's feature board in التراخيص. Null when the console has
+  /// no way to reach that screen.
+  final VoidCallback? onOpenFeatures;
+
   @override
   Widget build(BuildContext context) {
     final loaded = details;
@@ -61,6 +66,18 @@ class PlatformOfficeDetailsPanel extends StatelessWidget {
           subtitle: loaded?.office.slug,
           onClose: onClose,
         ),
+        if (onOpenFeatures case final open?) ...[
+          const SizedBox(height: AppSpacing.small),
+          // Above the fold and full width on purpose: "what is this office
+          // allowed to use" is the question this panel could never answer, and
+          // burying its answer under four sections would be the same as not
+          // having it.
+          FilledButton.tonalIcon(
+            onPressed: isBusy ? null : open,
+            icon: const Icon(Icons.tune_rounded, size: 18),
+            label: const Text('الميزات والحدود المتاحة لهذا المكتب'),
+          ),
+        ],
         const SizedBox(height: AppSpacing.small),
         if (isLoading && loaded == null)
           const DashboardLoading(rows: 3, showHeader: false, scrollable: false)
@@ -71,7 +88,6 @@ class PlatformOfficeDetailsPanel extends StatelessWidget {
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
-                
                 if (error != null) ...[
                   _InlineNotice(message: error!, isError: true),
                   const SizedBox(height: AppSpacing.small),
@@ -80,7 +96,7 @@ class PlatformOfficeDetailsPanel extends StatelessWidget {
                 const SizedBox(height: AppSpacing.medium),
                 _OperationalSection(details: loaded),
                 const SizedBox(height: AppSpacing.medium),
-                
+
                 if (metrics case final m?) ...[
                   _PerformanceSection(
                     metrics: m,
@@ -436,7 +452,7 @@ class _PerformanceSection extends StatelessWidget {
           ),
           _KeyValue(label: 'أول حجز', value: _date(metrics.firstBookingAt)),
           const SizedBox(height: AppSpacing.small),
-          
+
           Wrap(
             spacing: AppSpacing.large,
             runSpacing: AppSpacing.xSmall,

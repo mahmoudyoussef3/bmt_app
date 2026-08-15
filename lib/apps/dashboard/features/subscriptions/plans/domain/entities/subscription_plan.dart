@@ -25,7 +25,8 @@ class SubscriptionPlan {
   final int tripsCount;
   final int discountPercent;
   final double savingsAmount;
-  final String description;
+  final String descriptionAr;
+  final String descriptionEn;
   final PlanStatus status;
   final String packageType;
 
@@ -38,7 +39,8 @@ class SubscriptionPlan {
     required this.tripsCount,
     required this.discountPercent,
     required this.savingsAmount,
-    required this.description,
+    required this.descriptionAr,
+    required this.descriptionEn,
     required this.status,
     this.packageType = '',
   });
@@ -52,6 +54,8 @@ class SubscriptionPlan {
     'price': price,
     'duration_days': days,
     'ride_count': tripsCount,
+    'description_ar': descriptionAr,
+    'description_en': descriptionEn,
     'active': status == PlanStatus.active,
   };
 }

@@ -62,46 +62,42 @@ class _Loaded extends StatelessWidget {
             icon: DashboardIcons.officeBilling,
             title: 'الباقة والفوترة',
             subtitle: 'باقتك الحالية، وما تشمله، وفواتيرك.',
-            child: Padding(
-              padding: const EdgeInsets.all(AppSpacing.medium),
-              child: DashboardKpiGrid(
-                children: [
+            sectionId: DashboardSectionIds.officeBillingHeader,
+            summary: DashboardKpiGrid(
+              children: [
+                DashboardKpiCard(
+                  label: 'الباقة',
+                  value: license.planNameAr.isEmpty ? '—' : license.planNameAr,
+                  icon: DashboardIcons.plans,
+                  detail: license.statusLabelAr,
+                ),
+                DashboardKpiCard(
+                  label: 'التجديد',
+                  value: licensingDate(license.periodEnd),
+                  icon: DashboardIcons.time,
+                  detail: license.autoRenew
+                      ? 'تجديد تلقائي'
+                      : 'بدون تجديد تلقائي',
+                ),
+                DashboardKpiCard(
+                  label: 'القيمة',
+                  value: licensingMoney(license.price, license.currency),
+                  icon: DashboardIcons.payments,
+                  detail: switch (license.billingCycle) {
+                    'yearly' => 'سنويًا',
+                    'monthly' => 'شهريًا',
+                    'custom' => 'عقد مخصص',
+                    'free' => 'مجانية',
+                    _ => '',
+                  },
+                ),
+                if (license.isTrialing)
                   DashboardKpiCard(
-                    label: 'الباقة',
-                    value: license.planNameAr.isEmpty
-                        ? '—'
-                        : license.planNameAr,
-                    icon: DashboardIcons.plans,
-                    detail: license.statusLabelAr,
+                    label: 'باقٍ من التجربة',
+                    value: '${license.trialDaysLeft ?? 0} يوم',
+                    icon: DashboardIcons.attention,
                   ),
-                  DashboardKpiCard(
-                    label: 'التجديد',
-                    value: licensingDate(license.periodEnd),
-                    icon: DashboardIcons.time,
-                    detail: license.autoRenew
-                        ? 'تجديد تلقائي'
-                        : 'بدون تجديد تلقائي',
-                  ),
-                  DashboardKpiCard(
-                    label: 'القيمة',
-                    value: licensingMoney(license.price, license.currency),
-                    icon: DashboardIcons.payments,
-                    detail: switch (license.billingCycle) {
-                      'yearly' => 'سنويًا',
-                      'monthly' => 'شهريًا',
-                      'custom' => 'عقد مخصص',
-                      'free' => 'مجانية',
-                      _ => '',
-                    },
-                  ),
-                  if (license.isTrialing)
-                    DashboardKpiCard(
-                      label: 'باقٍ من التجربة',
-                      value: '${license.trialDaysLeft ?? 0} يوم',
-                      icon: DashboardIcons.attention,
-                    ),
-                ],
-              ),
+              ],
             ),
           ),
           const SizedBox(height: AppSpacing.medium),
@@ -122,7 +118,6 @@ class _Loaded extends StatelessWidget {
                     ),
                   const SizedBox(height: AppSpacing.small),
                   Text(
-                    
                     'الحد يمنع الإضافة الجديدة فقط. لا يُحذف ولا يُعطَّل أي عنصر '
                     'قائم عند تغيير الباقة.',
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -238,7 +233,7 @@ class _FeatureChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final on = feature.isOn;
-    
+
     final blocked = feature.blockedBy != null;
 
     final color = on

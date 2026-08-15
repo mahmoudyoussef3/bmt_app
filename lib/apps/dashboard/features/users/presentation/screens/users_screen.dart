@@ -1,5 +1,6 @@
 import 'package:bmt_app/apps/dashboard/core/di/dashboard_di.dart';
 import 'package:bmt_app/apps/dashboard/core/permissions/dashboard_role.dart';
+import 'package:bmt_app/apps/dashboard/core/session/dashboard_session.dart';
 import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_collapsible_section.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart';
@@ -15,6 +16,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/entities/app_user.dart';
 import '../cubit/users_cubit.dart';
 import '../cubit/users_state.dart';
+import '../widgets/staff_account_dialog.dart';
+import '../widgets/staff_credentials_panel.dart';
+import '../widgets/staff_password_dialog.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 
 class UsersScreen extends StatelessWidget {
@@ -40,9 +44,42 @@ class _UsersViewState extends State<_UsersView> {
   String _query = '';
   DashboardRole? _roleFilter;
 
+  /// The signed-in operator's own login name, so their row can refuse the two actions
+  /// the server will refuse anyway — changing their own role, disabling themselves.
+  /// Showing live controls that are guaranteed to fail is worse than not showing them.
+  ///
+  /// Matched on the username rather than the auth id because that is what the session
+  /// context carries, and `uq_office_users_username` makes it unique across the whole
+  /// platform — so it identifies exactly one row.
+  String? get _selfUsername {
+    final username = dashboardDi<DashboardSession>().context?.username.trim();
+    return (username == null || username.isEmpty) ? null : username;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<UsersCubit, UsersState>(
+    return BlocConsumer<UsersCubit, UsersState>(
+      // Action outcomes are notices over the screen, never replacements for it: a
+      // refused role change must leave the directory exactly where it was.
+      listenWhen: (_, current) =>
+          current is UsersActionSuccess || current is UsersActionFailure,
+      listener: (context, state) {
+        final scheme = Theme.of(context).colorScheme;
+        final (message, isError) = switch (state) {
+          UsersActionSuccess(:final message) => (message, false),
+          UsersActionFailure(:final message) => (message, true),
+          _ => ('', false),
+        };
+        if (message.isEmpty) return;
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              content: Text(message),
+              backgroundColor: isError ? scheme.errorContainer : null,
+            ),
+          );
+      },
       builder: (context, state) {
         if (state is UsersLoading) {
           return const DashboardLoading();
@@ -53,24 +90,45 @@ class _UsersViewState extends State<_UsersView> {
             onRetry: () => context.read<UsersCubit>().load(),
           );
         }
-        final users = (state as UsersLoaded).users;
+        if (state is UsersCredentialsIssued) {
+          return StaffCredentialsPanel(
+            credentials: state.credentials,
+            onDone: context.read<UsersCubit>().acknowledgeCredentials,
+          );
+        }
+
+        final users = switch (state) {
+          UsersLoaded(:final users) => users,
+          UsersActionSuccess(:final users) => users,
+          UsersActionFailure(:final users) => users,
+          _ => const <AppUser>[],
+        };
         final filtered = _filterUsers(users);
+        final selfUsername = _selfUsername;
+
         return ListView(
           padding: const EdgeInsets.all(AppSpacing.large),
           children: [
             DashboardModuleHeader(
               icon: DashboardIcons.usersActive,
               title: 'المستخدمون والصلاحيات',
-              subtitle: 'إدارة مستخدمي لوحة التحكم وأدوار خدمة العملاء.',
+              subtitle:
+                  'حسابات لوحة التحكم الخاصة بمكتبك — أنشئ حساباً لكل موظف '
+                  'وحدّد ما يراه.',
               actions: [
                 OutlinedButton.icon(
                   onPressed: () => context.read<UsersCubit>().load(),
                   icon: const Icon(Icons.refresh_rounded),
                   label: const Text('تحديث'),
                 ),
+                FilledButton.icon(
+                  onPressed: () => showStaffAccountDialog(context),
+                  icon: const Icon(Icons.person_add_alt_1_rounded),
+                  label: const Text('إضافة مستخدم'),
+                ),
               ],
-              
-              child: DashboardCollapsibleSection.bare(
+
+              pinned: DashboardCollapsibleSection.bare(
                 sectionId: DashboardSectionIds.usersFilters,
                 icon: Icons.filter_alt_outlined,
                 title: 'البحث والتصفية',
@@ -97,7 +155,9 @@ class _UsersViewState extends State<_UsersView> {
             if (users.isEmpty)
               const EmptyState(
                 title: 'لا يوجد مستخدمون مسجلون بعد',
-                subtitle: 'ستظهر هنا حسابات لوحة التحكم بعد منح الصلاحيات.',
+                subtitle:
+                    'أضف حساباً لكل موظف يحتاج الدخول إلى لوحة التحكم، وحدّد '
+                    'دوره عند الإنشاء.',
               )
             else if (filtered.isEmpty)
               const EmptyState(
@@ -110,16 +170,16 @@ class _UsersViewState extends State<_UsersView> {
                   padding: const EdgeInsets.only(bottom: AppSpacing.small),
                   child: _UserAccessRow(
                     user: user,
+                    isSelf: selfUsername != null &&
+                        user.username.toLowerCase() ==
+                            selfUsername.toLowerCase(),
                     onRoleChanged: (role) {
                       if (role != user.role) {
                         context.read<UsersCubit>().changeRole(user.id, role);
                       }
                     },
-                    onRemove: () => _confirmRemove(
-                      context,
-                      user.userId,
-                      () => context.read<UsersCubit>().removeUser(user),
-                    ),
+                    onResetPassword: () => _resetPassword(context, user),
+                    onToggleActive: () => _confirmToggle(context, user),
                   ),
                 ),
               ),
@@ -135,6 +195,8 @@ class _UsersViewState extends State<_UsersView> {
       final matchesQuery =
           query.isEmpty ||
           user.userId.toLowerCase().contains(query) ||
+          user.username.toLowerCase().contains(query) ||
+          user.fullName.toLowerCase().contains(query) ||
           (user.email ?? '').toLowerCase().contains(query) ||
           user.role.label.contains(query);
       final matchesRole = _roleFilter == null || user.role == _roleFilter;
@@ -142,32 +204,51 @@ class _UsersViewState extends State<_UsersView> {
     }).toList();
   }
 
-  Future<void> _confirmRemove(
-    BuildContext context,
-    String userId,
-    VoidCallback onConfirm,
-  ) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('إزالة الصلاحية'),
-        content: Text('هل تريد إزالة صلاحيات المستخدم $userId؟'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('إلغاء'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text(
-              'إزالة',
-              style: TextStyle(color: Theme.of(context).colorScheme.error),
-            ),
-          ),
-        ],
-      ),
+  Future<void> _resetPassword(BuildContext context, AppUser user) async {
+    final cubit = context.read<UsersCubit>();
+    final password = await showStaffPasswordDialog(
+      context,
+      username: user.username.isEmpty ? user.displayName : user.username,
     );
-    if (confirmed == true) onConfirm();
+    // Null is a cancellation; an empty string is "generate one server-side".
+    if (password == null) return;
+    await cubit.resetPassword(user, password: password);
+  }
+
+  Future<void> _confirmToggle(BuildContext context, AppUser user) async {
+    final cubit = context.read<UsersCubit>();
+    final name = user.displayName;
+
+    if (user.isActive) {
+      final confirmed = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: const Text('تعطيل الحساب'),
+          content: Text(
+            'لن يتمكن «$name» من تسجيل الدخول بعد الآن. يمكنك إعادة تفعيل '
+            'الحساب في أي وقت.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('إلغاء'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: Text(
+                'تعطيل',
+                style: TextStyle(
+                  color: Theme.of(dialogContext).colorScheme.error,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+      if (confirmed != true) return;
+    }
+
+    await cubit.setActive(user, active: !user.isActive);
   }
 }
 
@@ -194,7 +275,7 @@ class _UsersToolbar extends StatelessWidget {
       builder: (context, constraints) {
         final compact = constraints.maxWidth < 760;
         final search = DebouncedSearchField(
-          hintText: 'بحث بالبريد أو معرف المستخدم أو الدور...',
+          hintText: 'بحث بالاسم أو اسم الدخول أو الدور...',
           initialValue: query,
           onChanged: onQueryChanged,
         );
@@ -238,13 +319,22 @@ class _UsersToolbar extends StatelessWidget {
 
 class _UserAccessRow extends StatelessWidget {
   final AppUser user;
+
+  /// The signed-in owner's own row. Their role picker and disable action are inert,
+  /// because `office_update_staff_role` and `office_set_staff_status` refuse both —
+  /// an office that could demote its last owner would have nobody left to undo it.
+  final bool isSelf;
+
   final ValueChanged<DashboardRole> onRoleChanged;
-  final VoidCallback onRemove;
+  final VoidCallback onResetPassword;
+  final VoidCallback onToggleActive;
 
   const _UserAccessRow({
     required this.user,
+    required this.isSelf,
     required this.onRoleChanged,
-    required this.onRemove,
+    required this.onResetPassword,
+    required this.onToggleActive,
   });
 
   @override
@@ -253,16 +343,21 @@ class _UserAccessRow extends StatelessWidget {
     final initials = user.displayName.isEmpty
         ? '--'
         : user.displayName.characters.take(2).toString().toUpperCase();
+
     return AppCard(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
           CircleAvatar(
-            backgroundColor: scheme.primaryContainer,
+            backgroundColor: user.isActive
+                ? scheme.primaryContainer
+                : scheme.surfaceContainerHighest,
             child: Text(
               initials,
               style: TextStyle(
-                color: scheme.onPrimaryContainer,
+                color: user.isActive
+                    ? scheme.onPrimaryContainer
+                    : scheme.onSurfaceVariant,
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
               ),
@@ -273,17 +368,32 @@ class _UserAccessRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  user.email ?? user.userId,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        user.displayName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                    if (isSelf) ...[
+                      const SizedBox(width: AppSpacing.xSmall),
+                      Text(
+                        '(أنت)',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: scheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
-                if (user.email != null)
+                if (user.username.isNotEmpty)
                   Text(
-                    user.userId,
+                    user.username,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -300,38 +410,74 @@ class _UserAccessRow extends StatelessWidget {
               ],
             ),
           ),
+          if (!user.isActive) ...[
+            const SizedBox(width: AppSpacing.small),
+            StatusChip(
+              label: 'معطّل',
+              color: scheme.errorContainer.withAlpha(70),
+              textColor: scheme.error,
+            ),
+          ],
           const SizedBox(width: AppSpacing.small),
           DropdownButton<DashboardRole>(
             value: user.role,
             underline: const SizedBox.shrink(),
             isDense: true,
             items: DashboardRole.values
-                .where(
-                  (role) =>
-                      role != DashboardRole.admin ||
-                      user.role == DashboardRole.admin,
-                )
                 .map(
                   (role) =>
                       DropdownMenuItem(value: role, child: Text(role.label)),
                 )
                 .toList(),
-            onChanged: (role) {
-              if (role != null) onRoleChanged(role);
-            },
+            onChanged: isSelf
+                ? null
+                : (role) {
+                    if (role != null) onRoleChanged(role);
+                  },
           ),
           const SizedBox(width: AppSpacing.xSmall),
-          IconButton(
-            tooltip: 'إزالة الصلاحية',
-            icon: const Icon(Icons.person_remove_outlined),
-            color: scheme.error,
-            onPressed: onRemove,
+          PopupMenuButton<_UserAction>(
+            tooltip: 'إجراءات',
+            icon: const Icon(Icons.more_vert_rounded),
+            onSelected: (action) => switch (action) {
+              _UserAction.resetPassword => onResetPassword(),
+              _UserAction.toggleActive => onToggleActive(),
+            },
+            itemBuilder: (_) => [
+              const PopupMenuItem(
+                value: _UserAction.resetPassword,
+                child: ListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(Icons.key_outlined),
+                  title: Text('تعيين كلمة مرور جديدة'),
+                ),
+              ),
+              PopupMenuItem(
+                value: _UserAction.toggleActive,
+                // Disabling yourself locks you out of the screen that could undo it.
+                enabled: !isSelf,
+                child: ListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  leading: Icon(
+                    user.isActive
+                        ? Icons.person_off_outlined
+                        : Icons.person_add_alt_rounded,
+                    color: user.isActive ? scheme.error : null,
+                  ),
+                  title: Text(user.isActive ? 'تعطيل الحساب' : 'تفعيل الحساب'),
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 }
+
+enum _UserAction { resetPassword, toggleActive }
 
 String _formatRelativeDate(DateTime dt) {
   final diff = DateTime.now().difference(dt);

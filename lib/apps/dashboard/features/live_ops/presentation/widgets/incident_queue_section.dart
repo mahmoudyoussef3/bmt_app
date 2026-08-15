@@ -4,6 +4,7 @@ import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_empty_state.dart';
 
 import '../../domain/entities/trip_incident.dart';
 import 'incident_resolution_dialog.dart';
@@ -64,39 +65,17 @@ class IncidentQueueSection extends StatelessWidget {
   }
 }
 
+/// The cleared queue, drawn as the panel's own empty state rather than a card
+/// nested inside the panel card it already sits in.
 class _NoIncidents extends StatelessWidget {
   const _NoIncidents();
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final text = Theme.of(context).textTheme;
-    return AppCard(
-      padding: const EdgeInsets.all(AppSpacing.large),
-      child: Row(
-        children: [
-          Icon(Icons.verified_rounded, color: scheme.primary),
-          const SizedBox(width: AppSpacing.medium),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'لا توجد بلاغات مفتوحة',
-                  style: text.titleSmall?.copyWith(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'كل البلاغات الواردة من الكباتن تمت معالجتها.',
-                  style: text.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+    return const DashboardEmptyState(
+      icon: Icons.verified_rounded,
+      title: 'لا توجد بلاغات مفتوحة',
+      message: 'كل البلاغات الواردة من الكباتن تمت معالجتها.',
     );
   }
 }
@@ -337,7 +316,6 @@ class _Actions extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    
     if (!canAct) return const SizedBox.shrink();
 
     if (busy) {

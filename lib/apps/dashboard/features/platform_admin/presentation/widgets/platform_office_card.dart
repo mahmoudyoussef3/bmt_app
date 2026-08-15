@@ -24,6 +24,7 @@ class PlatformOfficeCard extends StatelessWidget {
     required this.onSetListing,
     required this.onSetStatus,
     this.metrics,
+    this.onOpenFeatures,
   });
 
   final PlatformOffice office;
@@ -39,6 +40,12 @@ class PlatformOfficeCard extends StatelessWidget {
   final bool isSelected;
 
   final VoidCallback onOpen;
+
+  /// Jumps to this office's feature board in التراخيص — what it can use, and
+  /// how much of it. Null where the console cannot reach that screen, so the
+  /// card keeps working in a harness that mounts it alone.
+  final VoidCallback? onOpenFeatures;
+
   final ValueChanged<String> onSetListing;
   final ValueChanged<String> onSetStatus;
 
@@ -102,7 +109,6 @@ class PlatformOfficeCard extends StatelessWidget {
               Wrap(
                 spacing: AppSpacing.xSmall,
                 children: [
-                  
                   if (metrics case final m?)
                     StatusChip(
                       label: m.activityLevel.label,
@@ -151,7 +157,7 @@ class PlatformOfficeCard extends StatelessWidget {
               _Stat(label: 'رحلات', value: office.trips),
             ],
           ),
-          
+
           if (metrics case final m?) ...[
             const SizedBox(height: AppSpacing.xSmall),
             Wrap(
@@ -213,6 +219,12 @@ class PlatformOfficeCard extends StatelessWidget {
             spacing: AppSpacing.small,
             runSpacing: AppSpacing.xSmall,
             children: [
+              if (onOpenFeatures case final open?)
+                FilledButton.tonalIcon(
+                  onPressed: isBusy ? null : open,
+                  icon: const Icon(Icons.tune_rounded, size: 18),
+                  label: const Text('الميزات والحدود'),
+                ),
               if (office.isListed)
                 OutlinedButton.icon(
                   onPressed: isBusy ? null : () => onSetListing('unlisted'),
@@ -221,7 +233,6 @@ class PlatformOfficeCard extends StatelessWidget {
                 )
               else
                 FilledButton.icon(
-                  
                   onPressed: isBusy || !office.canBeListed
                       ? null
                       : () => onSetListing('listed'),

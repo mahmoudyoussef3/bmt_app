@@ -15,8 +15,8 @@ import 'subscription_rides_widget.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
 /// Everything known about one subscriber, plus every operation the office can
-/// run on them. Lives beside the list on desktop (MasterDetailLayout), and
-/// replaces it on narrow screens.
+/// run on them. Hosted inside [SubscriptionDetailsSheet], which opens it as a
+/// modal sheet over the board (see [openSubscriptionDetails]).
 class SubscriptionDetailsPanel extends StatelessWidget {
   const SubscriptionDetailsPanel({
     super.key,
@@ -251,7 +251,6 @@ class _RideHistoryPanel extends StatelessWidget {
       child: history.isEmpty
           ? Text(
               subscription.usedRides > 0
-                  
                   ? 'لا يوجد سجل مفصّل — استُهلكت '
                         '${arabicNumber(subscription.usedRides)} رحلة قبل تفعيل '
                         'سجل الرحلات.'
@@ -460,7 +459,8 @@ class _ActionsPanel extends StatelessWidget {
             onPressed: () => Navigator.pop(dialogContext, true),
             style: destructive
                 ? FilledButton.styleFrom(
-                    backgroundColor: context.status(AppStatusTone.error).ink,
+                    backgroundColor: context.status(AppStatusTone.error).fill,
+                    foregroundColor: context.status(AppStatusTone.error).onFill,
                   )
                 : null,
             child: const Text('تأكيد'),

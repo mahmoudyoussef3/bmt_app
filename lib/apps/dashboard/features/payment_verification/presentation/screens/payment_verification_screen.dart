@@ -94,7 +94,7 @@ class _VerificationLoadedView extends StatelessWidget {
                 label: const Text('تحديث'),
               ),
             ],
-            child: DashboardCollapsibleSection.bare(
+            pinned: DashboardCollapsibleSection.bare(
               sectionId: DashboardSectionIds.paymentVerificationFilters,
               icon: Icons.filter_alt_outlined,
               title: 'البحث والتصفية',

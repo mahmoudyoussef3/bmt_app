@@ -11,10 +11,7 @@ class TripPricingModel extends TripPricing {
     required super.fromPointOrder,
     required super.toPointOrder,
     required super.oneTimePrice,
-    required super.fiveDaysPrice,
-    required super.tenDaysPrice,
-    required super.monthlyPrice,
-    required super.threeMonthsPrice,
+    super.packagePrices,
     required super.currency,
     required super.isActive,
     required super.createdAt,
@@ -32,10 +29,7 @@ class TripPricingModel extends TripPricing {
       fromPointOrder: pricing.fromPointOrder,
       toPointOrder: pricing.toPointOrder,
       oneTimePrice: pricing.oneTimePrice,
-      fiveDaysPrice: pricing.fiveDaysPrice,
-      tenDaysPrice: pricing.tenDaysPrice,
-      monthlyPrice: pricing.monthlyPrice,
-      threeMonthsPrice: pricing.threeMonthsPrice,
+      packagePrices: pricing.packagePrices,
       currency: pricing.currency,
       isActive: pricing.isActive,
       createdAt: pricing.createdAt,
@@ -43,7 +37,12 @@ class TripPricingModel extends TripPricing {
     );
   }
 
+  /// [json] is a `trip_pricing` row optionally carrying its nested
+  /// `trip_package_prices(package_id, price)` join rows (see
+  /// `SupabaseTripsDatasource._pricingSelect`). Missing/empty when the
+  /// caller didn't request the nested select.
   factory TripPricingModel.fromJson(Map<String, dynamic> json) {
+    final packageRows = json['trip_package_prices'] as List? ?? const [];
     return TripPricingModel(
       id: json['id'] as String? ?? '',
       tripId: json['trip_id'] as String? ?? '',
@@ -54,10 +53,11 @@ class TripPricingModel extends TripPricing {
       fromPointOrder: json['from_point_order'] as int? ?? 0,
       toPointOrder: json['to_point_order'] as int? ?? 0,
       oneTimePrice: (json['one_time_price'] as num? ?? 0).toDouble(),
-      fiveDaysPrice: (json['five_days_price'] as num? ?? 0).toDouble(),
-      tenDaysPrice: (json['ten_days_price'] as num? ?? 0).toDouble(),
-      monthlyPrice: (json['monthly_price'] as num? ?? 0).toDouble(),
-      threeMonthsPrice: (json['three_months_price'] as num? ?? 0).toDouble(),
+      packagePrices: {
+        for (final row in packageRows.whereType<Map<String, dynamic>>())
+          if (row['package_id'] != null)
+            row['package_id'].toString(): (row['price'] as num).toDouble(),
+      },
       currency: json['currency'] as String? ?? 'ج.م',
       isActive: json['is_active'] as bool? ?? true,
       createdAt: json['created_at'] != null
@@ -69,6 +69,8 @@ class TripPricingModel extends TripPricing {
     );
   }
 
+  /// The `trip_pricing` row alone — `packagePrices` is written separately to
+  /// `trip_package_prices` by the datasource, not through this row's json.
   Map<String, dynamic> toJson() {
     return {
       'trip_id': tripId,
@@ -79,10 +81,6 @@ class TripPricingModel extends TripPricing {
       'from_point_order': fromPointOrder,
       'to_point_order': toPointOrder,
       'one_time_price': oneTimePrice,
-      'five_days_price': fiveDaysPrice,
-      'ten_days_price': tenDaysPrice,
-      'monthly_price': monthlyPrice,
-      'three_months_price': threeMonthsPrice,
       'currency': currency,
       'is_active': isActive,
     };

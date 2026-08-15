@@ -35,45 +35,43 @@ class TripPricingResolver {
     return forPair(pricing, fromPointId, toPointId)?.oneTimePrice;
   }
 
-  /// The package-tier fare for the pair, bucketed by the package's
-  /// [durationDays] / [rideCount] — NOT by `transport_packages.package_type`
-  /// text (values like `just_go`, `work_week`, `two_work_weeks` don't line
-  /// up with trip_pricing's tier column names, and package_type is
-  /// free-form admin-editable text with no fixed vocabulary). This mirrors
-  /// the identical bucketing in the `confirm_seat_booking_v2` Supabase RPC
-  /// (see migration `20260710090000_authoritative_booking_pricing.sql`) so
-  /// the price shown here is always what the server will actually charge.
-  /// Returns null when the pair has no row, or the package's shape has no
-  /// trip_pricing equivalent (e.g. a same-day round trip: durationDays=1
-  /// with rideCount>1) — callers should fall back to the catalog price.
+  /// The package fare for the pair. A single-ride package (`durationDays <=
+  /// 1 && rideCount == 1`) resolves to the pair's own [TripStopPairPrice.
+  /// oneTimePrice] — every other package resolves to its own price, set
+  /// directly by the office (`trip_package_prices`). Mirrors the exact
+  /// branch `confirm_seat_booking_v2` takes (see migration
+  /// `20260815091000_per_package_trip_pricing.sql`) so the price shown here
+  /// is always what the server will actually charge. Returns null when the
+  /// pair has no row, or the office hasn't priced this package on this pair
+  /// yet — callers should fall back to the catalog price.
   static double? packageFareFor(
     List<TripStopPairPrice> pricing,
     String? fromPointId,
     String? toPointId,
+    String packageId,
     int durationDays,
     int rideCount,
   ) {
     final row = forPair(pricing, fromPointId, toPointId);
     if (row == null) return null;
-    return tierPriceOf(row, durationDays, rideCount);
+    return tierPriceOf(row, packageId, durationDays, rideCount);
   }
 
-  /// The tier column of one `trip_pricing` row that a package of this shape is
-  /// charged from. Split out of [packageFareFor] so a surface that quotes a
-  /// package before the rider has picked their stops — Route Details' "from"
-  /// price — buckets it by the same rule the booking RPC will, instead of
-  /// re-deriving the thresholds and drifting from them.
+  /// The package's price on one `trip_pricing` row. Split out of
+  /// [packageFareFor] so a surface that quotes a package before the rider
+  /// has picked their stops — Route Details' "from" price — can look it up
+  /// the same way.
   static double? tierPriceOf(
     TripStopPairPrice row,
+    String packageId,
     int durationDays,
     int rideCount,
   ) {
-    if (durationDays <= 1 && rideCount == 1) return row.oneTimePrice;
-    if (durationDays >= 2 && durationDays <= 6) return row.fiveDaysPrice;
-    if (durationDays >= 7 && durationDays <= 15) return row.tenDaysPrice;
-    if (durationDays >= 16 && durationDays <= 60) return row.monthlyPrice;
-    if (durationDays > 60) return row.threeMonthsPrice;
-    return null;
+    if (durationDays <= 1 && rideCount == 1) {
+      return row.oneTimePrice > 0 ? row.oneTimePrice : null;
+    }
+    final price = row.packagePrices[packageId];
+    return price != null && price > 0 ? price : null;
   }
 
   /// Extracts the numeric amount from a formatted price label such as

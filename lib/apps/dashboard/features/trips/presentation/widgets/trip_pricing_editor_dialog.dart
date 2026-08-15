@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 
 import '../../shared/domain/entities/operation_trip.dart';
+import '../../shared/domain/entities/trip_pricable_package.dart';
 import '../../shared/domain/entities/trip_pricing.dart';
 import '../../shared/presentation/widgets/trip_fare_controllers.dart';
 import '../../shared/presentation/widgets/trip_fare_fields.dart';
@@ -12,8 +13,14 @@ import '../../trip_pricing/presentation/cubit/trip_pricing_cubit.dart';
 class TripPricingEditorDialog extends StatefulWidget {
   final OperationTrip trip;
   final TripPricing? pricing;
+  final List<TripPricablePackage> packages;
 
-  const TripPricingEditorDialog({super.key, required this.trip, this.pricing});
+  const TripPricingEditorDialog({
+    super.key,
+    required this.trip,
+    required this.packages,
+    this.pricing,
+  });
 
   @override
   State<TripPricingEditorDialog> createState() =>
@@ -27,7 +34,7 @@ class _TripPricingEditorDialogState extends State<TripPricingEditorDialog> {
 
   /// The same fare editor the trip planner uses: one ticket price that derives
   /// the package tiers, each still overridable for this specific stop pair.
-  final _fare = TripFareControllers();
+  late final _fare = TripFareControllers(widget.packages);
   final currency = TextEditingController(text: 'ج.م');
   String error = '';
   bool saving = false;
@@ -307,10 +314,6 @@ class _TripPricingEditorDialogState extends State<TripPricingEditorDialog> {
           fromPointOrder: fromPoint.order,
           toPointOrder: toPoint.order,
           oneTimePrice: 0,
-          fiveDaysPrice: 0,
-          tenDaysPrice: 0,
-          monthlyPrice: 0,
-          threeMonthsPrice: 0,
           currency: currency.text.trim(),
           isActive: isActive,
           createdAt: existing?.createdAt ?? now,

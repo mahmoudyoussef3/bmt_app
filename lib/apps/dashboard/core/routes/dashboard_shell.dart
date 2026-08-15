@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -54,12 +56,9 @@ import '../../features/auth/presentation/cubit/dashboard_auth_cubit.dart';
 import '../../features/office_billing/presentation/cubit/office_billing_cubit.dart';
 import '../../features/office_billing/presentation/screens/office_billing_screen.dart';
 import '../../features/platform_licensing/presentation/cubit/platform_licensing_cubit.dart';
-import '../../features/platform_licensing/presentation/screens/platform_audit_screen.dart';
 import '../../features/platform_licensing/presentation/screens/platform_billing_screen.dart';
-import '../../features/platform_licensing/presentation/screens/platform_features_screen.dart';
+import '../../features/platform_licensing/presentation/screens/platform_catalog_screen.dart';
 import '../../features/platform_licensing/presentation/screens/platform_licenses_screen.dart';
-import '../../features/platform_licensing/presentation/screens/platform_plans_screen.dart';
-import '../../features/platform_licensing/presentation/screens/platform_usage_screen.dart';
 import '../di/dashboard_di.dart';
 import '../entitlements/entitlement_context.dart';
 import '../entitlements/entitlement_service.dart';
@@ -132,7 +131,6 @@ class DashboardShell extends StatefulWidget {
 }
 
 class _DashboardShellState extends State<DashboardShell> {
-  
   late DashboardRole _role = widget.office.role;
   late String _route = widget.initialRoute ?? DashboardRoutes.home;
 
@@ -210,7 +208,6 @@ class _DashboardShellState extends State<DashboardShell> {
   void _onEntitlementsChanged() {
     if (!mounted) return;
     setState(() {
-      
       if (!_canOpenRoute(_route)) _route = DashboardRoutes.home;
     });
   }
@@ -227,7 +224,7 @@ class _DashboardShellState extends State<DashboardShell> {
       icon: DashboardIcons.home,
       selectedIcon: DashboardIcons.homeActive,
     ),
-    
+
     _DashboardNavItem(
       label: 'نظرة تنفيذية',
       route: DashboardRoutes.businessOverview,
@@ -281,7 +278,6 @@ class _DashboardShellState extends State<DashboardShell> {
       group: _navSales,
     ),
     _DashboardNavItem(
-      
       label: 'إدارة الأسطول',
       route: DashboardRoutes.fleet,
       icon: DashboardIcons.fleet,
@@ -296,7 +292,7 @@ class _DashboardShellState extends State<DashboardShell> {
       icon: DashboardIcons.captainRequests,
       selectedIcon: DashboardIcons.captainRequestsActive,
       permission: DashboardPermission.captainRequests,
-      
+
       feature: FeatureKeys.driverApp,
       group: _navFleet,
     ),
@@ -310,7 +306,6 @@ class _DashboardShellState extends State<DashboardShell> {
       group: _navFinance,
     ),
     _DashboardNavItem(
-      
       label: 'محفظة العملاء',
       route: DashboardRoutes.wallet,
       icon: DashboardIcons.wallet,
@@ -368,24 +363,16 @@ class _DashboardShellState extends State<DashboardShell> {
       icon: DashboardIcons.platformOffices,
       selectedIcon: DashboardIcons.platformOfficesActive,
       permission: DashboardPermission.platformOffices,
-      
+
       platformOnly: true,
       group: _navPlatform,
     ),
+
     _DashboardNavItem(
-      label: 'الخطط والباقات',
-      route: DashboardRoutes.platformPlans,
+      label: 'الباقات والميزات',
+      route: DashboardRoutes.platformCatalog,
       icon: DashboardIcons.plans,
       selectedIcon: DashboardIcons.plansActive,
-      permission: DashboardPermission.platformLicensing,
-      platformOnly: true,
-      group: _navPlatform,
-    ),
-    _DashboardNavItem(
-      label: 'كتالوج الميزات',
-      route: DashboardRoutes.platformFeatures,
-      icon: DashboardIcons.featureCatalog,
-      selectedIcon: DashboardIcons.featureCatalogActive,
       permission: DashboardPermission.platformLicensing,
       platformOnly: true,
       group: _navPlatform,
@@ -400,28 +387,10 @@ class _DashboardShellState extends State<DashboardShell> {
       group: _navPlatform,
     ),
     _DashboardNavItem(
-      label: 'الفوترة',
+      label: 'الفوترة والسجل',
       route: DashboardRoutes.platformBilling,
       icon: DashboardIcons.billing,
       selectedIcon: DashboardIcons.billingActive,
-      permission: DashboardPermission.platformLicensing,
-      platformOnly: true,
-      group: _navPlatform,
-    ),
-    _DashboardNavItem(
-      label: 'الاستخدام',
-      route: DashboardRoutes.platformUsage,
-      icon: DashboardIcons.usage,
-      selectedIcon: DashboardIcons.usageActive,
-      permission: DashboardPermission.platformLicensing,
-      platformOnly: true,
-      group: _navPlatform,
-    ),
-    _DashboardNavItem(
-      label: 'سجل التغييرات',
-      route: DashboardRoutes.platformAudit,
-      icon: DashboardIcons.audit,
-      selectedIcon: DashboardIcons.auditActive,
       permission: DashboardPermission.platformLicensing,
       platformOnly: true,
       group: _navPlatform,
@@ -455,7 +424,7 @@ class _DashboardShellState extends State<DashboardShell> {
     return LayoutBuilder(
       builder: (context, constraints) {
         final useDrawer = constraints.maxWidth < _drawerBreakpoint;
-        
+
         final collapsed =
             _navCollapsed ?? (constraints.maxWidth < _railBreakpoint);
 
@@ -463,7 +432,6 @@ class _DashboardShellState extends State<DashboardShell> {
           return Scaffold(
             drawer: Drawer(
               child: SafeArea(
-                
                 child: _DashboardSidebar(
                   items: visibleItems,
                   lockedRoutes: lockedRoutes,
@@ -548,7 +516,7 @@ class _DashboardShellState extends State<DashboardShell> {
 
   bool _isItemAllowed(_DashboardNavItem item) {
     if (!_passesRoleGate(item)) return false;
-    
+
     return _entitlementContext.allows(item.feature);
   }
 
@@ -584,7 +552,6 @@ class _DashboardShellState extends State<DashboardShell> {
 
   bool _openRoute(String route) {
     if (!_canOpenRoute(route)) {
-      
       final locked = _items.firstWhere(
         (item) => item.route == route && _isItemLocked(item),
         orElse: () => _items.first,
@@ -631,6 +598,19 @@ class _DashboardShellState extends State<DashboardShell> {
     });
   }
 
+  /// «مكاتب المنصة» → this office's feature board in «التراخيص».
+  ///
+  /// The hand-off is a route change plus a selection rather than a route
+  /// argument, because the licensing console is one long-lived cubit shared by
+  /// all three of its destinations: telling it which office to open *is* the
+  /// navigation. [PlatformLicensingCubit.openOffice] waits for a load already
+  /// in flight, so the jump lands on the office even when التراخيص has not been
+  /// visited yet this session.
+  void _openOfficeFeatures(String officeId) {
+    if (!_openRoute(DashboardRoutes.platformLicenses)) return;
+    unawaited(_licensing.openOffice(officeId));
+  }
+
   bool _canOpenRoute(String route) {
     final item = _items.firstWhere(
       (item) => item.route == route,
@@ -661,9 +641,9 @@ class _DashboardShellState extends State<DashboardShell> {
         create: (_) => dashboardDi<BusinessOverviewCubit>()..load(),
         child: BusinessOverviewScreen(
           office: widget.office,
-          
+
           entitlements: _entitlementContext,
-          
+
           canOpenRoute: _canOpenRoute,
           onOpenModule: _openRoute,
           onCreateTrip: _startTripPlanner,
@@ -672,7 +652,6 @@ class _DashboardShellState extends State<DashboardShell> {
       DashboardRoutes.liveOps => BlocProvider(
         create: (_) => dashboardDi<LiveOpsCubit>()..startWatching(),
         child: LiveOpsScreen(
-          
           canResolveIncidents: DashboardPermissions.canAccess(
             widget.office.role,
             DashboardPermission.liveOpsIncidentAction,
@@ -730,7 +709,7 @@ class _DashboardShellState extends State<DashboardShell> {
       ),
       DashboardRoutes.wallet => BlocProvider(
         create: (_) => dashboardDi<WalletCubit>()..load(),
-        
+
         child: WalletScreen(
           canAdjust: DashboardPermissions.canAccess(
             widget.office.role,
@@ -770,21 +749,16 @@ class _DashboardShellState extends State<DashboardShell> {
       DashboardRoutes.officeProfile => BlocProvider(
         create: (_) => dashboardDi<OfficeProfileCubit>()..load(),
         child: OfficeProfileScreen(
-          
           canEdit: widget.office.role == DashboardRole.admin,
         ),
       ),
       DashboardRoutes.platformOffices => BlocProvider(
         create: (_) => dashboardDi<PlatformAdminCubit>()..load(),
-        child: const PlatformOfficesScreen(),
+        child: PlatformOfficesScreen(onOpenFeatures: _openOfficeFeatures),
       ),
-      DashboardRoutes.platformPlans => BlocProvider.value(
+      DashboardRoutes.platformCatalog => BlocProvider.value(
         value: _licensing,
-        child: const PlatformPlansScreen(),
-      ),
-      DashboardRoutes.platformFeatures => BlocProvider.value(
-        value: _licensing,
-        child: const PlatformFeaturesScreen(),
+        child: const PlatformCatalogScreen(),
       ),
       DashboardRoutes.platformLicenses => BlocProvider.value(
         value: _licensing,
@@ -794,20 +768,12 @@ class _DashboardShellState extends State<DashboardShell> {
         value: _licensing,
         child: const PlatformBillingScreen(),
       ),
-      DashboardRoutes.platformUsage => BlocProvider.value(
-        value: _licensing,
-        child: const PlatformUsageScreen(),
-      ),
-      DashboardRoutes.platformAudit => BlocProvider.value(
-        value: _licensing,
-        child: const PlatformAuditScreen(),
-      ),
       DashboardRoutes.officeBilling => BlocProvider(
         create: (_) => dashboardDi<OfficeBillingCubit>()..load(),
         child: const OfficeBillingScreen(),
       ),
       DashboardRoutes.settings => const SettingsScreen(),
-      
+
       DashboardRoutes.permissions => const UsersScreen(),
       _ => MultiBlocProvider(
         providers: [
@@ -911,7 +877,7 @@ class _DashboardSidebar extends StatelessWidget {
           end: BorderSide(color: DashboardColors.border(context)),
         ),
       ),
-      
+
       child: ClipRect(
         child: OverflowBox(
           alignment: AlignmentDirectional.topStart,
@@ -942,7 +908,7 @@ class _DashboardSidebar extends StatelessWidget {
           const SizedBox(height: AppSpacing.small),
           Divider(height: 1, color: DashboardColors.divider(context)),
           const SizedBox(height: AppSpacing.small),
-          
+
           if (kDebugMode && !collapsed) ...[
             _RoleSelector(role: role, onChanged: onRoleChanged),
             const SizedBox(height: AppSpacing.small),
@@ -1364,7 +1330,6 @@ class _NotificationsBell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    
     return BlocProvider.value(
       value: dashboardDi<OperationalAlertsBadgeCubit>(),
       child: BlocBuilder<OperationalAlertsBadgeCubit, int>(
@@ -1435,7 +1400,7 @@ class _NavButton extends StatelessWidget {
     final baseInk = selected
         ? DashboardColors.sidebarSelectedInk(context)
         : DashboardColors.sidebarInk(context);
-    
+
     final ink = locked ? baseInk.withValues(alpha: 0.55) : baseInk;
     final radius = BorderRadius.circular(AppTokens.radiusSmall);
 
@@ -1453,7 +1418,7 @@ class _NavButton extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: radius,
-        
+
         hoverColor: DashboardColors.tableRowHover(context),
         child: Padding(
           padding: EdgeInsets.symmetric(

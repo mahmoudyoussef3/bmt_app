@@ -135,7 +135,6 @@ class PlatformOfficeFilter {
           (a, b) => _bookings(b, metrics).compareTo(_bookings(a, metrics)),
         );
       case PlatformOfficeSort.idle:
-        
         sorted.sort(
           (a, b) => _idleDays(a, metrics).compareTo(_idleDays(b, metrics)),
         );
@@ -177,7 +176,7 @@ class PlatformOfficeFilter {
     }
     if (activity != null) {
       final level = metrics[office.id]?.activityLevel;
-      
+
       if (level != null && level != activity) return false;
     }
     if (needle.isEmpty) return true;

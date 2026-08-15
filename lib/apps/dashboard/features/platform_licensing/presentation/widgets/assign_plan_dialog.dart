@@ -86,7 +86,6 @@ class _AssignPlanDialogState extends State<_AssignPlanDialog> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                
                 'التعيين يبدأ مدة جديدة فورًا، ويعيد حساب صلاحيات المكتب من قيم '
                 'الباقة الجديدة. الاستثناءات القائمة تبقى كما هي.',
                 style: theme.textTheme.bodySmall?.copyWith(

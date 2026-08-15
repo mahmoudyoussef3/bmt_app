@@ -70,7 +70,8 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
           title: 'التقييمات',
           subtitle:
               'آراء الركاب في السائقين والمركبات والمسارات — مرئية للإدارة فقط',
-          child: _Kpis(summary: summary),
+          sectionId: DashboardSectionIds.reviewsHeader,
+          summary: _Kpis(summary: summary),
         ),
         const SizedBox(height: AppSpacing.large),
         if (state.isEmpty)

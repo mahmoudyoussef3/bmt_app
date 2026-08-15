@@ -2837,6 +2837,23 @@ class AppLocalizationsAr extends AppLocalizations {
   String get trips_paymentSubtitle => 'الحالة وتفاصيل الأجرة';
 
   @override
+  String get trips_totalPaid => 'الإجمالي المدفوع';
+
+  @override
+  String get trips_totalDue => 'الإجمالي المستحق';
+
+  @override
+  String trips_vehiclePhotosCount(int count) {
+    return '$count صور';
+  }
+
+  @override
+  String get trips_crewSubtitle => 'من يقود الرحلة، وبأي حافلة';
+
+  @override
+  String get trips_vehicleNumberLabel => 'رقم المركبة';
+
+  @override
   String get trips_paymentNotePaid => 'تم تأكيد دفعتك.';
 
   @override
