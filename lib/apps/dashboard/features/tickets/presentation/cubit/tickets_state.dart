@@ -1,4 +1,5 @@
 import '../../domain/entities/complaint.dart';
+import 'package:bmt_app/apps/dashboard/core/query/dashboard_query_caps.dart';
 
 sealed class TicketsState {
   const TicketsState();
@@ -23,6 +24,11 @@ class TicketsLoaded extends TicketsState {
   final String? actionMessage;
   final List<SupportAttachment>? selectedTicketAttachments;
   final List<Map<String, dynamic>> agents;
+
+  /// True when the query came back full at [DashboardQueryCaps.tickets], so
+  /// this queue is the newest slice of the office's history rather than all of
+  /// it. The screen says so rather than presenting a window as a total.
+  bool get capReached => tickets.length >= DashboardQueryCaps.tickets;
 
   const TicketsLoaded({
     required this.tickets,

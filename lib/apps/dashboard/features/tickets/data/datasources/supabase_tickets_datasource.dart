@@ -1,4 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import 'package:bmt_app/apps/dashboard/core/query/dashboard_query_caps.dart';
 import '../../domain/entities/complaint.dart';
 import '../models/complaint_model.dart';
 
@@ -15,7 +17,8 @@ class SupabaseTicketsDatasource {
       *,
       clients:client_id(id, full_name, phone)
     ''')
-        .order('created_at', ascending: false);
+        .order('created_at', ascending: false)
+        .limit(DashboardQueryCaps.tickets);
 
     return response.map((json) {
       return SupportTicketModel.fromJson(json);

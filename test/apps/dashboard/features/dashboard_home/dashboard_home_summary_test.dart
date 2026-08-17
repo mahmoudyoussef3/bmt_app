@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/domain/entities/operation_booking.dart';
 import 'package:bmt_app/apps/dashboard/features/captain_requests/domain/entities/captain_request.dart';
 import 'package:bmt_app/apps/dashboard/features/dashboard_home/domain/entities/dashboard_home_summary.dart';
-import 'package:bmt_app/apps/dashboard/features/payment_verification/domain/entities/booking_payment_verification.dart';
 import 'package:bmt_app/apps/dashboard/features/subscriptions/domain/entities/user_subscription.dart';
 import 'package:bmt_app/apps/dashboard/features/tickets/domain/entities/complaint.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/operation_trip.dart';
@@ -133,15 +132,17 @@ void main() {
       },
     );
 
-    test('pendingPaymentReviewsCount counts only pending verifications', () {
+    test('pendingPaymentReviewsCount counts only submitted receipts', () {
+      // Derived from the bookings feed since مراجعة المدفوعات was folded into
+      // الحجوزات. `underReview` is excluded on purpose: that booking is waiting
+      // on the passenger to re-upload, not on the office to decide — the same
+      // line the separate queue drew.
       final summary = buildSummary(
-        paymentVerifications: [
-          buildPaymentVerification(id: 'p1'),
-          buildPaymentVerification(
-            id: 'p2',
-            status: BookingVerificationStatus.approved,
-          ),
-          buildPaymentVerification(id: 'p3'),
+        bookings: [
+          buildBooking(id: 'p1', paymentStatus: PaymentStatus.submitted),
+          buildBooking(id: 'p2', paymentStatus: PaymentStatus.approved),
+          buildBooking(id: 'p3', paymentStatus: PaymentStatus.submitted),
+          buildBooking(id: 'p4', paymentStatus: PaymentStatus.underReview),
         ],
       );
 
@@ -484,7 +485,9 @@ void main() {
               driver: '',
             ),
           ],
-          paymentVerifications: [buildPaymentVerification(id: 'p1')],
+          bookings: [
+            buildBooking(id: 'p1', paymentStatus: PaymentStatus.submitted),
+          ],
           captainRequests: [buildCaptainRequest(id: 'c1')],
         );
 

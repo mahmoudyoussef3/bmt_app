@@ -82,6 +82,14 @@ abstract class WalletRepository {
 
   Future<WalletChainVerification> verifyChain(String clientId);
 
+  /// Writes [rows] and the office's liability position to a downloadable file
+  /// and returns the file name. The only write in the module that does not touch
+  /// the ledger — it writes to disk.
+  Future<String> exportStatement({
+    required List<WalletTransaction> rows,
+    required WalletOverview overview,
+  });
+
   /// Files a refund. When the caller holds the decide capability the server
   /// approves and settles it in the same transaction; otherwise it is born
   /// pending and lands in the queue.

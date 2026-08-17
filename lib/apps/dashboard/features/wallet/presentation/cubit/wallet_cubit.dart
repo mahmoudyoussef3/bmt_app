@@ -34,6 +34,7 @@ class WalletCubit extends Cubit<WalletState> {
   final CreateRefundUseCase _createRefund;
   final DecideRefundUseCase _decideRefund;
   final RefundTripBatchUseCase _refundTripBatch;
+  final ExportWalletStatementUseCase _exportStatement;
 
   WalletCubit({
     required GetWalletWorkspaceUseCase getWorkspace,
@@ -50,6 +51,7 @@ class WalletCubit extends Cubit<WalletState> {
     required CreateRefundUseCase createRefund,
     required DecideRefundUseCase decideRefund,
     required RefundTripBatchUseCase refundTripBatch,
+    required ExportWalletStatementUseCase exportStatement,
   }) : _getWorkspace = getWorkspace,
        _searchDirectory = searchDirectory,
        _getSummary = getSummary,
@@ -64,6 +66,7 @@ class WalletCubit extends Cubit<WalletState> {
        _createRefund = createRefund,
        _decideRefund = decideRefund,
        _refundTripBatch = refundTripBatch,
+       _exportStatement = exportStatement,
        super(const WalletLoadingState());
 
   WalletLoadedState? get _loaded =>
@@ -373,6 +376,24 @@ class WalletCubit extends Cubit<WalletState> {
     } catch (e) {
       return _fail(e);
     }
+  }
+
+  /// Exports the ledger rows currently on screen and returns the file name.
+  ///
+  /// Does not go through [_run]: nothing in the ledger changed, so re-reading
+  /// the workspace afterwards would cost the operator a round trip and a rebuild
+  /// for a file that was written to their disk. Failures are returned for the
+  /// screen to put in a snackbar rather than emitted, for the same reason —
+  /// a refused export must not disturb the workspace behind it.
+  Future<String> exportStatement() {
+    final current = _loaded;
+    if (current == null) {
+      throw StateError('لا توجد بيانات للتصدير.');
+    }
+    return _exportStatement(
+      rows: current.ledger.rows,
+      overview: current.overview,
+    );
   }
 
   /// The shared action path: mark busy, run, re-read, report.

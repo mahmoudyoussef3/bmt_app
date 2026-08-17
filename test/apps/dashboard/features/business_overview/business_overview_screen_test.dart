@@ -74,6 +74,20 @@ Widget _wrap({
   );
 }
 
+/// Scrolls the page until [finder] has been built and is on screen.
+///
+/// The page is a lazy `ListView` of eight sections; the last of them sits well
+/// below any viewport a test can declare, so it is not merely off screen — it
+/// has not been built, and a plain `ensureVisible` throws "No element".
+Future<void> _reveal(WidgetTester tester, Finder finder) async {
+  await tester.scrollUntilVisible(
+    finder,
+    360,
+    scrollable: find.byType(Scrollable).first,
+  );
+  await tester.pumpAndSettle();
+}
+
 void main() {
   testWidgets('renders the shared skeleton while loading', (tester) async {
     await tester.pumpWidget(_wrap(state: const BusinessOverviewLoading()));
@@ -110,6 +124,8 @@ void main() {
     expect(find.byType(FinancialSnapshotSection), findsOneWidget);
     expect(find.byType(OperationalSnapshotSection), findsOneWidget);
     expect(find.byType(CustomerSnapshotSection), findsOneWidget);
+
+    await _reveal(tester, find.byType(QuickActionsSection));
     expect(find.byType(QuickActionsSection), findsOneWidget);
   });
 
@@ -250,6 +266,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    await _reveal(tester, find.text('حجز جديد'));
+
     expect(find.text('منح كاش باك'), findsNothing);
     expect(find.text('تسجيل استرداد'), findsNothing);
     expect(find.text('حجز جديد'), findsOneWidget);
@@ -273,12 +291,7 @@ void main() {
 
     // Quick actions sit at the foot of the page by design — the owner reads
     // the business before acting on it — so the tap has to scroll there first.
-    // `ensureVisible`, not `scrollUntilVisible`: the ListView has already built
-    // the tile below the fold, so the finder matches without it ever being on
-    // screen and a scroll-until loop would exit immediately having moved
-    // nothing.
-    await tester.ensureVisible(find.text('رحلة جديدة'));
-    await tester.pumpAndSettle();
+    await _reveal(tester, find.text('رحلة جديدة'));
     await tester.tap(find.text('رحلة جديدة'));
     await tester.pump();
     expect(planned, 1);

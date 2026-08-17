@@ -1,5 +1,9 @@
 import '../../../../core/network/network_di.dart';
 import '../entitlements/entitlement_service.dart';
+import '../../features/office_billing/data/datasources/supabase_office_billing_datasource.dart';
+import '../../features/office_billing/data/repositories/office_billing_repository_impl.dart';
+import '../../features/office_billing/domain/repositories/office_billing_repository.dart';
+import '../../features/office_billing/domain/usecases/get_office_invoices_usecase.dart';
 import '../../features/office_billing/presentation/cubit/office_billing_cubit.dart';
 import '../../features/platform_licensing/data/datasources/platform_licensing_datasource.dart';
 import '../../features/platform_licensing/data/datasources/supabase_platform_licensing_datasource.dart';
@@ -9,6 +13,7 @@ import '../../features/platform_licensing/domain/usecases/platform_licensing_use
 import '../../features/platform_licensing/presentation/cubit/platform_licensing_cubit.dart';
 import '../session/dashboard_session.dart';
 import '../../features/auth/data/datasources/dashboard_auth_datasource.dart';
+import '../../features/auth/domain/repositories/dashboard_auth_repository.dart';
 import '../../features/auth/presentation/cubit/dashboard_auth_cubit.dart';
 import '../../features/captain_requests/data/datasources/supabase_captain_requests_datasource.dart';
 import '../../features/captain_requests/data/repositories/captain_requests_repository_impl.dart';
@@ -45,6 +50,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../features/bookings/data/datasources/supabase_bookings_datasource.dart';
 import '../../features/bookings/data/repositories/bookings_repository_impl.dart';
 import '../../features/bookings/domain/repositories/bookings_repository.dart';
+import '../../features/bookings/domain/usecases/add_booking_note_usecase.dart';
 import '../../features/bookings/domain/usecases/approve_booking_usecase.dart';
 import '../../features/bookings/domain/usecases/bulk_approve_bookings_usecase.dart';
 import '../../features/bookings/domain/usecases/bulk_reject_bookings_usecase.dart';
@@ -103,16 +109,6 @@ import '../../features/fleet/data/repositories/fleet_repository_impl.dart';
 import '../../features/fleet/domain/repositories/fleet_repository.dart';
 import '../../features/fleet/domain/usecases/fleet_usecases.dart';
 import '../../features/fleet/overview/presentation/cubit/fleet_overview_cubit.dart';
-import '../../features/payment_verification/data/datasources/booking_payment_verification_datasource.dart';
-import '../../features/payment_verification/data/datasources/supabase_booking_payment_verification_datasource.dart';
-import '../../features/payment_verification/data/repositories/booking_payment_verification_repository_impl.dart';
-import '../../features/payment_verification/domain/repositories/booking_payment_verification_repository.dart';
-import '../../features/payment_verification/domain/usecases/add_booking_payment_note_usecase.dart';
-import '../../features/payment_verification/domain/usecases/approve_booking_payment_usecase.dart';
-import '../../features/payment_verification/domain/usecases/get_booking_payment_verifications_usecase.dart';
-import '../../features/payment_verification/domain/usecases/reject_booking_payment_usecase.dart';
-import '../../features/payment_verification/domain/usecases/request_booking_payment_review_usecase.dart';
-import '../../features/payment_verification/presentation/cubit/payment_verification_cubit.dart';
 import '../../features/routes/data/datasources/routes_datasource.dart';
 import '../../features/routes/data/datasources/supabase_routes_datasource.dart';
 import '../../features/routes/data/repositories/routes_repository_impl.dart';
@@ -237,8 +233,6 @@ void registerDashboardDependencies() {
       () => DashboardHomeCubit(
         getTrips: dashboardDi<GetOperationTripsUseCase>(),
         getBookings: dashboardDi<GetOperationBookingsUseCase>(),
-        getPaymentVerifications:
-            dashboardDi<GetBookingPaymentVerificationsUseCase>(),
         getRevenueMetrics: dashboardDi<GetRevenueMetricsUseCase>(),
         getFleetWorkspace: dashboardDi<GetFleetWorkspaceUseCase>(),
         getCaptainRequests: dashboardDi<GetCaptainRequestsUseCase>(),
@@ -254,8 +248,6 @@ void registerDashboardDependencies() {
       () => BusinessOverviewCubit(
         getTrips: dashboardDi<GetOperationTripsUseCase>(),
         getBookings: dashboardDi<GetOperationBookingsUseCase>(),
-        getPaymentVerifications:
-            dashboardDi<GetBookingPaymentVerificationsUseCase>(),
         getRevenueMetrics: dashboardDi<GetRevenueMetricsUseCase>(),
         getFleetWorkspace: dashboardDi<GetFleetWorkspaceUseCase>(),
         getCaptainRequests: dashboardDi<GetCaptainRequestsUseCase>(),
@@ -577,6 +569,12 @@ void registerDashboardDependencies() {
     );
   }
 
+  if (!dashboardDi.isRegistered<AddBookingNoteUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => AddBookingNoteUseCase(dashboardDi<BookingsRepository>()),
+    );
+  }
+
   if (!dashboardDi.isRegistered<BookingsCubit>()) {
     dashboardDi.registerFactory(
       () => BookingsCubit(
@@ -589,6 +587,7 @@ void registerDashboardDependencies() {
         watchBookings: dashboardDi<WatchBookingsUseCase>(),
         reassignBooking: dashboardDi<ReassignBookingUseCase>(),
         getReassignmentTargets: dashboardDi<GetReassignmentTargetsUseCase>(),
+        addNote: dashboardDi<AddBookingNoteUseCase>(),
       ),
     );
   }
@@ -602,74 +601,6 @@ void registerDashboardDependencies() {
   if (!dashboardDi.isRegistered<GetReassignmentTargetsUseCase>()) {
     dashboardDi.registerLazySingleton(
       () => GetReassignmentTargetsUseCase(dashboardDi<BookingsRepository>()),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<BookingPaymentVerificationDatasource>()) {
-    dashboardDi.registerLazySingleton<BookingPaymentVerificationDatasource>(
-      () => SupabaseBookingPaymentVerificationDatasource(
-        dashboardDi<SupabaseClient>(),
-      ),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<BookingPaymentVerificationRepository>()) {
-    dashboardDi.registerLazySingleton<BookingPaymentVerificationRepository>(
-      () => BookingPaymentVerificationRepositoryImpl(
-        dashboardDi<BookingPaymentVerificationDatasource>(),
-      ),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<GetBookingPaymentVerificationsUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () => GetBookingPaymentVerificationsUseCase(
-        dashboardDi<BookingPaymentVerificationRepository>(),
-      ),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<ApproveBookingPaymentUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () => ApproveBookingPaymentUseCase(
-        dashboardDi<BookingPaymentVerificationRepository>(),
-      ),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<RejectBookingPaymentUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () => RejectBookingPaymentUseCase(
-        dashboardDi<BookingPaymentVerificationRepository>(),
-      ),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<RequestBookingPaymentReviewUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () => RequestBookingPaymentReviewUseCase(
-        dashboardDi<BookingPaymentVerificationRepository>(),
-      ),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<AddBookingPaymentNoteUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () => AddBookingPaymentNoteUseCase(
-        dashboardDi<BookingPaymentVerificationRepository>(),
-      ),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<PaymentVerificationCubit>()) {
-    dashboardDi.registerFactory(
-      () => PaymentVerificationCubit(
-        getQueue: dashboardDi<GetBookingPaymentVerificationsUseCase>(),
-        approve: dashboardDi<ApproveBookingPaymentUseCase>(),
-        reject: dashboardDi<RejectBookingPaymentUseCase>(),
-        requestReview: dashboardDi<RequestBookingPaymentReviewUseCase>(),
-        addNote: dashboardDi<AddBookingPaymentNoteUseCase>(),
-      ),
     );
   }
 
@@ -1443,8 +1374,8 @@ void _registerNotificationsDispatchDependencies() {
 
   _registerOperationalAlertsDependencies();
 
-  if (!dashboardDi.isRegistered<DashboardAuthDatasource>()) {
-    dashboardDi.registerLazySingleton<DashboardAuthDatasource>(
+  if (!dashboardDi.isRegistered<DashboardAuthRepository>()) {
+    dashboardDi.registerLazySingleton<DashboardAuthRepository>(
       () => DashboardAuthDatasource(dashboardDi<SupabaseClient>()),
     );
   }
@@ -1452,7 +1383,7 @@ void _registerNotificationsDispatchDependencies() {
   if (!dashboardDi.isRegistered<DashboardAuthCubit>()) {
     dashboardDi.registerLazySingleton<DashboardAuthCubit>(
       () => DashboardAuthCubit(
-        dashboardDi<DashboardAuthDatasource>(),
+        dashboardDi<DashboardAuthRepository>(),
         dashboardDi<DashboardSession>(),
         dashboardDi<EntitlementService>(),
       ),
@@ -1560,10 +1491,28 @@ void _registerOperationalAlertsDependencies() {
     });
   }
 
+  if (!dashboardDi.isRegistered<OfficeBillingDatasource>()) {
+    dashboardDi.registerLazySingleton<OfficeBillingDatasource>(
+      () => SupabaseOfficeBillingDatasource(dashboardDi<SupabaseClient>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<OfficeBillingRepository>()) {
+    dashboardDi.registerLazySingleton<OfficeBillingRepository>(
+      () => OfficeBillingRepositoryImpl(dashboardDi<OfficeBillingDatasource>()),
+    );
+  }
+
+  if (!dashboardDi.isRegistered<GetOfficeInvoicesUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => GetOfficeInvoicesUseCase(dashboardDi<OfficeBillingRepository>()),
+    );
+  }
+
   if (!dashboardDi.isRegistered<OfficeBillingCubit>()) {
     dashboardDi.registerFactory<OfficeBillingCubit>(
       () => OfficeBillingCubit(
-        dashboardDi<SupabaseClient>(),
+        dashboardDi<GetOfficeInvoicesUseCase>(),
         dashboardDi<EntitlementService>(),
       ),
     );

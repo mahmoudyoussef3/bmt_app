@@ -6,6 +6,8 @@ import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_snackbar.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/apps/dashboard/core/query/dashboard_query_caps.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_cap_notice.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_kpi_card.dart';
 import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart';
@@ -210,6 +212,12 @@ class _Header extends StatelessWidget {
       subtitle: 'راجع الطلبات، تحقق من الدفع، وافتح تفاصيل الحجز من مكان واحد.',
       actions: [
         StatusChip(label: '${state.bookings.length} طلب'),
+        if (state.capReached)
+          const DashboardCapNotice(
+            rowCap: DashboardQueryCaps.bookings,
+            noun: 'حجز',
+            hint: 'ضيّق الفلاتر للوصول لحجوزات أقدم.',
+          ),
         IconButton(
           tooltip: 'تحديث البيانات',
           onPressed: state.isProcessing ? null : cubit.load,

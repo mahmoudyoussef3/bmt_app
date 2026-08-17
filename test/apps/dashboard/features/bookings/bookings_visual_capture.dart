@@ -25,6 +25,7 @@ import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/domain/entities/operation_booking.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/domain/entities/reassignment_target.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/domain/repositories/bookings_repository.dart';
+import 'package:bmt_app/apps/dashboard/features/bookings/domain/usecases/add_booking_note_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/domain/usecases/approve_booking_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/domain/usecases/bulk_approve_bookings_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/domain/usecases/bulk_reject_bookings_usecase.dart';
@@ -209,6 +210,7 @@ BookingsCubit _cubit(List<OperationBooking> seed) => BookingsCubit(
   watchBookings: WatchBookingsUseCase(_FakeRepo(seed)),
   reassignBooking: ReassignBookingUseCase(_FakeRepo(seed)),
   getReassignmentTargets: GetReassignmentTargetsUseCase(_FakeRepo(seed)),
+  addNote: AddBookingNoteUseCase(_FakeRepo(seed)),
 );
 
 /// See the note in the Live Ops harness: the real themes build their text theme
@@ -269,6 +271,10 @@ class _FakeRepo implements BookingsRepository {
 
   @override
   Future<OperationBooking> reassignBooking(String id, String tripId) async =>
+      seed.firstWhere((b) => b.id == id);
+
+  @override
+  Future<OperationBooking> addNote(String id, String note) async =>
       seed.firstWhere((b) => b.id == id);
 
   @override

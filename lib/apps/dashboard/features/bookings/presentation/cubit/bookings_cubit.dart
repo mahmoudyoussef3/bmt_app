@@ -6,6 +6,7 @@ import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_filter_memory.dar
 
 import '../../domain/entities/operation_booking.dart';
 import '../../domain/entities/reassignment_target.dart';
+import '../../domain/usecases/add_booking_note_usecase.dart';
 import '../../domain/usecases/approve_booking_usecase.dart';
 import '../../domain/usecases/bulk_approve_bookings_usecase.dart';
 import '../../domain/usecases/bulk_reject_bookings_usecase.dart';
@@ -29,6 +30,7 @@ class BookingsCubit extends Cubit<BookingsState> {
   final WatchBookingsUseCase _watchBookings;
   final ReassignBookingUseCase _reassignBooking;
   final GetReassignmentTargetsUseCase _getReassignmentTargets;
+  final AddBookingNoteUseCase _addNote;
 
   StreamSubscription<List<OperationBooking>>? _bookingsSubscription;
 
@@ -42,6 +44,7 @@ class BookingsCubit extends Cubit<BookingsState> {
     required WatchBookingsUseCase watchBookings,
     required ReassignBookingUseCase reassignBooking,
     required GetReassignmentTargetsUseCase getReassignmentTargets,
+    required AddBookingNoteUseCase addNote,
   }) : _getBookings = getBookings,
        _approveBooking = approveBooking,
        _rejectBooking = rejectBooking,
@@ -51,9 +54,18 @@ class BookingsCubit extends Cubit<BookingsState> {
        _watchBookings = watchBookings,
        _reassignBooking = reassignBooking,
        _getReassignmentTargets = getReassignmentTargets,
+       _addNote = addNote,
        super(const BookingsLoading());
 
-  Future<void> load() async {
+  /// Loads the queue, optionally opening on [presetTab].
+  ///
+  /// [presetTab] is how `/payment-verification` survives as a destination now
+  /// that مراجعة المدفوعات is a preset of this board rather than its own module:
+  /// the route lands here on [BookingQueueTab.needsReview], which is the queue
+  /// that screen was. It overrides remembered filters deliberately — an operator
+  /// who asked for the payment queue is asking for *that* queue, not for
+  /// whatever الحجوزات was last narrowed to.
+  Future<void> load({BookingQueueTab? presetTab}) async {
     emit(const BookingsLoading());
     try {
       final bookings = await _getBookings();
@@ -64,15 +76,16 @@ class BookingsCubit extends Cubit<BookingsState> {
       emit(
         BookingsLoaded(
           bookings: bookings,
-          filters:
-              DashboardFilterMemory.instance.read<BookingFilters>(
-                DashboardFilterIds.bookings,
-              ) ??
-              const BookingFilters(),
+          activeTab: presetTab ?? BookingQueueTab.needsReview,
+          filters: presetTab != null
+              ? const BookingFilters()
+              : DashboardFilterMemory.instance.read<BookingFilters>(
+                      DashboardFilterIds.bookings,
+                    ) ??
+                    const BookingFilters(),
         ),
       );
       _bookingsSubscription?.cancel();
-      
       _bookingsSubscription = _watchBookings().listen(
         _onRealtimeUpdate,
         onError: (_) {},
@@ -205,6 +218,16 @@ class BookingsCubit extends Cubit<BookingsState> {
 
   Future<void> requestReupload(String bookingId, String reason) async {
     await _runReview(() => _requestReupload(bookingId, reason));
+  }
+
+  /// Records an operator note against a booking, deciding nothing.
+  ///
+  /// Runs through the same action path as a review, so it marks the workspace
+  /// busy and reports failure as a snackbar rather than as an error screen —
+  /// losing a filtered queue because a note did not save is not a trade the
+  /// operator would make.
+  Future<void> addNote(String bookingId, String note) async {
+    await _runReview(() => _addNote(bookingId, note));
   }
 
   /// Moves the booking onto [newTripId]. The old seat is released and a new one

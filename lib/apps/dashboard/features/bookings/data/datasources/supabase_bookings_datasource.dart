@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/entitlements/licensing_guard.dart';
+import '../../../../core/query/dashboard_query_caps.dart';
 import '../../domain/entities/reassignment_target.dart';
 import '../models/operation_booking_model.dart';
 import 'bookings_datasource.dart';
@@ -15,13 +18,19 @@ class SupabaseBookingsDatasource implements BookingsDatasource {
 
   const SupabaseBookingsDatasource(this._client);
 
+  /// The newest [DashboardQueryCaps.bookings] bookings for the office.
+  ///
+  /// The ordering is what makes the cap a decision rather than an accident: the
+  /// rows that survive it are the most recent ones, which are the ones a queue
+  /// is worked from. `BookingsLoaded.capReached` tells the board to say so.
   @override
   Future<List<OperationBookingModel>> fetchBookings() async {
     try {
       final response = await _client
           .from('operation_bookings')
           .select(OperationBookingModel.columns)
-          .order('created_at', ascending: false);
+          .order('created_at', ascending: false)
+          .limit(DashboardQueryCaps.bookings);
 
       return (response as List)
           .map((json) => OperationBookingModel.fromJson(json))
@@ -146,13 +155,107 @@ class SupabaseBookingsDatasource implements BookingsDatasource {
     }
   }
 
+  /// How long a burst of row changes is allowed to settle before the enriched
+  /// re-read runs. Long enough to collapse a bulk approval or a coach filling
+  /// up into one query, short enough that the board still reads as live.
+  static const Duration realtimeSettle = Duration(milliseconds: 400);
+
   @override
   Stream<List<OperationBookingModel>> watchBookings() {
-    
-    return _client
-        .from('operation_bookings')
-        .stream(primaryKey: ['id'])
-        .asyncMap((_) => fetchBookings());
+    // Realtime carries bare `operation_bookings` rows; the board needs the trip,
+    // route, driver, vehicle and package joined onto them, which a stream cannot
+    // do. So every change has to be answered by re-running the enriched select.
+    //
+    // Answering each change on its own turned one bulk approval of 20 bookings
+    // into 20 full-table reads, and a busy sales day into a permanent one. Two
+    // guards make the re-read proportional to activity instead of to row count:
+    // a burst is coalesced into a single read, and while a read is in flight the
+    // next is not started — it is remembered and run once the first returns.
+    final controller = StreamController<List<OperationBookingModel>>();
+    StreamSubscription<List<Map<String, dynamic>>>? source;
+    Timer? settle;
+    var reading = false;
+    var pending = false;
+
+    Future<void> read() async {
+      if (reading) {
+        pending = true;
+        return;
+      }
+      reading = true;
+      try {
+        final bookings = await fetchBookings();
+        if (!controller.isClosed) controller.add(bookings);
+      } catch (error, stackTrace) {
+        if (!controller.isClosed) controller.addError(error, stackTrace);
+      } finally {
+        reading = false;
+        if (pending && !controller.isClosed) {
+          pending = false;
+          unawaited(read());
+        }
+      }
+    }
+
+    controller.onListen = () {
+      source = _client
+          .from('operation_bookings')
+          .stream(primaryKey: ['id'])
+          .listen(
+            (_) {
+              settle?.cancel();
+              settle = Timer(realtimeSettle, read);
+            },
+            onError: (Object error, StackTrace stackTrace) {
+              if (!controller.isClosed) controller.addError(error, stackTrace);
+            },
+          );
+    };
+
+    controller.onCancel = () async {
+      settle?.cancel();
+      await source?.cancel();
+      await controller.close();
+    };
+
+    return controller.stream;
+  }
+
+  /// Prepends [note] to the booking's `notes` array.
+  ///
+  /// The one write in this module that is not an RPC, and it is a read-modify-
+  /// write: two operators noting the same booking within the same second can
+  /// lose one of the notes, because the array is rebuilt client-side rather than
+  /// appended server-side. Carried over verbatim from مراجعة المدفوعات when that
+  /// queue was folded into الحجوزات — folding it was not the moment to change
+  /// what it does. The fix is an `office_add_booking_note` RPC that appends in
+  /// one statement; see `DASHBOARD_KNOWN_ISSUES.md`.
+  @override
+  Future<OperationBookingModel> addNote(String bookingId, String note) async {
+    try {
+      final existing = await _client
+          .from('operation_bookings')
+          .select('notes')
+          .eq('id', bookingId)
+          .single();
+
+      final notes = [
+        for (final entry in (existing['notes'] as List?) ?? const [])
+          if (entry != null) entry.toString(),
+      ]..insert(0, note.trim());
+
+      await _client
+          .from('operation_bookings')
+          .update({
+            'notes': notes,
+            'updated_at': DateTime.now().toUtc().toIso8601String(),
+          })
+          .eq('id', bookingId);
+
+      return _refetch(bookingId);
+    } catch (e) {
+      throw _handleError(e);
+    }
   }
 
   Future<OperationBookingModel> _refetch(String bookingId) async {
@@ -165,7 +268,6 @@ class SupabaseBookingsDatasource implements BookingsDatasource {
   }
 
   Exception _handleError(dynamic error) {
-    
     LicensingGuard.check(error);
 
     if (error is PostgrestException) {

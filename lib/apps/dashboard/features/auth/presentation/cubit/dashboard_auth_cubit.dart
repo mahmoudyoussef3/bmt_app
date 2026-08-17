@@ -7,7 +7,8 @@ import '../../../../core/session/dashboard_session.dart';
 import '../../../../core/session/office_context.dart';
 import '../../../../core/ui_state/dashboard_filter_memory.dart';
 import '../../../../core/ui_state/dashboard_section_state_store.dart';
-import '../../data/datasources/dashboard_auth_datasource.dart';
+import '../../domain/entities/dashboard_auth_failure.dart';
+import '../../domain/repositories/dashboard_auth_repository.dart';
 
 sealed class DashboardAuthState {
   const DashboardAuthState();
@@ -41,10 +42,10 @@ class DashboardAuthError extends DashboardAuthState {
 /// the same instance — the previous factory registration meant signing out constructed
 /// a throwaway cubit whose state nobody observed.
 class DashboardAuthCubit extends Cubit<DashboardAuthState> {
-  DashboardAuthCubit(this._datasource, this._session, [this._entitlements])
+  DashboardAuthCubit(this._repository, this._session, [this._entitlements])
     : super(const DashboardAuthChecking());
 
-  final DashboardAuthDatasource _datasource;
+  final DashboardAuthRepository _repository;
   final DashboardSession _session;
 
   /// Optional so a test can construct the cubit without a Supabase client.
@@ -64,7 +65,6 @@ class DashboardAuthCubit extends Cubit<DashboardAuthState> {
   void _clearSession() {
     _session.clear();
     _entitlements?.clear();
-    
     DashboardSectionStateStore.instance.clear();
     // Both session-scoped UI stores clear together: a filter left behind would
     // show the next operator a narrowed queue they never chose.
@@ -75,17 +75,17 @@ class DashboardAuthCubit extends Cubit<DashboardAuthState> {
   /// re-login. Falls back to signed-out if the office context can no longer be loaded
   /// (account disabled, office suspended, operator moved).
   Future<void> restore() async {
-    if (!_datasource.hasCachedSession) {
+    if (!_repository.hasCachedSession) {
       emit(const DashboardAuthSignedOut());
       return;
     }
     emit(const DashboardAuthChecking());
     try {
-      final context = await _datasource.loadContext();
+      final context = await _repository.loadContext();
       _startSession(context);
       emit(DashboardAuthSignedIn(context));
     } catch (_) {
-      await _datasource.signOut();
+      await _repository.signOut();
       _clearSession();
       emit(const DashboardAuthSignedOut());
     }
@@ -97,7 +97,7 @@ class DashboardAuthCubit extends Cubit<DashboardAuthState> {
   }) async {
     emit(const DashboardAuthLoading());
     try {
-      final context = await _datasource.signIn(
+      final context = await _repository.signIn(
         username: username,
         password: password,
       );
@@ -124,7 +124,7 @@ class DashboardAuthCubit extends Cubit<DashboardAuthState> {
   }) async {
     emit(const DashboardAuthLoading());
     try {
-      final context = await _datasource.signUp(
+      final context = await _repository.signUp(
         email: email,
         password: password,
         officeName: officeName,
@@ -152,16 +152,16 @@ class DashboardAuthCubit extends Cubit<DashboardAuthState> {
   Future<void> refreshContext() async {
     if (state is! DashboardAuthSignedIn) return;
     try {
-      final context = await _datasource.loadContext();
+      final context = await _repository.loadContext();
       _startSession(context);
       emit(DashboardAuthSignedIn(context));
     } catch (_) {
-      
+      // Swallowed on purpose — see the doc comment above.
     }
   }
 
   Future<void> signOut() async {
-    await _datasource.signOut();
+    await _repository.signOut();
     _clearSession();
     emit(const DashboardAuthSignedOut());
   }

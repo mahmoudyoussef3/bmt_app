@@ -59,6 +59,9 @@ void registerWalletDependencies(GetIt di) {
   useCase<CreateRefundUseCase>(() => CreateRefundUseCase(repository()));
   useCase<DecideRefundUseCase>(() => DecideRefundUseCase(repository()));
   useCase<RefundTripBatchUseCase>(() => RefundTripBatchUseCase(repository()));
+  useCase<ExportWalletStatementUseCase>(
+    () => ExportWalletStatementUseCase(repository()),
+  );
 
   if (!di.isRegistered<WalletCubit>()) {
     di.registerFactory(
@@ -77,6 +80,7 @@ void registerWalletDependencies(GetIt di) {
         createRefund: di<CreateRefundUseCase>(),
         decideRefund: di<DecideRefundUseCase>(),
         refundTripBatch: di<RefundTripBatchUseCase>(),
+        exportStatement: di<ExportWalletStatementUseCase>(),
       ),
     );
   }

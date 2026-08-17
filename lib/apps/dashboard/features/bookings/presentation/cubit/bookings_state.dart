@@ -1,3 +1,5 @@
+import 'package:bmt_app/apps/dashboard/core/query/dashboard_query_caps.dart';
+
 import '../../domain/entities/booking_lifecycle.dart';
 import '../../domain/entities/operation_booking.dart';
 import '../models/booking_filters.dart';
@@ -32,6 +34,16 @@ class BookingsLoaded extends BookingsState {
   final BookingSortField sortField;
   final bool sortAscending;
   final int page;
+
+  /// True when the backing query returned a full page at
+  /// [DashboardQueryCaps.bookings], so this queue is the newest slice of the
+  /// office's history rather than all of it.
+  ///
+  /// Every tally on this state — the tab counts, `approvedRevenue`,
+  /// `availableRoutes` — is computed over [bookings], so when this is true they
+  /// describe the window and not the business. The board says so instead of
+  /// presenting them as totals.
+  bool get capReached => bookings.length >= DashboardQueryCaps.bookings;
 
   /// A failed action (approve, reject, reassign…). Surfaced as a snack bar over
   /// the still-intact workspace rather than as a full error screen: losing the

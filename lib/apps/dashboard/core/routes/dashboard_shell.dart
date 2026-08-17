@@ -9,6 +9,7 @@ import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
 
 import '../../features/bookings/presentation/cubit/bookings_cubit.dart';
+import '../../features/bookings/presentation/models/booking_queue_tab.dart';
 import '../../features/bookings/presentation/screens/bookings_screen.dart';
 import '../../features/captain_requests/presentation/cubit/captain_requests_cubit.dart';
 import '../../features/captain_requests/presentation/screens/captain_requests_screen.dart';
@@ -37,8 +38,6 @@ import '../../features/subscriptions/presentation/cubit/subscriptions_cubit.dart
 import '../../features/subscriptions/presentation/screens/subscriptions_screen.dart';
 import '../../features/referrals/presentation/cubit/referral_cubit.dart';
 import '../../features/referrals/presentation/screens/referral_management_screen.dart';
-import '../../features/payment_verification/presentation/cubit/payment_verification_cubit.dart';
-import '../../features/payment_verification/presentation/screens/payment_verification_screen.dart';
 import '../../features/reports/presentation/cubit/reports_cubit.dart';
 import '../../features/reports/presentation/screens/reports_screen.dart';
 import '../../features/reviews/presentation/cubit/reviews_cubit.dart';
@@ -820,9 +819,16 @@ class _DashboardShellState extends State<DashboardShell> {
           ),
         ),
       ),
+      // مراجعة المدفوعات is a preset of الحجوزات, not a module. The two read the
+      // same table through the same three RPCs; keeping two data layers over
+      // one job meant two places to fix a bug and two ways for the same number
+      // to disagree with itself. The route survives as the deep link it always
+      // was — the Home tile and the نظرة تنفيذية KPI both point at it — and
+      // lands on the review queue with the operator's other filters cleared.
       DashboardRoutes.paymentVerification => BlocProvider(
-        create: (_) => dashboardDi<PaymentVerificationCubit>()..load(),
-        child: const PaymentVerificationScreen(),
+        create: (_) => dashboardDi<BookingsCubit>()
+          ..load(presetTab: BookingQueueTab.needsReview),
+        child: const BookingsScreen(),
       ),
       DashboardRoutes.tickets => BlocProvider(
         create: (_) => dashboardDi<TicketsCubit>()..load(),

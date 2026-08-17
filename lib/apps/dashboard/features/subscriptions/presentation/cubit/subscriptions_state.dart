@@ -4,6 +4,7 @@ import '../models/subscription_filters.dart';
 import '../models/subscription_queue_tab.dart';
 import '../models/subscription_sort.dart';
 import '../models/trip_subscriber.dart';
+import 'package:bmt_app/apps/dashboard/core/query/dashboard_query_caps.dart';
 
 sealed class SubscriptionsState {
   const SubscriptionsState();
@@ -31,6 +32,11 @@ class SubscriptionsLoaded extends SubscriptionsState {
   final List<SubscriptionTrip> trips;
   final List<SubscriptionRideUsage> rideUsage;
   final SubscriptionCreationOptions creationOptions;
+
+  /// True when the query came back full at [DashboardQueryCaps.subscriptions],
+  /// so this book is the newest slice rather than every subscription ever sold.
+  bool get capReached =>
+      subscriptions.length >= DashboardQueryCaps.subscriptions;
 
   final SubscriptionFilters filters;
   final SubscriptionQueueTab activeTab;

@@ -396,3 +396,19 @@ class RefundTripBatchUseCase {
     );
   }
 }
+
+/// Writes the loaded activity list to a file the operator keeps off-system.
+///
+/// Owner-only, and enforced before this point: the button does not render
+/// without the capability, and [WalletStatementExportService] consumes the
+/// export licence itself. This use case adds no authorisation of its own.
+class ExportWalletStatementUseCase {
+  final WalletRepository _repository;
+
+  const ExportWalletStatementUseCase(this._repository);
+
+  Future<String> call({
+    required List<WalletTransaction> rows,
+    required WalletOverview overview,
+  }) => _repository.exportStatement(rows: rows, overview: overview);
+}

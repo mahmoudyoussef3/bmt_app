@@ -137,7 +137,7 @@ class TodayKpisSection extends StatelessWidget {
           ),
           DashboardKpiCard(
             label: 'مدفوعات بانتظار المراجعة',
-            value: overview.has(BusinessDataSource.paymentVerifications)
+            value: overview.has(BusinessDataSource.bookings)
                 ? count(overview.pendingPaymentReviews.length)
                 : '—',
             detail: '${money(overview.outstanding)} لم تُحصّل',

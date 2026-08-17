@@ -1,4 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import 'package:bmt_app/apps/dashboard/core/query/dashboard_query_caps.dart';
 import '../../../../core/session/dashboard_session.dart';
 import '../../domain/entities/subscription_trip.dart';
 import '../../domain/entities/user_subscription.dart';
@@ -24,7 +26,8 @@ class SupabaseSubscriptionsDatasource implements SubscriptionsDatasource {
     final rows = await _client
         .from('subscriptions')
         .select(_select)
-        .order('created_at', ascending: false);
+        .order('created_at', ascending: false)
+        .limit(DashboardQueryCaps.subscriptions);
     return rows.map((r) => _fromRow(r)).toList();
   }
 

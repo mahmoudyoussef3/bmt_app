@@ -383,20 +383,6 @@ FleetDocumentStatus _parseDocumentStatus(String value) {
   };
 }
 
-String documentTypeToDbString(FleetDocumentType type) {
-  return switch (type) {
-    FleetDocumentType.driverLicense => 'driver_license',
-    FleetDocumentType.nationalIdFront => 'national_id_front',
-    FleetDocumentType.nationalIdBack => 'national_id_back',
-    FleetDocumentType.criminalRecord => 'criminal_record',
-    FleetDocumentType.employmentContract => 'employment_contract',
-    FleetDocumentType.vehicleLicense => 'vehicle_license',
-    FleetDocumentType.insurance => 'insurance',
-    FleetDocumentType.inspection => 'inspection',
-    FleetDocumentType.other => 'other',
-  };
-}
-
 String documentStatusToDbString(FleetDocumentStatus status) {
   return switch (status) {
     FleetDocumentStatus.expired => 'expired',

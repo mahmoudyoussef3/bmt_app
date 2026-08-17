@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/domain/entities/operation_booking.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/domain/entities/reassignment_target.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/domain/repositories/bookings_repository.dart';
+import 'package:bmt_app/apps/dashboard/features/bookings/domain/usecases/add_booking_note_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/domain/usecases/approve_booking_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/domain/usecases/bulk_approve_bookings_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/domain/usecases/bulk_reject_bookings_usecase.dart';
@@ -12,6 +13,7 @@ import 'package:bmt_app/apps/dashboard/features/bookings/domain/usecases/request
 import 'package:bmt_app/apps/dashboard/features/bookings/domain/usecases/watch_bookings_usecase.dart';
 import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_filter_memory.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/presentation/models/booking_filters.dart';
+import 'package:bmt_app/apps/dashboard/features/bookings/presentation/models/booking_queue_tab.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/presentation/cubit/bookings_cubit.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/presentation/cubit/bookings_state.dart';
 
@@ -102,6 +104,16 @@ class _FakeRepo implements BookingsRepository {
     return _booking(id, status: BookingStatus.confirmed);
   }
 
+  /// Records what it was asked to save so a test can assert the note reached
+  /// the repository, not merely that the call did not throw.
+  final List<({String id, String note})> notesAdded = [];
+
+  @override
+  Future<OperationBooking> addNote(String id, String note) async {
+    notesAdded.add((id: id, note: note));
+    return _booking(id);
+  }
+
   @override
   Stream<List<OperationBooking>> watchBookings() => const Stream.empty();
 }
@@ -117,11 +129,75 @@ BookingsCubit _cubit(_FakeRepo repo) {
     watchBookings: WatchBookingsUseCase(repo),
     reassignBooking: ReassignBookingUseCase(repo),
     getReassignmentTargets: GetReassignmentTargetsUseCase(repo),
+    addNote: AddBookingNoteUseCase(repo),
   );
 }
 
 void main() {
   group('BookingsCubit', () {
+    // مراجعة المدفوعات was folded into this board: the `/payment-verification`
+    // route now loads it with a preset instead of building a second module over
+    // the same table. These pin the two halves of that — the preset lands on the
+    // review queue and ignores remembered filters, and the note action the old
+    // queue owned still exists here.
+    group('the folded payment-review queue', () {
+      setUp(DashboardFilterMemory.instance.clear);
+      tearDown(DashboardFilterMemory.instance.clear);
+
+      test('a preset opens the review tab and ignores remembered filters', () async {
+        DashboardFilterMemory.instance.write(
+          DashboardFilterIds.bookings,
+          const BookingFilters(search: 'أحمد'),
+        );
+
+        final cubit = _cubit(_FakeRepo([_booking('1')]));
+        await cubit.load(presetTab: BookingQueueTab.needsReview);
+
+        final state = cubit.state as BookingsLoaded;
+        expect(state.activeTab, BookingQueueTab.needsReview);
+        expect(state.filters.search, isEmpty);
+        await cubit.close();
+      });
+
+      test('without a preset the remembered filters are restored', () async {
+        DashboardFilterMemory.instance.write(
+          DashboardFilterIds.bookings,
+          const BookingFilters(search: 'أحمد'),
+        );
+
+        final cubit = _cubit(_FakeRepo([_booking('1')]));
+        await cubit.load();
+
+        expect((cubit.state as BookingsLoaded).filters.search, 'أحمد');
+        await cubit.close();
+      });
+
+      test('a note reaches the repository trimmed', () async {
+        final repo = _FakeRepo([_booking('1')]);
+        final cubit = _cubit(repo);
+        await cubit.load();
+
+        await cubit.addNote('1', '  اتصلت بالراكب  ');
+
+        expect(repo.notesAdded, [(id: '1', note: 'اتصلت بالراكب')]);
+        await cubit.close();
+      });
+
+      test('an empty note is refused without touching the repository', () async {
+        final repo = _FakeRepo([_booking('1')]);
+        final cubit = _cubit(repo);
+        await cubit.load();
+
+        await cubit.addNote('1', '   ');
+
+        expect(repo.notesAdded, isEmpty);
+        // Refused as an action failure, so the queue, its filters and the open
+        // booking all survive it.
+        expect((cubit.state as BookingsLoaded).actionError, isNotNull);
+        await cubit.close();
+      });
+    });
+
     test('load emits BookingsLoaded with the fetched bookings', () async {
       final cubit = _cubit(_FakeRepo([_booking('1'), _booking('2')]));
       await cubit.load();

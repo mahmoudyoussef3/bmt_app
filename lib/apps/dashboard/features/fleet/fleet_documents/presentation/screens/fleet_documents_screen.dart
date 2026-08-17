@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_document.dart';
@@ -7,6 +9,7 @@ import 'package:bmt_app/apps/dashboard/features/fleet/fleet_documents/presentati
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_documents/presentation/widgets/fleet_documents_card_list.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
+import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/app_snackbar.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -17,6 +20,10 @@ class FleetDocumentsScreen extends StatefulWidget {
   @override
   State<FleetDocumentsScreen> createState() => _FleetDocumentsScreenState();
 }
+
+/// Longest edge the document preview may take. Beyond this a scanned licence
+/// stops gaining legibility and starts costing the operator the page behind it.
+const double _previewMaxSide = 800;
 
 class _FleetDocumentsScreenState extends State<FleetDocumentsScreen> {
   int _page = 0;
@@ -99,8 +106,12 @@ class _FleetDocumentsScreenState extends State<FleetDocumentsScreen> {
 
     final isPdf = document.fileUrl.toLowerCase().contains('.pdf');
     if (isPdf) {
-      // PDFs are tricky to preview natively without heavy plugins, so we fallback to external launch
-      launchUrl(Uri.parse(document.fileUrl), mode: LaunchMode.externalApplication);
+      // Previewing a PDF in-app costs a rendering plugin for a document the
+      // operator opens once and reads in their own viewer anyway.
+      launchUrl(
+        Uri.parse(document.fileUrl),
+        mode: LaunchMode.externalApplication,
+      );
       return;
     }
 
@@ -109,12 +120,25 @@ class _FleetDocumentsScreenState extends State<FleetDocumentsScreen> {
       builder: (ctx) => Dialog(
         clipBehavior: Clip.antiAlias,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
         ),
         insetPadding: const EdgeInsets.all(AppSpacing.large),
-        child: SizedBox(
-          width: 800,
-          height: 800,
+        // Bounded by the window rather than sized to a fixed 800×800 box: a
+        // licence photo opened on a 1366×768 laptop was taller than the viewport
+        // and the dialog overflowed instead of shrinking.
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: _previewMaxSide,
+            maxHeight: _previewMaxSide,
+            minWidth: math.min(
+              _previewMaxSide,
+              MediaQuery.sizeOf(ctx).width * 0.6,
+            ),
+            minHeight: math.min(
+              _previewMaxSide,
+              MediaQuery.sizeOf(ctx).height * 0.6,
+            ),
+          ),
           child: Stack(
             fit: StackFit.expand,
             children: [
@@ -177,18 +201,18 @@ class _FleetDocumentsScreenState extends State<FleetDocumentsScreen> {
                   },
                 ),
               ),
-              Positioned(
+              PositionedDirectional(
                 top: AppSpacing.small,
-                left: AppSpacing.small, // since it's RTL, left is visually correct for the 'end' or 'start', let's use directionality
-                child: Directionality(
-                  textDirection: TextDirection.ltr,
-                  child: IconButton.filled(
-                    onPressed: () => Navigator.pop(ctx),
-                    icon: const Icon(Icons.close_rounded),
-                    style: IconButton.styleFrom(
-                      backgroundColor: Theme.of(ctx).colorScheme.surface.withAlpha(200),
-                      foregroundColor: Theme.of(ctx).colorScheme.onSurface,
-                    ),
+                end: AppSpacing.small,
+                child: IconButton.filled(
+                  tooltip: 'إغلاق',
+                  onPressed: () => Navigator.pop(ctx),
+                  icon: const Icon(Icons.close_rounded),
+                  style: IconButton.styleFrom(
+                    backgroundColor: Theme.of(
+                      ctx,
+                    ).colorScheme.surface.withAlpha(200),
+                    foregroundColor: Theme.of(ctx).colorScheme.onSurface,
                   ),
                 ),
               ),

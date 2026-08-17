@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../shared/domain/entities/operation_trip.dart';
 import '../../domain/usecases/trip_management_usecases.dart';
+import 'package:bmt_app/apps/dashboard/core/query/dashboard_query_caps.dart';
 
 /// How the loaded trips are laid out on screen.
 enum TripsViewMode {
@@ -46,6 +47,11 @@ class TripsListLoaded extends TripsListState {
   final String occupancyFilter;
   final String dateFilter;
   final TripsViewMode viewMode;
+
+  /// True when the query came back full at [DashboardQueryCaps.trips], so the
+  /// planner is showing the newest slice of the schedule rather than every trip
+  /// the office has ever run.
+  bool get capReached => trips.length >= DashboardQueryCaps.trips;
 
   const TripsListLoaded({
     required this.trips,

@@ -19,6 +19,8 @@ import '../widgets/reviews_filter_bar.dart';
 import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
+import 'package:bmt_app/apps/dashboard/core/query/dashboard_query_caps.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_cap_notice.dart';
 
 /// التقييمات — every passenger review of every completed trip.
 ///
@@ -70,6 +72,17 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
           title: 'التقييمات',
           subtitle:
               'آراء الركاب في السائقين والمركبات والمسارات — مرئية للإدارة فقط',
+          actions: [
+            if (state.capReached)
+              const DashboardCapNotice(
+                rowCap: DashboardQueryCaps.reviews,
+                noun: 'تقييم',
+                // The averages are computed over the loaded set, and no filter
+                // on this screen reaches the query, so there is nothing the
+                // operator can narrow to see further back.
+                hint: '',
+              ),
+          ],
           sectionId: DashboardSectionIds.reviewsHeader,
           summary: _Kpis(summary: summary),
         ),

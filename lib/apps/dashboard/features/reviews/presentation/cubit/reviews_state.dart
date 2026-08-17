@@ -1,5 +1,6 @@
 import '../../domain/entities/reviews_summary.dart';
 import '../../domain/entities/trip_review_entry.dart';
+import 'package:bmt_app/apps/dashboard/core/query/dashboard_query_caps.dart';
 
 /// How operations slices the feed. `needsAttention` is the one that matters on
 /// a busy day: it is the unhappy-passenger queue.
@@ -39,6 +40,11 @@ class ReviewsLoaded extends ReviewsState {
   final List<TripReviewEntry> reviews;
   final ReviewsFilter filter;
   final String query;
+
+  /// True when the query came back full at [DashboardQueryCaps.reviews]. The
+  /// averages below are computed over [reviews], so when this is true they
+  /// describe the newest slice and not the driver's whole record.
+  bool get capReached => reviews.length >= DashboardQueryCaps.reviews;
 
   ReviewsSummary get summary => ReviewsSummary.from(reviews);
 

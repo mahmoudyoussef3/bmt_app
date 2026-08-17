@@ -22,7 +22,6 @@ import 'package:bmt_app/apps/dashboard/features/platform_licensing/domain/entiti
 import 'package:bmt_app/apps/dashboard/features/live_ops/domain/entities/live_ops_snapshot.dart';
 import 'package:bmt_app/apps/dashboard/features/live_ops/domain/entities/trip_incident.dart';
 import 'package:bmt_app/apps/dashboard/features/office_profile/domain/entities/office_profile.dart';
-import 'package:bmt_app/apps/dashboard/features/payment_verification/domain/entities/booking_payment_verification.dart';
 import 'package:bmt_app/apps/dashboard/features/reports/domain/entities/report_entities.dart';
 import 'package:bmt_app/apps/dashboard/features/reviews/domain/entities/trip_review_entry.dart';
 import 'package:bmt_app/apps/dashboard/features/routes/domain/entities/operation_route.dart';
@@ -549,66 +548,6 @@ final List<OperationBooking> bookings = [
 final double _todayBookingRevenue = bookings
     .where((b) => b.paymentStatus == PaymentStatus.approved)
     .fold<double>(0, (sum, b) => sum + b.paymentAmount);
-
-// ── Payment verifications ───────────────────────────────────────────────────
-
-BookingPaymentVerification _verification({
-  required String id,
-  required int passengerIndex,
-  required int routeIndex,
-  required String amount,
-  BookingVerificationStatus status = BookingVerificationStatus.pending,
-}) {
-  return BookingPaymentVerification(
-    id: id,
-    bookingId: id,
-    customer: VerificationCustomer(
-      name: _passengers[passengerIndex],
-      phone: _phone(passengerIndex),
-      email: '',
-      profileStatus: 'موثق',
-    ),
-    trip: VerificationTrip(
-      tripId: 'T-2423',
-      route: _routeNames[routeIndex],
-      date: _date(now),
-      time: '13:00',
-      vehicle: _vehicles[routeIndex % _vehicles.length],
-      driver: _drivers[routeIndex % _drivers.length],
-    ),
-    selectedSeat: 'A1',
-    seatState: VerificationSeatState.temporaryReserved,
-    amount: amount,
-    method: VerificationPaymentMethod.bankTransfer,
-    referenceNumber: 'INS-$id',
-    receiptTitle: 'إيصال تحويل',
-    receiptMeta: '',
-    status: status,
-    notes: const [],
-    history: const [],
-  );
-}
-
-final List<BookingPaymentVerification> verifications = [
-  _verification(
-    id: '10428',
-    passengerIndex: 0,
-    routeIndex: 0,
-    amount: '180 ج.م',
-  ),
-  _verification(
-    id: '10427',
-    passengerIndex: 1,
-    routeIndex: 1,
-    amount: '420 ج.م',
-  ),
-  _verification(
-    id: '10419',
-    passengerIndex: 9,
-    routeIndex: 0,
-    amount: '180 ج.م',
-  ),
-];
 
 // ── Fleet ───────────────────────────────────────────────────────────────────
 
@@ -1330,7 +1269,6 @@ final LiveOpsSnapshot liveOps = LiveOpsSnapshot(
 final BusinessOverview businessOverview = BusinessOverview(
   trips: trips,
   bookings: bookings,
-  paymentVerifications: verifications,
   tickets: tickets,
   reviews: reviews,
   subscriptions: subscriptions,
@@ -1346,7 +1284,6 @@ final BusinessOverview businessOverview = BusinessOverview(
 final DashboardHomeSummary homeSummary = DashboardHomeSummary(
   trips: trips,
   bookings: bookings,
-  paymentVerifications: verifications,
   revenue: revenue,
   fleet: fleet,
   captainRequests: captainRequests,

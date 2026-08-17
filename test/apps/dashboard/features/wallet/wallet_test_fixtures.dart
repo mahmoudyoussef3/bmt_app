@@ -286,6 +286,15 @@ class FakeWalletRepository implements WalletRepository {
   }
 
   @override
+  Future<String> exportStatement({
+    required List<WalletTransaction> rows,
+    required WalletOverview overview,
+  }) async {
+    calls.add('exportStatement');
+    return 'wallet_statement.csv';
+  }
+
+  @override
   Future<RefundRequest> createRefund({
     required String bookingId,
     required double amount,

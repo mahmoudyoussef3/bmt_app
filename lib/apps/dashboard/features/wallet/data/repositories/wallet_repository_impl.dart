@@ -5,6 +5,7 @@ import '../../domain/entities/wallet_transaction.dart';
 import '../../domain/entities/wallet_vocabulary.dart';
 import '../../domain/repositories/wallet_repository.dart';
 import '../datasources/wallet_datasource.dart';
+import '../services/wallet_statement_export_service.dart';
 
 /// Thin by design.
 ///
@@ -18,6 +19,12 @@ class WalletRepositoryImpl implements WalletRepository {
   final WalletDatasource _datasource;
 
   const WalletRepositoryImpl(this._datasource);
+
+  @override
+  Future<String> exportStatement({
+    required List<WalletTransaction> rows,
+    required WalletOverview overview,
+  }) => WalletStatementExportService.export(rows: rows, overview: overview);
 
   @override
   Future<WalletOverview> getOverview() => _datasource.fetchOverview();

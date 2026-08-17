@@ -571,9 +571,9 @@ void main() {
             paymentStatus: PaymentStatus.approved,
             amount: 250,
           ),
+          buildBooking(id: 'v1', paymentStatus: PaymentStatus.submitted),
         ],
         tickets: [buildTicket(id: 'k1', priority: TicketPriority.urgent)],
-        paymentVerifications: [buildPaymentVerification(id: 'v1')],
       );
 
       await tester.pumpWidget(_wrap(homeState: DashboardHomeLoaded(summary)));

@@ -1,6 +1,8 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/session/office_context.dart';
+import '../../domain/entities/dashboard_auth_failure.dart';
+import '../../domain/repositories/dashboard_auth_repository.dart';
 
 /// Dashboard authentication: **name + password, nothing else.**
 ///
@@ -15,7 +17,7 @@ import '../../../../core/session/office_context.dart';
 /// `register_office`, which decides everything worth tampering with server-side. The
 /// office it creates is `active` (its dashboard works at once) and `draft` (invisible to
 /// passengers until the platform publishes it).
-class DashboardAuthDatasource {
+class DashboardAuthDatasource implements DashboardAuthRepository {
   const DashboardAuthDatasource(this._supabase);
 
   final SupabaseClient _supabase;
@@ -24,6 +26,7 @@ class DashboardAuthDatasource {
   ///
   /// Throws [DashboardAuthFailure] with a user-facing Arabic message on every
   /// failure path.
+  @override
   Future<OfficeContext> signIn({
     required String username,
     required String password,
@@ -71,6 +74,7 @@ class DashboardAuthDatasource {
   /// project ever turns email confirmation on, `signUp` returns no session, the office
   /// cannot be created yet, and the name would otherwise be lost by the time the owner
   /// comes back to sign in.
+  @override
   Future<OfficeContext> signUp({
     required String email,
     required String password,
@@ -178,6 +182,7 @@ class DashboardAuthDatasource {
 
   /// Loads the office context for the current session. Called after sign-in and on
   /// app start when a cached Supabase session already exists.
+  @override
   Future<OfficeContext> loadContext() async {
     final Object? result;
     try {
@@ -208,22 +213,9 @@ class DashboardAuthDatasource {
   /// The one context failure that a pending self-registration can still fix.
   static const _noOfficeCode = 'not_an_office_user';
 
+  @override
   Future<void> signOut() => _supabase.auth.signOut();
 
-  bool get hasCachedSession => _supabase.auth.currentSession != null;
-}
-
-class DashboardAuthFailure implements Exception {
-  const DashboardAuthFailure(this.message, {this.code});
-
-  /// User-facing Arabic text. Every caller shows this and nothing else.
-  final String message;
-
-  /// The server's machine code, set only where a caller needs to branch on the
-  /// *reason* rather than report it. Matching on [message] instead would couple
-  /// control flow to translatable text.
-  final String? code;
-
   @override
-  String toString() => message;
+  bool get hasCachedSession => _supabase.auth.currentSession != null;
 }

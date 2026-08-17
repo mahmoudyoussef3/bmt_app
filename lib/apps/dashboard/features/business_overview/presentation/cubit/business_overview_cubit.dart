@@ -7,7 +7,6 @@ import 'package:bmt_app/apps/dashboard/features/finance/domain/usecases/get_reve
 import 'package:bmt_app/apps/dashboard/features/finance/domain/usecases/get_wallet_position_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/domain/usecases/fleet_usecases.dart';
 import 'package:bmt_app/apps/dashboard/features/live_ops/domain/usecases/live_ops_usecases.dart';
-import 'package:bmt_app/apps/dashboard/features/payment_verification/domain/usecases/get_booking_payment_verifications_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/reviews/domain/usecases/reviews_usecases.dart';
 import 'package:bmt_app/apps/dashboard/features/subscriptions/domain/usecases/get_subscriptions_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/tickets/domain/usecases/get_tickets_usecase.dart';
@@ -34,7 +33,6 @@ class BusinessOverviewCubit extends Cubit<BusinessOverviewState> {
   BusinessOverviewCubit({
     required GetOperationTripsUseCase getTrips,
     required GetOperationBookingsUseCase getBookings,
-    required GetBookingPaymentVerificationsUseCase getPaymentVerifications,
     required GetRevenueMetricsUseCase getRevenueMetrics,
     required GetFleetWorkspaceUseCase getFleetWorkspace,
     required GetCaptainRequestsUseCase getCaptainRequests,
@@ -46,7 +44,6 @@ class BusinessOverviewCubit extends Cubit<BusinessOverviewState> {
     required GetLiveOpsSnapshotUseCase getLiveOps,
   }) : _getTrips = getTrips,
        _getBookings = getBookings,
-       _getPaymentVerifications = getPaymentVerifications,
        _getRevenueMetrics = getRevenueMetrics,
        _getFleetWorkspace = getFleetWorkspace,
        _getCaptainRequests = getCaptainRequests,
@@ -60,7 +57,6 @@ class BusinessOverviewCubit extends Cubit<BusinessOverviewState> {
 
   final GetOperationTripsUseCase _getTrips;
   final GetOperationBookingsUseCase _getBookings;
-  final GetBookingPaymentVerificationsUseCase _getPaymentVerifications;
   final GetRevenueMetricsUseCase _getRevenueMetrics;
   final GetFleetWorkspaceUseCase _getFleetWorkspace;
   final GetCaptainRequestsUseCase _getCaptainRequests;
@@ -108,10 +104,6 @@ class BusinessOverviewCubit extends Cubit<BusinessOverviewState> {
 
     final trips = guard(BusinessDataSource.trips, _getTrips.call);
     final bookings = guard(BusinessDataSource.bookings, _getBookings.call);
-    final verifications = guard(
-      BusinessDataSource.paymentVerifications,
-      _getPaymentVerifications.call,
-    );
     final revenue = guard(BusinessDataSource.revenue, _getRevenueMetrics.call);
     final fleet = guard(BusinessDataSource.fleet, _getFleetWorkspace.call);
     final captains = guard(
@@ -131,7 +123,6 @@ class BusinessOverviewCubit extends Cubit<BusinessOverviewState> {
     final overview = BusinessOverview(
       trips: await trips ?? const [],
       bookings: await bookings ?? const [],
-      paymentVerifications: await verifications ?? const [],
       revenue: await revenue,
       fleet: await fleet,
       captainRequests: await captains ?? const [],

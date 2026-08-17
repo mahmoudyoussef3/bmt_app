@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/core/theme/spacing.dart';
-import 'package:bmt_app/core/theme/tokens.dart';
 
 import '../../domain/entities/finance_entities.dart';
 import 'finance_format.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_cap_notice.dart';
 
 /// The single control that scopes the whole module. It lives in the module
 /// header, above the tabs, because every tab answers the same question for the
@@ -87,44 +87,18 @@ class FinancePeriodBar extends StatelessWidget {
                 context,
               ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
             ),
-            if (capReached) _CapNotice(rowCap: FinanceLedger.rowCap),
+            if (capReached)
+              const DashboardCapNotice(
+                rowCap: FinanceLedger.rowCap,
+                noun: 'معاملة',
+                // The period bar above already narrows the window, so pointing
+                // at the filters would be telling the operator to do what they
+                // are looking at.
+                hint: '',
+              ),
           ],
         ),
       ],
-    );
-  }
-}
-
-/// The ledger is capped, and a finance screen that silently drops the oldest
-/// movements is worse than one that admits the horizon.
-class _CapNotice extends StatelessWidget {
-  final int rowCap;
-
-  const _CapNotice({required this.rowCap});
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.small,
-        vertical: AppSpacing.xSmall,
-      ),
-      decoration: BoxDecoration(
-        color: scheme.tertiaryContainer.withAlpha(90),
-        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.info_outline_rounded, size: 14, color: scheme.onSurface),
-          const SizedBox(width: AppSpacing.xSmall),
-          Text(
-            'يعرض أحدث ${FinanceFormat.count(rowCap)} معاملة',
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-        ],
-      ),
     );
   }
 }

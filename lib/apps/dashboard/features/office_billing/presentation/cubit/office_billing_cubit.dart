@@ -1,9 +1,9 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/entitlements/entitlement_context.dart';
 import '../../../../core/entitlements/entitlement_service.dart';
 import '../../domain/entities/office_invoice.dart';
+import '../../domain/usecases/get_office_invoices_usecase.dart';
 
 sealed class OfficeBillingState {
   const OfficeBillingState();
@@ -45,43 +45,39 @@ class OfficeBillingLoaded extends OfficeBillingState {
 /// cannot disagree with the nav beside it, and asking for it costs no second
 /// entitlement call — only the invoice history is fetched.
 class OfficeBillingCubit extends Cubit<OfficeBillingState> {
-  OfficeBillingCubit(this._client, this._entitlements)
+  OfficeBillingCubit(this._getInvoices, this._entitlements)
     : super(const OfficeBillingLoading());
 
-  final SupabaseClient _client;
+  final GetOfficeInvoicesUseCase _getInvoices;
   final EntitlementService _entitlements;
 
   Future<void> load() async {
     emit(const OfficeBillingLoading());
+
+    // Refreshed rather than read from cache: this is the screen an owner opens
+    // *because* they just paid or just upgraded, and a stale licence document
+    // here would tell them the money never landed.
     try {
-      
       await _entitlements.refresh();
+    } catch (_) {
+      emit(const OfficeBillingError('تعذر تحميل بيانات الباقة.'));
+      return;
+    }
 
-      final raw = await _client.rpc(
-        'office_invoices',
-        params: {'p_limit': 50, 'p_offset': 0},
-      );
-
+    try {
       emit(
         OfficeBillingLoaded(
           entitlements: _entitlements.context,
-          invoices: [
-            for (final e in (raw as List?) ?? const [])
-              OfficeInvoice.fromJson(Map<String, dynamic>.from(e as Map)),
-          ],
+          invoices: await _getInvoices(),
         ),
       );
-    } on PostgrestException catch (e) {
-      emit(OfficeBillingError(_message(e.message)));
-    } catch (_) {
-      emit(const OfficeBillingError('تعذر تحميل بيانات الباقة.'));
+    } catch (error) {
+      // The repository names what it can explain — no office membership reads
+      // very differently to a dropped connection — so its sentence is shown as
+      // written rather than flattened into one generic apology.
+      emit(
+        OfficeBillingError(error.toString().replaceFirst('Exception: ', '')),
+      );
     }
-  }
-
-  String _message(String raw) {
-    if (raw.contains('not_an_office_user')) {
-      return 'حسابك غير مرتبط بمكتب.';
-    }
-    return 'تعذر تحميل بيانات الباقة.';
   }
 }

@@ -36,5 +36,9 @@ abstract class BookingsDatasource {
     String newTripId,
   );
 
+  /// Prepends an operator note to the booking's note list. Returns the
+  /// refreshed row.
+  Future<OperationBookingModel> addNote(String bookingId, String note);
+
   Stream<List<OperationBookingModel>> watchBookings();
 }

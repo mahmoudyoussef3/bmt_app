@@ -5,6 +5,8 @@
 /// never be a button.
 library;
 
+import 'package:bmt_app/apps/dashboard/core/query/dashboard_query_caps.dart';
+
 enum FinancePaymentMethod {
   instapay('انستا باي'),
   vodafoneCash('فودافون كاش'),
@@ -297,7 +299,11 @@ class FinanceLedger {
   /// screen is derived from this list, so the cap is the module's real horizon:
   /// when a load comes back full, the screen says so instead of quietly
   /// under-reporting the older end of the window.
-  static const rowCap = 3000;
+  ///
+  /// The number itself lives with the console's other row ceilings so they can
+  /// be read against each other; this alias is what the module's own code and
+  /// its tests have always called it.
+  static const rowCap = DashboardQueryCaps.financeLedger;
 
   static List<FinanceLedgerEntry> build({
     required List<PaymentRecord> payments,

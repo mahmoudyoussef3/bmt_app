@@ -47,24 +47,4 @@ class OfficeInvoice {
     'refunded' => 'مستردة',
     _ => status,
   };
-
-  factory OfficeInvoice.fromJson(Map<String, dynamic> json) {
-    DateTime? at(String k) => DateTime.tryParse((json[k] as String?) ?? '');
-    return OfficeInvoice(
-      id: json['id'] as String,
-      invoiceNumber: (json['invoice_number'] as String?) ?? '',
-      total: (json['total'] as num?) ?? 0,
-      currency: (json['currency'] as String?) ?? 'EGP',
-      status: (json['status'] as String?) ?? 'issued',
-      periodStart: at('period_start'),
-      periodEnd: at('period_end'),
-      issuedAt: at('issued_at'),
-      dueAt: at('due_at'),
-      paidAt: at('paid_at'),
-      lineItems: [
-        for (final i in (json['line_items'] as List?) ?? const [])
-          Map<String, dynamic>.from(i as Map),
-      ],
-    );
-  }
 }

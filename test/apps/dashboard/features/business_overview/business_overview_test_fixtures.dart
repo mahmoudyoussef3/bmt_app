@@ -5,7 +5,6 @@ import 'package:bmt_app/apps/dashboard/features/finance/domain/entities/finance_
     as finance;
 import 'package:bmt_app/apps/dashboard/features/finance/domain/entities/finance_money_model.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_workspace.dart';
-import 'package:bmt_app/apps/dashboard/features/payment_verification/domain/entities/booking_payment_verification.dart';
 import 'package:bmt_app/apps/dashboard/features/reviews/domain/entities/trip_review_entry.dart';
 import 'package:bmt_app/apps/dashboard/features/subscriptions/domain/entities/user_subscription.dart';
 import 'package:bmt_app/apps/dashboard/features/tickets/domain/entities/complaint.dart';
@@ -109,40 +108,6 @@ OperationBooking buildBooking({
           ),
     notes: const [],
     timeline: const [],
-  );
-}
-
-BookingPaymentVerification buildVerification({
-  required String id,
-  BookingVerificationStatus status = BookingVerificationStatus.pending,
-}) {
-  return BookingPaymentVerification(
-    id: id,
-    bookingId: '$id-booking',
-    customer: const VerificationCustomer(
-      name: 'عميل',
-      phone: '0100000000',
-      email: '',
-      profileStatus: 'موثق',
-    ),
-    trip: const VerificationTrip(
-      tripId: 'trip-1',
-      route: 'القاهرة - الإسكندرية',
-      date: '2026-08-07',
-      time: '10:00',
-      vehicle: 'تويوتا هايس',
-      driver: 'أحمد علي',
-    ),
-    selectedSeat: 'A1',
-    seatState: VerificationSeatState.temporaryReserved,
-    amount: '100 ج.م',
-    method: VerificationPaymentMethod.card,
-    referenceNumber: 'REF$id',
-    receiptTitle: 'إيصال',
-    receiptMeta: '',
-    status: status,
-    notes: const [],
-    history: const [],
   );
 }
 
@@ -324,7 +289,6 @@ WalletFinancePosition buildWallet({
 BusinessOverview buildOverview({
   List<OperationTrip>? trips,
   List<OperationBooking>? bookings,
-  List<BookingPaymentVerification>? paymentVerifications,
   List<SupportTicket>? tickets,
   List<TripReviewEntry>? reviews,
   List<UserSubscription>? subscriptions,
@@ -339,7 +303,6 @@ BusinessOverview buildOverview({
   return BusinessOverview(
     trips: trips ?? const [],
     bookings: bookings ?? const [],
-    paymentVerifications: paymentVerifications ?? const [],
     tickets: tickets ?? const [],
     reviews: reviews ?? const [],
     subscriptions: subscriptions ?? const [],

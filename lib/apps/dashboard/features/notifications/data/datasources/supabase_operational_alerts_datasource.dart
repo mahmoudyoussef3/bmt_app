@@ -2,9 +2,9 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/operational_alert_model.dart';
 
-/// Reads the shared `operational_alerts` feed. The Dashboard runs as the anon
-/// role (single-owner, no login), so — like the other operational tables — the
-/// feed has RLS disabled and every operator sees the same queue.
+/// Reads the `operational_alerts` feed. Scoping is the server's: RLS narrows
+/// the table to the signed-in operator's office, so every query here is written
+/// as if it were unscoped and comes back scoped.
 abstract class OperationalAlertsDatasource {
   Stream<List<OperationalAlertModel>> watchAlerts();
   Stream<int> watchUnreadCount();
@@ -28,14 +28,31 @@ class SupabaseOperationalAlertsDatasource
         .map((rows) => rows.map(OperationalAlertModel.fromMap).toList());
   }
 
+  /// The bell badge, counted by the server rather than by holding the feed.
+  ///
+  /// This subscription is open for the whole session — the bell lives in the
+  /// shell — so the previous shape, an unfiltered `.stream()` counted in Dart,
+  /// pulled the office's entire alert history into memory on every sign-in and
+  /// grew with every alert ever raised. Counting server-side keeps the badge
+  /// exact (it still counts *all* unread, not a page of them) while the client
+  /// holds nothing, and `operational_alerts (office_id, created_at desc) where
+  /// is_read = false` is indexed for precisely this query.
+  ///
+  /// The feed stream is the change signal because it is already bounded to 100
+  /// rows; a second unbounded subscription to the same table is what this
+  /// replaced.
   @override
   Stream<int> watchUnreadCount() {
-    return _client
+    return watchAlerts().asyncMap((_) => _unreadCount());
+  }
+
+  Future<int> _unreadCount() async {
+    final response = await _client
         .from('operational_alerts')
-        .stream(primaryKey: ['id'])
-        .map(
-          (rows) => rows.where((r) => !(r['is_read'] as bool? ?? false)).length,
-        );
+        .select('id')
+        .eq('is_read', false)
+        .count(CountOption.exact);
+    return response.count;
   }
 
   @override

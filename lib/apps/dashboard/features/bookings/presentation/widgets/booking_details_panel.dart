@@ -92,8 +92,11 @@ class BookingDetailsPanel extends StatelessWidget {
                     icon: Icons.warning_rounded,
                     rows: [('السبب', booking.rejectionReason!)],
                   ),
-                if (booking.notes.isNotEmpty)
-                  _ListSection(title: 'ملاحظات', items: booking.notes),
+                _NotesSection(
+                  booking: booking,
+                  cubit: cubit,
+                  isProcessing: isProcessing,
+                ),
                 _Timeline(events: booking.timeline),
               ],
             ),
@@ -562,14 +565,53 @@ class _DetailRow extends StatelessWidget {
   }
 }
 
-class _ListSection extends StatelessWidget {
-  const _ListSection({required this.title, required this.items});
 
-  final String title;
-  final List<String> items;
+/// Operator notes on the booking, and the box for adding one.
+///
+/// Came across with مراجعة المدفوعات when that queue was folded into الحجوزات.
+/// It answers the case neither review button does — the passenger has been
+/// called and the receipt is on its way — and losing it in the merge would have
+/// left the operator making a decision they had not taken just to leave a trace.
+///
+/// Renders even with no notes, because the *box* is the feature; a section that
+/// only appears once a note exists cannot be used to write the first one.
+class _NotesSection extends StatefulWidget {
+  const _NotesSection({
+    required this.booking,
+    required this.cubit,
+    required this.isProcessing,
+  });
+
+  final OperationBooking booking;
+  final BookingsCubit cubit;
+  final bool isProcessing;
+
+  @override
+  State<_NotesSection> createState() => _NotesSectionState();
+}
+
+class _NotesSectionState extends State<_NotesSection> {
+  final TextEditingController _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final note = _controller.text.trim();
+    if (note.isEmpty || widget.isProcessing) return;
+    // Cleared first: the cubit re-emits from the refreshed row, and a field
+    // still holding the text the operator just sent reads as a failed save.
+    _controller.clear();
+    await widget.cubit.addNote(widget.booking.id, note);
+  }
 
   @override
   Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.medium),
       child: AppCard(
@@ -578,18 +620,39 @@ class _ListSection extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              title,
-              style: Theme.of(
-                context,
-              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900),
+              'ملاحظات',
+              style: text.titleSmall?.copyWith(fontWeight: FontWeight.w900),
             ),
             const SizedBox(height: AppSpacing.small),
-            ...items.map(
-              (item) => ListTile(
-                dense: true,
-                contentPadding: EdgeInsets.zero,
-                leading: const Icon(Icons.circle_outlined, size: 14),
-                title: Text(item),
+            if (widget.booking.notes.isEmpty)
+              Text(
+                'لا توجد ملاحظات على هذا الحجز.',
+                style: text.bodySmall,
+              )
+            else
+              ...widget.booking.notes.map(
+                (note) => ListTile(
+                  dense: true,
+                  contentPadding: EdgeInsets.zero,
+                  leading: const Icon(Icons.circle_outlined, size: 14),
+                  title: Text(note),
+                ),
+              ),
+            const SizedBox(height: AppSpacing.small),
+            TextField(
+              controller: _controller,
+              enabled: !widget.isProcessing,
+              minLines: 1,
+              maxLines: 3,
+              textInputAction: TextInputAction.newline,
+              decoration: InputDecoration(
+                isDense: true,
+                hintText: 'أضف ملاحظة على هذا الحجز',
+                suffixIcon: IconButton(
+                  tooltip: 'حفظ الملاحظة',
+                  onPressed: widget.isProcessing ? null : _submit,
+                  icon: const Icon(Icons.send_rounded, size: 18),
+                ),
               ),
             ),
           ],

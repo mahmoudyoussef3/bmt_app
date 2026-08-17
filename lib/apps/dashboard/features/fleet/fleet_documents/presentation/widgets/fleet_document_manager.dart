@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_document.dart';
-import 'package:bmt_app/apps/dashboard/features/fleet/data/models/fleet_models.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/widgets/fleet_shared_widgets.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/core/utils/fleet_validators.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/core/utils/fleet_upload_helpers.dart';
@@ -113,7 +112,7 @@ class _FleetDocumentManagerState extends State<FleetDocumentManager> {
     try {
       final cubit = context.read<FleetDocumentsCubit>();
       final ownerFolder = widget.isDriver ? 'drivers' : 'vehicles';
-      final typeFolder = documentTypeToDbString(selectedType!);
+      final typeFolder = selectedType!.wireName;
       final fileName = FleetUploadHelpers.safeStorageFileName(pickedFile!.name);
       final path =
           '$ownerFolder/${widget.ownerId}/$typeFolder/${DateTime.now().millisecondsSinceEpoch}_$fileName';

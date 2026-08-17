@@ -5,7 +5,6 @@ import 'package:bmt_app/apps/dashboard/features/finance/domain/entities/finance_
     show RevenueMetrics;
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_workspace.dart';
 import 'package:bmt_app/apps/dashboard/features/office_profile/domain/entities/office_profile.dart';
-import 'package:bmt_app/apps/dashboard/features/payment_verification/domain/entities/booking_payment_verification.dart';
 import 'package:bmt_app/apps/dashboard/features/reviews/domain/entities/trip_review_entry.dart';
 import 'package:bmt_app/apps/dashboard/features/subscriptions/domain/entities/user_subscription.dart';
 import 'package:bmt_app/apps/dashboard/features/tickets/domain/entities/complaint.dart';
@@ -91,39 +90,6 @@ OperationBooking buildBooking({
   );
 }
 
-BookingPaymentVerification buildPaymentVerification({
-  required String id,
-  BookingVerificationStatus status = BookingVerificationStatus.pending,
-}) {
-  return BookingPaymentVerification(
-    id: id,
-    bookingId: '$id-booking',
-    customer: const VerificationCustomer(
-      name: 'عميل',
-      phone: '0100000000',
-      email: '',
-      profileStatus: 'موثق',
-    ),
-    trip: const VerificationTrip(
-      tripId: 'trip-1',
-      route: 'القاهرة - الإسكندرية',
-      date: '2026-01-01',
-      time: '10:00',
-      vehicle: 'تويوتا هايس',
-      driver: 'أحمد علي',
-    ),
-    selectedSeat: 'A1',
-    seatState: VerificationSeatState.temporaryReserved,
-    amount: '100 ج.م',
-    method: VerificationPaymentMethod.card,
-    referenceNumber: 'REF$id',
-    receiptTitle: 'إيصال',
-    receiptMeta: '',
-    status: status,
-    notes: const [],
-    history: const [],
-  );
-}
 
 const emptyRevenueMetrics = RevenueMetrics(
   todayRevenue: 0,
@@ -235,7 +201,6 @@ UserSubscription buildSubscription({
 DashboardHomeSummary buildSummary({
   List<OperationTrip>? trips,
   List<OperationBooking>? bookings,
-  List<BookingPaymentVerification>? paymentVerifications,
   RevenueMetrics? revenue,
   FleetWorkspace? fleet,
   List<CaptainRequest>? captainRequests,
@@ -247,7 +212,6 @@ DashboardHomeSummary buildSummary({
   return DashboardHomeSummary(
     trips: trips ?? const [],
     bookings: bookings ?? const [],
-    paymentVerifications: paymentVerifications ?? const [],
     revenue: revenue ?? emptyRevenueMetrics,
     fleet: fleet ?? emptyFleetWorkspace,
     captainRequests: captainRequests ?? const [],

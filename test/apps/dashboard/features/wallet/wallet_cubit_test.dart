@@ -27,6 +27,7 @@ void main() {
     createRefund: CreateRefundUseCase(repository),
     decideRefund: DecideRefundUseCase(repository),
     refundTripBatch: RefundTripBatchUseCase(repository),
+    exportStatement: ExportWalletStatementUseCase(repository),
   );
 
   setUp(() {

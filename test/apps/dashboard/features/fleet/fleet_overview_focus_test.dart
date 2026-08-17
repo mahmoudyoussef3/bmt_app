@@ -104,6 +104,25 @@ Widget _harness() {
   );
 }
 
+/// Opens the first driver through whichever affordance the current width
+/// renders.
+///
+/// The drivers tab swaps between a card list and [OpsDataTable] on its own
+/// breakpoint, and this test is about what the *flip to split view* does to the
+/// tab — not about which of the two the width happened to pick. Naming one
+/// layout's button made the test fail the next time the breakpoint moved, while
+/// the behaviour under test was still correct.
+Future<void> _openFirstDriver(WidgetTester tester) async {
+  final card = find.widgetWithText(FilledButton, 'فتح الملف');
+  final table = find.byTooltip('عرض جاهزية السائق');
+  final target = tester.any(card) ? card.first : table.first;
+
+  await tester.ensureVisible(target);
+  await tester.pumpAndSettle();
+  await tester.tap(target);
+  await tester.pumpAndSettle();
+}
+
 void main() {
   setUp(() {
     dashboardDi
@@ -124,11 +143,7 @@ void main() {
     await tester.pumpWidget(_harness());
     await tester.pumpAndSettle();
 
-    final openFile = find.text('فتح الملف').first;
-    await tester.ensureVisible(openFile);
-    await tester.pumpAndSettle();
-    await tester.tap(openFile);
-    await tester.pumpAndSettle();
+    await _openFirstDriver(tester);
 
     expect(tester.takeException(), isNull);
     // The detail pane is open, not a second copy of the list.
@@ -145,11 +160,7 @@ void main() {
     await tester.pumpWidget(_harness());
     await tester.pumpAndSettle();
 
-    final openFile = find.text('فتح الملف').first;
-    await tester.ensureVisible(openFile);
-    await tester.pumpAndSettle();
-    await tester.tap(openFile);
-    await tester.pumpAndSettle();
+    await _openFirstDriver(tester);
 
     await tester.tap(find.text('إدارة الأسطول').last);
     await tester.pumpAndSettle();
@@ -178,6 +189,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
-    expect(find.text('فتح الملف'), findsWidgets);
+    // The drivers tab rebuilt and is listing again, in whichever layout the
+    // width calls for.
+    expect(find.text('سائق 1'), findsWidgets);
   });
 }

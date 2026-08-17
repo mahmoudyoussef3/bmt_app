@@ -24,5 +24,10 @@ abstract class BookingsRepository {
 
   Future<OperationBooking> reassignBooking(String bookingId, String newTripId);
 
+  /// Records an operator note against the booking without deciding its
+  /// payment — the "I called the passenger, they are re-sending the receipt"
+  /// case that neither approve nor reject describes.
+  Future<OperationBooking> addNote(String bookingId, String note);
+
   Stream<List<OperationBooking>> watchBookings();
 }

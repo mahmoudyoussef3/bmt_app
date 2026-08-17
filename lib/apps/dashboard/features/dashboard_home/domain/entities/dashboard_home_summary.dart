@@ -3,7 +3,6 @@ import 'package:bmt_app/apps/dashboard/features/captain_requests/domain/entities
 import 'package:bmt_app/apps/dashboard/features/finance/domain/entities/finance_entities.dart'
     show RevenueMetrics;
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_workspace.dart';
-import 'package:bmt_app/apps/dashboard/features/payment_verification/domain/entities/booking_payment_verification.dart';
 import 'package:bmt_app/apps/dashboard/features/reviews/domain/entities/reviews_summary.dart';
 import 'package:bmt_app/apps/dashboard/features/reviews/domain/entities/trip_review_entry.dart';
 import 'package:bmt_app/apps/dashboard/features/subscriptions/domain/entities/user_subscription.dart';
@@ -19,7 +18,6 @@ import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/ope
 class DashboardHomeSummary {
   final List<OperationTrip> trips;
   final List<OperationBooking> bookings;
-  final List<BookingPaymentVerification> paymentVerifications;
   final RevenueMetrics revenue;
   final FleetWorkspace fleet;
   final List<CaptainRequest> captainRequests;
@@ -39,7 +37,6 @@ class DashboardHomeSummary {
   DashboardHomeSummary({
     required this.trips,
     required this.bookings,
-    required this.paymentVerifications,
     required this.revenue,
     required this.fleet,
     required this.captainRequests,
@@ -232,10 +229,16 @@ class DashboardHomeSummary {
     return rows.take(limit).toList();
   }
 
-  late final List<BookingPaymentVerification> pendingPaymentReviews =
-      paymentVerifications
-          .where((p) => p.status == BookingVerificationStatus.pending)
-          .toList();
+  /// Bookings whose receipt is waiting for the office to decide.
+  ///
+  /// Derived from [bookings] rather than fetched. مراجعة المدفوعات used to be a
+  /// second module reading the same table through its own datasource, and Home
+  /// fired both queries on every load to end up with this one number. Only
+  /// `submitted` counts — a booking already sent back for re-upload is waiting
+  /// on the *passenger*, which is what the folded queue also meant by "pending".
+  late final List<OperationBooking> pendingPaymentReviews = bookings
+      .where((b) => b.paymentStatus == PaymentStatus.submitted)
+      .toList();
 
   int get pendingPaymentReviewsCount => pendingPaymentReviews.length;
 

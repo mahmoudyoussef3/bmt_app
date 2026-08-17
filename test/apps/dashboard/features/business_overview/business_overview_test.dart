@@ -374,7 +374,9 @@ void main() {
   group('attention', () {
     test('only non-empty queues appear, most urgent first', () {
       final overview = buildOverview(
-        paymentVerifications: [buildVerification(id: 'v1')],
+        bookings: [
+          buildBooking(id: 'v1', paymentStatus: PaymentStatus.submitted),
+        ],
         captainRequests: [buildCaptainRequest(id: 'c1')],
         refundRequests: [buildRefund(id: 'r1', amount: 75)],
       );

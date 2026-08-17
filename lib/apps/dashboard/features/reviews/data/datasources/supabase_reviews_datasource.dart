@@ -1,5 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:bmt_app/apps/dashboard/core/query/dashboard_query_caps.dart';
+
 import '../../domain/entities/trip_review_entry.dart';
 import '../models/trip_review_entry_model.dart';
 import 'reviews_datasource.dart';
@@ -20,7 +22,8 @@ class SupabaseReviewsDatasource implements ReviewsDatasource {
     final rows = await _supabase
         .from('trip_reviews')
         .select(_columns)
-        .order('created_at', ascending: false);
+        .order('created_at', ascending: false)
+        .limit(DashboardQueryCaps.reviews);
 
     return rows.map((row) => TripReviewEntryModel(row).toEntity()).toList();
   }

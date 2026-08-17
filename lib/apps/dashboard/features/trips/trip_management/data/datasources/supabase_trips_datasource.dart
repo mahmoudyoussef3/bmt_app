@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'dart:developer' as developer;
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import 'package:bmt_app/apps/dashboard/core/query/dashboard_query_caps.dart';
 import '../../../../../core/entitlements/licensing_guard.dart';
 import '../../../../../core/session/dashboard_session.dart';
 import '../../../trip_creation/domain/entities/trip_driver_option.dart';
@@ -36,7 +38,8 @@ class SupabaseTripsDatasource implements TripsDatasource {
           ''')
           .eq('office_id', _session.officeId)
           .order('trip_date', ascending: false)
-          .order('departure_time', ascending: false);
+          .order('departure_time', ascending: false)
+          .limit(DashboardQueryCaps.trips);
 
       return (response as List)
           .map(

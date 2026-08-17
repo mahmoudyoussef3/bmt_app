@@ -12,19 +12,29 @@ enum FleetDocumentStatus {
 }
 
 enum FleetDocumentType {
-  driverLicense('رخصة سائق'),
-  nationalIdFront('الرقم القومي (أمام)'),
-  nationalIdBack('الرقم القومي (خلف)'),
-  criminalRecord('الفيش والتشبيه'),
-  employmentContract('عقد العمل'),
-  vehicleLicense('رخصة مركبة'),
-  insurance('التأمين'),
-  inspection('الفحص الفني'),
-  other('وثائق أخرى');
+  driverLicense('رخصة سائق', 'driver_license'),
+  nationalIdFront('الرقم القومي (أمام)', 'national_id_front'),
+  nationalIdBack('الرقم القومي (خلف)', 'national_id_back'),
+  criminalRecord('الفيش والتشبيه', 'criminal_record'),
+  employmentContract('عقد العمل', 'employment_contract'),
+  vehicleLicense('رخصة مركبة', 'vehicle_license'),
+  insurance('التأمين', 'insurance'),
+  inspection('الفحص الفني', 'inspection'),
+  other('وثائق أخرى', 'other');
 
+  /// What an operator reads.
   final String label;
 
-  const FleetDocumentType(this.label);
+  /// What everything outside Dart calls this type — the `type` column and the
+  /// storage folder both use it.
+  ///
+  /// Part of the domain vocabulary rather than a data-layer mapping because the
+  /// upload forms compose the storage path themselves; when the mapping lived in
+  /// `data/models/`, two presentation files reached across the layer boundary to
+  /// import it, and a third copy of the same switch was one edit away.
+  final String wireName;
+
+  const FleetDocumentType(this.label, this.wireName);
 }
 
 class FleetDocument {

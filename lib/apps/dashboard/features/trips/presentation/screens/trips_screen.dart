@@ -32,6 +32,8 @@ import '../widgets/trips_timeline_view.dart';
 import '../widgets/trips_view_mode_switch.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
+import 'package:bmt_app/apps/dashboard/core/query/dashboard_query_caps.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_cap_notice.dart';
 
 class TripsScreen extends StatelessWidget {
   const TripsScreen({
@@ -156,6 +158,12 @@ class _LoadedTrips extends StatelessWidget {
           title: 'إدارة الرحلات',
           subtitle: 'تابع حركة الرحلات، الإشغال، والطاقم من مساحة عمل واحدة.',
           actions: [
+            if (state.capReached)
+              const DashboardCapNotice(
+                rowCap: DashboardQueryCaps.trips,
+                noun: 'رحلة',
+                hint: 'ضيّق الفلاتر للوصول لرحلات أقدم.',
+              ),
             FilledButton.icon(
               onPressed: () => _createTrip(context),
               icon: const Icon(Icons.add_rounded),

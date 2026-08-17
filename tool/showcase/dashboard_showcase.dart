@@ -180,7 +180,7 @@ class _FakeBookings extends Cubit<BookingsState> implements BookingsCubit {
         ),
       );
   @override
-  Future<void> load() async {}
+  Future<void> load({BookingQueueTab? presetTab}) async {}
   @override
   dynamic noSuchMethod(Invocation i) => null;
 }

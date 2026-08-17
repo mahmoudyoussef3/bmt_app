@@ -8,7 +8,6 @@ import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/master_detail_layout.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 
-import '../../data/services/wallet_statement_export_service.dart';
 import '../../domain/entities/refund_request.dart';
 import '../../domain/entities/wallet_summary.dart';
 import '../../domain/entities/wallet_transaction.dart';
@@ -283,10 +282,7 @@ class _WalletBody extends StatelessWidget {
   Future<void> _export(BuildContext context) async {
     final messenger = ScaffoldMessenger.of(context);
     try {
-      final path = await WalletStatementExportService.export(
-        rows: state.ledger.rows,
-        overview: state.overview,
-      );
+      final path = await context.read<WalletCubit>().exportStatement();
       messenger
         ..hideCurrentSnackBar()
         ..showSnackBar(SnackBar(content: Text('تم حفظ الملف في $path')));

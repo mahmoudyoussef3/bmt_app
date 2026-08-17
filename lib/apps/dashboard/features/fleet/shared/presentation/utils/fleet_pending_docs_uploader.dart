@@ -1,4 +1,3 @@
-import 'package:bmt_app/apps/dashboard/features/fleet/data/models/fleet_models.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_documents/presentation/cubit/fleet_documents_cubit.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/core/utils/fleet_upload_helpers.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/pending_fleet_document.dart';
@@ -23,7 +22,7 @@ class FleetPendingDocsUploader {
 
     for (final doc in docs) {
       try {
-        final typeFolder = documentTypeToDbString(doc.type);
+        final typeFolder = doc.type.wireName;
         final fileName = FleetUploadHelpers.safeStorageFileName(doc.fileName);
         final path =
             '$ownerFolder/$ownerId/$typeFolder/${DateTime.now().millisecondsSinceEpoch}_$fileName';

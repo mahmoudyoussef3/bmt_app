@@ -15,6 +15,8 @@ import '../cubit/tickets_state.dart';
 import '../widgets/tickets_summary.dart';
 import '../widgets/tickets_table.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
+import 'package:bmt_app/apps/dashboard/core/query/dashboard_query_caps.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_cap_notice.dart';
 
 /// Customer support desk: triage the complaint queue and work a ticket to
 /// resolution.
@@ -70,6 +72,12 @@ class _LoadedView extends StatelessWidget {
             subtitle: 'راجع شكاوى العملاء، أسندها لموظف، وتابعها حتى الإغلاق.',
             actions: [
               StatusChip(label: '${state.tickets.length} تذكرة'),
+              if (state.capReached)
+                const DashboardCapNotice(
+                  rowCap: DashboardQueryCaps.tickets,
+                  noun: 'تذكرة',
+                  hint: 'ضيّق الفلاتر للوصول لشكاوى أقدم.',
+                ),
               OutlinedButton.icon(
                 onPressed: () => context.read<TicketsCubit>().load(),
                 icon: const Icon(Icons.refresh_rounded),

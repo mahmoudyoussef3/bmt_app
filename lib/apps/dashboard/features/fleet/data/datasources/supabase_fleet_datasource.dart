@@ -630,7 +630,7 @@ class SupabaseFleetDatasource implements FleetDatasource {
           .from(tableName)
           .insert({
             if (isDriver) 'driver_id': ownerId else 'vehicle_id': ownerId,
-            'type': documentTypeToDbString(type),
+            'type': type.wireName,
             'file_url': fileUrl,
             'expiry_date': expiryDate,
             'status': documentStatusToDbString(status),

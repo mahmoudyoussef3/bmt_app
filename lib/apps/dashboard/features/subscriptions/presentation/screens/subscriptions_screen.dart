@@ -24,6 +24,8 @@ import '../widgets/subscriptions_toolbar.dart';
 import '../widgets/trip_focus_panel.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
+import 'package:bmt_app/apps/dashboard/core/query/dashboard_query_caps.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_cap_notice.dart';
 
 /// Dashboard → الاشتراكات.
 ///
@@ -123,6 +125,12 @@ class _SubscriptionsWorkspace extends StatelessWidget {
         subtitle:
             'كل مشتركي المكتب — اختر رحلة لمعرفة من يركبها باشتراك وبأي باقة.',
         actions: [
+          if (state.capReached)
+            const DashboardCapNotice(
+              rowCap: DashboardQueryCaps.subscriptions,
+              noun: 'اشتراك',
+              hint: 'ضيّق الفلاتر للوصول لاشتراكات أقدم.',
+            ),
           if (state.isProcessing)
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: AppSpacing.small),

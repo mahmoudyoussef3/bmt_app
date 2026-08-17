@@ -7,7 +7,6 @@ import 'package:bmt_app/apps/dashboard/features/finance/domain/entities/finance_
 import 'package:bmt_app/apps/dashboard/features/finance/domain/usecases/get_revenue_metrics_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/domain/usecases/fleet_usecases.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_workspace.dart';
-import 'package:bmt_app/apps/dashboard/features/payment_verification/domain/usecases/get_booking_payment_verifications_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/reviews/domain/usecases/reviews_usecases.dart';
 import 'package:bmt_app/apps/dashboard/features/subscriptions/domain/usecases/get_subscriptions_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/tickets/domain/usecases/get_tickets_usecase.dart';
@@ -35,7 +34,6 @@ class DashboardHomeCubit extends Cubit<DashboardHomeState> {
   DashboardHomeCubit({
     required GetOperationTripsUseCase getTrips,
     required GetOperationBookingsUseCase getBookings,
-    required GetBookingPaymentVerificationsUseCase getPaymentVerifications,
     required GetRevenueMetricsUseCase getRevenueMetrics,
     required GetFleetWorkspaceUseCase getFleetWorkspace,
     required GetCaptainRequestsUseCase getCaptainRequests,
@@ -44,7 +42,6 @@ class DashboardHomeCubit extends Cubit<DashboardHomeState> {
     required GetSubscriptionsUseCase getSubscriptions,
   }) : _getTrips = getTrips,
        _getBookings = getBookings,
-       _getPaymentVerifications = getPaymentVerifications,
        _getRevenueMetrics = getRevenueMetrics,
        _getFleetWorkspace = getFleetWorkspace,
        _getCaptainRequests = getCaptainRequests,
@@ -55,7 +52,6 @@ class DashboardHomeCubit extends Cubit<DashboardHomeState> {
 
   final GetOperationTripsUseCase _getTrips;
   final GetOperationBookingsUseCase _getBookings;
-  final GetBookingPaymentVerificationsUseCase _getPaymentVerifications;
   final GetRevenueMetricsUseCase _getRevenueMetrics;
   final GetFleetWorkspaceUseCase _getFleetWorkspace;
   final GetCaptainRequestsUseCase _getCaptainRequests;
@@ -104,10 +100,6 @@ class DashboardHomeCubit extends Cubit<DashboardHomeState> {
 
     final trips = guard('الرحلات', _getTrips.call);
     final bookings = guard('الحجوزات', _getBookings.call);
-    final verifications = guard(
-      'مراجعة المدفوعات',
-      _getPaymentVerifications.call,
-    );
     final revenue = guard('الإيرادات', _getRevenueMetrics.call);
     final fleet = guard('الأسطول', _getFleetWorkspace.call);
     final captains = guard('طلبات الكباتن', _getCaptainRequests.call);
@@ -118,7 +110,6 @@ class DashboardHomeCubit extends Cubit<DashboardHomeState> {
     final summary = DashboardHomeSummary(
       trips: await trips ?? const [],
       bookings: await bookings ?? const [],
-      paymentVerifications: await verifications ?? const [],
       revenue: await revenue ?? _emptyRevenue,
       fleet: await fleet ?? _emptyFleet,
       captainRequests: await captains ?? const [],

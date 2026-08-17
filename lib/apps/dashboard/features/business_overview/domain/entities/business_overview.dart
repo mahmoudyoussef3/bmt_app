@@ -31,7 +31,6 @@ import 'package:bmt_app/apps/dashboard/features/finance/domain/entities/finance_
 import 'package:bmt_app/apps/dashboard/features/finance/domain/entities/finance_money_model.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_workspace.dart';
 import 'package:bmt_app/apps/dashboard/features/live_ops/domain/entities/live_ops_snapshot.dart';
-import 'package:bmt_app/apps/dashboard/features/payment_verification/domain/entities/booking_payment_verification.dart';
 import 'package:bmt_app/apps/dashboard/features/reviews/domain/entities/trip_review_entry.dart';
 import 'package:bmt_app/apps/dashboard/features/subscriptions/domain/entities/user_subscription.dart';
 import 'package:bmt_app/apps/dashboard/features/tickets/domain/entities/complaint.dart';
@@ -47,7 +46,6 @@ import 'business_metric.dart';
 enum BusinessDataSource {
   trips('الرحلات'),
   bookings('الحجوزات'),
-  paymentVerifications('مراجعة المدفوعات'),
   revenue('الإيرادات'),
   fleet('الأسطول'),
   tickets('الشكاوى'),
@@ -98,7 +96,6 @@ class TopCustomer {
 class BusinessOverview {
   final List<OperationTrip> trips;
   final List<OperationBooking> bookings;
-  final List<BookingPaymentVerification> paymentVerifications;
   final List<SupportTicket> tickets;
   final List<TripReviewEntry> reviews;
   final List<UserSubscription> subscriptions;
@@ -121,7 +118,6 @@ class BusinessOverview {
   BusinessOverview({
     this.trips = const [],
     this.bookings = const [],
-    this.paymentVerifications = const [],
     this.tickets = const [],
     this.reviews = const [],
     this.subscriptions = const [],
@@ -461,10 +457,12 @@ class BusinessOverview {
       )
       .fold<double>(0, (sum, b) => sum + b.paymentAmount);
 
-  late final List<BookingPaymentVerification> pendingPaymentReviews =
-      paymentVerifications
-          .where((p) => p.status == BookingVerificationStatus.pending)
-          .toList();
+  /// Bookings whose receipt is waiting for the office to decide, derived from
+  /// [bookings] rather than fetched — see [DashboardHomeSummary] for why the
+  /// second query went away and why only `submitted` counts.
+  late final List<OperationBooking> pendingPaymentReviews = bookings
+      .where((b) => b.paymentStatus == PaymentStatus.submitted)
+      .toList();
 
   late final List<RefundRequest> pendingRefunds = refundRequests
       .where((r) => r.status == RefundStatus.pending)

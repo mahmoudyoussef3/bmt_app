@@ -76,6 +76,14 @@ class BookingsRepositoryImpl implements BookingsRepository {
   }
 
   @override
+  Future<OperationBooking> addNote(String bookingId, String note) {
+    return _guard(
+      () => _datasource.addNote(bookingId, note),
+      'تعذر حفظ الملاحظة',
+    );
+  }
+
+  @override
   Stream<List<OperationBooking>> watchBookings() =>
       _datasource.watchBookings().cast();
 
