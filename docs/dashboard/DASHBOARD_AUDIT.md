@@ -1,5 +1,11 @@
 # EWT Dashboard — Audit
 
+> **Superseded in part.** A follow-up architecture and performance pass ran on
+> 2026-08-16 — see `DASHBOARD_REFACTOR_REPORT.md`. It closed P1-3 (unbounded queries),
+> folded مراجعة المدفوعات into الحجوزات, removed the four layer violations this pass did
+> not look for, and fixed seven dashboard test failures this pass reported as zero.
+> The scores below are from 2026-08-15 and have not been re-run.
+
 **Date:** 2026-08-15 · **Scope:** `lib/apps/dashboard/` (575 files, ~108k lines), the
 Supabase migrations behind it, and the dashboard test suite.
 **Method:** code, schema and migrations read as the source of truth. Existing docs and the
@@ -165,7 +171,7 @@ See `DASHBOARD_KNOWN_ISSUES.md` §2.
 | What | Verdict |
 |---|---|
 | **نظرة المالك على الإيرادات** (`/owner-overview`, 525 lines) | **Removed.** No nav item, no inbound link from any screen — unreachable since the نظرة تنفيذية rebuild. Its figures were a strict subset of نظرة تنفيذية + المركز المالي, its datasource applied no office filter of its own, and its own footer admitted it could not compute the metrics it was named for. |
-| **مراجعة المدفوعات** vs **الحجوزات** | **Merge, later.** Same table, same three RPCs, two complete data layers. الحجوزات is the richer surface and should absorb the queue as a preset. Not done here — it is a refactor with its own test surface, not a cleanup. |
+| **مراجعة المدفوعات** vs **الحجوزات** | **Merged 2026-08-16.** 14 files deleted; `/payment-verification` opens الحجوزات on the review preset, and `addNote` came across as `AddBookingNoteUseCase`. |
 | **الإعدادات** | **Retire.** A theme toggle already in the top bar, a paragraph saying permissions live elsewhere, and a sign-out already in the sidebar footer. |
 | **`/users` and `/permissions`** | Two routes, one screen. Kept as an alias; both now registered and gated. |
 | **Home KPIs vs نظرة تنفيذية KPIs** | Home's four are a strict subset of the other's eleven. Sharpen the split rather than delete either. |
@@ -297,11 +303,11 @@ into the sidebar), **+1 to build** (customers), **−1 to merge** (payment verif
 - ~~**The fleet RLS migration.**~~ Applied in a follow-up pass as
   `20260815110000_fleet_role_authority`, with its own verification and regression suite.
   The read-side PII split remains deferred (`DASHBOARD_SECURITY.md` §3.1).
-- **The payment-verification merge.** A refactor, not a cleanup.
+- ~~**The payment-verification merge.**~~ Done 2026-08-16.
 - **`referral_analytics`'s grant.** A one-line view change, but it is client-facing and
   belongs in its own migration with its own test.
-- **The uncapped queries.** Fixing them properly means new RPCs and a paging contract per
-  module.
+- ~~**The uncapped queries.**~~ Capped 2026-08-16 (`DashboardQueryCaps` + a visible
+  notice). Paging still needs new RPCs and a paging contract per module.
 - **`BusinessOverview`'s own partial-data notice.** Migrating it means touching a module
   this pass had no other reason to change.
 - **The five captain-app unused imports and the pre-existing layout test failures.** Out of

@@ -39,7 +39,6 @@ class DashboardAuthDatasource implements DashboardAuthRepository {
         password: password,
       );
     } on AuthException {
-      
       throw const DashboardAuthFailure(
         'اسم المستخدم أو كلمة المرور غير صحيحة.',
       );
@@ -50,19 +49,15 @@ class DashboardAuthDatasource implements DashboardAuthRepository {
     try {
       return await loadContext();
     } on DashboardAuthFailure catch (failure) {
-      
       if (failure.code == _noOfficeCode) {
         try {
           await _supabase.rpc('register_office');
           return await loadContext();
-        } catch (_) {
-          
-        }
+        } catch (_) {}
       }
       await signOut();
       rethrow;
     } catch (e) {
-      
       await signOut();
       rethrow;
     }
@@ -88,11 +83,7 @@ class DashboardAuthDatasource implements DashboardAuthRepository {
       response = await _supabase.auth.signUp(
         email: trimmedEmail,
         password: password,
-        data: {
-          
-          'role': 'office_user',
-          'pending_office_name': trimmedOffice,
-        },
+        data: {'role': 'office_user', 'pending_office_name': trimmedOffice},
       );
     } on AuthException catch (e) {
       throw DashboardAuthFailure(_signUpMessage(e));
@@ -101,7 +92,6 @@ class DashboardAuthDatasource implements DashboardAuthRepository {
     }
 
     if (response.session == null) {
-      
       throw const DashboardAuthFailure(
         'تم إنشاء الحساب. فعّل الرابط المرسل إلى بريدك الإلكتروني ثم سجّل الدخول '
         'لإكمال إنشاء المكتب.',
@@ -114,7 +104,6 @@ class DashboardAuthDatasource implements DashboardAuthRepository {
         params: {'p_office_name': trimmedOffice},
       );
     } on PostgrestException catch (e) {
-      
       throw DashboardAuthFailure(_registerMessage(e.message));
     } catch (_) {
       throw const DashboardAuthFailure('تعذر إنشاء المكتب. حاول مرة أخرى.');

@@ -565,7 +565,6 @@ class _DetailRow extends StatelessWidget {
   }
 }
 
-
 /// Operator notes on the booking, and the box for adding one.
 ///
 /// Came across with مراجعة المدفوعات when that queue was folded into الحجوزات.
@@ -625,10 +624,7 @@ class _NotesSectionState extends State<_NotesSection> {
             ),
             const SizedBox(height: AppSpacing.small),
             if (widget.booking.notes.isEmpty)
-              Text(
-                'لا توجد ملاحظات على هذا الحجز.',
-                style: text.bodySmall,
-              )
+              Text('لا توجد ملاحظات على هذا الحجز.', style: text.bodySmall)
             else
               ...widget.booking.notes.map(
                 (note) => ListTile(

@@ -128,7 +128,7 @@ class BookingsCubit extends Cubit<BookingsState> {
     emit(
       current.copyWith(
         sortField: field,
-        
+
         sortAscending: sameField
             ? !current.sortAscending
             : field == BookingSortField.passenger ||

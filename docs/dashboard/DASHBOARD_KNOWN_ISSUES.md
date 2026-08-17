@@ -1,7 +1,8 @@
 # Dashboard — Known Issues
 
-Open as of **2026-08-15**, after the audit pass. Issues fixed in that pass are recorded in
-`DASHBOARD_AUDIT.md` §"What was fixed" and are not repeated here.
+Open as of **2026-08-16**, after the architecture/performance pass. Issues fixed in that
+pass are recorded in `DASHBOARD_REFACTOR_REPORT.md` and are not repeated here; issues
+fixed in the 2026-08-15 pass are in `DASHBOARD_AUDIT.md`.
 
 > A second, **UX-only** pass ran the same day — see `DASHBOARD_UX_AUDIT.md` (findings and
 > fixes) and `DASHBOARD_UX_ROADMAP.md` (what to do next). It fixed the trip-wizard
@@ -35,39 +36,38 @@ that needs a deliberate verification pass rather than being folded into an audit
 
 ## P1 — major workflow, correctness or scale problem
 
-### 2. Almost every list query is unbounded
+### 2. List queries are capped, not paged *(PARTIALLY RESOLVED 2026-08-16)*
 
-**Where** Most `supabase_*_datasource.dart` files: 14 `.limit()` calls across ~110 selects.
-`fetchBookings()`, `fetchTrips()`, the fleet workspace (23 selects), tickets, subscriptions
-and reviews all pull the office's entire history.
+The five heaviest lists — bookings, trips, subscriptions, reviews, tickets — now carry a
+row ceiling from `DashboardQueryCaps`, an explicit `.order()`, a `capReached` flag and a
+visible `DashboardCapNotice`. الرئيسية is down to 8 feeds and نظرة تنفيذية to 11.
 
-**Impact** compounds badly:
+**What is still open** is paging, and it is a migration rather than a Dart change. The
+counters and KPIs on these screens (`countByStatus`, `countForTab`, `approvedRevenue`,
+`availableRoutes`) are computed over the full loaded set, so paging the query without
+moving those tallies server-side would replace a truthful window with a lying one. Needs
+per module:
 
-- الرئيسية fires **9** uncapped queries on every visit.
-- نظرة تنفيذية fires **12** on every visit.
-- The shell disposes and rebuilds each module on every navigation, so returning to Home
-  re-runs all nine.
+```
+office_<x>_page(p_filters jsonb, p_limit int, p_offset int)
+office_<x>_tallies(p_filters jsonb)
+```
 
-An office with 50k bookings pulls 50k rows several times per session. Finance already has
-a row cap and surfaces `ledgerCapReached`; that is the pattern the rest should follow.
+Also still open: **`GetFleetWorkspaceUseCase` runs 23 selects** and الرئيسية calls it on
+every load. One `office_fleet_workspace` RPC returning one document would replace it.
 
-**Fix** Server-side aggregates for the two composition screens (a `dashboard_home_summary`
-RPC), and paging + caps on the module lists.
+### 3. `addNote` writes a column directly, with a lost-update race
 
-### 3. Payment Verification duplicates Bookings
+**Where** `SupabaseBookingsDatasource.addNote`.
 
-**Where** `features/payment_verification/` (2.0k lines) vs `features/bookings/` (5.8k).
+A read-modify-write on the `notes` array: two operators noting the same booking within the
+same second lose one of the notes. Carried over verbatim from مراجعة المدفوعات when that
+queue was folded into الحجوزات on 2026-08-16 — folding it was not the moment to change what
+it does.
 
-Both read `operation_bookings`, both call `office_approve_payment` /
-`office_reject_payment` / reupload. Two datasources, two repositories, two cubits, two
-sets of use cases, two DI graphs, one job.
-
-الحجوزات is the richer surface (filters, bulk actions, reassignment); مراجعة المدفوعات is a
-narrower queue over `payment_status in (submitted, underReview, approved, rejected)`.
-
-**Fix** Fold it into الحجوزات as a saved queue preset, and keep `/payment-verification` as
-a deep link that opens that preset. Not done in this pass because it is a genuine refactor
-with its own test surface, not a cleanup.
+**Fix** An `office_add_booking_note` RPC that appends in one statement. That also brings
+the write back under the module's own stated rule, which is that state changes go through
+audited definer RPCs.
 
 ### 4. Reports cannot date-bound driver, vehicle or complaint data
 
@@ -126,23 +126,32 @@ touching a module this pass did not otherwise need to.
 
 ### 11. الشكاوى writes columns directly
 
-The only module that updates its table without an RPC. RLS-gated and low-risk today, but
-inconsistent with every other write path in the console.
+RLS-gated and low-risk today, but inconsistent with every other write path in the console.
+One of two such writes — see §3 for the other.
 
 ### 12. No test coverage for several shipped modules
 
-No tests exist for: referrals, tickets, office billing, notifications dispatch, settings,
-or the reports **screen** (the cubit is covered).
+No tests exist for: referrals, office billing, notifications dispatch, settings, or the
+reports **screen** (the cubit is covered). Tickets gained coverage in the UX pass.
+
+`office_billing` gained a real data layer on 2026-08-16 and is now testable without a
+Supabase client — as is `auth`, whose cubit had no tests at all because it depended on a
+concrete datasource. Both are the cheapest coverage left to add.
 
 ---
 
 ## P3 — polish
 
-### 13. Filters do not survive navigation
+### 13. Filters do not survive navigation, except where a module opts in
 
-Every module rebuilds from scratch when the shell switches route, so an operator who
-filters الحجوزات, checks a trip and comes back starts over. Fold state persists via
-`DashboardSectionStateStore`; filter state does not.
+Every module is rebuilt from scratch when the shell switches route.
+`DashboardFilterMemory` papers over it for الحجوزات and الشكاوى; every other module still
+starts over.
+
+The underlying cause is that the shell disposes each module on navigation. With the row
+caps in place the refetch is now bounded, and refetching *is* arguably right for an ops
+console — so the remaining work is to extend the memory to the other filtered modules
+rather than to keep modules alive.
 
 ### 14. `revenue_daily_view` has no subscription revenue
 
@@ -157,22 +166,24 @@ mistakes them for new.
 
 ---
 
-## Pre-existing test failures (not caused by, and not fixed by, this pass)
+## Pre-existing test failures
 
-Measured after the UX pass (`flutter test`, whole repo):
+Measured 2026-08-16 (`flutter test`, whole repo). **All are in the captain and client
+apps; the dashboard suite is green.**
+
+> The earlier claim that the dashboard suite was "1,107 passing, 0 failing" was wrong. It
+> was 1,193 passing / **7 failing** on a clean tree. All seven were fixed on 2026-08-16 —
+> one was a real RTL violation, six were tests that had drifted from the UI. See
+> `DASHBOARD_REFACTOR_REPORT.md` §1.
 
 | Test | Failure |
 |---|---|
-| ~~`dashboard/features/trips/trip_creation_driver_vehicle_test.dart`~~ | ~~Overflow at 1.3× and 1.6× text scale (×2)~~ — **fixed** in the UX pass |
 | `captain/captain_profile_layout_test.dart` | Overflow at small/medium/large (×3) |
 | `captain/features/trip_history/trip_history_layout_test.dart` | Overflow and copy assertions (×4) |
 | `captain/features/trip_history/trip_history_detail_layout_test.dart` | Overflow and copy assertions (×3) |
 | `client/support_ticket_details_test.dart` | Overflow on a loaded ticket (×1) |
 
-Full suite was **2,221 passing / 13 failing** at the end of the correctness audit and is
-**2,236 passing / 11 failing** after the UX pass: the two dashboard overflows are fixed and
-13 tickets tests were added. The remaining **11 failures are all in the captain and client
-apps**, all pre-existing, and untouched by dashboard work. (The earlier note split the seven
-captain trip-history failures as "×5"; the per-file counts above are measured.)
+Full suite is **2,335 passing / 11 failing**. The 11 are all pre-existing and all outside
+the dashboard.
 
-The dashboard suite on its own is **1,107 passing, 0 failing**.
+The dashboard suite on its own is **1,206 passing, 0 failing**.
