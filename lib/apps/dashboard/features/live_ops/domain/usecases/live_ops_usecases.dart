@@ -1,3 +1,4 @@
+import '../entities/fleet_feed.dart';
 import '../entities/live_ops_snapshot.dart';
 import '../entities/trip_incident.dart';
 import '../repositories/live_ops_repository.dart';
@@ -16,6 +17,30 @@ class WatchLiveOpsUseCase {
   const WatchLiveOpsUseCase(this._repository);
 
   Stream<void> call() => _repository.watchChanges();
+}
+
+/// The office's live position feed, and the health of the link carrying it.
+///
+/// The Bloc above this holds no Supabase client, opens no channel and names no
+/// table; it receives [FleetFeedEvent]s and nothing else.
+class WatchFleetFeedUseCase {
+  final LiveOpsRepository _repository;
+
+  const WatchFleetFeedUseCase(this._repository);
+
+  Stream<FleetFeedEvent> call() => _repository.watchFleetFixes();
+}
+
+/// Latest known position per active trip.
+///
+/// Used to seed the board on open and to catch up while the socket is unhealthy —
+/// never on a timer while it is healthy.
+class GetLatestFleetFixesUseCase {
+  final LiveOpsRepository _repository;
+
+  const GetLatestFleetFixesUseCase(this._repository);
+
+  Future<Map<String, LiveFix>> call() => _repository.fetchLatestFixes();
 }
 
 /// Thrown when a caller attempts a move the lifecycle does not allow — e.g.

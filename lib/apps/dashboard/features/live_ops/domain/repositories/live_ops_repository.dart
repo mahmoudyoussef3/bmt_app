@@ -1,3 +1,4 @@
+import '../entities/fleet_feed.dart';
 import '../entities/live_ops_snapshot.dart';
 import '../entities/trip_incident.dart';
 
@@ -12,6 +13,17 @@ abstract class LiveOpsRepository {
   /// cubit reacts by re-reading a fresh [getSnapshot]; the stream is a trigger,
   /// not a data source, mirroring the trips feature's `watchTripsChanges`.
   Stream<void> watchChanges();
+
+  /// Live positions for the office's fleet, as values on one stream.
+  ///
+  /// Distinct from [watchChanges] on purpose: that one is a *trigger* saying the
+  /// joined roster is stale, this one *carries* the data. A position must never
+  /// cause a roster refetch — the roster does not change because a bus moved.
+  Stream<FleetFeedEvent> watchFleetFixes();
+
+  /// Latest position per active trip. Backfills the first paint and serves the
+  /// catch-up poll that runs only while the realtime link is unhealthy.
+  Future<Map<String, LiveFix>> fetchLatestFixes();
 
   /// Moves an incident to [next], optionally recording the operator's account
   /// of what was done. The legality of the move is decided in the domain

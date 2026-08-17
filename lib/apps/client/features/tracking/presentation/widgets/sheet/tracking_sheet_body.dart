@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
-import 'package:bmt_app/core/tracking/progress/route_progress_snapshot.dart';
 
 import '../../../domain/entities/tracking_trip.dart';
 import '../../formatters/tracking_labels.dart';
+import '../live_progress_builder.dart';
 import 'tracking_boarding_card.dart';
 import 'tracking_booking_card.dart';
 import 'tracking_completed_card.dart';
@@ -23,7 +23,6 @@ class TrackingSheetBody extends StatelessWidget {
   const TrackingSheetBody({
     super.key,
     required this.trip,
-    required this.progress,
     required this.labels,
     required this.onRefresh,
     this.isBoarding = false,
@@ -32,7 +31,6 @@ class TrackingSheetBody extends StatelessWidget {
   });
 
   final TrackingTripData trip;
-  final RouteProgressSnapshot? progress;
   final TrackingLabels labels;
   final VoidCallback onRefresh;
   final bool isBoarding;
@@ -49,10 +47,15 @@ class TrackingSheetBody extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 28),
       children: [
         const _Grabber(),
-        TrackingStatusHeader(
-          trip: trip,
-          progress: progress,
-          labels: labels,
+        // The two sections a moving vehicle actually changes, each scoped to the
+        // live feed on its own. Everything else in this list is a fact about the
+        // trip and is built once.
+        LiveProgressBuilder(
+          builder: (context, progress) => TrackingStatusHeader(
+            trip: trip,
+            progress: progress,
+            labels: labels,
+          ),
         ),
         if (trip.tripState.isFinished) ...[
           const SizedBox(height: 16),
@@ -80,11 +83,13 @@ class TrackingSheetBody extends StatelessWidget {
         ],
         if (!trip.tripState.isFinished) ...[
           const SizedBox(height: 20),
-          TrackingStopsList(
-            progress: progress,
-            rider: rider,
-            labels: labels,
-            stations: trip.stations,
+          LiveProgressBuilder(
+            builder: (context, progress) => TrackingStopsList(
+              progress: progress,
+              rider: rider,
+              labels: labels,
+              stations: trip.stations,
+            ),
           ),
         ],
         const SizedBox(height: 16),

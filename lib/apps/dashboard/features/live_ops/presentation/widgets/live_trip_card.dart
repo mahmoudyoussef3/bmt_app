@@ -4,6 +4,7 @@ import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 
+import '../../domain/entities/fleet_feed.dart';
 import '../../domain/entities/live_ops_snapshot.dart';
 import 'departure_status_badge.dart';
 import 'live_ops_format.dart';
@@ -18,6 +19,15 @@ import 'tracking_health_badge.dart';
 /// alone, so it survives greyscale and high-contrast modes.
 class LiveTripCard extends StatelessWidget {
   final LiveTrip trip;
+
+  /// This trip's live position, or `null` when it has never reported one.
+  ///
+  /// Passed in rather than read off [trip] because the roster's fix is only the
+  /// seed the board opened with; the feed Bloc holds the current one. A card
+  /// reading `trip.lastFix` would keep showing the position the last roster
+  /// refetch happened to carry, which after this change is up to two minutes old.
+  final TrackedVehicle? vehicle;
+
   final DateTime now;
   final bool selected;
   final VoidCallback? onTap;
@@ -26,6 +36,7 @@ class LiveTripCard extends StatelessWidget {
     super.key,
     required this.trip,
     required this.now,
+    this.vehicle,
     this.selected = false,
     this.onTap,
   });
@@ -34,8 +45,10 @@ class LiveTripCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
-    final health = trip.trackingHealthAt(now);
-    final age = trip.fixAgeAt(now);
+    final health = vehicle?.healthAt(now) ?? TrackingHealth.unknown;
+    final age = vehicle == null
+        ? null
+        : _nonNegative(now.difference(vehicle!.receivedAt));
 
     final card = AppCard(
       padding: const EdgeInsets.all(AppSpacing.medium),
@@ -71,7 +84,7 @@ class LiveTripCard extends StatelessWidget {
               TrackingHealthBadge(health: health),
             ],
           ),
-          
+
           Builder(
             builder: (context) {
               final badge = DepartureStatusBadge(trip: trip, now: now);
@@ -109,7 +122,7 @@ class LiveTripCard extends StatelessWidget {
             ratio: trip.occupancyRatio,
           ),
           const SizedBox(height: AppSpacing.small),
-          _TrackingLine(health: health, age: age, fix: trip.lastFix),
+          _TrackingLine(health: health, age: age, fix: vehicle?.fix),
         ],
       ),
     );
@@ -136,6 +149,10 @@ class LiveTripCard extends StatelessWidget {
       ),
     );
   }
+
+  /// A captain's clock running ahead of the desk's must never render as a
+  /// negative age.
+  static Duration _nonNegative(Duration d) => d.isNegative ? Duration.zero : d;
 }
 
 class _MetaRow extends StatelessWidget {
@@ -163,7 +180,7 @@ class _MetaRow extends StatelessWidget {
         ),
         if (secondary != null) ...[
           const SizedBox(width: AppSpacing.small),
-          
+
           Flexible(
             child: Text(
               secondary!,

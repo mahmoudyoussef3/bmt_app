@@ -1,5 +1,8 @@
-import 'package:async/async.dart';
+import 'dart:async';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
+
+import 'package:bmt_app/core/tracking/live_tracking_config.dart';
 
 import '../../domain/entities/tracking_trip.dart';
 import '../models/tracking_point_model.dart';
@@ -9,13 +12,17 @@ import 'tracking_realtime.dart';
 import 'tracking_trip_query.dart';
 
 class SupabaseTrackingDatasource implements TrackingDatasource {
-  SupabaseTrackingDatasource(this._client)
-    : _query = TrackingTripQuery(_client),
-      _realtime = TrackingRealtime(_client);
+  SupabaseTrackingDatasource(
+    this._client, {
+    LiveTrackingConfig config = kLiveTrackingConfig,
+  }) : _query = TrackingTripQuery(_client),
+       _realtime = TrackingRealtime(_client),
+       _config = config;
 
   final SupabaseClient _client;
   final TrackingTripQuery _query;
   final TrackingRealtime _realtime;
+  final LiveTrackingConfig _config;
 
   @override
   Future<TrackingTripData> getTrackingTrip({
@@ -98,33 +105,89 @@ class SupabaseTrackingDatasource implements TrackingDatasource {
     return 'تعذر تأكيد الصعود، حاول مجدداً';
   }
 
-  /// Realtime delivers a fix the instant the captain shares it; the poll is a
-  /// safety net so a dropped socket, an expired realtime token, or a single
-  /// missed event can never leave the rider on a frozen map while the captain
-  /// is still sending. Re-emitting an already-seen fix is harmless — the
-  /// vehicle engine rejects any fix that is not strictly newer than the last
-  /// one it drew, so only genuinely new positions ever move the marker.
+  /// Positions and link health, with a catch-up poll that runs **only while the
+  /// socket is unhealthy**.
+  ///
+  /// This used to poll every 8 s unconditionally, alongside realtime, forever.
+  /// That was the right fix for a real bug — riders were watching frozen maps —
+  /// but it was made blind, because nothing reported whether the socket was
+  /// working. Now that `TrackingRealtime` surfaces status, the redundancy can be
+  /// spent only when it is earning something: while the link is `connected`
+  /// there are no periodic queries at all, and the moment it is not, the poll
+  /// fires immediately and then keeps pace until the socket returns.
+  ///
+  /// Re-emitting an already-seen fix stays harmless — the progress engine rejects
+  /// any fix that is not strictly newer than the last one it folded in, so a
+  /// catch-up poll landing a position realtime also delivered changes nothing.
   @override
-  Stream<TrackingPoint> watchVehiclePosition(String tripId) {
-    final live = _realtime.watchVehiclePosition(tripId);
-    final polled = Stream.periodic(_pollInterval)
-        .asyncMap((_) => _latestOrNull(tripId))
-        .map(TrackingPointModel.fromNullableRow)
-        .where((point) => point != null)
-        .cast<TrackingPoint>();
-    return StreamGroup.merge([live, polled]);
-  }
+  Stream<VehicleFeedEvent> watchVehicleFeed(String tripId) {
+    late StreamController<VehicleFeedEvent> controller;
+    StreamSubscription<VehicleFeedEvent>? feedSub;
+    Timer? poll;
 
-  /// A transient read failure must not end the poll — the next tick retries.
-  Future<Map<String, dynamic>?> _latestOrNull(String tripId) async {
-    try {
-      return await _query.latestLocation(tripId);
-    } catch (_) {
-      return null;
+    void emit(VehicleFeedEvent event) {
+      if (!controller.isClosed) controller.add(event);
     }
-  }
 
-  static const _pollInterval = Duration(seconds: 8);
+    Future<void> pollOnce() async {
+      try {
+        final point = TrackingPointModel.fromNullableRow(
+          await _query.latestLocation(tripId),
+        );
+        if (point != null) emit(VehicleFixReported(point));
+      } catch (_) {
+        // A transient read failure must not end the poll — the next tick retries.
+      }
+    }
+
+    void stopPoll() {
+      poll?.cancel();
+      poll = null;
+    }
+
+    void startPoll({required bool immediately}) {
+      if (poll != null) return;
+      if (immediately) unawaited(pollOnce());
+      poll = Timer.periodic(
+        _config.reconnectPollInterval,
+        (_) => unawaited(pollOnce()),
+      );
+    }
+
+    controller = StreamController<VehicleFeedEvent>(
+      onListen: () {
+        // Armed but not fired: until the socket reports in we do not know whether
+        // it is coming up, and the trip fetch has already seeded the last known
+        // position. If it never connects, the first tick covers for it.
+        startPoll(immediately: false);
+
+        feedSub = _realtime.watchVehicleFeed(tripId).listen(
+          (event) {
+            if (event is VehicleLinkChanged) {
+              if (event.link.isConnected) {
+                stopPoll();
+              } else {
+                startPoll(immediately: true);
+              }
+            }
+            emit(event);
+          },
+          onError: (Object error, StackTrace stackTrace) {
+            startPoll(immediately: true);
+            emit(const VehicleLinkChanged(TrackingLink.lost));
+          },
+        );
+      },
+      onCancel: () {
+        stopPoll();
+        final active = feedSub;
+        feedSub = null;
+        return active?.cancel();
+      },
+    );
+
+    return controller.stream;
+  }
 
   @override
   Stream<void> watchTripChanges(String tripId) =>

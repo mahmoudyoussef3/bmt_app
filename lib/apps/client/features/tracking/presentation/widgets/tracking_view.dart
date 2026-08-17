@@ -3,6 +3,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 
+import '../bloc/live_tracking_bloc.dart';
+import '../bloc/live_tracking_state.dart';
 import '../cubit/tracking_cubit.dart';
 import '../cubit/tracking_state.dart';
 import '../formatters/tracking_labels.dart';
@@ -17,6 +19,11 @@ import 'tracking_signal_pill.dart';
 /// becomes a fixed side panel — the same widgets, not a second layout tree to
 /// keep in sync. (The old screen maintained separate mobile and tablet
 /// hierarchies, and they had already drifted apart.)
+///
+/// Two state holders meet here, and the split is the point: `TrackingCubit` is
+/// consulted for what the trip *is*, `LiveTrackingBloc` for where the vehicle is.
+/// Only the second one changes every few seconds, so only the widgets scoped to
+/// it repaint.
 class TrackingView extends StatefulWidget {
   const TrackingView({super.key, required this.labels});
 
@@ -27,7 +34,6 @@ class TrackingView extends StatefulWidget {
 }
 
 class _TrackingViewState extends State<TrackingView> {
-  
   final _sheetController = DraggableScrollableController();
 
   @override
@@ -38,8 +44,8 @@ class _TrackingViewState extends State<TrackingView> {
 
   void _refresh() => context.read<TrackingCubit>().refresh();
 
-  /// Every section is scoped to the loaded state, so a fix that only moves the
-  /// vehicle does not rebuild the scaffold around it.
+  /// Scoped to the loaded trip, so a fix that only moves the vehicle does not
+  /// rebuild the scaffold around it.
   Widget _scoped(Widget Function(TrackingLoaded loaded) build) {
     return BlocSelector<TrackingCubit, TrackingState, TrackingLoaded?>(
       selector: (state) => state is TrackingLoaded ? state : null,
@@ -53,38 +59,41 @@ class _TrackingViewState extends State<TrackingView> {
     final isWide = MediaQuery.sizeOf(context).width > 900;
     final labels = widget.labels;
 
-    // Once this rider boards, the vehicle marker goes with their read access:
-    // `can_read_trip_fixes` stops admitting the rows, the subscription is
-    // dropped, and passing the last-known fix on to the map would leave a
-    // marker frozen at wherever the bus happened to be — a stale position
-    // presented as a live one. The route line and the stops stay; those are
-    // still their journey.
+    // The marker comes from the live feed and nowhere else. Once this rider
+    // boards, the bloc answers `unavailable` and there is no fix to hand over —
+    // which is the honest outcome, because passing the last known position on
+    // would leave a marker frozen wherever the bus happened to be, presented as
+    // a live one. The route line and the stops stay; those are still their
+    // journey.
     final map = _scoped(
-      (loaded) => TrackingMap(
-        routePoints: loaded.data.routePoints,
-        vehicleFix: loaded.data.rider.canTrackVehicle
-            ? loaded.data.vehicleFix
-            : null,
-        progress: loaded.progress,
-        labels: labels,
-        onRetry: _refresh,
-        sheetController: isWide ? null : _sheetController,
-        borderRadius: isWide ? 18 : 0,
+      (loaded) => BlocBuilder<LiveTrackingBloc, LiveTrackingState>(
+        builder: (context, live) => TrackingMap(
+          routePoints: loaded.data.routePoints,
+          vehicleFix: live is LiveTrackingActive ? live.fix : null,
+          progress: live.progress,
+          labels: labels,
+          onRetry: _refresh,
+          sheetController: isWide ? null : _sheetController,
+          borderRadius: isWide ? 18 : 0,
+        ),
       ),
     );
 
-    final pill = _scoped(
-      (loaded) => TrackingSignalPill(
-        progress: loaded.progress,
-        recordedAt: loaded.data.vehicleFix?.recordedAt,
+    final pill = BlocBuilder<LiveTrackingBloc, LiveTrackingState>(
+      builder: (context, live) => TrackingSignalPill(
+        progress: live.progress,
+        recordedAt: live is LiveTrackingActive ? live.fix.recordedAt : null,
+        freshness: live is LiveTrackingActive ? live.freshness : null,
+        link: live is LiveTrackingActive ? live.link : null,
         labels: labels,
       ),
     );
 
+    // The sheet is built from the trip alone; the two sections inside it that a
+    // position affects subscribe to the feed themselves.
     Widget sheet([ScrollController? scrollController]) => _scoped(
       (loaded) => TrackingSheetBody(
         trip: loaded.data,
-        progress: loaded.progress,
         labels: labels,
         onRefresh: _refresh,
         isBoarding: loaded.isBoarding,

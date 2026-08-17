@@ -334,7 +334,7 @@ void main() {
         testWidgets('summary bar @ ${width}px ${scale}x', (tester) async {
           await _expectNoOverflow(
             tester,
-            LiveOpsSummaryBar(snapshot: snapshot, now: _now),
+            LiveOpsSummaryBar(snapshot: snapshot, atRisk: 2, now: _now),
             width: width,
             textScale: scale,
           );

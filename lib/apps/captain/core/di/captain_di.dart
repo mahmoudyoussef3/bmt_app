@@ -75,7 +75,9 @@ import '../../features/live_location/data/datasources/location_datasource.dart';
 import '../../features/live_location/data/datasources/supabase_location_datasource.dart';
 import '../../features/live_location/data/repositories/location_repository_impl.dart';
 import '../../features/live_location/domain/repositories/location_repository.dart';
+import '../../features/live_location/domain/usecases/publish_trip_location_usecase.dart';
 import '../../features/live_location/domain/usecases/send_location_update_usecase.dart';
+import '../../features/live_location/domain/usecases/watch_publishable_location_usecase.dart';
 import '../../features/live_location/presentation/cubit/live_location_cubit.dart';
 import '../../features/passenger_manifest/data/datasources/passenger_manifest_datasource.dart';
 import '../../features/passenger_manifest/data/repositories/passenger_manifest_repository_impl.dart';
@@ -562,10 +564,23 @@ void _registerLiveLocationDependencies() {
       () => SendLocationUpdateUseCase(captainGetIt<LocationRepository>()),
     );
   }
+  if (!captainGetIt.isRegistered<PublishTripLocationUseCase>()) {
+    captainGetIt.registerLazySingleton<PublishTripLocationUseCase>(
+      () => PublishTripLocationUseCase(captainGetIt<LocationRepository>()),
+    );
+  }
+  if (!captainGetIt.isRegistered<WatchPublishableLocationUseCase>()) {
+    captainGetIt.registerLazySingleton<WatchPublishableLocationUseCase>(
+      () => WatchPublishableLocationUseCase(captainGetIt<LocationRepository>()),
+    );
+  }
   if (!captainGetIt.isRegistered<LiveLocationCubit>()) {
     captainGetIt.registerLazySingleton<LiveLocationCubit>(
       () => LiveLocationCubit(
         sendLocation: captainGetIt<SendLocationUpdateUseCase>(),
+        watchPublishableLocation:
+            captainGetIt<WatchPublishableLocationUseCase>(),
+        publishLocation: captainGetIt<PublishTripLocationUseCase>(),
         session: captainGetIt<CaptainOfficeSession>(),
       ),
       dispose: (cubit) => cubit.close(),

@@ -1,17 +1,15 @@
+import 'package:bmt_app/core/tracking/live_tracking_config.dart';
+
 import 'trip_incident.dart';
 
 /// Health of a trip's live position feed, derived from the age of its most
 /// recent GPS fix.
 ///
-/// The Captain App publishes a fix roughly every 30s while a trip runs
-/// (`kAutoLocationInterval` in the captain live-location cubit). The thresholds
-/// below are expressed as multiples of that cadence so a single dropped update
-/// never demotes a healthy captain:
-///
-/// - [live]    — a fix within the last 75s (≤ ~2 cadences). Genuinely current.
-/// - [stale]   — 75s–4min old. The feed slipped; worth a glance, not an alarm.
-/// - [offline] — older than 4min while the trip is still running. The captain
-///               has almost certainly lost signal or closed the app.
+/// - [live]    — a fix inside [liveWindow]. Genuinely current.
+/// - [stale]   — older than [liveWindow], at or under [staleWindow]. The feed
+///               slipped; worth a glance, not an alarm.
+/// - [offline] — older than [staleWindow] while the trip is still running. The
+///               captain has almost certainly lost signal or closed the app.
 /// - [unknown] — the trip is active but no fix has ever arrived. The captain
 ///               likely never granted location permission or never started the
 ///               share. Distinct from [offline]: there is nothing to be stale.
@@ -26,10 +24,24 @@ enum TrackingHealth {
   final String label;
 
   /// A fix at or under this age is [live].
-  static const Duration liveWindow = Duration(seconds: 75);
+  ///
+  /// Read from the shared [LiveTrackingConfig] rather than set here, because
+  /// "can this position still be believed?" must have exactly one answer across
+  /// the platform. It used to be a local 75s, derived from a captain cadence of
+  /// 30s that no longer exists — the publisher now throttles to 10s with a 30s
+  /// heartbeat floor. That left a real, visible contradiction: a bus whose rider
+  /// was already being shown «تأخر الإشارة» still read «حية» on the operator's
+  /// board for another half-minute. The desk and the rider now go stale together.
+  static Duration get liveWindow => kLiveTrackingConfig.staleAfter;
 
   /// A fix older than [liveWindow] but at or under this age is [stale];
   /// anything older is [offline].
+  ///
+  /// Deliberately *not* shared with the client, because it answers a different
+  /// question. [liveWindow] asks whether a position is current; this asks whether
+  /// a captain is still there at all — a judgement only the operations desk acts
+  /// on, and one that must not flap. Four minutes is eight missed heartbeats: long
+  /// past a tunnel, comfortably short of a shift.
   static const Duration staleWindow = Duration(minutes: 4);
 
   /// Classifies a feed from the age of its latest fix. [fixAge] is `null` when
@@ -102,7 +114,15 @@ class LiveTrip {
   final int capacity;
   final int bookedSeats;
 
-  /// Latest position, or `null` if the trip has never reported one.
+  /// Latest position at the moment the roster was read — a **seed**, not a live
+  /// value.
+  ///
+  /// It exists so the map is populated on the board's first paint instead of
+  /// empty until the next INSERT arrives. Once `FleetTrackingBloc` is running it
+  /// owns positions, and this field goes out of date immediately. Nothing in the
+  /// UI may read it: ask the feed. That is also why this entity no longer offers
+  /// `trackingHealthAt` / `fixAgeAt` — two ways to compute health from two
+  /// different positions is precisely the drift worth designing out.
   final LiveFix? lastFix;
 
   /// `trip_date` + `departure_time` resolved to a single local instant, or
@@ -130,18 +150,6 @@ class LiveTrip {
     this.scheduledDeparture,
     this.actualStart,
   });
-
-  /// Age of the latest fix relative to [now], or `null` if there is no fix.
-  Duration? fixAgeAt(DateTime now) {
-    final fix = lastFix;
-    if (fix == null) return null;
-    final age = now.difference(fix.recordedAt);
-    
-    return age.isNegative ? Duration.zero : age;
-  }
-
-  TrackingHealth trackingHealthAt(DateTime now) =>
-      TrackingHealth.fromFixAge(fixAgeAt(now));
 
   double get occupancyRatio => capacity <= 0 ? 0 : bookedSeats / capacity;
 
@@ -237,13 +245,6 @@ class LiveOpsSnapshot {
 
   int get boardingCount => activeTrips.where((t) => !t.isInProgress).length;
 
-  /// Count of active trips whose feed is [TrackingHealth.stale],
-  /// [TrackingHealth.offline] or [TrackingHealth.unknown] — the ones an
-  /// operator can no longer see moving.
-  int trackingAtRiskCount(DateTime now) => activeTrips
-      .where((t) => t.trackingHealthAt(now) != TrackingHealth.live)
-      .length;
-
   /// Trips still boarding well past their scheduled departure, worst first, so
   /// the desk works the longest-delayed trip before the one that just tipped
   /// over the grace window.
@@ -259,9 +260,8 @@ class LiveOpsSnapshot {
 
   int overdueCount(DateTime now) => overdueTrips(now).length;
 
-  /// Active trips that have a position to draw. The map renders only these; the
-  /// rest are still represented in the trip list, so an untracked trip is never
-  /// silently dropped from the operator's view.
+  /// Active trips that arrived with a seed position. Reported by the *feed*
+  /// once it is running — this is only what the roster read.
   List<LiveTrip> get mappableTrips =>
       activeTrips.where((t) => t.lastFix != null).toList();
 

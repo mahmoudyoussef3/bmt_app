@@ -72,7 +72,7 @@ class _IncidentResolutionDialogState extends State<_IncidentResolutionDialog> {
 
     return AlertDialog(
       title: Text(_isDismissal ? 'استبعاد البلاغ' : 'إغلاق البلاغ'),
-      
+
       content: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 420),
         child: SingleChildScrollView(

@@ -43,7 +43,7 @@ void main() {
       expect(status.headline, isNot(contains('30')));
     });
 
-    test('a fix inside the window reads as live and states the cadence', () {
+    test('a fix inside the window reads as live without promising a cadence', () {
       final status = statusAt(
         sharing: true,
         sinceLastFix: kAutoLocationInterval,
@@ -51,7 +51,12 @@ void main() {
 
       expect(status.health, LocationSharingHealth.live);
       expect(status.isHealthy, isTrue);
-      expect(status.headline, contains('${kAutoLocationInterval.inSeconds}'));
+      // Publishing follows the vehicle's movement now — a fix goes out when the
+      // bus has moved, at most once per `publishInterval`, with the heartbeat as
+      // the floor. Naming a fixed "every N seconds" would be a promise the
+      // pipeline no longer makes, so the headline states the behaviour instead.
+      expect(status.headline, isNot(contains('${kAutoLocationInterval.inSeconds}')));
+      expect(status.headline, contains('تحرك'));
     });
 
     test('a fix older than the stale threshold reads as stale — this is the '

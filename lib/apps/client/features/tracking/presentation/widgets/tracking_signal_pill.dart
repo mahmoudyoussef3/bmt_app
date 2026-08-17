@@ -5,6 +5,7 @@ import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/core/tracking/progress/route_progress_snapshot.dart';
 import 'package:bmt_app/core/widgets/maps/map_style.dart';
 
+import '../../domain/entities/vehicle_feed.dart';
 import '../formatters/tracking_labels.dart';
 
 /// The only thing floating over the map.
@@ -19,23 +20,46 @@ class TrackingSignalPill extends StatelessWidget {
     required this.progress,
     required this.recordedAt,
     required this.labels,
+    this.freshness,
+    this.link,
   });
 
   final RouteProgressSnapshot? progress;
   final DateTime? recordedAt;
   final TrackingLabels labels;
 
+  /// The tracking bloc's authoritative freshness, when the pill is being driven
+  /// from it. Preferred over [RouteProgressSnapshot.isStale] because the two
+  /// answer slightly different questions on different thresholds: the snapshot's
+  /// flag is about when ETAs stop being trustworthy, this one is about when the
+  /// *dot* stops being trustworthy, and the rider is asking about the dot.
+  final TrackingFreshness? freshness;
+
+  /// Health of the feed. A fresh position arriving by catch-up poll is still
+  /// worth distinguishing from one arriving live.
+  final TrackingLink? link;
+
   @override
   Widget build(BuildContext context) {
     final l10n = labels.l10n;
     final hasFix = progress?.hasVehicleFix ?? false;
-    final isStale = progress?.isStale ?? false;
+    final isStale = freshness?.isStale ?? progress?.isStale ?? false;
     final isOffRoute = progress?.isOffRoute ?? false;
+    final activeLink = link;
+    final isReconnecting =
+        hasFix && !isStale && activeLink != null && !activeLink.isConnected;
 
-    final (color, text) = switch ((hasFix, isStale, isOffRoute)) {
-      (false, _, _) => (ClientColors.journeySlate, l10n.tracking_signalNone),
-      (_, true, _) => (ClientColors.journeyAmber, l10n.tracking_signalStale),
-      (_, _, true) => (ClientColors.journeyAmber, l10n.tracking_signalOffRoute),
+    final (color, text) = switch ((hasFix, isStale, isReconnecting, isOffRoute)) {
+      (false, _, _, _) => (ClientColors.journeySlate, l10n.tracking_signalNone),
+      (_, true, _, _) => (ClientColors.journeyAmber, l10n.tracking_signalStale),
+      (_, _, true, _) => (
+        ClientColors.journeyAmber,
+        l10n.tracking_signalReconnecting,
+      ),
+      (_, _, _, true) => (
+        ClientColors.journeyAmber,
+        l10n.tracking_signalOffRoute,
+      ),
       _ => (ClientColors.journeyCyan, l10n.tracking_signalLive),
     };
 

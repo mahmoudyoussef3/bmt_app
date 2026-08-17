@@ -2,17 +2,14 @@ import 'dart:async';
 
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:bmt_app/apps/client/features/tracking/data/datasources/tracking_datasource.dart';
-import 'package:bmt_app/apps/client/features/tracking/data/repositories/tracking_repository_impl.dart';
 import 'package:bmt_app/apps/client/features/tracking/domain/entities/tracking_trip.dart';
-import 'package:bmt_app/apps/client/features/tracking/domain/usecases/confirm_boarding_usecase.dart';
-import 'package:bmt_app/apps/client/features/tracking/domain/usecases/get_tracking_trip_usecase.dart';
-import 'package:bmt_app/apps/client/features/tracking/domain/usecases/watch_tracking_trip_usecase.dart';
-import 'package:bmt_app/apps/client/features/tracking/domain/usecases/watch_vehicle_position_usecase.dart';
-import 'package:bmt_app/apps/client/features/tracking/presentation/cubit/tracking_cubit.dart';
+import 'package:bmt_app/apps/client/features/tracking/presentation/bloc/live_tracking_event.dart';
+import 'package:bmt_app/apps/client/features/tracking/presentation/bloc/live_tracking_state.dart';
 import 'package:bmt_app/apps/client/features/tracking/presentation/cubit/tracking_state.dart';
 import 'package:bmt_app/core/tracking/progress/route_stop.dart';
 import 'package:bmt_app/core/tracking/progress/station_board.dart';
+
+import 'tracking_test_harness.dart';
 
 /// §14 is the rule these tests exist for: tracking visibility is per booking,
 /// never per trip. A rider who boards stops seeing the vehicle; every rider still
@@ -101,10 +98,10 @@ void main() {
 
   group('confirming boarding', () {
     test('calls the server with this rider\'s own booking id', () async {
-      final datasource = _FakeDatasource(
+      final datasource = FakeTrackingDatasource(
         trip: _trip(rider: const TrackingRider(bookingStatus: 'confirmed')),
       );
-      final cubit = _cubit(datasource);
+      final cubit = buildTrackingCubit(datasource);
       await cubit.load();
 
       await cubit.confirmBoarding();
@@ -115,15 +112,23 @@ void main() {
 
     test('a successful confirmation drops this rider\'s position feed while '
         'the captain keeps publishing', () async {
-      final positions = StreamController<TrackingPoint>.broadcast();
-      final datasource = _FakeDatasource(
+      final datasource = FakeTrackingDatasource(
         trip: _trip(rider: const TrackingRider(bookingStatus: 'confirmed')),
-        positions: positions.stream,
       );
-      final cubit = _cubit(datasource);
+      final cubit = buildTrackingCubit(datasource);
+      final bloc = buildLiveTrackingBloc(datasource);
 
       await cubit.load();
-      expect(datasource.positionSubscriptions, 1);
+      // The screen's bridge, played by hand: the trip document tells the feed
+      // which trip to follow.
+      bloc.add(TrackingRequested((cubit.state as TrackingLoaded).data));
+      await Future<void>.delayed(Duration.zero);
+      expect(
+        datasource.feedSubscriptions,
+        1,
+        reason: 'one feed per tracked trip, held by the bloc alone',
+      );
+      expect(datasource.feed.hasListener, isTrue);
 
       // The server flips the booking; the refetch picks it up.
       datasource.trip = _trip(
@@ -134,22 +139,28 @@ void main() {
       final loaded = cubit.state as TrackingLoaded;
       expect(loaded.data.rider.hasBoarded, isTrue);
       expect(loaded.data.rider.canTrackVehicle, isFalse);
+
+      bloc.add(TrackingRequested(loaded.data));
+      await Future<void>.delayed(Duration.zero);
+
+      expect(bloc.state, isA<LiveTrackingUnavailable>());
       expect(
-        positions.hasListener,
+        datasource.feed.hasListener,
         isFalse,
         reason: 'this rider stops consuming; nothing stopped the captain',
       );
 
-      await positions.close();
+      await bloc.close();
       await cubit.close();
+      await datasource.dispose();
     });
 
     test('a refused confirmation keeps the trip on screen and says why',
         () async {
-      final datasource = _FakeDatasource(
+      final datasource = FakeTrackingDatasource(
         trip: _trip(rider: const TrackingRider(bookingStatus: 'confirmed')),
       )..boardingFailure = Exception('لم تصل السيارة إلى محطتك بعد');
-      final cubit = _cubit(datasource);
+      final cubit = buildTrackingCubit(datasource);
       await cubit.load();
 
       await cubit.confirmBoarding();
@@ -162,10 +173,10 @@ void main() {
     });
 
     test('the refusal can be dismissed', () async {
-      final datasource = _FakeDatasource(
+      final datasource = FakeTrackingDatasource(
         trip: _trip(rider: const TrackingRider(bookingStatus: 'confirmed')),
       )..boardingFailure = Exception('boom');
-      final cubit = _cubit(datasource);
+      final cubit = buildTrackingCubit(datasource);
       await cubit.load();
       await cubit.confirmBoarding();
 
@@ -177,10 +188,10 @@ void main() {
 
     test('a second tap while the first is in flight is dropped', () async {
       final gate = Completer<void>();
-      final datasource = _FakeDatasource(
+      final datasource = FakeTrackingDatasource(
         trip: _trip(rider: const TrackingRider(bookingStatus: 'confirmed')),
       )..hold = gate.future;
-      final cubit = _cubit(datasource);
+      final cubit = buildTrackingCubit(datasource);
       await cubit.load();
 
       final first = cubit.confirmBoarding();
@@ -194,8 +205,8 @@ void main() {
     });
 
     test('a rider with no booking has nothing to confirm', () async {
-      final datasource = _FakeDatasource(trip: const TrackingTripData.none());
-      final cubit = _cubit(datasource);
+      final datasource = FakeTrackingDatasource(trip: const TrackingTripData.none());
+      final cubit = buildTrackingCubit(datasource);
       await cubit.load();
 
       await cubit.confirmBoarding();
@@ -204,16 +215,6 @@ void main() {
       await cubit.close();
     });
   });
-}
-
-TrackingCubit _cubit(TrackingDatasource datasource) {
-  final repository = TrackingRepositoryImpl(datasource);
-  return TrackingCubit(
-    getTrackingTrip: GetTrackingTripUseCase(repository),
-    watchVehiclePosition: WatchVehiclePositionUseCase(repository),
-    watchTrackingTrip: WatchTrackingTripUseCase(repository),
-    confirmBoarding: ConfirmBoardingUseCase(repository),
-  );
 }
 
 TrackingTripData _trip({
@@ -249,41 +250,4 @@ TripStation _station(
     routePointId: routePointId,
     actualArrivalAt: arrived,
   );
-}
-
-class _FakeDatasource implements TrackingDatasource {
-  _FakeDatasource({required this.trip, Stream<TrackingPoint>? positions})
-    : positions = positions ?? const Stream.empty();
-
-  TrackingTripData trip;
-  final Stream<TrackingPoint> positions;
-
-  String? confirmedBookingId;
-  int confirmCalls = 0;
-  int positionSubscriptions = 0;
-  Object? boardingFailure;
-  Future<void>? hold;
-
-  @override
-  Future<TrackingTripData> getTrackingTrip({
-    String? bookingId,
-    String? tripId,
-  }) async => trip;
-
-  @override
-  Stream<TrackingPoint> watchVehiclePosition(String tripId) {
-    positionSubscriptions++;
-    return positions;
-  }
-
-  @override
-  Stream<void> watchTripChanges(String tripId) => const Stream.empty();
-
-  @override
-  Future<void> confirmBoarding(String bookingId) async {
-    confirmCalls++;
-    confirmedBookingId = bookingId;
-    if (hold != null) await hold;
-    if (boardingFailure case final error?) throw error;
-  }
 }

@@ -961,6 +961,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get tracking_signalOffRoute => 'Off route';
 
   @override
+  String get tracking_signalReconnecting => 'Reconnecting';
+
+  @override
   String get tracking_updatedJustNow => 'just now';
 
   @override

@@ -1,5 +1,3 @@
-import 'package:bmt_app/core/tracking/progress/route_progress_snapshot.dart';
-
 import '../../domain/entities/tracking_trip.dart';
 
 sealed class TrackingState {
@@ -19,16 +17,12 @@ class TrackingEmpty extends TrackingState {
 class TrackingLoaded extends TrackingState {
   const TrackingLoaded({
     required this.data,
-    this.progress,
     this.isRefreshing = false,
     this.isBoarding = false,
     this.boardingError,
   });
 
   final TrackingTripData data;
-
-  /// Live route progress and ETAs from the shared progress engine.
-  final RouteProgressSnapshot? progress;
 
   /// A background refetch is in flight; the screen keeps showing the real data
   /// underneath instead of flashing a spinner over it.
@@ -46,7 +40,6 @@ class TrackingLoaded extends TrackingState {
 
   TrackingLoaded copyWith({
     TrackingTripData? data,
-    RouteProgressSnapshot? progress,
     bool? isRefreshing,
     bool? isBoarding,
     String? boardingError,
@@ -54,7 +47,6 @@ class TrackingLoaded extends TrackingState {
   }) {
     return TrackingLoaded(
       data: data ?? this.data,
-      progress: progress ?? this.progress,
       isRefreshing: isRefreshing ?? this.isRefreshing,
       isBoarding: isBoarding ?? this.isBoarding,
       boardingError: clearBoardingError

@@ -17,7 +17,6 @@ import 'package:bmt_app/apps/client/features/tracking/domain/entities/tracking_t
 import 'package:bmt_app/apps/client/features/tracking/domain/usecases/confirm_boarding_usecase.dart';
 import 'package:bmt_app/apps/client/features/tracking/domain/usecases/get_tracking_trip_usecase.dart';
 import 'package:bmt_app/apps/client/features/tracking/domain/usecases/watch_tracking_trip_usecase.dart';
-import 'package:bmt_app/apps/client/features/tracking/domain/usecases/watch_vehicle_position_usecase.dart';
 import 'package:bmt_app/apps/client/features/tracking/presentation/cubit/tracking_cubit.dart';
 import 'package:bmt_app/apps/client/features/tracking/presentation/cubit/tracking_state.dart';
 import 'package:bmt_app/core/tracking/progress/route_stop.dart';
@@ -266,7 +265,6 @@ TrackingCubit _riderCubit(_FakeServer server, String bookingId) {
   final repository = TrackingRepositoryImpl(_RiderDatasource(server, bookingId));
   return TrackingCubit(
     getTrackingTrip: GetTrackingTripUseCase(repository),
-    watchVehiclePosition: WatchVehiclePositionUseCase(repository),
     watchTrackingTrip: WatchTrackingTripUseCase(repository),
     confirmBoarding: ConfirmBoardingUseCase(repository),
   );
@@ -540,7 +538,7 @@ class _RiderDatasource implements TrackingDatasource {
   /// Only ever subscribed to while this rider is eligible — and the server would
   /// refuse the rows regardless.
   @override
-  Stream<TrackingPoint> watchVehiclePosition(String tripId) =>
+  Stream<VehicleFeedEvent> watchVehicleFeed(String tripId) =>
       const Stream.empty();
 
   @override

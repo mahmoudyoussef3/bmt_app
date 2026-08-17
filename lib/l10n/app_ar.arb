@@ -330,6 +330,7 @@
   "tracking_signalStale": "الإشارة متأخرة",
   "tracking_signalNone": "في انتظار إشارة الكابتن",
   "tracking_signalOffRoute": "خارج المسار",
+  "tracking_signalReconnecting": "جارٍ إعادة الاتصال",
   "tracking_updatedJustNow": "الآن",
   "tracking_updatedMinutesAgo": "منذ {minutes} دقيقة",
   "@tracking_updatedMinutesAgo": {

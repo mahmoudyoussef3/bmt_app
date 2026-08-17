@@ -1,5 +1,6 @@
 import '../../../trips/shared/domain/entities/operation_trip.dart';
 import '../../domain/entities/live_ops_snapshot.dart';
+import 'live_fix_model.dart';
 
 /// Maps an `operation_trips` row (with its route/driver/vehicle/seats embeds)
 /// plus an optional latest `trip_live_locations` row into a [LiveTrip].
@@ -70,7 +71,7 @@ class LiveTripModel extends LiveTrip {
   /// entirely rather than measure against a guessed time.
   static DateTime? _parseSchedule(String date, String time) {
     if (date.isEmpty || time.isEmpty) return null;
-    
+
     final parts = time.split(':');
     if (parts.length < 2) return null;
     final normalized = parts.length == 2 ? '$time:00' : time;
@@ -85,20 +86,6 @@ class LiveTripModel extends LiveTrip {
         .length;
   }
 
-  static LiveFix? _parseFix(Map<String, dynamic>? fix) {
-    if (fix == null) return null;
-    final lat = (fix['latitude'] as num?)?.toDouble();
-    final lng = (fix['longitude'] as num?)?.toDouble();
-    final recordedAt = DateTime.tryParse(fix['recorded_at'] as String? ?? '');
-    if (lat == null || lng == null || recordedAt == null) return null;
-
-    final speedMs = (fix['speed'] as num?)?.toDouble();
-    return LiveFix(
-      latitude: lat,
-      longitude: lng,
-      recordedAt: recordedAt.toLocal(),
-      heading: (fix['heading'] as num?)?.toDouble(),
-      speedKph: speedMs == null ? null : speedMs * 3.6,
-    );
-  }
+  static LiveFix? _parseFix(Map<String, dynamic>? fix) =>
+      LiveFixModel.fromRow(fix);
 }

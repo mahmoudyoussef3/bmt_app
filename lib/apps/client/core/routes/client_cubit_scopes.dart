@@ -29,6 +29,7 @@ import 'package:bmt_app/apps/client/features/routes/presentation/cubit/routes_di
 import 'package:bmt_app/apps/client/features/seat_release/presentation/cubit/seat_release_cubit.dart';
 import 'package:bmt_app/apps/client/features/seat_selection/presentation/cubit/seat_selection_cubit.dart';
 import 'package:bmt_app/apps/client/features/support/presentation/cubit/support_cubit.dart';
+import 'package:bmt_app/apps/client/features/tracking/presentation/bloc/live_tracking_bloc.dart';
 import 'package:bmt_app/apps/client/features/tracking/presentation/cubit/tracking_cubit.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/cubit/trips_cubit.dart';
 
@@ -118,8 +119,16 @@ abstract final class ClientCubitScopes {
         child: child,
       );
 
-  static Widget tracking(Widget child) => BlocProvider<TrackingCubit>(
-    create: (_) => clientGetIt<TrackingCubit>(),
+  /// Tracking needs both: the cubit owns the trip document and the boarding
+  /// action, the bloc owns the live position feed. Two holders on purpose — the
+  /// screen's static half must not rebuild because a bus moved 12 metres.
+  static Widget tracking(Widget child) => MultiBlocProvider(
+    providers: [
+      BlocProvider<TrackingCubit>(create: (_) => clientGetIt<TrackingCubit>()),
+      BlocProvider<LiveTrackingBloc>(
+        create: (_) => clientGetIt<LiveTrackingBloc>(),
+      ),
+    ],
     child: child,
   );
 

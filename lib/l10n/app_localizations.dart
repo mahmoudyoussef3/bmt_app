@@ -1856,6 +1856,12 @@ abstract class AppLocalizations {
   /// **'Off route'**
   String get tracking_signalOffRoute;
 
+  /// No description provided for @tracking_signalReconnecting.
+  ///
+  /// In en, this message translates to:
+  /// **'Reconnecting'**
+  String get tracking_signalReconnecting;
+
   /// No description provided for @tracking_updatedJustNow.
   ///
   /// In en, this message translates to:

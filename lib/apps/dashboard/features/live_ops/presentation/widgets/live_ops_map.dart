@@ -8,10 +8,11 @@ import 'package:bmt_app/core/widgets/maps/easyway_tile_layer.dart';
 import 'package:bmt_app/core/widgets/maps/map_camera_animator.dart';
 import 'package:bmt_app/core/widgets/maps/map_style.dart';
 
+import '../../domain/entities/fleet_feed.dart';
 import '../../domain/entities/live_ops_snapshot.dart';
+import 'fleet_vehicle_layer.dart';
 import 'live_ops_format.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
-import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
 
 /// The operations desk's fleet map: every active trip that has reported a
 /// position, drawn at once, coloured by tracking health.
@@ -26,10 +27,16 @@ import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
 /// Trips with no fix are deliberately absent: drawing them at a guessed
 /// location would be a lie, and they remain fully visible in the trip list with
 /// their tracking marked unknown.
+///
+/// Positions come from [FleetTrackingBloc] rather than from the roster snapshot,
+/// and are drawn by [FleetVehicleLayer], which interpolates between them. The
+/// tile layer and the map camera live outside that subtree, so a position landing
+/// repaints the markers and nothing else.
 class LiveOpsMap extends StatefulWidget {
   const LiveOpsMap({
     super.key,
     required this.trips,
+    required this.vehicles,
     required this.now,
     required this.selectedTripId,
     required this.onSelect,
@@ -37,6 +44,10 @@ class LiveOpsMap extends StatefulWidget {
   });
 
   final List<LiveTrip> trips;
+
+  /// Live positions keyed by trip id.
+  final Map<String, TrackedVehicle> vehicles;
+
   final DateTime now;
   final String? selectedTripId;
   final ValueChanged<String?> onSelect;
@@ -93,12 +104,20 @@ class _LiveOpsMapState extends State<LiveOpsMap>
   /// (see [_lastFitSignature]).
   String get _signature => widget.trips.map((t) => t.id).toList().join(',');
 
+  /// Trips the map can place — the ones the feed currently holds a position for.
+  /// Read from the feed, not from `trip.lastFix`: the snapshot's fix is only a
+  /// seed, and after the first socket delivery it is already out of date.
   List<LiveTrip> get _mappable =>
-      widget.trips.where((t) => t.lastFix != null).toList();
+      widget.trips.where((t) => widget.vehicles.containsKey(t.id)).toList();
+
+  LatLng? _pointFor(String tripId) {
+    final fix = widget.vehicles[tripId]?.fix;
+    return fix == null ? null : LatLng(fix.latitude, fix.longitude);
+  }
 
   void _onReady() {
     _ready = true;
-    
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       widget.selectedTripId != null ? _applySelection() : _fitAll();
@@ -111,28 +130,19 @@ class _LiveOpsMapState extends State<LiveOpsMap>
       _fitAll();
       return;
     }
-    LiveTrip? target;
-    for (final trip in _mappable) {
-      if (trip.id == id) target = trip;
-    }
-    final fix = target?.lastFix;
-    if (fix == null) {
-      
+    final point = _pointFor(id);
+    if (point == null) {
+      // Selected a trip with no position yet: nothing to centre on, so show the
+      // whole fleet rather than jumping somewhere arbitrary.
       _fitAll();
       return;
     }
-    _camera?.animateTo(
-      center: LatLng(fix.latitude, fix.longitude),
-      zoom: _selectedZoom,
-    );
+    _camera?.animateTo(center: point, zoom: _selectedZoom);
   }
 
   void _fitAll() {
     _lastFitSignature = _signature;
-    final points = [
-      for (final trip in _mappable)
-        LatLng(trip.lastFix!.latitude, trip.lastFix!.longitude),
-    ];
+    final points = [for (final trip in _mappable) ?_pointFor(trip.id)];
     if (points.isEmpty) return;
 
     if (points.length == 1) {
@@ -166,13 +176,10 @@ class _LiveOpsMapState extends State<LiveOpsMap>
                   options: MapOptions(
                     initialCenter: mappable.isEmpty
                         ? _fallbackCenter
-                        : LatLng(
-                            mappable.first.lastFix!.latitude,
-                            mappable.first.lastFix!.longitude,
-                          ),
+                        : (_pointFor(mappable.first.id) ?? _fallbackCenter),
                     initialZoom: 11,
                     onMapReady: _onReady,
-                    
+
                     onTap: (_, _) => widget.onSelect(null),
                     interactionOptions: const InteractionOptions(
                       flags:
@@ -184,14 +191,12 @@ class _LiveOpsMapState extends State<LiveOpsMap>
                   ),
                   children: [
                     const EasyWayTileLayer(),
-                    MarkerLayer(
-                      markers: [
-                        for (final trip in mappable)
-                          _vehicleMarker(
-                            trip,
-                            selected: trip.id == widget.selectedTripId,
-                          ),
-                      ],
+                    FleetVehicleLayer(
+                      trips: widget.trips,
+                      vehicles: widget.vehicles,
+                      now: widget.now,
+                      selectedTripId: widget.selectedTripId,
+                      onSelect: widget.onSelect,
                     ),
                   ],
                 ),
@@ -207,134 +212,6 @@ class _LiveOpsMapState extends State<LiveOpsMap>
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Marker _vehicleMarker(LiveTrip trip, {required bool selected}) {
-    final fix = trip.lastFix!;
-    final health = trip.trackingHealthAt(widget.now);
-    
-    final size = selected ? 132.0 : 44.0;
-
-    return Marker(
-      point: LatLng(fix.latitude, fix.longitude),
-      width: size,
-      height: selected ? 74 : 44,
-      alignment: Alignment.center,
-      child: _VehicleMarker(
-        trip: trip,
-        health: health,
-        selected: selected,
-        overdue: trip.isOverdueAt(widget.now),
-        onTap: () => widget.onSelect(trip.id),
-      ),
-    );
-  }
-}
-
-class _VehicleMarker extends StatelessWidget {
-  const _VehicleMarker({
-    required this.trip,
-    required this.health,
-    required this.selected,
-    required this.overdue,
-    required this.onTap,
-  });
-
-  final LiveTrip trip;
-  final TrackingHealth health;
-  final bool selected;
-  final bool overdue;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = DashboardChartPalette.of(context);
-    final colors = context.status(trackingHealthTone(health));
-
-    final dot = Container(
-      width: 34,
-      height: 34,
-      decoration: BoxDecoration(
-        color: colors.tint,
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: selected ? MapStyle.onSurface(context) : colors.ink,
-          width: selected ? 3 : 2,
-        ),
-        boxShadow: MapStyle.shadow(context),
-      ),
-      child: Icon(Icons.directions_bus_rounded, size: 18, color: colors.ink),
-    );
-
-    return Semantics(
-      button: true,
-      
-      label:
-          '${trip.routeName}، التتبّع ${health.label}'
-          '${overdue ? '، متأخرة عن الانطلاق' : ''}',
-      child: GestureDetector(
-        onTap: onTap,
-        behavior: HitTestBehavior.opaque,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Stack(
-              clipBehavior: Clip.none,
-              alignment: Alignment.center,
-              children: [
-                dot,
-                if (overdue)
-                  Positioned(
-                    top: -2,
-                    right: -2,
-                    child: Container(
-                      padding: const EdgeInsets.all(2),
-                      decoration: const BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.schedule_rounded,
-                        size: 12,
-                        color: palette.negative,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            if (selected) ...[
-              const SizedBox(height: 4),
-              _MarkerLabel(text: trip.vehicleLabel),
-            ],
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _MarkerLabel extends StatelessWidget {
-  const _MarkerLabel({required this.text});
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: MapStyle.surface(context).withAlpha(242),
-        borderRadius: MapStyle.pill,
-        border: Border.all(color: MapStyle.border(context)),
-      ),
-      child: Text(
-        text,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        textAlign: TextAlign.center,
-        style: MapStyle.pillLabel(context),
       ),
     );
   }
@@ -359,7 +236,7 @@ class _MapLegend extends StatelessWidget {
           border: Border.all(color: MapStyle.border(context)),
           boxShadow: MapStyle.shadow(context),
         ),
-        
+
         child: Wrap(
           spacing: 10,
           runSpacing: 4,

@@ -3,9 +3,12 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bmt_app/apps/captain/features/live_location/domain/entities/location_sharing_state.dart';
 import 'package:bmt_app/apps/captain/features/live_location/domain/repositories/location_repository.dart';
+import 'package:bmt_app/apps/captain/features/live_location/domain/usecases/publish_trip_location_usecase.dart';
+import 'package:bmt_app/apps/captain/features/live_location/domain/usecases/watch_publishable_location_usecase.dart';
 import 'package:bmt_app/apps/captain/features/live_location/domain/usecases/send_location_update_usecase.dart';
 import 'package:bmt_app/apps/captain/features/live_location/presentation/cubit/live_location_cubit.dart';
 import 'package:bmt_app/apps/captain/features/live_location/presentation/cubit/live_location_state.dart';
+import 'package:bmt_app/core/tracking/vehicle_fix.dart';
 
 void main() {
   late _FakeRepository repository;
@@ -15,6 +18,8 @@ void main() {
     repository = _FakeRepository();
     cubit = LiveLocationCubit(
       sendLocation: SendLocationUpdateUseCase(repository),
+      watchPublishableLocation: WatchPublishableLocationUseCase(repository),
+      publishLocation: PublishTripLocationUseCase(repository),
     );
   });
 
@@ -147,4 +152,15 @@ class _FakeRepository implements LocationRepository {
       recordedAt: DateTime.now(),
     );
   }
+
+  /// The GPS stream is silent in tests: no device sensor, and nothing here needs
+  /// one. That leaves the heartbeat as the only publisher, which is exactly the
+  /// pre-stream behaviour these tests were written against — so what they assert
+  /// about ownership and cadence still means the same thing.
+  @override
+  Stream<VehicleFix> watchDevicePosition() => const Stream<VehicleFix>.empty();
+
+  @override
+  Future<LocationUpdateData> publishFix(String tripId, VehicleFix fix) =>
+      sendLocation(tripId);
 }

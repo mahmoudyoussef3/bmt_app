@@ -18,8 +18,8 @@ class TrackingRepositoryImpl implements TrackingRepository {
   }
 
   @override
-  Stream<TrackingPoint> watchVehiclePosition(String tripId) =>
-      _datasource.watchVehiclePosition(tripId);
+  Stream<VehicleFeedEvent> watchVehicleFeed(String tripId) =>
+      _datasource.watchVehicleFeed(tripId);
 
   @override
   Stream<void> watchTripChanges(String tripId) =>

@@ -7,6 +7,14 @@ Phase 6 audit, 2026-07-29. Companion documents: [TRACKING_SECURITY.md](TRACKING_
 [TRACKING_USER_STORIES.md](TRACKING_USER_STORIES.md),
 [TRACKING_USER_FLOWS.md](TRACKING_USER_FLOWS.md), [TRACKING_STATUS.md](TRACKING_STATUS.md).
 
+> **Superseded in part, 2026-08-17.** The producer is no longer a 30-second pull, the
+> client consumer is no longer a Cubit polling alongside realtime, and **the dashboard
+> is no longer a polled board**. All three were rebuilt into a validated, throttled
+> pipeline feeding Blocs:
+> **[TRACKING_LIVE_PIPELINE.md](TRACKING_LIVE_PIPELINE.md)** is now the authority on
+> the producer (§2 below), the client consumer (§3 below), the dashboard consumer
+> (§3 below) and the cadences. The data model and the security boundary are unchanged.
+
 ---
 
 ## 1. The shape of it
@@ -103,6 +111,14 @@ It is now a singleton, provided with `BlocProvider.value` so no widget disposal 
 
 ### Cadence
 
+> **Changed 2026-08-17.** Publishing is now movement-driven: a validated GPS stream
+> behind a 10-second latest-value throttle, with `kAutoLocationInterval` demoted to a
+> *heartbeat* floor for a stationary vehicle. `kLocationStaleAfter` is still
+> `3 × interval` for the captain's own card, but the client's freshness threshold is
+> now an independent 45 s — see
+> [TRACKING_LIVE_PIPELINE.md §4](TRACKING_LIVE_PIPELINE.md#4-throttle-not-debounce)
+> for why that derivation was deliberately broken.
+
 `kAutoLocationInterval = 30 s`, declared in the domain
 (`domain/entities/location_sharing_health.dart`) beside the staleness threshold derived from it
 (`kLocationStaleAfter = 3 × interval`), so the two cannot drift apart.
@@ -119,6 +135,13 @@ See [TRACKING_STATUS.md](TRACKING_STATUS.md) for what true background tracking w
 ---
 
 ## 3. The client consumer
+
+> **Rebuilt 2026-08-17.** `TrackingCubit` now owns only the trip document and the
+> boarding action; positions, link health, freshness and route progress belong to
+> `LiveTrackingBloc`. The 8-second poll still exists but is **gated on socket
+> health** — while realtime is connected there are no periodic queries at all. The
+> sequence below still describes the trip fetch correctly; for the live half read
+> [TRACKING_LIVE_PIPELINE.md §5](TRACKING_LIVE_PIPELINE.md#5-the-client-stream-and-the-poll-that-is-no-longer-a-fixture).
 
 ```mermaid
 sequenceDiagram
@@ -211,6 +234,8 @@ ends. `prune_trip_live_locations(retain_days)` exists to bound this; it is **not
 
 | Concern | Path |
 |---|---|
+| **Live pipeline: throttle, validation, shared cadences** | `lib/core/tracking/{latest_value_throttle,valid_fix_filter,live_tracking_config}.dart` |
+| **Client live tracking Bloc** | `lib/apps/client/features/tracking/presentation/bloc/` |
 | Captain publisher | `lib/apps/captain/features/live_location/` |
 | Captain cadence + health rules | `.../live_location/domain/entities/location_sharing_health.dart` |
 | Captain in-trip map (device GPS, display only) | `lib/apps/captain/features/trip_map/` |

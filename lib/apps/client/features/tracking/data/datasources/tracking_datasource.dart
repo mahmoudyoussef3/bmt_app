@@ -5,8 +5,9 @@ abstract class TrackingDatasource {
   /// confirmed booking to track.
   Future<TrackingTripData> getTrackingTrip({String? bookingId, String? tripId});
 
-  /// Live GPS fixes as the captain's device reports them.
-  Stream<TrackingPoint> watchVehiclePosition(String tripId);
+  /// Live GPS fixes as the captain's device reports them, interleaved with the
+  /// health of the link carrying them.
+  Stream<VehicleFeedEvent> watchVehicleFeed(String tripId);
 
   /// Fires whenever any table backing the trip changes, so the screen can
   /// refetch its joined view.

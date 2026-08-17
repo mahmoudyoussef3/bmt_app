@@ -24,6 +24,7 @@ import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_empty_state.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_panel.dart';
+import 'package:bmt_app/apps/dashboard/features/live_ops/domain/entities/fleet_feed.dart';
 import 'package:bmt_app/apps/dashboard/features/live_ops/domain/entities/live_ops_snapshot.dart';
 import 'package:bmt_app/apps/dashboard/features/live_ops/domain/entities/trip_incident.dart';
 import 'package:bmt_app/apps/dashboard/features/live_ops/domain/repositories/live_ops_repository.dart';
@@ -193,6 +194,12 @@ class _QuietRepo implements LiveOpsRepository {
 
   @override
   Stream<void> watchChanges() => const Stream.empty();
+
+  @override
+  Stream<FleetFeedEvent> watchFleetFixes() => const Stream.empty();
+
+  @override
+  Future<Map<String, LiveFix>> fetchLatestFixes() async => const {};
 
   @override
   Future<void> updateIncidentStatus({

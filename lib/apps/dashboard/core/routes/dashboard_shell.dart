@@ -20,6 +20,8 @@ import '../../features/dashboard_home/presentation/screens/dashboard_home_screen
 import '../../features/fleet/overview/presentation/cubit/fleet_overview_cubit.dart';
 import '../../features/fleet/overview/presentation/screens/fleet_overview_screen.dart';
 import '../../features/fleet/shared/domain/entities/fleet_common.dart';
+import '../../features/live_ops/presentation/bloc/fleet_tracking_bloc.dart';
+import '../../features/live_ops/presentation/bloc/fleet_tracking_event.dart';
 import '../../features/live_ops/presentation/cubit/live_ops_cubit.dart';
 import '../../features/live_ops/presentation/screens/live_ops_screen.dart';
 import '../../features/wallet/presentation/cubit/wallet_cubit.dart';
@@ -751,8 +753,20 @@ class _DashboardShellState extends State<DashboardShell> {
           onCreateTrip: _startTripPlanner,
         ),
       ),
-      DashboardRoutes.liveOps => BlocProvider(
-        create: (_) => dashboardDi<LiveOpsCubit>()..startWatching(),
+      // Two state holders, deliberately: the cubit owns the roster and the
+      // incident queue, the Bloc owns live positions. Keeping them apart is what
+      // stops a bus moving from rebuilding the incident queue — see
+      // `FleetTrackingBloc`.
+      DashboardRoutes.liveOps => MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            create: (_) => dashboardDi<LiveOpsCubit>()..startWatching(),
+          ),
+          BlocProvider(
+            create: (_) => dashboardDi<FleetTrackingBloc>()
+              ..add(const FleetTrackingStarted()),
+          ),
+        ],
         child: LiveOpsScreen(
           canResolveIncidents: DashboardPermissions.canAccess(
             widget.office.role,

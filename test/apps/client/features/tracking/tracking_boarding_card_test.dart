@@ -8,7 +8,6 @@ import 'package:bmt_app/apps/client/features/tracking/domain/entities/tracking_t
 import 'package:bmt_app/apps/client/features/tracking/domain/usecases/confirm_boarding_usecase.dart';
 import 'package:bmt_app/apps/client/features/tracking/domain/usecases/get_tracking_trip_usecase.dart';
 import 'package:bmt_app/apps/client/features/tracking/domain/usecases/watch_tracking_trip_usecase.dart';
-import 'package:bmt_app/apps/client/features/tracking/domain/usecases/watch_vehicle_position_usecase.dart';
 import 'package:bmt_app/apps/client/features/tracking/presentation/cubit/tracking_cubit.dart';
 import 'package:bmt_app/apps/client/features/tracking/presentation/formatters/tracking_labels.dart';
 import 'package:bmt_app/apps/client/features/tracking/presentation/widgets/sheet/tracking_boarding_card.dart';
@@ -218,7 +217,6 @@ Future<TrackingCubit> _pumpCard(
   final repository = TrackingRepositoryImpl(source);
   final cubit = TrackingCubit(
     getTrackingTrip: GetTrackingTripUseCase(repository),
-    watchVehiclePosition: WatchVehiclePositionUseCase(repository),
     watchTrackingTrip: WatchTrackingTripUseCase(repository),
     confirmBoarding: ConfirmBoardingUseCase(repository),
   );
@@ -364,7 +362,7 @@ class _StubDatasource implements TrackingDatasource {
   }) async => trip;
 
   @override
-  Stream<TrackingPoint> watchVehiclePosition(String tripId) =>
+  Stream<VehicleFeedEvent> watchVehicleFeed(String tripId) =>
       const Stream.empty();
 
   @override

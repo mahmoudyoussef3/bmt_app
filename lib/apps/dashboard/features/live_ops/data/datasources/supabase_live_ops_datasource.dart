@@ -2,8 +2,13 @@ import 'dart:async';
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'package:bmt_app/core/tracking/link_health.dart';
+
 import '../../../../core/session/dashboard_session.dart';
+import '../../domain/entities/fleet_feed.dart';
+import '../../domain/entities/live_ops_snapshot.dart';
 import '../../domain/entities/trip_incident.dart';
+import '../models/live_fix_model.dart';
 import '../models/live_trip_model.dart';
 import '../models/trip_incident_model.dart';
 import 'live_ops_datasource.dart';
@@ -53,7 +58,7 @@ class SupabaseLiveOpsDatasource implements LiveOpsDatasource {
       final trips = (tripRows as List).cast<Map<String, dynamic>>();
       if (trips.isEmpty) return const [];
 
-      final latestByTrip = await _latestFixByTrip();
+      final latestByTrip = await _latestFixRows();
 
       return trips
           .map(
@@ -66,18 +71,33 @@ class SupabaseLiveOpsDatasource implements LiveOpsDatasource {
     }
   }
 
+  @override
+  Future<Map<String, LiveFix>> fetchLatestFixes() async {
+    final rows = await _latestFixRows();
+    final fixes = <String, LiveFix>{};
+    for (final entry in rows.entries) {
+      final fix = LiveFixModel.fromRow(entry.value);
+      if (fix != null) fixes[entry.key] = fix;
+    }
+    return fixes;
+  }
+
   /// Latest fix per active trip, one row each, resolved server-side.
   ///
   /// The RPC does the `DISTINCT ON (trip_id) … ORDER BY recorded_at DESC` in
   /// Postgres against the `(trip_id, recorded_at DESC)` index. Reading the table
-  /// directly instead would pull every fix ever recorded for every active trip
-  /// on each 15s poll — at the captain's 30s publish cadence that is ~360 rows
-  /// per trip-hour, to use one of them.
+  /// directly instead would pull every fix ever recorded for every active trip,
+  /// to use one of them — and at the captain's throttled 10s cadence that is now
+  /// ~360 rows per trip-hour rather than the ~120 it was when this was written.
+  ///
+  /// This is no longer on a timer. It backfills the board's first paint and
+  /// serves the catch-up poll that runs *only* while the socket is unhealthy;
+  /// while realtime is connected, positions cost no queries at all.
   ///
   /// A failure here is swallowed: positions are an enrichment, and a desk that
   /// can still see *which* trips are running with their tracking marked unknown
   /// is far more useful than an error screen.
-  Future<Map<String, Map<String, dynamic>>> _latestFixByTrip() async {
+  Future<Map<String, Map<String, dynamic>>> _latestFixRows() async {
     try {
       final rows = await _client.rpc(
         'dashboard_active_trip_fixes',
@@ -93,10 +113,68 @@ class SupabaseLiveOpsDatasource implements LiveOpsDatasource {
     }
   }
 
+  /// Every position this office is allowed to see, on one subscription.
+  ///
+  /// **There is no `office_id` filter, and that is not an oversight.**
+  /// `trip_live_locations` carries no office column — it is keyed by trip — so
+  /// there is nothing to filter on server-side. What scopes this subscription is
+  /// RLS: `trip_live_locations_read` calls `can_read_trip_fixes(trip_id)`, whose
+  /// office arm admits exactly the trips this office operates, and Realtime
+  /// evaluates that policy against each WAL row as this subscriber before
+  /// delivering it. Rows for other offices are never sent.
+  ///
+  /// Subscribing per trip instead would need a channel per vehicle, torn down and
+  /// rebuilt every time a trip starts or ends — N sockets and a reconnect storm at
+  /// every shift change, to receive the same rows this one channel already gets.
+  @override
+  Stream<FleetFeedEvent> watchFleetFixes() {
+    final controller = StreamController<FleetFeedEvent>.broadcast();
+
+    void emit(FleetFeedEvent event) {
+      if (!controller.isClosed) controller.add(event);
+    }
+
+    final channel = _client
+        .channel('dashboard_fleet_fixes_${_session.officeId}')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.insert,
+          schema: 'public',
+          table: 'trip_live_locations',
+          callback: (change) {
+            final row = change.newRecord;
+            final tripId = row['trip_id'] as String?;
+            final fix = LiveFixModel.fromRow(row);
+            // A row we cannot parse is not a reason to tear the feed down.
+            if (tripId != null && fix != null) {
+              emit(FleetFixReported(tripId: tripId, fix: fix));
+            }
+          },
+        );
+
+    final subscribed = channel.subscribe((status, _) {
+      emit(FleetLinkChanged(_linkFor(status)));
+    });
+
+    controller.onCancel = () => subscribed.unsubscribe();
+    return controller.stream;
+  }
+
+  /// Supabase's subscribe states, reduced to the three the domain cares about.
+  ///
+  /// `closed` is `degraded` rather than `lost` deliberately: the client library
+  /// closes and re-opens a channel while reconnecting, so treating every close as
+  /// a dead link would flap the board's banner on an ordinary network blip.
+  /// Genuinely dead is what the freshness timer decides.
+  TrackingLink _linkFor(RealtimeSubscribeStatus status) => switch (status) {
+    RealtimeSubscribeStatus.subscribed => TrackingLink.connected,
+    RealtimeSubscribeStatus.closed => TrackingLink.degraded,
+    RealtimeSubscribeStatus.timedOut => TrackingLink.degraded,
+    RealtimeSubscribeStatus.channelError => TrackingLink.lost,
+  };
+
   @override
   Future<List<TripIncidentModel>> fetchOpenIncidents() async {
     try {
-      
       final rows = await _client
           .from('driver_trip_reports')
           .select('''

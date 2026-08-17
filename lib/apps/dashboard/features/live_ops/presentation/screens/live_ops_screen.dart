@@ -10,9 +10,14 @@ import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_sto
 import '../../../../core/widgets/dashboard_empty_state.dart';
 import '../../../../core/widgets/dashboard_panel.dart';
 import '../../../../core/widgets/dashboard_state_views.dart';
+import '../../domain/entities/fleet_feed.dart';
 import '../../domain/entities/live_ops_snapshot.dart';
+import '../bloc/fleet_tracking_bloc.dart';
+import '../bloc/fleet_tracking_state.dart';
 import '../cubit/live_ops_cubit.dart';
 import '../cubit/live_ops_state.dart';
+import '../widgets/feed_link_banner.dart';
+import '../widgets/fleet_tracking_scope.dart';
 import '../widgets/incident_queue_section.dart';
 import '../widgets/live_ops_all_clear.dart';
 import '../widgets/live_ops_map.dart';
@@ -23,8 +28,21 @@ import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 
 /// The Live Operations Center — the dashboard's answer to "what is happening on
 /// the road right now?". It renders the office's active trips with an honest
-/// read of each trip's tracking health, and the open incident queue, refreshing
-/// itself on both a realtime trigger and a steady poll.
+/// read of each trip's tracking health, and the open incident queue.
+///
+/// Two state holders feed it, and the split is what makes it cheap:
+/// [LiveOpsCubit] carries the roster and the incident queue (realtime-triggered,
+/// with a slow poll behind it), while [FleetTrackingBloc] carries live positions
+/// over one subscription. Positions land every few seconds; almost nothing on
+/// this screen is about a position.
+///
+/// | Region | Rebuilds on a position? |
+/// |---|---|
+/// | map markers | yes — and only the marker layer, via [FleetVehicleLayer] |
+/// | a trip card's health badge + "آخر تحديث" line | yes, that card only |
+/// | «تتبع متعثّر» KPI tile | only when the count changes |
+/// | incident queue, critical banner, other KPI tiles | **no** |
+/// | map camera, tile layer, panel chrome | **no** |
 class LiveOpsScreen extends StatelessWidget {
   /// Whether this operator may move incidents through their lifecycle. Support
   /// agents get the module read-only — see [DashboardPermission.liveOpsIncidentAction].
@@ -34,30 +52,71 @@ class LiveOpsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocConsumer<LiveOpsCubit, LiveOpsState>(
-      listenWhen: (prev, curr) =>
-          curr is LiveOpsLoaded && curr.actionError != null,
-      listener: (context, state) {
-        if (state is LiveOpsLoaded && state.actionError != null) {
-          ScaffoldMessenger.of(
-            context,
-          ).showSnackBar(SnackBar(content: Text(state.actionError!)));
-        }
-      },
-      builder: (context, state) {
-        return switch (state) {
-          LiveOpsLoading() => const DashboardLoading(),
-          LiveOpsError(:final message) => DashboardErrorState(
-            message: message,
-            onRetry: () => context.read<LiveOpsCubit>().load(),
-          ),
-          LiveOpsLoaded() => _LiveOpsBody(
-            state: state,
-            canResolveIncidents: canResolveIncidents,
-          ),
-        };
-      },
+    // The bridge that hands the roster to the feed. It renders its child
+    // untouched, so it costs no layout — see [FleetTrackingScope].
+    return FleetTrackingScope(
+      child: BlocConsumer<LiveOpsCubit, LiveOpsState>(
+        listenWhen: (prev, curr) =>
+            curr is LiveOpsLoaded && curr.actionError != null,
+        listener: (context, state) {
+          if (state is LiveOpsLoaded && state.actionError != null) {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(state.actionError!)));
+          }
+        },
+        // The roster changes rarely. Without this, an acknowledged incident or a
+        // slow poll returning identical data rebuilt the entire board.
+        buildWhen: (prev, curr) => !_sameRender(prev, curr),
+        builder: (context, state) {
+          return switch (state) {
+            LiveOpsLoading() => const DashboardLoading(),
+            LiveOpsError(:final message) => DashboardErrorState(
+              message: message,
+              onRetry: () => context.read<LiveOpsCubit>().load(),
+            ),
+            LiveOpsLoaded() => _LiveOpsBody(
+              state: state,
+              canResolveIncidents: canResolveIncidents,
+            ),
+          };
+        },
+      ),
     );
+  }
+
+  /// Would these two states draw the same board?
+  ///
+  /// [LiveOpsLoaded] is rebuilt wholesale by every refresh, so reference equality
+  /// says nothing. What actually changes the page is the roster, the incident
+  /// queue and the selection — deliberately *not* `generatedAt`, which moves on
+  /// every poll and would defeat the whole check.
+  static bool _sameRender(LiveOpsState prev, LiveOpsState curr) {
+    if (prev is! LiveOpsLoaded || curr is! LiveOpsLoaded) return false;
+    if (prev.selectedTripId != curr.selectedTripId) return false;
+
+    final a = prev.snapshot;
+    final b = curr.snapshot;
+    if (a.activeTrips.length != b.activeTrips.length) return false;
+    if (a.incidents.length != b.incidents.length) return false;
+
+    for (var i = 0; i < a.activeTrips.length; i++) {
+      final x = a.activeTrips[i];
+      final y = b.activeTrips[i];
+      if (x.id != y.id ||
+          x.statusLabel != y.statusLabel ||
+          x.bookedSeats != y.bookedSeats ||
+          x.driverName != y.driverName ||
+          x.vehicleLabel != y.vehicleLabel) {
+        return false;
+      }
+    }
+    for (var i = 0; i < a.incidents.length; i++) {
+      final x = a.incidents[i];
+      final y = b.incidents[i];
+      if (x.id != y.id || x.status != y.status) return false;
+    }
+    return true;
   }
 }
 
@@ -89,7 +148,16 @@ class _LiveOpsBody extends StatelessWidget {
             ),
           ],
           sectionId: DashboardSectionIds.liveOpsHeader,
-          summary: LiveOpsSummaryBar(snapshot: snapshot, now: now),
+          // Only the at-risk tile depends on the feed, and only on a count — so
+          // the KPI row repaints when that number changes, not when a bus moves.
+          summary: BlocSelector<FleetTrackingBloc, FleetTrackingState, int>(
+            selector: (feed) => feed.atRiskCount(
+              snapshot.activeTrips.map((t) => t.id),
+              feed.evaluatedAt ?? now,
+            ),
+            builder: (context, atRisk) =>
+                LiveOpsSummaryBar(snapshot: snapshot, atRisk: atRisk, now: now),
+          ),
         ),
         if (snapshot.hasCriticalIncident) ...[
           const SizedBox(height: AppSpacing.medium),
@@ -98,16 +166,26 @@ class _LiveOpsBody extends StatelessWidget {
 
         if (snapshot.activeTrips.isNotEmpty) ...[
           const SizedBox(height: AppSpacing.medium),
-          DashboardPanel(
-            sectionId: DashboardSectionIds.liveOpsMap,
-            icon: Icons.map_rounded,
-            title: 'خريطة الأسطول المباشرة',
-            subtitle: '${snapshot.mappableTrips.length} مركبة ترسل موقعها',
-            child: LiveOpsMap(
-              trips: snapshot.activeTrips,
-              now: now,
-              selectedTripId: state.selectedTripId,
-              onSelect: cubit.selectTrip,
+          BlocBuilder<FleetTrackingBloc, FleetTrackingState>(
+            builder: (context, feed) => DashboardPanel(
+              sectionId: DashboardSectionIds.liveOpsMap,
+              icon: Icons.map_rounded,
+              title: 'خريطة الأسطول المباشرة',
+              // Counted off the feed, not off the roster's seed fixes — after
+              // the first socket delivery those two numbers diverge.
+              subtitle: '${feed.vehicles.length} مركبة ترسل موقعها',
+              child: Column(
+                children: [
+                  const FeedLinkBanner(),
+                  LiveOpsMap(
+                    trips: snapshot.activeTrips,
+                    vehicles: feed.vehicles,
+                    now: feed.evaluatedAt ?? now,
+                    selectedTripId: state.selectedTripId,
+                    onSelect: cubit.selectTrip,
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -205,9 +283,9 @@ class _TripsPanel extends StatelessWidget {
                     for (final trip in ordered)
                       SizedBox(
                         width: width,
-                        child: LiveTripCard(
+                        child: _TrackedTripCard(
                           trip: trip,
-                          now: now,
+                          fallbackNow: now,
                           selected: trip.id == selectedTripId,
                           onTap: () => onSelect(trip.id),
                         ),
@@ -216,6 +294,50 @@ class _TripsPanel extends StatelessWidget {
                 );
               },
             ),
+    );
+  }
+}
+
+/// One trip card, subscribed to just its own vehicle.
+///
+/// The selector returns a record, so the card rebuilds when *this* trip's
+/// position or the board clock changes — and a position landing for a different
+/// bus rebuilds nothing here. On a board with a dozen trips that is the
+/// difference between one card repainting and twelve.
+class _TrackedTripCard extends StatelessWidget {
+  final LiveTrip trip;
+
+  /// Used until the feed has a clock of its own, i.e. before the first position.
+  final DateTime fallbackNow;
+
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _TrackedTripCard({
+    required this.trip,
+    required this.fallbackNow,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocSelector<
+      FleetTrackingBloc,
+      FleetTrackingState,
+      ({TrackedVehicle? vehicle, DateTime now})
+    >(
+      selector: (feed) => (
+        vehicle: feed.vehicle(trip.id),
+        now: feed.evaluatedAt ?? fallbackNow,
+      ),
+      builder: (context, view) => LiveTripCard(
+        trip: trip,
+        vehicle: view.vehicle,
+        now: view.now,
+        selected: selected,
+        onTap: onTap,
+      ),
     );
   }
 }

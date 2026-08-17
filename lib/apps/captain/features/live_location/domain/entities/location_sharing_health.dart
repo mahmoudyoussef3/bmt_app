@@ -1,3 +1,11 @@
+/// The publisher's *heartbeat* cadence — how long the GPS stream may stay quiet
+/// before the captain's device takes a position on its own.
+///
+/// Since the pipeline became movement-driven this is a floor, not the reporting
+/// rate: a moving vehicle publishes on its own throttled cadence
+/// (`LiveTrackingConfig.publishInterval`) and never reaches the heartbeat, while
+/// a parked one still proves it is alive at this interval. Must stay equal to
+/// `LiveTrackingConfig.heartbeatInterval`.
 const Duration kAutoLocationInterval = Duration(seconds: 30);
 
 enum LocationSharingHealth { off, acquiring, live, stale }
@@ -39,9 +47,12 @@ class LocationSharingStatus {
 
     final age = now.difference(lastSentAt);
     if (age < kLocationStaleAfter) {
+      // Not "every N seconds" any more: publishing follows the vehicle's
+      // movement, so promising a fixed cadence would be a claim the pipeline no
+      // longer makes.
       return LocationSharingStatus._(
         LocationSharingHealth.live,
-        'يتم إرسال موقعك كل ${kAutoLocationInterval.inSeconds} ثانية',
+        'يتم إرسال موقعك أثناء تحرك السيارة',
         age,
       );
     }

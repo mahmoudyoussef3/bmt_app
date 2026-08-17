@@ -10,6 +10,7 @@ export 'tracking_crew.dart';
 export 'tracking_point.dart';
 export 'tracking_rider.dart';
 export 'tracking_trip_state.dart';
+export 'vehicle_feed.dart';
 
 /// Everything the tracking screen knows about one trip, all of it read from
 /// Supabase. There are no placeholder defaults here on purpose: a field we do

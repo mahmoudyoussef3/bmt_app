@@ -10,6 +10,7 @@ import '../cubit/tracking_cubit.dart';
 import '../cubit/tracking_state.dart';
 import '../formatters/tracking_labels.dart';
 import '../widgets/tracking_empty_view.dart';
+import '../widgets/tracking_feed_bridge.dart';
 import '../widgets/tracking_view.dart';
 
 /// Live trip tracking.
@@ -17,6 +18,12 @@ import '../widgets/tracking_view.dart';
 /// The screen owns nothing but its four states — loading, empty, error, and the
 /// live view. The trip state it shows is always the operation's real one; there
 /// is no way from here to put the screen into a state the trip is not in.
+///
+/// It is also where the two state holders are introduced to each other, and that
+/// wiring is deliberately one-directional in each direction: the trip document
+/// tells the feed which trip to follow, and the feed tells the trip document the
+/// one thing a position can prove about it (the bus is moving). Neither reads the
+/// other's state.
 class TrackingScreen extends StatefulWidget {
   const TrackingScreen({super.key, this.bookingId, this.tripId});
 
@@ -48,7 +55,6 @@ class _TrackingScreenState extends State<TrackingScreen> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       backgroundColor: ClientColors.surfaceFor(context),
-      
       appBar: ClientAppBar(
         title: l10n.tracking_title,
         backgroundColor: Colors.transparent,
@@ -60,21 +66,22 @@ class _TrackingScreenState extends State<TrackingScreen> {
           ),
         ],
       ),
-      body: BlocBuilder<TrackingCubit, TrackingState>(
-        
-        buildWhen: (previous, current) =>
-            previous.runtimeType != current.runtimeType,
-        builder: (context, state) => switch (state) {
-          TrackingLoading() => MapLoadingShimmer(
-            message: l10n.tracking_loading,
-          ),
-          TrackingEmpty() => const TrackingEmptyView(),
-          TrackingError(:final message) => ClientErrorCard.fullScreen(
-            message: message,
-            onRetry: () => context.read<TrackingCubit>().refresh(),
-          ),
-          TrackingLoaded() => TrackingView(labels: labels),
-        },
+      body: TrackingFeedBridge(
+        child: BlocBuilder<TrackingCubit, TrackingState>(
+          buildWhen: (previous, current) =>
+              previous.runtimeType != current.runtimeType,
+          builder: (context, state) => switch (state) {
+            TrackingLoading() => MapLoadingShimmer(
+              message: l10n.tracking_loading,
+            ),
+            TrackingEmpty() => const TrackingEmptyView(),
+            TrackingError(:final message) => ClientErrorCard.fullScreen(
+              message: message,
+              onRetry: () => context.read<TrackingCubit>().refresh(),
+            ),
+            TrackingLoaded() => TrackingView(labels: labels),
+          },
+        ),
       ),
     );
   }

@@ -957,6 +957,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tracking_signalOffRoute => 'خارج المسار';
 
   @override
+  String get tracking_signalReconnecting => 'جارٍ إعادة الاتصال';
+
+  @override
   String get tracking_updatedJustNow => 'الآن';
 
   @override

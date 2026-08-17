@@ -72,7 +72,7 @@ class _HealthDotState extends State<_HealthDot>
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1100),
-      
+
       value: 1,
     );
     if (widget.pulsing) _controller.repeat(reverse: true);

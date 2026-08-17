@@ -4,7 +4,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/apps/client/core/di/client_di.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/features/tracking/presentation/bloc/live_tracking_bloc.dart';
 import 'package:bmt_app/apps/client/features/tracking/presentation/cubit/tracking_cubit.dart';
+import 'package:bmt_app/apps/client/features/tracking/presentation/widgets/tracking_feed_bridge.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_progress_summary.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_soft_icon.dart';
@@ -12,9 +14,12 @@ import 'package:bmt_app/core/localization/l10n_context.dart';
 import 'package:bmt_app/apps/client/features/tracking/presentation/routes/tracking_routes.dart';
 
 /// Shown for an in-progress trip: real route-completion progress from the
-/// shared [RouteProgressEngine] (via a locally-scoped [TrackingCubit], the
-/// same one the dedicated `/tracking` screen uses) with a graceful fallback
-/// to a plain "track this trip" prompt if live data isn't available yet.
+/// shared `RouteProgressEngine`, with a graceful fallback to a plain "track this
+/// trip" prompt if live data isn't available yet.
+///
+/// Scopes the same pair the `/tracking` screen does — the cubit for the trip
+/// document, the bloc for the live feed — because progress is derived from
+/// positions and the bloc is what owns them.
 class TripLiveTrackingCard extends StatelessWidget {
   const TripLiveTrackingCard({super.key, required this.trip});
 
@@ -22,9 +27,16 @@ class TripLiveTrackingCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider<TrackingCubit>(
-      create: (_) => clientGetIt<TrackingCubit>()..load(bookingId: trip.id),
-      child: _TripLiveTrackingCardBody(trip: trip),
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<TrackingCubit>(
+          create: (_) => clientGetIt<TrackingCubit>()..load(bookingId: trip.id),
+        ),
+        BlocProvider<LiveTrackingBloc>(
+          create: (_) => clientGetIt<LiveTrackingBloc>(),
+        ),
+      ],
+      child: TrackingFeedBridge(child: _TripLiveTrackingCardBody(trip: trip)),
     );
   }
 }

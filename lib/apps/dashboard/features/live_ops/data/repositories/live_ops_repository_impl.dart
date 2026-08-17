@@ -1,3 +1,4 @@
+import '../../domain/entities/fleet_feed.dart';
 import '../../domain/entities/live_ops_snapshot.dart';
 import '../../domain/entities/trip_incident.dart';
 import '../../domain/repositories/live_ops_repository.dart';
@@ -10,7 +11,6 @@ class LiveOpsRepositoryImpl implements LiveOpsRepository {
 
   @override
   Future<LiveOpsSnapshot> getSnapshot() async {
-    
     final results = await Future.wait([
       _datasource.fetchActiveTrips(),
       _datasource.fetchOpenIncidents(),
@@ -25,6 +25,13 @@ class LiveOpsRepositoryImpl implements LiveOpsRepository {
 
   @override
   Stream<void> watchChanges() => _datasource.watchChanges();
+
+  @override
+  Stream<FleetFeedEvent> watchFleetFixes() => _datasource.watchFleetFixes();
+
+  @override
+  Future<Map<String, LiveFix>> fetchLatestFixes() =>
+      _datasource.fetchLatestFixes();
 
   @override
   Future<void> updateIncidentStatus({

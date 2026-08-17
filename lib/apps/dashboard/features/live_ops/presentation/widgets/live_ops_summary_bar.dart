@@ -15,17 +15,26 @@ import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 /// running trips are context, everything after it is a potential intervention.
 class LiveOpsSummaryBar extends StatelessWidget {
   final LiveOpsSnapshot snapshot;
+
+  /// Trips whose feed is not [TrackingHealth.live], counted by the feed Bloc.
+  ///
+  /// Passed in rather than derived from [snapshot] so that this tile and the
+  /// badges on the cards below it are computed from the same positions. Deriving
+  /// it here would count the roster's seed fixes and could report "0 متعثّر"
+  /// while three cards visibly read «غير متصلة».
+  final int atRisk;
+
   final DateTime now;
 
   const LiveOpsSummaryBar({
     super.key,
     required this.snapshot,
+    required this.atRisk,
     required this.now,
   });
 
   @override
   Widget build(BuildContext context) {
-    final atRisk = snapshot.trackingAtRiskCount(now);
     final openIncidents = snapshot.openIncidentCount;
     final unacknowledged = snapshot.unacknowledgedCount;
     final overdue = snapshot.overdueCount(now);
@@ -68,7 +77,7 @@ class LiveOpsSummaryBar extends StatelessWidget {
               : (openIncidents > 0
                     ? context.status(AppStatusTone.warning).ink
                     : context.status(AppStatusTone.neutral).ink),
-          
+
           detail: snapshot.hasCriticalIncident
               ? 'بلاغ طوارئ نشط'
               : (unacknowledged > 0

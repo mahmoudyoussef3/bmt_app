@@ -43,7 +43,7 @@ class DepartureStatusBadge extends StatelessWidget {
         ),
         Icons.schedule_rounded,
       ),
-      
+
       DepartureStatus.departed when delay != null => (
         'انطلقت متأخرة ${_delayText(delay)}',
         (
@@ -70,7 +70,7 @@ class DepartureStatusBadge extends StatelessWidget {
         children: [
           Icon(icon, size: 13, color: colors.$2),
           const SizedBox(width: 5),
-          
+
           Flexible(
             child: Text(
               label,

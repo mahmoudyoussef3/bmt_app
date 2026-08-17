@@ -1,11 +1,15 @@
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:bmt_app/core/tracking/live_tracking_config.dart';
+
 import 'package:bmt_app/apps/dashboard/features/live_ops/data/models/live_trip_model.dart';
 import 'package:bmt_app/apps/dashboard/features/live_ops/data/models/trip_incident_model.dart';
+import 'package:bmt_app/apps/dashboard/features/live_ops/domain/entities/fleet_feed.dart';
 import 'package:bmt_app/apps/dashboard/features/live_ops/domain/entities/live_ops_snapshot.dart';
 import 'package:bmt_app/apps/dashboard/features/live_ops/domain/entities/trip_incident.dart';
 import 'package:bmt_app/apps/dashboard/features/live_ops/domain/repositories/live_ops_repository.dart';
 import 'package:bmt_app/apps/dashboard/features/live_ops/domain/usecases/live_ops_usecases.dart';
+import 'package:bmt_app/apps/dashboard/features/live_ops/presentation/bloc/fleet_tracking_state.dart';
 import 'package:bmt_app/apps/dashboard/features/live_ops/presentation/cubit/live_ops_cubit.dart';
 import 'package:bmt_app/apps/dashboard/features/live_ops/presentation/cubit/live_ops_state.dart';
 
@@ -64,14 +68,24 @@ void main() {
     test('a fresh fix is live', () {
       expect(TrackingHealth.fromFixAge(Duration.zero), TrackingHealth.live);
       expect(
-        TrackingHealth.fromFixAge(const Duration(seconds: 75)),
+        TrackingHealth.fromFixAge(TrackingHealth.liveWindow),
         TrackingHealth.live,
       );
     });
 
+    test('the live window is the platform-wide one, not a local guess', () {
+      // The desk and the rider must call the same bus stale at the same moment.
+      // This used to be a local 75s derived from a 30s captain cadence that no
+      // longer exists, so a rider already seeing «تأخر الإشارة» could watch the
+      // operator's board still read «حية».
+      expect(TrackingHealth.liveWindow, kLiveTrackingConfig.staleAfter);
+    });
+
     test('just past the live window is stale', () {
       expect(
-        TrackingHealth.fromFixAge(const Duration(seconds: 76)),
+        TrackingHealth.fromFixAge(
+          TrackingHealth.liveWindow + const Duration(seconds: 1),
+        ),
         TrackingHealth.stale,
       );
       expect(
@@ -92,27 +106,41 @@ void main() {
     });
   });
 
-  group('LiveTrip health & occupancy', () {
+  group('TrackedVehicle health & trip occupancy', () {
     final now = DateTime(2026, 7, 27, 8, 30);
 
-    test('a trip with a recent fix reads live', () {
-      final trip = _trip(fix: _fixAgo(now, const Duration(seconds: 20)));
-      expect(trip.trackingHealthAt(now), TrackingHealth.live);
+    TrackedVehicle vehicleAgo(Duration age) =>
+        TrackedVehicle(fix: _fixAgo(now, age), receivedAt: now.subtract(age));
+
+    test('a vehicle with a recent fix reads live', () {
+      expect(
+        vehicleAgo(const Duration(seconds: 20)).healthAt(now),
+        TrackingHealth.live,
+      );
     });
 
-    test('a trip that never reported reads unknown', () {
-      expect(_trip().trackingHealthAt(now), TrackingHealth.unknown);
-      expect(_trip().fixAgeAt(now), isNull);
+    test('a trip with no vehicle at all reads unknown', () {
+      const state = FleetTrackingState();
+      expect(state.vehicle('t1'), isNull);
+      expect(state.healthOf('t1', now), TrackingHealth.unknown);
     });
 
-    test(
-      'a fix stamped slightly in the future reads as fresh, not negative',
-      () {
-        final trip = _trip(fix: _fixAgo(now, const Duration(seconds: -5)));
-        expect(trip.fixAgeAt(now), Duration.zero);
-        expect(trip.trackingHealthAt(now), TrackingHealth.live);
-      },
-    );
+    test('a fix received slightly in the future reads fresh, not negative', () {
+      expect(
+        vehicleAgo(const Duration(seconds: -5)).healthAt(now),
+        TrackingHealth.live,
+      );
+    });
+
+    test('health is measured from receipt, not from the captain clock', () {
+      // A device whose clock runs an hour fast must not keep a dead feed alive:
+      // the fix claims the future, but it was received four minutes ago.
+      final vehicle = TrackedVehicle(
+        fix: _fixAgo(now, const Duration(hours: -1)),
+        receivedAt: now.subtract(const Duration(minutes: 4, seconds: 30)),
+      );
+      expect(vehicle.healthAt(now), TrackingHealth.offline);
+    });
 
     test('occupancy ratio guards a zero-capacity trip', () {
       expect(_trip(capacity: 0, booked: 0).occupancyRatio, 0);
@@ -146,8 +174,23 @@ void main() {
     });
 
     test('counts trips that are no longer live as at-risk', () {
+      // The count is the feed's to make, not the roster's — the roster's fixes
+      // are only the seed the board opened with.
+      final feed = FleetTrackingState(
+        vehicles: {
+          'a': TrackedVehicle(
+            fix: _fixAgo(now, const Duration(seconds: 20)),
+            receivedAt: now.subtract(const Duration(seconds: 20)),
+          ),
+          'b': TrackedVehicle(
+            fix: _fixAgo(now, const Duration(minutes: 10)),
+            receivedAt: now.subtract(const Duration(minutes: 10)),
+          ),
+          // 'c' never reported at all.
+        },
+      );
       // offline + unknown = 2 (the live one is excluded).
-      expect(snapshot.trackingAtRiskCount(now), 2);
+      expect(feed.atRiskCount(snapshot.activeTrips.map((t) => t.id), now), 2);
     });
 
     test('open incidents exclude resolved and flag a critical one', () {
@@ -719,6 +762,12 @@ class _FakeRepo implements LiveOpsRepository {
   /// Every write the cubit performed, so tests can assert what reached the
   /// data layer (and that an illegal move reached it never).
   final List<({String id, IncidentStatus next, String? note})> writes = [];
+
+  @override
+  Stream<FleetFeedEvent> watchFleetFixes() => const Stream.empty();
+
+  @override
+  Future<Map<String, LiveFix>> fetchLatestFixes() async => const {};
 
   @override
   Future<LiveOpsSnapshot> getSnapshot() async {

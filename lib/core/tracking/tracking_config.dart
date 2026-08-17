@@ -4,7 +4,7 @@
 /// device reports fixes at irregular intervals (seconds to minutes apart).
 class TrackingConfig {
   const TrackingConfig({
-    this.maxAccuracyMeters = 100,
+    this.maxAccuracyMeters = defaultMaxAccuracyMeters,
     this.maxPlausibleSpeedMps = 55,
     this.snapDistanceMeters = 1000,
     this.minAnimation = const Duration(milliseconds: 300),
@@ -17,6 +17,10 @@ class TrackingConfig {
 
   /// Fixes with a worse (larger) reported accuracy are rejected as noise.
   final double maxAccuracyMeters;
+
+  /// Named so the producer side can share it: a fix the marker engine would
+  /// reject is not worth a database write. See `LiveTrackingConfig`.
+  static const double defaultMaxAccuracyMeters = 100;
 
   /// Fixes implying a faster ground speed than this (m/s) are rejected as
   /// GPS glitches. 55 m/s ≈ 200 km/h.

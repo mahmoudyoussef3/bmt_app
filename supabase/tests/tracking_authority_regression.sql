@@ -38,11 +38,23 @@ grant all on fixture to authenticated, anon;
 do $$
 declare v_trip uuid; v_office uuid;
 begin
+  -- Prefer a trip that also carries a paid booking, so probe 05 — the one positive
+  -- case in the whole suite, "a passenger who paid CAN watch their vehicle" — runs
+  -- against real data instead of skipping. Ordering by that first rather than
+  -- filtering on it keeps the suite working on a dataset where no such trip exists:
+  -- it still picks the busiest trip and probe 05 skips honestly, as before.
   select l.trip_id into v_trip
     from public.trip_live_locations l
     join public.operation_trips t on t.id = l.trip_id
    where t.driver_id is not null and t.office_id is not null
-   group by l.trip_id order by count(*) desc limit 1;
+   group by l.trip_id
+   order by
+     (exists (select 1 from public.operation_bookings b
+               where b.trip_id = l.trip_id
+                 and b.client_id is not null
+                 and b.status = 'confirmed')) desc,
+     count(*) desc
+   limit 1;
 
   if v_trip is null then
     insert into probe values ('00. fixture', 'ABORTED — no trip has live fixes');
@@ -70,11 +82,15 @@ begin
    join public.operation_trips t on t.driver_id = d.id
    where t.id = v_trip and d.user_id is not null and d.status = 'active';
 
-  -- A passenger holding a paid booking on it.
+  -- A passenger who is still WAITING for the vehicle, which is now the only
+  -- passenger status the boundary admits. `boarded` and `completed` were in this
+  -- list; they no longer qualify to read positions, so resolving the cast from them
+  -- would hand probe 05 a rider the policy is *supposed* to refuse and report the
+  -- boarding rule as a broken feature.
   insert into fixture
   select 'paid_client', b.client_id from public.operation_bookings b
    where b.trip_id = v_trip and b.client_id is not null
-     and b.status in ('confirmed','boarded','completed') limit 1;
+     and b.status = 'confirmed' limit 1;
 
   -- Somebody with an account but no paid booking on this trip. Any signed-up user
   -- will do — this is the "crafted API call from a stranger" case.
@@ -90,9 +106,20 @@ begin
   insert into fixture
   select 'office_user', u.user_id from public.office_users u
    where u.office_id = v_office and u.status = 'active' limit 1;
+  -- A platform admin must be excluded from this cast, or probe 15 reports a leak
+  -- that is actually the design working: `is_platform_admin()` is the first arm of
+  -- `can_read_trip_fixes`, and admin is deliberately the one unscoped reader on the
+  -- table. This probe went vacuously green while the dataset held a single office;
+  -- the moment a second office existed it picked an admin account out of it and
+  -- called correct behaviour a cross-office leak. Same family as the false positive
+  -- documented in this file's header — the cast has to be resolved carefully, not
+  -- just resolved.
   insert into fixture
   select 'other_office_user', u.user_id from public.office_users u
-   where u.office_id <> v_office and u.status = 'active' limit 1;
+   where u.office_id <> v_office
+     and u.status = 'active'
+     and not exists (select 1 from public.admins a where a.user_id = u.user_id)
+   limit 1;
 
   -- A trip in some other office, used to prove cross-office read isolation.
   insert into fixture

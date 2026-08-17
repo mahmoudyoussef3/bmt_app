@@ -1,44 +1,41 @@
-import 'dart:async';
-
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/entities/tracking_trip.dart';
 import '../../domain/usecases/confirm_boarding_usecase.dart';
 import '../../domain/usecases/get_tracking_trip_usecase.dart';
 import '../../domain/usecases/watch_tracking_trip_usecase.dart';
-import '../../domain/usecases/watch_vehicle_position_usecase.dart';
-import 'tracking_progress_controller.dart';
 import 'tracking_state.dart';
 import 'tracking_subscriptions.dart';
 
-/// Drives the live tracking screen.
+/// Owns the rider's trip *document* and the one action they can take on it.
+///
+/// The live axis — positions, link health, freshness, route progress and ETAs —
+/// belongs to `LiveTrackingBloc`. This cubit is what the trip *is*: which trip,
+/// which booking, which captain and vehicle, which seat, and whether the rider
+/// has boarded. It fetches that, keeps it current when the operation changes it,
+/// and confirms boarding.
 ///
 /// The trip state shown here is always the one the operation is actually in: it
-/// is derived in the data layer from the trip's status and the captain's
-/// events. There is deliberately no way for the UI to set it.
+/// is derived in the data layer from the trip's status and the captain's events.
+/// There is deliberately no way for the UI to set it.
 class TrackingCubit extends Cubit<TrackingState> {
   TrackingCubit({
     required GetTrackingTripUseCase getTrackingTrip,
-    required WatchVehiclePositionUseCase watchVehiclePosition,
     required WatchTrackingTripUseCase watchTrackingTrip,
     required ConfirmBoardingUseCase confirmBoarding,
   }) : _getTrackingTrip = getTrackingTrip,
        _confirmBoarding = confirmBoarding,
        super(const TrackingLoading()) {
     _subscriptions = TrackingSubscriptions(
-      watchVehiclePosition: watchVehiclePosition,
       watchTrackingTrip: watchTrackingTrip,
-      onFix: _onFix,
       onTripChanged: () => _fetch(silent: true),
     );
   }
 
   final GetTrackingTripUseCase _getTrackingTrip;
   final ConfirmBoardingUseCase _confirmBoarding;
-  final _progress = TrackingProgressController();
   late final TrackingSubscriptions _subscriptions;
 
-  Timer? _etaTicker;
   String? _bookingId;
   String? _tripId;
 
@@ -71,23 +68,11 @@ class TrackingCubit extends Cubit<TrackingState> {
         return;
       }
 
-      emit(
-        TrackingLoaded(
-          data: data,
-          progress: _progress.sync(data, now: DateTime.now()),
-        ),
-      );
-      _subscriptions
-        ..syncLocation(
-          data.tripId!,
-          data.tripState,
-          canTrack: data.rider.canTrackVehicle,
-        )
-        ..syncTripChanges(data.tripId!);
-      _startEtaTicker();
+      emit(TrackingLoaded(data: data));
+      _subscriptions.syncTripChanges(data.tripId!);
     } catch (error) {
       if (isClosed) return;
-      
+
       if (silent && current is TrackingLoaded) {
         emit(current.copyWith(isRefreshing: false));
         return;
@@ -96,18 +81,19 @@ class TrackingCubit extends Cubit<TrackingState> {
     }
   }
 
-  void _onFix(TrackingPoint fix) {
+  /// A position arrived for a trip the operation still calls "not started".
+  ///
+  /// The captain's bus is demonstrably moving, so telling the rider it has not
+  /// set off would be worse than the record being a few minutes behind. This is
+  /// the one place a live fix touches the trip document, and it is driven from
+  /// the screen by `LiveTrackingBloc` rather than by a second subscription here.
+  void noteVehicleMoving() {
     final current = state;
     if (current is! TrackingLoaded) return;
-
-    final next = current.tripState == TrackingTripState.notStarted
-        ? TrackingTripState.driverOnWay
-        : current.tripState;
-
+    if (current.data.tripState != TrackingTripState.notStarted) return;
     emit(
       current.copyWith(
-        data: current.data.copyWith(tripState: next, vehicleFix: fix),
-        progress: _progress.addFix(fix, next, now: DateTime.now()),
+        data: current.data.copyWith(tripState: TrackingTripState.driverOnWay),
       ),
     );
   }
@@ -117,9 +103,9 @@ class TrackingCubit extends Cubit<TrackingState> {
   /// On success the refetch picks up a booking that is now `boarded`, which does
   /// three things at once: the station's tally drops a pending rider (the captain
   /// sees it immediately over realtime), the boarding card is replaced by the
-  /// confirmation, and [TrackingSubscriptions.syncLocation] drops this rider's
-  /// position feed. The failure path leaves everything exactly as it was and
-  /// surfaces the server's reason.
+  /// confirmation, and the screen re-requests tracking — which the bloc answers
+  /// with `unavailable`, dropping this rider's position feed. The failure path
+  /// leaves everything exactly as it was and surfaces the server's reason.
   Future<void> confirmBoarding() async {
     final current = state;
     if (current is! TrackingLoaded) return;
@@ -160,20 +146,8 @@ class TrackingCubit extends Cubit<TrackingState> {
     }
   }
 
-  /// ETAs are moments in time, so they go stale on their own. This re-reads the
-  /// engine; it does not touch the network.
-  void _startEtaTicker() {
-    _etaTicker?.cancel();
-    _etaTicker = Timer.periodic(const Duration(seconds: 30), (_) {
-      final current = state;
-      if (current is! TrackingLoaded || current.tripState.isFinished) return;
-      emit(current.copyWith(progress: _progress.tick(DateTime.now())));
-    });
-  }
-
   @override
   Future<void> close() {
-    _etaTicker?.cancel();
     _subscriptions.cancelAll();
     return super.close();
   }

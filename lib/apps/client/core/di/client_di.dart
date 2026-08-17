@@ -210,7 +210,8 @@ import '../../features/tracking/domain/repositories/tracking_repository.dart';
 import '../../features/tracking/domain/usecases/confirm_boarding_usecase.dart';
 import '../../features/tracking/domain/usecases/get_tracking_trip_usecase.dart';
 import '../../features/tracking/domain/usecases/watch_tracking_trip_usecase.dart';
-import '../../features/tracking/domain/usecases/watch_vehicle_position_usecase.dart';
+import '../../features/tracking/domain/usecases/watch_vehicle_feed_usecase.dart';
+import '../../features/tracking/presentation/bloc/live_tracking_bloc.dart';
 import '../../features/tracking/presentation/cubit/tracking_cubit.dart';
 import '../../../../core/network/network_di.dart';
 
@@ -977,9 +978,9 @@ void _registerTrackingDependencies() {
     );
   }
 
-  if (!clientGetIt.isRegistered<WatchVehiclePositionUseCase>()) {
-    clientGetIt.registerLazySingleton<WatchVehiclePositionUseCase>(
-      () => WatchVehiclePositionUseCase(clientGetIt<TrackingRepository>()),
+  if (!clientGetIt.isRegistered<WatchVehicleFeedUseCase>()) {
+    clientGetIt.registerLazySingleton<WatchVehicleFeedUseCase>(
+      () => WatchVehicleFeedUseCase(clientGetIt<TrackingRepository>()),
     );
   }
 
@@ -998,9 +999,19 @@ void _registerTrackingDependencies() {
     clientGetIt.registerFactory<TrackingCubit>(
       () => TrackingCubit(
         getTrackingTrip: clientGetIt<GetTrackingTripUseCase>(),
-        watchVehiclePosition: clientGetIt<WatchVehiclePositionUseCase>(),
         watchTrackingTrip: clientGetIt<WatchTrackingTripUseCase>(),
         confirmBoarding: clientGetIt<ConfirmBoardingUseCase>(),
+      ),
+    );
+  }
+
+  // A factory, not a singleton: one bloc per tracked trip, holding one feed and
+  // one progress engine. Sharing an instance across two screens would make the
+  // second one re-target the first one's trip.
+  if (!clientGetIt.isRegistered<LiveTrackingBloc>()) {
+    clientGetIt.registerFactory<LiveTrackingBloc>(
+      () => LiveTrackingBloc(
+        watchVehicleFeed: clientGetIt<WatchVehicleFeedUseCase>(),
       ),
     );
   }

@@ -421,6 +421,7 @@
   "tracking_signalStale": "Signal delayed",
   "tracking_signalNone": "Waiting for the captain's signal",
   "tracking_signalOffRoute": "Off route",
+  "tracking_signalReconnecting": "Reconnecting",
   "tracking_updatedJustNow": "just now",
   "tracking_updatedMinutesAgo": "{minutes} min ago",
   "@tracking_updatedMinutesAgo": {

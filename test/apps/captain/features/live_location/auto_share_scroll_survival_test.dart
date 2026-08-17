@@ -4,9 +4,12 @@ import 'package:bmt_app/apps/captain/core/di/captain_di.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_theme.dart';
 import 'package:bmt_app/apps/captain/features/live_location/domain/entities/location_sharing_state.dart';
 import 'package:bmt_app/apps/captain/features/live_location/domain/repositories/location_repository.dart';
+import 'package:bmt_app/apps/captain/features/live_location/domain/usecases/publish_trip_location_usecase.dart';
+import 'package:bmt_app/apps/captain/features/live_location/domain/usecases/watch_publishable_location_usecase.dart';
 import 'package:bmt_app/apps/captain/features/live_location/domain/usecases/send_location_update_usecase.dart';
 import 'package:bmt_app/apps/captain/features/live_location/presentation/cubit/live_location_cubit.dart';
 import 'package:bmt_app/apps/captain/features/live_location/presentation/widgets/trip_location_auto_share.dart';
+import 'package:bmt_app/core/tracking/vehicle_fix.dart';
 
 /// The 30-second cadence is only worth what survives a captain using the page.
 ///
@@ -39,6 +42,12 @@ void main() {
     captainGetIt.registerLazySingleton<LiveLocationCubit>(
       () => LiveLocationCubit(
         sendLocation: captainGetIt<SendLocationUpdateUseCase>(),
+        watchPublishableLocation: WatchPublishableLocationUseCase(
+          captainGetIt<LocationRepository>(),
+        ),
+        publishLocation: PublishTripLocationUseCase(
+          captainGetIt<LocationRepository>(),
+        ),
       ),
     );
   });
@@ -172,4 +181,15 @@ class _RecordingRepository implements LocationRepository {
       recordedAt: DateTime.now(),
     );
   }
+
+  /// The GPS stream is silent in tests: no device sensor, and nothing here needs
+  /// one. That leaves the heartbeat as the only publisher, which is exactly the
+  /// pre-stream behaviour these tests were written against — so what they assert
+  /// about ownership and cadence still means the same thing.
+  @override
+  Stream<VehicleFix> watchDevicePosition() => const Stream<VehicleFix>.empty();
+
+  @override
+  Future<LocationUpdateData> publishFix(String tripId, VehicleFix fix) =>
+      sendLocation(tripId);
 }

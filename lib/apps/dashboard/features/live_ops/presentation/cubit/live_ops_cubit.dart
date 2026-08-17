@@ -6,15 +6,23 @@ import '../../domain/entities/trip_incident.dart';
 import '../../domain/usecases/live_ops_usecases.dart';
 import 'live_ops_state.dart';
 
-/// Drives the Live Operations Center.
+/// Drives the Live Operations Center's **roster**: which trips are on the road,
+/// and the open incident queue.
 ///
-/// Freshness comes from two independent sources, matching the resilient pattern
-/// the client tracking layer uses:
+/// It deliberately does *not* own positions. Those live in [FleetTrackingBloc],
+/// which receives them as values over one realtime subscription. Until that split
+/// this cubit refetched the entire snapshot — two joined queries plus the fixes
+/// RPC — every 15 seconds, because moving a marker was the only way to move a
+/// marker. Every one of those refetches also replaced the whole state object, so
+/// a bus travelling 200 metres rebuilt the incident queue.
+///
+/// What is left here is genuinely request/response work, which is why it stays a
+/// Cubit while the feed is a Bloc:
 ///  - a realtime trigger ([WatchLiveOpsUseCase]) that refreshes the instant a
-///    trip status flips or an incident is filed, and
-///  - a steady poll ([pollInterval]) that both catches anything the socket
-///    missed and re-stamps the snapshot clock so tracking-health badges age
-///    correctly even when nothing else changes.
+///    trip status flips or an incident is filed — this is what makes the roster
+///    feel immediate, and
+///  - a slow poll ([pollInterval]) that is now purely a safety net for anything
+///    the socket missed, no longer the mechanism that animates the board.
 ///
 /// Neither path ever blanks a good screen: a failed refresh keeps the last
 /// snapshot on screen. Only the very first load can surface a full error state.
@@ -38,7 +46,12 @@ class LiveOpsCubit extends Cubit<LiveOpsState> {
 
   /// Public so the screen can *state* the cadence it refreshes at instead of
   /// repeating the number in a string that would quietly drift from the timer.
-  static const Duration pollInterval = Duration(seconds: 15);
+  ///
+  /// Two minutes, not the 15 seconds this was when the same timer also had to
+  /// fetch positions. Roster changes already arrive over realtime the moment they
+  /// happen; this is the backstop for a missed socket message, and at 15s it was
+  /// re-running two joined queries per desk 240 times an hour to learn nothing.
+  static const Duration pollInterval = Duration(minutes: 2);
 
   Future<void> startWatching() async {
     await load();
