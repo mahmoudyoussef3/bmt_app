@@ -46,6 +46,4 @@ class HomeBookingData {
 
   /// Preformatted amount paid (e.g. `EGP 100`); empty when not recorded.
   final String fare;
-
-  String get routeLabel => '$pickup → $destination';
 }

@@ -64,8 +64,8 @@ class SupabaseOfficesDatasource implements OfficesDatasource {
         .eq('office_id', officeId)
         .eq('status', BookableTrip.status)
         .gte('trip_date', BookableTrip.today())
-        .order('trip_date')
-        .order('departure_time')
+        .order('trip_date', ascending: true)
+        .order('departure_time', ascending: true)
         .limit(30);
 
     return rows

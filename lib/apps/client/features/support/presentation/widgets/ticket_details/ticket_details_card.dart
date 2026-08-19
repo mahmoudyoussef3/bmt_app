@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/core/widgets/app_card.dart';
+
 import '../../../domain/entities/support_ticket.dart';
 import 'ticket_details_description.dart';
 import 'ticket_details_headline.dart';
@@ -14,22 +16,18 @@ class TicketDetailsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 24),
-      decoration: BoxDecoration(
-        color: scheme.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: scheme.outlineVariant.withAlpha(50)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          TicketDetailsHeadline(ticket: ticket),
-          TicketDetailsStatusBand(ticket: ticket),
-          TicketDetailsDescription(description: ticket.description),
-        ],
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24),
+      child: AppCard(
+        padding: EdgeInsets.zero,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            TicketDetailsHeadline(ticket: ticket),
+            TicketDetailsStatusBand(ticket: ticket),
+            TicketDetailsDescription(description: ticket.description),
+          ],
+        ),
       ),
     );
   }

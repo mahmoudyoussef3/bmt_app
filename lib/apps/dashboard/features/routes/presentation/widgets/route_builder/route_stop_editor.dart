@@ -27,13 +27,18 @@ enum RouteStopRole {
   bool get isEndpoint => this != RouteStopRole.waypoint;
 }
 
+/// What the editor hands back: the stop itself, and whether the operator chose
+/// "حفظ والتالي" instead of finishing — so the caller knows to reopen it for
+/// the next one.
+typedef RouteStopEditorResult = ({RouteStopDraft stop, bool addAnother});
+
 /// Collects one stop, then hands it back complete.
 ///
 /// The only required answer is a name. Everything else — a street address, a
 /// pin on the map, what riders may do here, how long the bus waits — is an
 /// optional refinement, and the dialog says so rather than leaving the operator
 /// to discover it by trying to save.
-Future<RouteStopDraft?> showRouteStopEditor(
+Future<RouteStopEditorResult?> showRouteStopEditor(
   BuildContext context, {
   required RouteStopDraft stop,
   required RouteStopRole role,
@@ -41,7 +46,7 @@ Future<RouteStopDraft?> showRouteStopEditor(
   SearchPlacesUseCase? searchPlaces,
   bool isNew = false,
 }) {
-  return showDialog<RouteStopDraft>(
+  return showDialog<RouteStopEditorResult>(
     context: context,
     builder: (_) => _RouteStopEditorDialog(
       stop: stop,
@@ -152,8 +157,9 @@ class _RouteStopEditorDialogState extends State<_RouteStopEditorDialog> {
                     searchPlaces: widget.searchPlaces,
                     onChanged: (value) =>
                         setState(() => _stop = _stop.copyWith(name: value)),
-                    onSuggestionSelected: (suggestion) =>
-                        _adopt(suggestion.toStop(_stop.key).copyWith(id: _stop.id)),
+                    onSuggestionSelected: (suggestion) => _adopt(
+                      suggestion.toStop(_stop.key).copyWith(id: _stop.id),
+                    ),
                     onPlaceSelected: (place) => _adopt(_stop.withPlace(place)),
                   ),
                   const SizedBox(height: AppSpacing.medium),
@@ -165,6 +171,7 @@ class _RouteStopEditorDialogState extends State<_RouteStopEditorDialog> {
                     decoration: const InputDecoration(
                       labelText: 'الوصف أو العنوان (اختياري)',
                       hintText: 'مثال: موقف شبين القناطر الرئيسي',
+                      prefixIcon: Icon(Icons.notes_rounded),
                       isDense: true,
                       border: OutlineInputBorder(),
                     ),
@@ -173,8 +180,7 @@ class _RouteStopEditorDialogState extends State<_RouteStopEditorDialog> {
                   _LocationBlock(
                     point: _stop.point,
                     onPick: _pickLocation,
-                    onClear: () =>
-                        setState(() => _stop = _stop.withoutPoint()),
+                    onClear: () => setState(() => _stop = _stop.withoutPoint()),
                   ),
                   if (!widget.role.isEndpoint) ...[
                     const SizedBox(height: AppSpacing.large),
@@ -187,8 +193,9 @@ class _RouteStopEditorDialogState extends State<_RouteStopEditorDialog> {
                     const SizedBox(height: AppSpacing.small),
                     _BoardingSelector(
                       value: _stop.boarding,
-                      onChanged: (value) =>
-                          setState(() => _stop = _stop.copyWith(boarding: value)),
+                      onChanged: (value) => setState(
+                        () => _stop = _stop.copyWith(boarding: value),
+                      ),
                     ),
                     const SizedBox(height: AppSpacing.medium),
                     _DwellStepper(
@@ -208,30 +215,58 @@ class _RouteStopEditorDialogState extends State<_RouteStopEditorDialog> {
                 AppSpacing.large,
                 AppSpacing.large,
               ),
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Text(
-                      _canSave ? '' : 'اسم النقطة مطلوب',
-                      style: Theme.of(
-                        context,
-                      ).textTheme.bodySmall?.copyWith(color: scheme.error),
+                  if (!_canSave) ...[
+                    Text(
+                      'أدخل اسم النقطة للمتابعة',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
                     ),
-                  ),
-                  OutlinedButton(
-                    onPressed: () => Navigator.of(context).pop(),
-                    child: const Text('إلغاء'),
-                  ),
-                  const SizedBox(width: AppSpacing.small),
-                  FilledButton.icon(
-                    key: const ValueKey('route-stop-editor-save'),
-                    onPressed: _canSave
-                        ? () => Navigator.of(context).pop(
-                            _stop.copyWith(name: _name.text.trim()),
-                          )
-                        : null,
-                    icon: const Icon(Icons.check_rounded),
-                    label: Text(widget.isNew ? 'إضافة النقطة' : 'حفظ النقطة'),
+                    const SizedBox(height: AppSpacing.small),
+                  ],
+                  Wrap(
+                    alignment: WrapAlignment.end,
+                    spacing: AppSpacing.small,
+                    runSpacing: AppSpacing.small,
+                    children: [
+                      OutlinedButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text('إلغاء'),
+                      ),
+                      // Only offered while adding a brand-new waypoint — the
+                      // one action an operator repeats several times per route.
+                      if (widget.isNew && !widget.role.isEndpoint)
+                        OutlinedButton.icon(
+                          key: const ValueKey('route-stop-editor-save-next'),
+                          onPressed: _canSave
+                              ? () => Navigator.of(context).pop((
+                                  stop: _stop.copyWith(name: _name.text.trim()),
+                                  addAnother: true,
+                                ))
+                              : null,
+                          icon: const Icon(
+                            Icons.playlist_add_rounded,
+                            size: 18,
+                          ),
+                          label: const Text('حفظ والتالي'),
+                        ),
+                      FilledButton.icon(
+                        key: const ValueKey('route-stop-editor-save'),
+                        onPressed: _canSave
+                            ? () => Navigator.of(context).pop((
+                                stop: _stop.copyWith(name: _name.text.trim()),
+                                addAnother: false,
+                              ))
+                            : null,
+                        icon: const Icon(Icons.check_rounded),
+                        label: Text(
+                          widget.isNew ? 'إضافة النقطة' : 'حفظ النقطة',
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -258,14 +293,11 @@ class _DialogHeader extends StatelessWidget {
         children: [
           CircleAvatar(
             backgroundColor: scheme.primaryContainer,
-            child: Icon(
-              switch (role) {
-                RouteStopRole.origin => Icons.trip_origin_rounded,
-                RouteStopRole.waypoint => Icons.pin_drop_outlined,
-                RouteStopRole.destination => Icons.flag_rounded,
-              },
-              color: scheme.primary,
-            ),
+            child: Icon(switch (role) {
+              RouteStopRole.origin => Icons.trip_origin_rounded,
+              RouteStopRole.waypoint => Icons.pin_drop_outlined,
+              RouteStopRole.destination => Icons.flag_rounded,
+            }, color: scheme.primary),
           ),
           const SizedBox(width: AppSpacing.medium),
           Expanded(
@@ -274,16 +306,16 @@ class _DialogHeader extends StatelessWidget {
               children: [
                 Text(
                   isNew ? 'إضافة ${role.label}' : 'تعديل ${role.label}',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   role.hint,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
                 ),
               ],
             ),
@@ -394,7 +426,7 @@ class _StopNameFieldState extends State<_StopNameField> {
     final scheme = Theme.of(context).colorScheme;
     final query = widget.controller.text;
     final suggestions = widget.library.search(query);
-    
+
     final showSuggestions =
         suggestions.isNotEmpty &&
         (_accepted.trim().isEmpty || query.trim() != _accepted.trim());

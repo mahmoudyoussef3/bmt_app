@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/utils/trip_schedule_format.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 import 'package:bmt_app/core/widgets/directional_icon.dart';
 
+import '../../domain/entities/route_availability.dart';
 import '../../domain/entities/route_summary.dart';
 
 /// One corridor in the routes catalog, as an origin→destination spine with
@@ -90,6 +92,10 @@ class RouteCard extends StatelessWidget {
             const SizedBox(height: ClientSpacing.sm),
             _ViaStopTag(stopName: viaStop),
           ],
+          if (route.availability.isKnown) ...[
+            const SizedBox(height: ClientSpacing.sm),
+            _AvailabilityRow(availability: route.availability),
+          ],
           if (_hasMeta || route.officeName.isNotEmpty) ...[
             const SizedBox(height: ClientSpacing.sm),
             Row(
@@ -121,6 +127,138 @@ class RouteCard extends StatelessWidget {
               ],
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Whether this corridor is selling seats, stated on the card so the rider
+/// never has to open a route to find out that it is dead.
+///
+/// Reads as a badge plus the one fact that follows from it: when the next bus
+/// leaves. Sold out keeps that line — a full corridor is still worth knowing
+/// the shape of — while a corridor with nothing on sale says only that, because
+/// there is no departure to name.
+class _AvailabilityRow extends StatelessWidget {
+  const _AvailabilityRow({required this.availability});
+
+  final RouteAvailability availability;
+
+  /// Below this, the seat count stops being background detail and becomes the
+  /// reason to book now, so it is worth the space on the card.
+  static const int _scarceSeats = 5;
+
+  /// "Next departure Today · 8:00 AM" — composed through the translation so the
+  /// separator sits where the language puts it, not where Dart concatenated it.
+  String _departureLine(BuildContext context) {
+    final day = formatTripDay(context, availability.nextDepartureDate);
+    if (day.isEmpty) return '';
+
+    final time = formatTripTime(context, availability.nextDepartureTime);
+    if (time.isEmpty) return context.l10n.routes_nextDepartureDay(day);
+    return context.l10n.routes_nextDepartureDayTime(day, time);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    final departure = availability.status == RouteAvailabilityStatus.none
+        ? ''
+        : _departureLine(context);
+    final showSeats =
+        availability.isBookable &&
+        availability.seatsLeft > 0 &&
+        availability.seatsLeft <= _scarceSeats;
+
+    return Row(
+      children: [
+        _AvailabilityPill(status: availability.status),
+        if (departure.isNotEmpty) ...[
+          const SizedBox(width: ClientSpacing.xs),
+          Expanded(
+            child: Text(
+              departure,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: ClientTypography.labelSmall(
+                context,
+              ).copyWith(color: ClientColors.textSecondaryFor(context)),
+            ),
+          ),
+        ],
+        if (showSeats) ...[
+          const SizedBox(width: ClientSpacing.xs),
+          Text(
+            l10n.routes_seatsLeft(availability.seatsLeft),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: ClientTypography.labelSmall(context).copyWith(
+              color: ClientColors.journeyAmberFor(context),
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// The badge itself. Three states, because "every seat is taken" and "no bus is
+/// running" send a rider to different places — one comes back tomorrow, the
+/// other looks for another operator.
+class _AvailabilityPill extends StatelessWidget {
+  const _AvailabilityPill({required this.status});
+
+  final RouteAvailabilityStatus status;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
+    final (
+      ClientJourneyStatus tone,
+      IconData icon,
+      String label,
+    ) = switch (status) {
+      RouteAvailabilityStatus.bookable => (
+        ClientJourneyStatus.upcoming,
+        Icons.event_available_rounded,
+        l10n.routes_availabilityBookable,
+      ),
+      RouteAvailabilityStatus.soldOut => (
+        ClientJourneyStatus.departing,
+        Icons.event_busy_rounded,
+        l10n.routes_availabilitySoldOut,
+      ),
+      // Never rendered — the card omits the whole row when the outlook is
+      // unknown — but the switch stays total rather than throwing.
+      RouteAvailabilityStatus.unknown || RouteAvailabilityStatus.none => (
+        ClientJourneyStatus.completed,
+        Icons.event_note_outlined,
+        l10n.routes_availabilityNone,
+      ),
+    };
+
+    final colors = ClientColors.journeyBadgeFor(context, tone);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: colors.bg,
+        borderRadius: BorderRadius.circular(ClientRadius.pill),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: colors.label),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: ClientTypography.labelSmall(
+              context,
+            ).copyWith(color: colors.fg, fontWeight: FontWeight.w800),
+          ),
         ],
       ),
     );

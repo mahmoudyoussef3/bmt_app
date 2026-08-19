@@ -61,14 +61,13 @@ class TrackingTripQuery {
           'arrival_offset, departure_offset',
         )
         .eq('trip_id', tripId)
-        .order('point_order');
+        .order('point_order', ascending: true);
     return (rows as List).cast<Map<String, dynamic>>();
   }
 
   /// `drivers.rating` / `vehicles.rating` are the real averages maintained by
   /// the `trip_reviews` triggers — the screen shows those, or nothing.
   Future<Map<String, dynamic>?> trip(String tripId) {
-    
     return _client
         .from('public_trips')
         .select('''
@@ -111,7 +110,7 @@ class TrackingTripQuery {
           .from('trip_station_progress')
           .select(StationBoardMapper.columns)
           .eq('trip_id', tripId)
-          .order('sequence');
+          .order('sequence', ascending: true);
       return (rows as List).cast<Map<String, dynamic>>();
     } on PostgrestException {
       return const [];
@@ -149,7 +148,6 @@ class TrackingTripQuery {
           .order('created_at', ascending: false);
       return (rows as List).cast<Map<String, dynamic>>();
     } on PostgrestException {
-      
       return const [];
     }
   }

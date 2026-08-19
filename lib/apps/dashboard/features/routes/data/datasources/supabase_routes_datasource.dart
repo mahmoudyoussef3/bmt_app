@@ -37,7 +37,7 @@ class SupabaseRoutesDatasource implements RoutesDatasource {
                 .from('route_stations')
                 .select()
                 .inFilter('route_id', routeIds)
-                .order('sort_order');
+                .order('sort_order', ascending: true);
 
       final stationsByRouteId = <String, List<RouteStationModel>>{};
       for (final json in stationsData) {
@@ -239,7 +239,7 @@ class SupabaseRoutesDatasource implements RoutesDatasource {
         .from('route_stations')
         .select()
         .eq('route_id', routeId)
-        .order('sort_order');
+        .order('sort_order', ascending: true);
 
     return data
         .map<RouteStationModel>((json) => RouteStationModel.fromJson(json))

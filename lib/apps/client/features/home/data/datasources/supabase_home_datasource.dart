@@ -15,7 +15,6 @@ class SupabaseHomeDatasource implements HomeDatasource {
   static const _bookingColumns =
       'id, trip_id, booking_number, status, seat, trip_date, '
       'trip_time, route, payment_amount, pickup_point_name, dropoff_point_name, '
-      
       'operation_trips:public_trips(status)';
 
   @override
@@ -39,7 +38,6 @@ class SupabaseHomeDatasource implements HomeDatasource {
           table: 'trip_events',
           callback: notify,
         )
-        
         .onPostgresChanges(
           event: PostgresChangeEvent.all,
           schema: 'public',
@@ -62,7 +60,7 @@ class SupabaseHomeDatasource implements HomeDatasource {
           .from('operation_routes')
           .select('id, name, start_city, end_city, duration, status')
           .eq('status', 'active'),
-      
+
       _supabase
           .from('public_trips')
           .select('''
@@ -74,8 +72,8 @@ class SupabaseHomeDatasource implements HomeDatasource {
           ''')
           .gte('trip_date', today)
           .eq('status', BookableTrip.status)
-          .order('trip_date')
-          .order('departure_time')
+          .order('trip_date', ascending: true)
+          .order('departure_time', ascending: true)
           .limit(50),
       if (user != null) _bookingsOf(user.id, today) else Future.value(const []),
       if (user != null) _activePackageOf(user.id) else Future.value(null),
@@ -117,8 +115,8 @@ class SupabaseHomeDatasource implements HomeDatasource {
         .eq('client_id', userId)
         .inFilter('status', HomeBookingStatus.liveStatuses)
         .gte('trip_date', today)
-        .order('trip_date')
-        .order('trip_time')
+        .order('trip_date', ascending: true)
+        .order('trip_time', ascending: true)
         .limit(10);
   }
 
@@ -143,7 +141,6 @@ class SupabaseHomeDatasource implements HomeDatasource {
     List<dynamic> tripsData,
     List<HomeBookingData> bookings,
   ) {
-    
     final booked = <String, HomeBookingData>{};
     final bookedSeats = <String, int>{};
     for (final booking in bookings) {

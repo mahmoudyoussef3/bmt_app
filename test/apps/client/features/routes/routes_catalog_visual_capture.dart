@@ -16,6 +16,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/features/routes/domain/entities/route_availability.dart';
 import 'package:bmt_app/apps/client/features/routes/domain/entities/route_details.dart';
 import 'package:bmt_app/apps/client/features/routes/domain/entities/route_stop.dart';
 import 'package:bmt_app/apps/client/features/routes/domain/entities/route_summary.dart';
@@ -58,6 +59,32 @@ Future<void> _loadFonts() async {
   }
 }
 
+String _today() => DateTime.now().toIso8601String().split('T').first;
+
+String _tomorrow() => DateTime.now()
+    .add(const Duration(days: 1))
+    .toIso8601String()
+    .split('T')
+    .first;
+
+/// The three booking outlooks a card can state, so every capture shows the
+/// badge row rather than the pre-availability card.
+final _bookableSoon = RouteAvailability(
+  status: RouteAvailabilityStatus.bookable,
+  nextDepartureDate: _today(),
+  nextDepartureTime: '08:30:00',
+  seatsLeft: 2,
+  tripCount: 3,
+);
+
+final _soldOut = RouteAvailability(
+  status: RouteAvailabilityStatus.soldOut,
+  nextDepartureDate: _tomorrow(),
+  nextDepartureTime: '06:00:00',
+);
+
+const _nothingOnSale = RouteAvailability.none;
+
 List<RouteStop> _stops(List<String> names) => [
   for (var i = 0; i < names.length; i++)
     RouteStop(id: 's${i + 1}', name: names[i], order: i + 1),
@@ -73,6 +100,7 @@ final _arabicCatalog = <RouteSummary>[
     duration: 'ساعتان ونصف',
     officeName: 'شركة الدلتا للنقل',
     stops: _stops(['القاهرة', 'شبين الكوم', 'بنها', 'طنطا', 'المنصورة']),
+    availability: _bookableSoon,
   ),
   RouteSummary(
     id: 'B',
@@ -83,6 +111,7 @@ final _arabicCatalog = <RouteSummary>[
     duration: 'ساعة ونصف',
     officeName: 'شركة الشرقية',
     stops: _stops(['القاهرة', 'مسطرد', 'الزقازيق']),
+    availability: _soldOut,
   ),
   RouteSummary(
     id: 'C',
@@ -93,6 +122,7 @@ final _arabicCatalog = <RouteSummary>[
     duration: '٣ ساعات',
     officeName: 'النيل إكسبريس',
     stops: _stops(['القاهرة', 'بنها', 'طنطا', 'دمنهور', 'الإسكندرية']),
+    availability: _nothingOnSale,
   ),
 ];
 
@@ -106,6 +136,7 @@ final _englishCatalog = <RouteSummary>[
     duration: '2h 30m',
     officeName: 'Delta Lines',
     stops: _stops(['Cairo', 'Shibin El Kom', 'Banha', 'Tanta', 'Mansoura']),
+    availability: _bookableSoon,
   ),
   RouteSummary(
     id: 'B',
@@ -116,6 +147,7 @@ final _englishCatalog = <RouteSummary>[
     duration: '1h 30m',
     officeName: 'Sharqia Transport',
     stops: _stops(['Cairo', 'Mostorod', 'Zagazig']),
+    availability: _soldOut,
   ),
 ];
 

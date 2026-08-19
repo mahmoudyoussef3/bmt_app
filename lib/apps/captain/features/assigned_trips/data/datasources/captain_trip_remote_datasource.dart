@@ -78,8 +78,8 @@ class CaptainTripRemoteDataSource {
           'status.in.(scheduled,open_for_booking,boarding,in_progress),'
           'and(status.eq.completed,trip_date.eq.$today)',
         )
-        .order('trip_date')
-        .order('departure_time');
+        .order('trip_date', ascending: true)
+        .order('departure_time', ascending: true);
 
     return response.map<AssignedTripModel>(_mapTrip).toList();
   }
@@ -126,9 +126,15 @@ class CaptainTripRemoteDataSource {
 
     return AssignedTripModel(
       id: json['id']?.toString() ?? '',
+      // The route's own name when it has one. The fallback joins the cities
+      // with a neutral dash rather than an arrow: an arrow written here is laid
+      // out by the reader's bidi context, not by this file, and reverses on
+      // mixed-script endpoints (`New Cairo → شبرا بخوم` renders as
+      // `شبرا بخوم → New Cairo`). Screens that state a direction compose it
+      // with `routeDirectionLabel`.
       route:
           route['name']?.toString() ??
-          '${route['start_city'] ?? ''} → ${route['end_city'] ?? ''}',
+          '${route['start_city'] ?? ''} - ${route['end_city'] ?? ''}',
       vehicleNumber: vehicle['vehicle_code']?.toString() ?? '',
       plateNumber: vehicle['plate_number']?.toString() ?? '',
       departureTime: _dateTime(tripDate, json['departure_time']),

@@ -1,3 +1,4 @@
+import '../../domain/entities/route_availability.dart';
 import '../../domain/entities/route_summary.dart';
 import 'route_stop_model.dart';
 
@@ -15,6 +16,7 @@ class RouteSummaryModel extends RouteSummary {
     super.officeName,
     super.officeLogoUrl,
     super.stops,
+    super.availability,
   });
 
   /// Supabase returns an embedded to-one relation as a `Map`, but older
@@ -48,7 +50,15 @@ class RouteSummaryModel extends RouteSummary {
     return List.unmodifiable(stops);
   }
 
-  factory RouteSummaryModel.fromJson(Map<String, dynamic> json) {
+  /// [availability] comes from a separate `public_trips` read rather than from
+  /// this row — an `operation_routes` record says nothing about whether the
+  /// office is currently selling seats on it — so it is passed in rather than
+  /// parsed out, and defaults to [RouteAvailability.unknown] for any caller
+  /// that has not read departures.
+  factory RouteSummaryModel.fromJson(
+    Map<String, dynamic> json, {
+    RouteAvailability availability = RouteAvailability.unknown,
+  }) {
     final office = _officeOf(json['office']);
     return RouteSummaryModel(
       id: (json['id'] as String?) ?? '',
@@ -61,6 +71,7 @@ class RouteSummaryModel extends RouteSummary {
       officeName: (office?['name'] as String?) ?? '',
       officeLogoUrl: office?['logo_url'] as String?,
       stops: _stopsOf(json['stops']),
+      availability: availability,
     );
   }
 }

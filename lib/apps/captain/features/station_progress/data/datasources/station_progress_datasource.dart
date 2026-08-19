@@ -73,7 +73,7 @@ class StationProgressDataSource {
         .from('trip_station_progress')
         .select(StationBoardMapper.columns)
         .eq('trip_id', tripId)
-        .order('sequence');
+        .order('sequence', ascending: true);
 
     return StationBoardMapper.fromRows(
       (rows as List).cast<Map<String, dynamic>>(),
@@ -115,7 +115,7 @@ class StationProgressDataSource {
         await (routePointId != null && routePointId.isNotEmpty
                 ? query.eq('pickup_point_id', routePointId)
                 : query.eq('pickup_point_name', pointName))
-            .order('seat_label');
+            .order('seat_label', ascending: true);
 
     return [
       for (final row in (rows as List).cast<Map<String, dynamic>>())

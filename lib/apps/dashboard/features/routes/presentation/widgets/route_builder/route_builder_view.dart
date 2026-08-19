@@ -110,29 +110,44 @@ class _RouteBuilderBody extends StatelessWidget {
       role: _roleAt(index, state.draft.stops.length),
       library: state.library,
       searchPlaces: _searchPlaces(state),
-      
+
       isNew: !stop.isNamed,
     );
-    if (result != null) cubit.applyStop(index, result);
+    if (result == null) return;
+    cubit.applyStop(index, result.stop);
+    if (result.addAnother && context.mounted) {
+      await _addStop(context, cubit, state, index + 1);
+    }
   }
 
   /// Collects the stop *before* the timeline grows a row, so cancelling the
   /// dialog leaves no blank placeholder for the operator to clean up.
+  ///
+  /// Reopens itself at the next position for as long as the operator keeps
+  /// choosing "حفظ والتالي" — a route commonly needs several stops in one
+  /// sitting, and this is the difference between doing that in one flow or
+  /// reopening the dialog from scratch each time.
   Future<void> _addStop(
     BuildContext context,
     RouteBuilderCubit cubit,
     RouteBuilderState state,
     int index,
   ) async {
-    final result = await showRouteStopEditor(
-      context,
-      stop: RouteStopDraft(key: RouteStopDraft.freshKey()),
-      role: RouteStopRole.waypoint,
-      library: state.library,
-      searchPlaces: _searchPlaces(state),
-      isNew: true,
-    );
-    if (result != null) cubit.addStopAt(index, stop: result);
+    var at = index;
+    while (true) {
+      final result = await showRouteStopEditor(
+        context,
+        stop: RouteStopDraft(key: RouteStopDraft.freshKey()),
+        role: RouteStopRole.waypoint,
+        library: state.library,
+        searchPlaces: _searchPlaces(state),
+        isNew: true,
+      );
+      if (result == null) return;
+      cubit.addStopAt(at, stop: result.stop);
+      if (!result.addAnother || !context.mounted) return;
+      at += 1;
+    }
   }
 
   static RouteStopRole _roleAt(int index, int total) {
@@ -399,7 +414,7 @@ class _DetailsSectionState extends State<_DetailsSection> {
   @override
   void didUpdateWidget(_DetailsSection oldWidget) {
     super.didUpdateWidget(oldWidget);
-    
+
     _sync(_distance, _draft.distance);
     _sync(_duration, _draft.duration);
   }
@@ -444,6 +459,7 @@ class _DetailsSectionState extends State<_DetailsSection> {
             onChanged: cubit.setName,
             decoration: InputDecoration(
               labelText: 'اسم المسار',
+              prefixIcon: const Icon(Icons.short_text_rounded),
               isDense: true,
               border: const OutlineInputBorder(),
               hintText: draft.suggestedName.isEmpty
@@ -464,6 +480,7 @@ class _DetailsSectionState extends State<_DetailsSection> {
                   onChanged: cubit.setCode,
                   decoration: InputDecoration(
                     labelText: 'كود المسار',
+                    prefixIcon: const Icon(Icons.tag_rounded),
                     isDense: true,
                     border: const OutlineInputBorder(),
                     hintText: draft.suggestedCode,
@@ -480,6 +497,7 @@ class _DetailsSectionState extends State<_DetailsSection> {
                   isExpanded: true,
                   decoration: const InputDecoration(
                     labelText: 'الحالة',
+                    prefixIcon: Icon(Icons.toggle_on_outlined),
                     isDense: true,
                     border: OutlineInputBorder(),
                   ),
@@ -499,7 +517,7 @@ class _DetailsSectionState extends State<_DetailsSection> {
               ),
             ],
           ),
-          
+
           if (widget.state.metricsManual) ...[
             const SizedBox(height: AppSpacing.medium),
             Row(
@@ -511,6 +529,7 @@ class _DetailsSectionState extends State<_DetailsSection> {
                     decoration: const InputDecoration(
                       labelText: 'المسافة (اختياري)',
                       hintText: 'مثال: 42 كم',
+                      prefixIcon: Icon(Icons.straighten_rounded),
                       isDense: true,
                       border: OutlineInputBorder(),
                     ),
@@ -524,6 +543,7 @@ class _DetailsSectionState extends State<_DetailsSection> {
                     decoration: const InputDecoration(
                       labelText: 'المدة (اختياري)',
                       hintText: 'مثال: 1 س 10 د',
+                      prefixIcon: Icon(Icons.timer_outlined),
                       isDense: true,
                       border: OutlineInputBorder(),
                     ),

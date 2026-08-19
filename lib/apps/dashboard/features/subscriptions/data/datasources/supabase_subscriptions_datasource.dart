@@ -55,7 +55,7 @@ class SupabaseSubscriptionsDatasource implements SubscriptionsDatasource {
         'package_id': subscription.packageId,
       'package_name': subscription.packageName,
       if (subscription.routeId.isNotEmpty) 'route_id': subscription.routeId,
-      
+
       'route_name': subscription.routeLabel.isNotEmpty
           ? subscription.routeLabel
           : subscription.packageName,
@@ -183,20 +183,20 @@ class SupabaseSubscriptionsDatasource implements SubscriptionsDatasource {
     final clients = await _client
         .from('clients')
         .select('id, full_name, phone')
-        .order('full_name')
+        .order('full_name', ascending: true)
         .limit(200);
     final packages = await _client
         .from('packages')
         .select('id, title, price, days, trips_count, status')
         .neq('status', 'archived')
-        .order('price');
-    
+        .order('price', ascending: true);
+
     final routes = await _client
         .from('operation_routes')
         .select('id, name, start_city, end_city, status')
         .eq('office_id', _session.officeId)
         .neq('status', 'archived')
-        .order('name');
+        .order('name', ascending: true);
 
     final users = (clients as List).map((c) {
       final m = c as Map<String, dynamic>;

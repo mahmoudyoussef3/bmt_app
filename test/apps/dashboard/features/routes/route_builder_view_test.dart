@@ -165,6 +165,46 @@ void main() {
     expect(_saveButton(tester).onPressed, isNotNull);
   });
 
+  testWidgets('حفظ والتالي reopens the dialog and adds each stop in order', (
+    tester,
+  ) async {
+    await pumpBuilder(tester);
+    await fillStop(tester, 'اضغط لتحديد نقطة الانطلاق', 'بنها');
+    await fillStop(tester, 'اضغط لتحديد الوجهة النهائية', 'القاهرة');
+
+    await tester.tap(find.text('إضافة نقطة').first);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).first, 'شبين القناطر');
+    await tester.pump();
+    await tester.tap(find.text('حفظ والتالي'));
+    await tester.pumpAndSettle();
+
+    // The dialog reopened for the next stop without a second tap on "+".
+    expect(find.text('إضافة نقطة في الطريق'), findsOneWidget);
+    await tester.enterText(find.byType(TextField).first, 'الخانكة');
+    await tester.pump();
+    await tester.tap(find.byKey(const ValueKey('route-stop-editor-save')));
+    await tester.pumpAndSettle();
+
+    expect(cubit.state.draft.stops.map((stop) => stop.name).toList(), [
+      'بنها',
+      'شبين القناطر',
+      'الخانكة',
+      'القاهرة',
+    ]);
+  });
+
+  testWidgets(
+    'حفظ والتالي is offered only for a new waypoint, never an endpoint',
+    (tester) async {
+      await pumpBuilder(tester);
+      await tester.tap(find.text('اضغط لتحديد نقطة الانطلاق'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('حفظ والتالي'), findsNothing);
+    },
+  );
+
   testWidgets('a cancelled stop dialog leaves no blank row behind', (
     tester,
   ) async {
@@ -200,7 +240,7 @@ void main() {
     expect(find.text('تحديد الموقع على الخريطة'), findsOneWidget);
 
     // A name is the one thing it will not do without.
-    expect(find.text('اسم النقطة مطلوب'), findsOneWidget);
+    expect(find.text('أدخل اسم النقطة للمتابعة'), findsOneWidget);
     expect(
       tester
           .widget<FilledButton>(

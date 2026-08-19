@@ -30,6 +30,7 @@ Future<void> _pumpSections(WidgetTester tester, HomeData data) async {
               offices: const [],
               officesLoading: false,
               onOpenRoute: (_, [_]) {},
+              onSwitchTab: (_) {},
             ),
           ],
         ),

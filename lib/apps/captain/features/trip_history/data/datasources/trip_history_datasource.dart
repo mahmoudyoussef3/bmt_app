@@ -16,7 +16,7 @@ class TripHistoryDataSource {
         .from('trip_route_points')
         .select('point_name, point_order, arrival_offset, departure_offset')
         .eq('trip_id', tripId)
-        .order('point_order');
+        .order('point_order', ascending: true);
 
     return (response as List).map((row) {
       final r = row as Map<String, dynamic>;
@@ -66,9 +66,15 @@ class TripHistoryDataSource {
 
     return TripHistoryItem(
       id: row['id']?.toString() ?? '',
+      // The route's own name when it has one. The fallback joins the cities
+      // with a neutral dash rather than an arrow: an arrow written here is laid
+      // out by the reader's bidi context, not by this file, and reverses on
+      // mixed-script endpoints (`New Cairo → شبرا بخوم` renders as
+      // `شبرا بخوم → New Cairo`). Screens that state a direction compose it
+      // with `routeDirectionLabel`.
       route:
           route['name']?.toString() ??
-          '${route['start_city'] ?? ''} → ${route['end_city'] ?? ''}',
+          '${route['start_city'] ?? ''} - ${route['end_city'] ?? ''}',
       tripDate: date,
       departureTime: _parseTime(date, row['departure_time']),
       arrivalTime: _parseTime(date, row['arrival_time']),

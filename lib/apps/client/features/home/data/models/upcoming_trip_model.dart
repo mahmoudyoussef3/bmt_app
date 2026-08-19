@@ -22,7 +22,11 @@ abstract final class UpcomingTripMapper {
     return UpcomingTripData(
       tripId: trip['id']?.toString() ?? '',
       routeId: trip['route_id']?.toString() ?? route['id']?.toString() ?? '',
-      routeName: routeName.isNotEmpty ? routeName : '$startCity → $endCity',
+      // A name, not a direction claim: an arrow composed here would be laid
+      // out by the reader's bidi context, not by this file, and reverses on
+      // mixed-script endpoints. The card states the direction structurally,
+      // through `HomeTripJourney`'s labelled pickup/drop-off rail.
+      routeName: routeName.isNotEmpty ? routeName : '$startCity - $endCity',
       pickup: startCity,
       destination: endCity,
       tripDate: trip['trip_date']?.toString() ?? '',

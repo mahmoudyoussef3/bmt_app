@@ -57,6 +57,7 @@ class _ClientShellScreenState extends State<ClientShellScreen> {
           HomeScreen(
             onOpenRoute: _openRoute,
             onOpenNotifications: _openNotifications,
+            onSwitchTab: (tab) => setState(() => _index = _indexForTab(tab)),
           ),
         ),
       ),

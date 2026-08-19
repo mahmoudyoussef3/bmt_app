@@ -70,7 +70,7 @@ class SupabaseReportsDatasource implements ReportsDatasource {
         .select()
         .gte('report_date', _day(filter.startDate))
         .lte('report_date', _day(filter.endDate))
-        .order('report_date');
+        .order('report_date', ascending: true);
 
     final rows = <RevenueReportRow>[];
     final trends = <MapEntry<String, double>>[];

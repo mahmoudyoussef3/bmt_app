@@ -32,7 +32,6 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
 
   @override
   Future<List<RouteOptionModel>> getRoutes(BookingSearchQuery query) async {
-    
     var routesQuery = _supabase
         .from('operation_routes')
         .select('*, office:public_offices(*)')
@@ -54,7 +53,7 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
                 'id, route_id, name, sort_order, latitude, longitude, pickup_allowed, dropoff_allowed',
               )
               .inFilter('route_id', routeIds)
-              .order('sort_order');
+              .order('sort_order', ascending: true);
     final stationsByRouteId = <String, List<dynamic>>{};
     for (final station in stationsResponse) {
       final routeId = station['route_id']?.toString();
@@ -193,7 +192,7 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
     List<String> routeIds,
   ) async {
     if (routeIds.isEmpty) return const {};
-    
+
     final response = await _supabase
         .from('public_trips')
         .select('''

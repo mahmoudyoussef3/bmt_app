@@ -168,8 +168,8 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
             total: total,
             onSelect: cubit.selectMethod,
           ),
-          const SizedBox(height: 16),
-          CheckoutAssurance(requiresReceipt: state.requiresReceipt),
+        //  const SizedBox(height: 16),
+      //    CheckoutAssurance(requiresReceipt: state.requiresReceipt),
         ],
       ),
     );

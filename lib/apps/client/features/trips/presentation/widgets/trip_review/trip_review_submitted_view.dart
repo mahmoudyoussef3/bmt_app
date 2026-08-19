@@ -7,6 +7,7 @@ import 'package:bmt_app/apps/client/features/trips/domain/entities/reviewable_tr
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip_review.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_review/trip_review_rating_card.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
+import 'package:bmt_app/core/widgets/route_direction_text.dart';
 
 /// The passenger's stored review, read-only. Reviewing is a one-time act per
 /// trip, so re-opening the sheet confirms what they said rather than inviting
@@ -65,7 +66,13 @@ class TripReviewSubmittedView extends StatelessWidget {
         const SizedBox(height: 16),
         TripReviewRatingCard(
           title: context.l10n.trips_ratingRoute,
-          subtitle: trip.routeLine,
+          subtitle: trip.hasEndpoints
+              ? routeDirectionLabel(
+                  trip.origin,
+                  trip.destination,
+                  direction: Directionality.of(context),
+                )
+              : trip.routeName,
           value: review.routeRating,
         ),
         if (review.comment.trim().isNotEmpty) ...[

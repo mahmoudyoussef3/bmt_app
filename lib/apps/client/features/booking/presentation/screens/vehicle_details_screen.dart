@@ -8,6 +8,7 @@ import 'package:bmt_app/apps/client/features/booking/presentation/widgets/vehicl
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/vehicle_details/vehicle_details_body.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/vehicle_details/vehicle_details_states.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/vehicle_details/vehicle_gallery_app_bar.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/utils/booking_query_summary.dart';
 
 /// Full vehicle profile for informed booking decisions.
 class VehicleDetailsScreen extends StatefulWidget {
@@ -54,7 +55,9 @@ class _VehicleDetailsScreenState extends State<VehicleDetailsScreen> {
               SliverToBoxAdapter(
                 child: VehicleDetailsBody(
                   vehicle: vehicle,
-                  routeSummary: query.isComplete ? query.summaryLine : null,
+                  routeSummary: query.isComplete
+                      ? bookingQuerySummary(query, context)
+                      : null,
                 ),
               ),
             ],

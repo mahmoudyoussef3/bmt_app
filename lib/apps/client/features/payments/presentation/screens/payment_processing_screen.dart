@@ -12,6 +12,7 @@ import 'package:bmt_app/apps/client/core/di/client_di.dart';
 import 'package:bmt_app/apps/client/features/seat_selection/domain/usecases/confirm_seat_booking_usecase.dart';
 import 'package:bmt_app/core/localization/format_util.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
+import 'package:bmt_app/core/widgets/route_direction_text.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class PaymentProcessingScreen extends StatefulWidget {
@@ -390,7 +391,11 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '${widget.checkoutData.pickupPoint} → ${widget.checkoutData.destination}',
+                          routeDirectionLabel(
+                            widget.checkoutData.pickupPoint,
+                            widget.checkoutData.destination,
+                            direction: Directionality.of(context),
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: ClientTypography.bodySmall(context).copyWith(

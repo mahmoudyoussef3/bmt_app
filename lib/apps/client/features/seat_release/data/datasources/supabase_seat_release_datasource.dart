@@ -24,7 +24,6 @@ class SupabaseSeatReleaseDatasource implements SeatReleaseDatasource {
     ).toIso8601String().substring(0, 10);
 
     final results = await Future.wait([
-      
       _client
           .from('subscriptions')
           .select('package_name, route_name, start_date, end_date, status')
@@ -42,7 +41,7 @@ class SupabaseSeatReleaseDatasource implements SeatReleaseDatasource {
           .eq('client_id', userId)
           .inFilter('status', const ['reserved', 'confirmed', 'boarded'])
           .gte('trip_date', todayStr)
-          .order('trip_date')
+          .order('trip_date', ascending: true)
           .limit(10),
 
       _client

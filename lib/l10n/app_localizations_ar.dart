@@ -4315,6 +4315,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get booking_whereGetOnOff => 'أين تركب وأين تنزل؟';
 
   @override
+  String get booking_setPickupAndDestination => 'حدد نقطة الركوب والوجهة';
+
+  @override
   String get booking_choosePickupThenStop =>
       'اختر نقطة الركوب أولاً، ثم محطة أبعد على الخط.';
 
@@ -5286,5 +5289,37 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String routes_operatedBy(String officeName) {
     return 'تشغيل $officeName';
+  }
+
+  @override
+  String get routes_availabilityBookable => 'متاح للحجز';
+
+  @override
+  String get routes_availabilitySoldOut => 'مكتمل الحجز';
+
+  @override
+  String get routes_availabilityNone => 'لا توجد رحلات متاحة';
+
+  @override
+  String routes_nextDepartureDay(String day) {
+    return 'أقرب رحلة $day';
+  }
+
+  @override
+  String routes_nextDepartureDayTime(String day, String time) {
+    return 'أقرب رحلة $day · $time';
+  }
+
+  @override
+  String routes_seatsLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'بقي $count مقعداً',
+      few: 'بقيت $count مقاعد',
+      two: 'بقي مقعدان',
+      one: 'بقي مقعد واحد',
+    );
+    return '$_temp0';
   }
 }

@@ -1380,6 +1380,7 @@
   "communication_messagesUnavailable": "الرسائل غير متاحة",
   "communication_imagePreviewUnavailable": "المعاينة غير متاحة بعد",
   "booking_whereGetOnOff": "أين تركب وأين تنزل؟",
+  "booking_setPickupAndDestination": "حدد نقطة الركوب والوجهة",
   "booking_choosePickupThenStop": "اختر نقطة الركوب أولاً، ثم محطة أبعد على الخط.",
   "booking_stopsCountLabel": "{count} محطة",
   "booking_selectYourPickupStop": "1  اختر نقطة الركوب",
@@ -1699,5 +1700,11 @@
   "routes_dropoffOnly": "نزول فقط",
   "routes_stopsCount": "{count, plural, =1{محطة واحدة} =2{محطتان} few{{count} محطات} other{{count} محطة}}",
   "routes_bookThisRoute": "احجز هذا الخط",
-  "routes_operatedBy": "تشغيل {officeName}"
+  "routes_operatedBy": "تشغيل {officeName}",
+  "routes_availabilityBookable": "متاح للحجز",
+  "routes_availabilitySoldOut": "مكتمل الحجز",
+  "routes_availabilityNone": "لا توجد رحلات متاحة",
+  "routes_nextDepartureDay": "أقرب رحلة {day}",
+  "routes_nextDepartureDayTime": "أقرب رحلة {day} · {time}",
+  "routes_seatsLeft": "{count, plural, =1{بقي مقعد واحد} =2{بقي مقعدان} few{بقيت {count} مقاعد} other{بقي {count} مقعداً}}"
 }

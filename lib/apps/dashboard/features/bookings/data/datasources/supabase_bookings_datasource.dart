@@ -120,8 +120,8 @@ class SupabaseBookingsDatasource implements BookingsDatasource {
           .select('id, trip_date, departure_time, operation_routes(name)')
           .inFilter('status', const ['scheduled', 'open_for_booking'])
           .gte('trip_date', DateTime.now().toIso8601String().split('T').first)
-          .order('trip_date')
-          .order('departure_time')
+          .order('trip_date', ascending: true)
+          .order('departure_time', ascending: true)
           .limit(100);
 
       return (rows as List).map((row) {

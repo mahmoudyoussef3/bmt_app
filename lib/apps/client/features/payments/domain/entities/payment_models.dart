@@ -142,6 +142,10 @@ class PaymentCheckoutData {
   int remainingWalletAfterPayment(int total) =>
       (walletBalance - total).clamp(0, walletBalance);
 
+  /// The booking's route as **stored** — `operation_bookings.route`, which
+  /// `SupabaseSeatReleaseDatasource` later splits back apart on the arrow.
+  /// Never render this: on screen the endpoints must be composed by
+  /// `routeDirectionLabel` against the reader's text direction.
   String get route => '$pickupPoint → $destination';
 
   List<String> get missingRequiredFields {

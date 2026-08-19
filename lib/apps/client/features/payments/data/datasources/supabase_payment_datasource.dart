@@ -17,7 +17,7 @@ class SupabasePaymentDatasource implements PaymentDatasource {
           .from('payment_methods')
           .select()
           .eq('is_active', true)
-          .order('sort_order');
+          .order('sort_order', ascending: true);
 
       final methods = response
           .map((json) => _mapPaymentMethod(Map<String, dynamic>.from(json)))
@@ -26,7 +26,6 @@ class SupabasePaymentDatasource implements PaymentDatasource {
 
       return methods;
     } on PostgrestException catch (error) {
-      
       if (error.code == 'PGRST205' || error.code == '42P01') {
         return const <PaymentMethodData>[];
       }
@@ -114,7 +113,7 @@ class SupabasePaymentDatasource implements PaymentDatasource {
           'trip_id': checkoutData.tripId,
           'route': checkoutData.route,
           'seat': checkoutData.selectedSeat,
-          
+
           'customer': {
             'email': user?.email,
             'name':

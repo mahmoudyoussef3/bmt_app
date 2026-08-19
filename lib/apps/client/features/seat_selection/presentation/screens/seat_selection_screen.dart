@@ -14,6 +14,7 @@ import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 import 'package:bmt_app/core/vehicles/vehicles.dart';
 import 'package:bmt_app/core/widgets/vehicle_seats/vehicle_seats.dart';
+import 'package:bmt_app/core/widgets/route_direction_text.dart';
 
 class SeatSelectionScreen extends StatefulWidget {
   const SeatSelectionScreen({super.key});
@@ -71,7 +72,7 @@ class _SeatSelectionContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
     final contentPadding = width < 380 ? 16.0 : 20.0;
-    
+
     final maxContentWidth = width >= 900
         ? 720.0
         : (width >= 600 ? 560.0 : width);
@@ -95,7 +96,6 @@ class _SeatSelectionContent extends StatelessWidget {
                         24,
                       ),
                       children: [
-                        
                         _buildBusLayout(context),
                         const SizedBox(height: 14),
                         if (selectedSeat == null)
@@ -103,7 +103,7 @@ class _SeatSelectionContent extends StatelessWidget {
                         else
                           _buildSelectedSeatsSummary(context, selectedSeat!),
                         const SizedBox(height: 12),
-                        
+
                         SeatBookingSummaryPanel(
                           selectedSeat: selectedSeat == null
                               ? null
@@ -120,7 +120,11 @@ class _SeatSelectionContent extends StatelessWidget {
                                     .seatNumber
                                     .toString(),
                           vehicleName: data.vehicleName,
-                          route: data.route,
+                          route: routeDirectionLabel(
+                            data.pickupPoint,
+                            data.destination,
+                            direction: Directionality.of(context),
+                          ),
                           pricePerSeat: data.pricePerSeat,
                           onPassengerDetailsTap: selectedSeat == null
                               ? null
@@ -129,7 +133,7 @@ class _SeatSelectionContent extends StatelessWidget {
                                   seatLabel: selectedSeat,
                                 ),
                         ),
-                        
+
                         const SizedBox(height: 20),
                       ],
                     ),
@@ -229,8 +233,9 @@ class _SeatSelectionContent extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 5),
-                Text(
-                  data.route,
+                RouteDirectionText(
+                  origin: data.pickupPoint,
+                  destination: data.destination,
                   style: ClientTypography.bodySmall(
                     context,
                   ).copyWith(color: ClientColors.textSecondaryFor(context)),
@@ -316,7 +321,14 @@ class _SeatSelectionContent extends StatelessWidget {
             spacing: 10,
             runSpacing: 10,
             children: [
-              _InfoPill(icon: Icons.route_rounded, label: data.route),
+              _InfoPill(
+                icon: Icons.route_rounded,
+                label: routeDirectionLabel(
+                  data.pickupPoint,
+                  data.destination,
+                  direction: Directionality.of(context),
+                ),
+              ),
               _InfoPill(
                 icon: Icons.schedule_rounded,
                 label: l10n.seatSelection_departsAt(data.departureTime),
@@ -606,7 +618,7 @@ class _SeatMapGrid extends StatelessWidget {
                 : seat.isAvailable
                 ? SeatViewState.available
                 : SeatViewState.occupied,
-            
+
             enabled: seat.isAvailable,
           ),
       ],

@@ -17,7 +17,6 @@ import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_quic
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_sections.dart';
 import 'package:bmt_app/apps/client/features/offices/presentation/cubit/offices_directory_cubit.dart';
 import 'package:bmt_app/apps/client/features/offices/presentation/cubit/offices_directory_state.dart';
-import 'package:bmt_app/apps/client/features/trips/presentation/routes/trips_routes.dart';
 import 'package:bmt_app/core/theme/app_layout.dart';
 
 /// Loaded home layout: pinned status-bar strip, hero canvas with the
@@ -31,11 +30,13 @@ class HomeContent extends StatelessWidget {
     required this.data,
     required this.onOpenRoute,
     required this.onOpenNotifications,
+    required this.onSwitchTab,
   });
 
   final HomeData data;
   final void Function(String route, [Object? arguments]) onOpenRoute;
   final VoidCallback onOpenNotifications;
+  final void Function(String tab) onSwitchTab;
 
   static const double _tileOverlap = HomeQuickActions.height / 2;
 
@@ -105,6 +106,7 @@ class HomeContent extends StatelessWidget {
                   },
                   officesLoading: state is OfficesDirectoryLoading,
                   onOpenRoute: onOpenRoute,
+                  onSwitchTab: onSwitchTab,
                 ),
               ),
             ),
@@ -149,8 +151,8 @@ class HomeContent extends StatelessWidget {
                 child: HomeEntrance(
                   order: 1,
                   child: HomeQuickActions(
-                    onRoutes: () => onOpenRoute(BookingRoutes.popularRoutes),
-                    onTrips: () => onOpenRoute(TripsRoutes.myTrips),
+                    onRoutes: () => onSwitchTab('routes'),
+                    onTrips: () => onSwitchTab('trips'),
                     onSubscription: () =>
                         onOpenRoute(PackagesRoutes.mySubscription),
                     onSupport: () => onOpenRoute(SupportRoutes.center),

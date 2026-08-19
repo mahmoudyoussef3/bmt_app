@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/core/theme/spacing.dart';
+import 'package:bmt_app/core/widgets/route_direction_text.dart';
 
 /// Where a point sits in the journey, which is the only thing the timeline
 /// colours encode.
@@ -153,6 +154,8 @@ class RouteLocationChip extends StatelessWidget {
 
 /// `بنها ← شبين القناطر ← القاهرة`, wrapping instead of truncating so the whole
 /// journey is readable on a narrow card.
+///
+/// Direction-safe in both scripts — see [isolatedPlaceName].
 class RouteDirectionChain extends StatelessWidget {
   final List<String> stops;
   final TextStyle? style;
@@ -177,18 +180,23 @@ class RouteDirectionChain extends StatelessWidget {
           context,
         ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant);
 
+    // Spans do not isolate: the whole chain is one bidi paragraph, so an
+    // all-Latin route ("New Cairo ← Adly Mansour ← Zefta") resolves LTR under
+    // UAX#9 rule N1 and lays itself out end-to-start. Each name carries its own
+    // first-strong isolate, and the arrow follows the ambient direction.
+    final arrow = directionArrow(Directionality.of(context));
+
     return Text.rich(
       TextSpan(
         children: [
           for (final entry in names.indexed) ...[
             if (entry.$1 != 0)
               TextSpan(
-                
-                text: ' ← ',
+                text: ' $arrow ',
                 style: base?.copyWith(color: scheme.outline),
               ),
             TextSpan(
-              text: entry.$2.trim(),
+              text: isolatedPlaceName(entry.$2),
               style: entry.$1 == 0 || entry.$1 == names.length - 1
                   ? base?.copyWith(
                       fontWeight: FontWeight.bold,

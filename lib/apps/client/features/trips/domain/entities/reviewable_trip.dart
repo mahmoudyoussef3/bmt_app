@@ -14,7 +14,9 @@ class ReviewableTrip {
     this.officeName = '',
     this.driverName = '',
     this.vehicleName = '',
-    this.routeLine = '',
+    this.origin = '',
+    this.destination = '',
+    this.routeName = '',
   });
 
   /// `operation_bookings.id` — the review is keyed on the booking, because
@@ -33,5 +35,16 @@ class ReviewableTrip {
   final String officeName;
   final String driverName;
   final String vehicleName;
-  final String routeLine;
+
+  /// The two ends of the ride, kept apart rather than joined into one string.
+  /// Which way round they read on screen depends on the ambient text direction
+  /// and on the script of the names themselves, so only the presentation layer
+  /// can compose them — see `routeDirectionLabel`.
+  final String origin;
+  final String destination;
+
+  /// The route's own name, shown when the endpoints aren't known.
+  final String routeName;
+
+  bool get hasEndpoints => origin.isNotEmpty && destination.isNotEmpty;
 }

@@ -7,7 +7,10 @@ class CaptainOnboardingDatasource {
   const CaptainOnboardingDatasource(this._client);
 
   Future<List<OnboardingOffice>> fetchActiveOffices() async {
-    final rows = await _client.from('public_offices').select().order('name');
+    final rows = await _client
+        .from('public_offices')
+        .select()
+        .order('name', ascending: true);
     return (rows as List)
         .map(
           (r) => OnboardingOffice.fromRow(Map<String, dynamic>.from(r as Map)),

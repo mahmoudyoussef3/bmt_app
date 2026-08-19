@@ -6,6 +6,7 @@ import 'package:bmt_app/apps/client/features/trips/presentation/cubit/trip_revie
 import 'package:bmt_app/apps/client/features/trips/presentation/cubit/trip_review_state.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/widgets/trip_review/trip_review_rating_card.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
+import 'package:bmt_app/core/widgets/route_direction_text.dart';
 
 /// The office / driver / vehicle / route star cards a passenger fills in.
 ///
@@ -47,7 +48,13 @@ class TripReviewRatings extends StatelessWidget {
         const SizedBox(height: 16),
         TripReviewRatingCard(
           title: context.l10n.trips_ratingRoute,
-          subtitle: trip.routeLine,
+          subtitle: trip.hasEndpoints
+              ? routeDirectionLabel(
+                  trip.origin,
+                  trip.destination,
+                  direction: Directionality.of(context),
+                )
+              : trip.routeName,
           value: state.draft.routeRating,
           onChanged: cubit.rateRoute,
         ),

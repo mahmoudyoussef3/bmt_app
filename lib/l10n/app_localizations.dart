@@ -7772,6 +7772,12 @@ abstract class AppLocalizations {
   /// **'Where will you get on and off?'**
   String get booking_whereGetOnOff;
 
+  /// No description provided for @booking_setPickupAndDestination.
+  ///
+  /// In en, this message translates to:
+  /// **'Set pickup and destination'**
+  String get booking_setPickupAndDestination;
+
   /// No description provided for @booking_choosePickupThenStop.
   ///
   /// In en, this message translates to:
@@ -9355,6 +9361,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Operated by {officeName}'**
   String routes_operatedBy(String officeName);
+
+  /// No description provided for @routes_availabilityBookable.
+  ///
+  /// In en, this message translates to:
+  /// **'Available to book'**
+  String get routes_availabilityBookable;
+
+  /// No description provided for @routes_availabilitySoldOut.
+  ///
+  /// In en, this message translates to:
+  /// **'Fully booked'**
+  String get routes_availabilitySoldOut;
+
+  /// No description provided for @routes_availabilityNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No trips on sale'**
+  String get routes_availabilityNone;
+
+  /// No description provided for @routes_nextDepartureDay.
+  ///
+  /// In en, this message translates to:
+  /// **'Next departure {day}'**
+  String routes_nextDepartureDay(String day);
+
+  /// No description provided for @routes_nextDepartureDayTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Next departure {day} · {time}'**
+  String routes_nextDepartureDayTime(String day, String time);
+
+  /// No description provided for @routes_seatsLeft.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 seat left} other{{count} seats left}}'**
+  String routes_seatsLeft(int count);
 }
 
 class _AppLocalizationsDelegate

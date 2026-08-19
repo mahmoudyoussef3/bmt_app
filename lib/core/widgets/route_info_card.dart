@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/core/widgets/app_card.dart';
+import 'package:bmt_app/core/widgets/route_direction_text.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
 
 class RouteInfoCard extends StatelessWidget {
@@ -49,8 +50,9 @@ class RouteInfoCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 6),
-          Text(
-            '$origin → $destination',
+          RouteDirectionText(
+            origin: origin,
+            destination: destination,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.bodyMedium,

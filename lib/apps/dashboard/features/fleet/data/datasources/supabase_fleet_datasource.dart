@@ -69,14 +69,14 @@ class SupabaseFleetDatasource implements FleetDatasource {
           .select()
           .eq('office_id', officeId)
           .neq('status', 'archived')
-          .order('full_name');
+          .order('full_name', ascending: true);
 
       final vehiclesData = await _client
           .from('vehicles')
           .select()
           .eq('office_id', officeId)
           .neq('status', 'archived')
-          .order('vehicle_code');
+          .order('vehicle_code', ascending: true);
 
       final assignmentsData = await _client
           .from('assignments')
@@ -99,8 +99,8 @@ class SupabaseFleetDatasource implements FleetDatasource {
             'in_progress',
           ])
           .gte('trip_date', _daysFromToday(-1))
-          .order('trip_date')
-          .order('departure_time');
+          .order('trip_date', ascending: true)
+          .order('departure_time', ascending: true);
 
       final driverIds = driversData.map((d) => d['id'] as String).toList();
       final vehicleIds = vehiclesData.map((v) => v['id'] as String).toList();
@@ -343,7 +343,6 @@ class SupabaseFleetDatasource implements FleetDatasource {
   @override
   Future<void> deleteDriver(String driverId) async {
     try {
-      
       await _assertNoTripHistory(
         column: 'driver_id',
         id: driverId,
@@ -718,7 +717,6 @@ class SupabaseFleetDatasource implements FleetDatasource {
 
       return _client.storage.from(bucket).getPublicUrl(path);
     } on StorageException catch (e) {
-      
       LicensingGuard.check(e);
       throw Exception(e.message);
     } catch (e) {

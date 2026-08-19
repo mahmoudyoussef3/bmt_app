@@ -4343,6 +4343,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get booking_whereGetOnOff => 'Where will you get on and off?';
 
   @override
+  String get booking_setPickupAndDestination => 'Set pickup and destination';
+
+  @override
   String get booking_choosePickupThenStop =>
       'Choose your pickup first, then a stop further along the route.';
 
@@ -5307,5 +5310,35 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String routes_operatedBy(String officeName) {
     return 'Operated by $officeName';
+  }
+
+  @override
+  String get routes_availabilityBookable => 'Available to book';
+
+  @override
+  String get routes_availabilitySoldOut => 'Fully booked';
+
+  @override
+  String get routes_availabilityNone => 'No trips on sale';
+
+  @override
+  String routes_nextDepartureDay(String day) {
+    return 'Next departure $day';
+  }
+
+  @override
+  String routes_nextDepartureDayTime(String day, String time) {
+    return 'Next departure $day · $time';
+  }
+
+  @override
+  String routes_seatsLeft(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count seats left',
+      one: '1 seat left',
+    );
+    return '$_temp0';
   }
 }

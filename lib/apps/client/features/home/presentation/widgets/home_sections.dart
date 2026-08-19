@@ -29,6 +29,7 @@ class HomeSections extends StatelessWidget {
     required this.offices,
     required this.officesLoading,
     required this.onOpenRoute,
+    required this.onSwitchTab,
   });
 
   final HomeData data;
@@ -39,6 +40,7 @@ class HomeSections extends StatelessWidget {
   final bool officesLoading;
 
   final void Function(String route, [Object? arguments]) onOpenRoute;
+  final void Function(String tab) onSwitchTab;
 
   /// The subscription the rider already holds, with its own usage detail.
   void _openMySubscription() => onOpenRoute(PackagesRoutes.mySubscription);
@@ -111,7 +113,7 @@ class HomeSections extends StatelessWidget {
                     ? l10n.home_tripsOpenSoonest
                     : l10n.home_departuresOpenCount(data.upcomingTrips.length),
                 actionLabel: l10n.home_allRoutes,
-                onAction: () => onOpenRoute(BookingRoutes.popularRoutes),
+                onAction: () => onSwitchTab('routes'),
               ),
             ),
           ),
@@ -119,7 +121,7 @@ class HomeSections extends StatelessWidget {
         HomeUpcomingTripsList(
           trips: data.upcomingTrips,
           onBook: _bookTrip,
-          onBrowseRoutes: () => onOpenRoute(BookingRoutes.popularRoutes),
+          onBrowseRoutes: () => onSwitchTab('routes'),
         ),
         if (data.activePackage != null)
           _BoxSection(

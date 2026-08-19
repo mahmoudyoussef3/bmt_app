@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
@@ -58,12 +59,12 @@ class TripVehicleSheet extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     TripVehicleGallery(imageUrls: vehicle.imageUrls),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 24),
                     _CaptainRow(vehicle: vehicle),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 20),
                     _SpecsGrid(trip: trip, vehicle: vehicle),
                     if (vehicle.features.isNotEmpty) ...[
-                      const SizedBox(height: 18),
+                      const SizedBox(height: 20),
                       _Amenities(features: vehicle.features),
                     ],
                   ],
@@ -128,16 +129,12 @@ class _CaptainRow extends StatelessWidget {
     final name = vehicle.driverName.trim();
     if (name.isEmpty) return const SizedBox.shrink();
 
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: ClientColors.surfaceMutedFor(context),
-        borderRadius: BorderRadius.circular(ClientRadius.md),
-      ),
+    return AppCard(
+      padding: const EdgeInsets.all(16),
       child: Row(
         children: [
           _CaptainAvatar(imageUrl: vehicle.driverImageUrl, name: name),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -148,14 +145,14 @@ class _CaptainRow extends StatelessWidget {
                     context,
                   ).copyWith(color: ClientColors.textTertiaryFor(context)),
                 ),
-                const SizedBox(height: 3),
+                const SizedBox(height: 4),
                 Text(
                   name,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: ClientTypography.bodyMedium(
+                  style: ClientTypography.bodyLarge(
                     context,
-                  ).copyWith(fontWeight: FontWeight.w800),
+                  ).copyWith(fontWeight: FontWeight.w700),
                 ),
               ],
             ),
@@ -331,10 +328,22 @@ class _SpecsGrid extends StatelessWidget {
         ),
     ];
 
-    return Wrap(
-      spacing: 10,
-      runSpacing: 10,
-      children: specs.map((spec) => _SpecTile(spec: spec)).toList(),
+    return AppCard(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          const spacing = 16.0;
+          final itemWidth = (constraints.maxWidth - spacing) / 2;
+          return Wrap(
+            spacing: spacing,
+            runSpacing: spacing * 1.5,
+            children: specs.map((spec) => SizedBox(
+              width: itemWidth,
+              child: _SpecTile(spec: spec),
+            )).toList(),
+          );
+        },
+      ),
     );
   }
 }
@@ -354,22 +363,21 @@ class _SpecTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        border: Border.all(color: ClientColors.borderFor(context)),
-        borderRadius: BorderRadius.circular(ClientRadius.sm),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 2),
+          child: Icon(
             spec.icon,
-            size: 16,
-            color: ClientColors.textSecondaryFor(context),
+            size: 18,
+            color: ClientColors.primaryFor(context),
           ),
-          const SizedBox(width: 8),
-          Column(
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -377,19 +385,22 @@ class _SpecTile extends StatelessWidget {
                 spec.label,
                 style: ClientTypography.labelSmall(
                   context,
-                ).copyWith(color: ClientColors.textTertiaryFor(context)),
+                ).copyWith(color: ClientColors.textSecondaryFor(context)),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: 4),
               Text(
                 spec.value,
-                style: ClientTypography.bodySmall(
+                style: ClientTypography.bodyMedium(
                   context,
-                ).copyWith(fontWeight: FontWeight.w800),
+                ).copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: ClientColors.textPrimaryFor(context),
+                ),
               ),
             ],
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
@@ -401,42 +412,48 @@ class _Amenities extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          context.l10n.booking_comfortAndAmenities,
-          style: ClientTypography.bodyMedium(
-            context,
-          ).copyWith(fontWeight: FontWeight.w800),
-        ),
-        const SizedBox(height: 10),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: features
-              .map(
-                (feature) => Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 11,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: ClientColors.primaryFor(context).withAlpha(18),
-                    borderRadius: BorderRadius.circular(ClientRadius.pill),
-                  ),
-                  child: Text(
-                    feature,
-                    style: ClientTypography.labelMedium(context).copyWith(
-                      color: ClientColors.primaryFor(context),
-                      fontWeight: FontWeight.w700,
+    return AppCard(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Text(
+            context.l10n.booking_comfortAndAmenities,
+            style: ClientTypography.labelMedium(
+              context,
+            ).copyWith(
+              fontWeight: FontWeight.w600,
+              color: ClientColors.textSecondaryFor(context),
+            ),
+          ),
+          const SizedBox(height: 14),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: features
+                .map(
+                  (feature) => Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: ClientColors.primaryFor(context).withAlpha(18),
+                      borderRadius: BorderRadius.circular(ClientRadius.pill),
+                    ),
+                    child: Text(
+                      feature,
+                      style: ClientTypography.labelMedium(context).copyWith(
+                        color: ClientColors.primaryFor(context),
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
-                ),
-              )
-              .toList(),
-        ),
-      ],
+                )
+                .toList(),
+          ),
+        ],
+      ),
     );
   }
 }

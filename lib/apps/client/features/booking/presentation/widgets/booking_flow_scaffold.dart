@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_search_query.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/utils/booking_query_summary.dart';
 
 /// App bar + optional search summary for booking flow screens.
 class BookingFlowScaffold extends StatelessWidget {
@@ -31,7 +32,7 @@ class BookingFlowScaffold extends StatelessWidget {
       appBar: ClientAppBar(
         title: title,
         actions: actions,
-        
+
         backgroundColor: extendBodyBehindAppBar ? Colors.transparent : null,
       ),
       body: Column(
@@ -71,7 +72,7 @@ class BookingSearchSummaryBar extends StatelessWidget {
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              query.summaryLine,
+              bookingQuerySummary(query, context),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: Theme.of(

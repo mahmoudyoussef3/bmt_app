@@ -60,6 +60,4 @@ class SeatSelectionData {
   final String driverImageUrl;
 
   int get availableCount => seats.where((seat) => seat.isAvailable).length;
-
-  String get route => '$pickupPoint → $destination';
 }

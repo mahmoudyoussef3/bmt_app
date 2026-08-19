@@ -35,13 +35,7 @@ const _banhaCairo = OperationRoute(
       arrivalOffset: '',
       order: 2,
     ),
-    RouteStation(
-      id: 'c',
-      name: 'مسطرد',
-      area: '',
-      arrivalOffset: '',
-      order: 3,
-    ),
+    RouteStation(id: 'c', name: 'مسطرد', area: '', arrivalOffset: '', order: 3),
     RouteStation(
       id: 'd',
       name: 'القاهرة',
@@ -52,6 +46,35 @@ const _banhaCairo = OperationRoute(
   ],
   notes: [],
 );
+
+/// Endpoints as the geocoder returns them for Egypt: Latin, inside an
+/// otherwise-Arabic console.
+const _newCairoZefta = OperationRoute(
+  id: 'r-2',
+  routeCode: 'RT-02',
+  name: 'New Cairo - Zefta',
+  startCity: 'New Cairo',
+  endCity: 'Zefta',
+  duration: '1 س 40 د',
+  distance: '125 كم',
+  status: OperationRouteStatus.active,
+  stations: [
+    RouteStation(
+      id: 'x',
+      name: 'New Cairo',
+      area: '',
+      arrivalOffset: '',
+      order: 1,
+    ),
+    RouteStation(id: 'y', name: 'Zefta', area: '', arrivalOffset: '', order: 2),
+  ],
+  notes: [],
+);
+
+/// The headline as [RouteDetailsView] builds it: each endpoint inside a
+/// first-strong isolate so the arrow follows the RTL paragraph.
+String _direction(String from, String to) =>
+    '\u2068$from\u2069 ← \u2068$to\u2069';
 
 /// Nothing here calls the repository — these screens render state — but
 /// [RoutesCubit] needs its use cases, so they are wired to a repository that
@@ -107,7 +130,10 @@ void main() {
       await pump(
         tester,
         const RoutesListView(
-          state: RoutesLoaded(routes: [_banhaCairo], selectedRouteId: 'route-1'),
+          state: RoutesLoaded(
+            routes: [_banhaCairo],
+            selectedRouteId: 'route-1',
+          ),
         ),
       );
 
@@ -121,20 +147,21 @@ void main() {
       expect(find.textContaining('شبين القناطر'), findsOneWidget);
     });
 
-    testWidgets('the empty state explains what a route is and how little it needs', (
-      tester,
-    ) async {
-      await pump(
-        tester,
-        const RoutesListView(
-          state: RoutesLoaded(routes: [], selectedRouteId: ''),
-        ),
-      );
+    testWidgets(
+      'the empty state explains what a route is and how little it needs',
+      (tester) async {
+        await pump(
+          tester,
+          const RoutesListView(
+            state: RoutesLoaded(routes: [], selectedRouteId: ''),
+          ),
+        );
 
-      expect(find.text('ابدأ بإضافة أول مسار'), findsOneWidget);
-      expect(find.textContaining('اختياري'), findsOneWidget);
-      expect(find.text('إضافة مسار جديد'), findsWidgets);
-    });
+        expect(find.text('ابدأ بإضافة أول مسار'), findsOneWidget);
+        expect(find.textContaining('اختياري'), findsOneWidget);
+        expect(find.text('إضافة مسار جديد'), findsWidgets);
+      },
+    );
 
     testWidgets('filtering to nothing offers a different message', (
       tester,
@@ -159,14 +186,36 @@ void main() {
       await pump(
         tester,
         const RouteDetailsView(
-          state: RoutesLoaded(routes: [_banhaCairo], selectedRouteId: 'route-1'),
+          state: RoutesLoaded(
+            routes: [_banhaCairo],
+            selectedRouteId: 'route-1',
+          ),
         ),
       );
 
-      expect(find.text('بنها ← القاهرة'), findsOneWidget);
+      expect(find.text(_direction('بنها', 'القاهرة')), findsOneWidget);
       expect(find.textContaining('مسار نقل'), findsOneWidget);
       expect(find.text('نقاط المسار'), findsOneWidget);
       expect(find.text('إنشاء مسار العودة'), findsOneWidget);
+    });
+
+    /// The geocoder answers in English for most Egyptian places, so a route's
+    /// endpoints are routinely Latin inside this otherwise-Arabic console.
+    /// Two Latin names on either side of a bare `←` resolve the whole line
+    /// left to right, which points the arrow back at the origin and announces
+    /// the route backwards; the isolates around each endpoint keep the arrow
+    /// on the RTL paragraph's terms.
+    testWidgets('the direction survives Latin place names', (tester) async {
+      await pump(
+        tester,
+        const RouteDetailsView(
+          state: RoutesLoaded(routes: [_newCairoZefta], selectedRouteId: 'r-2'),
+        ),
+      );
+
+      expect(find.text(_direction('New Cairo', 'Zefta')), findsOneWidget);
+      // The bare form is what reads backwards on screen.
+      expect(find.text('New Cairo ← Zefta'), findsNothing);
     });
 
     testWidgets('an unpinned stop reads as unset, never as an error', (
@@ -175,7 +224,10 @@ void main() {
       await pump(
         tester,
         const RouteDetailsView(
-          state: RoutesLoaded(routes: [_banhaCairo], selectedRouteId: 'route-1'),
+          state: RoutesLoaded(
+            routes: [_banhaCairo],
+            selectedRouteId: 'route-1',
+          ),
         ),
       );
 
@@ -194,7 +246,10 @@ void main() {
       await pump(
         tester,
         const RouteDetailsView(
-          state: RoutesLoaded(routes: [_banhaCairo], selectedRouteId: 'route-1'),
+          state: RoutesLoaded(
+            routes: [_banhaCairo],
+            selectedRouteId: 'route-1',
+          ),
         ),
       );
 

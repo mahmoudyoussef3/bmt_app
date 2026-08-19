@@ -9,6 +9,7 @@ import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/core/widgets/route_direction_text.dart';
 
 import '../../domain/entities/operation_route.dart';
 import '../cubit/routes_cubit.dart';
@@ -102,19 +103,19 @@ class _DetailsHeader extends StatelessWidget {
               ),
               const SizedBox(height: AppSpacing.small),
               Text(
-                _headline(route),
+                _headline(route, Directionality.of(context)),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(
-                  context,
-                ).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
               ),
               const SizedBox(height: AppSpacing.xSmall),
               Text(
                 'مسار نقل · ${facts.join(' · ')}',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: scheme.onSurfaceVariant,
+                ),
               ),
             ],
           );
@@ -165,11 +166,19 @@ class _DetailsHeader extends StatelessWidget {
     );
   }
 
-  static String _headline(OperationRoute route) {
+  /// `origin ← destination`, read right to left like the rest of the console.
+  ///
+  /// Each endpoint is wrapped in a first-strong isolate (U+2068 … U+2069) so
+  /// the arrow lands between two *neutral* objects and follows the RTL
+  /// paragraph instead of the names' own script. Without it, two Latin names —
+  /// which is what the geocoder returns for "New Cairo" or "Zefta" — resolve
+  /// the whole line left to right and the arrow ends up pointing at the
+  /// origin, announcing the route backwards. The controls render as nothing.
+  static String _headline(OperationRoute route, TextDirection direction) {
     final from = route.startCity.trim();
     final to = route.endCity.trim();
     if (from.isEmpty || to.isEmpty) return route.name;
-    return '$from ← $to';
+    return routeDirectionLabel(from, to, direction: direction);
   }
 }
 
@@ -330,9 +339,7 @@ class _StopTile extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          station.name.isEmpty
-                              ? 'نقطة بدون اسم'
-                              : station.name,
+                          station.name.isEmpty ? 'نقطة بدون اسم' : station.name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: Theme.of(context).textTheme.titleSmall
@@ -341,7 +348,9 @@ class _StopTile extends StatelessWidget {
                       ),
                       if (role.isEndpoint)
                         Text(
-                          role == RouteTimelineRole.origin ? 'البداية' : 'النهاية',
+                          role == RouteTimelineRole.origin
+                              ? 'البداية'
+                              : 'النهاية',
                           style: Theme.of(context).textTheme.labelSmall
                               ?.copyWith(
                                 color: routeRoleColor(context, role),

@@ -21,10 +21,12 @@ class BookingSearchQuery {
 
   bool get isComplete => pickup.isNotEmpty && destination.isNotEmpty;
 
-  String get summaryLine {
-    if (!isComplete) return 'Set pickup and destination';
+  /// When the search runs — the half of the summary that carries no direction.
+  /// The endpoints are joined presentation-side by `routeDirectionLabel`, which
+  /// needs the reader's text direction to point its arrow at the destination.
+  String get scheduleLine {
     final timePart = time.isEmpty ? '' : ' · $time';
-    return '$pickup → $destination · $date$timePart';
+    return '$date$timePart';
   }
 
   BookingSearchQuery copyWith({

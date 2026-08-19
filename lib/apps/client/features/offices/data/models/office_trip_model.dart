@@ -27,7 +27,10 @@ class OfficeTripModel extends OfficeTrip {
     return OfficeTripModel(
       id: json['id']?.toString() ?? '',
       routeId: json['route_id']?.toString() ?? route['id']?.toString() ?? '',
-      routeName: routeName.isNotEmpty ? routeName : '$startCity → $endCity',
+      // `origin - destination`, the naming this system already uses for a
+      // route. See `UpcomingTripMapper` for why the arrow form cannot live in
+      // the data layer.
+      routeName: routeName.isNotEmpty ? routeName : '$startCity - $endCity',
       pickup: startCity,
       destination: endCity,
       tripDate: json['trip_date']?.toString() ?? '',

@@ -2237,6 +2237,7 @@
   "communication_messagesUnavailable": "Messages unavailable",
   "communication_imagePreviewUnavailable": "Preview not available yet",
   "booking_whereGetOnOff": "Where will you get on and off?",
+  "booking_setPickupAndDestination": "Set pickup and destination",
   "booking_choosePickupThenStop": "Choose your pickup first, then a stop further along the route.",
   "booking_stopsCountLabel": "{count} stops",
   "@booking_stopsCountLabel": {
@@ -2785,6 +2786,36 @@
     "placeholders": {
       "officeName": {
         "type": "String"
+      }
+    }
+  },
+  "routes_availabilityBookable": "Available to book",
+  "routes_availabilitySoldOut": "Fully booked",
+  "routes_availabilityNone": "No trips on sale",
+  "routes_nextDepartureDay": "Next departure {day}",
+  "@routes_nextDepartureDay": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      }
+    }
+  },
+  "routes_nextDepartureDayTime": "Next departure {day} · {time}",
+  "@routes_nextDepartureDayTime": {
+    "placeholders": {
+      "day": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "routes_seatsLeft": "{count, plural, =1{1 seat left} other{{count} seats left}}",
+  "@routes_seatsLeft": {
+    "placeholders": {
+      "count": {
+        "type": "int"
       }
     }
   }

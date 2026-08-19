@@ -118,8 +118,6 @@ class TripData {
   /// once, so a rated trip must stop asking to be rated.
   final bool isReviewed;
 
-  String get routeLine => '$pickup → $destination';
-
   /// The slice of this trip the review flow actually needs.
   ReviewableTrip get reviewable => ReviewableTrip(
     bookingId: id,
@@ -127,7 +125,8 @@ class TripData {
     reference: reference,
     driverName: driverName,
     vehicleName: vehicleName,
-    routeLine: routeLine,
+    origin: pickup,
+    destination: destination,
   );
 
   bool get hasSeatMap => seatMap.isNotEmpty;

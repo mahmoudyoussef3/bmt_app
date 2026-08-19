@@ -21,10 +21,12 @@ class HomeScreen extends StatefulWidget {
     super.key,
     required this.onOpenRoute,
     required this.onOpenNotifications,
+    required this.onSwitchTab,
   });
 
   final void Function(String route, [Object? arguments]) onOpenRoute;
   final VoidCallback onOpenNotifications;
+  final void Function(String tab) onSwitchTab;
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -78,6 +80,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
             data: data,
             onOpenRoute: widget.onOpenRoute,
             onOpenNotifications: widget.onOpenNotifications,
+            onSwitchTab: widget.onSwitchTab,
           ),
           HomeError(:final failure) => ColoredBox(
             color: ClientColors.backgroundFor(context),

@@ -86,21 +86,16 @@ class TrackingCompletedCard extends StatelessWidget {
       context,
       trip: ReviewableTrip(
         bookingId: bookingId,
-        
+
         isCompleted: trip.tripState.isFinished,
         reference: trip.tripCode ?? '',
         driverName: trip.captain.displayName ?? '',
         vehicleName: trip.vehicle.displayName ?? '',
-        routeLine: _routeLine(),
+        origin: trip.rider.boardingName ?? trip.originName ?? '',
+        destination: trip.rider.dropoffName ?? trip.destinationName ?? '',
+        routeName: trip.routeName ?? '',
       ),
     );
     onReviewed();
-  }
-
-  String _routeLine() {
-    final from = trip.rider.boardingName ?? trip.originName;
-    final to = trip.rider.dropoffName ?? trip.destinationName;
-    if (from == null || to == null) return trip.routeName ?? '';
-    return '$from → $to';
   }
 }

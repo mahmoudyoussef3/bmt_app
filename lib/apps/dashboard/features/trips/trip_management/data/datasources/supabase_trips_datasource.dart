@@ -78,7 +78,6 @@ class SupabaseTripsDatasource implements TripsDatasource {
   @override
   Future<OperationTripModel> createTrip(CreateTripInput input) async {
     try {
-      
       final stationsResponse = await _client
           .from('route_stations')
           .select()
@@ -146,7 +145,6 @@ class SupabaseTripsDatasource implements TripsDatasource {
   @override
   Future<OperationTripModel> updateTripInfo(OperationTrip trip) async {
     try {
-      
       await _client
           .from('operation_trips')
           .update({
@@ -246,7 +244,6 @@ class SupabaseTripsDatasource implements TripsDatasource {
     TripSeatState state,
   ) async {
     try {
-      
       final seatResponse = await _client
           .from('trip_seats')
           .select('seat_label')
@@ -258,7 +255,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
           .from('trip_seats')
           .update({
             'state': state.name,
-            
+
             if (state == TripSeatState.available ||
                 state == TripSeatState.blocked)
               'passenger_id': null,
@@ -310,7 +307,6 @@ class SupabaseTripsDatasource implements TripsDatasource {
     String passengerId,
   ) async {
     try {
-      
       final pResponse = await _client
           .from('trip_passengers')
           .select('passenger_name, seat_id')
@@ -351,7 +347,6 @@ class SupabaseTripsDatasource implements TripsDatasource {
     String seatLabel,
   ) async {
     try {
-      
       final pResponse = await _client
           .from('trip_passengers')
           .select('passenger_name, seat_id, status')
@@ -443,10 +438,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
             .single();
         pricingId = response['id'] as String;
       } else {
-        await _client
-            .from('trip_pricing')
-            .update(data)
-            .eq('id', pricing.id);
+        await _client.from('trip_pricing').update(data).eq('id', pricing.id);
         pricingId = pricing.id;
       }
 
@@ -573,7 +565,6 @@ class SupabaseTripsDatasource implements TripsDatasource {
         'done': true,
       });
     } catch (e) {
-      
       developer.log('Supabase logEvent error: $e', error: e);
     }
   }
@@ -605,7 +596,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
             'license_expiry_date',
             DateTime.now().toIso8601String().split('T').first,
           )
-          .order('full_name');
+          .order('full_name', ascending: true);
 
       return (response as List)
           .map((json) => _driverOption(json as Map<String, dynamic>))
@@ -699,7 +690,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
       var end = arrivalTime.isEmpty
           ? start.add(const Duration(hours: 1))
           : DateTime.parse('$date $arrivalTime');
-      
+
       if (arrivalTime.isNotEmpty && !end.isAfter(start)) {
         end = end.add(const Duration(days: 1));
       }
@@ -819,7 +810,6 @@ class SupabaseTripsDatasource implements TripsDatasource {
   }
 
   Exception _handleError(dynamic error) {
-    
     LicensingGuard.check(error);
 
     if (error is PostgrestException) {

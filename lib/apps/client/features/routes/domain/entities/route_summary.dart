@@ -1,3 +1,4 @@
+import 'route_availability.dart';
 import 'route_stop.dart';
 
 /// One route as it appears in the client's routes catalog: just enough to
@@ -14,6 +15,7 @@ class RouteSummary {
     this.officeName = '',
     this.officeLogoUrl,
     this.stops = const [],
+    this.availability = RouteAvailability.unknown,
   });
 
   final String id;
@@ -34,4 +36,11 @@ class RouteSummary {
   /// rules, so every other [RouteStop] field here sits at its default. Anything
   /// that needs a real timetable loads the route's details instead.
   final List<RouteStop> stops;
+
+  /// Whether this corridor is actually selling seats right now.
+  ///
+  /// Carried on the catalog row so the rider decides *before* opening a route:
+  /// tapping into a corridor only to find no departures on the other side is
+  /// the one dead end this list can spare them.
+  final RouteAvailability availability;
 }
