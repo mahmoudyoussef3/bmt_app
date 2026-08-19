@@ -178,18 +178,22 @@ class _RoundButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: CaptainColors.surfaceFor(context),
-      shape: const CircleBorder(),
-      elevation: 2,
-      shadowColor: Colors.black.withValues(alpha: 0.15),
-      child: InkWell(
-        onTap: onTap,
-        customBorder: const CircleBorder(),
-        child: SizedBox(
-          width: 44,
-          height: 44,
-          child: Icon(icon, color: CaptainColors.textPrimaryFor(context)),
+    return Container(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        boxShadow: CaptainDesignTokens.softShadow(context),
+      ),
+      child: Material(
+        color: CaptainColors.surfaceFor(context),
+        shape: const CircleBorder(),
+        child: InkWell(
+          onTap: onTap,
+          customBorder: const CircleBorder(),
+          child: SizedBox(
+            width: 44,
+            height: 44,
+            child: Icon(icon, color: CaptainColors.textPrimaryFor(context)),
+          ),
         ),
       ),
     );

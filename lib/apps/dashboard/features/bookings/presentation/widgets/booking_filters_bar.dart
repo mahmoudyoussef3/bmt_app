@@ -135,9 +135,11 @@ class _QueueTab extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
 
-    final accent = urgent && count > 0 ? scheme.tertiary : scheme.primary;
+    final accent = scheme.primary;
     final background = selected ? accent : scheme.surfaceContainerHighest;
     final foreground = selected ? scheme.onPrimary : scheme.onSurface;
+
+    final isUrgentAlert = urgent && count > 0 && !selected;
 
     return Semantics(
       selected: selected,
@@ -178,16 +180,22 @@ class _QueueTab extends StatelessWidget {
                     vertical: 2,
                   ),
                   decoration: BoxDecoration(
-                    color: selected
-                        ? scheme.onPrimary.withAlpha(55)
-                        : accent.withAlpha(28),
+                    color: isUrgentAlert
+                        ? scheme.error
+                        : selected
+                            ? scheme.onPrimary.withAlpha(55)
+                            : accent.withAlpha(28),
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
                     '$count',
                     textAlign: TextAlign.center,
                     style: text.labelSmall?.copyWith(
-                      color: selected ? scheme.onPrimary : accent,
+                      color: isUrgentAlert
+                          ? scheme.onError
+                          : selected
+                              ? scheme.onPrimary
+                              : accent,
                       fontWeight: FontWeight.w900,
                     ),
                   ),

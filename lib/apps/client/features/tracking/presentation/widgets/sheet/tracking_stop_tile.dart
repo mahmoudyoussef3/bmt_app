@@ -98,7 +98,7 @@ class TrackingStopTile extends StatelessWidget {
   }
 
   Color _color(BuildContext context) => switch (stop.status) {
-    StopVisitStatus.departed => ClientColors.journeySlate,
+    StopVisitStatus.departed => ClientColors.journeySlateFor(context),
     StopVisitStatus.arrived ||
     StopVisitStatus.next => ClientColors.primaryFor(context),
     StopVisitStatus.upcoming => ClientColors.borderStrongFor(context),

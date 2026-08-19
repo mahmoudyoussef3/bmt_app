@@ -46,7 +46,14 @@ import 'package:bmt_app/apps/client/features/payments/domain/repositories/paymen
 import 'package:bmt_app/apps/client/features/payments/domain/usecases/get_payment_methods_usecase.dart';
 import 'package:bmt_app/apps/client/features/seat_selection/presentation/cubit/seat_selection_cubit.dart';
 import 'package:bmt_app/apps/client/features/seat_selection/presentation/cubit/seat_selection_state.dart';
+import 'package:bmt_app/apps/client/features/tracking/presentation/bloc/live_tracking_bloc.dart';
+import 'package:bmt_app/apps/client/features/tracking/presentation/bloc/live_tracking_event.dart';
+import 'package:bmt_app/apps/client/features/tracking/presentation/bloc/live_tracking_state.dart';
+import 'package:bmt_app/apps/client/features/tracking/presentation/cubit/tracking_cubit.dart';
+import 'package:bmt_app/apps/client/features/tracking/presentation/cubit/tracking_state.dart';
+import 'package:bmt_app/apps/client/features/tracking/presentation/screens/tracking_screen.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/cubit/trips_cubit.dart';
+import 'package:bmt_app/core/tracking/link_health.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/cubit/trips_state.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/screens/my_trips_screen.dart';
 import 'package:bmt_app/apps/client/features/trips/presentation/screens/trip_details_screen.dart';
@@ -172,6 +179,28 @@ class _FakeWallet extends Cubit<ClientWalletState>
   dynamic noSuchMethod(Invocation i) => null;
 }
 
+class _FakeTracking extends Cubit<TrackingState> implements TrackingCubit {
+  _FakeTracking() : super(TrackingLoaded(data: demo.trackingTrip));
+  @override
+  dynamic noSuchMethod(Invocation i) => null;
+}
+
+class _FakeLiveTracking extends Bloc<LiveTrackingEvent, LiveTrackingState>
+    implements LiveTrackingBloc {
+  _FakeLiveTracking()
+    : super(
+        LiveTrackingActive(
+          fix: demo.trackingTrip.vehicleFix!,
+          receivedAt: demo.now,
+          freshness: TrackingFreshness.live,
+          link: TrackingLink.connected,
+          progress: demo.trackingProgress,
+        ),
+      );
+  @override
+  dynamic noSuchMethod(Invocation i) => null;
+}
+
 class _FakeLoyalty extends Cubit<LoyaltyState> implements LoyaltyCubit {
   _FakeLoyalty() : super(LoyaltyLoaded(demo.loyalty));
   @override
@@ -211,6 +240,8 @@ void registerClientShowcaseFakes() {
     ..registerFactory<PackagesCubit>(_FakePackages.new)
     ..registerFactory<MySubscriptionCubit>(_FakeMySubscription.new)
     ..registerFactory<ClientWalletCubit>(_FakeWallet.new)
+    ..registerFactory<TrackingCubit>(_FakeTracking.new)
+    ..registerFactory<LiveTrackingBloc>(_FakeLiveTracking.new)
     ..registerFactory<LoyaltyCubit>(_FakeLoyalty.new)
     ..registerFactory<BookingWizardConfirmCubit>(_FakeConfirm.new)
     ..registerLazySingleton<GetPaymentMethodsUseCase>(
@@ -309,6 +340,15 @@ final Map<String, Widget Function()> clientScreens = {
   'client-loyalty': () => BlocProvider<LoyaltyCubit>(
     create: (_) => clientGetIt<LoyaltyCubit>(),
     child: const LoyaltyScreen(),
+  ),
+  'client-tracking': () => MultiBlocProvider(
+    providers: [
+      BlocProvider<TrackingCubit>(create: (_) => clientGetIt<TrackingCubit>()),
+      BlocProvider<LiveTrackingBloc>(
+        create: (_) => clientGetIt<LiveTrackingBloc>(),
+      ),
+    ],
+    child: const TrackingScreen(bookingId: 'demo-booking-1'),
   ),
 };
 

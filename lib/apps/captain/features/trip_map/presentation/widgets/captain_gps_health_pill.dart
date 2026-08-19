@@ -67,6 +67,11 @@ class CaptainGpsHealthPill extends StatelessWidget {
     );
   }
 
+  // `success`/`warning` both alias to `CaptainColors.primary` (see
+  // captain_colors.dart) — using `warning` here would leave "live" and
+  // "acquiring"/"lost" reading as the exact same blue. `rating` (the app's
+  // established caution amber, already used this way elsewhere in this
+  // feature) is what actually separates "still fine" from "needs a glance".
   (Color, IconData, String) get _presentation => switch (health) {
     GpsHealth.live => (
       CaptainColors.success,
@@ -74,12 +79,12 @@ class CaptainGpsHealthPill extends StatelessWidget {
       'التتبع المباشر نشط',
     ),
     GpsHealth.acquiring => (
-      CaptainColors.warning,
+      CaptainColors.rating,
       Icons.gps_not_fixed_rounded,
       'جارٍ تحديد الموقع…',
     ),
     GpsHealth.lost => (
-      CaptainColors.warning,
+      CaptainColors.rating,
       Icons.gps_off_rounded,
       'انقطع الاتصال بالموقع',
     ),

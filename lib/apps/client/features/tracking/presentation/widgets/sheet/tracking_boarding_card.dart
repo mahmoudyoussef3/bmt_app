@@ -54,7 +54,7 @@ class TrackingBoardingCard extends StatelessWidget {
     if (trip.rider.hasBoarded) {
       return _Panel(
         icon: Icons.check_circle_rounded,
-        color: ClientColors.journeyCyan,
+        color: ClientColors.journeyCyanFor(context),
         title: l10n.tracking_boardedTitle,
         body: l10n.tracking_boardedBody,
       );
@@ -67,7 +67,7 @@ class TrackingBoardingCard extends StatelessWidget {
     if (!trip.isVehicleAtRiderStation) {
       return _Panel(
         icon: Icons.schedule_rounded,
-        color: ClientColors.journeyAmber,
+        color: ClientColors.journeyAmberFor(context),
         title: l10n.tracking_boardingWaitingTitle,
         body: l10n.tracking_boardingWaitingBody(stationName),
       );
@@ -189,7 +189,7 @@ class _ErrorLine extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: ClientColors.journeyAmber.withAlpha(28),
+          color: ClientColors.journeyAmberFor(context).withAlpha(28),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Text(

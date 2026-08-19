@@ -27,9 +27,9 @@ class AlertTile extends StatelessWidget {
     final iconBg = status.tint;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+      padding: const EdgeInsets.only(bottom: 12),
       child: Material(
-        color: alert.isRead ? cs.surface : cs.primaryContainer.withAlpha(35),
+        color: alert.isRead ? cs.surface : cs.primaryContainer.withAlpha(20),
         borderRadius: BorderRadius.circular(AppTokens.radius),
         child: InkWell(
           onTap: onTap,
@@ -41,46 +41,50 @@ class AlertTile extends StatelessWidget {
               border: Border.all(
                 color: alert.isRead
                     ? cs.outlineVariant.withAlpha(60)
-                    : cs.primary.withAlpha(70),
+                    : cs.primary.withAlpha(50),
               ),
             ),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: iconBg,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(icon, color: iconColor, size: 22),
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: iconBg,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(icon, color: iconColor, size: 22),
+                    ),
+                    if (!alert.isRead)
+                      Positioned(
+                        top: -2,
+                        right: -2,
+                        child: Container(
+                          width: 12,
+                          height: 12,
+                          decoration: BoxDecoration(
+                            color: cs.primary,
+                            shape: BoxShape.circle,
+                            border: Border.all(color: cs.surface, width: 2),
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              alert.title,
-                              style: tt.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                          ),
-                          if (!alert.isRead)
-                            Container(
-                              width: 9,
-                              height: 9,
-                              decoration: BoxDecoration(
-                                color: cs.primary,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                        ],
+                      Text(
+                        alert.title,
+                        style: tt.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w800,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -100,12 +104,18 @@ class AlertTile extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (!alert.isRead)
+                if (!alert.isRead) ...[
+                  const SizedBox(width: 12),
                   IconButton(
                     tooltip: 'تعليم كمقروء',
                     onPressed: onMarkRead,
-                    icon: const Icon(Icons.done_rounded, size: 20),
+                    style: IconButton.styleFrom(
+                      backgroundColor: cs.surface,
+                      side: BorderSide(color: cs.outlineVariant.withAlpha(50)),
+                    ),
+                    icon: Icon(Icons.check_rounded, size: 20, color: cs.primary),
                   ),
+                ],
               ],
             ),
           ),

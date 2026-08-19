@@ -62,7 +62,7 @@ class TrackingBookingCard extends StatelessWidget {
               icon: Icons.place_rounded,
               label: l10n.tracking_alightAt,
               value: dropoff,
-              color: ClientColors.journeyRed,
+              color: ClientColors.journeyRedFor(context),
             ),
           if (rider.status != null) ...[
             const SizedBox(height: 12),
@@ -71,8 +71,8 @@ class TrackingBookingCard extends StatelessWidget {
                   ? l10n.tracking_boarded
                   : l10n.tracking_notBoarded,
               color: rider.hasBoarded
-                  ? ClientColors.journeyCyan
-                  : ClientColors.journeyAmber,
+                  ? ClientColors.journeyCyanFor(context)
+                  : ClientColors.journeyAmberFor(context),
               icon: rider.hasBoarded
                   ? Icons.check_circle_rounded
                   : Icons.schedule_rounded,

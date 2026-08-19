@@ -50,17 +50,23 @@ class TrackingSignalPill extends StatelessWidget {
         hasFix && !isStale && activeLink != null && !activeLink.isConnected;
 
     final (color, text) = switch ((hasFix, isStale, isReconnecting, isOffRoute)) {
-      (false, _, _, _) => (ClientColors.journeySlate, l10n.tracking_signalNone),
-      (_, true, _, _) => (ClientColors.journeyAmber, l10n.tracking_signalStale),
+      (false, _, _, _) => (
+        ClientColors.journeySlateFor(context),
+        l10n.tracking_signalNone,
+      ),
+      (_, true, _, _) => (
+        ClientColors.journeyAmberFor(context),
+        l10n.tracking_signalStale,
+      ),
       (_, _, true, _) => (
-        ClientColors.journeyAmber,
+        ClientColors.journeyAmberFor(context),
         l10n.tracking_signalReconnecting,
       ),
       (_, _, _, true) => (
-        ClientColors.journeyAmber,
+        ClientColors.journeyAmberFor(context),
         l10n.tracking_signalOffRoute,
       ),
-      _ => (ClientColors.journeyCyan, l10n.tracking_signalLive),
+      _ => (ClientColors.journeyCyanFor(context), l10n.tracking_signalLive),
     };
 
     return Container(

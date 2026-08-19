@@ -35,7 +35,7 @@ List<Widget> buildTrackingMapLayers({
           ...buildRoutePolylines(
             context,
             traveled,
-            color: ClientColors.journeySlate,
+            color: ClientColors.journeySlateFor(context),
             glow: false,
             style: RouteLineStyle.trail,
           ),
@@ -58,7 +58,7 @@ List<Widget> buildTrackingMapLayers({
       animation: pulse,
       builder: (context, _) => LiveVehicleLayer(
         controller: track,
-        color: ClientColors.primary,
+        color: ClientColors.primaryFor(context),
         pulseValue: pulse.value,
       ),
     ),

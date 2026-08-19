@@ -10,6 +10,10 @@ import 'tracking_stop_marker_parts.dart';
 /// only in size, fill and ring — so the rider reads the route in a single
 /// sweep: slate dots behind the bus are done, the ringed pulsing dot is where
 /// it is headed next, the red flag is where the trip ends.
+///
+/// Only "next" pulses. "Arrived" used to pulse as well, but the vehicle marker
+/// sitting on the same spot already carries its own breathing halo — two
+/// independent, unsynced rings on top of each other read as noise, not signal.
 class TrackingStopMarker extends StatelessWidget {
   const TrackingStopMarker({
     super.key,
@@ -41,7 +45,7 @@ class TrackingStopMarker extends StatelessWidget {
           child: TrackingStopLabel(
             text: label,
             color: isDestination
-                ? ClientColors.journeyRed
+                ? ClientColors.journeyRedFor(context)
                 : MapStyle.routeLine(context),
           ),
         ),
@@ -52,29 +56,26 @@ class TrackingStopMarker extends StatelessWidget {
   Widget _dot(BuildContext context) {
     final route = MapStyle.routeLine(context);
     if (isDestination && status != StopVisitStatus.departed) {
-      return const TrackingStopDot(
+      return TrackingStopDot(
         diameter: 24,
-        fill: ClientColors.journeyRed,
+        fill: ClientColors.journeyRedFor(context),
         icon: Icons.flag_rounded,
       );
     }
     return switch (status) {
-      
-      StopVisitStatus.departed => const TrackingStopDot(
+
+      StopVisitStatus.departed => TrackingStopDot(
         diameter: 12,
-        fill: ClientColors.journeySlate,
+        fill: ClientColors.journeySlateFor(context),
       ),
       
-      StopVisitStatus.arrived => TrackingStopPulse(
-        color: route,
+      StopVisitStatus.arrived => TrackingStopDot(
         diameter: 24,
-        child: TrackingStopDot(
-          diameter: 24,
-          fill: route,
-          icon: Icons.directions_bus_rounded,
-        ),
+        fill: route,
+        icon: Icons.directions_bus_rounded,
       ),
-      
+
+
       StopVisitStatus.next => TrackingStopPulse(
         color: route,
         diameter: 18,

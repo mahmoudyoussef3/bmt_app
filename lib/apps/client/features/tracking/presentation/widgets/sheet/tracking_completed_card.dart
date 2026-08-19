@@ -40,9 +40,9 @@ class TrackingCompletedCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.check_circle_rounded,
-                color: ClientColors.journeyCyan,
+                color: ClientColors.journeyCyanFor(context),
               ),
               const SizedBox(width: 10),
               Expanded(

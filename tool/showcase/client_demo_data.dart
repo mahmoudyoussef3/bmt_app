@@ -15,11 +15,16 @@ import 'package:bmt_app/apps/client/features/packages/domain/entities/my_subscri
 import 'package:bmt_app/apps/client/features/packages/domain/entities/package_plan.dart';
 import 'package:bmt_app/apps/client/features/payments/domain/entities/payment_models.dart';
 import 'package:bmt_app/apps/client/features/seat_selection/domain/entities/seat_option.dart';
+import 'package:bmt_app/apps/client/features/tracking/domain/entities/tracking_trip.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip_seat.dart';
 import 'package:bmt_app/apps/client/features/wallet/domain/entities/client_wallet.dart';
 import 'package:bmt_app/core/pricing/package_tier_pricing.dart';
 import 'package:bmt_app/core/pricing/trip_stop_pair_price.dart';
+import 'package:bmt_app/core/tracking/progress/route_progress_engine.dart';
+import 'package:bmt_app/core/tracking/progress/route_progress_snapshot.dart';
+import 'package:bmt_app/core/tracking/progress/route_stop.dart';
+import 'package:bmt_app/core/tracking/progress/stop_progress.dart';
 
 final DateTime now = DateTime.now();
 final DateTime _midnight = DateTime(now.year, now.month, now.day);
@@ -904,6 +909,88 @@ final RouteOptionData deltaRoute = RouteOptionData(
 );
 
 final List<RouteOptionData> routeResults = [bookingRoute, deltaRoute];
+
+// ── Live tracking ───────────────────────────────────────────────────────────
+//
+// Same Cairo → Alexandria corridor as the booking wizard's demo route, so the
+// showcase reads as one consistent world rather than unrelated fixtures. The
+// route-progress snapshot is produced by the real `RouteProgressEngine`
+// (fed one fix approaching the second stop) instead of hand-built, so the
+// per-stop states, ETAs and along-route fraction are guaranteed internally
+// consistent — the same guarantee the production pipeline gets.
+
+final List<RouteStop> trackingStops = [
+  for (final point in _cairoAlexStops)
+    RouteStop(
+      id: point.id,
+      name: point.name,
+      latitude: point.latitude!,
+      longitude: point.longitude!,
+      order: point.order,
+      plannedArrival: now.add(Duration(minutes: 20 * (point.order - 1))),
+      plannedDeparture: now.add(
+        Duration(minutes: 20 * (point.order - 1) + 3),
+      ),
+    ),
+];
+
+RouteProgressSnapshot _trackingProgress() {
+  final engine = RouteProgressEngine(stops: trackingStops)
+    ..updatePhase(TripProgressPhase.enRoute)
+    ..seedVisited(1)
+    ..addFix(
+      latitude: trackingStops[1].latitude,
+      longitude: trackingStops[1].longitude,
+      speedKmh: 62,
+      now: now,
+    );
+  return engine.snapshot(now);
+}
+
+final RouteProgressSnapshot trackingProgress = _trackingProgress();
+
+final TrackingTripData trackingTrip = TrackingTripData(
+  stops: trackingStops,
+  tripState: TrackingTripState.inProgress,
+  tripId: 'demo-trip-1',
+  bookingId: 'demo-booking-1',
+  tripCode: 'TRP-2201',
+  routeName: 'القاهرة → الإسكندرية',
+  departureAt: now.subtract(const Duration(minutes: 25)),
+  arrivalAt: now.add(const Duration(minutes: 55)),
+  arrivalEventCount: 1,
+  captain: const TrackingCaptain(
+    name: 'أحمد فتحي',
+    phone: '+201001234567',
+    rating: 4.8,
+    ratingCount: 212,
+  ),
+  vehicle: const TrackingVehicle(
+    brand: 'Toyota',
+    model: 'Hiace',
+    type: 'ميكروباص',
+    plate: 'ق ط م 3421',
+    rating: 4.6,
+    ratingCount: 340,
+  ),
+  rider: TrackingRider(
+    seatLabel: 'A3',
+    boardingName: trackingStops[0].name,
+    dropoffName: trackingStops[2].name,
+    boardingPointId: trackingStops[0].id,
+    boardingIndex: 0,
+    dropoffIndex: 2,
+    bookingStatus: 'confirmed',
+  ),
+  vehicleFix: TrackingPoint(
+    latitude: trackingStops[1].latitude,
+    longitude: trackingStops[1].longitude,
+    recordedAt: now,
+    heading: 340,
+    speed: 62 / 3.6,
+    accuracy: 8,
+  ),
+);
 
 const BookingSearchQuery searchQuery = BookingSearchQuery(
   pickup: 'القاهرة',

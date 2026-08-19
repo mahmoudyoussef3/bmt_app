@@ -200,10 +200,10 @@ class _MarkerLabel extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       constraints: const BoxConstraints(maxWidth: 116),
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
       decoration: BoxDecoration(
         color: MapStyle.surface(context).withAlpha(235),
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(999),
         border: Border.all(color: color.withAlpha(70)),
         boxShadow: MapStyle.shadow(context),
       ),

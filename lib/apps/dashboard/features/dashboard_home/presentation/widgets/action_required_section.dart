@@ -118,31 +118,35 @@ class _QueueRow extends StatelessWidget {
     final radius = BorderRadius.circular(AppTokens.radiusSmall);
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.xSmall),
+      padding: const EdgeInsets.only(bottom: 12),
       child: Material(
-        color: Colors.transparent,
-        borderRadius: radius,
+        color: tone.withAlpha(15),
+        borderRadius: BorderRadius.circular(AppTokens.radius),
         child: InkWell(
           onTap: () => onOpenModule(spec.route),
-          borderRadius: radius,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.small,
-              vertical: AppSpacing.small,
+          borderRadius: BorderRadius.circular(AppTokens.radius),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(AppTokens.radius),
+              border: Border.all(
+                color: tone.withAlpha(50),
+              ),
             ),
             child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Container(
-                  width: 32,
-                  height: 32,
+                  width: 44,
+                  height: 44,
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
-                    color: tone.withAlpha(28),
-                    borderRadius: radius,
+                    color: tone.withAlpha(30),
+                    shape: BoxShape.circle,
                   ),
-                  child: Icon(spec.icon, size: 18, color: tone),
+                  child: Icon(spec.icon, size: 22, color: tone),
                 ),
-                const SizedBox(width: AppSpacing.small),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -151,43 +155,45 @@ class _QueueRow extends StatelessWidget {
                         spec.title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: text.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
+                        style: text.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
+                      const SizedBox(height: 4),
                       Text(
                         spec.action,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: text.labelSmall?.copyWith(
+                        style: text.bodySmall?.copyWith(
                           color: scheme.onSurfaceVariant,
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(width: AppSpacing.small),
+                const SizedBox(width: 12),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
+                    horizontal: 12,
+                    vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: tone.withAlpha(28),
+                    color: tone.withAlpha(30),
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
                     '${item.count}',
-                    style: text.labelMedium?.copyWith(
+                    style: text.titleMedium?.copyWith(
                       color: tone,
-                      fontWeight: FontWeight.w800,
+                      fontWeight: FontWeight.w900,
                     ),
                   ),
                 ),
+                const SizedBox(width: 12),
                 Icon(
                   DashboardIcons.openModule,
-                  size: 18,
-                  color: scheme.onSurfaceVariant,
+                  size: 20,
+                  color: scheme.onSurfaceVariant.withAlpha(180),
                 ),
               ],
             ),
