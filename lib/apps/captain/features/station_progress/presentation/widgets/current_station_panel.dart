@@ -128,9 +128,7 @@ class _Header extends StatelessWidget {
       child: Row(
         children: [
           Icon(
-            atStation
-                ? Icons.pin_drop_rounded
-                : Icons.alt_route_rounded,
+            atStation ? Icons.pin_drop_rounded : Icons.alt_route_rounded,
             size: 20,
             color: CaptainColors.primary,
           ),
@@ -202,14 +200,17 @@ class _GateBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (color, icon) = switch (gate.state) {
-      StationGateState.ready => (CaptainColors.success, Icons.check_circle_rounded),
+      StationGateState.ready when gate.aheadOfSchedule => (
+        CaptainColors.success,
+        Icons.schedule_rounded,
+      ),
+      StationGateState.ready => (
+        CaptainColors.success,
+        Icons.check_circle_rounded,
+      ),
       StationGateState.waitingForPassengers => (
         CaptainColors.rating,
         Icons.people_alt_rounded,
-      ),
-      StationGateState.waitingForDepartureTime => (
-        CaptainColors.rating,
-        Icons.schedule_rounded,
       ),
       StationGateState.notAtStation => (
         CaptainColors.offline,

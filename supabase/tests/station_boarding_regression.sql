@@ -15,8 +15,9 @@
 -- Every row of the output should read OK or "blocked". Any row reading BROKEN or
 -- "STILL POSSIBLE" is a regression.
 --
--- Covers: 20260811090000 (station boarding authority), and the parts of
--- 20260728120000 (captain authority) and 20260729090000 (tracking authority) it changes.
+-- Covers: 20260811090000 (station boarding authority) as amended by 20260819120000
+-- (departure gated on boarding alone), and the parts of 20260728120000 (captain
+-- authority) and 20260729090000 (tracking authority) they change.
 -- ═══════════════════════════════════════════════════════════════════════════════════
 
 begin;
@@ -328,48 +329,21 @@ begin
        from public.trip_station_progress where trip_id = v_trip and sequence = 1));
 end $$;
 
--- ── 6. Condition B: the departure clock ─────────────────────────────────────────────
+-- ── 6. The clock is NOT a gate (20260819120000) ─────────────────────────────────────
+-- The published departure time and the configured dwell are shown to both apps and
+-- enforced by neither: nobody can join this station's manifest any more, so a stop
+-- whose riders are all accounted for has nobody left to wait for. Both probes here
+-- invert what 20260811090000 asserted — an early departure must now SUCCEED.
 reset role;
 
 do $$
 declare v_trip uuid := (select trip_id from fx);
 begin
   if v_trip is null then return; end if;
-  -- Arrived just now, five minutes of configured dwell, published departure in the past
-  -- so the dwell is the binding clock.
+  -- Arrived just now, five minutes of configured dwell still unspent, and the published
+  -- departure half an hour out: under the old rule both clocks blocked this.
   update public.trip_station_progress
-     set actual_arrival_at   = now(),
-         min_dwell_seconds   = 300,
-         expected_departure_at = now() - interval '1 hour'
-   where trip_id = v_trip and sequence = 1;
-end $$;
-
-set local role authenticated;
-set local request.jwt.claims = '{"sub":"dcad0f26-7815-4646-b69d-b94b123ab4ef","role":"authenticated"}';
-
-do $$
-declare v_trip uuid := (select trip_id from fx);
-begin
-  if v_trip is null then return; end if;
-  begin
-    perform public.captain_depart_station(v_trip);
-    insert into probe values ('06. depart before the dwell elapses', 'STILL POSSIBLE');
-  exception when others then
-    insert into probe values ('06. depart before the dwell elapses',
-      case when sqlerrm like 'departure_time_not_reached%' then 'blocked — ' || sqlerrm
-           else 'BROKEN — ' || sqlerrm end);
-  end;
-end $$;
-
-reset role;
-do $$
-declare v_trip uuid := (select trip_id from fx);
-begin
-  if v_trip is null then return; end if;
-  -- Now hold the dwell but put the *published* departure in the future: the second
-  -- clock must bind on its own, or an early bus leaves before its riders arrive.
-  update public.trip_station_progress
-     set actual_arrival_at     = now() - interval '20 minutes',
+     set actual_arrival_at     = now(),
          min_dwell_seconds     = 300,
          expected_departure_at = now() + interval '30 minutes'
    where trip_id = v_trip and sequence = 1;
@@ -379,19 +353,46 @@ set local role authenticated;
 set local request.jwt.claims = '{"sub":"dcad0f26-7815-4646-b69d-b94b123ab4ef","role":"authenticated"}';
 
 do $$
-declare v_trip uuid := (select trip_id from fx);
+declare v_trip uuid := (select trip_id from fx); v_res jsonb;
 begin
   if v_trip is null then return; end if;
   begin
-    perform public.captain_depart_station(v_trip);
-    insert into probe values ('06b. depart before the published time', 'STILL POSSIBLE');
+    v_res := public.captain_depart_station(v_trip);
+    insert into probe values ('06. boarding resolved departs before dwell and schedule',
+      case when v_res->>'success' = 'true' then 'OK — left early'
+           else 'BROKEN — ' || v_res::text end);
   exception when others then
-    insert into probe values ('06b. depart before the published time',
-      case when sqlerrm like 'departure_time_not_reached%' then 'blocked' else 'BROKEN — ' || sqlerrm end);
+    insert into probe values ('06. boarding resolved departs before dwell and schedule',
+      'BROKEN — still blocked: ' || sqlerrm);
   end;
 end $$;
 
--- ── 7. Both conditions satisfied: the trip advances, exactly once ───────────────────
+-- Rewind: station 1 back to standing, station 2 back to upcoming, and the trip back to
+-- `boarding` — so section 7 still proves that *leaving the first station* is what puts
+-- a trip in progress, rather than reading a flag section 6 already set.
+reset role;
+do $$
+declare v_trip uuid := (select trip_id from fx);
+begin
+  if v_trip is null then return; end if;
+
+  update public.trip_station_progress
+     set actual_departure_at = null,
+         status              = 'waiting_for_passengers',
+         departed_by         = null
+   where trip_id = v_trip and sequence = 1;
+  update public.trip_station_progress
+     set status = 'upcoming'
+   where trip_id = v_trip and sequence = 2;
+
+  perform set_config('bmt.trip_transition', v_trip::text, true);
+  update public.operation_trips
+     set status = 'boarding', actual_start_time = null
+   where id = v_trip;
+  perform set_config('bmt.trip_transition', '', true);
+end $$;
+
+-- ── 7. The gate satisfied: the trip advances, exactly once ──────────────────────────
 reset role;
 do $$
 declare v_trip uuid := (select trip_id from fx);
@@ -399,6 +400,7 @@ begin
   if v_trip is null then return; end if;
   update public.trip_station_progress
      set actual_arrival_at     = now() - interval '20 minutes',
+         min_dwell_seconds     = 300,
          expected_departure_at = now() - interval '10 minutes'
    where trip_id = v_trip and sequence = 1;
 end $$;
@@ -412,7 +414,7 @@ begin
   if v_trip is null then return; end if;
 
   v_res := public.captain_depart_station(v_trip);
-  insert into probe values ('07. depart with both conditions met',
+  insert into probe values ('07. depart with the boarding gate satisfied',
     case when v_res->>'success' = 'true' and (v_res->>'sequence')::int = 1
          then 'OK' else 'BROKEN — ' || v_res::text end);
 

@@ -10,7 +10,6 @@ class CaptainRoutes {
   static const tripExecution = '/captain/trip';
   static const tripMap = '/captain/trip/map';
   static const passengerManifest = '/captain/trip/passengers';
-  static const locationUpdate = '/captain/trip/location';
   static const statusUpdate = '/captain/trip/status';
   static const reportIncident = '/captain/trip/incident';
 

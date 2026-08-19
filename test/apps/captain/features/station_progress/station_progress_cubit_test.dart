@@ -48,18 +48,20 @@ void main() {
     expect(repository.watchCount, 1);
   });
 
-  test('a stream error leaves the board on screen rather than blanking it',
-      () async {
-    cubit.watch('trip-1');
-    repository.emit(StationBoard([_station(1, 'محطة بنها')]));
-    await _settle();
+  test(
+    'a stream error leaves the board on screen rather than blanking it',
+    () async {
+      cubit.watch('trip-1');
+      repository.emit(StationBoard([_station(1, 'محطة بنها')]));
+      await _settle();
 
-    repository.emitError(Exception('socket dropped'));
-    await _settle();
+      repository.emitError(Exception('socket dropped'));
+      await _settle();
 
-    expect(cubit.state.board.stations, hasLength(1));
-    expect(cubit.state.isLoading, isFalse);
-  });
+      expect(cubit.state.board.stations, hasLength(1));
+      expect(cubit.state.isLoading, isFalse);
+    },
+  );
 
   test('arriving calls the RPC path exactly once', () async {
     cubit.watch('trip-1');
@@ -72,20 +74,22 @@ void main() {
     expect(cubit.state.failure, isNull);
   });
 
-  test('a refused departure surfaces as the typed refusal, not a raw string',
-      () async {
-    cubit.watch('trip-1');
-    await _settle();
-    repository.departureFailure = 'passengers_not_boarded:2';
+  test(
+    'a refused departure surfaces as the typed refusal, not a raw string',
+    () async {
+      cubit.watch('trip-1');
+      await _settle();
+      repository.departureFailure = 'passengers_not_boarded:2';
 
-    await cubit.departCurrentStation();
+      await cubit.departCurrentStation();
 
-    final failure = cubit.state.failure;
-    expect(failure, isNotNull);
-    expect(failure!.failure, StationActionFailure.passengersNotBoarded);
-    expect(failure.pendingCount, 2);
-    expect(cubit.state.isSubmitting, isFalse);
-  });
+      final failure = cubit.state.failure;
+      expect(failure, isNotNull);
+      expect(failure!.failure, StationActionFailure.passengersNotBoarded);
+      expect(failure.pendingCount, 2);
+      expect(cubit.state.isSubmitting, isFalse);
+    },
+  );
 
   test('a second tap while a departure is in flight is dropped — a double tap '
       'must never queue up a departure for the next station too', () async {
@@ -110,7 +114,7 @@ void main() {
     cubit.watch('trip-1');
     await _settle();
 
-    repository.departureFailure = 'departure_time_not_reached:08:45';
+    repository.departureFailure = 'passengers_not_boarded:2';
     await cubit.departCurrentStation();
     expect(cubit.state.failure, isNotNull);
 
@@ -141,31 +145,32 @@ void main() {
       note: 'اتصل وقال إنه لن يحضر',
     );
 
-    expect(repository.noShows, [
-      ('pax-1', 'other', 'اتصل وقال إنه لن يحضر'),
-    ]);
+    expect(repository.noShows, [('pax-1', 'other', 'اتصل وقال إنه لن يحضر')]);
   });
 
-  test('the pending list for a station is looked up by route point id', () async {
-    cubit.watch('trip-1');
-    await _settle();
-    repository.passengers = [
-      const StationPassenger(
-        id: 'pax-1',
-        name: 'راكب',
-        seatLabel: 'A1',
-        phone: '0100',
-        status: StationPassengerStatus.pending,
-      ),
-    ];
+  test(
+    'the pending list for a station is looked up by route point id',
+    () async {
+      cubit.watch('trip-1');
+      await _settle();
+      repository.passengers = [
+        const StationPassenger(
+          id: 'pax-1',
+          name: 'راكب',
+          seatLabel: 'A1',
+          phone: '0100',
+          status: StationPassengerStatus.pending,
+        ),
+      ];
 
-    final result = await cubit.passengersAt(
-      _station(1, 'محطة بنها', routePointId: 'rp-1'),
-    );
+      final result = await cubit.passengersAt(
+        _station(1, 'محطة بنها', routePointId: 'rp-1'),
+      );
 
-    expect(result, hasLength(1));
-    expect(repository.passengerLookup, ('trip-1', 'rp-1', 'محطة بنها'));
-  });
+      expect(result, hasLength(1));
+      expect(repository.passengerLookup, ('trip-1', 'rp-1', 'محطة بنها'));
+    },
+  );
 
   test('a failed passenger lookup degrades to an empty list rather than '
       'taking the sheet down', () async {

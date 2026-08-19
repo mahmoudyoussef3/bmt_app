@@ -6,7 +6,8 @@ import 'package:bmt_app/core/tracking/progress/stop_progress.dart';
 /// The departure gate and the station lifecycle, tested as the pure functions
 /// they are. Every case here has a mirror in `captain_depart_station`; this side
 /// decides whether the button is live, that side decides whether the vehicle
-/// moves, and they have to agree.
+/// moves, and they have to agree. Since 20260819120000 the gate is one
+/// condition — the passengers — and the published time is a label, not a lock.
 void main() {
   final now = DateTime(2026, 8, 11, 8, 40);
 
@@ -30,21 +31,26 @@ void main() {
       expect(station.hasDeparted, isTrue);
     });
 
-    test('statuses map from the database vocabulary, unknown falls to upcoming',
-        () {
-      expect(tripStationStatusFrom('arriving'), TripStationStatus.arriving);
-      expect(
-        tripStationStatusFrom('waiting_for_passengers'),
-        TripStationStatus.waitingForPassengers,
-      );
-      expect(tripStationStatusFrom('departed'), TripStationStatus.departed);
-      expect(tripStationStatusFrom(null), TripStationStatus.upcoming);
-      expect(tripStationStatusFrom('something_new'), TripStationStatus.upcoming);
-    });
+    test(
+      'statuses map from the database vocabulary, unknown falls to upcoming',
+      () {
+        expect(tripStationStatusFrom('arriving'), TripStationStatus.arriving);
+        expect(
+          tripStationStatusFrom('waiting_for_passengers'),
+          TripStationStatus.waitingForPassengers,
+        );
+        expect(tripStationStatusFrom('departed'), TripStationStatus.departed);
+        expect(tripStationStatusFrom(null), TripStationStatus.upcoming);
+        expect(
+          tripStationStatusFrom('something_new'),
+          TripStationStatus.upcoming,
+        );
+      },
+    );
   });
 
-  group('earliest departure — the two clocks', () {
-    test('a late arrival still owes the configured dwell', () {
+  group('published departure — the two clocks', () {
+    test('a late arrival pushes it out by the configured dwell', () {
       // Due out at 08:30, actually arrived 08:39 with a 5-minute dwell: the
       // published time has passed, so the dwell binds.
       final station = _station(
@@ -56,9 +62,9 @@ void main() {
       expect(station.earliestDeparture, DateTime(2026, 8, 11, 8, 44));
     });
 
-    test('an early arrival still waits for the published time', () {
-      // Arrived 08:10 with a 5-minute dwell but not due out until 08:30 — the
-      // riders were told 08:30 and are not there yet.
+    test('an early arrival keeps the published time', () {
+      // Arrived 08:10 with a 5-minute dwell but not due out until 08:30 — 08:30
+      // is the minute the riders here were given.
       final station = _station(
         actualArrival: DateTime(2026, 8, 11, 8, 10),
         expectedDeparture: DateTime(2026, 8, 11, 8, 30),
@@ -68,7 +74,7 @@ void main() {
       expect(station.earliestDeparture, DateTime(2026, 8, 11, 8, 30));
     });
 
-    test('an untimed stop is gated by the dwell alone', () {
+    test('an untimed stop falls back to the dwell alone', () {
       final station = _station(
         actualArrival: DateTime(2026, 8, 11, 8, 39),
         minDwell: _min(3),
@@ -77,7 +83,7 @@ void main() {
       expect(station.earliestDeparture, DateTime(2026, 8, 11, 8, 42));
     });
 
-    test('a stop with no dwell and no plan is not time-gated at all', () {
+    test('a stop with no dwell and no plan has no published minute', () {
       final station = _station(actualArrival: DateTime(2026, 8, 11, 8, 39));
       expect(station.earliestDeparture, DateTime(2026, 8, 11, 8, 39));
     });
@@ -85,7 +91,10 @@ void main() {
 
   group('departure gate', () {
     test('between stations there is nothing to leave', () {
-      final board = StationBoard([_station(sequence: 1), _station(sequence: 2)]);
+      final board = StationBoard([
+        _station(sequence: 1),
+        _station(sequence: 2),
+      ]);
 
       expect(board.gateAt(now).state, StationGateState.notAtStation);
       expect(board.gateAt(now).canDepart, isFalse);
@@ -108,7 +117,7 @@ void main() {
       expect(gate.canDepart, isFalse);
     });
 
-    test('everyone aboard but not yet due out waits on the clock', () {
+    test('everyone aboard may leave early, and is told it is early', () {
       final board = StationBoard([
         _station(
           actualArrival: now.subtract(_min(1)),
@@ -119,13 +128,22 @@ void main() {
       ]);
 
       final gate = board.gateAt(now);
-      expect(gate.state, StationGateState.waitingForDepartureTime);
+      expect(gate.state, StationGateState.ready);
+      expect(gate.canDepart, isTrue, reason: 'the clock holds nobody');
+      expect(gate.aheadOfSchedule, isTrue);
       expect(gate.earliestDeparture, now.add(_min(5)));
       expect(gate.countdown(now), _min(5));
-      expect(gate.canDepart, isFalse);
     });
 
-    test('both conditions met is the only way the gate opens', () {
+    test('a station nobody is due at is left immediately', () {
+      final board = StationBoard([
+        _station(actualArrival: now, expectedDeparture: now.add(_min(10))),
+      ]);
+
+      expect(board.gateAt(now).canDepart, isTrue);
+    });
+
+    test('boarding resolved after the published time is not flagged early', () {
       final board = StationBoard([
         _station(
           actualArrival: now.subtract(_min(20)),
@@ -138,6 +156,7 @@ void main() {
       final gate = board.gateAt(now);
       expect(gate.state, StationGateState.ready);
       expect(gate.canDepart, isTrue);
+      expect(gate.aheadOfSchedule, isFalse);
       expect(gate.countdown(now), isNull);
     });
 
@@ -210,7 +229,9 @@ void main() {
       ]);
 
       expect(
-        board.stationForPickup(routePointId: 'rp-2', name: 'محطة بنها')?.sequence,
+        board
+            .stationForPickup(routePointId: 'rp-2', name: 'محطة بنها')
+            ?.sequence,
         2,
         reason: 'the id disambiguates two stations sharing a name',
       );

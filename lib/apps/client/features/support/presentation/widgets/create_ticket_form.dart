@@ -46,12 +46,32 @@ class _CreateTicketFormState extends State<CreateTicketForm> {
     cubit.loadOfficeOptions();
   }
 
-  /// The office the complaint is filed against. When there is only one office
-  /// to pick, it is selected implicitly so the client isn't asked a question
-  /// with a single answer; otherwise they must choose.
+  /// The office the complaint is filed against.
+  ///
+  /// A linked booking decides it: the backend derives the ticket's office from
+  /// the booking's trip and overrides whatever the form sends, so the picker
+  /// shows that office rather than pretending the choice is still open. Only
+  /// when nothing is linked (or the operating office isn't one the client can
+  /// see) does their own pick apply — implicitly when there is a single office,
+  /// since asking a question with one answer helps nobody.
   SupportOfficeOption? _effectiveOffice(List<SupportOfficeOption> options) {
+    final bookingOffice = _bookingOffice(options);
+    if (bookingOffice != null) return bookingOffice;
     if (_office != null) return _office;
     return options.length == 1 ? options.first : null;
+  }
+
+  /// The office that operated the linked booking, when it is one of the offices
+  /// the client can see. An unlisted operator has no name to show, so the
+  /// picker stays open there — the server still routes the ticket to the trip's
+  /// office either way.
+  SupportOfficeOption? _bookingOffice(List<SupportOfficeOption> options) {
+    final officeId = _relatedBooking?.officeId;
+    if (officeId == null) return null;
+    for (final option in options) {
+      if (option.id == officeId) return option;
+    }
+    return null;
   }
 
   @override
@@ -95,6 +115,8 @@ class _CreateTicketFormState extends State<CreateTicketForm> {
     final bookingOptions = cubit.relatedBookingOptions;
     final officeOptions = cubit.officeOptions;
 
+    final bookingOffice = _bookingOffice(officeOptions);
+
     return Form(
       key: _formKey,
       child: ListView(
@@ -111,7 +133,9 @@ class _CreateTicketFormState extends State<CreateTicketForm> {
           const SizedBox(height: 24),
           SupportFieldLabel(
             label: context.l10n.support_officeLabel,
-            hint: context.l10n.support_officeHint,
+            hint: bookingOffice == null
+                ? context.l10n.support_officeHint
+                : context.l10n.support_officeFromBookingHint,
             isRequired: true,
           ),
           SupportOfficeDropdown(
@@ -120,9 +144,10 @@ class _CreateTicketFormState extends State<CreateTicketForm> {
             onChanged: (office) => setState(() => _office = office),
             hasError: cubit.officeLoadFailed,
             onRetry: cubit.loadOfficeOptions,
+            isLocked: bookingOffice != null,
           ),
           const SizedBox(height: 24),
-          
+
           if (bookingOptions.isNotEmpty) ...[
             SupportFieldLabel(
               label: context.l10n.support_relatedBookingLabel,

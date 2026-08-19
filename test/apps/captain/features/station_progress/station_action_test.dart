@@ -41,7 +41,7 @@ void main() {
     expect(depart.gate.pendingCount, 1);
   });
 
-  test('standing at a station too early: the gate is still shut', () {
+  test('standing at a station early with everyone aboard: go, but flagged', () {
     final action =
         resolveStationAction(
               StationBoard([
@@ -58,11 +58,12 @@ void main() {
             )
             as StationDepartAction;
 
-    expect(action.isEnabled, isFalse);
-    expect(action.gate.state, StationGateState.waitingForDepartureTime);
+    expect(action.isEnabled, isTrue);
+    expect(action.gate.state, StationGateState.ready);
+    expect(action.gate.aheadOfSchedule, isTrue);
   });
 
-  test('both conditions met: continue', () {
+  test('boarding resolved and the time passed: continue', () {
     final action =
         resolveStationAction(
               StationBoard([

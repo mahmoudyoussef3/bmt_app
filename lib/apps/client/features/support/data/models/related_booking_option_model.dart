@@ -7,6 +7,7 @@ class RelatedBookingOptionModel extends RelatedBookingOption {
     required super.route,
     super.tripDate,
     super.seat,
+    super.officeId,
   });
 
   factory RelatedBookingOptionModel.fromJson(Map<String, dynamic> json) {
@@ -18,6 +19,7 @@ class RelatedBookingOptionModel extends RelatedBookingOption {
           ? DateTime.tryParse(json['trip_date'] as String)
           : null,
       seat: (json['seat'] as String?) ?? '',
+      officeId: json['office_id'] as String?,
     );
   }
 }

@@ -2305,6 +2305,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get support_officeLoadError => 'تعذّر تحميل المكاتب.';
 
   @override
+  String get support_officeFromBookingHint =>
+      'محدَّد من الحجز المرتبط — سيصل البلاغ إلى المكتب الذي شغّل هذه الرحلة.';
+
+  @override
   String get support_attachmentOpenFailed => 'تعذّر فتح المرفق.';
 
   @override

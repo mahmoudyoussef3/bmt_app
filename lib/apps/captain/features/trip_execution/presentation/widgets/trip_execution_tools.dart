@@ -25,20 +25,17 @@ class TripExecutionTools extends StatelessWidget {
           icon: Icons.people_alt_rounded,
           onTap: () => context.openPassengerManifest(tripId),
         ),
-        if (stage.isLive) ...[
-          _Tool(
-            label: 'إرسال الموقع',
-            detail: 'تحديث موقعك يدوياً الآن',
-            icon: Icons.my_location_rounded,
-            onTap: () => context.openLocationUpdate(tripId),
-          ),
+        // Nothing here sends the captain's position: publishing is automatic
+        // for the whole live trip (`TripLocationAutoShare`), and a manual
+        // "send my location" entry alongside it only invites the captain to
+        // believe the riders' map depends on them remembering to tap it.
+        if (stage.isLive)
           _Tool(
             label: 'إبلاغ العمليات',
             detail: 'رسالة بموقفك الحالي',
             icon: Icons.sync_rounded,
             onTap: () => context.openStatusUpdate(tripId),
           ),
-        ],
         if (!stage.isWaiting)
           _Tool(
             label: 'بلاغ طارئ',

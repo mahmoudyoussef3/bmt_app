@@ -149,6 +149,9 @@ class _AutoShareCard extends StatelessWidget {
     required bool isSending,
     required int failures,
   }) {
+    final needsRetry =
+        status.health == LocationSharingHealth.stale || error != null;
+
     final (icon, tone) = switch (status.health) {
       LocationSharingHealth.live => (
         Icons.share_location_rounded,
@@ -243,32 +246,38 @@ class _AutoShareCard extends StatelessWidget {
               ],
             ),
           ],
-          const SizedBox(height: CaptainDesignTokens.s12),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              onPressed: isSending
-                  ? null
-                  : () => context.read<LiveLocationCubit>().send(tripId),
-              icon: isSending
-                  ? const SizedBox.square(
-                      dimension: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.my_location_rounded, size: 18),
-              label: Text(
-                isSending ? 'جارٍ تحديد الموقع...' : 'إرسال الموقع الآن',
-              ),
-              style: OutlinedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  vertical: CaptainDesignTokens.s12,
+          // Only when the pipeline is actually failing. While it is healthy the
+          // captain has nothing to do here — offering a send button would say
+          // the opposite, and a captain who believes the riders' map depends on
+          // their taps is a captain who stops driving to tap.
+          if (needsRetry) ...[
+            const SizedBox(height: CaptainDesignTokens.s12),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: isSending
+                    ? null
+                    : () => context.read<LiveLocationCubit>().send(tripId),
+                icon: isSending
+                    ? const SizedBox.square(
+                        dimension: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.refresh_rounded, size: 18),
+                label: Text(
+                  isSending ? 'جارٍ تحديد الموقع...' : 'إعادة المحاولة الآن',
                 ),
-                shape: const RoundedRectangleBorder(
-                  borderRadius: CaptainDesignTokens.br16,
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: CaptainDesignTokens.s12,
+                  ),
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: CaptainDesignTokens.br16,
+                  ),
                 ),
               ),
             ),
-          ),
+          ],
         ],
       ),
     );

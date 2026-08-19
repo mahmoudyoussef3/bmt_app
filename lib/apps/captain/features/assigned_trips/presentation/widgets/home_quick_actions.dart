@@ -24,12 +24,6 @@ class HomeQuickActions extends StatelessWidget {
         label: 'الركاب',
         onTap: () => context.openPassengerManifest(tripId),
       ),
-      if (stage == CaptainTripStage.underway)
-        _QuickAction(
-          icon: Icons.my_location_rounded,
-          label: 'الموقع',
-          onTap: () => context.openLocationUpdate(tripId),
-        ),
       if (!stage.isWaiting)
         _QuickAction(
           icon: Icons.report_problem_outlined,

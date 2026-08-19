@@ -1052,6 +1052,7 @@
   "support_officePlaceholder": "Select an office",
   "support_officeRequired": "Please choose an office",
   "support_officeLoadError": "Couldn't load offices.",
+  "support_officeFromBookingHint": "Set by the booking you linked — the ticket goes to the office that operated that trip.",
   "support_attachmentOpenFailed": "Couldn't open attachment.",
   "support_subjectLabel": "Subject",
   "support_subjectHint": "A short summary of the problem.",

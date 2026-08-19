@@ -4262,6 +4262,12 @@ abstract class AppLocalizations {
   /// **'Couldn\'t load offices.'**
   String get support_officeLoadError;
 
+  /// No description provided for @support_officeFromBookingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Set by the booking you linked — the ticket goes to the office that operated that trip.'**
+  String get support_officeFromBookingHint;
+
   /// No description provided for @support_attachmentOpenFailed.
   ///
   /// In en, this message translates to:

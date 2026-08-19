@@ -22,8 +22,9 @@ import 'package:bmt_app/core/tracking/progress/station_board.dart';
 void main() {
   final now = DateTime(2026, 8, 11, 8, 40);
 
-  testWidgets('waiting on passengers: disabled, and the label is the count',
-      (tester) async {
+  testWidgets('waiting on passengers: disabled, and the label is the count', (
+    tester,
+  ) async {
     final repository = _StubRepository();
     final board = StationBoard([
       _station(
@@ -50,8 +51,8 @@ void main() {
     );
   });
 
-  testWidgets('waiting on the clock: disabled, and the label is the time',
-      (tester) async {
+  testWidgets('everyone aboard before the published time: enabled, and the '
+      'early departure is confirmed first', (tester) async {
     final repository = _StubRepository();
     final board = StationBoard([
       _station(
@@ -64,38 +65,54 @@ void main() {
 
     await _pump(tester, repository: repository, board: board, now: now);
 
-    expect(find.textContaining('يمكنك المغادرة بعد 08:45'), findsOneWidget);
+    // The clock holds nobody — but the captain is told they are ahead of it.
+    expect(find.text('متابعة — آخر محطة'), findsOneWidget);
 
     await tester.tap(find.byType(InkWell));
-    await tester.pump();
-    expect(repository.departures, isEmpty);
-  });
+    await tester.pumpAndSettle();
 
-  testWidgets('both conditions met: enabled, and tapping departs',
-      (tester) async {
-    final repository = _StubRepository();
-    final board = StationBoard([
-      _station(
-        arrived: now.subtract(const Duration(minutes: 20)),
-        expectedDeparture: now.subtract(const Duration(minutes: 10)),
-        expected: 2,
-        boarded: 2,
-      ),
-      _station(sequence: 2, name: 'محطة كفر شكر'),
-    ]);
+    expect(
+      repository.departures,
+      isEmpty,
+      reason: 'leaving before the published minute is a decision, not a tap',
+    );
+    expect(find.text('المغادرة قبل الموعد'), findsOneWidget);
+    expect(find.textContaining('قبل الموعد المعلن 08:45'), findsOneWidget);
 
-    await _pump(tester, repository: repository, board: board, now: now);
-
-    expect(find.text('متابعة إلى المحطة التالية'), findsOneWidget);
-
-    await tester.tap(find.byType(InkWell));
-    await tester.pump();
+    await tester.tap(find.text('نعم، تحرك الآن'));
+    await tester.pumpAndSettle();
 
     expect(repository.departures, ['trip-1']);
   });
 
-  testWidgets('driving towards a station offers the arrival report',
-      (tester) async {
+  testWidgets(
+    'boarding resolved and past the published time: one tap departs',
+    (tester) async {
+      final repository = _StubRepository();
+      final board = StationBoard([
+        _station(
+          arrived: now.subtract(const Duration(minutes: 20)),
+          expectedDeparture: now.subtract(const Duration(minutes: 10)),
+          expected: 2,
+          boarded: 2,
+        ),
+        _station(sequence: 2, name: 'محطة كفر شكر'),
+      ]);
+
+      await _pump(tester, repository: repository, board: board, now: now);
+
+      expect(find.text('متابعة إلى المحطة التالية'), findsOneWidget);
+
+      await tester.tap(find.byType(InkWell));
+      await tester.pump();
+
+      expect(repository.departures, ['trip-1']);
+    },
+  );
+
+  testWidgets('driving towards a station offers the arrival report', (
+    tester,
+  ) async {
     final repository = _StubRepository();
 
     await _pump(
@@ -126,8 +143,9 @@ void main() {
     expect(find.text('متابعة — آخر محطة'), findsOneWidget);
   });
 
-  testWidgets('an action in flight shows a spinner and no button',
-      (tester) async {
+  testWidgets('an action in flight shows a spinner and no button', (
+    tester,
+  ) async {
     await _pump(
       tester,
       repository: _StubRepository(),
@@ -167,10 +185,13 @@ void main() {
     ];
 
     for (final board in boards) {
-      await _pump(tester, repository: _StubRepository(), board: board, now: now);
-      heights.add(
-        tester.getSize(find.byType(StationPrimaryAction)).height,
+      await _pump(
+        tester,
+        repository: _StubRepository(),
+        board: board,
+        now: now,
       );
+      heights.add(tester.getSize(find.byType(StationPrimaryAction)).height);
     }
 
     expect(heights, hasLength(1), reason: 'heights differed: $heights');

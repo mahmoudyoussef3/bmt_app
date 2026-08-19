@@ -19,15 +19,16 @@ class HomeTripBookedNote extends StatelessWidget {
     final accent = trip.bookedStatus!.accent;
     final seats = trip.bookedSeats;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: ClientSpacing.sm,
-        vertical: 8,
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+      decoration: BoxDecoration(
+        color: accent.withAlpha(22),
+        borderRadius: BorderRadius.circular(ClientRadius.xs),
       ),
       child: Row(
         children: [
-          Icon(Icons.check_circle_rounded, size: 15, color: accent),
-          const SizedBox(width: 8),
+          Icon(Icons.check_circle_rounded, size: 14, color: accent),
+          const SizedBox(width: 6),
           Expanded(
             child: Text(
               seats > 1

@@ -2316,6 +2316,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get support_officeLoadError => 'Couldn\'t load offices.';
 
   @override
+  String get support_officeFromBookingHint =>
+      'Set by the booking you linked — the ticket goes to the office that operated that trip.';
+
+  @override
   String get support_attachmentOpenFailed => 'Couldn\'t open attachment.';
 
   @override

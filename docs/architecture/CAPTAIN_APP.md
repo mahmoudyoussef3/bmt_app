@@ -83,7 +83,7 @@ can't be immediately undone by the welcome-home upgrader.
 | Home / "اليوم" (assigned trips) | ✅ Completed | `operation_trips` (driver-scoped) + Realtime | focus card, day summary, quick actions | ✅ | Live watch; new-assignment banner; seen-trips cache |
 | Trip lifecycle / execution | ✅ Completed | `captain_update_trip_status` (ownership-checked) | canopy + docked action bar | ✅ | Watch stream is source of truth; server validates transitions |
 | Passenger manifest | ✅ Completed | `trip_passengers` + Realtime | list, filters, status sheet | ✅ | Boarding door for the trip |
-| Live location sharing | ✅ Completed | `trip_live_locations` insert | auto-share card + manual send | ✅ | **30 s** foreground cadence (see §6) |
+| Live location sharing | ✅ Completed | `trip_live_locations` insert | auto-share status card | ✅ | Automatic for the whole live trip; the card's only button is a retry, shown when publishing is failing (see §6) |
 | Trip history | ✅ Completed | `operation_trips` history + stops | list, filters, detail | ✅ | Search + date filters |
 | Notifications | ✅ Completed | `notifications` (user-scoped) | bell, list, ops broadcast snackbar | ✅ | Per-user isolation via `user_id = auth.uid()` |
 | Communication (chat) | ✅ Completed | `captain_messages` (office-scoped RLS) | chats, chat details | ✅ | Driver↔office threads scoped by trip |
@@ -91,7 +91,6 @@ can't be immediately undone by the welcome-home upgrader.
 | Driver profile | ✅ Completed | `drivers` + vehicle | profile, metrics, appearance | ✅ | Rating pill, verification card, sign-out |
 | Theme (light/dark) | ✅ Completed | local store | appearance sheet | ✅ | RTL-native tokens |
 | Report to operations | ✅ Completed | `trip_events` insert | `StatusUpdatePage` | — | Reframed as a message, not a lifecycle control — see §12 |
-| Manual location send | ✅ Completed | `trip_live_locations` insert | `LocationUpdatePage` | ✅ (cubit) | Complements the automatic 30 s share |
 
 Legend: ✅ Completed · ⚠️ Completed, gap noted · 🟡 Partial · ❌ Missing · 💡 Improvement.
 

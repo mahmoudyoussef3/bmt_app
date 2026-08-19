@@ -12,6 +12,7 @@ class RelatedBookingOption {
     required this.route,
     this.tripDate,
     this.seat = '',
+    this.officeId,
   });
 
   final String bookingId;
@@ -19,4 +20,10 @@ class RelatedBookingOption {
   final String route;
   final DateTime? tripDate;
   final String seat;
+
+  /// The office that operated this booking's trip — the office the backend
+  /// will route the ticket to once this booking is linked. Carried so the
+  /// form can show that destination instead of letting the client pick one
+  /// the server is going to override.
+  final String? officeId;
 }

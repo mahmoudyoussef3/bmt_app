@@ -795,6 +795,7 @@
   "support_officePlaceholder": "اختر مكتبًا",
   "support_officeRequired": "من فضلك اختر مكتبًا",
   "support_officeLoadError": "تعذّر تحميل المكاتب.",
+  "support_officeFromBookingHint": "محدَّد من الحجز المرتبط — سيصل البلاغ إلى المكتب الذي شغّل هذه الرحلة.",
   "support_attachmentOpenFailed": "تعذّر فتح المرفق.",
   "support_subjectLabel": "الموضوع",
   "support_subjectHint": "ملخص قصير للمشكلة.",

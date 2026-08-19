@@ -93,15 +93,17 @@ class TripStation {
   bool get isCurrent => hasArrived && !hasDeparted;
 
   /// Every rider due here is accounted for: aboard, a recorded no-show, or
-  /// cancelled. This is the departure gate's Condition A.
+  /// cancelled. This — and only this — is the departure gate.
   bool get boardingResolved => pendingCount <= 0;
 
-  /// The earliest instant the vehicle may leave: the later of the configured
-  /// dwell measured from the real arrival, and the published departure time.
+  /// The moment this stop was *published* to leave at: the later of the
+  /// configured dwell measured from the real arrival, and the scheduled
+  /// departure time.
   ///
-  /// Mirrors `station_earliest_departure` in migration 20260811090000. Null
-  /// until the vehicle has arrived and when the stop was never timed — in which
-  /// case the boarding requirement is the only gate.
+  /// Informational, not a gate. It is what the riders due here were told, so a
+  /// captain leaving before it is told they are running ahead of the schedule —
+  /// but a vehicle whose passengers are all accounted for is never held by a
+  /// clock. Null when the vehicle has not arrived and the stop was never timed.
   DateTime? get earliestDeparture {
     final dwellDeadline = actualArrivalAt?.add(minDwell);
     final planned = expectedDepartureAt;
@@ -116,34 +118,33 @@ enum StationGateState {
   /// The vehicle is not at a station, so there is nothing to leave.
   notAtStation,
 
-  /// Riders are still expected here.
+  /// Riders are still expected here. The one thing that holds a vehicle.
   waitingForPassengers,
 
-  /// Everyone is accounted for, but the vehicle is not due out yet.
-  waitingForDepartureTime,
-
-  /// Both conditions met.
+  /// Everyone due here is accounted for; the vehicle may go.
   ready,
 }
 
 /// The answer to the only question a captain standing at a station has.
 ///
 /// This is a *representation* of the rule. `captain_depart_station` evaluates
-/// the identical two conditions server-side and refuses the transition when
-/// they do not hold, so a stale screen cannot let a vehicle leave early.
+/// the identical condition server-side and refuses the transition when it does
+/// not hold, so a stale screen cannot let a vehicle leave a rider behind.
 class StationGate {
   const StationGate({
     required this.state,
     required this.pendingCount,
     this.station,
     this.earliestDeparture,
+    this.aheadOfSchedule = false,
   });
 
   const StationGate.notAtStation()
     : state = StationGateState.notAtStation,
       pendingCount = 0,
       station = null,
-      earliestDeparture = null;
+      earliestDeparture = null,
+      aheadOfSchedule = false;
 
   final StationGateState state;
 
@@ -153,12 +154,19 @@ class StationGate {
   /// Riders still expected to board here.
   final int pendingCount;
 
-  /// When the vehicle becomes free to leave; null when no time gates it.
+  /// The published departure moment for this stop; null when it was never
+  /// timed. Shown, never enforced — see [aheadOfSchedule].
   final DateTime? earliestDeparture;
+
+  /// The gate is open, but [earliestDeparture] has not arrived yet: everyone
+  /// due here is aboard and the vehicle is free to leave early. Surfaced so the
+  /// captain is told they are departing before the time their riders were
+  /// given, rather than discovering it from a passenger.
+  final bool aheadOfSchedule;
 
   bool get canDepart => state == StationGateState.ready;
 
-  /// How long until [earliestDeparture]; null when nothing is being waited on.
+  /// How long until [earliestDeparture]; null once it has passed.
   Duration? countdown(DateTime now) {
     final target = earliestDeparture;
     if (target == null || !target.isAfter(now)) return null;
@@ -279,8 +287,9 @@ class StationBoard {
 
   /// Whether any real arrival has been observed yet. Below that, every estimate
   /// is the published schedule and is labelled as such.
-  bool get hasObservedProgress =>
-      stations.any((s) => s.actualArrivalAt != null && s.expectedArrivalAt != null);
+  bool get hasObservedProgress => stations.any(
+    (s) => s.actualArrivalAt != null && s.expectedArrivalAt != null,
+  );
 
   /// An estimate for every station the vehicle has not left yet.
   ///
@@ -317,8 +326,16 @@ class StationBoard {
     return projected.isBefore(now) ? now : projected;
   }
 
-  /// The two-condition departure gate, evaluated for the station the vehicle is
-  /// standing at.
+  /// The departure gate, evaluated for the station the vehicle is standing at.
+  ///
+  /// One condition: every rider due to board here is accounted for. Riders hold
+  /// the vehicle; the clock does not. Nobody can join the manifest after the
+  /// trip leaves `open_for_booking`, so once the people expected here are
+  /// aboard (or recorded as no-shows) there is nobody left for the stop to wait
+  /// for, and holding a full vehicle to its published minute only delays every
+  /// station after it. Leaving early is *announced* — [aheadOfSchedule] — not
+  /// forbidden, and a vehicle that runs ahead simply waits at the next stop,
+  /// where riders are still pending and this same gate is shut.
   StationGate gateAt(DateTime now) {
     final station = currentStation;
     if (station == null) return const StationGate.notAtStation();
@@ -334,20 +351,12 @@ class StationBoard {
       );
     }
 
-    if (earliest != null && earliest.isAfter(now)) {
-      return StationGate(
-        state: StationGateState.waitingForDepartureTime,
-        station: station,
-        pendingCount: 0,
-        earliestDeparture: earliest,
-      );
-    }
-
     return StationGate(
       state: StationGateState.ready,
       station: station,
       pendingCount: 0,
       earliestDeparture: earliest,
+      aheadOfSchedule: earliest != null && earliest.isAfter(now),
     );
   }
 }

@@ -3,8 +3,7 @@
 ## Purpose
 
 Make a trip advance the way a real transport operation does — one station at a
-time, and only when the passengers due there are accounted for and the vehicle is
-due out:
+time, and only when the passengers due there are accounted for:
 
 ```
 STATION → ARRIVAL → WAIT → BOARDING → VALIDATION → DEPARTURE → NEXT STATION
@@ -21,17 +20,37 @@ every rider waiting at them.
 ## The rule
 
 ```
-canProceed = boardingRequirementResolved AND earliestDepartureReached
+canProceed = boardingRequirementResolved
 ```
 
-Both halves are enforced in `captain_depart_station`. The Captain App renders the
-same rule so the button is honestly disabled and *says why*, but the app is a
-representation of the rule, never the rule itself.
+Enforced in `captain_depart_station`. The Captain App renders the same rule so the
+button is honestly disabled and *says why*, but the app is a representation of the
+rule, never the rule itself.
 
 | Condition | Satisfied when |
 | --- | --- |
-| **A — boarding** | No passenger whose pickup is this station is still `reserved`. They are aboard (`confirmed`), a recorded no-show, or cancelled. |
-| **B — departure clock** | `now >= greatest(actual_arrival + configured_dwell, published_departure)`. A late bus still owes its riders the dwell; an early bus still waits for the time riders were told. |
+| **Boarding** | No passenger whose pickup is this station is still `reserved`. They are aboard (`confirmed`), a recorded no-show, or cancelled. |
+
+### Why the clock is not a second condition
+
+`20260811090000` shipped a second condition — `now >= greatest(actual_arrival +
+configured_dwell, published_departure)` — and `20260819120000` removed it.
+
+A rider reaches a station's manifest exactly one way: by booking, and booking is
+refused for any trip past `open_for_booking`. So once every rider expected at a
+stop is accounted for, there is nobody who *can* still turn up there. Holding the
+vehicle to its published minute waits for a passenger who cannot exist, and
+spends that wait on every station downstream.
+
+Nobody is left behind by dropping it, because the boarding condition — not the
+clock — is what protects riders: a vehicle that runs ahead simply reaches the
+next station early and stands there, where riders *are* still pending and the
+same gate is shut.
+
+`expected_departure_at` / `min_dwell_seconds` keep their meaning and are still
+served to both apps. `StationGate.aheadOfSchedule` names a departure that beats
+the published minute, and the Captain App asks the captain to confirm it —
+`station_earliest_departure()` is now a label, not a lock.
 
 ## What is reused
 
@@ -83,7 +102,7 @@ and the rider are literally reading the same numbers.
 | Function | Who | Refuses when |
 | --- | --- | --- |
 | `captain_arrive_station(trip)` | assigned captain | not their trip, trip not running, no stations left. Takes **no station argument** — the server picks the next un-departed stop, so a captain cannot mark an arbitrary station reached. Idempotent while standing at one. |
-| `captain_depart_station(trip)` | assigned captain | `passengers_not_boarded:N`, `departure_time_not_reached:HH:MM`, `no_current_station`. Row-locked; leaving station 1 transitions the trip to `in_progress` through `captain_update_trip_status`. |
+| `captain_depart_station(trip)` | assigned captain | `passengers_not_boarded:N`, `no_current_station`. Row-locked; leaving station 1 transitions the trip to `in_progress` through `captain_update_trip_status`. (`departure_time_not_reached:HH:MM` was retired by `20260819120000`; the client still parses it so an un-migrated server stays legible.) |
 | `captain_resolve_no_show(passenger, reason, note)` | assigned captain | invalid reason, `other` without a note, passenger not `reserved`. Records reason + author + time and files a `trip_events` row. |
 | `passenger_confirm_boarding(booking)` | the rider | not their booking, booking not paid, trip not running, vehicle not at *their* station. Idempotent. |
 
@@ -156,9 +175,14 @@ widgets). `resolveStationAction` is a pure function returning the one action:
 arrive / depart (with its gate) / finish / board-unavailable.
 
 The docked bar renders **one fixed-height button** in every state; when the gate
-is shut the label *becomes the reason* ("متبقي راكبان", "يمكنك المغادرة بعد 08:45")
-rather than adding a second line, because a bar that changes height reflows the
-page under the captain's thumb at the moment they reach for it.
+is shut the label *becomes the reason* ("متبقي راكبان") rather than adding a
+second line, because a bar that changes height reflows the page under the
+captain's thumb at the moment they reach for it.
+
+When the gate is open but the published minute has not arrived, the button is
+live and one tap away — with a confirmation naming the time
+("قبل الموعد المعلن 08:45"), because leaving early is a decision the captain is
+making rather than the ordinary flow of the trip.
 
 ### Client — `lib/apps/client/features/tracking/`
 
@@ -174,7 +198,12 @@ competing for the attention of someone holding a wheel. The live-map CTA is gone
 from `TripExecutionPage`.
 
 GPS itself is untouched: `TripLocationAutoShare` publishes for the whole live
-trip, because the riders still waiting down the route are watching it.
+trip, because the riders still waiting down the route are watching it. It is also
+the *only* location surface the captain has: the manual "إرسال الموقع" page,
+its route and its two entry points were removed, since publishing is automatic
+and a manual sibling only suggests the riders' map depends on the captain
+remembering to tap it. The card keeps one send button, shown solely when the
+pipeline is failing, labelled as the retry it is.
 
 > The `features/trip_map` module still exists on disk with its route registered,
 > but has no entry point from the trip screen. It was left in place rather than
@@ -201,7 +230,7 @@ trip, because the riders still waiting down the route are watching it.
 
 | Level | File |
 | --- | --- |
-| Unit | `test/core/tracking/progress/station_board_test.dart` — lifecycle, both departure clocks, gate states, delay projection, ETA provenance. |
+| Unit | `test/core/tracking/progress/station_board_test.dart` — lifecycle, the published-departure computation, gate states (including early departure), delay projection, ETA provenance. |
 | Unit | `test/core/tracking/progress/station_board_mapper_test.dart` — mapping, units, sorting, sparse rows, select-list parity. |
 | Unit | `test/core/tracking/progress/station_overlay_test.dart` — fact over inference, ETA preference, re-sequenced boards. |
 | Unit | `test/apps/captain/.../station_action_test.dart` — the four situations. |

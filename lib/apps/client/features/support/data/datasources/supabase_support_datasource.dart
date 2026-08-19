@@ -73,14 +73,12 @@ class SupabaseSupportDatasource {
   Future<List<RelatedBookingOptionModel>> getRelatedBookingOptions() async {
     final response = await _supabase
         .from('operation_bookings')
-        .select('id, trip_id, route, trip_date, seat')
+        .select('id, trip_id, route, trip_date, seat, office_id')
         .eq('client_id', _currentUserId)
         .order('created_at', ascending: false)
         .limit(10);
 
-    return response
-        .map((e) => RelatedBookingOptionModel.fromJson(e))
-        .toList();
+    return response.map((e) => RelatedBookingOptionModel.fromJson(e)).toList();
   }
 
   /// The offices a client can direct a complaint to, for the create-ticket
@@ -93,9 +91,7 @@ class SupabaseSupportDatasource {
         .select('id, name')
         .order('name', ascending: true);
 
-    return response
-        .map((e) => SupportOfficeOptionModel.fromJson(e))
-        .toList();
+    return response.map((e) => SupportOfficeOptionModel.fromJson(e)).toList();
   }
 
   Future<SupportTicketModel> getTicketDetails(String ticketId) async {

@@ -13,9 +13,11 @@ import 'package:bmt_app/apps/client/features/home/presentation/widgets/pulse_dot
 /// The ticket's departure band: a tinted strip carrying when the bus leaves,
 /// which route it runs, and the rider's own stake in it.
 ///
-/// Departure time is the headline — it is what a rider scans a feed for. The
-/// band is tinted in the booking's status colour once the rider holds a seat,
-/// so a card they are already on is recognisable before a word is read.
+/// Departure time is the headline — it is what a rider scans a rail of tickets
+/// for, so it gets the width a leading icon used to take and the route runs
+/// under it as the caption. The band is tinted in the booking's status colour
+/// once the rider holds a seat, so a card they are already on is recognisable
+/// before a word is read.
 class HomeTripCardHeader extends StatelessWidget {
   const HomeTripCardHeader({super.key, required this.trip});
 
@@ -29,62 +31,47 @@ class HomeTripCardHeader extends StatelessWidget {
         : ClientColors.primaryFor(context);
 
     return Container(
-      padding: const EdgeInsets.all(ClientSpacing.md),
+      padding: const EdgeInsets.fromLTRB(
+        ClientSpacing.md,
+        10,
+        ClientSpacing.md,
+        10,
+      ),
       decoration: BoxDecoration(
         color: accent.withAlpha(isDark ? 30 : 16),
         borderRadius: const BorderRadius.vertical(
           top: Radius.circular(ClientRadius.lg),
         ),
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _DepartureIcon(trip: trip, accent: accent),
-          const SizedBox(width: ClientSpacing.sm),
-          Expanded(child: _Schedule(trip: trip)),
-          const SizedBox(width: ClientSpacing.xs),
-          
-          if (trip.isBooked)
-            ClientStatusBadge(
-              status: trip.bookedStatus!.badge,
-              label: trip.bookedStatus!.labelFor(context.l10n),
-              showDot: trip.bookedStatus!.isPulsing,
-            )
-          else if (trip.isLive)
-            const _BoardingBadge(),
+          Row(
+            children: [
+              Expanded(child: _Departure(trip: trip)),
+              const SizedBox(width: ClientSpacing.sm),
+              if (trip.isBooked)
+                ClientStatusBadge(
+                  status: trip.bookedStatus!.badge,
+                  label: trip.bookedStatus!.labelFor(context.l10n),
+                  showDot: trip.bookedStatus!.isPulsing,
+                )
+              else if (trip.isLive)
+                const _BoardingBadge(),
+            ],
+          ),
+          const SizedBox(height: 2),
+          _Route(trip: trip, accent: accent),
         ],
       ),
     );
   }
 }
 
-class _DepartureIcon extends StatelessWidget {
-  const _DepartureIcon({required this.trip, required this.accent});
-
-  final UpcomingTripData trip;
-  final Color accent;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 44,
-      height: 44,
-      decoration: BoxDecoration(
-        color: accent.withAlpha(36),
-        borderRadius: BorderRadius.circular(ClientRadius.sm),
-      ),
-      child: Icon(
-        trip.isBooked
-            ? trip.bookedStatus!.icon
-            : Icons.directions_bus_filled_rounded,
-        color: accent,
-        size: 22,
-      ),
-    );
-  }
-}
-
-class _Schedule extends StatelessWidget {
-  const _Schedule({required this.trip});
+/// When it leaves: the clock time as the headline, the day beside it as the
+/// qualifier a rider only needs once the hour has caught their eye.
+class _Departure extends StatelessWidget {
+  const _Departure({required this.trip});
 
   final UpcomingTripData trip;
 
@@ -93,44 +80,69 @@ class _Schedule extends StatelessWidget {
     final time = formatTripTime(context, trip.departureTime);
     final day = formatTripDay(context, trip.tripDate);
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.baseline,
+      textBaseline: TextBaseline.alphabetic,
       children: [
-        Row(
-          children: [
-            Flexible(
-              child: Text(
-                time.isEmpty ? context.l10n.home_departureToBeSet : time,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: ClientTypography.headingMedium(
-                  context,
-                ).copyWith(fontWeight: FontWeight.w800),
+        Flexible(
+          child: Text(
+            time.isEmpty ? context.l10n.home_departureToBeSet : time,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: ClientTypography.headingMedium(
+              context,
+            ).copyWith(fontWeight: FontWeight.w800),
+          ),
+        ),
+        if (day.isNotEmpty) ...[
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              day,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: ClientTypography.labelMedium(context).copyWith(
+                color: ClientColors.textSecondaryFor(context),
+                fontWeight: FontWeight.w700,
               ),
             ),
-            if (day.isNotEmpty) ...[
-              const SizedBox(width: 6),
-              Text(
-                '· $day',
-                style: ClientTypography.labelMedium(context).copyWith(
-                  color: ClientColors.textSecondaryFor(context),
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ],
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// Which service this is: the route, and the operator running it.
+class _Route extends StatelessWidget {
+  const _Route({required this.trip, required this.accent});
+
+  final UpcomingTripData trip;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(
+          trip.isBooked
+              ? trip.bookedStatus!.icon
+              : Icons.directions_bus_filled_rounded,
+          size: 14,
+          color: accent,
         ),
-        const SizedBox(height: 2),
-        Text(
-          
-          trip.officeName.isEmpty
-              ? trip.routeName
-              : '${trip.routeName} · ${trip.officeName}',
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: ClientTypography.bodySmall(
-            context,
-          ).copyWith(color: ClientColors.textSecondaryFor(context)),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            trip.officeName.isEmpty
+                ? trip.routeName
+                : '${trip.routeName} · ${trip.officeName}',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: ClientTypography.bodySmall(
+              context,
+            ).copyWith(color: ClientColors.textSecondaryFor(context)),
+          ),
         ),
       ],
     );

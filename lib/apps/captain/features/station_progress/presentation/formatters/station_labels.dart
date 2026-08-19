@@ -35,29 +35,37 @@ abstract final class StationLabels {
   static String gateHeadline(StationGate gate) => switch (gate.state) {
     StationGateState.notAtStation => 'في الطريق إلى المحطة التالية',
     StationGateState.waitingForPassengers => 'في انتظار صعود جميع الركاب',
-    StationGateState.waitingForDepartureTime => 'اكتمل الصعود — في انتظار الموعد',
+    StationGateState.ready when gate.aheadOfSchedule =>
+      'اكتمل الصعود — يمكنك المغادرة الآن',
     StationGateState.ready => 'يمكنك متابعة الرحلة',
   };
 
-  /// The one line underneath it that says what is actually being waited on.
+  /// The one line underneath it that says what is actually being waited on —
+  /// or, when nothing is, that leaving now is ahead of the published time.
   static String? gateDetail(StationGate gate, DateTime now) {
     return switch (gate.state) {
       StationGateState.notAtStation => null,
       StationGateState.waitingForPassengers => remainingToBoard(
         gate.pendingCount,
       ),
-      StationGateState.waitingForDepartureTime => _departureHint(gate, now),
+      StationGateState.ready when gate.aheadOfSchedule => earlyDepartureHint(
+        gate,
+        now,
+      ),
       StationGateState.ready => null,
     };
   }
 
-  static String? _departureHint(StationGate gate, DateTime now) {
+  /// Said as a fact about the schedule, never as a refusal: no rider is left
+  /// behind by this departure, the stop is simply being left before its
+  /// published minute.
+  static String? earlyDepartureHint(StationGate gate, DateTime now) {
     final at = gate.earliestDeparture;
     if (at == null) return null;
     final left = gate.countdown(now);
-    final clock = 'يمكنك المغادرة بعد ${CaptainFormats.clock(at)}';
+    final clock = 'قبل الموعد المعلن ${CaptainFormats.clock(at)}';
     if (left == null || left.inMinutes < 1) return clock;
-    return '$clock — ${CaptainFormats.duration(left)}';
+    return '$clock — بفارق ${CaptainFormats.duration(left)}';
   }
 
   /// The primary button's label for each situation.

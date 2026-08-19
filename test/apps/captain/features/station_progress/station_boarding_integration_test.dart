@@ -119,24 +119,17 @@ void main() {
     expect(server.noShowReasons['pax-c'], 'did_not_arrive');
     expect(captain.state.board.currentStation!.pendingCount, 0);
 
-    // ── 10. Boarding is resolved, but the vehicle is not due out yet ──────────
+    // ── 10-11. Boarding is resolved, so the vehicle goes — early, and told so ─
+    // Nobody else can turn up at this stop: booking closed when the trip left
+    // open_for_booking. The published 08:47 is a label on the departure, not a
+    // lock on it.
     gate = captain.state.board.gateAt(server.now);
-    expect(gate.state, StationGateState.waitingForDepartureTime);
+    expect(gate.state, StationGateState.ready);
+    expect(gate.canDepart, isTrue);
+    expect(gate.aheadOfSchedule, isTrue);
     expect(gate.earliestDeparture, DateTime(2026, 8, 11, 8, 47));
-    await captain.departCurrentStation();
-    expect(
-      captain.state.failure!.failure,
-      StationActionFailure.departureTimeNotReached,
-    );
-    expect(server.departures, isEmpty);
 
-    // ── 11-12. The dwell elapses and the captain may go ───────────────────────
-    server.now = DateTime(2026, 8, 11, 8, 48);
-    expect(
-      captain.state.board.gateAt(server.now).state,
-      StationGateState.ready,
-    );
-
+    // ── 12. And the server agrees — it is the same rule on both sides ─────────
     await captain.departCurrentStation();
     await _settle();
     expect(server.departures, ['محطة بنها']);
@@ -192,41 +185,48 @@ void main() {
     await riderB.close();
   });
 
-  test('a rider cannot confirm boarding before the vehicle reaches their stop',
-      () async {
-    final server = _FakeServer(
-      stations: [
-        _ServerStation(sequence: 1, name: 'A', routePointId: 'rp-1'),
-        _ServerStation(sequence: 2, name: 'B', routePointId: 'rp-2'),
-      ],
-      passengers: [
-        _ServerPassenger(id: 'pax-b', bookingId: 'bk-b', routePointId: 'rp-2'),
-      ],
-    );
+  test(
+    'a rider cannot confirm boarding before the vehicle reaches their stop',
+    () async {
+      final server = _FakeServer(
+        stations: [
+          _ServerStation(sequence: 1, name: 'A', routePointId: 'rp-1'),
+          _ServerStation(sequence: 2, name: 'B', routePointId: 'rp-2'),
+        ],
+        passengers: [
+          _ServerPassenger(
+            id: 'pax-b',
+            bookingId: 'bk-b',
+            routePointId: 'rp-2',
+          ),
+        ],
+      );
 
-    final captain = _captainCubit(server);
-    captain.watch('trip-1');
-    await _settle();
-    await captain.arriveAtCurrentStation();
-    await _settle();
+      final captain = _captainCubit(server);
+      captain.watch('trip-1');
+      await _settle();
+      await captain.arriveAtCurrentStation();
+      await _settle();
 
-    final rider = _riderCubit(server, 'bk-b');
-    await rider.load();
-    expect(_data(rider).isVehicleAtRiderStation, isFalse);
+      final rider = _riderCubit(server, 'bk-b');
+      await rider.load();
+      expect(_data(rider).isVehicleAtRiderStation, isFalse);
 
-    await rider.confirmBoarding();
+      await rider.confirmBoarding();
 
-    expect((rider.state as TrackingLoaded).boardingError, isNotNull);
-    expect(_data(rider).rider.hasBoarded, isFalse);
-    expect(
-      captain.state.board.currentStation!.boardedCount,
-      0,
-      reason: 'a rider at the next stop cannot clear this stop\'s requirement',
-    );
+      expect((rider.state as TrackingLoaded).boardingError, isNotNull);
+      expect(_data(rider).rider.hasBoarded, isFalse);
+      expect(
+        captain.state.board.currentStation!.boardedCount,
+        0,
+        reason:
+            'a rider at the next stop cannot clear this stop\'s requirement',
+      );
 
-    await captain.close();
-    await rider.close();
-  });
+      await captain.close();
+      await rider.close();
+    },
+  );
 
   test('a rider whose booking is not theirs is refused', () async {
     final server = _FakeServer(
@@ -262,7 +262,9 @@ StationProgressCubit _captainCubit(_FakeServer server) {
 }
 
 TrackingCubit _riderCubit(_FakeServer server, String bookingId) {
-  final repository = TrackingRepositoryImpl(_RiderDatasource(server, bookingId));
+  final repository = TrackingRepositoryImpl(
+    _RiderDatasource(server, bookingId),
+  );
   return TrackingCubit(
     getTrackingTrip: GetTrackingTripUseCase(repository),
     watchTrackingTrip: WatchTrackingTripUseCase(repository),
@@ -333,12 +335,10 @@ class _FakeServer {
 
   void _push() => _boards.add(board());
 
-  _ServerStation? get _current => stations
-      .cast<_ServerStation?>()
-      .firstWhere(
-        (s) => s!.actualArrival != null && s.actualDeparture == null,
-        orElse: () => null,
-      );
+  _ServerStation? get _current => stations.cast<_ServerStation?>().firstWhere(
+    (s) => s!.actualArrival != null && s.actualDeparture == null,
+    orElse: () => null,
+  );
 
   StationBoard board() {
     return StationBoardMapper.fromRows([
@@ -365,7 +365,9 @@ class _FakeServer {
   }
 
   Map<String, int> _counts(_ServerStation station) {
-    final here = passengers.where((p) => p.routePointId == station.routePointId);
+    final here = passengers.where(
+      (p) => p.routePointId == station.routePointId,
+    );
     return {
       'expected_boardings': here.where((p) => p.status != 'cancelled').length,
       'boarded_count': here.where((p) => p.status == 'confirmed').length,
@@ -384,7 +386,9 @@ class _FakeServer {
     _push();
   }
 
-  /// The gate, server-side. Both conditions, in this order, every time.
+  /// The gate, server-side: the passengers, and nothing else. The published
+  /// departure time is served to the apps but never enforced here — see
+  /// migration 20260819120000.
   void depart() {
     final station = _current;
     if (station == null) throw stationFailureFrom('no_current_station');
@@ -394,26 +398,9 @@ class _FakeServer {
       throw stationFailureFrom('passengers_not_boarded:$pending');
     }
 
-    final earliest = _earliest(station);
-    if (earliest != null && now.isBefore(earliest)) {
-      throw stationFailureFrom(
-        'departure_time_not_reached:'
-        '${earliest.hour.toString().padLeft(2, '0')}:'
-        '${earliest.minute.toString().padLeft(2, '0')}',
-      );
-    }
-
     station.actualDeparture = now;
     departures.add(station.name);
     _push();
-  }
-
-  DateTime? _earliest(_ServerStation station) {
-    final dwell = station.actualArrival?.add(station.minDwell);
-    final planned = station.expectedDeparture;
-    if (dwell == null) return planned;
-    if (planned == null) return dwell;
-    return dwell.isAfter(planned) ? dwell : planned;
   }
 
   void resolveNoShow(String passengerId, String reason) {

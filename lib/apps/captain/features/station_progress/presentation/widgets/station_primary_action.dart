@@ -19,7 +19,8 @@ import '../formatters/station_labels.dart';
 /// arriving, continue to the next station, or end the trip.
 ///
 /// When the vehicle may not leave, the button is disabled **and the label
-/// becomes the reason** — "متبقي راكبان", "يمكنك المغادرة بعد 08:45". The reason
+/// becomes the reason** — "متبقي راكبان", the only thing that ever holds a
+/// vehicle at a station. The reason
 /// deliberately does not go on a second line: the docked bar holds one height
 /// across every state of the trip, because a bar that grows and shrinks reflows
 /// the page under the captain's thumb at exactly the moment they are reaching
@@ -80,8 +81,13 @@ class StationPrimaryAction extends StatelessWidget {
         label: StationLabels.departAction(_isLastStation(station)),
         icon: Icons.arrow_forward_rounded,
         color: CaptainColors.success,
-        onPressed: () =>
-            context.read<StationProgressCubit>().departCurrentStation(),
+        // Leaving with everyone aboard is the normal case and stays one tap.
+        // Leaving *before* the minute the riders here were published is not
+        // refused — nobody is left behind — but it is confirmed, because it is
+        // a decision rather than the flow of the trip.
+        onPressed: gate.aheadOfSchedule
+            ? () => _confirmEarlyDeparture(context, gate)
+            : () => context.read<StationProgressCubit>().departCurrentStation(),
       );
     }
 
@@ -89,12 +95,30 @@ class StationPrimaryAction extends StatelessWidget {
       label:
           StationLabels.gateDetail(gate, now) ??
           StationLabels.gateHeadline(gate),
-      icon: gate.state == StationGateState.waitingForPassengers
-          ? Icons.people_alt_rounded
-          : Icons.schedule_rounded,
+      icon: Icons.people_alt_rounded,
       color: CaptainColors.success,
       onPressed: null,
     );
+  }
+
+  Future<void> _confirmEarlyDeparture(
+    BuildContext context,
+    StationGate gate,
+  ) async {
+    final cubit = context.read<StationProgressCubit>();
+    final hint = StationLabels.earlyDepartureHint(gate, now);
+
+    final confirmed = await CaptainConfirmDialog.show(
+      context,
+      title: 'المغادرة قبل الموعد',
+      message: hint == null
+          ? 'صعد جميع ركاب هذه المحطة. هل تريد المغادرة الآن؟'
+          : 'صعد جميع ركاب هذه المحطة، والمغادرة الآن $hint. '
+                'هل تريد المتابعة؟',
+      confirmLabel: 'نعم، تحرك الآن',
+      confirmColor: CaptainColors.success,
+    );
+    if (confirmed) await cubit.departCurrentStation();
   }
 
   bool _isLastStation(TripStation station) =>
@@ -156,10 +180,9 @@ class _Action extends StatelessWidget {
                   child: Text(
                     label,
                     maxLines: 1,
-                    style: CaptainTypography.titleMedium(context).copyWith(
-                      fontWeight: FontWeight.w900,
-                      color: foreground,
-                    ),
+                    style: CaptainTypography.titleMedium(
+                      context,
+                    ).copyWith(fontWeight: FontWeight.w900, color: foreground),
                   ),
                 ),
               ),

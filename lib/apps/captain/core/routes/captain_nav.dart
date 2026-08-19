@@ -22,9 +22,6 @@ extension CaptainNav on BuildContext {
   Future<void> openPassengerManifest(String tripId) =>
       _push<void>(CaptainRoutes.passengerManifest, tripId);
 
-  Future<void> openLocationUpdate(String tripId) =>
-      _push<void>(CaptainRoutes.locationUpdate, tripId);
-
   Future<void> openStatusUpdate(String tripId) =>
       _push<void>(CaptainRoutes.statusUpdate, tripId);
 

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 
 /// Compact icon + label pill used for the facts on an upcoming trip card
-/// (duration, seats left, boarding state).
+/// (duration, seats left).
 class HomeTripChip extends StatelessWidget {
   const HomeTripChip({
     super.key,
@@ -19,10 +20,10 @@ class HomeTripChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withAlpha(20),
-        borderRadius: BorderRadius.circular(8),
+        color: color.withAlpha(22),
+        borderRadius: BorderRadius.circular(ClientRadius.xs),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -34,7 +35,7 @@ class HomeTripChip extends StatelessWidget {
               label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: ClientTypography.labelSmall(
+              style: ClientTypography.labelMedium(
                 context,
               ).copyWith(color: color, fontWeight: FontWeight.w800),
             ),
