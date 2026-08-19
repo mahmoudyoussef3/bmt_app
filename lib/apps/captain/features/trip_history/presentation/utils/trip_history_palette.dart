@@ -29,7 +29,7 @@ class TripHistoryPalette {
   );
 
   static const LinearGradient shortfallGradient = LinearGradient(
-    colors: [attention, Color(0xFFB45309)],
+    colors: [attention, accentDeep],
     begin: AlignmentDirectional.topStart,
     end: AlignmentDirectional.bottomEnd,
   );

@@ -141,7 +141,7 @@ class StatusUpdatePage extends StatelessWidget {
       CaptainTripStatus.boarding => CaptainColors.primary,
       CaptainTripStatus.departed => CaptainColors.primary,
       CaptainTripStatus.arrivedDestination => CaptainColors.primaryDeep,
-      CaptainTripStatus.completed => CaptainColors.offline,
+      CaptainTripStatus.completed => CaptainColors.primary,
     };
   }
 }

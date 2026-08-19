@@ -209,11 +209,11 @@ class _GateBanner extends StatelessWidget {
         Icons.check_circle_rounded,
       ),
       StationGateState.waitingForPassengers => (
-        CaptainColors.rating,
+        CaptainColors.primary,
         Icons.people_alt_rounded,
       ),
       StationGateState.notAtStation => (
-        CaptainColors.offline,
+        CaptainColors.primary,
         Icons.directions_bus_filled_rounded,
       ),
     };

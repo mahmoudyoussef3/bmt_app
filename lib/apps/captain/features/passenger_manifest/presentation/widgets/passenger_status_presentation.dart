@@ -4,6 +4,14 @@ import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 
 import '../../domain/entities/passenger.dart';
 
+/// How heavily a status badge is drawn.
+///
+/// Boarding status deliberately does **not** change hue. A manifest whose rows
+/// flip between green, red and amber is tiring to scan on a phone, so every
+/// status stays in the app's primary blue and is told apart by its icon, its
+/// label, and how filled its badge is.
+enum PassengerStatusEmphasis { solid, tinted, outlined, muted }
+
 extension PassengerStatusPresentation on PassengerBoardingStatus {
   String get label => switch (this) {
     PassengerBoardingStatus.boarded => 'صعد',
@@ -12,11 +20,13 @@ extension PassengerStatusPresentation on PassengerBoardingStatus {
     PassengerBoardingStatus.cancelled => 'ملغي',
   };
 
-  Color get color => switch (this) {
-    PassengerBoardingStatus.boarded => CaptainColors.success,
-    PassengerBoardingStatus.pending => CaptainColors.primary,
-    PassengerBoardingStatus.absent => CaptainColors.error,
-    PassengerBoardingStatus.cancelled => CaptainColors.offline,
+  Color get color => CaptainColors.primary;
+
+  PassengerStatusEmphasis get emphasis => switch (this) {
+    PassengerBoardingStatus.boarded => PassengerStatusEmphasis.solid,
+    PassengerBoardingStatus.pending => PassengerStatusEmphasis.tinted,
+    PassengerBoardingStatus.absent => PassengerStatusEmphasis.outlined,
+    PassengerBoardingStatus.cancelled => PassengerStatusEmphasis.muted,
   };
 
   IconData get icon => switch (this) {

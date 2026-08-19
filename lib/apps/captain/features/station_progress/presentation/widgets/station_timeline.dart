@@ -14,11 +14,7 @@ import '../formatters/station_labels.dart';
 /// acts through the one primary action at the bottom of the screen; this is
 /// where they look to answer "how much of this is left".
 class StationTimeline extends StatelessWidget {
-  const StationTimeline({
-    super.key,
-    required this.board,
-    required this.now,
-  });
+  const StationTimeline({super.key, required this.board, required this.now});
 
   final StationBoard board;
   final DateTime now;
@@ -70,9 +66,7 @@ class _StationRow extends StatelessWidget {
     final isCurrent = station.isCurrent;
     final done = station.hasDeparted;
 
-    final color = done
-        ? CaptainColors.success
-        : isCurrent
+    final color = done || isCurrent
         ? CaptainColors.primary
         : CaptainColors.textSecondaryFor(context);
 
@@ -80,7 +74,12 @@ class _StationRow extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _Spine(color: color, filled: done || isCurrent, isFirst: isFirst, isLast: isLast),
+          _Spine(
+            color: color,
+            filled: done || isCurrent,
+            isFirst: isFirst,
+            isLast: isLast,
+          ),
           const SizedBox(width: CaptainDesignTokens.s12),
           Expanded(
             child: Padding(
@@ -154,8 +153,8 @@ class _BoardingChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final complete = station.boardingResolved;
     final color = complete
-        ? CaptainColors.success
-        : CaptainColors.rating;
+        ? CaptainColors.primary
+        : CaptainColors.textSecondaryFor(context);
 
     return Container(
       padding: const EdgeInsets.symmetric(

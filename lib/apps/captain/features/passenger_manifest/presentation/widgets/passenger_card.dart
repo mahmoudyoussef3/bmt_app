@@ -6,7 +6,6 @@ import 'package:bmt_app/core/widgets/widgets.dart';
 import '../../domain/entities/passenger.dart';
 import 'passenger_action_button.dart';
 import 'passenger_card_details.dart';
-import 'passenger_status_presentation.dart';
 import 'passenger_status_sheet.dart';
 
 class PassengerCard extends StatelessWidget {
@@ -23,32 +22,18 @@ class PassengerCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AppCard(
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(width: 6, color: passenger.status.color),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsetsDirectional.fromSTEB(16, 16, 12, 16),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    AppAvatar(
-                      initials: passenger.name.isNotEmpty
-                          ? passenger.name[0]
-                          : '?',
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(child: PassengerCardDetails(passenger: passenger)),
-                    const SizedBox(width: 12),
-                    _Actions(passenger: passenger, onCall: onCall),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AppAvatar(
+            initials: passenger.name.isNotEmpty ? passenger.name[0] : '?',
+          ),
+          const SizedBox(width: 16),
+          Expanded(child: PassengerCardDetails(passenger: passenger)),
+          const SizedBox(width: 12),
+          _Actions(passenger: passenger, onCall: onCall),
+        ],
       ),
     );
   }
@@ -71,7 +56,7 @@ class _Actions extends StatelessWidget {
         PassengerActionButton(
           icon: Icons.edit_rounded,
           tooltip: 'تغيير الحالة',
-          color: CaptainColors.primary,
+          color: CaptainColors.textSecondaryFor(context),
           onPressed: canChangeStatus
               ? () => showPassengerStatusSheet(context, passenger)
               : null,
@@ -80,7 +65,7 @@ class _Actions extends StatelessWidget {
         PassengerActionButton(
           icon: Icons.call_rounded,
           tooltip: onCall == null ? 'لا يوجد رقم هاتف' : 'اتصال',
-          color: CaptainColors.primary,
+          color: CaptainColors.textSecondaryFor(context),
           onPressed: onCall,
         ),
       ],

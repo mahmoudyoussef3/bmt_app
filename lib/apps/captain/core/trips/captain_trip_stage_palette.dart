@@ -6,15 +6,14 @@ import 'captain_trip_stage.dart';
 class CaptainTripStagePalette {
   const CaptainTripStagePalette._();
 
-  static Color accent(CaptainTripStage stage) => switch (stage) {
-    CaptainTripStage.awaitingRelease => CaptainColors.offline,
-    CaptainTripStage.awaitingWindow ||
-    CaptainTripStage.readyToBoard => CaptainColors.primary,
-    CaptainTripStage.boarding => const Color(0xFFD97706),
-    CaptainTripStage.underway => const Color(0xFF0284C7),
-    CaptainTripStage.finished => CaptainColors.offline,
-    CaptainTripStage.cancelled => CaptainColors.error,
-  };
+  /// The trip stage never changes hue.
+  ///
+  /// A card that turns amber while boarding, cyan while underway and red when
+  /// cancelled makes the screen feel like it is alarming the captain at every
+  /// step of an ordinary trip. The stage is already spelled out by [icon] and
+  /// by the stage label next to it, so the surface stays in one calm primary
+  /// blue and only the wording and the icon move.
+  static Color accent(CaptainTripStage stage) => CaptainColors.primary;
 
   static Color onAccent(Color accent) {
     return ThemeData.estimateBrightnessForColor(accent) == Brightness.dark
@@ -23,21 +22,12 @@ class CaptainTripStagePalette {
   }
 
   static LinearGradient gradient(CaptainTripStage stage) {
-    final base = accent(stage);
-    return LinearGradient(
-      colors: [base, _deepen(stage, base)],
+    return const LinearGradient(
+      colors: [CaptainColors.primary, CaptainColors.primaryDeep],
       begin: AlignmentDirectional.topStart,
       end: AlignmentDirectional.bottomEnd,
     );
   }
-
-  static Color _deepen(CaptainTripStage stage, Color base) => switch (stage) {
-    CaptainTripStage.underway => CaptainColors.primary,
-    CaptainTripStage.boarding => const Color(0xFFB45309),
-    CaptainTripStage.awaitingWindow ||
-    CaptainTripStage.readyToBoard => CaptainColors.primaryDeep,
-    _ => Color.lerp(base, Colors.black, 0.25)!,
-  };
 
   static IconData icon(CaptainTripStage stage) => switch (stage) {
     CaptainTripStage.awaitingRelease => Icons.lock_clock_rounded,

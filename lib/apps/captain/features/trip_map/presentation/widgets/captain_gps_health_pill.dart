@@ -67,24 +67,23 @@ class CaptainGpsHealthPill extends StatelessWidget {
     );
   }
 
-  // `success`/`warning` both alias to `CaptainColors.primary` (see
-  // captain_colors.dart) — using `warning` here would leave "live" and
-  // "acquiring"/"lost" reading as the exact same blue. `rating` (the app's
-  // established caution amber, already used this way elsewhere in this
-  // feature) is what actually separates "still fine" from "needs a glance".
+  // Healthy and still-searching are both normal, so they share the one primary
+  // blue and are separated by the icon and the wording. Red is spent only on
+  // the two states the captain has to act on — tracking dropped, or the device
+  // will not give a location at all.
   (Color, IconData, String) get _presentation => switch (health) {
     GpsHealth.live => (
-      CaptainColors.success,
+      CaptainColors.primary,
       Icons.gps_fixed_rounded,
       'التتبع المباشر نشط',
     ),
     GpsHealth.acquiring => (
-      CaptainColors.rating,
+      CaptainColors.primary,
       Icons.gps_not_fixed_rounded,
       'جارٍ تحديد الموقع…',
     ),
     GpsHealth.lost => (
-      CaptainColors.rating,
+      CaptainColors.error,
       Icons.gps_off_rounded,
       'انقطع الاتصال بالموقع',
     ),

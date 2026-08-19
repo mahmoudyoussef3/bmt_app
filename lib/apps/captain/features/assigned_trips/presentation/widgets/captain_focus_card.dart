@@ -59,10 +59,10 @@ class CaptainFocusCard extends StatelessWidget {
                       trip.route,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: CaptainTypography.titleLarge(context).copyWith(
+                      style: CaptainTypography.titleMedium(context).copyWith(
                         fontWeight: FontWeight.w900,
                         color: CaptainColors.textPrimaryFor(context),
-                        height: 1.25,
+                        height: 1.3,
                       ),
                     ),
                     const SizedBox(height: CaptainDesignTokens.s12),

@@ -371,7 +371,7 @@ class _StackedCell extends StatelessWidget {
       children: [
         Text(
           primary,
-          maxLines: 1,
+          maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: text.bodyMedium?.copyWith(
             fontWeight: FontWeight.w800,
@@ -382,7 +382,7 @@ class _StackedCell extends StatelessWidget {
           const SizedBox(height: 2),
           Text(
             secondary!,
-            maxLines: 1,
+            maxLines: 2,
             overflow: TextOverflow.ellipsis,
             style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
           ),
@@ -507,7 +507,7 @@ class _ActionIcon extends StatelessWidget {
       padding: EdgeInsets.zero,
       constraints: const BoxConstraints(minWidth: 34, minHeight: 34),
       style: IconButton.styleFrom(
-        backgroundColor: style.resolve(context).tint,
+        backgroundColor: Colors.transparent,
         foregroundColor: style.resolve(context).ink,
         padding: EdgeInsets.zero,
         minimumSize: const Size(32, 32),

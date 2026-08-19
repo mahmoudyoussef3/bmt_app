@@ -35,7 +35,7 @@ class StationBoardingTally extends StatelessWidget {
           child: _Cell(
             value: station.boardedCount,
             label: 'صعدوا',
-            color: CaptainColors.success,
+            color: CaptainColors.primary,
           ),
         ),
         const _Separator(),
@@ -44,7 +44,7 @@ class StationBoardingTally extends StatelessWidget {
             value: pending,
             label: 'لم يصعدوا',
             color: pending > 0
-                ? CaptainColors.rating
+                ? CaptainColors.primary
                 : CaptainColors.textSecondaryFor(context),
           ),
         ),
@@ -57,7 +57,7 @@ class StationBoardingTally extends StatelessWidget {
             child: _Cell(
               value: noShow,
               label: 'لم يحضروا',
-              color: CaptainColors.offline,
+              color: CaptainColors.textSecondaryFor(context),
             ),
           ),
         ],

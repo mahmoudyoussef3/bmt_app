@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
+
 import '../../domain/entities/passenger.dart';
 import 'passenger_status_badge.dart';
 
@@ -15,7 +17,7 @@ class PassengerCardDetails extends StatelessWidget {
       children: [
         Row(
           children: [
-            Expanded(
+            Flexible(
               child: Text(
                 passenger.name,
                 style: Theme.of(
@@ -23,11 +25,20 @@ class PassengerCardDetails extends StatelessWidget {
                 ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
               ),
             ),
+            const SizedBox(width: 8),
             PassengerStatusBadge(status: passenger.status),
           ],
         ),
-        const SizedBox(height: 4),
-        _MutedText('مقعد ${passenger.seat}  •  ${passenger.pickupPoint}'),
+        const SizedBox(height: 6),
+        Wrap(
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 6,
+          children: [
+            _MutedText('مقعد ${passenger.seat}'),
+            const _MutedText('•'),
+            _MutedText(passenger.pickupPoint),
+          ],
+        ),
         if (passenger.destination.isNotEmpty) ...[
           const SizedBox(height: 8),
           _IconLine(
@@ -40,7 +51,7 @@ class PassengerCardDetails extends StatelessWidget {
           _IconLine(
             icon: Icons.schedule_rounded,
             text: passenger.pickupTime,
-            color: Colors.blue,
+            color: CaptainColors.primary,
           ),
         ],
       ],

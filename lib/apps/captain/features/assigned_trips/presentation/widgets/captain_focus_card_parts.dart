@@ -89,23 +89,30 @@ class FocusFact extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Flexible(
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 17, color: CaptainColors.textSecondaryFor(context)),
-          const SizedBox(width: 6),
-          Flexible(
-            child: Text(
-              text,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: CaptainTypography.bodyMedium(context).copyWith(
-                color: CaptainColors.textPrimaryFor(context),
-                fontWeight: FontWeight.w800,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+        decoration: BoxDecoration(
+          color: CaptainColors.primary.withValues(alpha: 0.08),
+          borderRadius: CaptainDesignTokens.brPill,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16, color: CaptainColors.primary),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                text,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: CaptainTypography.labelMedium(context).copyWith(
+                  color: CaptainColors.primary,
+                  fontWeight: FontWeight.w800,
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -127,30 +134,41 @@ class FocusBoardingBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final progress = total == 0 ? 0.0 : boarded / total;
 
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Expanded(
-          child: ClipRRect(
-            borderRadius: CaptainDesignTokens.brPill,
-            child: TweenAnimationBuilder<double>(
-              tween: Tween(begin: 0, end: progress),
-              duration: const Duration(milliseconds: 450),
-              curve: Curves.easeOutCubic,
-              builder: (context, value, _) => LinearProgressIndicator(
-                value: value,
-                minHeight: 8,
-                backgroundColor: accent.withValues(alpha: 0.14),
-                valueColor: AlwaysStoppedAnimation<Color>(accent),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'الركاب للصعود',
+              style: CaptainTypography.labelMedium(context).copyWith(
+                color: CaptainColors.textSecondaryFor(context),
+                fontWeight: FontWeight.w700,
               ),
             ),
-          ),
+            Text(
+              '$boarded / $total',
+              style: CaptainTypography.labelLarge(context).copyWith(
+                color: CaptainColors.textPrimaryFor(context),
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(width: CaptainDesignTokens.s12),
-        Text(
-          '$boarded/$total صعدوا',
-          style: CaptainTypography.labelMedium(context).copyWith(
-            color: CaptainColors.textSecondaryFor(context),
-            fontWeight: FontWeight.w800,
+        const SizedBox(height: 8),
+        ClipRRect(
+          borderRadius: CaptainDesignTokens.brPill,
+          child: TweenAnimationBuilder<double>(
+            tween: Tween(begin: 0, end: progress),
+            duration: const Duration(milliseconds: 450),
+            curve: Curves.easeOutCubic,
+            builder: (context, value, _) => LinearProgressIndicator(
+              value: value,
+              minHeight: 8,
+              backgroundColor: accent.withValues(alpha: 0.14),
+              valueColor: AlwaysStoppedAnimation<Color>(accent),
+            ),
           ),
         ),
       ],

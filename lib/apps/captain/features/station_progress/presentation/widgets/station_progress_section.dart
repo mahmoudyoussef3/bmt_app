@@ -93,17 +93,17 @@ class _FailureNote extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(CaptainDesignTokens.s16),
           decoration: BoxDecoration(
-            color: CaptainColors.rating.withValues(alpha: 0.12),
+            color: CaptainColors.error.withValues(alpha: 0.12),
             borderRadius: CaptainDesignTokens.br16,
             border: Border.all(
-              color: CaptainColors.rating.withValues(alpha: 0.4),
+              color: CaptainColors.error.withValues(alpha: 0.4),
             ),
           ),
           child: Row(
             children: [
               const Icon(
                 Icons.info_outline_rounded,
-                color: CaptainColors.rating,
+                color: CaptainColors.error,
                 size: 22,
               ),
               const SizedBox(width: CaptainDesignTokens.s12),

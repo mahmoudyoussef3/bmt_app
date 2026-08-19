@@ -13,34 +13,42 @@ class AssignedTripsStatsStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            _Stat(
-              icon: Icons.route_rounded,
-              value: '${summary.totalTrips}',
-              label: 'رحلات',
-            ),
-            _Stat(
-              icon: Icons.bolt_rounded,
-              value: '${summary.activeTrips}',
-              label: 'نشطة',
-              color: summary.activeTrips > 0 ? CaptainColors.warning : null,
-            ),
-            _Stat(
-              icon: Icons.people_alt_rounded,
-              value: '${summary.passengers}',
-              label: 'ركاب',
-            ),
+    return Container(
+      padding: const EdgeInsets.all(CaptainDesignTokens.s16),
+      decoration: BoxDecoration(
+        color: CaptainColors.surfaceFor(context).withValues(alpha: 0.4),
+        borderRadius: CaptainDesignTokens.br16,
+        border: Border.all(color: CaptainColors.dividerFor(context)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              _Stat(
+                icon: Icons.route_rounded,
+                value: '${summary.totalTrips}',
+                label: 'رحلات',
+              ),
+              _Stat(
+                icon: Icons.bolt_rounded,
+                value: '${summary.activeTrips}',
+                label: 'نشطة',
+                color: summary.activeTrips > 0 ? CaptainColors.warning : null,
+              ),
+              _Stat(
+                icon: Icons.people_alt_rounded,
+                value: '${summary.passengers}',
+                label: 'ركاب',
+              ),
+            ],
+          ),
+          if (summary.passengers > 0) ...[
+            const SizedBox(height: CaptainDesignTokens.s12),
+            _BoardingLine(summary: summary),
           ],
-        ),
-        if (summary.passengers > 0) ...[
-          const SizedBox(height: CaptainDesignTokens.s12),
-          _BoardingLine(summary: summary),
         ],
-      ],
+      ),
     );
   }
 }

@@ -27,11 +27,11 @@ class CaptainPickupRiderTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final (statusColor, statusIcon) = switch (rider.status) {
       PassengerBoardingStatus.boarded => (
-        CaptainColors.success,
+        CaptainColors.primary,
         Icons.check_circle_rounded,
       ),
       PassengerBoardingStatus.absent => (
-        CaptainColors.error,
+        CaptainColors.primary,
         Icons.person_off_rounded,
       ),
       _ => (CaptainColors.primary, Icons.hourglass_top_rounded),
@@ -93,7 +93,7 @@ class _PendingActions extends StatelessWidget {
             label: 'تأكيد الصعود',
             icon: Icons.how_to_reg_rounded,
             filled: true,
-            color: CaptainColors.success,
+            color: CaptainColors.primary,
             onTap: onConfirm,
           ),
         ),
@@ -103,7 +103,7 @@ class _PendingActions extends StatelessWidget {
             label: 'غائب',
             icon: Icons.person_off_rounded,
             filled: false,
-            color: CaptainColors.error,
+            color: CaptainColors.primary,
             onTap: onAbsent,
           ),
         ),
@@ -122,8 +122,8 @@ class _ResolvedRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final label = rider.hasBoarded ? 'صعد إلى المركبة' : 'مُسجّل كغائب';
     final color = rider.hasBoarded
-        ? CaptainColors.success
-        : CaptainColors.error;
+        ? CaptainColors.primary
+        : CaptainColors.textSecondaryFor(context);
     return Row(
       children: [
         Expanded(

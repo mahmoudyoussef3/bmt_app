@@ -14,46 +14,45 @@ class PassengerStatsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsetsDirectional.fromSTEB(
-        CaptainDesignTokens.s24,
-        CaptainDesignTokens.s16,
-        CaptainDesignTokens.s24,
-        CaptainDesignTokens.s16,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Container(
-        padding: const EdgeInsets.all(CaptainDesignTokens.s24),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: CaptainColors.surfaceFor(context),
-          borderRadius: CaptainDesignTokens.br24,
+          borderRadius: CaptainDesignTokens.br16,
           boxShadow: CaptainDesignTokens.softShadow(context),
         ),
         child: Column(
           children: [
+            // The three live tallies share one colour on purpose — their icons
+            // and labels say which is which, and a row that recolours itself as
+            // boarding progresses is noise the captain has to re-read.
             Row(
               children: [
                 _Stat(
+                  icon: Icons.check_circle_rounded,
                   label: 'صعد',
                   value: counts.boarded,
-                  color: CaptainColors.success,
                 ),
                 _Stat(
+                  icon: Icons.hourglass_top_rounded,
                   label: 'بانتظار',
                   value: counts.pending,
-                  color: CaptainColors.primary,
                 ),
                 _Stat(
+                  icon: Icons.person_off_rounded,
                   label: 'غائب',
                   value: counts.absent,
-                  color: CaptainColors.error,
                 ),
                 _Stat(
+                  icon: Icons.people_alt_rounded,
                   label: 'المتوقعون',
                   value: counts.expected,
-                  color: CaptainColors.textSecondaryFor(context),
+                  muted: true,
                 ),
               ],
             ),
-            const SizedBox(height: CaptainDesignTokens.s24),
+            const SizedBox(height: 16),
             _BoardingProgress(ratio: counts.boardedRatio),
           ],
         ),
@@ -73,41 +72,57 @@ class _BoardingProgress extends StatelessWidget {
       borderRadius: CaptainDesignTokens.br8,
       child: LinearProgressIndicator(
         value: ratio,
-        minHeight: 8,
+        minHeight: 6,
         backgroundColor: CaptainColors.primary.withValues(alpha: 0.1),
-        valueColor: AlwaysStoppedAnimation<Color>(
-          ratio == 1.0 ? CaptainColors.success : CaptainColors.primary,
-        ),
+        valueColor: const AlwaysStoppedAnimation<Color>(CaptainColors.primary),
       ),
     );
   }
 }
 
 class _Stat extends StatelessWidget {
-  const _Stat({required this.label, required this.value, required this.color});
+  const _Stat({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.muted = false,
+  });
 
+  final IconData icon;
   final String label;
   final int value;
-  final Color color;
+  final bool muted;
 
   @override
   Widget build(BuildContext context) {
+    final secondary = CaptainColors.textSecondaryFor(context);
+    final accent = muted ? secondary : CaptainColors.primary;
+
     return Expanded(
       child: Column(
         children: [
           Text(
             '$value',
-            style: CaptainTypography.headlineMedium(
+            style: CaptainTypography.titleLarge(
               context,
-            ).copyWith(color: color, fontWeight: FontWeight.w900),
+            ).copyWith(color: accent, fontWeight: FontWeight.w900),
           ),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: CaptainTypography.labelSmall(context).copyWith(
-              color: CaptainColors.textSecondaryFor(context),
-              fontWeight: FontWeight.w700,
-            ),
+          const SizedBox(height: 4),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 12, color: secondary),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  label,
+                  overflow: TextOverflow.ellipsis,
+                  style: CaptainTypography.labelSmall(
+                    context,
+                  ).copyWith(color: secondary, fontWeight: FontWeight.w700),
+                ),
+              ),
+            ],
           ),
         ],
       ),

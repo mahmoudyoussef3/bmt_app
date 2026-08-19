@@ -442,7 +442,7 @@ class _FinishedCard extends StatelessWidget {
         children: [
           Icon(
             cancelled ? Icons.cancel_rounded : Icons.check_circle_rounded,
-            color: cancelled ? CaptainColors.error : CaptainColors.success,
+            color: CaptainColors.primary,
           ),
           const SizedBox(width: CaptainDesignTokens.s12),
           Expanded(
