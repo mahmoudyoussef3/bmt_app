@@ -29,12 +29,12 @@ class _WizardPackageStepState extends State<WizardPackageStep> {
     _loadAndApplyInitialSelection();
   }
 
-  /// Loads the catalogue, then applies the package reviewed before this
-  /// search started, if any and if nothing has been chosen yet.
+  /// Loads this trip's fare menu, then applies the package reviewed before
+  /// this search started, if any and if nothing has been chosen yet.
   Future<void> _loadAndApplyInitialSelection() async {
     final packagesCubit = context.read<PackagesCubit>();
     final wizardCubit = context.read<BookingWizardCubit>();
-    await packagesCubit.load();
+    await _load(packagesCubit, wizardCubit.state);
     if (!mounted || wizardCubit.state.selectedPackage != null) return;
     final packageId = wizardCubit.initialPackageId;
     final packagesState = packagesCubit.state;
@@ -45,6 +45,15 @@ class _WizardPackageStepState extends State<WizardPackageStep> {
         break;
       }
     }
+  }
+
+  /// The menu is the trip's, not the marketplace's: which packages exist here
+  /// is decided per trip by the office that runs it.
+  Future<void> _load(PackagesCubit cubit, BookingWizardSession session) {
+    return cubit.loadForTrip(
+      officeId: session.route.office.id,
+      packageIds: session.tripPackageIds,
+    );
   }
 
   void _select(PackagePlan plan) {
@@ -68,10 +77,13 @@ class _WizardPackageStepState extends State<WizardPackageStep> {
         if (packagesState is PackagesError) {
           return PackageFaresError(
             message: packagesState.message,
-            onRetry: context.read<PackagesCubit>().load,
+            onRetry: () => _load(
+              context.read<PackagesCubit>(),
+              context.read<BookingWizardCubit>().state,
+            ),
           );
         }
-        
+
         final plans = (packagesState as PackagesLoaded).packages;
         final featured = _featuredIndex(plans);
 
@@ -105,6 +117,7 @@ class _WizardPackageStepState extends State<WizardPackageStep> {
                             plan: plans[i],
                             price: session.resolvedPackagePrice(plans[i]),
                             singleRideFare: session.tripPrice,
+                            note: session.packageNoteFor(plans[i]),
                             isFeatured: i == featured,
                             isSelected:
                                 session.selectedPackage?.id == plans[i].id,

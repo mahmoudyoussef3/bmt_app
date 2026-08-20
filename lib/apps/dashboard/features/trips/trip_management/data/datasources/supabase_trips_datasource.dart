@@ -8,6 +8,7 @@ import '../../../../../core/session/dashboard_session.dart';
 import '../../../trip_creation/domain/entities/trip_driver_option.dart';
 import '../../../shared/domain/entities/operation_trip.dart';
 import '../../../shared/domain/entities/trip_lifecycle.dart';
+import '../../../shared/domain/entities/trip_package_offer.dart';
 import '../../../shared/domain/entities/trip_pricable_package.dart';
 import '../../../shared/domain/entities/trip_pricing.dart';
 import '../../../shared/data/models/operation_trip_model.dart';
@@ -401,8 +402,10 @@ class SupabaseTripsDatasource implements TripsDatasource {
     }
   }
 
-  /// `trip_pricing` plus its per-package prices, joined in one round trip.
-  static const _pricingSelect = '*, trip_package_prices(package_id, price)';
+  /// `trip_pricing` plus its per-package prices and notes, joined in one
+  /// round trip.
+  static const _pricingSelect =
+      '*, trip_package_prices(package_id, price, note)';
 
   @override
   Future<List<TripPricingModel>> fetchTripPricing(String tripId) async {
@@ -456,6 +459,7 @@ class SupabaseTripsDatasource implements TripsDatasource {
               'trip_pricing_id': pricingId,
               'package_id': entry.key,
               'price': entry.value,
+              'note': pricing.packageNotes[entry.key] ?? '',
             },
         ]);
       }
@@ -505,37 +509,121 @@ class SupabaseTripsDatasource implements TripsDatasource {
     }
   }
 
+  static const _packageColumns =
+      'id, name_ar, name_en, ride_count, duration_days, price';
+
   @override
   Future<List<TripPricablePackage>> fetchOfficePricablePackages() async {
     try {
       final response = await _client
           .from('transport_packages')
-          .select('id, name_ar, name_en, ride_count, duration_days')
+          .select(_packageColumns)
           .eq('office_id', _session.officeId)
           .eq('active', true)
+          // Catalog packages only. A package created for one trip
+          // (`trip_id` set) is that trip's own menu item, never a template
+          // the planner offers on other trips — see
+          // `20260820100000_trip_scoped_packages.sql`.
+          .isFilter('trip_id', null)
           .order('display_order', ascending: true);
 
-      return (response as List)
-          .map((row) => row as Map<String, dynamic>)
-          .where((row) {
-            final rideCount = (row['ride_count'] as num?)?.toInt() ?? 1;
-            final durationDays = (row['duration_days'] as num?)?.toInt() ?? 1;
-            return !(durationDays <= 1 && rideCount <= 1);
-          })
-          .map((row) {
-            final nameAr = row['name_ar']?.toString() ?? '';
-            final nameEn = row['name_en']?.toString() ?? '';
-            return TripPricablePackage(
-              id: row['id'].toString(),
-              name: nameAr.trim().isEmpty ? nameEn : nameAr,
-              rideCount: (row['ride_count'] as num?)?.toInt() ?? 1,
-              durationDays: (row['duration_days'] as num?)?.toInt() ?? 1,
-            );
-          })
-          .toList();
+      return _pricablePackagesFrom(response as List);
     } catch (e) {
       throw _handleError(e);
     }
+  }
+
+  @override
+  Future<List<TripPricablePackage>> fetchTripScopedPackages(
+    String tripId,
+  ) async {
+    try {
+      final response = await _client
+          .from('transport_packages')
+          .select(_packageColumns)
+          .eq('office_id', _session.officeId)
+          .eq('active', true)
+          .eq('trip_id', tripId)
+          .order('display_order', ascending: true);
+
+      return _pricablePackagesFrom(response as List, tripScoped: true);
+    } catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  @override
+  Future<String> createTripPackage({
+    required String tripId,
+    required TripPackageOffer offer,
+  }) async {
+    try {
+      final displayOrder = await _nextPackageDisplayOrder();
+      final inserted = await _client
+          .from('transport_packages')
+          .insert({
+            'office_id': _session.officeId,
+            'trip_id': tripId,
+            'name_ar': offer.name.trim(),
+            'name_en': offer.name.trim(),
+            // package_type is a free-text discriminator since the enum was
+            // dropped; a trip package needs one that cannot collide with a
+            // catalog entry's.
+            'package_type': 'trip_${DateTime.now().microsecondsSinceEpoch}',
+            'price': offer.price,
+            'duration_days': offer.durationDays,
+            'ride_count': offer.rideCount,
+            'description_ar': '',
+            'description_en': '',
+            'active': true,
+            'display_order': displayOrder,
+          })
+          .select('id')
+          .single();
+      return inserted['id'].toString();
+    } catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<int> _nextPackageDisplayOrder() async {
+    final row = await _client
+        .from('transport_packages')
+        .select('display_order')
+        .eq('office_id', _session.officeId)
+        .order('display_order', ascending: false)
+        .limit(1)
+        .maybeSingle();
+    return ((row?['display_order'] as num?)?.toInt() ?? 0) + 1;
+  }
+
+  /// Maps `transport_packages` rows to the fare editor's shape, dropping the
+  /// single-ride shape: that one *is* the trip's base ticket price
+  /// (`trip_pricing.one_time_price`), not a package with its own
+  /// `trip_package_prices` row.
+  List<TripPricablePackage> _pricablePackagesFrom(
+    List rows, {
+    bool tripScoped = false,
+  }) {
+    return rows
+        .map((row) => row as Map<String, dynamic>)
+        .where((row) {
+          final rideCount = (row['ride_count'] as num?)?.toInt() ?? 1;
+          final durationDays = (row['duration_days'] as num?)?.toInt() ?? 1;
+          return !(durationDays <= 1 && rideCount <= 1);
+        })
+        .map((row) {
+          final nameAr = row['name_ar']?.toString() ?? '';
+          final nameEn = row['name_en']?.toString() ?? '';
+          return TripPricablePackage(
+            id: row['id'].toString(),
+            name: nameAr.trim().isEmpty ? nameEn : nameAr,
+            rideCount: (row['ride_count'] as num?)?.toInt() ?? 1,
+            durationDays: (row['duration_days'] as num?)?.toInt() ?? 1,
+            isTripScoped: tripScoped,
+          );
+        })
+        .toList();
   }
 
   @override
@@ -863,6 +951,9 @@ class SupabaseTripsDatasource implements TripsDatasource {
     }
     if (message.contains('trip_not_found')) {
       return 'الرحلة غير موجودة.';
+    }
+    if (message.contains('package_trip_office_mismatch')) {
+      return 'لا يمكن ربط باقة بمكتب مختلف عن مكتب الرحلة.';
     }
     return null;
   }

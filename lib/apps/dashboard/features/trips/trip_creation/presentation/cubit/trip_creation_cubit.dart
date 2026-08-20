@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../shared/domain/entities/operation_trip.dart';
+import '../../../shared/domain/entities/trip_package_offer.dart';
 import '../../../shared/domain/entities/trip_pricable_package.dart';
 import '../../../shared/domain/entities/trip_pricing.dart';
 import '../../domain/entities/trip_driver_option.dart';
@@ -29,7 +30,8 @@ class TripCreationWizardDataLoaded extends TripCreationState {
   /// the planner offers one resource choice and derives the bus from it.
   final List<TripDriverOption> drivers;
 
-  /// The office's own pricable packages, for the fare panel.
+  /// The office's saved catalog packages, offered as a starting point in the
+  /// fare panel — never the limit of what a trip may sell.
   final List<TripPricablePackage> packages;
 
   const TripCreationWizardDataLoaded({
@@ -65,9 +67,9 @@ class TripCreationCubit extends Cubit<TripCreationState> {
        super(const TripCreationInitial());
 
   /// Three independent reads, issued together. Routes/drivers used to be
-  /// three round trips on their own; the office's own pricable packages —
-  /// what the fare panel offers a price field for — joins them here rather
-  /// than the fare panel fetching separately.
+  /// three round trips on their own; the office's catalog packages — what the
+  /// fare panel offers to add to the trip — join them here rather than the
+  /// fare panel fetching separately.
   Future<void> loadWizardData() async {
     emit(const TripCreationLoading());
     try {
@@ -88,15 +90,18 @@ class TripCreationCubit extends Cubit<TripCreationState> {
     }
   }
 
+  /// [offers] is the package menu the operator built for this trip. Any offer
+  /// with no `packageId` is created against the new trip before it is priced,
+  /// so an office can sell a package it never added to its catalog.
   Future<OperationTrip?> submitTrip(
     CreateTripInput input,
     List<TripPricing> pricing,
-    List<TripPricablePackage> packages,
+    List<TripPackageOffer> offers,
   ) async {
     final prev = state;
     emit(const TripCreationLoading());
     try {
-      final trip = await _createTrip(input, pricing, packages);
+      final trip = await _createTrip(input, pricing, offers);
       emit(TripCreationSuccess(trip));
       return trip;
     } catch (e) {
@@ -136,7 +141,6 @@ class TripCreationCubit extends Cubit<TripCreationState> {
   /// exclusion-constraint names appear when a conflicting write reaches the table
   /// without going through `create_trip`.
   static String _friendlyError(String raw) {
-    
     if (raw.contains('driver_has_no_vehicle')) {
       return 'هذا السائق غير مرتبط بسيارة حالياً. عيّن له سيارة من إدارة الأسطول '
           'ثم أعد المحاولة.';

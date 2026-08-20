@@ -24,7 +24,10 @@ class _StaticPackagesRepository implements PackagesRepository {
   }
 
   @override
-  Future<List<PackagePlan>> getPackages() => throw UnimplementedError();
+  Future<List<PackagePlan>> getTripPackages({
+    required String officeId,
+    required Set<String> packageIds,
+  }) => throw UnimplementedError();
 
   @override
   Future<List<PackagePlan>> getOfficePackages(String officeId) =>

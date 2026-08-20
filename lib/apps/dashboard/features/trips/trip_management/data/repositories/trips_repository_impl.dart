@@ -1,5 +1,6 @@
 import '../../../shared/domain/entities/operation_trip.dart';
 import '../../../shared/domain/entities/trip_lifecycle.dart';
+import '../../../shared/domain/entities/trip_package_offer.dart';
 import '../../../shared/domain/entities/trip_pricable_package.dart';
 import '../../../shared/domain/entities/trip_pricing.dart';
 import '../../../trip_creation/domain/entities/trip_driver_option.dart';
@@ -45,7 +46,7 @@ class TripsRepositoryImpl implements TripsRepository {
           'لا يمكن نقل الرحلة من "${trip.status.label}" إلى "${status.label}". استخدم الخطوة التشغيلية التالية فقط.',
         );
       }
-      
+
       if (status == OperationTripStatus.openForBooking) {
         final blocker = TripPublishBlocker.evaluate(trip);
         if (blocker != null) {
@@ -116,7 +117,6 @@ class TripsRepositoryImpl implements TripsRepository {
   @override
   Future<OperationTrip> createTrip(CreateTripInput input) async {
     try {
-      
       if (input.routeId.trim().isEmpty || input.route.trim().isEmpty) {
         throw Exception('المسار مطلوب لإنشاء رحلة.');
       }
@@ -172,7 +172,6 @@ class TripsRepositoryImpl implements TripsRepository {
   @override
   Future<void> deleteTrip(String tripId) async {
     try {
-      
       final trip = await _datasource.fetchTripById(tripId);
       if (!TripLifecycle.canDelete(trip)) {
         throw Exception(
@@ -298,7 +297,6 @@ class TripsRepositoryImpl implements TripsRepository {
   @override
   Future<TripPricing> upsertTripPricing(TripPricing pricing) async {
     try {
-      
       if (pricing.tripId.trim().isEmpty) {
         throw Exception('معرف الرحلة مطلوب.');
       }
@@ -329,6 +327,28 @@ class TripsRepositoryImpl implements TripsRepository {
       return await _datasource.fetchOfficePricablePackages();
     } catch (e) {
       throw Exception('تعذر تحميل باقات المكتب: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<List<TripPricablePackage>> getTripScopedPackages(String tripId) async {
+    try {
+      return await _datasource.fetchTripScopedPackages(tripId);
+    } catch (e) {
+      throw Exception('تعذر تحميل باقات الرحلة: ${e.toString()}');
+    }
+  }
+
+  @override
+  Future<String> createTripPackage({
+    required String tripId,
+    required TripPackageOffer offer,
+  }) async {
+    try {
+      return await _datasource.createTripPackage(tripId: tripId, offer: offer);
+    } catch (e) {
+      if (e.toString().contains('Exception:')) rethrow;
+      throw Exception('تعذر إنشاء باقة الرحلة: ${e.toString()}');
     }
   }
 

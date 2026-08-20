@@ -35,11 +35,22 @@ class _FakeDatasource implements PackagesDatasource {
   final List<PackagePlanModel> rows;
   final List<PackagePlanModel>? officeRows;
   String? requestedOfficeId;
+  Set<String>? requestedPackageIds;
 
   @override
   Future<List<PackagePlanModel>> getPackages({String? officeId}) async {
     requestedOfficeId = officeId;
     if (officeId != null && officeRows != null) return officeRows!;
+    return rows;
+  }
+
+  @override
+  Future<List<PackagePlanModel>> getTripPackages({
+    required String officeId,
+    required Set<String> packageIds,
+  }) async {
+    requestedOfficeId = officeId;
+    requestedPackageIds = packageIds;
     return rows;
   }
 
@@ -137,7 +148,10 @@ void main() {
         ]);
         final repo = PackagesRepositoryImpl(datasource);
 
-        final packages = await repo.getPackages();
+        final packages = await repo.getTripPackages(
+          officeId: 'o1',
+          packageIds: const {'listed', 'orphan'},
+        );
 
         expect(packages.map((p) => p.id), ['listed']);
       },

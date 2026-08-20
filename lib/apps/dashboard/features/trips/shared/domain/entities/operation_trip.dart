@@ -339,14 +339,12 @@ class CreateTripInput {
   final String date;
   final String departure;
   final String arrival;
-  final double ticketPrice;
 
-  /// Package prices configured alongside [ticketPrice] in the planner's
-  /// pricing panel, keyed by `transport_packages.id`. Any package missing or
-  /// <= 0 is derived from [ticketPrice] by `PackageTierPricing`, so a trip
-  /// can never end up with a subscription package priced the same as a
-  /// single ride.
-  final Map<String, double> packagePrices;
+  /// The single-ride fare. The packages this trip sells are not derived from
+  /// it — they are chosen and priced explicitly in the planner's fare panel
+  /// and carried alongside this input as [TripPackageOffer]s, so an office is
+  /// never forced onto a catalog template it did not pick.
+  final double ticketPrice;
 
   final String currency;
   final List<Map<String, String>> customStationTimes;
@@ -360,7 +358,6 @@ class CreateTripInput {
     required this.departure,
     this.arrival = '',
     this.ticketPrice = 0,
-    this.packagePrices = const {},
     this.currency = 'ج.م',
     this.customStationTimes = const [],
   });

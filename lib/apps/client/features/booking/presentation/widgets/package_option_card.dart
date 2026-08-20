@@ -24,11 +24,19 @@ class PackageOptionCard extends StatelessWidget {
     required this.isFeatured,
     required this.isSelected,
     required this.onTap,
+    this.note,
   });
 
   final PackagePlan plan;
   final double price;
   final double singleRideFare;
+
+  /// What the office wrote about this package on this trip — terms the rider
+  /// should read before choosing it ("تشمل رحلة العودة"). Null when they
+  /// wrote none. Per trip, not per package: the same package can carry a
+  /// different note on another departure.
+  final String? note;
+
   final bool isFeatured;
   final bool isSelected;
   final VoidCallback onTap;
@@ -59,6 +67,10 @@ class PackageOptionCard extends StatelessWidget {
                     accent: accent,
                     isSelected: isSelected,
                   ),
+                  if (note != null && note!.trim().isNotEmpty) ...[
+                    const SizedBox(height: 10),
+                    _PackageNote(note: note!.trim(), accent: accent),
+                  ],
                   const SizedBox(height: 14),
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.end,
@@ -86,6 +98,35 @@ class PackageOptionCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _PackageNote extends StatelessWidget {
+  const _PackageNote({required this.note, required this.accent});
+
+  final String note;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: accent.withAlpha(16),
+        borderRadius: BorderRadius.circular(ClientRadius.sm),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.info_outline_rounded, size: 16, color: accent),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(note, style: ClientTypography.bodySmall(context)),
+          ),
+        ],
       ),
     );
   }

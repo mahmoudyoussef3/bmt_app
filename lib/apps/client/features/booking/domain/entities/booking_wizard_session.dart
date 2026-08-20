@@ -65,6 +65,52 @@ class BookingWizardSession {
         TripPricingResolver.parsePriceLabel(selectedTrip?.price ?? '0');
   }
 
+  /// The ids of the packages the office put on the selected trip, taken from
+  /// its `trip_package_prices` rows. This is the trip's fare menu: an office
+  /// prices only what that departure actually sells, and may write a package
+  /// that exists on no other trip.
+  ///
+  /// Read off the rider's exact stop pair when both stops are chosen — the
+  /// pair they will be charged on — and otherwise off every active pricing
+  /// row, so the menu is still known before the stops are narrowed down.
+  Set<String> get tripPackageIds {
+    final pricing = selectedTrip?.stopPricing ?? const [];
+    final pair = TripPricingResolver.forPair(
+      pricing,
+      pickupStop?.id,
+      dropoffStop?.id,
+    );
+    if (pair != null) return pair.packagePrices.keys.toSet();
+    return {
+      for (final row in pricing)
+        if (row.isActive) ...row.packagePrices.keys,
+    };
+  }
+
+  /// The office's note about [package] on this trip, or null when they wrote
+  /// none.
+  ///
+  /// The rider's exact stop pair is authoritative once both stops are chosen —
+  /// including when it carries no note. Falling through to another pair's note
+  /// would show terms written about a corridor this rider is not travelling.
+  /// Only before the stops are narrowed down is any active row read, so the
+  /// menu can still be described.
+  String? packageNoteFor(PackagePlan package) {
+    final pricing = selectedTrip?.stopPricing ?? const [];
+    final pair = TripPricingResolver.forPair(
+      pricing,
+      pickupStop?.id,
+      dropoffStop?.id,
+    );
+    final note = pair != null
+        ? pair.packageNotes[package.id]
+        : pricing
+              .where((row) => row.isActive)
+              .map((row) => row.packageNotes[package.id])
+              .firstWhere((note) => note != null, orElse: () => null);
+    return (note == null || note.trim().isEmpty) ? null : note;
+  }
+
   /// The package price for the exact pickup -> dropoff pair, resolved the
   /// same way as [tripPrice]. Falls back to the package catalog's flat
   /// price when the pair has no dedicated tier pricing configured.

@@ -24,7 +24,6 @@ import 'trip_pricing/presentation/cubit/trip_pricing_cubit.dart';
 import 'trip_passengers/presentation/cubit/trip_passengers_cubit.dart';
 
 void registerTripsDependencies(GetIt di) {
-  
   di.registerLazySingleton<TripsDatasource>(
     () => SupabaseTripsDatasource(di<SupabaseClient>(), di<DashboardSession>()),
   );
@@ -61,6 +60,12 @@ void registerTripsDependencies(GetIt di) {
   );
   di.registerLazySingleton(
     () => GetOfficePricablePackagesUseCase(di<TripsRepository>()),
+  );
+  di.registerLazySingleton(
+    () => GetTripScopedPackagesUseCase(di<TripsRepository>()),
+  );
+  di.registerLazySingleton(
+    () => CreateTripPackageUseCase(di<TripsRepository>()),
   );
 
   di.registerLazySingleton(() => UpdateSeatStateUseCase(di<TripsRepository>()));
@@ -110,6 +115,8 @@ void registerTripsDependencies(GetIt di) {
       saveTripPricing: di<SaveTripPricingUseCase>(),
       toggleTripPricing: di<ToggleTripPricingUseCase>(),
       getPricablePackages: di<GetOfficePricablePackagesUseCase>(),
+      getTripScopedPackages: di<GetTripScopedPackagesUseCase>(),
+      createTripPackage: di<CreateTripPackageUseCase>(),
     ),
   );
   di.registerFactory(

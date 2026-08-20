@@ -20,6 +20,11 @@ class SubscriptionPlansDatasource {
         .from('transport_packages')
         .select(_columns)
         .eq('office_id', _session.officeId)
+        // The office catalog only. A package created inside the trip planner
+        // carries `trip_id` and is sold on that one trip — listing it here
+        // would make a per-trip offer look like a permanent catalog entry.
+        // See `20260820100000_trip_scoped_packages.sql`.
+        .isFilter('trip_id', null)
         .order('display_order', ascending: true);
     return (rows as List)
         .map((r) => _fromRow(r as Map<String, dynamic>))
@@ -82,6 +87,7 @@ class SubscriptionPlansDatasource {
     final row = await _client
         .from('transport_packages')
         .select('display_order')
+        .eq('office_id', _session.officeId)
         .order('display_order', ascending: false)
         .limit(1)
         .maybeSingle();

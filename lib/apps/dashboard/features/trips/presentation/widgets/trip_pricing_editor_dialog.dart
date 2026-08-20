@@ -32,8 +32,10 @@ class _TripPricingEditorDialogState extends State<TripPricingEditorDialog> {
   late TripRoutePoint toPoint = _initialToPoint;
   late bool isActive = widget.pricing?.isActive ?? true;
 
-  /// The same fare editor the trip planner uses: one ticket price that derives
-  /// the package tiers, each still overridable for this specific stop pair.
+  /// The same fare editor the trip planner uses: one ticket price that
+  /// suggests package prices, plus the package menu sold on this specific
+  /// stop pair — catalog packages, this trip's own, or a new one written
+  /// here.
   late final _fare = TripFareControllers(widget.packages);
   final currency = TextEditingController(text: 'ج.م');
   String error = '';
@@ -61,7 +63,13 @@ class _TripPricingEditorDialogState extends State<TripPricingEditorDialog> {
   void initState() {
     super.initState();
     final pricing = widget.pricing;
-    if (pricing != null) _fare.loadFrom(pricing);
+    if (pricing != null) {
+      _fare.loadFrom(pricing);
+    } else {
+      // A brand new stop pair starts from the office's catalog, exactly as
+      // the planner does — every entry still removable.
+      _fare.seedFromCatalog();
+    }
     currency.text = pricing?.currency ?? 'ج.م';
   }
 
@@ -290,8 +298,18 @@ class _TripPricingEditorDialogState extends State<TripPricingEditorDialog> {
   }
 
   Future<void> _save() async {
-    if (!_fare.isValid || currency.text.trim().isEmpty) {
-      setState(() => error = 'كل الأسعار والعملة مطلوبة ويجب أن تكون صحيحة');
+    if (currency.text.trim().isEmpty) {
+      setState(() => error = 'العملة مطلوبة');
+      return;
+    }
+    if (_fare.hasIncompletePackage) {
+      setState(
+        () => error = 'أكمل بيانات كل باقة: الاسم وعدد الرحلات والمدة والسعر.',
+      );
+      return;
+    }
+    if (!_fare.isValid) {
+      setState(() => error = 'سعر التذكرة مطلوب ويجب أن يكون أكبر من صفر');
       return;
     }
 
@@ -299,10 +317,30 @@ class _TripPricingEditorDialogState extends State<TripPricingEditorDialog> {
       saving = true;
       error = '';
     });
+
+    // A package written in this dialog does not exist yet — create it against
+    // the trip first, so the pricing row below can key on a real package id.
+    final cubit = context.read<TripPricingCubit>();
+    final drafts = _fare.entries.where((entry) => entry.isDraft).toList();
+    for (final entry in drafts) {
+      final offer = entry.toOffer();
+      if (!offer.isSellable) continue;
+      final id = await cubit.createTripPackage(widget.trip.id, offer);
+      if (!mounted) return;
+      if (id == null) {
+        setState(() {
+          saving = false;
+          error = 'تعذر إنشاء الباقة "${offer.name}". حاول مرة أخرى.';
+        });
+        return;
+      }
+      _fare.adoptCreatedPackage(entry, id);
+    }
+
     final now = DateTime.now();
     final existing = widget.pricing;
-    
-    final result = await context.read<TripPricingCubit>().savePricing(
+
+    final result = await cubit.savePricing(
       _fare.applyTo(
         TripPricing(
           id: existing?.id ?? '',

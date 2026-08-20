@@ -11,14 +11,20 @@ class PackagesRepositoryImpl implements PackagesRepository {
   final PackagesDatasource _datasource;
 
   @override
-  Future<List<PackagePlan>> getPackages() async {
-    final models = await _datasource.getPackages();
+  Future<List<PackagePlan>> getOfficePackages(String officeId) async {
+    final models = await _datasource.getPackages(officeId: officeId);
     return _marketplaceReady(models.toEntities());
   }
 
   @override
-  Future<List<PackagePlan>> getOfficePackages(String officeId) async {
-    final models = await _datasource.getPackages(officeId: officeId);
+  Future<List<PackagePlan>> getTripPackages({
+    required String officeId,
+    required Set<String> packageIds,
+  }) async {
+    final models = await _datasource.getTripPackages(
+      officeId: officeId,
+      packageIds: packageIds,
+    );
     return _marketplaceReady(models.toEntities());
   }
 

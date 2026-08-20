@@ -148,7 +148,8 @@ class TripCreationWizard extends StatefulWidget {
   /// picks a driver and the vehicle comes with them.
   final List<TripDriverOption> drivers;
 
-  /// The office's own pricable packages — one fare field renders per entry.
+  /// The office's saved catalog packages, offered as a starting point in the
+  /// fare panel. The operator keeps, drops, or adds to them freely.
   final List<TripPricablePackage> packages;
 
   final OperationTrip? prefillTrip;
@@ -178,12 +179,15 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
   final Map<String, String> _customArrivals = {};
   final Map<String, String> _customDepartures = {};
 
-  /// The ONE fare configured for this trip: the ticket price plus one price
-  /// per the office's own packages, derived from it. Applied to every
-  /// boarding -> dropoff pair on submit, so `trip_pricing` is fully
-  /// populated the moment the trip exists and the Client app never has to
-  /// fall back to a guessed price.
-  late final _fare = TripFareControllers(widget.packages);
+  /// The ONE fare configured for this trip: the ticket price plus the package
+  /// menu this trip sells. Applied to every boarding -> dropoff pair on
+  /// submit, so `trip_pricing` is fully populated the moment the trip exists
+  /// and the Client app never has to fall back to a guessed price.
+  ///
+  /// It is seeded with the office's catalog packages purely as a convenience —
+  /// every one of them can be removed, and packages that exist nowhere but on
+  /// this trip can be written next to them.
+  late final _fare = TripFareControllers(widget.packages)..seedFromCatalog();
 
   /// Driver/vehicle ids already committed to an overlapping trip for the
   /// currently chosen date/departure/arrival, keyed to the conflicting row so
@@ -931,7 +935,8 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'أدخل سعر التذكرة، وسيتم حساب أسعار الباقات تلقائياً. يمكنك تعديل أي باقة يدوياً.',
+          'أدخل سعر التذكرة، وسيتم اقتراح أسعار الباقات تلقائياً. اختر باقات '
+          'هذه الرحلة كما تريد — وعدّل أي سعر أو أضف باقة جديدة خاصة بها.',
           style: Theme.of(
             context,
           ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
@@ -940,9 +945,9 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
         TripFareFields(controllers: _fare, onChanged: () => setState(() {})),
         const SizedBox(height: AppSpacing.small),
         Text(
-          'تُطبَّق هذه الأسعار على جميع مقاطع الصعود والنزول في هذه الرحلة، '
-          'وتظهر مباشرة في تطبيق العميل. لتسعير مقطع بعينه بسعر مختلف، '
-          'استخدم تبويب التسعير بعد إنشاء الرحلة.',
+          'تُطبَّق هذه الأسعار والملاحظات على جميع مقاطع الصعود والنزول في هذه '
+          'الرحلة، وتظهر مباشرة للراكب عند حجزها. لتسعير مقطع بعينه بسعر '
+          'مختلف، استخدم تبويب التسعير بعد إنشاء الرحلة.',
           style: Theme.of(
             context,
           ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
@@ -1025,6 +1030,9 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
       _customArrivals.clear();
       _customDepartures.clear();
       _fare.clear();
+      // Back to the same starting point a fresh planner opens with: the
+      // office's catalog offered, none of it forced.
+      _fare.seedFromCatalog();
       _applyDefaultSchedule();
     });
     _refreshAvailability();
@@ -1185,14 +1193,13 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
       departure: _timeController.text,
       arrival: _arrivalController.text,
       ticketPrice: _fare.baseFare,
-      packagePrices: _fare.packagePrices,
       currency: 'ج.م',
       customStationTimes: customStationTimesList,
     );
 
     final cubit = context.read<TripCreationCubit>();
 
-    final created = await cubit.submitTrip(input, const [], widget.packages);
+    final created = await cubit.submitTrip(input, const [], _fare.offers);
 
     if (mounted && created != null) {
       Navigator.of(context).pop();

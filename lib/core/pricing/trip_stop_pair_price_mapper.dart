@@ -24,17 +24,25 @@ List<TripStopPairPrice> tripStopPairPricesFromJson(
       .map((row) {
         final from = row['from_point_id']?.toString() ?? '';
         final to = row['to_point_id']?.toString() ?? '';
-        final packageRows =
-            row['trip_package_prices'] as List? ?? const [];
+        final packageRows = row['trip_package_prices'] as List? ?? const [];
         return TripStopPairPrice(
           fromPointId: stationIds[from] ?? from,
           toPointId: stationIds[to] ?? to,
           oneTimePrice: (row['one_time_price'] as num?)?.toDouble() ?? 0,
           packagePrices: {
-            for (final packageRow in packageRows.whereType<Map<String, dynamic>>())
+            for (final packageRow
+                in packageRows.whereType<Map<String, dynamic>>())
               if (packageRow['package_id'] != null)
                 packageRow['package_id'].toString():
                     (packageRow['price'] as num).toDouble(),
+          },
+          packageNotes: {
+            for (final packageRow
+                in packageRows.whereType<Map<String, dynamic>>())
+              if (packageRow['package_id'] != null &&
+                  (packageRow['note']?.toString().trim().isNotEmpty ?? false))
+                packageRow['package_id'].toString(): packageRow['note']
+                    .toString(),
           },
           currency: row['currency']?.toString() ?? 'EGP',
           isActive: row['is_active'] as bool? ?? true,

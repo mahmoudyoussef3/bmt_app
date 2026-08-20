@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/operation_trip.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/trip_lifecycle.dart';
+import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/trip_package_offer.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/trip_pricable_package.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/trip_pricing.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/shared/data/models/operation_trip_model.dart';
@@ -89,7 +90,11 @@ void main() {
     test('a driver with an assigned vehicle can be scheduled', () async {
       final createTrip = CreateTripUseCase(repository);
 
-      final created = await createTrip(_input(driverId: 'driver-active'), [], []);
+      final created = await createTrip(
+        _input(driverId: 'driver-active'),
+        [],
+        [],
+      );
 
       expect(created.id, isNotEmpty);
       expect(created.driver, 'أحمد حسن');
@@ -102,7 +107,11 @@ void main() {
       'the vehicle and capacity come from the fleet, not from the planner',
       () async {
         final createTrip = CreateTripUseCase(repository);
-        final created = await createTrip(_input(driverId: 'driver-active'), [], []);
+        final created = await createTrip(
+          _input(driverId: 'driver-active'),
+          [],
+          [],
+        );
 
         // `CreateTripInput` has no vehicle or capacity field to carry — that is enforced
         // by the compiler. What this asserts is the consequence: the trip still comes
@@ -132,7 +141,8 @@ void main() {
       final createTrip = CreateTripUseCase(repository);
 
       expect(
-        () => createTrip(_input(driverId: 'driver-vehicle-maintenance'), [], []),
+        () =>
+            createTrip(_input(driverId: 'driver-vehicle-maintenance'), [], []),
         throwsA(
           isA<Exception>().having(
             (e) => e.toString(),
@@ -711,6 +721,16 @@ class _MockTripsDatasource implements TripsDatasource {
   Future<List<TripPricablePackage>> fetchOfficePricablePackages() async {
     return const [];
   }
+
+  @override
+  Future<List<TripPricablePackage>> fetchTripScopedPackages(String tripId) =>
+      Future.value(const []);
+
+  @override
+  Future<String> createTripPackage({
+    required String tripId,
+    required TripPackageOffer offer,
+  }) => throw UnimplementedError();
 }
 
 class _FailingTripsDatasource implements TripsDatasource {
@@ -862,4 +882,14 @@ class _FailingTripsDatasource implements TripsDatasource {
   Future<List<TripPricablePackage>> fetchOfficePricablePackages() {
     throw StateError('failure');
   }
+
+  @override
+  Future<List<TripPricablePackage>> fetchTripScopedPackages(String tripId) =>
+      Future.value(const []);
+
+  @override
+  Future<String> createTripPackage({
+    required String tripId,
+    required TripPackageOffer offer,
+  }) => throw UnimplementedError();
 }

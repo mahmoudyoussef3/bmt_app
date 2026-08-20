@@ -1,5 +1,6 @@
 import '../../../shared/domain/entities/operation_trip.dart';
 import '../../../shared/domain/entities/trip_lifecycle.dart';
+import '../../../shared/domain/entities/trip_package_offer.dart';
 import '../../../shared/domain/entities/trip_pricable_package.dart';
 import '../../../shared/domain/entities/trip_pricing.dart';
 import '../../../trip_creation/domain/entities/trip_driver_option.dart';
@@ -44,10 +45,23 @@ abstract class TripsRepository {
   Future<TripPricing> upsertTripPricing(TripPricing pricing);
   Future<TripPricing> toggleTripPricingStatus(String pricingId, bool isActive);
 
-  /// The office's own active, multi-ride packages — what the fare editor
-  /// offers a price field for, alongside the base ticket price. Excludes
-  /// single-ride-shaped packages (see [TripPricablePackage]).
+  /// The office's saved catalog packages — the templates the fare editor
+  /// offers to add to a trip, alongside the base ticket price. Excludes
+  /// single-ride-shaped packages (see [TripPricablePackage]) and packages
+  /// that belong to one trip.
   Future<List<TripPricablePackage>> getOfficePricablePackages();
+
+  /// The packages created for one trip only, so its fare editor can list
+  /// them next to the catalog templates it already carries.
+  Future<List<TripPricablePackage>> getTripScopedPackages(String tripId);
+
+  /// Creates a package sold only on [tripId], returning its new id. Called
+  /// by [CreateTripUseCase] and the pricing editor for any offer the
+  /// operator wrote by hand instead of picking from the catalog.
+  Future<String> createTripPackage({
+    required String tripId,
+    required TripPackageOffer offer,
+  });
   Future<List<TripEvent>> getTripEvents(String tripId);
 
   /// Schedulable drivers with the vehicle each one operates. The planner picks a

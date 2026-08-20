@@ -3,7 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:bmt_app/apps/client/features/packages/domain/entities/my_subscription.dart';
 import 'package:bmt_app/apps/client/features/packages/domain/entities/package_plan.dart';
 import 'package:bmt_app/apps/client/features/packages/domain/repositories/packages_repository.dart';
-import 'package:bmt_app/apps/client/features/packages/domain/usecases/get_packages_usecase.dart';
+import 'package:bmt_app/apps/client/features/packages/domain/usecases/get_trip_packages_usecase.dart';
 import 'package:bmt_app/apps/client/features/packages/presentation/cubit/packages_cubit.dart';
 import 'package:bmt_app/apps/client/features/packages/presentation/cubit/packages_state.dart';
 
@@ -38,10 +38,20 @@ class _FakeRepository implements PackagesRepository {
   final List<PackagePlan> packages;
   final Object? error;
 
+  String? requestedOfficeId;
+  Set<String>? requestedPackageIds;
+
   @override
-  Future<List<PackagePlan>> getPackages() async {
+  Future<List<PackagePlan>> getTripPackages({
+    required String officeId,
+    required Set<String> packageIds,
+  }) async {
+    requestedOfficeId = officeId;
+    requestedPackageIds = packageIds;
     if (error != null) throw error!;
-    return packages;
+    return packages
+        .where((p) => p.officeId == officeId && packageIds.contains(p.id))
+        .toList();
   }
 
   @override
@@ -53,22 +63,34 @@ class _FakeRepository implements PackagesRepository {
 }
 
 PackagesCubit _cubit(_FakeRepository repo) =>
-    PackagesCubit(getPackages: GetPackagesUseCase(repo));
+    PackagesCubit(getTripPackages: GetTripPackagesUseCase(repo));
 
 void main() {
-  group('PackagesCubit load', () {
-    test('exposes every plan on offer for the wizard to price', () async {
+  group('PackagesCubit loadForTrip', () {
+    test('asks for the trip\'s own menu, not the whole catalogue', () async {
+      final repo = _FakeRepository(_catalogue);
+      final cubit = _cubit(repo);
+      await cubit.loadForTrip(officeId: 'o1', packageIds: {'a', 'b'});
+
+      expect(repo.requestedOfficeId, 'o1');
+      expect(repo.requestedPackageIds, {'a', 'b'});
+      final state = cubit.state as PackagesLoaded;
+      expect(state.packages.map((p) => p.id), ['a', 'b']);
+      await cubit.close();
+    });
+
+    test('another office\'s package never reaches the wizard', () async {
       final cubit = _cubit(_FakeRepository(_catalogue));
-      await cubit.load();
+      await cubit.loadForTrip(officeId: 'o1', packageIds: {'a', 'c'});
 
       final state = cubit.state as PackagesLoaded;
-      expect(state.packages.map((p) => p.id), ['a', 'b', 'c']);
+      expect(state.packages.map((p) => p.id), ['a']);
       await cubit.close();
     });
 
     test('a failure surfaces an error state', () async {
       final cubit = _cubit(_FakeRepository(const [], error: Exception('down')));
-      await cubit.load();
+      await cubit.loadForTrip(officeId: 'o1', packageIds: const {'a'});
 
       expect(cubit.state, isA<PackagesError>());
       await cubit.close();

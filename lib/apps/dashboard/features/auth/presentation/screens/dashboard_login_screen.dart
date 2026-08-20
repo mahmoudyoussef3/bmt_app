@@ -59,13 +59,49 @@ class _DashboardLoginScreenState extends State<DashboardLoginScreen> {
           },
           builder: (context, state) {
             final loading = state is DashboardAuthLoading;
+            
+            final inputDecoration = (
+              String label,
+              Widget prefix, {
+              Widget? suffix,
+            }) {
+              return InputDecoration(
+                labelText: label,
+                prefixIcon: prefix,
+                suffixIcon: suffix,
+                filled: true,
+                fillColor: scheme.onSurface.withOpacity(0.03),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppTokens.radius),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppTokens.radius),
+                  borderSide: BorderSide(
+                    color: scheme.outlineVariant.withOpacity(0.5),
+                  ),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppTokens.radius),
+                  borderSide: BorderSide(
+                    color: scheme.primary,
+                    width: 1.5,
+                  ),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 18,
+                ),
+              );
+            };
+
             return Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 440),
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 40,
-                    vertical: 32,
+                    vertical: 40,
                   ),
                   child: Form(
                     key: _formKey,
@@ -76,66 +112,106 @@ class _DashboardLoginScreenState extends State<DashboardLoginScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Container(
-                              width: 52,
-                              height: 52,
-                              decoration: BoxDecoration(
-                                color: scheme.primary,
-                                borderRadius: BorderRadius.circular(
-                                  AppTokens.radius,
+                            Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                Container(
+                                  width: 100,
+                                  height: 100,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: scheme.primary.withOpacity(0.15),
+                                        blurRadius: 40,
+                                        spreadRadius: 10,
+                                      ),
+                                    ],
+                                  ),
                                 ),
-                              ),
-                              child: Icon(
-                                Icons.dashboard_rounded,
-                                size: 28,
-                                color: scheme.onPrimary,
-                              ),
+                                Container(
+                                  width: 64,
+                                  height: 64,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        scheme.primary,
+                                        scheme.primary.withOpacity(0.8),
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
+                                    border: Border.all(
+                                      color: scheme.onPrimary.withOpacity(0.2),
+                                      width: 1,
+                                    ),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: scheme.primary.withOpacity(0.3),
+                                        blurRadius: 16,
+                                        offset: const Offset(0, 8),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Icon(
+                                    Icons.dashboard_rounded,
+                                    size: 32,
+                                    color: scheme.onPrimary,
+                                  ),
+                                ),
+                              ],
                             ),
                           ],
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 32),
                         Text(
                           'لوحة التحكم',
                           textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.headlineSmall
-                              ?.copyWith(fontWeight: FontWeight.w700),
+                          style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: -0.5,
+                                color: scheme.onSurface,
+                              ),
                         ),
-                        const SizedBox(height: 6),
+                        const SizedBox(height: 8),
                         Text(
                           'مخصص للمسؤولين وخدمة العملاء فقط',
                           textAlign: TextAlign.center,
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: scheme.onSurfaceVariant),
+                          style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                                color: scheme.onSurfaceVariant,
+                                fontWeight: FontWeight.w500,
+                              ),
                         ),
-                        const SizedBox(height: 36),
+                        const SizedBox(height: 48),
                         TextFormField(
                           controller: _nameCtrl,
                           keyboardType: TextInputType.name,
                           textInputAction: TextInputAction.next,
                           autofillHints: const [AutofillHints.username],
-                          decoration: const InputDecoration(
-                            
-                            labelText: 'الاسم أو البريد الإلكتروني',
-                            prefixIcon: Icon(Icons.person_outline_rounded),
+                          decoration: inputDecoration(
+                            'الاسم أو البريد الإلكتروني',
+                            const Icon(Icons.person_outline_rounded),
                           ),
                           validator: (v) => (v?.trim().isEmpty ?? true)
                               ? 'أدخل الاسم أو البريد الإلكتروني'
                               : null,
                         ),
-                        const SizedBox(height: 14),
+                        const SizedBox(height: 16),
                         TextFormField(
                           controller: _passCtrl,
                           obscureText: _obscure,
                           textInputAction: TextInputAction.done,
                           onFieldSubmitted: (_) => _submit(),
-                          decoration: InputDecoration(
-                            labelText: 'كلمة المرور',
-                            prefixIcon: const Icon(Icons.lock_outline_rounded),
-                            suffixIcon: IconButton(
+                          decoration: inputDecoration(
+                            'كلمة المرور',
+                            const Icon(Icons.lock_outline_rounded),
+                            suffix: IconButton(
                               icon: Icon(
                                 _obscure
                                     ? Icons.visibility_off_outlined
                                     : Icons.visibility_outlined,
+                                color: scheme.onSurfaceVariant,
                               ),
                               onPressed: () =>
                                   setState(() => _obscure = !_obscure),
@@ -144,15 +220,21 @@ class _DashboardLoginScreenState extends State<DashboardLoginScreen> {
                           validator: (v) =>
                               (v?.isEmpty ?? true) ? 'أدخل كلمة المرور' : null,
                         ),
-                        const SizedBox(height: 28),
+                        const SizedBox(height: 32),
                         SizedBox(
-                          height: 50,
+                          height: 56,
                           child: FilledButton(
+                            style: FilledButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(AppTokens.radius),
+                              ),
+                              elevation: 0,
+                            ),
                             onPressed: loading ? null : _submit,
                             child: loading
                                 ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
+                                    width: 24,
+                                    height: 24,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2.5,
                                     ),
@@ -160,17 +242,24 @@ class _DashboardLoginScreenState extends State<DashboardLoginScreen> {
                                 : const Text(
                                     'دخول',
                                     style: TextStyle(
-                                      fontSize: 15,
+                                      fontSize: 16,
                                       fontWeight: FontWeight.w700,
                                     ),
                                   ),
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 16),
                         TextButton(
+                          style: TextButton.styleFrom(
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(AppTokens.radius),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                          ),
                           onPressed: loading ? null : widget.onCreateOffice,
                           child: const Text(
                             'ليس لديك مكتب؟ سجّل مكتباً جديداً',
+                            style: TextStyle(fontWeight: FontWeight.w600),
                           ),
                         ),
                       ],

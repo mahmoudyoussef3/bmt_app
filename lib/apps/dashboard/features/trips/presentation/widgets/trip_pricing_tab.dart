@@ -59,7 +59,8 @@ class _TripPricingTabState extends State<TripPricingTab> {
                 ),
               ),
               FilledButton.icon(
-                onPressed: () => _openEditor(context, _currentPackages(context)),
+                onPressed: () =>
+                    _openEditor(context, _currentPackages(context)),
                 icon: const Icon(Icons.add_rounded),
                 label: const Text('إضافة تسعير جديد'),
               ),
@@ -290,6 +291,8 @@ class _PricingCard extends StatelessWidget {
                       _PriceRow(
                         label: package.name,
                         value: pricing.packagePrices[package.id]!,
+                        note: pricing.packageNotes[package.id],
+                        tripScoped: package.isTripScoped,
                       ),
                 ],
               ),
@@ -326,19 +329,55 @@ class _PriceRow extends StatelessWidget {
   final String label;
   final double value;
 
-  const _PriceRow({required this.label, required this.value});
+  /// The operator's note for this package on this trip, shown to the rider at
+  /// booking. Null when they wrote none.
+  final String? note;
+
+  /// True for a package that exists only on this trip, so the operator can
+  /// tell it apart from one of the office's catalog packages.
+  final bool tripScoped;
+
+  const _PriceRow({
+    required this.label,
+    required this.value,
+    this.note,
+    this.tripScoped = false,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.only(bottom: AppSpacing.xSmall),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(child: Text(label)),
-          Text(
-            '${_formatPrice(value)} ج.م',
-            style: Theme.of(context).textTheme.titleSmall,
+          Row(
+            children: [
+              Expanded(child: Text(label)),
+              if (tripScoped)
+                Padding(
+                  padding: const EdgeInsets.only(left: AppSpacing.xSmall),
+                  child: Text(
+                    'خاصة بالرحلة',
+                    style: Theme.of(
+                      context,
+                    ).textTheme.labelSmall?.copyWith(color: scheme.primary),
+                  ),
+                ),
+              Text(
+                '${_formatPrice(value)} ج.م',
+                style: Theme.of(context).textTheme.titleSmall,
+              ),
+            ],
           ),
+          if (note != null && note!.trim().isNotEmpty)
+            Text(
+              note!,
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+            ),
         ],
       ),
     );

@@ -12,6 +12,7 @@ class TripPricingModel extends TripPricing {
     required super.toPointOrder,
     required super.oneTimePrice,
     super.packagePrices,
+    super.packageNotes,
     required super.currency,
     required super.isActive,
     required super.createdAt,
@@ -30,6 +31,7 @@ class TripPricingModel extends TripPricing {
       toPointOrder: pricing.toPointOrder,
       oneTimePrice: pricing.oneTimePrice,
       packagePrices: pricing.packagePrices,
+      packageNotes: pricing.packageNotes,
       currency: pricing.currency,
       isActive: pricing.isActive,
       createdAt: pricing.createdAt,
@@ -38,7 +40,7 @@ class TripPricingModel extends TripPricing {
   }
 
   /// [json] is a `trip_pricing` row optionally carrying its nested
-  /// `trip_package_prices(package_id, price)` join rows (see
+  /// `trip_package_prices(package_id, price, note)` join rows (see
   /// `SupabaseTripsDatasource._pricingSelect`). Missing/empty when the
   /// caller didn't request the nested select.
   factory TripPricingModel.fromJson(Map<String, dynamic> json) {
@@ -58,6 +60,12 @@ class TripPricingModel extends TripPricing {
           if (row['package_id'] != null)
             row['package_id'].toString(): (row['price'] as num).toDouble(),
       },
+      packageNotes: {
+        for (final row in packageRows.whereType<Map<String, dynamic>>())
+          if (row['package_id'] != null &&
+              (row['note']?.toString().trim().isNotEmpty ?? false))
+            row['package_id'].toString(): row['note'].toString(),
+      },
       currency: json['currency'] as String? ?? 'ج.م',
       isActive: json['is_active'] as bool? ?? true,
       createdAt: json['created_at'] != null
@@ -69,8 +77,9 @@ class TripPricingModel extends TripPricing {
     );
   }
 
-  /// The `trip_pricing` row alone — `packagePrices` is written separately to
-  /// `trip_package_prices` by the datasource, not through this row's json.
+  /// The `trip_pricing` row alone — `packagePrices`/`packageNotes` are
+  /// written separately to `trip_package_prices` by the datasource, not
+  /// through this row's json.
   Map<String, dynamic> toJson() {
     return {
       'trip_id': tripId,

@@ -11,9 +11,10 @@ class PackagesLoading extends PackagesState {
 class PackagesLoaded extends PackagesState {
   const PackagesLoaded({required this.packages});
 
-  /// Every plan on offer. The only reader is the booking wizard's package step,
-  /// which prices each plan against the route the rider is already booking —
-  /// there is no filtering here because there is no listing to filter.
+  /// The trip's fare menu, in the order the office published it. The only
+  /// reader is the booking wizard's package step, which prices each plan
+  /// against the exact stops the rider picked — there is no filtering here
+  /// because the read is already scoped to one trip.
   final List<PackagePlan> packages;
 }
 

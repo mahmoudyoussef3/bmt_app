@@ -1,5 +1,6 @@
 import '../../../shared/domain/entities/operation_trip.dart';
 import '../../../shared/domain/entities/trip_lifecycle.dart';
+import '../../../shared/domain/entities/trip_package_offer.dart';
 import '../../../shared/domain/entities/trip_pricable_package.dart';
 import '../../../shared/domain/entities/trip_pricing.dart';
 import '../../../shared/data/models/operation_trip_model.dart';
@@ -51,6 +52,17 @@ abstract class TripsDatasource {
     bool isActive,
   );
   Future<List<TripPricablePackage>> fetchOfficePricablePackages();
+
+  /// The packages that exist only for [tripId] (`transport_packages.trip_id`),
+  /// so the trip's own fare editor lists them next to the catalog templates.
+  Future<List<TripPricablePackage>> fetchTripScopedPackages(String tripId);
+
+  /// Creates a package that belongs to [tripId] alone and returns its id.
+  /// This is what lets an office sell a package it never put in its catalog.
+  Future<String> createTripPackage({
+    required String tripId,
+    required TripPackageOffer offer,
+  });
   Future<List<TripEventModel>> fetchTripEvents(String tripId);
 
   /// Schedulable drivers, each carrying the vehicle they are assigned to. There is no

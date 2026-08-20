@@ -127,7 +127,7 @@ import '../../features/packages/data/repositories/packages_repository_impl.dart'
 import '../../features/packages/domain/repositories/packages_repository.dart';
 import '../../features/packages/domain/usecases/get_my_subscription_usecase.dart';
 import '../../features/packages/domain/usecases/get_office_packages_usecase.dart';
-import '../../features/packages/domain/usecases/get_packages_usecase.dart';
+import '../../features/packages/domain/usecases/get_trip_packages_usecase.dart';
 import '../../features/packages/presentation/cubit/my_subscription_cubit.dart';
 import '../../features/packages/presentation/cubit/packages_cubit.dart';
 import '../../features/profile/data/datasources/profile_datasource.dart';
@@ -928,15 +928,16 @@ void _registerPackagesDependencies() {
     );
   }
 
-  if (!clientGetIt.isRegistered<GetPackagesUseCase>()) {
-    clientGetIt.registerLazySingleton<GetPackagesUseCase>(
-      () => GetPackagesUseCase(clientGetIt<PackagesRepository>()),
+  if (!clientGetIt.isRegistered<GetTripPackagesUseCase>()) {
+    clientGetIt.registerLazySingleton<GetTripPackagesUseCase>(
+      () => GetTripPackagesUseCase(clientGetIt<PackagesRepository>()),
     );
   }
 
   if (!clientGetIt.isRegistered<PackagesCubit>()) {
     clientGetIt.registerFactory<PackagesCubit>(
-      () => PackagesCubit(getPackages: clientGetIt<GetPackagesUseCase>()),
+      () =>
+          PackagesCubit(getTripPackages: clientGetIt<GetTripPackagesUseCase>()),
     );
   }
 
