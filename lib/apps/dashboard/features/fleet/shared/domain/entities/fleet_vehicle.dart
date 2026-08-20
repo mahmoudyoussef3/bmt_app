@@ -4,6 +4,7 @@ library;
 import 'package:bmt_app/core/vehicles/vehicles.dart';
 
 import 'fleet_common.dart';
+import 'fleet_expiry.dart';
 
 enum FleetVehicleStatus {
   active('نشطة'),
@@ -199,9 +200,26 @@ class FleetVehicle {
   final String insuranceExpiry;
   final String inspectionExpiry;
   final List<FleetVehicleImage> images;
+
+  /// Ended `assignments` rows for this vehicle, most recent first — a real
+  /// driver-tenure history, not a placeholder.
   final List<FleetHistoryItem> previousDrivers;
+
+  /// Recent `operation_trips` for this vehicle (any status), most recent
+  /// first, capped in the datasource.
   final List<FleetHistoryItem> tripHistory;
-  final List<FleetHistoryItem> timeline;
+
+  /// Real operational counts, computed once in the datasource from
+  /// `operation_trips` so every reader of this entity (the profile, the
+  /// table, the Overview activity panel) agrees on the same numbers instead
+  /// of each recomputing its own from a raw trip list.
+  final int completedTripsCount;
+  final int cancelledTripsCount;
+
+  /// Denormalized passenger-review aggregate (`vehicles.rating` /
+  /// `.rating_count`), refreshed server-side on every `trip_reviews` write.
+  final double rating;
+  final int ratingCount;
 
   const FleetVehicle({
     required this.id,
@@ -227,7 +245,10 @@ class FleetVehicle {
     this.images = const [],
     this.previousDrivers = const [],
     this.tripHistory = const [],
-    this.timeline = const [],
+    this.completedTripsCount = 0,
+    this.cancelledTripsCount = 0,
+    this.rating = 0,
+    this.ratingCount = 0,
   });
 
   String get vehicleNumber => vehicleCode;
@@ -236,26 +257,14 @@ class FleetVehicle {
   String get imageLabel => vehicleCode;
   String get type => vehicleType;
 
-  bool _isExpired(String dateStr) {
-    final d = DateTime.tryParse(dateStr);
-    return d != null && d.isBefore(DateTime.now());
-  }
-
-  bool _isExpiringSoon(String dateStr) {
-    final d = DateTime.tryParse(dateStr);
-    if (d == null) return false;
-    final diff = d.difference(DateTime.now()).inDays;
-    return diff >= 0 && diff <= 30;
-  }
-
   bool get hasExpiredDocument =>
-      _isExpired(licenseExpiry) ||
-      _isExpired(insuranceExpiry) ||
-      _isExpired(inspectionExpiry);
+      FleetExpiry.isExpired(licenseExpiry) ||
+      FleetExpiry.isExpired(insuranceExpiry) ||
+      FleetExpiry.isExpired(inspectionExpiry);
   bool get hasDocumentExpiringSoon =>
-      _isExpiringSoon(licenseExpiry) ||
-      _isExpiringSoon(insuranceExpiry) ||
-      _isExpiringSoon(inspectionExpiry);
+      FleetExpiry.isExpiringSoon(licenseExpiry) ||
+      FleetExpiry.isExpiringSoon(insuranceExpiry) ||
+      FleetExpiry.isExpiringSoon(inspectionExpiry);
 
   FleetVehicle copyWith({
     String? id,
@@ -282,7 +291,10 @@ class FleetVehicle {
     List<FleetVehicleImage>? images,
     List<FleetHistoryItem>? previousDrivers,
     List<FleetHistoryItem>? tripHistory,
-    List<FleetHistoryItem>? timeline,
+    int? completedTripsCount,
+    int? cancelledTripsCount,
+    double? rating,
+    int? ratingCount,
   }) {
     return FleetVehicle(
       id: id ?? this.id,
@@ -310,7 +322,10 @@ class FleetVehicle {
       images: images ?? this.images,
       previousDrivers: previousDrivers ?? this.previousDrivers,
       tripHistory: tripHistory ?? this.tripHistory,
-      timeline: timeline ?? this.timeline,
+      completedTripsCount: completedTripsCount ?? this.completedTripsCount,
+      cancelledTripsCount: cancelledTripsCount ?? this.cancelledTripsCount,
+      rating: rating ?? this.rating,
+      ratingCount: ratingCount ?? this.ratingCount,
     );
   }
 }

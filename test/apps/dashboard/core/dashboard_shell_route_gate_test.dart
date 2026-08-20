@@ -131,7 +131,6 @@ void main() {
       DashboardPermission.fleet,
       DashboardPermission.drivers,
       DashboardPermission.vehicles,
-      DashboardPermission.assignments,
     ]) {
       expect(
         DashboardPermissions.canAccess(DashboardRole.supportAgent, permission),
@@ -158,7 +157,6 @@ void main() {
       DashboardRoutes.paymentVerification: 'مراجعة المدفوعات',
       DashboardRoutes.drivers: 'السائقون',
       DashboardRoutes.vehicles: 'المركبات',
-      DashboardRoutes.assignments: 'مهام الأسطول',
       DashboardRoutes.users: 'المستخدمون والصلاحيات',
       DashboardRoutes.referrals: 'برنامج الإحالة',
     };
@@ -196,7 +194,6 @@ void main() {
       DashboardRoutes.fleet,
       DashboardRoutes.drivers,
       DashboardRoutes.vehicles,
-      DashboardRoutes.assignments,
     ]) {
       // ignore: avoid_dynamic_calls
       expect(

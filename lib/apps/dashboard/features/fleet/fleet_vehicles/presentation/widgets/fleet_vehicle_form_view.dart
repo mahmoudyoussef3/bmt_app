@@ -691,7 +691,10 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
         images: finalUrls.map((url) => FleetVehicleImage(url: url)).toList(),
         previousDrivers: existing?.previousDrivers ?? const [],
         tripHistory: existing?.tripHistory ?? const [],
-        timeline: existing?.timeline ?? const [],
+        completedTripsCount: existing?.completedTripsCount ?? 0,
+        cancelledTripsCount: existing?.cancelledTripsCount ?? 0,
+        rating: existing?.rating ?? 0,
+        ratingCount: existing?.ratingCount ?? 0,
       );
 
       final error = await widget.onSave(finalVehicle, _pendingDocs);

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_document.dart';
+import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_expiry.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_documents/domain/usecases/fleet_documents_usecases.dart';
 import 'fleet_documents_state.dart';
 
@@ -53,16 +54,12 @@ class FleetDocumentsCubit extends Cubit<FleetDocumentsState> {
   }
 
   FleetDocumentStatus calculateDocumentStatus(String expiryDate) {
-    try {
-      final date = DateTime.tryParse(expiryDate);
-      if (date != null) {
-        final difference = date.difference(DateTime.now()).inDays;
-        if (difference < 0) return FleetDocumentStatus.expired;
-        if (difference <= 30) return FleetDocumentStatus.expiringSoon;
-        return FleetDocumentStatus.valid;
-      }
-    } catch (_) {}
-    return FleetDocumentStatus.valid;
+    return switch (FleetExpiry.levelOf(expiryDate)) {
+      FleetExpiryLevel.expired => FleetDocumentStatus.expired,
+      FleetExpiryLevel.expiringSoon => FleetDocumentStatus.expiringSoon,
+      FleetExpiryLevel.valid || FleetExpiryLevel.missing =>
+        FleetDocumentStatus.valid,
+    };
   }
 
   Future<String?> saveDocument({

@@ -28,6 +28,7 @@ class FleetAnalyticsCharts extends StatelessWidget {
       icon: Icons.people_alt_rounded,
       title: 'جاهزية السائقين',
       subtitle: 'من يمكنه استلام رحلة الآن',
+      initiallyExpanded: false,
       child: DashboardDonutChart(data: _driverData(palette)),
     );
 
@@ -36,6 +37,7 @@ class FleetAnalyticsCharts extends StatelessWidget {
       icon: Icons.directions_bus_rounded,
       title: 'حالة المركبات',
       subtitle: 'توزيع الأسطول حسب الحالة التشغيلية',
+      initiallyExpanded: false,
       child: DashboardDonutChart(data: _vehicleData(palette)),
     );
 

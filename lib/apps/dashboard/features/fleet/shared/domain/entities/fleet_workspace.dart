@@ -42,20 +42,39 @@ class FleetWorkspace {
   FleetOperationalStatus operationalStatusOf(FleetVehicle vehicle) =>
       resolveOperationalStatus(vehicle: vehicle, duties: duties);
 
+  /// The trip physically holding [vehicle] right now (boarding/in progress),
+  /// or null if it is not out on the road.
+  FleetVehicleDuty? underwayDutyOf(FleetVehicle vehicle) =>
+      _earliest(duties.where((d) => d.vehicleId == vehicle.id && d.isUnderWay));
+
+  /// The nearest future trip [vehicle] is committed to, excluding one already
+  /// under way.
+  FleetVehicleDuty? nextDutyOf(FleetVehicle vehicle) =>
+      _earliest(duties.where((d) => d.vehicleId == vehicle.id && d.isUpcoming));
+
   /// The trip holding [vehicle] right now, or the next one it is committed to.
-  FleetVehicleDuty? currentDutyOf(FleetVehicle vehicle) {
-    final mine = duties.where((duty) => duty.vehicleId == vehicle.id).toList();
-    if (mine.isEmpty) return null;
+  FleetVehicleDuty? currentDutyOf(FleetVehicle vehicle) =>
+      underwayDutyOf(vehicle) ?? nextDutyOf(vehicle);
 
-    final underWay = mine.where((duty) => duty.isUnderWay);
-    if (underWay.isNotEmpty) return underWay.first;
+  /// The vehicle-side helpers above, mirrored for a driver — trips key on
+  /// `driver_id` in the exact same `duties` rows, so no extra query is
+  /// needed to answer "what is this driver doing".
+  FleetVehicleDuty? underwayDutyOfDriver(FleetDriver driver) =>
+      _earliest(duties.where((d) => d.driverId == driver.id && d.isUnderWay));
 
-    final upcoming = mine.where((duty) => duty.isUpcoming).toList()
+  FleetVehicleDuty? nextDutyOfDriver(FleetDriver driver) =>
+      _earliest(duties.where((d) => d.driverId == driver.id && d.isUpcoming));
+
+  FleetVehicleDuty? currentDutyOfDriver(FleetDriver driver) =>
+      underwayDutyOfDriver(driver) ?? nextDutyOfDriver(driver);
+
+  static FleetVehicleDuty? _earliest(Iterable<FleetVehicleDuty> duties) {
+    final sorted = duties.toList()
       ..sort((a, b) {
         final byDate = a.tripDate.compareTo(b.tripDate);
         return byDate != 0 ? byDate : a.departureTime.compareTo(b.departureTime);
       });
-    return upcoming.isEmpty ? null : upcoming.first;
+    return sorted.isEmpty ? null : sorted.first;
   }
 
   FleetSummary get summary {

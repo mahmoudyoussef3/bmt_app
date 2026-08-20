@@ -461,3 +461,68 @@ class FleetOperationalChip extends StatelessWidget {
     );
   }
 }
+
+/// The "الرحلة" table column — what a vehicle/driver is doing right now, or
+/// the next thing they are committed to, whichever applies. Shared by the
+/// vehicles and drivers tables since both key duties from the same
+/// `FleetVehicleDuty` shape (see [FleetWorkspace.underwayDutyOf] and its
+/// driver-scoped mirror).
+class FleetTripCell extends StatelessWidget {
+  const FleetTripCell({super.key, this.underway, this.next});
+
+  final FleetVehicleDuty? underway;
+  final FleetVehicleDuty? next;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
+    if (underway != null) {
+      final route = underway!.routeName.isEmpty ? '' : ' • ${underway!.routeName}';
+      return Text(
+        'الآن: ${underway!.tripCode}$route',
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(color: scheme.primary, fontWeight: FontWeight.w700),
+      );
+    }
+
+    if (next != null) {
+      final route = next!.routeName.isEmpty ? '' : ' • ${next!.routeName}';
+      return Text(
+        'القادمة: ${next!.tripDate.toIso8601String().split('T').first}$route',
+        maxLines: 2,
+        overflow: TextOverflow.ellipsis,
+        style: TextStyle(color: scheme.onSurfaceVariant),
+      );
+    }
+
+    return Text(
+      'لا توجد رحلة مجدولة',
+      style: TextStyle(color: scheme.onSurfaceVariant),
+    );
+  }
+}
+
+/// The "آخر تحديث" table column — a real `updated_at` timestamp, labelled
+/// honestly as a last-changed date rather than "last activity": one column
+/// update is not the same claim as a genuine usage/activity log, which this
+/// data model does not have.
+class FleetLastUpdatedCell extends StatelessWidget {
+  const FleetLastUpdatedCell({super.key, required this.updatedAt});
+
+  final DateTime? updatedAt;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final value = updatedAt;
+    if (value == null) {
+      return Text('—', style: TextStyle(color: scheme.onSurfaceVariant));
+    }
+    return Text(
+      value.toIso8601String().split('T').first,
+      style: TextStyle(color: scheme.onSurfaceVariant),
+    );
+  }
+}

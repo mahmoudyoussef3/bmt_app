@@ -100,15 +100,9 @@ class FleetVehicleDetailsView extends StatelessWidget {
                         ),
                         const SizedBox(height: AppSpacing.medium),
                         _HistoryTimeline(
-                          title: 'سجل الرحلات',
+                          title: 'سجل الرحلات (آخر 12 شهر)',
                           items: vehicle.tripHistory,
                           icon: Icons.map_outlined,
-                        ),
-                        const SizedBox(height: AppSpacing.medium),
-                        _HistoryTimeline(
-                          title: 'سجل النشاط التشغيلي',
-                          items: vehicle.timeline,
-                          icon: Icons.timeline_rounded,
                         ),
                       ],
                     ),
@@ -142,15 +136,9 @@ class FleetVehicleDetailsView extends StatelessWidget {
                   ),
                   const SizedBox(height: AppSpacing.medium),
                   _HistoryTimeline(
-                    title: 'سجل الرحلات',
+                    title: 'سجل الرحلات (آخر 12 شهر)',
                     items: vehicle.tripHistory,
                     icon: Icons.map_outlined,
-                  ),
-                  const SizedBox(height: AppSpacing.medium),
-                  _HistoryTimeline(
-                    title: 'سجل النشاط التشغيلي',
-                    items: vehicle.timeline,
-                    icon: Icons.timeline_rounded,
                   ),
                 ],
               );
@@ -194,6 +182,18 @@ class FleetVehicleDetailsView extends StatelessWidget {
             driverName.isEmpty ? 'بدون سائق حالياً' : driverName,
           ),
           _detailRow(context, 'حالة المركبة', vehicle.status.label),
+          _detailRow(
+            context,
+            'الرحلات المكتملة (آخر 12 شهر)',
+            '${vehicle.completedTripsCount}',
+          ),
+          _detailRow(
+            context,
+            'تقييم الركاب',
+            vehicle.ratingCount > 0
+                ? '${vehicle.rating.toStringAsFixed(1)} (${vehicle.ratingCount} تقييم)'
+                : 'لا يوجد تقييم بعد',
+          ),
           _detailRow(context, 'انتهاء الرخصة', vehicle.licenseExpiry),
           _detailRow(context, 'انتهاء التأمين', vehicle.insuranceExpiry),
           _detailRow(context, 'انتهاء الفحص الفني', vehicle.inspectionExpiry),
@@ -271,11 +271,15 @@ class _HistoryTimeline extends StatelessWidget {
             children: [
               Icon(icon, color: iconColor),
               const SizedBox(width: AppSpacing.small),
-              Text(
-                title,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+              Expanded(
+                child: Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ),
             ],
           ),

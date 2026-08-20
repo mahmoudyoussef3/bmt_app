@@ -102,6 +102,24 @@ class SupabaseFleetDatasource implements FleetDatasource {
           .order('trip_date', ascending: true)
           .order('departure_time', ascending: true);
 
+      // Finished trips feed both the "سجل الرحلات" timeline and the real
+      // completed/cancelled counts behind the driver Performance card and the
+      // Overview activity panel. Bounded to a trailing 12-month window rather
+      // than fetched in full — a business-scale office can accumulate
+      // thousands of trips over its lifetime, and "last year" is a defensible,
+      // clearly-labelled figure rather than an unbounded query.
+      final tripHistoryData = await _client
+          .from('operation_trips')
+          .select(
+            'trip_code, status, trip_date, departure_time, driver_id, '
+            'vehicle_id, operation_routes(name)',
+          )
+          .eq('office_id', officeId)
+          .inFilter('status', const ['completed', 'cancelled'])
+          .gte('trip_date', _daysFromToday(-365))
+          .order('trip_date', ascending: false)
+          .order('departure_time', ascending: false);
+
       final driverIds = driversData.map((d) => d['id'] as String).toList();
       final vehicleIds = vehiclesData.map((v) => v['id'] as String).toList();
 
@@ -146,6 +164,95 @@ class SupabaseFleetDatasource implements FleetDatasource {
             (json['vehicle_code'] ?? '') as String;
       }
 
+      // Bucket the trailing-12-month trip history by owner, in the same
+      // order the query already returned it (most recent first), and tally
+      // completed/cancelled counts alongside it in one pass.
+      final driverTripHistory = <String, List<FleetHistoryItem>>{};
+      final vehicleTripHistory = <String, List<FleetHistoryItem>>{};
+      final driverCompleted = <String, int>{};
+      final driverCancelled = <String, int>{};
+      final vehicleCompleted = <String, int>{};
+      final vehicleCancelled = <String, int>{};
+
+      for (final json in tripHistoryData) {
+        final status = json['status'] as String? ?? '';
+        final driverId = json['driver_id'] as String? ?? '';
+        final vehicleId = json['vehicle_id'] as String? ?? '';
+        final route = json['operation_routes'] as Map<String, dynamic>?;
+        final routeName = route?['name'] as String? ?? '';
+        final tripCode = json['trip_code'] as String? ?? '';
+        final tripDate = json['trip_date'] as String? ?? '';
+
+        final item = FleetHistoryItem(
+          title: routeName.isEmpty ? tripCode : '$tripCode • $routeName',
+          date: tripDate,
+          description: status == 'completed' ? 'رحلة مكتملة' : 'رحلة ملغاة',
+        );
+
+        if (driverId.isNotEmpty) {
+          driverTripHistory.putIfAbsent(driverId, () => []).add(item);
+          if (status == 'completed') {
+            driverCompleted[driverId] = (driverCompleted[driverId] ?? 0) + 1;
+          } else if (status == 'cancelled') {
+            driverCancelled[driverId] = (driverCancelled[driverId] ?? 0) + 1;
+          }
+        }
+        if (vehicleId.isNotEmpty) {
+          vehicleTripHistory.putIfAbsent(vehicleId, () => []).add(item);
+          if (status == 'completed') {
+            vehicleCompleted[vehicleId] =
+                (vehicleCompleted[vehicleId] ?? 0) + 1;
+          } else if (status == 'cancelled') {
+            vehicleCancelled[vehicleId] =
+                (vehicleCancelled[vehicleId] ?? 0) + 1;
+          }
+        }
+      }
+
+      // Ended `assignments` rows are a real tenure history — every driver a
+      // vehicle has had, and every vehicle a driver has operated — already
+      // present in `assignmentsData` above, so this costs no extra query.
+      final vehiclePreviousDrivers = <String, List<FleetHistoryItem>>{};
+      final driverVehicleHistory = <String, List<FleetHistoryItem>>{};
+
+      for (final json in assignmentsData) {
+        if (json['status'] != 'ended') continue;
+        final driverId = json['driver_id'] as String? ?? '';
+        final vehicleId = json['vehicle_id'] as String? ?? '';
+        final assignedAt = json['assigned_at'] as String? ?? '';
+        final endedAt = json['ended_at'] as String?;
+        final period = endedAt == null
+            ? 'من $assignedAt'
+            : 'من $assignedAt إلى $endedAt';
+
+        if (vehicleId.isNotEmpty) {
+          vehiclePreviousDrivers
+              .putIfAbsent(vehicleId, () => [])
+              .add(
+                FleetHistoryItem(
+                  title: driverNames[driverId]?.isNotEmpty == true
+                      ? driverNames[driverId]!
+                      : 'سائق سابق',
+                  date: endedAt ?? assignedAt,
+                  description: period,
+                ),
+              );
+        }
+        if (driverId.isNotEmpty) {
+          driverVehicleHistory
+              .putIfAbsent(driverId, () => [])
+              .add(
+                FleetHistoryItem(
+                  title: vehicleCodes[vehicleId]?.isNotEmpty == true
+                      ? vehicleCodes[vehicleId]!
+                      : 'مركبة سابقة',
+                  date: endedAt ?? assignedAt,
+                  description: period,
+                ),
+              );
+        }
+      }
+
       final driverDocs = driverDocsData.map<FleetDocumentModel>((json) {
         final driverId = json['driver_id'] as String? ?? '';
         return FleetDocumentModel.fromJson(
@@ -180,6 +287,14 @@ class SupabaseFleetDatasource implements FleetDatasource {
           json,
           currentVehicleId: activeAssign?.vehicleId ?? '',
           documents: docsByDriverId[driverId] ?? const [],
+          tripHistory: (driverTripHistory[driverId] ?? const [])
+              .take(15)
+              .toList(),
+          vehicleHistory: (driverVehicleHistory[driverId] ?? const [])
+              .take(15)
+              .toList(),
+          completedTripsCount: driverCompleted[driverId] ?? 0,
+          cancelledTripsCount: driverCancelled[driverId] ?? 0,
         );
       }).toList();
 
@@ -215,6 +330,14 @@ class SupabaseFleetDatasource implements FleetDatasource {
           licenseExpiry: licenseExpiry,
           insuranceExpiry: insuranceExpiry,
           inspectionExpiry: inspectionExpiry,
+          tripHistory: (vehicleTripHistory[vehicleId] ?? const [])
+              .take(15)
+              .toList(),
+          previousDrivers: (vehiclePreviousDrivers[vehicleId] ?? const [])
+              .take(15)
+              .toList(),
+          completedTripsCount: vehicleCompleted[vehicleId] ?? 0,
+          cancelledTripsCount: vehicleCancelled[vehicleId] ?? 0,
         );
       }).toList();
 

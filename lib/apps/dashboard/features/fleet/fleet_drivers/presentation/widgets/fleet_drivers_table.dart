@@ -14,7 +14,7 @@ import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 /// Sortable column indices exposed by the drivers table header. Kept in one
 /// place so the screen and the table agree on the column→field mapping.
 const int _kDriverCol = 1;
-const int _kLicenseCol = 5;
+const int _kLicenseCol = 6;
 
 class FleetDriversTable extends StatelessWidget {
   final List<FleetDriver> drivers;
@@ -172,8 +172,10 @@ class FleetDriversTable extends StatelessWidget {
         OpsColumn('الصحة', flex: 2, minWidth: 116),
         OpsColumn('التوفر', flex: 2, minWidth: 120),
         OpsColumn('المركبة', flex: 2, minWidth: 120),
+        OpsColumn('الرحلة', flex: 3, minWidth: 170),
         OpsColumn('الرخصة', flex: 2, sortable: true, minWidth: 132),
-        OpsColumn('إجراءات', flex: 2, minWidth: 112),
+        OpsColumn('آخر تحديث', flex: 2, minWidth: 110),
+        OpsColumn('إجراءات', flex: 3, minWidth: 112),
       ],
       rows: paged.map((driver) {
         final vehicle = _vehicleName(driver.currentVehicleId);
@@ -207,11 +209,16 @@ class FleetDriversTable extends StatelessWidget {
                   textColor: context.status(AppStatusTone.warning).ink,
                 )
               : Text(vehicle, maxLines: 1, overflow: TextOverflow.ellipsis),
+          FleetTripCell(
+            underway: workspace.underwayDutyOfDriver(driver),
+            next: workspace.nextDutyOfDriver(driver),
+          ),
           Text(
             driver.licenseExpiry,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
+          FleetLastUpdatedCell(updatedAt: driver.updatedAt),
           _DriverRowActions(
             driver: driver,
             onView: () => onView(driver),

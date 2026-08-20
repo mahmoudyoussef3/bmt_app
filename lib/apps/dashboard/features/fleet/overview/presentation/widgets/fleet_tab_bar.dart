@@ -31,18 +31,6 @@ class FleetTabBar extends StatelessWidget {
         count: summary.vehiclesCount,
         subtitle: 'حالة المركبات والتراخيص',
       ),
-      _FleetNavItem(
-        tab: FleetTab.assignments,
-        icon: Icons.link_rounded,
-        count: summary.activeAssignmentsCount,
-        subtitle: 'ربط السائقين بالمركبات',
-      ),
-      _FleetNavItem(
-        tab: FleetTab.documents,
-        icon: Icons.folder_copy_outlined,
-        count: summary.documentsNeedFollowUpCount,
-        subtitle: 'الوثائق قرب انتهاء الصلاحية',
-      ),
     ];
 
     return AppCard(

@@ -17,7 +17,6 @@ import 'package:bmt_app/core/widgets/app_snackbar.dart';
 import 'package:bmt_app/core/widgets/debounced_search_field.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 
-
 /// The filters an operator actually reaches for. The first group asks what a bus
 /// is *doing* (answered from `operation_trips`), the second what state its record
 /// is in (`vehicles.status`) — the same split the two chips on each row draw.
@@ -39,9 +38,27 @@ class FleetVehiclesScreen extends StatefulWidget {
   const FleetVehiclesScreen({
     super.key,
     this.onViewStateChanged,
+    this.focusRequest,
+    this.onFocusResolved,
   });
 
   final void Function(bool isList)? onViewStateChanged;
+
+  /// When set, the matching vehicle's detail dialog opens automatically once
+  /// the list has loaded — the deep link a "Needs Attention" row uses to jump
+  /// straight to the vehicle it flagged.
+  ///
+  /// A fresh [FleetFocusRequest] instance identifies each request, even when
+  /// the id repeats (open a vehicle, close it, tap the same "Needs Attention"
+  /// row again) — see the type's doc comment for why a plain `String?` id
+  /// can't do this.
+  final FleetFocusRequest? focusRequest;
+
+  /// Called once this screen has either opened [focusRequest]'s dialog or
+  /// given up (vehicle not found, or the list failed to load), so the parent
+  /// can dismiss whatever "opening..." feedback it showed on the tap that
+  /// created the request.
+  final VoidCallback? onFocusResolved;
 
   @override
   State<FleetVehiclesScreen> createState() => _FleetVehiclesScreenState();
@@ -53,6 +70,22 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
   FleetSortField _sortField = FleetSortField.name;
   bool _sortAscending = true;
   _VehicleOpsFilter _opsFilter = _VehicleOpsFilter.all;
+  String? _pendingFocusId;
+
+  @override
+  void initState() {
+    super.initState();
+    _pendingFocusId = widget.focusRequest?.id;
+  }
+
+  @override
+  void didUpdateWidget(covariant FleetVehiclesScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.focusRequest != null &&
+        widget.focusRequest != oldWidget.focusRequest) {
+      _pendingFocusId = widget.focusRequest!.id;
+    }
+  }
 
   List<FleetVehicle> _sortVehicles(List<FleetVehicle> list) {
     final sorted = [...list];
@@ -78,7 +111,8 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
         _VehicleOpsFilter.all => true,
         _VehicleOpsFilter.available =>
           operational == FleetOperationalStatus.available,
-        _VehicleOpsFilter.onTrip => operational == FleetOperationalStatus.onTrip,
+        _VehicleOpsFilter.onTrip =>
+          operational == FleetOperationalStatus.onTrip,
         _VehicleOpsFilter.assignedToTrip =>
           operational == FleetOperationalStatus.assigned,
         _VehicleOpsFilter.withoutDriver => vehicle.currentDriverId.isEmpty,
@@ -109,24 +143,34 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
     FleetVehiclesCubit cubit,
     bool isDesktop,
   ) {
+    final docsCubit = context.read<FleetDocumentsCubit>();
+    final overviewCubit = context.read<FleetOverviewCubit>();
+
     if (isDesktop) {
       showDialog(
         context: context,
-        builder: (context) => Dialog(
-          clipBehavior: Clip.antiAlias,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
-          ),
-          child: SizedBox(
-            width: 800,
-            height: 800,
-            child: _detailsView(
-              context,
-              state,
-              workspace,
-              vehicle,
-              cubit,
-              onBack: () => Navigator.pop(context),
+        builder: (context) => MultiBlocProvider(
+          providers: [
+            BlocProvider.value(value: docsCubit),
+            BlocProvider.value(value: overviewCubit),
+          ],
+          child: Dialog(
+            clipBehavior: Clip.antiAlias,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
+            ),
+            child: SizedBox(
+              width: 800,
+              height: 800,
+              child: _detailsView(
+                context,
+                state,
+                workspace,
+                vehicle,
+                cubit,
+                docsCubit,
+                onBack: () => Navigator.pop(context),
+              ),
             ),
           ),
         ),
@@ -140,35 +184,46 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
-        builder: (context) => DraggableScrollableSheet(
-          expand: false,
-          initialChildSize: 0.9,
-          builder: (context, controller) {
-            return Column(
-              children: [
-                Container(
-                  width: 40,
-                  height: 4,
-                  margin: const EdgeInsets.symmetric(vertical: AppSpacing.medium),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant.withAlpha(100),
-                    borderRadius: BorderRadius.circular(2),
+        builder: (context) => MultiBlocProvider(
+          providers: [
+            BlocProvider.value(value: docsCubit),
+            BlocProvider.value(value: overviewCubit),
+          ],
+          child: DraggableScrollableSheet(
+            expand: false,
+            initialChildSize: 0.9,
+            builder: (context, controller) {
+              return Column(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.medium,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurfaceVariant.withAlpha(100),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
-                ),
-                Expanded(
-                  child: _detailsView(
-                    context,
-                    state,
-                    workspace,
-                    vehicle,
-                    cubit,
-                    onBack: () => Navigator.pop(context),
-                    scrollController: controller,
+                  Expanded(
+                    child: _detailsView(
+                      context,
+                      state,
+                      workspace,
+                      vehicle,
+                      cubit,
+                      docsCubit,
+                      onBack: () => Navigator.pop(context),
+                      scrollController: controller,
+                    ),
                   ),
-                ),
-              ],
-            );
-          },
+                ],
+              );
+            },
+          ),
         ),
       );
     }
@@ -190,6 +245,15 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
         }
 
         if (state is FleetVehiclesError) {
+          if (_pendingFocusId != null) {
+            // The tab this focus request jumped to failed to load — nothing
+            // to open. Give up on the request rather than leaving the
+            // parent's "opening..." indicator stuck forever.
+            _pendingFocusId = null;
+            WidgetsBinding.instance.addPostFrameCallback(
+              (_) => widget.onFocusResolved?.call(),
+            );
+          }
           return DashboardErrorState(
             title: 'تعذّر تحميل المركبات',
             message: state.message,
@@ -206,6 +270,35 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
           return LayoutBuilder(
             builder: (context, constraints) {
               final isDesktop = constraints.maxWidth >= 980;
+
+              final focusId = _pendingFocusId;
+              if (focusId != null) {
+                final target = state.vehicles.where((v) => v.id == focusId);
+                _pendingFocusId = null;
+                if (target.isNotEmpty) {
+                  final vehicle = target.first;
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    widget.onFocusResolved?.call();
+                    if (!mounted) return;
+                    _openVehicle(
+                      context,
+                      state,
+                      workspace,
+                      vehicle,
+                      cubit,
+                      isDesktop,
+                    );
+                  });
+                } else {
+                  // Loaded, but the flagged vehicle isn't in this list
+                  // (deleted, archived, ...) — stop waiting instead of
+                  // leaving the parent's "opening..." indicator stuck
+                  // forever.
+                  WidgetsBinding.instance.addPostFrameCallback(
+                    (_) => widget.onFocusResolved?.call(),
+                  );
+                }
+              }
 
               final browsing = Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -237,25 +330,45 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
     );
   }
 
+  /// Reactive to [cubit] rather than a one-time snapshot of [state]: a
+  /// `showDialog` builder only runs once, so without this, saving an edit
+  /// from the nested form dialog (which reloads [cubit] in the background)
+  /// left the still-open details dialog showing the pre-edit vehicle until it
+  /// was closed and reopened — or the whole screen refreshed.
   Widget _detailsView(
     BuildContext context,
     FleetVehiclesLoaded state,
     FleetWorkspace workspace,
     FleetVehicle vehicle,
-    FleetVehiclesCubit cubit, {
+    FleetVehiclesCubit cubit,
+    FleetDocumentsCubit docsCubit, {
     required VoidCallback onBack,
     ScrollController? scrollController,
   }) {
-    final updatedVehicle = state.vehicles.firstWhere(
-      (v) => v.id == vehicle.id,
-      orElse: () => vehicle,
-    );
-    return FleetVehicleDetailsView(
-      vehicle: updatedVehicle,
-      workspace: workspace,
-      onBack: onBack,
-      onEdit: () => _showVehicleForm(context, cubit, workspace, updatedVehicle),
-      scrollController: scrollController,
+    return BlocBuilder<FleetVehiclesCubit, FleetVehiclesState>(
+      bloc: cubit,
+      builder: (context, liveState) {
+        final vehicles = liveState is FleetVehiclesLoaded
+            ? liveState.vehicles
+            : state.vehicles;
+        final updatedVehicle = vehicles.firstWhere(
+          (v) => v.id == vehicle.id,
+          orElse: () => vehicle,
+        );
+        return FleetVehicleDetailsView(
+          vehicle: updatedVehicle,
+          workspace: workspace,
+          onBack: onBack,
+          onEdit: () => _showVehicleForm(
+            context,
+            cubit,
+            workspace,
+            updatedVehicle,
+            docsCubit,
+          ),
+          scrollController: scrollController,
+        );
+      },
     );
   }
 
@@ -274,8 +387,15 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
           return FleetVehiclesCardList(
             vehicles: sorted,
             workspace: workspace,
-            onViewDetails: (v) => _openVehicle(context, state, workspace, v, cubit, isDesktop),
-            onEdit: (v) => _showVehicleForm(context, cubit, workspace, v),
+            onViewDetails: (v) =>
+                _openVehicle(context, state, workspace, v, cubit, isDesktop),
+            onEdit: (v) => _showVehicleForm(
+              context,
+              cubit,
+              workspace,
+              v,
+              context.read<FleetDocumentsCubit>(),
+            ),
             onDelete: _confirmDeleteVehicle,
             page: _page,
             pageSize: _pageSize,
@@ -286,8 +406,15 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
         return FleetVehiclesTable(
           vehicles: sorted,
           workspace: workspace,
-          onView: (v) => _openVehicle(context, state, workspace, v, cubit, isDesktop),
-          onEdit: (v) => _showVehicleForm(context, cubit, workspace, v),
+          onView: (v) =>
+              _openVehicle(context, state, workspace, v, cubit, isDesktop),
+          onEdit: (v) => _showVehicleForm(
+            context,
+            cubit,
+            workspace,
+            v,
+            context.read<FleetDocumentsCubit>(),
+          ),
           selectedIds: state.selectedIds,
           page: _page,
           pageSize: _pageSize,
@@ -324,8 +451,13 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
             ),
             const SizedBox(width: AppSpacing.medium),
             FilledButton.icon(
-              onPressed: () =>
-                  _showVehicleForm(context, cubit, workspace, null),
+              onPressed: () => _showVehicleForm(
+                context,
+                cubit,
+                workspace,
+                null,
+                context.read<FleetDocumentsCubit>(),
+              ),
               icon: const Icon(Icons.add_rounded),
               label: const Text('إضافة مركبة'),
               style: FilledButton.styleFrom(
@@ -449,6 +581,7 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
     FleetVehiclesCubit cubit,
     FleetWorkspace workspace,
     FleetVehicle? vehicle,
+    FleetDocumentsCubit docsCubit,
   ) {
     showDialog(
       context: context,
@@ -460,7 +593,6 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
           onBack: () => Navigator.pop(dialogContext),
           onUploadFile: cubit.uploadVehicleFile,
           onSave: (savedVehicle, pendingDocs) async {
-            final docsCubit = context.read<FleetDocumentsCubit>();
             final overviewCubit = context.read<FleetOverviewCubit>();
             final isEdit = savedVehicle.id.isNotEmpty;
             try {
@@ -494,7 +626,6 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
               await overviewCubit.loadWorkspace();
               return null;
             } catch (error) {
-              
               return error.toString().replaceAll('Exception: ', '');
             }
           },
@@ -534,7 +665,7 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
       ),
     );
     if (confirmed != true || !mounted) return;
-    
+
     final error = await vehiclesCubit.deleteVehicle(vehicle.id);
     if (!mounted) return;
     if (error == null) {

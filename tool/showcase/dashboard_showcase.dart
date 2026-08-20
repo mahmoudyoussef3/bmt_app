@@ -27,8 +27,6 @@ import 'package:bmt_app/apps/dashboard/features/dashboard_home/presentation/cubi
 import 'package:bmt_app/apps/dashboard/features/dashboard_home/presentation/cubit/dashboard_home_state.dart';
 import 'package:bmt_app/apps/dashboard/features/finance/presentation/cubit/finance_cubit.dart';
 import 'package:bmt_app/apps/dashboard/features/finance/presentation/cubit/finance_state.dart';
-import 'package:bmt_app/apps/dashboard/features/fleet/fleet_assignments/presentation/cubit/fleet_assignments_cubit.dart';
-import 'package:bmt_app/apps/dashboard/features/fleet/fleet_assignments/presentation/cubit/fleet_assignments_state.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_documents/presentation/cubit/fleet_documents_cubit.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_documents/presentation/cubit/fleet_documents_state.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_drivers/presentation/cubit/fleet_drivers_cubit.dart';
@@ -223,22 +221,6 @@ class _FakeFleetDocuments extends Cubit<FleetDocumentsState>
   dynamic noSuchMethod(Invocation i) => null;
 }
 
-class _FakeFleetAssignments extends Cubit<FleetAssignmentsState>
-    implements FleetAssignmentsCubit {
-  _FakeFleetAssignments()
-    : super(
-        FleetAssignmentsLoaded(
-          assignments: demo.fleet.assignments,
-          drivers: demo.fleet.drivers,
-          vehicles: demo.fleet.vehicles,
-        ),
-      );
-  @override
-  Future<void> load() async {}
-  @override
-  dynamic noSuchMethod(Invocation i) => null;
-}
-
 class _FakeFinance extends Cubit<FinanceState> implements FinanceCubit {
   _FakeFinance([FinanceSection section = FinanceSection.overview])
     : super(
@@ -353,7 +335,6 @@ void registerDashboardShowcaseFakes() {
     ..registerFactory<FleetDriversCubit>(_FakeFleetDrivers.new)
     ..registerFactory<FleetVehiclesCubit>(_FakeFleetVehicles.new)
     ..registerFactory<FleetDocumentsCubit>(_FakeFleetDocuments.new)
-    ..registerFactory<FleetAssignmentsCubit>(_FakeFleetAssignments.new)
     ..registerFactory<FinanceCubit>(() => _FakeFinance(_financeSection))
     ..registerFactory<WalletCubit>(_FakeWallet.new)
     ..registerFactory<ReportsCubit>(_FakeReports.new)

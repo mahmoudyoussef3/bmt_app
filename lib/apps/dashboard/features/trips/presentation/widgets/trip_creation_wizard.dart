@@ -785,12 +785,13 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
     return '${driver.name} • ${vehicle.plateNumber} • ${vehicle.capacity} مقعد';
   }
 
-  /// Sends the operator to Fleet to pair the driver with a bus. The planner closes
-  /// first: coming back to a half-filled form whose driver list is now stale would be
-  /// worse than restarting it with correct data.
+  /// Sends the operator to Fleet's drivers tab to pair the driver with a bus
+  /// (edit the driver, pick a vehicle). The planner closes first: coming back
+  /// to a half-filled form whose driver list is now stale would be worse than
+  /// restarting it with correct data.
   void _openFleetAssignment() {
     Navigator.of(context).pop();
-    widget.onOpenModule?.call(DashboardRoutes.assignments);
+    widget.onOpenModule?.call(DashboardRoutes.drivers);
   }
 
   Widget _buildPlannerSummary() {

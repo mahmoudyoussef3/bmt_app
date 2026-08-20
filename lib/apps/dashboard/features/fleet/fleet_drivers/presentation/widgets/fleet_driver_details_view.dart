@@ -35,7 +35,6 @@ class FleetDriverDetailsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final vehicle = _vehicleName(driver.currentVehicleId);
     final snapshot = DriverOperations.snapshot(driver, workspace);
 
@@ -71,22 +70,15 @@ class FleetDriverDetailsView extends StatelessWidget {
               final history = Column(
                 children: [
                   _HistoryTimeline(
-                    title: 'سجل الرحلات',
+                    title: 'سجل الرحلات (آخر 12 شهر)',
                     items: driver.tripHistory,
                     icon: Icons.map_outlined,
                   ),
                   const SizedBox(height: AppSpacing.medium),
                   _HistoryTimeline(
-                    title: 'سجل المخالفات',
-                    items: driver.violations,
-                    icon: Icons.gpp_bad_outlined,
-                    color: scheme.error,
-                  ),
-                  const SizedBox(height: AppSpacing.medium),
-                  _HistoryTimeline(
-                    title: 'سجل النشاط',
-                    items: driver.activityTimeline,
-                    icon: Icons.timeline_rounded,
+                    title: 'سجل المركبات المعينة سابقاً',
+                    items: driver.vehicleHistory,
+                    icon: Icons.directions_bus_filled_outlined,
                   ),
                 ],
               );
@@ -663,11 +655,15 @@ class _HistoryTimeline extends StatelessWidget {
                 child: Icon(icon, color: iconColor, size: 22),
               ),
               const SizedBox(width: AppSpacing.medium),
-              Text(
-                title,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+              Expanded(
+                child: Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
               ),
             ],
           ),
@@ -774,25 +770,42 @@ class _PerformanceMetricsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final tripCount = driver.tripHistory.length;
-    final violationCount = driver.violations.length;
+    final completed = driver.completedTripsCount;
+    final cancelled = driver.cancelledTripsCount;
+    final totalTrips = completed + cancelled;
+    final completionRate = totalTrips == 0
+        ? null
+        : (completed / totalTrips * 100).round();
     final licenseExpired = driver.isLicenseExpired;
     final licenseWarn = driver.isLicenseExpiringSoon;
 
     final items = [
       _StatItem(
-        label: 'إجمالي الرحلات',
-        value: '$tripCount',
+        label: 'الرحلات المكتملة',
+        value: '$completed',
         icon: Icons.map_rounded,
         color: scheme.primary,
-        subtitle: 'رحلة مكتملة',
+        subtitle: 'آخر 12 شهر',
       ),
       _StatItem(
-        label: 'المخالفات',
-        value: '$violationCount',
-        icon: Icons.gpp_bad_rounded,
-        color: violationCount > 0 ? scheme.error : scheme.primary,
-        subtitle: violationCount > 0 ? 'تحتاج مراجعة' : 'سجل نظيف',
+        label: 'معدل الإتمام',
+        value: completionRate == null ? '—' : '$completionRate%',
+        icon: Icons.fact_check_rounded,
+        color: completionRate != null && completionRate < 80
+            ? scheme.error
+            : scheme.primary,
+        subtitle: totalTrips == 0 ? 'لا توجد رحلات بعد' : '$cancelled ملغاة',
+      ),
+      _StatItem(
+        label: 'تقييم الركاب',
+        value: driver.ratingCount > 0
+            ? driver.rating.toStringAsFixed(1)
+            : '—',
+        icon: Icons.star_rounded,
+        color: scheme.primary,
+        subtitle: driver.ratingCount > 0
+            ? '${driver.ratingCount} تقييم'
+            : 'لا يوجد تقييم بعد',
       ),
       _StatItem(
         label: 'حالة الرخصة',

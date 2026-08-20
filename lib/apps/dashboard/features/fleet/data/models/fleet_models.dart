@@ -19,9 +19,12 @@ class FleetDriverModel extends FleetDriver {
     super.createdAt,
     super.updatedAt,
     super.tripHistory,
-    super.violations,
+    super.vehicleHistory,
     super.documents,
-    super.activityTimeline,
+    super.completedTripsCount,
+    super.cancelledTripsCount,
+    super.rating,
+    super.ratingCount,
   });
 
   factory FleetDriverModel.fromEntity(FleetDriver driver) {
@@ -43,9 +46,12 @@ class FleetDriverModel extends FleetDriver {
       createdAt: driver.createdAt,
       updatedAt: driver.updatedAt,
       tripHistory: driver.tripHistory,
-      violations: driver.violations,
+      vehicleHistory: driver.vehicleHistory,
       documents: driver.documents,
-      activityTimeline: driver.activityTimeline,
+      completedTripsCount: driver.completedTripsCount,
+      cancelledTripsCount: driver.cancelledTripsCount,
+      rating: driver.rating,
+      ratingCount: driver.ratingCount,
     );
   }
 
@@ -53,6 +59,10 @@ class FleetDriverModel extends FleetDriver {
     Map<String, dynamic> json, {
     String currentVehicleId = '',
     List<FleetDocument> documents = const [],
+    List<FleetHistoryItem> tripHistory = const [],
+    List<FleetHistoryItem> vehicleHistory = const [],
+    int completedTripsCount = 0,
+    int cancelledTripsCount = 0,
   }) {
     return FleetDriverModel(
       id: json['id'] as String? ?? '',
@@ -85,6 +95,12 @@ class FleetDriverModel extends FleetDriver {
           ? DateTime.parse(json['updated_at'] as String)
           : null,
       documents: documents,
+      tripHistory: tripHistory,
+      vehicleHistory: vehicleHistory,
+      completedTripsCount: completedTripsCount,
+      cancelledTripsCount: cancelledTripsCount,
+      rating: (json['rating'] as num?)?.toDouble() ?? 0,
+      ratingCount: (json['rating_count'] as num?)?.toInt() ?? 0,
     );
   }
 
@@ -132,7 +148,10 @@ class FleetVehicleModel extends FleetVehicle {
     super.images,
     super.previousDrivers,
     super.tripHistory,
-    super.timeline,
+    super.completedTripsCount,
+    super.cancelledTripsCount,
+    super.rating,
+    super.ratingCount,
   });
 
   factory FleetVehicleModel.fromEntity(FleetVehicle vehicle) {
@@ -160,7 +179,10 @@ class FleetVehicleModel extends FleetVehicle {
       images: vehicle.images,
       previousDrivers: vehicle.previousDrivers,
       tripHistory: vehicle.tripHistory,
-      timeline: vehicle.timeline,
+      completedTripsCount: vehicle.completedTripsCount,
+      cancelledTripsCount: vehicle.cancelledTripsCount,
+      rating: vehicle.rating,
+      ratingCount: vehicle.ratingCount,
     );
   }
 
@@ -170,6 +192,10 @@ class FleetVehicleModel extends FleetVehicle {
     String licenseExpiry = '',
     String insuranceExpiry = '',
     String inspectionExpiry = '',
+    List<FleetHistoryItem> tripHistory = const [],
+    List<FleetHistoryItem> previousDrivers = const [],
+    int completedTripsCount = 0,
+    int cancelledTripsCount = 0,
   }) {
     final imgUrl =
         json['image_url'] as String? ?? json['image_label'] as String? ?? '';
@@ -214,6 +240,12 @@ class FleetVehicleModel extends FleetVehicle {
       insuranceExpiry: insuranceExpiry,
       inspectionExpiry: inspectionExpiry,
       images: parsedImages,
+      tripHistory: tripHistory,
+      previousDrivers: previousDrivers,
+      completedTripsCount: completedTripsCount,
+      cancelledTripsCount: cancelledTripsCount,
+      rating: (json['rating'] as num?)?.toDouble() ?? 0,
+      ratingCount: (json['rating_count'] as num?)?.toInt() ?? 0,
     );
   }
 

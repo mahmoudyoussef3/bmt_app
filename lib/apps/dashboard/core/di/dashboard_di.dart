@@ -93,11 +93,6 @@ import '../../features/fleet/fleet_vehicles/domain/repositories/fleet_vehicles_r
 import '../../features/fleet/fleet_vehicles/domain/usecases/fleet_vehicles_usecases.dart';
 import '../../features/fleet/fleet_vehicles/presentation/cubit/fleet_vehicles_cubit.dart';
 
-import '../../features/fleet/fleet_assignments/data/repositories/fleet_assignments_repository_impl.dart';
-import '../../features/fleet/fleet_assignments/domain/repositories/fleet_assignments_repository.dart';
-import '../../features/fleet/fleet_assignments/domain/usecases/fleet_assignments_usecases.dart';
-import '../../features/fleet/fleet_assignments/presentation/cubit/fleet_assignments_cubit.dart';
-
 import '../../features/fleet/fleet_documents/data/repositories/fleet_documents_repository_impl.dart';
 import '../../features/fleet/fleet_documents/domain/repositories/fleet_documents_repository.dart';
 import '../../features/fleet/fleet_documents/domain/usecases/fleet_documents_usecases.dart';
@@ -389,72 +384,6 @@ void registerDashboardDependencies() {
         deleteVehicle: dashboardDi<DeleteFleetVehicleUseCase>(),
         uploadFile: dashboardDi<UploadVehicleFileUseCase>(),
         deleteFile: dashboardDi<DeleteVehicleFileUseCase>(),
-      ),
-    );
-  }
-
-  if (!dashboardDi.isRegistered<FleetAssignmentsRepository>()) {
-    dashboardDi.registerLazySingleton<FleetAssignmentsRepository>(
-      () => FleetAssignmentsRepositoryImpl(dashboardDi<FleetDatasource>()),
-    );
-  }
-  if (!dashboardDi.isRegistered<GetFleetAssignmentsUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () =>
-          GetFleetAssignmentsUseCase(dashboardDi<FleetAssignmentsRepository>()),
-    );
-  }
-  if (!dashboardDi.isRegistered<GetAssignmentDriversUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () => GetAssignmentDriversUseCase(
-        dashboardDi<FleetAssignmentsRepository>(),
-      ),
-    );
-  }
-  if (!dashboardDi.isRegistered<GetAssignmentVehiclesUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () => GetAssignmentVehiclesUseCase(
-        dashboardDi<FleetAssignmentsRepository>(),
-      ),
-    );
-  }
-  if (!dashboardDi.isRegistered<AssignFleetVehicleUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () =>
-          AssignFleetVehicleUseCase(dashboardDi<FleetAssignmentsRepository>()),
-    );
-  }
-  if (!dashboardDi.isRegistered<ReassignFleetVehicleUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () => ReassignFleetVehicleUseCase(
-        dashboardDi<FleetAssignmentsRepository>(),
-      ),
-    );
-  }
-  if (!dashboardDi.isRegistered<RemoveFleetAssignmentUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () => RemoveFleetAssignmentUseCase(
-        dashboardDi<FleetAssignmentsRepository>(),
-      ),
-    );
-  }
-  if (!dashboardDi.isRegistered<DeleteFleetAssignmentUseCase>()) {
-    dashboardDi.registerLazySingleton(
-      () => DeleteFleetAssignmentUseCase(
-        dashboardDi<FleetAssignmentsRepository>(),
-      ),
-    );
-  }
-  if (!dashboardDi.isRegistered<FleetAssignmentsCubit>()) {
-    dashboardDi.registerFactory(
-      () => FleetAssignmentsCubit(
-        getAssignments: dashboardDi<GetFleetAssignmentsUseCase>(),
-        getDrivers: dashboardDi<GetAssignmentDriversUseCase>(),
-        getVehicles: dashboardDi<GetAssignmentVehiclesUseCase>(),
-        assignVehicle: dashboardDi<AssignFleetVehicleUseCase>(),
-        reassignVehicle: dashboardDi<ReassignFleetVehicleUseCase>(),
-        removeAssignment: dashboardDi<RemoveFleetAssignmentUseCase>(),
-        deleteAssignment: dashboardDi<DeleteFleetAssignmentUseCase>(),
       ),
     );
   }

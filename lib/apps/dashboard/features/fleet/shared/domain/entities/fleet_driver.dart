@@ -3,6 +3,7 @@ library;
 
 import 'fleet_common.dart';
 import 'fleet_document.dart';
+import 'fleet_expiry.dart';
 
 enum FleetDriverStatus {
   active('نشط'),
@@ -31,10 +32,25 @@ class FleetDriver {
   final String currentVehicleId;
   final DateTime? createdAt;
   final DateTime? updatedAt;
+
+  /// Recent `operation_trips` for this driver (any status), most recent
+  /// first, capped in the datasource.
   final List<FleetHistoryItem> tripHistory;
-  final List<FleetHistoryItem> violations;
+
+  /// Ended `assignments` rows for this driver, most recent first — which
+  /// buses this driver has previously operated.
+  final List<FleetHistoryItem> vehicleHistory;
   final List<FleetDocument> documents;
-  final List<FleetHistoryItem> activityTimeline;
+
+  /// Real operational counts, computed once in the datasource from
+  /// `operation_trips` so every reader agrees on the same numbers.
+  final int completedTripsCount;
+  final int cancelledTripsCount;
+
+  /// Denormalized passenger-review aggregate (`drivers.rating` /
+  /// `.rating_count`), refreshed server-side on every `trip_reviews` write.
+  final double rating;
+  final int ratingCount;
 
   const FleetDriver({
     required this.id,
@@ -54,23 +70,17 @@ class FleetDriver {
     this.createdAt,
     this.updatedAt,
     this.tripHistory = const [],
-    this.violations = const [],
+    this.vehicleHistory = const [],
     this.documents = const [],
-    this.activityTimeline = const [],
+    this.completedTripsCount = 0,
+    this.cancelledTripsCount = 0,
+    this.rating = 0,
+    this.ratingCount = 0,
   });
 
-  DateTime? get _parsedLicenseExpiry => DateTime.tryParse(licenseExpiryDate);
-  bool get isLicenseExpired {
-    final d = _parsedLicenseExpiry;
-    return d != null && d.isBefore(DateTime.now());
-  }
-
-  bool get isLicenseExpiringSoon {
-    final d = _parsedLicenseExpiry;
-    if (d == null) return false;
-    final diff = d.difference(DateTime.now()).inDays;
-    return diff >= 0 && diff <= 30;
-  }
+  bool get isLicenseExpired => FleetExpiry.isExpired(licenseExpiryDate);
+  bool get isLicenseExpiringSoon =>
+      FleetExpiry.isExpiringSoon(licenseExpiryDate);
 
   String get name => fullName;
   String get emergencyContact => emergencyPhone;
@@ -100,9 +110,12 @@ class FleetDriver {
     DateTime? createdAt,
     DateTime? updatedAt,
     List<FleetHistoryItem>? tripHistory,
-    List<FleetHistoryItem>? violations,
+    List<FleetHistoryItem>? vehicleHistory,
     List<FleetDocument>? documents,
-    List<FleetHistoryItem>? activityTimeline,
+    int? completedTripsCount,
+    int? cancelledTripsCount,
+    double? rating,
+    int? ratingCount,
   }) {
     return FleetDriver(
       id: id ?? this.id,
@@ -124,9 +137,12 @@ class FleetDriver {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       tripHistory: tripHistory ?? this.tripHistory,
-      violations: violations ?? this.violations,
+      vehicleHistory: vehicleHistory ?? this.vehicleHistory,
       documents: documents ?? this.documents,
-      activityTimeline: activityTimeline ?? this.activityTimeline,
+      completedTripsCount: completedTripsCount ?? this.completedTripsCount,
+      cancelledTripsCount: cancelledTripsCount ?? this.cancelledTripsCount,
+      rating: rating ?? this.rating,
+      ratingCount: ratingCount ?? this.ratingCount,
     );
   }
 }

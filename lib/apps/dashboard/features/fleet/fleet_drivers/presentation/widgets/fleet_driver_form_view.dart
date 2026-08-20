@@ -165,9 +165,12 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
       status: existing?.status ?? FleetDriverStatus.active,
       currentVehicleId: selectedVehicleId ?? '',
       tripHistory: existing?.tripHistory ?? const [],
-      violations: existing?.violations ?? const [],
+      vehicleHistory: existing?.vehicleHistory ?? const [],
       documents: existing?.documents ?? const [],
-      activityTimeline: existing?.activityTimeline ?? const [],
+      completedTripsCount: existing?.completedTripsCount ?? 0,
+      cancelledTripsCount: existing?.cancelledTripsCount ?? 0,
+      rating: existing?.rating ?? 0,
+      ratingCount: existing?.ratingCount ?? 0,
     );
 
     setState(() => _saving = true);

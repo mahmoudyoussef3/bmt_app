@@ -1,3 +1,4 @@
+import 'fleet_expiry.dart';
 import 'fleet_workspace.dart';
 
 enum DriverOperationalStatus {
@@ -71,10 +72,10 @@ class DriverOperations {
       attention.add('السائق مؤرشف');
     }
 
-    final licenseState = _licenseState(driver.licenseExpiryDate);
-    if (licenseState == _LicenseState.expired) {
+    final licenseLevel = FleetExpiry.levelOf(driver.licenseExpiryDate);
+    if (licenseLevel == FleetExpiryLevel.expired) {
       attention.add('رخصة القيادة منتهية');
-    } else if (licenseState == _LicenseState.expiringSoon) {
+    } else if (licenseLevel == FleetExpiryLevel.expiringSoon) {
       attention.add('رخصة القيادة قاربت على الانتهاء');
     }
 
@@ -171,19 +172,4 @@ class DriverOperations {
     return DriverOperationalStatus.available;
   }
 
-  static _LicenseState _licenseState(String expiryText) {
-    final expiry = DateTime.tryParse(expiryText);
-    if (expiry == null) return _LicenseState.missing;
-
-    final today = DateTime.now();
-    final todayOnly = DateTime(today.year, today.month, today.day);
-    final expiryOnly = DateTime(expiry.year, expiry.month, expiry.day);
-    final days = expiryOnly.difference(todayOnly).inDays;
-
-    if (days < 0) return _LicenseState.expired;
-    if (days <= 30) return _LicenseState.expiringSoon;
-    return _LicenseState.valid;
-  }
 }
-
-enum _LicenseState { valid, expiringSoon, expired, missing }

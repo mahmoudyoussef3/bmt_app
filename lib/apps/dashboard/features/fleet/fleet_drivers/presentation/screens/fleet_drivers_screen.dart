@@ -35,7 +35,29 @@ enum _DriverOpsFilter {
 
 class FleetDriversScreen extends StatefulWidget {
   final ValueChanged<bool>? onViewStateChanged;
-  const FleetDriversScreen({super.key, this.onViewStateChanged});
+
+  /// When set, the matching driver's detail dialog opens automatically once
+  /// the list has loaded — the deep link a "Needs Attention" row uses to jump
+  /// straight to the driver it flagged.
+  ///
+  /// A fresh [FleetFocusRequest] instance identifies each request, even when
+  /// the id repeats (open a driver, close it, tap the same "Needs Attention"
+  /// row again) — see the type's doc comment for why a plain `String?` id
+  /// can't do this.
+  final FleetFocusRequest? focusRequest;
+
+  /// Called once this screen has either opened [focusRequest]'s dialog or
+  /// given up (driver not found, or the list failed to load), so the parent
+  /// can dismiss whatever "opening..." feedback it showed on the tap that
+  /// created the request.
+  final VoidCallback? onFocusResolved;
+
+  const FleetDriversScreen({
+    super.key,
+    this.onViewStateChanged,
+    this.focusRequest,
+    this.onFocusResolved,
+  });
 
   @override
   State<FleetDriversScreen> createState() => _FleetDriversScreenState();
@@ -47,6 +69,22 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
   FleetSortField _sortField = FleetSortField.name;
   bool _sortAscending = true;
   _DriverOpsFilter _opsFilter = _DriverOpsFilter.all;
+  String? _pendingFocusId;
+
+  @override
+  void initState() {
+    super.initState();
+    _pendingFocusId = widget.focusRequest?.id;
+  }
+
+  @override
+  void didUpdateWidget(covariant FleetDriversScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.focusRequest != null &&
+        widget.focusRequest != oldWidget.focusRequest) {
+      _pendingFocusId = widget.focusRequest!.id;
+    }
+  }
 
   List<FleetDriver> _sortDrivers(List<FleetDriver> list) {
     final sorted = [...list];
@@ -102,24 +140,30 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
     FleetDriversCubit cubit,
     bool isDesktop,
   ) {
+    final docsCubit = context.read<FleetDocumentsCubit>();
+
     if (isDesktop) {
       showDialog(
         context: context,
-        builder: (context) => Dialog(
-          clipBehavior: Clip.antiAlias,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
-          ),
-          child: SizedBox(
-            width: 800,
-            height: 800,
-            child: _detailsView(
-              context,
-              state,
-              workspace,
-              driver,
-              cubit,
-              onBack: () => Navigator.pop(context),
+        builder: (context) => BlocProvider.value(
+          value: docsCubit,
+          child: Dialog(
+            clipBehavior: Clip.antiAlias,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
+            ),
+            child: SizedBox(
+              width: 800,
+              height: 800,
+              child: _detailsView(
+                context,
+                state,
+                workspace,
+                driver,
+                cubit,
+                docsCubit,
+                onBack: () => Navigator.pop(context),
+              ),
             ),
           ),
         ),
@@ -133,35 +177,43 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
         ),
-        builder: (context) => DraggableScrollableSheet(
-          expand: false,
-          initialChildSize: 0.9,
-          builder: (context, controller) {
-            return Column(
-              children: [
-                Container(
-                  width: 40,
-                  height: 4,
-                  margin: const EdgeInsets.symmetric(vertical: AppSpacing.medium),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant.withAlpha(100),
-                    borderRadius: BorderRadius.circular(2),
+        builder: (context) => BlocProvider.value(
+          value: docsCubit,
+          child: DraggableScrollableSheet(
+            expand: false,
+            initialChildSize: 0.9,
+            builder: (context, controller) {
+              return Column(
+                children: [
+                  Container(
+                    width: 40,
+                    height: 4,
+                    margin: const EdgeInsets.symmetric(
+                      vertical: AppSpacing.medium,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurfaceVariant.withAlpha(100),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
-                ),
-                Expanded(
-                  child: _detailsView(
-                    context,
-                    state,
-                    workspace,
-                    driver,
-                    cubit,
-                    onBack: () => Navigator.pop(context),
-                    scrollController: controller,
+                  Expanded(
+                    child: _detailsView(
+                      context,
+                      state,
+                      workspace,
+                      driver,
+                      cubit,
+                      docsCubit,
+                      onBack: () => Navigator.pop(context),
+                      scrollController: controller,
+                    ),
                   ),
-                ),
-              ],
-            );
-          },
+                ],
+              );
+            },
+          ),
         ),
       );
     }
@@ -183,6 +235,16 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
           FleetDriversError() => AsyncViewStatus.error,
           FleetDriversLoaded() => AsyncViewStatus.data,
         };
+
+        if (state is FleetDriversError && _pendingFocusId != null) {
+          // The tab this focus request jumped to failed to load — nothing to
+          // open. Give up on the request rather than leaving the parent's
+          // "opening..." indicator stuck forever.
+          _pendingFocusId = null;
+          WidgetsBinding.instance.addPostFrameCallback(
+            (_) => widget.onFocusResolved?.call(),
+          );
+        }
 
         return AsyncStateView(
           status: status,
@@ -214,6 +276,27 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
       builder: (context, constraints) {
         final isDesktop = constraints.maxWidth >= AppLayout.breakpointTablet;
 
+        final focusId = _pendingFocusId;
+        if (focusId != null) {
+          final target = state.drivers.where((d) => d.id == focusId);
+          _pendingFocusId = null;
+          if (target.isNotEmpty) {
+            final driver = target.first;
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              widget.onFocusResolved?.call();
+              if (!mounted) return;
+              _openDriver(context, state, workspace, driver, cubit, isDesktop);
+            });
+          } else {
+            // Loaded, but the flagged driver isn't in this list (deleted,
+            // archived, ...) — stop waiting instead of leaving the parent's
+            // "opening..." indicator stuck forever.
+            WidgetsBinding.instance.addPostFrameCallback(
+              (_) => widget.onFocusResolved?.call(),
+            );
+          }
+        }
+
         final browsing = Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -232,25 +315,45 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
     );
   }
 
+  /// Reactive to [cubit] rather than a one-time snapshot of [state]: a
+  /// `showDialog` builder only runs once, so without this, saving an edit
+  /// from the nested form dialog (which reloads [cubit] in the background)
+  /// left the still-open details dialog showing the pre-edit driver until it
+  /// was closed and reopened — or the whole screen refreshed.
   Widget _detailsView(
     BuildContext context,
     FleetDriversLoaded state,
     FleetWorkspace workspace,
     FleetDriver driver,
-    FleetDriversCubit cubit, {
+    FleetDriversCubit cubit,
+    FleetDocumentsCubit docsCubit, {
     required VoidCallback onBack,
     ScrollController? scrollController,
   }) {
-    final updatedDriver = state.drivers.firstWhere(
-      (d) => d.id == driver.id,
-      orElse: () => driver,
-    );
-    return FleetDriverDetailsView(
-      driver: updatedDriver,
-      workspace: workspace,
-      onBack: onBack,
-      onEdit: () => _showDriverForm(context, cubit, workspace, updatedDriver),
-      scrollController: scrollController,
+    return BlocBuilder<FleetDriversCubit, FleetDriversState>(
+      bloc: cubit,
+      builder: (context, liveState) {
+        final drivers = liveState is FleetDriversLoaded
+            ? liveState.drivers
+            : state.drivers;
+        final updatedDriver = drivers.firstWhere(
+          (d) => d.id == driver.id,
+          orElse: () => driver,
+        );
+        return FleetDriverDetailsView(
+          driver: updatedDriver,
+          workspace: workspace,
+          onBack: onBack,
+          onEdit: () => _showDriverForm(
+            context,
+            cubit,
+            workspace,
+            updatedDriver,
+            docsCubit,
+          ),
+          scrollController: scrollController,
+        );
+      },
     );
   }
 
@@ -269,8 +372,15 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
           return FleetDriversCardList(
             drivers: sorted,
             workspace: workspace,
-            onViewDetails: (d) => _openDriver(context, state, workspace, d, cubit, isDesktop),
-            onEdit: (d) => _showDriverForm(context, cubit, workspace, d),
+            onViewDetails: (d) =>
+                _openDriver(context, state, workspace, d, cubit, isDesktop),
+            onEdit: (d) => _showDriverForm(
+              context,
+              cubit,
+              workspace,
+              d,
+              context.read<FleetDocumentsCubit>(),
+            ),
             onDelete: _confirmDeleteDriver,
             page: _page,
             pageSize: _pageSize,
@@ -280,8 +390,15 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
         return FleetDriversTable(
           drivers: sorted,
           workspace: workspace,
-          onView: (d) => _openDriver(context, state, workspace, d, cubit, isDesktop),
-          onEdit: (d) => _showDriverForm(context, cubit, workspace, d),
+          onView: (d) =>
+              _openDriver(context, state, workspace, d, cubit, isDesktop),
+          onEdit: (d) => _showDriverForm(
+            context,
+            cubit,
+            workspace,
+            d,
+            context.read<FleetDocumentsCubit>(),
+          ),
           selectedIds: state.selectedIds,
           selectedId: null,
           page: _page,
@@ -323,7 +440,13 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
             ),
             const SizedBox(width: AppSpacing.medium),
             FilledButton.icon(
-              onPressed: () => _showDriverForm(context, cubit, workspace, null),
+              onPressed: () => _showDriverForm(
+                context,
+                cubit,
+                workspace,
+                null,
+                context.read<FleetDocumentsCubit>(),
+              ),
               icon: const Icon(Icons.add_rounded),
               label: const Text('إضافة سائق'),
               style: FilledButton.styleFrom(
@@ -385,6 +508,7 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
     FleetDriversCubit cubit,
     FleetWorkspace workspace,
     FleetDriver? driver,
+    FleetDocumentsCubit docsCubit,
   ) {
     showDialog(
       context: context,
@@ -395,7 +519,6 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
           workspace: workspace,
           onBack: () => Navigator.pop(dialogContext),
           onSave: (savedDriver, pendingDocs) async {
-            final docsCubit = context.read<FleetDocumentsCubit>();
             final overviewCubit = context.read<FleetOverviewCubit>();
             final isEdit = savedDriver.id.isNotEmpty;
             try {

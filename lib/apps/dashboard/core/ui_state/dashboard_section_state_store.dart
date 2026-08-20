@@ -100,6 +100,8 @@ class DashboardSectionIds {
 
   static const fleetDriverReadiness = 'fleet.driverReadiness';
   static const fleetVehicleStatus = 'fleet.vehicleStatus';
+  static const fleetAttention = 'fleet.attention';
+  static const fleetActivity = 'fleet.activity';
 
   static const financeHeader = 'finance.header';
   static const financeRevenueTrend = 'finance.revenueTrend';

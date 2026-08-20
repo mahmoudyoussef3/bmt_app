@@ -464,16 +464,6 @@ class _DashboardShellState extends State<DashboardShell> {
       inSidebar: false,
     ),
     _DashboardNavItem(
-      label: 'مهام الأسطول',
-      route: DashboardRoutes.assignments,
-      icon: DashboardIcons.routes,
-      selectedIcon: DashboardIcons.routesActive,
-      permission: DashboardPermission.assignments,
-      feature: FeatureKeys.drivers,
-      group: _navFleet,
-      inSidebar: false,
-    ),
-    _DashboardNavItem(
       label: 'مراجعة المدفوعات',
       route: DashboardRoutes.paymentVerification,
       icon: DashboardIcons.paymentReview,
@@ -791,10 +781,6 @@ class _DashboardShellState extends State<DashboardShell> {
         child: const CaptainRequestsScreen(),
       ),
       DashboardRoutes.drivers => BlocProvider(
-        create: (_) => dashboardDi<FleetOverviewCubit>()..loadWorkspace(),
-        child: const FleetOverviewScreen(initialTab: FleetTab.drivers),
-      ),
-      DashboardRoutes.assignments => BlocProvider(
         create: (_) => dashboardDi<FleetOverviewCubit>()..loadWorkspace(),
         child: const FleetOverviewScreen(initialTab: FleetTab.drivers),
       ),

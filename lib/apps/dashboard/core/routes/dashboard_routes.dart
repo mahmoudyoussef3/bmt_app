@@ -17,7 +17,6 @@ class DashboardRoutes {
   static const fleet = '/fleet';
   static const captainRequests = '/captain-requests';
   static const drivers = '/drivers';
-  static const assignments = '/assignments';
   static const vehicles = '/vehicles';
   static const routes = '/routes';
   static const users = '/users';
