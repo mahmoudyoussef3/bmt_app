@@ -51,6 +51,20 @@ class _FakeFinanceCubit extends Cubit<FinanceState> implements FinanceCubit {
   @override
   void setLedgerPage(int page) {}
   @override
+  void setLedgerSort(FinanceLedgerSort sort) {}
+  @override
+  void setCustomRange(DateTime start, DateTime end) {
+    final current = state;
+    if (current is! FinanceLoaded) return;
+    emit(
+      current.copyWith(
+        period: FinancePeriod.custom,
+        customRange: FinanceDateRange(start: start, end: end),
+      ),
+    );
+  }
+
+  @override
   void clearActionMessage() {}
 }
 
@@ -60,10 +74,34 @@ FinanceLoaded _loadedState({
   FinancePeriod period = FinancePeriod.month,
   FinanceSection section = FinanceSection.overview,
   bool capReached = false,
+  bool withAttention = false,
+
+  /// Drops the outstanding fare, leaving a book with nothing waiting on a
+  /// decision — the state the attention panel has to say something about.
+  bool nothingPending = false,
+  List<RefundRequest> refundRequests = const [],
 }) {
   return FinanceLoaded(
     ledger: FinanceLedger.build(
       payments: [
+        if (withAttention)
+          PaymentRecord(
+            id: 'TXN-9',
+            clientName: 'سارة محمود',
+            tripCode: 'Obour, QH, Egypt → New Cairo, QH, Egypt',
+            amount: 210,
+            paymentMethod: FinancePaymentMethod.instapay,
+            status: PaymentStatus.pending,
+            date: _now.subtract(const Duration(days: 1)),
+            awaitingReview: true,
+            context: const FinanceEntryContext(
+              reference: 'BK-000999',
+              phone: '01000000000',
+              origin: 'Obour, QH, Egypt',
+              destination: 'New Cairo, QH, Egypt',
+              hasReceipt: true,
+            ),
+          ),
         PaymentRecord(
           id: 'TXN-1',
           clientName: 'خالد أحمد',
@@ -73,15 +111,16 @@ FinanceLoaded _loadedState({
           status: PaymentStatus.success,
           date: _now.subtract(const Duration(days: 1)),
         ),
-        PaymentRecord(
-          id: 'TXN-2',
-          clientName: 'منى سعيد',
-          tripCode: 'القاهرة - طنطا',
-          amount: 120,
-          paymentMethod: FinancePaymentMethod.cash,
-          status: PaymentStatus.pending,
-          date: _now.subtract(const Duration(days: 2)),
-        ),
+        if (!nothingPending)
+          PaymentRecord(
+            id: 'TXN-2',
+            clientName: 'منى سعيد',
+            tripCode: 'القاهرة - طنطا',
+            amount: 120,
+            paymentMethod: FinancePaymentMethod.cash,
+            status: PaymentStatus.pending,
+            date: _now.subtract(const Duration(days: 2)),
+          ),
       ],
       subscriptions: [
         SubscriptionRecord(
@@ -97,7 +136,7 @@ FinanceLoaded _loadedState({
         ),
       ],
     ),
-    refundRequests: const [],
+    refundRequests: refundRequests,
     subscriptions: const [],
     loadedAt: _now,
     period: period,
@@ -106,14 +145,80 @@ FinanceLoaded _loadedState({
   );
 }
 
-Widget _wrap(FinanceState state, {_FakeFinanceCubit? cubit}) {
+/// A ledger whose every string is longer than anything a fixture would
+/// otherwise carry: a full Arabic quadruple name, a geocoder-length route, and
+/// a seven-figure fare.
+FinanceLoaded _longNameState({
+  FinanceSection section = FinanceSection.overview,
+}) {
+  return FinanceLoaded(
+    ledger: FinanceLedger.build(
+      payments: [
+        PaymentRecord(
+          id: 'TXN-LONG-0000-0000-0000-0000-0000-0000',
+          clientName: 'عبد الرحمن محمد عبد الفتاح الشناوي المصري',
+          tripCode:
+              'Obour City, Qalyubia Governorate, Egypt → American University '
+              'in Cairo (AUC) - New Cairo, Qalyubia Governorate, Egypt',
+          amount: 1234567.89,
+          paymentMethod: FinancePaymentMethod.instapay,
+          status: PaymentStatus.success,
+          date: _now.subtract(const Duration(days: 1)),
+          context: const FinanceEntryContext(
+            reference: 'BK-0000000000123456',
+            phone: '01000000000',
+            origin: 'Obour City, Qalyubia Governorate, Egypt',
+            destination:
+                'American University in Cairo (AUC) - New Cairo, '
+                'Qalyubia Governorate, Egypt',
+          ),
+        ),
+        PaymentRecord(
+          id: 'TXN-LONG-2',
+          clientName: 'فاطمة الزهراء عبد المنعم أبو العلا',
+          tripCode: 'المنصورة، محافظة الدقهلية → القاهرة الجديدة، محافظة القاهرة',
+          amount: 987654.32,
+          paymentMethod: FinancePaymentMethod.vodafoneCash,
+          status: PaymentStatus.pending,
+          date: _now.subtract(const Duration(days: 2)),
+          awaitingReview: true,
+        ),
+      ],
+      subscriptions: [
+        SubscriptionRecord(
+          id: 'SUB-LONG',
+          clientName: 'محمود إبراهيم عبد العزيز السيد',
+          packageName: 'الباقة الشهرية الممتدة — عشرون رحلة ذهاب وعودة',
+          amount: 500000,
+          createdAt: _now.subtract(const Duration(days: 3)),
+          startDate: _now.subtract(const Duration(days: 3)),
+          endDate: _now.add(const Duration(days: 27)),
+          status: SubscriptionStatus.active,
+          remainingRides: 8,
+          paidAmount: 300000,
+          remainingAmount: 200000,
+        ),
+      ],
+    ),
+    refundRequests: const [],
+    subscriptions: const [],
+    loadedAt: _now,
+    section: section,
+  );
+}
+
+Widget _wrap(
+  FinanceState state, {
+  _FakeFinanceCubit? cubit,
+  ValueChanged<String>? onOpenModule,
+}) {
   return MaterialApp(
     home: Scaffold(
       body: Directionality(
         textDirection: TextDirection.rtl,
         child: BlocProvider<FinanceCubit>(
           create: (_) => cubit ?? _FakeFinanceCubit(state),
-          child: const FinanceScreen(),
+          child: FinanceScreen(onOpenModule: onOpenModule),
         ),
       ),
     ),
@@ -261,5 +366,214 @@ void main() {
     await tester.pump();
 
     expect(find.textContaining('يعرض أحدث'), findsOneWidget);
+  });
+
+  testWidgets('the period bar states the window it resolved to', (
+    tester,
+  ) async {
+    // A chip that says "هذا الشهر" is a name, not a boundary. The dates have to
+    // be on screen or the reader cannot tell which window produced a figure.
+    _useTallViewport(tester);
+    await tester.pumpWidget(_wrap(_loadedState(period: FinancePeriod.week)));
+    await tester.pump();
+
+    expect(find.textContaining('من 2026/07/25 إلى 2026/07/31'), findsOneWidget);
+    expect(find.textContaining('المقارنة مع'), findsOneWidget);
+  });
+
+  testWidgets('a calendar month is named and bounded to the month', (
+    tester,
+  ) async {
+    _useTallViewport(tester);
+    await tester.pumpWidget(
+      _wrap(_loadedState(period: FinancePeriod.lastMonth)),
+    );
+    await tester.pump();
+
+    expect(find.textContaining('يونيو 2026'), findsWidgets);
+    expect(find.textContaining('من 2026/06/01 إلى 2026/06/30'), findsOneWidget);
+  });
+
+  group('يحتاج المتابعة', () {
+    testWidgets('a clear board says so rather than rendering nothing', (
+      tester,
+    ) async {
+      _useTallViewport(tester);
+      await tester.pumpWidget(_wrap(_loadedState(nothingPending: true)));
+      await tester.pumpAndSettle();
+
+      expect(find.text('يحتاج المتابعة'), findsOneWidget);
+      expect(
+        find.textContaining('لا شيء معلق'),
+        findsWidgets,
+        reason: 'an empty panel is indistinguishable from a failed one',
+      );
+    });
+
+    testWidgets('an uncollected fare on a live seat is a queue of its own', (
+      tester,
+    ) async {
+      // The category an earlier query dropped entirely. If this stops
+      // appearing, the module has gone back to under-reporting what it is owed.
+      _useTallViewport(tester);
+      await tester.pumpWidget(_wrap(_loadedState()));
+      await tester.pumpAndSettle();
+
+      expect(find.text('حجوزات قائمة لم تُحصّل'), findsOneWidget);
+      expect(find.text('120 ج.م'), findsWidgets);
+    });
+
+    testWidgets('an undecided receipt is listed with its count and money', (
+      tester,
+    ) async {
+      _useTallViewport(tester);
+      await tester.pumpWidget(_wrap(_loadedState(withAttention: true)));
+      await tester.pumpAndSettle();
+
+      expect(find.text('إيصالات بانتظار المراجعة'), findsOneWidget);
+      expect(find.text('1 إيصال'), findsOneWidget);
+      expect(find.text('راجع الإيصال واقبله أو ارفضه'), findsOneWidget);
+    });
+
+    testWidgets('a queue hands the operator off to the module that owns it', (
+      tester,
+    ) async {
+      _useTallViewport(tester);
+      final opened = <String>[];
+      await tester.pumpWidget(
+        _wrap(
+          _loadedState(withAttention: true),
+          onOpenModule: opened.add,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('إيصالات بانتظار المراجعة'));
+      await tester.pumpAndSettle();
+
+      expect(opened, ['/payment-verification']);
+    });
+
+    testWidgets('pending refunds are counted from the requests, not the ledger',
+        (tester) async {
+      _useTallViewport(tester);
+      await tester.pumpWidget(
+        _wrap(
+          _loadedState(
+            refundRequests: [
+              RefundRequest(
+                id: 'REF-1',
+                transactionId: 'TXN-1',
+                clientName: 'سارة محمود',
+                amount: 68,
+                date: _now.subtract(const Duration(days: 1)),
+                status: RefundStatus.pending,
+                reason: 'إلغاء الرحلة',
+              ),
+            ],
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('طلبات استرداد بلا قرار'), findsOneWidget);
+      expect(find.text('1 طلب'), findsOneWidget);
+    });
+
+    testWidgets('the overview tab carries the count as a badge', (
+      tester,
+    ) async {
+      _useTallViewport(tester);
+      await tester.pumpWidget(
+        _wrap(_loadedState(withAttention: true, section: FinanceSection.reports)),
+      );
+      await tester.pumpAndSettle();
+
+      // Working in التقارير must not mean being the last to know.
+      expect(find.text('1'), findsWidgets);
+    });
+  });
+
+  group('nothing overflows', () {
+    // The console is used at 1366×768 as often as at 1920, and Arabic office
+    // and passenger names are long. An overflow here is a red-striped box in
+    // production, which is why these run at the narrow end and with names
+    // longer than any real fixture.
+    for (final width in const [1100.0, 1366.0, 1440.0, 1920.0]) {
+      testWidgets('at ${width.toInt()}px wide', (tester) async {
+        tester.view.physicalSize = Size(width, 3000);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        await tester.pumpWidget(_wrap(_longNameState()));
+        await tester.pumpAndSettle();
+
+        expect(tester.takeException(), isNull);
+      });
+    }
+
+    testWidgets('with a large amount and a long route on the ledger', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(1366, 2000);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        _wrap(_longNameState(section: FinanceSection.ledger)),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+    });
+  });
+
+  group('transaction detail', () {
+    testWidgets('a ledger row opens into its full context', (tester) async {
+      _useTallViewport(tester);
+      await tester.pumpWidget(
+        _wrap(
+          _loadedState(
+            withAttention: true,
+            section: FinanceSection.ledger,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('سارة محمود'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('حركة حجز رحلة'), findsOneWidget);
+      expect(find.text('BK-000999'), findsOneWidget);
+      expect(find.text('01000000000'), findsOneWidget);
+      expect(find.textContaining('210'), findsWidgets);
+      expect(
+        find.textContaining('خارج صافي الإيراد'),
+        findsOneWidget,
+        reason: 'a row has to explain what it did to the headline figure',
+      );
+    });
+
+    testWidgets('the detail sheet decides nothing', (tester) async {
+      _useTallViewport(tester);
+      await tester.pumpWidget(
+        _wrap(
+          _loadedState(withAttention: true, section: FinanceSection.ledger),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('سارة محمود'));
+      await tester.pumpAndSettle();
+
+      for (final forbidden in const ['قبول', 'رفض', 'استرداد', 'إلغاء الحجز']) {
+        expect(find.widgetWithText(FilledButton, forbidden), findsNothing);
+        expect(find.widgetWithText(TextButton, forbidden), findsNothing);
+      }
+      expect(find.text('إغلاق'), findsOneWidget);
+    });
   });
 }

@@ -195,6 +195,7 @@ abstract final class DashboardIcons {
   /// The customer base as a group, as opposed to [passenger] (one traveller)
   /// or `users` (an operator account).
   static const customers = Icons.groups_2_outlined;
+  static const customersActive = Icons.groups_2_rounded;
 
   /// A summarised financial position.
   static const financial = Icons.account_balance_outlined;

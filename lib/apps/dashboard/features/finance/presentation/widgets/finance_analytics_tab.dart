@@ -89,7 +89,7 @@ class FinanceAnalyticsTab extends StatelessWidget {
           icon: Icons.compare_arrows_rounded,
           title: 'مقارنة بالفترة السابقة',
           subtitle: analytics.hasComparison
-              ? 'مقارنة كل مؤشر بفترة مساوية في الطول تسبقها مباشرة'
+              ? 'كل مؤشر مقابل ${analytics.window.previousLabel}'
               : 'اختر فترة محددة لتفعيل المقارنة',
           child: _ComparisonTable(analytics: analytics),
         ),
@@ -136,7 +136,7 @@ class _SignalsPanel extends StatelessWidget {
       sectionId: DashboardSectionIds.financeKpis,
       icon: Icons.insights_rounded,
       title: 'مؤشرات الأداء',
-      subtitle: 'قراءة سريعة لسلوك الإيراد خلال ${analytics.period.label}',
+      subtitle: 'قراءة سريعة لسلوك الإيراد خلال ${analytics.periodLabel}',
       child: LayoutBuilder(
         builder: (context, constraints) {
           final columns = constraints.maxWidth >= 1040
@@ -178,9 +178,14 @@ class _SignalsPanel extends StatelessWidget {
               icon: Icons.hub_outlined,
               label: 'تركّز الإيراد',
               value: FinanceFormat.percent(analytics.routeConcentration),
+              
+              // The route's own name is deliberately not printed here: it is a
+              // whole journey as free text and would ellipsise to nothing in a
+              // one-line tile. «أعلى المسارات إيراداً» on the overview names it
+              // in a row wide enough to read.
               detail: topRoute == null
                   ? 'لا توجد مسارات في الفترة'
-                  : 'من مسار ${topRoute.label} وحده',
+                  : 'من أعلى مسار وحده، من ${FinanceFormat.count(analytics.byRoute.length)} مسار',
               color: palette.accent,
             ),
             _SignalTile(
@@ -298,7 +303,7 @@ class _ComparisonTable extends StatelessWidget {
 
     if (previous == null) {
       return Text(
-        'الفترة "${analytics.period.label}" تشمل كل السجلات، فلا توجد فترة سابقة مساوية لمقارنتها بها.',
+        'الفترة "${analytics.periodLabel}" تشمل كل السجلات، فلا توجد فترة سابقة مساوية لمقارنتها بها.',
         style: Theme.of(
           context,
         ).textTheme.bodyMedium?.copyWith(color: scheme.onSurfaceVariant),
@@ -351,7 +356,10 @@ class _ComparisonTable extends StatelessWidget {
             children: [
               Expanded(flex: 3, child: _head(context, 'المؤشر')),
               Expanded(flex: 2, child: _head(context, 'الفترة الحالية')),
-              Expanded(flex: 2, child: _head(context, 'الفترة السابقة')),
+              Expanded(
+                flex: 2,
+                child: _head(context, analytics.window.previousLabel),
+              ),
               Expanded(flex: 2, child: _head(context, 'التغير')),
             ],
           ),

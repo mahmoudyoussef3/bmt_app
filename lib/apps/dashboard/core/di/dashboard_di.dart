@@ -11,6 +11,7 @@ import '../../features/platform_licensing/data/repositories/platform_licensing_r
 import '../../features/platform_licensing/domain/repositories/platform_licensing_repository.dart';
 import '../../features/platform_licensing/domain/usecases/platform_licensing_usecases.dart';
 import '../../features/platform_licensing/presentation/cubit/platform_licensing_cubit.dart';
+import '../../features/customers/customers_di.dart';
 import '../session/dashboard_session.dart';
 import '../../features/auth/data/datasources/dashboard_auth_datasource.dart';
 import '../../features/auth/domain/repositories/dashboard_auth_repository.dart';
@@ -790,6 +791,7 @@ void registerDashboardDependencies() {
   registerTripsDependencies(dashboardDi);
   registerLiveOpsDependencies(dashboardDi);
   registerWalletDependencies(dashboardDi);
+  registerCustomersDependencies(dashboardDi);
 
   if (!dashboardDi.isRegistered<SupabaseTicketsDatasource>()) {
     dashboardDi.registerLazySingleton<SupabaseTicketsDatasource>(

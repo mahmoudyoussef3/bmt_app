@@ -23,6 +23,11 @@ class DashboardRoutes {
   static const subscriptions = '/subscriptions';
   static const referrals = '/referrals';
   static const payments = '/payments';
+
+  /// العملاء — the Customer 360 directory. Distinct from [wallet], which is
+  /// the same people seen through their money alone.
+  static const customers = '/customers';
+
   static const wallet = '/wallet';
   static const paymentVerification = '/payment-verification';
   static const tickets = '/tickets';

@@ -48,39 +48,266 @@ enum SubscriptionStatus {
   const SubscriptionStatus(this.label);
 }
 
+/// How a period's boundaries are worked out.
+///
+/// The distinction is not pedantry: on the 3rd of the month "هذا الشهر" and
+/// "آخر ٣٠ يوم" differ by an order of magnitude, and an owner reconciling a
+/// month means the calendar one while an owner watching momentum means the
+/// rolling one. Conflating them is how a finance screen ends up arguing with
+/// the paper the owner is holding.
+enum FinancePeriodShape {
+  /// A window of [FinancePeriod.days] days ending now, today included.
+  rolling,
+
+  /// A calendar month, [FinancePeriod.monthsBack] months before the current
+  /// one. `0` is the month to date; `1` is the last complete month.
+  calendar,
+
+  /// No lower bound — every row the ledger holds.
+  unbounded,
+
+  /// Two dates the operator picked.
+  custom,
+}
+
 /// The reporting window every figure on the screen is measured over. One
 /// selection drives the KPIs, the charts, the ledger and the exported
 /// statement, so two numbers on the same screen can never mean two periods.
 enum FinancePeriod {
-  today('اليوم', 1),
-  week('آخر ٧ أيام', 7),
-  month('آخر ٣٠ يوم', 30),
-  quarter('آخر ٩٠ يوم', 90),
-  all('كل الفترات', null);
+  today('اليوم', FinancePeriodShape.rolling, days: 1),
+  week('آخر ٧ أيام', FinancePeriodShape.rolling, days: 7),
+  thisMonth('هذا الشهر', FinancePeriodShape.calendar, monthsBack: 0),
+  lastMonth('الشهر الماضي', FinancePeriodShape.calendar, monthsBack: 1),
+  month('آخر ٣٠ يوم', FinancePeriodShape.rolling, days: 30),
+  quarter('آخر ٩٠ يوم', FinancePeriodShape.rolling, days: 90),
+  all('كل الفترات', FinancePeriodShape.unbounded),
+  custom('فترة مخصصة', FinancePeriodShape.custom);
 
   final String label;
+  final FinancePeriodShape shape;
 
-  /// Window length in days, counting today. `null` means "no lower bound".
+  /// Window length in days, counting today. Only meaningful for
+  /// [FinancePeriodShape.rolling].
   final int? days;
 
-  const FinancePeriod(this.label, this.days);
+  /// How many calendar months back. Only meaningful for
+  /// [FinancePeriodShape.calendar].
+  final int monthsBack;
 
-  /// First instant included in the window, or `null` for [FinancePeriod.all].
-  DateTime? startFrom(DateTime now) {
+  const FinancePeriod(
+    this.label,
+    this.shape, {
+    this.days,
+    this.monthsBack = 0,
+  });
+
+  // Resolving a preset into concrete bounds is deliberately not a method here:
+  // a custom range has no enum to hang its dates on, and two ways to answer
+  // "when does this window start" is one too many. See [FinanceWindow.resolve].
+}
+
+/// A resolved reporting window: concrete bounds, the words that describe them,
+/// and the comparable window before it.
+///
+/// Resolution lives here rather than on [FinancePeriod] because a custom range
+/// has no enum to hang its dates on, and because "what does السابقة mean for
+/// this period" is a different answer per shape — the month before a calendar
+/// month, and an equally long span before a rolling one.
+class FinanceWindow {
+  final FinancePeriod period;
+
+  /// First instant included, or `null` for an unbounded window.
+  final DateTime? start;
+
+  /// Last instant included.
+  final DateTime end;
+
+  /// What the period bar and every panel subtitle call this window.
+  final String label;
+
+  /// What the comparison column is measured against, in words. Shown next to
+  /// every delta so a "+18%" can never be read against the wrong baseline.
+  final String previousLabel;
+
+  const FinanceWindow({
+    required this.period,
+    required this.start,
+    required this.end,
+    required this.label,
+    required this.previousLabel,
+  });
+
+  FinanceDateRange get range => FinanceDateRange(start: start, end: end);
+
+  bool get isBounded => start != null;
+
+  /// True when the window's own end is in the past — a closed book rather than
+  /// a period still filling up. The comparison means something different for
+  /// each, and the UI says which.
+  bool get isComplete => period.shape == FinancePeriodShape.calendar
+      ? period.monthsBack > 0
+      : false;
+
+  static FinanceWindow resolve(
+    FinancePeriod period,
+    DateTime now, {
+    FinanceDateRange? custom,
+  }) {
     final today = DateTime(now.year, now.month, now.day);
-    final length = days;
-    if (length == null) return null;
-    return today.subtract(Duration(days: length - 1));
+
+    switch (period.shape) {
+      case FinancePeriodShape.rolling:
+        final length = period.days!;
+        return FinanceWindow(
+          period: period,
+          start: _shiftDays(today, -(length - 1)),
+          end: now,
+          label: period.label,
+          previousLabel: length == 1
+              ? 'أمس'
+              : 'الـ$length يوم السابقة',
+        );
+
+      case FinancePeriodShape.calendar:
+        final anchor = _monthStart(now, monthsBack: period.monthsBack);
+        final isCurrentMonth = period.monthsBack == 0;
+        return FinanceWindow(
+          period: period,
+          start: anchor,
+          
+          end: isCurrentMonth ? now : _lastInstantOf(anchor),
+          label: '${period.label} (${_monthName(anchor)})',
+          previousLabel: isCurrentMonth
+              ? 'نفس المدة من الشهر الماضي'
+              : _monthName(_monthStart(anchor, monthsBack: 1)),
+        );
+
+      case FinancePeriodShape.unbounded:
+        return FinanceWindow(
+          period: period,
+          start: null,
+          end: now,
+          label: period.label,
+          previousLabel: '—',
+        );
+
+      case FinancePeriodShape.custom:
+        final range = custom;
+        
+        if (range == null || range.start == null) {
+          return FinanceWindow.resolve(FinancePeriod.month, now);
+        }
+        return FinanceWindow(
+          period: period,
+          start: range.start,
+          end: range.end,
+          label: '${_day(range.start!)} — ${_day(range.end)}',
+          previousLabel: 'الفترة المماثلة السابقة',
+        );
+    }
   }
 
-  /// Start of the equally long window immediately before this one — the basis
-  /// for every "مقارنة بالفترة السابقة" figure. `null` when there is nothing
-  /// meaningful to compare against.
-  DateTime? previousStartFrom(DateTime now) {
-    final length = days;
-    if (length == null) return null;
-    return startFrom(now)!.subtract(Duration(days: length));
+  /// The window this one's deltas are measured against, or `null` when there is
+  /// nothing comparable — dividing by a window that does not exist prints an
+  /// impressive but meaningless number.
+  FinanceWindow? get previous {
+    switch (period.shape) {
+      case FinancePeriodShape.unbounded:
+        return null;
+
+      case FinancePeriodShape.calendar:
+        final anchor = start!;
+        final previousStart = _monthStart(anchor, monthsBack: 1);
+        
+        final span = end.difference(anchor);
+        final previousEnd = period.monthsBack == 0
+            ? _min(previousStart.add(span), _lastInstantOf(previousStart))
+            : _lastInstantOf(previousStart);
+        return FinanceWindow(
+          period: period,
+          start: previousStart,
+          end: previousEnd,
+          label: _monthName(previousStart),
+          previousLabel: '—',
+        );
+
+      case FinancePeriodShape.rolling:
+      case FinancePeriodShape.custom:
+        final from = start;
+        if (from == null) return null;
+
+        // The whole window shifted back by its own length in days, keeping the
+        // same time of day at both ends.
+        //
+        // The obvious alternative — end the previous window one microsecond
+        // before this one starts — compares a *partial* window against a
+        // *complete* one: at 3pm "اليوم" holds fifteen hours and would be
+        // measured against the whole of yesterday, reporting a collapse every
+        // afternoon. Shifting keeps both windows the same shape. The cost is a
+        // few hours between them that belong to neither, which is the standard
+        // "same period last week" reading and the one an owner expects.
+        final length = period.shape == FinancePeriodShape.rolling
+            ? period.days!
+            : end.difference(from).inDays + 1;
+        return FinanceWindow(
+          period: period,
+          start: _shiftDays(from, -length),
+          end: _shiftDays(end, -length),
+          label: previousLabel,
+          previousLabel: '—',
+        );
+    }
   }
+
+  /// Calendar arithmetic rather than `Duration(days:)`: Egypt observes summer
+  /// time, and a 30-day `Duration` across a transition lands an hour off, which
+  /// is enough to move a midnight booking into the wrong window.
+  static DateTime _shiftDays(DateTime from, int days) => DateTime(
+    from.year,
+    from.month,
+    from.day + days,
+    from.hour,
+    from.minute,
+    from.second,
+    from.millisecond,
+    from.microsecond,
+  );
+
+  static DateTime _monthStart(DateTime from, {required int monthsBack}) {
+    final month = from.month - monthsBack;
+    return DateTime(from.year, month, 1);
+  }
+
+  /// Last representable instant of [monthStart]'s month.
+  static DateTime _lastInstantOf(DateTime monthStart) => DateTime(
+    monthStart.year,
+    monthStart.month + 1,
+    1,
+  ).subtract(const Duration(microseconds: 1));
+
+  static DateTime _min(DateTime a, DateTime b) => a.isBefore(b) ? a : b;
+
+  static const _monthNames = [
+    'يناير',
+    'فبراير',
+    'مارس',
+    'أبريل',
+    'مايو',
+    'يونيو',
+    'يوليو',
+    'أغسطس',
+    'سبتمبر',
+    'أكتوبر',
+    'نوفمبر',
+    'ديسمبر',
+  ];
+
+  static String _monthName(DateTime date) =>
+      '${_monthNames[date.month - 1]} ${date.year}';
+
+  static String _day(DateTime date) =>
+      '${date.year}/${date.month.toString().padLeft(2, '0')}/'
+      '${date.day.toString().padLeft(2, '0')}';
 }
 
 /// Which side of the business a money movement came from.
@@ -108,6 +335,80 @@ class FinanceDateRange {
   }
 }
 
+/// Where a booking's *seat* stands, collapsed to what a money reader needs.
+///
+/// The bookings module owns the full six-state machine; Finance only ever asks
+/// three questions of it — is this fare still expected, has it been earned, or
+/// has the seat gone away. Collapsing here rather than importing the bookings
+/// entity keeps the two modules' vocabularies from fusing while still letting
+/// Finance stop counting money nobody is waiting for.
+enum FinanceBookingState {
+  /// Seat held, journey not taken: draft / reserved / confirmed.
+  live('قائم'),
+
+  /// The passenger travelled: boarded / completed.
+  travelled('تمت'),
+
+  /// The seat was released. Nothing further will be collected on it, and
+  /// anything already collected is a refund liability.
+  cancelled('ملغي');
+
+  final String label;
+  const FinanceBookingState(this.label);
+
+  static FinanceBookingState fromDb(String? value) => switch (value) {
+    'cancelled' => FinanceBookingState.cancelled,
+    'boarded' || 'completed' => FinanceBookingState.travelled,
+    _ => FinanceBookingState.live,
+  };
+}
+
+/// The context behind one money movement — everything an owner needs to
+/// understand a row without opening four other modules.
+///
+/// Optional throughout: an office's older rows predate half these columns, and
+/// a detail sheet that renders "—" for a fact the database never recorded is
+/// honest, while one that refuses to open is not.
+class FinanceEntryContext {
+  /// Human-facing booking reference, e.g. `BK-000123`.
+  final String? reference;
+
+  final String? phone;
+
+  /// The two ends of the journey, kept apart so the UI can compose them with
+  /// [routeDirectionLabel] instead of trusting a pre-joined string to survive
+  /// bidi layout.
+  final String? origin;
+  final String? destination;
+
+  /// When the service happens (trip date) or begins (subscription start) — not
+  /// the date the money moved, which is [FinanceLedgerEntry.date].
+  final DateTime? serviceDate;
+
+  final String? packageName;
+
+  /// A payment receipt was uploaded. Finance does not open it — Bookings does —
+  /// but knowing one exists is the difference between "chase the passenger" and
+  /// "review the receipt".
+  final bool hasReceipt;
+
+  /// Why the payment was refused, when it was.
+  final String? rejectionReason;
+
+  const FinanceEntryContext({
+    this.reference,
+    this.phone,
+    this.origin,
+    this.destination,
+    this.serviceDate,
+    this.packageName,
+    this.hasReceipt = false,
+    this.rejectionReason,
+  });
+
+  static const empty = FinanceEntryContext();
+}
+
 class PaymentRecord {
   final String id;
   final String clientName;
@@ -117,6 +418,17 @@ class PaymentRecord {
   final PaymentStatus status;
   final DateTime date;
 
+  /// Where the seat stands. A fare on a cancelled seat is not "قيد التحصيل" —
+  /// nobody is waiting for it — and counting it as such is how the module
+  /// used to overstate what was still collectable.
+  final FinanceBookingState bookingState;
+
+  /// A receipt is uploaded and the desk has not decided yet. This is the one
+  /// finance signal that maps to a real queue elsewhere in the console.
+  final bool awaitingReview;
+
+  final FinanceEntryContext context;
+
   const PaymentRecord({
     required this.id,
     required this.clientName,
@@ -125,6 +437,9 @@ class PaymentRecord {
     required this.paymentMethod,
     required this.status,
     required this.date,
+    this.bookingState = FinanceBookingState.live,
+    this.awaitingReview = false,
+    this.context = FinanceEntryContext.empty,
   });
 
   PaymentRecord copyWith({
@@ -135,6 +450,9 @@ class PaymentRecord {
     FinancePaymentMethod? paymentMethod,
     PaymentStatus? status,
     DateTime? date,
+    FinanceBookingState? bookingState,
+    bool? awaitingReview,
+    FinanceEntryContext? context,
   }) {
     return PaymentRecord(
       id: id ?? this.id,
@@ -144,6 +462,9 @@ class PaymentRecord {
       paymentMethod: paymentMethod ?? this.paymentMethod,
       status: status ?? this.status,
       date: date ?? this.date,
+      bookingState: bookingState ?? this.bookingState,
+      awaitingReview: awaitingReview ?? this.awaitingReview,
+      context: context ?? this.context,
     );
   }
 }
@@ -192,7 +513,23 @@ class SubscriptionRecord {
   final String id;
   final String clientName;
   final String packageName;
+
+  /// The **sold** price of the package. Not necessarily what was collected —
+  /// see [paidAmount].
   final double amount;
+
+  /// What the office has actually received against [amount].
+  ///
+  /// The two diverge on part-paid packages, and the module used to file the
+  /// whole [amount] as collected the moment the subscription went active. That
+  /// counted money that had not arrived.
+  final double paidAmount;
+
+  /// Still owed on this package. Reported as outstanding, never as revenue.
+  final double remainingAmount;
+
+  /// The package's receipt has been uploaded and nobody has decided on it yet.
+  final bool awaitingReview;
 
   /// Purchase date — the date the money moved, and therefore the date the
   /// ledger files it under. [startDate] is when the *rides* begin, which can be
@@ -217,7 +554,10 @@ class SubscriptionRecord {
     required this.remainingRides,
     this.tripsCount = 0,
     this.tripsUsed = 0,
-  });
+    double? paidAmount,
+    this.remainingAmount = 0,
+    this.awaitingReview = false,
+  }) : paidAmount = paidAmount ?? amount;
 
   SubscriptionRecord copyWith({
     String? id,
@@ -231,6 +571,9 @@ class SubscriptionRecord {
     int? remainingRides,
     int? tripsCount,
     int? tripsUsed,
+    double? paidAmount,
+    double? remainingAmount,
+    bool? awaitingReview,
   }) {
     return SubscriptionRecord(
       id: id ?? this.id,
@@ -244,6 +587,9 @@ class SubscriptionRecord {
       remainingRides: remainingRides ?? this.remainingRides,
       tripsCount: tripsCount ?? this.tripsCount,
       tripsUsed: tripsUsed ?? this.tripsUsed,
+      paidAmount: paidAmount ?? this.paidAmount,
+      remainingAmount: remainingAmount ?? this.remainingAmount,
+      awaitingReview: awaitingReview ?? this.awaitingReview,
     );
   }
 }
@@ -270,6 +616,19 @@ class FinanceLedgerEntry {
   final PaymentStatus status;
   final DateTime date;
 
+  /// Where the underlying seat stands, for bookings. Subscriptions have no seat
+  /// and report [FinanceBookingState.live] while they are sold.
+  final FinanceBookingState bookingState;
+
+  /// A receipt is waiting for a decision at the desk.
+  final bool awaitingReview;
+
+  /// Money still owed on this row — the unpaid tail of a part-paid package.
+  /// Zero for anything settled in one movement, which is almost everything.
+  final double outstanding;
+
+  final FinanceEntryContext context;
+
   const FinanceLedgerEntry({
     required this.id,
     required this.type,
@@ -279,11 +638,30 @@ class FinanceLedgerEntry {
     required this.status,
     required this.date,
     this.method,
+    this.bookingState = FinanceBookingState.live,
+    this.awaitingReview = false,
+    this.outstanding = 0,
+    this.context = FinanceEntryContext.empty,
   });
 
   /// Money the office received *and kept* — the only figure that may be added
   /// into net revenue. Everything else is a promise, a dead row, or a reversal.
   bool get isRealised => status == PaymentStatus.success;
+
+  /// Collected, then the seat was cancelled: the office is holding money it no
+  /// longer has a service to deliver against. Not a refund yet — a refund that
+  /// has not been decided, which is exactly why it belongs on an attention list
+  /// and not silently inside net revenue.
+  bool get isUnreleasedLiability =>
+      status == PaymentStatus.success &&
+      bookingState == FinanceBookingState.cancelled;
+
+  /// A fare that is still genuinely expected: unpaid, on a seat that still
+  /// exists. A pending amount on a cancelled seat is not collectable and is
+  /// filed as [PaymentStatus.cancelled] by the datasource instead.
+  bool get isCollectable =>
+      status == PaymentStatus.pending &&
+      bookingState != FinanceBookingState.cancelled;
 }
 
 /// Flattens the money-in sources into one chronological ledger.
@@ -320,6 +698,9 @@ class FinanceLedger {
           method: payment.paymentMethod,
           status: payment.status,
           date: payment.date,
+          bookingState: payment.bookingState,
+          awaitingReview: payment.awaitingReview,
+          context: payment.context,
         ),
       for (final subscription in subscriptions)
         FinanceLedgerEntry(
@@ -327,13 +708,38 @@ class FinanceLedger {
           type: FinanceEntryType.subscription,
           party: subscription.clientName,
           reference: subscription.packageName,
-          amount: subscription.amount,
+          
+          // The money that moved, not the price on the invoice. A part-paid
+          // package files what arrived and reports the rest as outstanding.
+          amount: subscriptionCollectedAmount(subscription),
           status: subscriptionMoneyStatus(subscription.status),
           date: subscription.createdAt,
+          awaitingReview: subscription.awaitingReview,
+          outstanding: subscription.status == SubscriptionStatus.cancelled
+              ? 0
+              : subscription.remainingAmount,
+          context: FinanceEntryContext(
+            packageName: subscription.packageName,
+            serviceDate: subscription.startDate,
+          ),
         ),
     ];
     entries.sort((a, b) => b.date.compareTo(a.date));
     return entries;
+  }
+
+  /// What a subscription actually contributed to the ledger.
+  ///
+  /// [SubscriptionRecord.amount] is the **price**; a package can go active on a
+  /// deposit, and filing the full price the moment it does is revenue the office
+  /// has not received. A cancelled package contributed nothing at all.
+  static double subscriptionCollectedAmount(SubscriptionRecord subscription) {
+    return switch (subscription.status) {
+      SubscriptionStatus.cancelled => subscription.amount,
+      SubscriptionStatus.pendingPayment => subscription.amount,
+      SubscriptionStatus.active ||
+      SubscriptionStatus.expired => subscription.paidAmount,
+    };
   }
 
   /// A cancelled package was never collected; one still awaiting payment is

@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
 import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_panel.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_empty_state.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/ops_data_table.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
@@ -27,18 +28,25 @@ class FinanceReportsTab extends StatelessWidget {
   Widget build(BuildContext context) {
     final analytics = state.analytics;
 
+    // Built once per build of the tab rather than inside the statement widget:
+    // `toStatement` walks the window and allocates every line, and calling it
+    // from a `build` also stamped a different `generatedAt` on every frame —
+    // so the printed "generated at" drifted from the exported one.
+    final statement = analytics.toStatement(generatedAt: state.loadedAt);
+
     return ListView(
       padding: EdgeInsets.zero,
       children: [
         _ExportToolbar(state: state),
         const SizedBox(height: AppSpacing.medium),
-        _IncomeStatement(analytics: analytics),
+        _IncomeStatement(analytics: analytics, statement: statement),
         const SizedBox(height: AppSpacing.medium),
         DashboardPanel(
           sectionId: DashboardSectionIds.financeCollectionByMethod,
           icon: Icons.account_balance_rounded,
           title: 'التحصيل حسب طريقة الدفع',
-          subtitle: 'أين يدخل المال فعلياً خلال ${analytics.period.label}',
+          subtitle:
+              'أين تدخل أموال الحجوزات فعلياً خلال ${analytics.periodLabel}',
           child: _MethodTable(analytics: analytics),
         ),
         const SizedBox(height: AppSpacing.medium),
@@ -80,7 +88,7 @@ class _ExportToolbar extends StatelessWidget {
                   const SizedBox(width: AppSpacing.small),
                   Flexible(
                     child: Text(
-                      'تصدير التقرير المالي — ${state.period.label}',
+                      'تصدير التقرير المالي — ${state.analytics.periodLabel}',
                       style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w900,
                       ),
@@ -159,21 +167,21 @@ class _ExportToolbar extends StatelessWidget {
 /// lines rather than quietly dropped.
 class _IncomeStatement extends StatelessWidget {
   final FinanceAnalytics analytics;
+  final FinanceStatement statement;
 
-  const _IncomeStatement({required this.analytics});
+  const _IncomeStatement({required this.analytics, required this.statement});
 
   @override
   Widget build(BuildContext context) {
     final palette = DashboardChartPalette.of(context);
     final scheme = Theme.of(context).colorScheme;
-    final statement = analytics.toStatement(generatedAt: DateTime.now());
     final memoLines = statement.summary.where((line) => line.isMemo).toList();
     final mainLines = statement.summary.where((line) => !line.isMemo).toList();
 
     return DashboardPanel(
       sectionId: DashboardSectionIds.financeIncomeStatement,
       icon: Icons.request_quote_outlined,
-      title: 'قائمة الدخل — ${analytics.period.label}',
+      title: 'قائمة الدخل — ${analytics.periodLabel}',
       subtitle:
           'صافي الإيراد = إجمالي المتحصلات − المرتجعات المنفذة. المبالغ المعلقة والملغاة خارج الحساب.',
       child: Column(
@@ -241,20 +249,39 @@ class _MethodTable extends StatelessWidget {
       );
     }
 
+    // The share is of what this table actually covers, not of net revenue: a
+    // package purchase records no payment rail, so dividing by the headline
+    // would print four percentages summing to a quarter and leave the reader
+    // hunting for the missing three quarters.
+    final tendered = analytics.byMethod.fold<double>(
+      0,
+      (sum, row) => sum + row.amount,
+    );
+    final tenderedCount = analytics.byMethod.fold<int>(
+      0,
+      (sum, row) => sum + row.count,
+    );
+
     return Column(
       children: [
         FinanceRankedList(
           rows: analytics.byMethod,
-          total: analytics.netRevenue,
+          total: tendered,
           limit: FinancePaymentMethod.values.length,
         ),
         const Divider(height: AppSpacing.large),
         FinanceFigureRow(
-          label: 'الإجمالي',
-          value: FinanceFormat.moneyPrecise(analytics.netRevenue),
-          trailing: '${FinanceFormat.count(analytics.paidCount)} عملية',
+          label: 'إجمالي الحجوزات المحصّلة',
+          value: FinanceFormat.moneyPrecise(tendered),
+          trailing: '${FinanceFormat.count(tenderedCount)} عملية',
           emphasised: true,
         ),
+        if (analytics.subscriptionsRevenue > 0)
+          FinanceFigureRow(
+            label: 'اشتراكات بلا وسيلة دفع مسجلة',
+            value: FinanceFormat.moneyPrecise(analytics.subscriptionsRevenue),
+            muted: true,
+          ),
       ],
     );
   }
@@ -374,7 +401,11 @@ class _DailyTable extends StatelessWidget {
       currentPage: 0,
       pageSize: rows.isEmpty ? 1 : rows.length,
       onPageChanged: (_) {},
-      emptyLabel: 'لا توجد حركة مالية في هذه الفترة',
+      emptyState: const DashboardEmptyState(
+        icon: Icons.calendar_today_outlined,
+        title: 'لا توجد حركة مالية في هذه الفترة',
+        message: 'وسّع الفترة من الشريط أعلى الصفحة لعرض أيام فيها حركة.',
+      ),
     );
   }
 }

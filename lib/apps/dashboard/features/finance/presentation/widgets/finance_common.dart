@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
+import 'package:bmt_app/core/widgets/route_direction_text.dart';
 
 import '../../domain/entities/finance_analytics.dart';
 import '../../domain/entities/finance_entities.dart';
@@ -104,6 +105,11 @@ class FinanceDeltaBadge extends StatelessWidget {
 /// The shared [DashboardRankedBars] prints a bare integer, which is right for
 /// counts and wrong for currency — a finance ranking has to say "12,340 ج.م —
 /// 24%", not "12340". Same visual language, money-aware trailing block.
+///
+/// The label column is proportional rather than a fixed 140px. A route label in
+/// this database is the whole journey as free text — "Obour, QH, Egypt →
+/// American University in Cairo (AUC) - New Cairo, QH, Egypt" — and 140px of it
+/// is "Obour, QH, Egyp…", which ranks corridors the reader cannot identify.
 class FinanceRankedList extends StatelessWidget {
   final List<FinanceBreakdownRow> rows;
   final double total;
@@ -111,12 +117,18 @@ class FinanceRankedList extends StatelessWidget {
   final bool showCount;
   final String emptyLabel;
 
+  /// Renders each label as an origin → destination pair. Set on the route
+  /// ranking, where the label is a stored `'A → B'` string that reverses under
+  /// bidi if it is printed as-is.
+  final bool labelsAreRoutes;
+
   const FinanceRankedList({
     super.key,
     required this.rows,
     required this.total,
     this.limit = 6,
     this.showCount = true,
+    this.labelsAreRoutes = false,
     this.emptyLabel = 'لا توجد بيانات في هذه الفترة',
   });
 
@@ -143,17 +155,20 @@ class FinanceRankedList extends StatelessWidget {
             padding: const EdgeInsets.symmetric(vertical: 7),
             child: Row(
               children: [
-                SizedBox(
-                  width: 140,
-                  child: Text(
-                    row.label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodySmall,
-                  ),
+                Expanded(
+                  flex: 5,
+                  child: labelsAreRoutes
+                      ? FinanceRouteLabel(label: row.label)
+                      : Text(
+                          row.label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
                 ),
                 const SizedBox(width: AppSpacing.small),
                 Expanded(
+                  flex: 4,
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(999),
                     child: LinearProgressIndicator(
@@ -199,6 +214,60 @@ class FinanceRankedList extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+/// A stored `'origin → destination'` route string, taken apart and recomposed
+/// so it still reads forwards.
+///
+/// The database keeps the pair already joined, and a joined string is a single
+/// bidi paragraph: with Latin place names — what the geocoder returns for most
+/// Egyptian stops — UAX#9 resolves the whole line left-to-right and the arrow
+/// ends up pointing at the origin. Splitting it and handing the two names to
+/// [RouteDirectionText] isolates each one and picks the arrow from the ambient
+/// direction. The full original stays in the tooltip, since the split is for
+/// reading and never for identity.
+class FinanceRouteLabel extends StatelessWidget {
+  const FinanceRouteLabel({super.key, required this.label, this.style});
+
+  final String label;
+  final TextStyle? style;
+
+  static const _separators = ['→', '←', '->', '<-'];
+
+  @override
+  Widget build(BuildContext context) {
+    final effective = style ?? Theme.of(context).textTheme.bodySmall;
+
+    for (final separator in _separators) {
+      final index = label.indexOf(separator);
+      if (index <= 0) continue;
+      final head = label.substring(0, index).trim();
+      final tail = label.substring(index + separator.length).trim();
+      if (head.isEmpty || tail.isEmpty) continue;
+
+      final reversed = separator == '←' || separator == '<-';
+      return Tooltip(
+        message: label,
+        child: RouteDirectionText(
+          origin: reversed ? tail : head,
+          destination: reversed ? head : tail,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: effective,
+        ),
+      );
+    }
+
+    return Tooltip(
+      message: label,
+      child: Text(
+        label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: effective,
+      ),
     );
   }
 }

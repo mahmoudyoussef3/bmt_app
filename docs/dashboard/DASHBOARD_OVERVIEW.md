@@ -269,7 +269,7 @@ The console reports on real money and real buses. These rules are load-bearing:
 | Who may do what? | `DASHBOARD_USER_ROLES.md` |
 | What is in the sidebar and why? | `DASHBOARD_NAVIGATION.md` |
 | How does a booking become money? | `DASHBOARD_BUSINESS_FLOWS.md` |
-| What are the accounting rules? | `DASHBOARD_FINANCE.md` |
+| What are the accounting rules? | `DASHBOARD_FINANCE.md`, then `finance/` |
 | How does an operator run today? | `DASHBOARD_OPERATIONS.md` |
 | What can be reported and exported? | `DASHBOARD_REPORTS.md` |
 | Where does customer data live? | `DASHBOARD_CUSTOMERS.md` |

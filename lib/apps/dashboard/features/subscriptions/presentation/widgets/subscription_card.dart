@@ -155,6 +155,21 @@ class SubscriptionCard extends StatelessWidget {
                   tripId: tripId!,
                   isProcessing: isProcessing,
                 ),
+              ] else if (subscription.status ==
+                  SubscriptionStatus.pendingPayment) ...[
+                const SizedBox(height: AppSpacing.medium),
+                FilledButton.icon(
+                  onPressed: isProcessing
+                      ? null
+                      : () => context.read<SubscriptionsCubit>().confirmPayment(
+                          subscription.id,
+                        ),
+                  icon: const Icon(Icons.payments_outlined, size: 18),
+                  label: const Text('تأكيد استلام الدفع'),
+                  style: FilledButton.styleFrom(
+                    minimumSize: const Size.fromHeight(40),
+                  ),
+                ),
               ],
             ],
           ),

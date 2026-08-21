@@ -38,6 +38,7 @@ class FinanceCubit extends Cubit<FinanceState> {
     final period = current is FinanceLoaded
         ? current.period
         : FinancePeriod.month;
+    final customRange = current is FinanceLoaded ? current.customRange : null;
 
     emit(const FinanceLoading());
     try {
@@ -60,6 +61,7 @@ class FinanceCubit extends Cubit<FinanceState> {
           walletPosition: wallet,
           loadedAt: DateTime.now(),
           period: period,
+          customRange: customRange,
           ledgerCapReached: payments.length >= FinanceLedger.rowCap,
         ),
       );
@@ -79,7 +81,38 @@ class FinanceCubit extends Cubit<FinanceState> {
   void setPeriod(FinancePeriod period) {
     final current = state;
     if (current is! FinanceLoaded) return;
+    
+    // Selecting "فترة مخصصة" with no range yet would resolve to the default
+    // window and quietly disagree with its own chip, so the picker owns that
+    // transition and this refuses it.
+    if (period == FinancePeriod.custom && current.customRange == null) return;
     emit(current.copyWith(period: period, ledgerPage: 0));
+  }
+
+  /// Applies an operator-chosen range. [start] and [end] are days; the window is
+  /// widened to cover both of them completely, because an owner who picks
+  /// "1 — 31" means the whole of the 31st.
+  void setCustomRange(DateTime start, DateTime end) {
+    final current = state;
+    if (current is! FinanceLoaded) return;
+
+    final (from, to) = start.isAfter(end) ? (end, start) : (start, end);
+    emit(
+      current.copyWith(
+        period: FinancePeriod.custom,
+        customRange: FinanceDateRange(
+          start: DateTime(from.year, from.month, from.day),
+          end: DateTime(to.year, to.month, to.day, 23, 59, 59, 999),
+        ),
+        ledgerPage: 0,
+      ),
+    );
+  }
+
+  void setLedgerSort(FinanceLedgerSort sort) {
+    final current = state;
+    if (current is! FinanceLoaded) return;
+    emit(current.copyWith(ledgerSort: sort, ledgerPage: 0));
   }
 
   void setSearchQuery(String query) {

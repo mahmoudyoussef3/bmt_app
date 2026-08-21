@@ -14,6 +14,7 @@ import '../widgets/plan_card.dart';
 import '../widgets/plan_form_sheet.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
+import '../../../presentation/widgets/subscription_formatting.dart';
 
 class SubscriptionPlansScreen extends StatelessWidget {
   const SubscriptionPlansScreen({super.key});
@@ -75,18 +76,18 @@ class _LoadedView extends StatelessWidget {
           children: [
             DashboardKpiCard(
               label: 'إجمالي الباقات',
-              value: '${state.plans.length}',
+              value: arabicNumber(state.plans.length),
               icon: Icons.inventory_2_outlined,
             ),
             DashboardKpiCard(
               label: 'الباقات النشطة',
-              value: '$active',
+              value: arabicNumber(active),
               icon: Icons.check_circle_outline,
               color: palette.positive,
             ),
             DashboardKpiCard(
               label: 'الإيراد الشهري المتكرر التقديري',
-              value: '${state.monthlyRecurringRevenue.toStringAsFixed(0)} ج.م',
+              value: subscriptionMoney(state.monthlyRecurringRevenue),
               icon: Icons.trending_up_rounded,
               color: palette.active,
             ),

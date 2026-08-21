@@ -8,6 +8,7 @@ import '../../domain/entities/user_subscription.dart';
 import '../cubit/subscriptions_cubit.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
+import 'subscription_formatting.dart';
 
 /// Compact rides-balance indicator used inside list cards.
 class SubscriptionRidesBalancePill extends StatelessWidget {
@@ -91,15 +92,18 @@ class SubscriptionRidesSection extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: _Stat(label: 'إجمالي الرحلات', value: total.toString()),
+              child: _Stat(
+                label: 'إجمالي الرحلات',
+                value: arabicNumber(total),
+              ),
             ),
             Expanded(
-              child: _Stat(label: 'مستخدمة', value: used.toString()),
+              child: _Stat(label: 'مستخدمة', value: arabicNumber(used)),
             ),
             Expanded(
               child: _Stat(
                 label: 'متبقية',
-                value: remaining.toString(),
+                value: arabicNumber(remaining),
                 highlight: true,
                 color: barColor,
               ),
@@ -118,7 +122,7 @@ class SubscriptionRidesSection extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.small),
         Text(
-          '${(fraction * 100).toStringAsFixed(0)}٪ مستخدم',
+          '${arabicNumber((fraction * 100).round())}٪ مستخدم',
           style: Theme.of(
             context,
           ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
@@ -225,7 +229,9 @@ class _MarkRideUsedButton extends StatelessWidget {
       builder: (_) => AlertDialog(
         title: const Text('تسجيل رحلة مستخدمة'),
         content: Text(
-          'هل تريد خصم رحلة من رصيد الاشتراك؟\nالمتبقي بعد الخصم: ${remaining - 1} رحلة.',
+          'هل تريد خصم رحلة من رصيد الاشتراك؟\n'
+          'المتبقي بعد الخصم: ${arabicNumber(remaining - 1)} رحلة.\n'
+          'ملاحظة: هذه الرحلة لن تُربط برحلة محددة في السجل.',
         ),
         actions: [
           TextButton(

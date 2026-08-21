@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/dashboard/core/di/dashboard_di.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_collapsible_section.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_kpi_card.dart';
 import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart';
@@ -86,7 +87,10 @@ void openPlansManagement(BuildContext context) {
     MaterialPageRoute<void>(
       builder: (_) => BlocProvider(
         create: (_) => dashboardDi<SubscriptionPlansCubit>()..load(),
-        child: const Scaffold(body: SubscriptionPlansScreen()),
+        child: Scaffold(
+          appBar: AppBar(title: const Text('إدارة باقات الاشتراك')),
+          body: const SubscriptionPlansScreen(),
+        ),
       ),
     ),
   );
@@ -157,6 +161,14 @@ class _SubscriptionsWorkspace extends StatelessWidget {
           ),
         ],
         sectionId: DashboardSectionIds.subscriptionsHeader,
+        collapsedSummary: DashboardSectionSummary(
+          items: [
+            'نشطة ${arabicNumber(state.activeCount)}',
+            'بانتظار الدفع ${arabicNumber(state.pendingPaymentCount)}',
+            'ينتهي قريبًا ${arabicNumber(state.expiringSoonCount)}',
+            'متبقٍ ${subscriptionMoney(state.outstandingRevenue)}',
+          ],
+        ),
         summary: _OfficeKpis(state: state),
       ),
       const SizedBox(height: AppSpacing.medium),
@@ -174,6 +186,13 @@ class _SubscriptionsWorkspace extends StatelessWidget {
       _SubscriberBoard(state: state, width: boardWidth),
       if (state.tripBoard == null && state.subscriptions.isNotEmpty) ...[
         const SizedBox(height: AppSpacing.large),
+        Text(
+          'نظرة عامة على المكتب بالكامل، بصرف النظر عن الفلاتر الحالية',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: Theme.of(context).colorScheme.onSurfaceVariant,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.small),
         SubscriptionsAnalytics(subscriptions: state.subscriptions),
       ],
     ];

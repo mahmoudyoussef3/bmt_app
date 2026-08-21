@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_models.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/dashboard_donut_chart.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/dashboard_line_chart.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_empty_state.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_kpi_card.dart';
 import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_panel.dart';
@@ -13,67 +15,83 @@ import 'package:bmt_app/core/widgets/app_card.dart';
 
 import '../../domain/entities/finance_analytics.dart';
 import '../cubit/finance_state.dart';
+import 'finance_attention_panel.dart';
 import 'finance_common.dart';
 import 'finance_format.dart';
 import 'finance_money_statements_panel.dart';
 
-/// The answer to "how did we do?" in one screen: the headline number, what it
-/// is made of, and where it came from.
+/// The thirty-second read.
+///
+/// The order is the argument: **where the money stands**, then **what needs a
+/// decision**, then **which way it is moving**, then **where it comes from**.
+/// An earlier revision led with a hero and eight equal KPI tiles, which is a
+/// wall rather than a hierarchy — every figure claimed the same importance, and
+/// the two the owner had to act on (undecided receipts, pending refunds) were
+/// tiles four and eight, with nowhere to go from them.
+///
+/// The three-statement reconciliation now sits below and starts collapsed. That
+/// is safe only because a broken control identity is promoted into the
+/// attention panel, so hiding the panel can never hide a break.
 class FinanceOverviewTab extends StatelessWidget {
   final FinanceLoaded state;
+  final ValueChanged<String>? onOpenModule;
 
-  const FinanceOverviewTab({super.key, required this.state});
+  const FinanceOverviewTab({super.key, required this.state, this.onOpenModule});
 
   @override
   Widget build(BuildContext context) {
-    final palette = DashboardChartPalette.of(context);
     final analytics = state.analytics;
+
+    if (state.hasNoHistory) {
+      return const _NoHistory();
+    }
 
     return ListView(
       padding: EdgeInsets.zero,
       children: [
+        // 1 — Money status.
         _NetRevenueHero(state: state),
         const SizedBox(height: AppSpacing.medium),
         _KpiBand(state: state),
         const SizedBox(height: AppSpacing.medium),
-        FinanceMoneyStatementsPanel(
-          statements: analytics.statements,
-          periodLabel: analytics.period.label,
+
+        // 2 — What needs a decision.
+        FinanceAttentionPanel(
+          attention: state.attention,
+          onOpenModule: onOpenModule,
         ),
         const SizedBox(height: AppSpacing.medium),
+
+        // 3 — Which way it is moving.
         DashboardPanel(
           sectionId: DashboardSectionIds.financeRevenueTrend,
           icon: Icons.show_chart_rounded,
           title: 'اتجاه الإيراد اليومي',
           subtitle:
-              'صافي المحصّل لكل يوم خلال ${analytics.period.label} — ${FinanceFormat.count(analytics.activeDays)} يوم فيه تحصيل',
-          child: DashboardLineChart(
-            data: [
-              for (final point in analytics.daily)
-                ChartDatum(
-                  label: FinanceFormat.shortDate(point.date),
-                  value: point.net,
-                  color: palette.active,
-                ),
-            ],
-            lineColor: palette.active,
-          ),
+              'صافي المحصّل لكل يوم خلال ${analytics.periodLabel} — '
+              '${FinanceFormat.count(analytics.activeDays)} يوم فيه تحصيل',
+          child: _RevenueTrend(analytics: analytics),
         ),
         const SizedBox(height: AppSpacing.medium),
+
+        // 4 — Where it comes from.
         _ResponsivePair(
           first: DashboardPanel(
             sectionId: DashboardSectionIds.financeRevenueSources,
             icon: Icons.pie_chart_outline_rounded,
             title: 'مصادر الإيراد',
             subtitle: 'حجوزات الرحلات مقابل باقات الاشتراك',
-            child: DashboardDonutChart(data: _sourceData(analytics, palette)),
+            child: _SourcesChart(analytics: analytics),
           ),
           second: DashboardPanel(
             sectionId: DashboardSectionIds.financePaymentMethods,
             icon: Icons.donut_large_rounded,
             title: 'طرق التحصيل',
-            subtitle: 'الإيراد المحصّل حسب وسيلة الدفع',
-            child: DashboardDonutChart(data: _methodData(analytics, palette)),
+            // A package purchase records no rail, so this covers fares only.
+            // Without saying so the donut's total reads as *the* revenue and
+            // silently disagrees with the headline above it.
+            subtitle: 'إيراد الحجوزات حسب وسيلة الدفع — الاشتراكات بلا وسيلة',
+            child: _MethodsChart(analytics: analytics),
           ),
         ),
         const SizedBox(height: AppSpacing.medium),
@@ -86,6 +104,7 @@ class FinanceOverviewTab extends StatelessWidget {
             child: FinanceRankedList(
               rows: analytics.byRoute,
               total: analytics.netRevenue,
+              labelsAreRoutes: true,
             ),
           ),
           second: DashboardPanel(
@@ -99,40 +118,137 @@ class FinanceOverviewTab extends StatelessWidget {
             ),
           ),
         ),
+        const SizedBox(height: AppSpacing.medium),
+
+        // 5 — The reconciliation, for when a number is challenged.
+        FinanceMoneyStatementsPanel(
+          statements: analytics.statements,
+          periodLabel: analytics.periodLabel,
+        ),
       ],
     );
   }
+}
 
-  List<ChartDatum> _sourceData(
-    FinanceAnalytics analytics,
-    DashboardChartPalette palette,
-  ) => [
-    if (analytics.bookingsRevenue > 0)
-      ChartDatum(
-        label: 'الحجوزات',
-        value: analytics.bookingsRevenue,
-        color: palette.active,
-      ),
-    if (analytics.subscriptionsRevenue > 0)
-      ChartDatum(
-        label: 'الاشتراكات',
-        value: analytics.subscriptionsRevenue,
-        color: palette.accent,
-      ),
-  ];
+/// An office with no ledger at all is not an office with a bad month. Zeros
+/// everywhere would be arithmetically true and completely uninformative.
+class _NoHistory extends StatelessWidget {
+  const _NoHistory();
 
-  List<ChartDatum> _methodData(
-    FinanceAnalytics analytics,
-    DashboardChartPalette palette,
-  ) => [
-    for (final (index, row) in analytics.byMethod.indexed)
-      if (row.amount > 0)
-        ChartDatum(
-          label: row.label,
-          value: row.amount,
-          color: palette.categoryAt(index),
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: EdgeInsets.zero,
+      children: const [
+        DashboardEmptyState(
+          icon: DashboardIcons.payments,
+          title: 'لا توجد حركات مالية بعد',
+          message:
+              'لم يُسجَّل أي حجز أو اشتراك على هذا المكتب حتى الآن، فلا توجد '
+              'أرقام تُعرض. أول عملية بيع ستظهر هنا مباشرة، وستبدأ كل المؤشرات '
+              'والتقارير في العمل من تلقاء نفسها.',
         ),
-  ];
+      ],
+    );
+  }
+}
+
+/// A window with no movement says so, instead of drawing a flat line at zero
+/// that looks like a chart with data in it.
+class _RevenueTrend extends StatelessWidget {
+  const _RevenueTrend({required this.analytics});
+
+  final FinanceAnalytics analytics;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = DashboardChartPalette.of(context);
+
+    if (analytics.activeDays == 0) {
+      return const DashboardEmptyState(
+        icon: Icons.show_chart_rounded,
+        title: 'لا يوجد تحصيل في هذه الفترة',
+        message: 'لم تُحصَّل أي مبالغ خلال الفترة المختارة — وسّعها للمقارنة.',
+      );
+    }
+
+    return DashboardLineChart(
+      data: [
+        for (final point in analytics.daily)
+          ChartDatum(
+            label: FinanceFormat.shortDate(point.date),
+            value: point.net,
+            color: palette.active,
+          ),
+      ],
+      lineColor: palette.active,
+    );
+  }
+}
+
+class _SourcesChart extends StatelessWidget {
+  const _SourcesChart({required this.analytics});
+
+  final FinanceAnalytics analytics;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = DashboardChartPalette.of(context);
+    final data = [
+      if (analytics.bookingsRevenue > 0)
+        ChartDatum(
+          label: 'الحجوزات',
+          value: analytics.bookingsRevenue,
+          color: palette.active,
+        ),
+      if (analytics.subscriptionsRevenue > 0)
+        ChartDatum(
+          label: 'الاشتراكات',
+          value: analytics.subscriptionsRevenue,
+          color: palette.accent,
+        ),
+    ];
+
+    if (data.isEmpty) {
+      return const DashboardEmptyState(
+        icon: Icons.pie_chart_outline_rounded,
+        title: 'لا يوجد إيراد محصّل',
+        message: 'لم تُحصَّل أي حركة في هذه الفترة، فلا توجد مصادر توزَّع.',
+      );
+    }
+
+    return DashboardDonutChart(data: data);
+  }
+}
+
+class _MethodsChart extends StatelessWidget {
+  const _MethodsChart({required this.analytics});
+
+  final FinanceAnalytics analytics;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = DashboardChartPalette.of(context);
+    final data = [
+      for (final (index, row) in analytics.byMethod.indexed)
+        if (row.amount > 0)
+          ChartDatum(
+            label: row.label,
+            value: row.amount,
+            color: palette.categoryAt(index),
+          ),
+    ];
+
+    if (data.isEmpty) {
+      return const DashboardEmptyState(
+        icon: Icons.donut_large_rounded,
+        title: 'لا توجد عمليات محصّلة',
+        message: 'وسيلة الدفع تُسجَّل عند التحصيل فقط.',
+      );
+    }
+
+    return DashboardDonutChart(data: data);
+  }
 }
 
 /// The number the owner opens this screen for, with the shape of the period
@@ -155,7 +271,7 @@ class _NetRevenueHero extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          'صافي الإيراد • ${analytics.period.label}',
+          'صافي الإيراد • ${analytics.periodLabel}',
           style: Theme.of(
             context,
           ).textTheme.labelLarge?.copyWith(color: scheme.onSurfaceVariant),
@@ -177,7 +293,8 @@ class _NetRevenueHero extends StatelessWidget {
           change: analytics.netRevenueChange,
           caption: previous == null
               ? null
-              : 'مقابل ${FinanceFormat.money(previous.netRevenue)} في الفترة السابقة',
+              : 'مقابل ${FinanceFormat.money(previous.netRevenue)} '
+                    'في ${analytics.window.previousLabel}',
         ),
       ],
     );
@@ -201,6 +318,13 @@ class _NetRevenueHero extends StatelessWidget {
           value: FinanceFormat.money(analytics.netRevenue),
           emphasised: true,
           valueColor: palette.positive,
+        ),
+        const SizedBox(height: AppSpacing.xSmall),
+        Text(
+          'الإيراد بعد المرتجعات فقط — ليس ربحاً: لا تُخصم منه أي تكاليف تشغيل.',
+          style: Theme.of(
+            context,
+          ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
         ),
       ],
     );
@@ -255,6 +379,18 @@ class _NetRevenueHero extends StatelessWidget {
   }
 }
 
+/// Four figures, not eight.
+///
+/// The four that went were not wrong, they were redundant or misplaced: booking
+/// and subscription revenue are the «مصادر الإيراد» donut directly below,
+/// average ticket is a row of the comparison table on التحليلات, and pending
+/// refund requests are a queue with an owner, which is the attention panel's
+/// job. A KPI band is a summary, and a summary that repeats the chart under it
+/// has stopped summarising.
+///
+/// Four is also the width [DashboardKpiGrid] lays out at desktop sizes. A fifth
+/// tile does not make a denser band, it makes a row of four and an orphan with
+/// a hole beside it.
 class _KpiBand extends StatelessWidget {
   final FinanceLoaded state;
 
@@ -264,77 +400,113 @@ class _KpiBand extends StatelessWidget {
   Widget build(BuildContext context) {
     final palette = DashboardChartPalette.of(context);
     final analytics = state.analytics;
+    final previous = analytics.previous;
+    final previousLabel = analytics.window.previousLabel;
+
+    final transactions = _trend(analytics.transactionsChange, previousLabel);
+    final refunds = _trend(
+      analytics.refundedChange,
+      previousLabel,
+      inverted: true,
+    );
+    final collection = _rateTrend(analytics, previous);
 
     return DashboardKpiGrid(
-      itemExtent: 92,
+      // The stacked form only appears when there is a movement to stack; an
+      // office with no comparable window would otherwise get four tall tiles
+      // with an empty band of nothing under each value.
+      itemExtent:
+          [transactions, refunds, collection].any((t) => t != null) ? 132 : 92,
       children: [
         DashboardKpiCard(
-          icon: Icons.receipt_long_rounded,
-          label: 'عدد المعاملات',
-          value: FinanceFormat.count(analytics.transactionCount),
-          detail:
-              '${FinanceFormat.count(analytics.paidCount)} محصّلة • ${FinanceFormat.count(analytics.pendingCount)} معلقة',
-          color: palette.active,
-        ),
-        DashboardKpiCard(
-          icon: Icons.confirmation_number_outlined,
-          label: 'متوسط قيمة المعاملة',
-          value: FinanceFormat.money(analytics.averageTicket),
-          detail: analytics.hasComparison
-              ? 'التغير ${FinanceFormat.changeLabel(analytics.averageTicketChange)}'
-              : 'متوسط العملية المحصّلة',
-          color: palette.accent,
-        ),
-        DashboardKpiCard(
           icon: Icons.hourglass_bottom_rounded,
-          label: 'قيد التحصيل',
-          value: FinanceFormat.money(analytics.pending),
-          detail: '${FinanceFormat.count(analytics.pendingCount)} عملية معلقة',
+          label: 'مستحقات لم تُحصّل',
+          value: FinanceFormat.money(analytics.receivable),
+          // Kept short on purpose: at 1366 the four-across band gives the
+          // detail line about fifteen characters, and a sentence that
+          // ellipsises mid-word is worse than a shorter true one.
+          detail: '${FinanceFormat.count(analytics.pendingCount)} عملية قائمة',
           color: palette.warning,
         ),
         DashboardKpiCard(
           icon: Icons.verified_outlined,
           label: 'معدل التحصيل',
           value: FinanceFormat.percent(analytics.collectionRate),
-          detail: 'من إجمالي ${FinanceFormat.money(analytics.billed)} مفوترة',
+          detail: 'من ${FinanceFormat.money(analytics.billed)}',
           color: palette.positive,
-        ),
-        DashboardKpiCard(
-          icon: Icons.directions_bus_filled_outlined,
-          label: 'إيراد الحجوزات',
-          value: FinanceFormat.money(analytics.bookingsRevenue),
-          detail: FinanceFormat.percent(
-            analytics.netRevenue <= 0
-                ? 0
-                : analytics.bookingsRevenue / analytics.netRevenue,
-          ),
-          color: palette.active,
-        ),
-        DashboardKpiCard(
-          icon: Icons.workspace_premium_outlined,
-          label: 'إيراد الاشتراكات',
-          value: FinanceFormat.money(analytics.subscriptionsRevenue),
-          detail:
-              '${FinanceFormat.count(state.activeSubscriptions)} اشتراك نشط حالياً',
-          color: palette.accent,
+          trend: collection,
         ),
         DashboardKpiCard(
           icon: Icons.undo_rounded,
           label: 'المرتجعات المنفذة',
           value: FinanceFormat.money(analytics.refunded),
-          detail:
-              'نسبة ${FinanceFormat.percent(analytics.refundRate)} من المتحصلات',
+          detail: '${FinanceFormat.percent(analytics.refundRate)} من المتحصل',
           color: palette.negative,
+          trend: refunds,
         ),
         DashboardKpiCard(
-          icon: Icons.pending_actions_outlined,
-          label: 'طلبات استرداد معلقة',
-          value: FinanceFormat.money(state.pendingRefundAmount),
-          detail:
-              '${FinanceFormat.count(state.pendingRefundRequests.length)} طلب بانتظار القرار',
-          color: palette.warning,
+          icon: Icons.receipt_long_rounded,
+          label: 'عدد المعاملات',
+          value: FinanceFormat.count(analytics.transactionCount),
+          detail: '${FinanceFormat.count(analytics.paidCount)} منها محصّلة',
+          color: palette.active,
+          trend: transactions,
         ),
       ],
+    );
+  }
+
+  /// A movement is shown only when there is a previous window that had
+  /// something in it — the dashboard holds no historical snapshots, and a delta
+  /// against zero is a division, not a measurement.
+  KpiTrend? _trend(
+    double? change,
+    String previousLabel, {
+    bool inverted = false,
+  }) {
+    if (change == null) return null;
+    final isUp = change > 0;
+    final isFlat = change == 0;
+    final isGood = inverted ? !isUp : isUp;
+
+    return KpiTrend(
+      label: isFlat ? 'بدون تغيير' : FinanceFormat.changeLabel(change),
+      icon: isFlat
+          ? DashboardIcons.trendFlat
+          : isUp
+          ? DashboardIcons.trendUp
+          : DashboardIcons.trendDown,
+      tone: isFlat
+          ? KpiTrendTone.neutral
+          : isGood
+          ? KpiTrendTone.positive
+          : KpiTrendTone.negative,
+      caption: 'مقابل $previousLabel',
+    );
+  }
+
+  /// The collection rate moves in percentage *points*, not percent — reporting
+  /// "94% → 87%" as "−7.4%" is the kind of arithmetic that starts an argument.
+  KpiTrend? _rateTrend(FinanceAnalytics analytics, FinanceAnalytics? previous) {
+    if (previous == null || previous.billed <= 0) return null;
+    final points = (analytics.collectionRate - previous.collectionRate) * 100;
+    final isFlat = points.abs() < 0.05;
+
+    return KpiTrend(
+      label: isFlat
+          ? 'بدون تغيير'
+          : '${points > 0 ? '+' : ''}${points.toStringAsFixed(1)} نقطة',
+      icon: isFlat
+          ? DashboardIcons.trendFlat
+          : points > 0
+          ? DashboardIcons.trendUp
+          : DashboardIcons.trendDown,
+      tone: isFlat
+          ? KpiTrendTone.neutral
+          : points > 0
+          ? KpiTrendTone.positive
+          : KpiTrendTone.negative,
+      caption: 'مقابل ${analytics.window.previousLabel}',
     );
   }
 }

@@ -99,7 +99,28 @@ void main() {
           // are owner-only, and the server checks the same thing again in
           // `public.office_can`.
           DashboardPermission.customerWallets,
+          // Added deliberately with العملاء: the module aggregates bookings,
+          // wallets and tickets — three surfaces this role already reads in
+          // full — into one view of the person. Withholding the summary of data
+          // they can already page through would protect nothing and would leave
+          // the agent assembling it by hand across five modules, which is the
+          // problem the module exists to remove. Read-only: the repository
+          // exposes no write, and `office_can('customers_view')` is checked
+          // again server-side.
+          DashboardPermission.customers,
         },
+      );
+    });
+
+    test('a support agent may open العملاء', () {
+      // The money capabilities it sits beside are asserted owner-only by the
+      // wallet test below; this only pins that the directory itself is granted.
+      expect(
+        DashboardPermissions.canAccess(
+          DashboardRole.supportAgent,
+          DashboardPermission.customers,
+        ),
+        isTrue,
       );
     });
 

@@ -65,6 +65,18 @@ import 'dashboard_demo_data.dart' as demo;
 
 // ── Fakes ───────────────────────────────────────────────────────────────────
 
+import 'package:bmt_app/apps/dashboard/features/customers/domain/entities/customer.dart';
+import 'package:bmt_app/apps/dashboard/features/customers/domain/entities/customer_activity.dart';
+import 'package:bmt_app/apps/dashboard/features/customers/domain/entities/customer_filters.dart';
+import 'package:bmt_app/apps/dashboard/features/customers/domain/entities/customer_payment.dart';
+import 'package:bmt_app/apps/dashboard/features/customers/domain/entities/customer_profile.dart';
+import 'package:bmt_app/apps/dashboard/features/customers/domain/entities/customer_subscription.dart';
+import 'package:bmt_app/apps/dashboard/features/customers/domain/entities/customer_trip.dart';
+import 'package:bmt_app/apps/dashboard/features/customers/domain/repositories/customers_repository.dart';
+import 'package:bmt_app/apps/dashboard/features/customers/domain/usecases/customers_usecases.dart';
+import 'package:bmt_app/apps/dashboard/features/customers/presentation/cubit/customers_cubit.dart';
+import 'package:bmt_app/apps/dashboard/features/customers/presentation/cubit/customers_state.dart';
+
 class _Storage implements SecureStorage {
   final _values = <String, String>{};
   @override
@@ -256,6 +268,73 @@ class _FakeWallet extends Cubit<WalletState> implements WalletCubit {
   dynamic noSuchMethod(Invocation i) => null;
 }
 
+/// العملاء's directory, already loaded.
+class _FakeCustomers extends Cubit<CustomersState> implements CustomersCubit {
+  _FakeCustomers()
+    : super(
+        CustomersLoadedState(
+          overview: demo.customersOverview,
+          page: CustomerDirectoryPage(
+            total: demo.customers.length,
+            rows: demo.customers,
+          ),
+        ),
+      );
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => null;
+}
+
+/// Serves the Customer 360 workspace.
+///
+/// A repository rather than a cubit fake, because `CustomerProfileCubit` takes
+/// the client id it serves as a constructor argument and is built by the screen
+/// from the use cases in the graph. Faking the repository means the harness
+/// photographs the real cubit driving the real tabs.
+class _ShowcaseCustomersRepository implements CustomersRepository {
+  const _ShowcaseCustomersRepository();
+
+  @override
+  Future<CustomersOverview> getOverview() async => demo.customersOverview;
+
+  @override
+  Future<CustomerDirectoryPage> getDirectory({
+    required CustomerFilters filters,
+    required int limit,
+    required int offset,
+  }) async =>
+      CustomerDirectoryPage(total: demo.customers.length, rows: demo.customers);
+
+  @override
+  Future<CustomerProfile> getProfile(String clientId) async =>
+      demo.showcaseCustomerProfile;
+
+  @override
+  Future<CustomerTripsPage> getTrips(
+    String clientId, {
+    required bool upcoming,
+    required int limit,
+    required int offset,
+  }) async => upcoming
+      ? const CustomerTripsPage.empty()
+      : demo.showcaseCustomerPastTrips;
+
+  @override
+  Future<List<CustomerSubscription>> getSubscriptions(String clientId) async =>
+      demo.showcaseCustomerSubscriptions;
+
+  @override
+  Future<CustomerPaymentsPage> getPayments(
+    String clientId, {
+    required int limit,
+    required int offset,
+  }) async => demo.showcaseCustomerPayments;
+
+  @override
+  Future<List<CustomerActivityEvent>> getActivity(String clientId) async =>
+      demo.showcaseCustomerActivity;
+}
+
 class _FakeReports extends Cubit<ReportsState> implements ReportsCubit {
   _FakeReports()
     : super(
@@ -337,6 +416,27 @@ void registerDashboardShowcaseFakes() {
     ..registerFactory<FleetDocumentsCubit>(_FakeFleetDocuments.new)
     ..registerFactory<FinanceCubit>(() => _FakeFinance(_financeSection))
     ..registerFactory<WalletCubit>(_FakeWallet.new)
+    ..registerFactory<CustomersCubit>(_FakeCustomers.new)
+    // The profile workspace resolves these from the graph, so the harness
+    // registers the real use cases over a fake repository.
+    ..registerLazySingleton<CustomersRepository>(
+      () => const _ShowcaseCustomersRepository(),
+    )
+    ..registerLazySingleton(
+      () => GetCustomerProfileUseCase(dashboardDi<CustomersRepository>()),
+    )
+    ..registerLazySingleton(
+      () => GetCustomerTripsUseCase(dashboardDi<CustomersRepository>()),
+    )
+    ..registerLazySingleton(
+      () => GetCustomerSubscriptionsUseCase(dashboardDi<CustomersRepository>()),
+    )
+    ..registerLazySingleton(
+      () => GetCustomerPaymentsUseCase(dashboardDi<CustomersRepository>()),
+    )
+    ..registerLazySingleton(
+      () => GetCustomerActivityUseCase(dashboardDi<CustomersRepository>()),
+    )
     ..registerFactory<ReportsCubit>(_FakeReports.new)
     ..registerFactory<ReviewsCubit>(_FakeReviews.new)
     ..registerFactory<OfficeProfileCubit>(_FakeOfficeProfile.new)
@@ -370,8 +470,10 @@ const Map<String, String> dashboardScreens = {
   'dashboard-bookings': DashboardRoutes.bookings,
   'dashboard-fleet': DashboardRoutes.fleet,
   'dashboard-finance': DashboardRoutes.payments,
+  'dashboard-finance-ledger': DashboardRoutes.payments,
   'dashboard-finance-analytics': DashboardRoutes.payments,
   'dashboard-finance-reports': DashboardRoutes.payments,
+  'dashboard-customers': DashboardRoutes.customers,
   'dashboard-wallet': DashboardRoutes.wallet,
   'dashboard-reports': DashboardRoutes.reports,
   'dashboard-reviews': DashboardRoutes.reviews,
@@ -388,6 +490,7 @@ const Map<String, String> dashboardScreens = {
 Widget buildDashboardShowcase(String screenId, {bool dark = false}) {
   final route = dashboardScreens[screenId] ?? DashboardRoutes.home;
   _financeSection = switch (screenId) {
+    'dashboard-finance-ledger' => FinanceSection.ledger,
     'dashboard-finance-analytics' => FinanceSection.analytics,
     'dashboard-finance-reports' => FinanceSection.reports,
     _ => FinanceSection.overview,

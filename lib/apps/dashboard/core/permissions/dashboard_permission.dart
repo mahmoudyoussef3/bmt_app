@@ -18,6 +18,8 @@ enum DashboardPermission {
   payments,
   paymentVerification,
 
+  customers,
+
   customerWallets,
 
   walletAdjustments,
@@ -61,6 +63,8 @@ class DashboardPermissions {
         DashboardPermission.notifications,
 
         DashboardPermission.customerWallets,
+
+        DashboardPermission.customers,
       },
     };
   }

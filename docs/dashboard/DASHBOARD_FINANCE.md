@@ -1,123 +1,94 @@
 # Dashboard — Finance
 
-> **Finance reports. It does not decide.** Payment verification lives in الحجوزات, refund
-> decisions in محفظة العملاء, subscription changes in الاشتراكات. The financial centre has
-> no approve button and must not grow one.
+> **The detail lives in [`finance/`](finance/).** This page is the short version
+> and the list of invariants; it is kept because other documents link to it.
+>
+> | Document | Answers |
+> |---|---|
+> | [`finance/FINANCE_OVERVIEW.md`](finance/FINANCE_OVERVIEW.md) | What the module is for, the periods, the accounting model, the attention queues |
+> | [`finance/FINANCE_ARCHITECTURE.md`](finance/FINANCE_ARCHITECTURE.md) | Layer map, where every figure comes from, status translation, the three statements, memoisation |
+> | [`finance/FINANCE_FEATURES.md`](finance/FINANCE_FEATURES.md) | What each tab does, the transaction detail, empty/loading/error states |
+> | [`finance/FINANCE_UX.md`](finance/FINANCE_UX.md) | The design rules and the reasoning behind the non-obvious ones |
+> | [`finance/FINANCE_KNOWN_ISSUES.md`](finance/FINANCE_KNOWN_ISSUES.md) | What is still wrong, what needs a backend change, what was fixed |
 
 ---
 
-## 1. The module
+## The module
 
-`/payments` — «المركز المالي». Owner only. Four tabs behind one pinned period bar:
+`/payments` — «المركز المالي». Owner only. Four tabs behind one pinned period
+bar: نظرة عامة · الحركات المالية · التحليلات · التقارير.
 
-| Tab | Question it answers |
-|---|---|
-| نظرة عامة | Where does the money stand this period? |
-| الحركات المالية | Show me every individual movement |
-| التحليلات | What shape is it — by payment method, by day? |
-| التقارير | The income statement, and a file of it |
+**Finance reports. It does not decide.** Payment verification lives in الحجوزات,
+refund decisions in محفظة العملاء, subscription changes in الاشتراكات. There is
+no approve button here and there must not be one.
 
-The period bar is **pinned to the module header** rather than scrolling with the content,
-because every figure on every tab is scoped by it. An operator who cannot see the period
-cannot read the page.
+That is a rule about **authority**, not about silence. «يحتاج المتابعة» names
+every queue with money waiting on a decision and opens the module that owns it.
+Naming a queue is reading; clearing it happens elsewhere.
 
 ---
 
-## 2. The accounting model
+## Invariants that must not be reinvented
+
+1. **A refund is not a separate ledger row.** It is mirrored onto the booking it
+   reverses. Adding it as its own row double-subtracts.
+2. **Refund requests are a liability signal**, kept out of the ledger so an
+   approved refund is never subtracted twice.
+3. **Wallet balances are a liability, not income.** Finance reads
+   `WalletFinancePosition`; it does not recompute it.
+4. **Excluded amounts are shown, not dropped.** A figure quietly removed from a
+   total is indistinguishable from a bug.
+5. **The ledger query filters nothing by payment state.** Deciding in the query
+   which money is worth knowing about is how «قيد التحصيل» came to report a
+   fraction of what the office was owed.
+6. **Payment state is read together with seat state.** An unpaid fare on a
+   cancelled seat is not a receivable; nobody is waiting for it.
+7. **A package is worth what arrived, not what was invoiced.**
+8. **`getRevenueMetrics()` stays uncapped.** It computes sums, and a capped sum
+   presented as a total is the silent truncation the cap contract forbids.
+9. **The control identity is asserted on every load**, and a failure is stated
+   with its exact gap rather than displaying a plausible wrong number.
+10. **No figure is invented.** No comparable window means `—`, never `0%`.
+
+---
+
+## The accounting model, in one block
 
 ```
-  Total collected            all bookings whose payment reached approved
+  Total collected            bookings whose payment reached approved
 − Executed refunds           refunds actually paid back
 ─────────────────────────
 = NET REVENUE                the line the owner keeps
 
   Memo lines (shown, excluded from the net):
-    · Pending collection     submitted / under review — not money yet
-    · Cancelled / rejected   never was money
+    · Pending collection     unpaid fare on a seat that still exists
+    · Cancelled / rejected   never was money, or the seat went away
     · Pending refund requests outstanding liability, not yet subtracted
 ```
 
-Rules that must not be reinvented:
+Beside it, three statements computed independently — revenue (accrual), cash
+(treasury) and liability (wallet balances) — with the control identity
 
-1. **A refund is not a separate ledger row.** It is mirrored onto the booking it reverses.
-   Adding it as its own row double-subtracts.
-2. **Refund requests are a liability signal**, deliberately kept out of the ledger so an
-   approved refund is never subtracted twice.
-3. **Wallet balances are a liability, not income.** The wallet subsystem keeps its own
-   hash-chained ledger and its own three statements. Finance reads
-   `WalletFinancePosition`; it does not recompute it.
-4. **Excluded amounts are shown, not dropped.** A figure quietly removed from a total is
-   indistinguishable from a bug.
+```
+CASH_in − CASH_out  =  REVENUE − PROMOTIONAL_COST + ΔLIABILITY
+```
 
-`FinanceLoaded` holds the **full** ledger and the **whole** wallet position, and derives
-the period view in memory. That is deliberate: switching period must not produce a screen
-where the KPI band, the identity check and the statement were computed from three
-different snapshots.
+Net revenue is revenue net of refunds. **It is not profit** — there is no
+expense side anywhere in the system, and the UI must never call it profit.
 
 ---
 
-## 3. Where the numbers come from
+## Export
 
-| Figure | Source |
-|---|---|
-| Collected / net revenue | `operation_bookings.payment_amount` where payment reached approved, dated by `created_at` |
-| By payment method | Same rows, grouped by `payment_method` |
-| Daily movement | Same rows, bucketed by day |
-| Refund requests | `refund_requests` (office-scoped by RLS) |
-| Wallet position | The wallet RPCs |
-| Subscriptions | `subscriptions` |
-
-`revenue_daily_view` is the office-scoped daily roll-up used by التقارير. It is
-deliberately **not** licence-gated, unlike the other three report views, because Finance
-reads it too and withdrawing it with `reports` would take down a module the office still
-holds.
+PDF, Excel and CSV carry the same figures as the screen. PDF uses the Cairo font
+and RTL; CSV is UTF-8 with a BOM (`String.codeUnits` + `Uint8List.fromList`
+turns every Arabic character into mojibake). Both are licence-metered through
+`LicensedExport.consume(format)`.
 
 ---
 
-## 4. The row cap
+## The row cap
 
-The ledger query is capped. When the cap is hit, `FinanceLoaded.ledgerCapReached` is true
-and the period bar says so. An office whose period exceeds the cap is told its window may
-be incomplete rather than shown a quietly truncated total.
-
----
-
-## 5. Export
-
-PDF, Excel and CSV, all three carrying the same figures as the screen — income statement,
-collection by method, daily movement, and the ledger.
-
-- **PDF** uses the Cairo font and RTL text direction; the default Helvetica cannot render
-  Arabic at all.
-- **CSV** is UTF-8 with a BOM (`CsvEncoder(addBom: true)` + `utf8.encode`). This is not
-  cosmetic: `String.codeUnits` yields UTF-16 units and `Uint8List.fromList` truncates each
-  to its low byte, which turns every Arabic character into mojibake. The reports module
-  had exactly that bug until this pass; Finance and Wallet always did it correctly.
-- Exports are **licence-metered** through `LicensedExport.consume(format)`, against
-  `export_pdf` / `export_excel`.
-
----
-
-## 6. The wallet, in one paragraph
-
-«محفظة العملاء» is a separate module with its own permissions (`customerWallets` to view,
-`walletAdjustments` to move money, `walletApprovals` to approve a refund). It is a
-directory of customer wallets with a per-customer ledger, a refund queue, and a chain
-verification that proves the ledger has not been tampered with. A support agent can look
-up a balance to answer "where is my money" and can do nothing else. The office's liability
-to its customers is the sum of those balances, and that figure is what Finance reads.
-
----
-
-## 7. What Finance does not have
-
-Stated plainly because their absence is a business gap, not an oversight:
-
-- **No cash-movement or drawer reconciliation.** Finance knows what was *collected
-  digitally*; it cannot tell an owner what cash a station agent is holding.
-- **No cost or expense side.** Fuel, salaries, maintenance and platform fees are nowhere.
-  "Net revenue" is revenue net of refunds — it is not profit, and the UI must never call
-  it profit.
-- **No period-over-period comparison** on the statement itself.
-- **No per-route or per-vehicle P&L.** Revenue attributes to routes in التقارير; costs do
-  not exist to attribute against.
+The ledger is capped at `DashboardQueryCaps.financeLedger`. When the cap is hit
+the period bar says the window may be incomplete rather than showing a quietly
+truncated total.

@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:bmt_app/apps/dashboard/features/finance/data/repositories/finance_repository_impl.dart';
 import 'package:bmt_app/apps/dashboard/features/finance/domain/entities/finance_analytics.dart';
+import 'package:bmt_app/apps/dashboard/features/finance/domain/entities/finance_attention.dart';
 import 'package:bmt_app/apps/dashboard/features/finance/domain/entities/finance_entities.dart';
 import 'package:bmt_app/apps/dashboard/features/finance/domain/entities/finance_money_model.dart';
 import 'package:bmt_app/apps/dashboard/features/finance/domain/repositories/finance_repository.dart';
@@ -137,6 +139,150 @@ void main() {
         expect(state.pendingRefundAmount, 60);
       },
     );
+
+    test('a refund request awaiting a decision reaches the attention list',
+        () async {
+      await cubit.load();
+
+      final attention = (cubit.state as FinanceLoaded).attention;
+      expect(
+        attention.items.map((i) => i.kind),
+        contains(FinanceAttentionKind.refundRequestsPending),
+      );
+      expect(attention.totalAtRisk, 60);
+    });
+
+    group('derivation is reused when its inputs have not moved', () {
+      // The analytics walk the ledger twice and bucket it six ways. Doing that
+      // on every keystroke, page turn and tab switch was the module's largest
+      // avoidable cost on Flutter Web; these tests are what stops it coming
+      // back the next time `copyWith` is extended.
+
+      test('typing in the search box does not re-derive the period', () async {
+        await cubit.load();
+        final before = cubit.state as FinanceLoaded;
+
+        cubit.setSearchQuery('خالد');
+        final after = cubit.state as FinanceLoaded;
+
+        expect(identical(before.analytics, after.analytics), isTrue);
+        expect(identical(before.attention, after.attention), isTrue);
+        expect(after.searchQuery, 'خالد');
+      });
+
+      test('paging and tab switches reuse it too', () async {
+        await cubit.load();
+        final before = cubit.state as FinanceLoaded;
+
+        cubit.setLedgerPage(2);
+        cubit.selectSection(FinanceSection.reports);
+        cubit.setLedgerSort(FinanceLedgerSort.amountDesc);
+        final after = cubit.state as FinanceLoaded;
+
+        expect(identical(before.analytics, after.analytics), isTrue);
+      });
+
+      test('changing the period does re-derive it', () async {
+        await cubit.load();
+        final before = cubit.state as FinanceLoaded;
+
+        cubit.setPeriod(FinancePeriod.week);
+        final after = cubit.state as FinanceLoaded;
+
+        expect(identical(before.analytics, after.analytics), isFalse);
+        expect(after.analytics.period, FinancePeriod.week);
+      });
+    });
+
+    group('the custom range', () {
+      test('applying two dates scopes the window to them', () async {
+        await cubit.load();
+        final now = (cubit.state as FinanceLoaded).loadedAt;
+
+        cubit.setCustomRange(
+          now.subtract(const Duration(days: 7)),
+          now.subtract(const Duration(days: 3)),
+        );
+
+        final state = cubit.state as FinanceLoaded;
+        expect(state.period, FinancePeriod.custom);
+        expect(state.analytics.window.start!.hour, 0);
+        expect(state.analytics.window.end.hour, 23);
+      });
+
+      test('dates given backwards are still read as a range', () async {
+        await cubit.load();
+        final now = (cubit.state as FinanceLoaded).loadedAt;
+
+        cubit.setCustomRange(
+          now.subtract(const Duration(days: 2)),
+          now.subtract(const Duration(days: 9)),
+        );
+
+        final window = (cubit.state as FinanceLoaded).analytics.window;
+        expect(window.start!.isBefore(window.end), isTrue);
+      });
+
+      test('selecting the custom preset with no range is refused', () async {
+        // Resolving it would silently fall back to the default window while the
+        // chip claimed a custom one — two different periods on one screen.
+        await cubit.load();
+
+        cubit.setPeriod(FinancePeriod.custom);
+
+        expect((cubit.state as FinanceLoaded).period, FinancePeriod.month);
+      });
+
+      test('a chosen range survives a refresh', () async {
+        await cubit.load();
+        final now = (cubit.state as FinanceLoaded).loadedAt;
+        cubit.setCustomRange(
+          now.subtract(const Duration(days: 7)),
+          now.subtract(const Duration(days: 3)),
+        );
+
+        await cubit.load();
+
+        expect((cubit.state as FinanceLoaded).period, FinancePeriod.custom);
+        expect((cubit.state as FinanceLoaded).customRange, isNotNull);
+      });
+    });
+
+    test('the export file name survives a period label with a slash', () {
+      // Calendar and custom windows put `/` and `()` into the label, and a
+      // slash is a path separator rather than a character — the download either
+      // fails or lands somewhere nobody asked for.
+      expect(
+        FinanceRepositoryImpl.exportFileName(
+          '2026/08/01 — 2026/08/10',
+          '2026-08-21',
+        ),
+        'التقرير_المالي_2026_08_01_2026_08_10_2026-08-21',
+      );
+      expect(
+        FinanceRepositoryImpl.exportFileName(
+          'هذا الشهر (أغسطس 2026)',
+          '2026-08-21',
+        ),
+        'التقرير_المالي_هذا_الشهر_أغسطس_2026_2026-08-21',
+      );
+      expect(
+        FinanceRepositoryImpl.exportFileName('آخر ٣٠ يوم', '2026-08-21'),
+        'التقرير_المالي_آخر_٣٠_يوم_2026-08-21',
+      );
+    });
+
+    test('the ledger can be re-ordered without touching the figures', () async {
+      await cubit.load();
+      final net = (cubit.state as FinanceLoaded).analytics.netRevenue;
+
+      cubit.setLedgerSort(FinanceLedgerSort.amountDesc);
+      final state = cubit.state as FinanceLoaded;
+
+      expect(state.analytics.netRevenue, net);
+      final amounts = state.filteredEntries.map((e) => e.amount).toList();
+      expect(amounts, List.of(amounts)..sort((a, b) => b.compareTo(a)));
+    });
   });
 }
 

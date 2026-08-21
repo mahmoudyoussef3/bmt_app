@@ -85,6 +85,12 @@ class DashboardSectionIds {
   static const bookingsDailyTrend = 'bookings.dailyTrend';
   static const bookingsTopRoutes = 'bookings.topRoutes';
 
+  static const customersHeader = 'customers.header';
+  static const customersFilters = 'customers.filters';
+  static const customerProfileInsights = 'customers.profile.insights';
+  static const customerProfileRoutes = 'customers.profile.routes';
+  static const customerProfileBehaviour = 'customers.profile.behaviour';
+
   static const subscriptionsHeader = 'subscriptions.header';
   static const subscriptionsFilters = 'subscriptions.filters';
   static const subscriptionsStatus = 'subscriptions.status';
@@ -104,6 +110,8 @@ class DashboardSectionIds {
   static const fleetActivity = 'fleet.activity';
 
   static const financeHeader = 'finance.header';
+  static const financeAttention = 'finance.attention';
+  static const financeMoneyStatus = 'finance.moneyStatus';
   static const financeRevenueTrend = 'finance.revenueTrend';
   static const financeRevenueSources = 'finance.revenueSources';
   static const financePaymentMethods = 'finance.paymentMethods';

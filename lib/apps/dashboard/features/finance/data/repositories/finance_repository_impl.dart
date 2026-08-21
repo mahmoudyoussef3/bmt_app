@@ -53,10 +53,7 @@ class FinanceRepositoryImpl implements FinanceRepository {
     };
 
     final stamp = statement.generatedAt.toIso8601String().substring(0, 10);
-    final name = 'التقرير_المالي_${statement.periodLabel}_$stamp'.replaceAll(
-      ' ',
-      '_',
-    );
+    final name = exportFileName(statement.periodLabel, stamp);
 
     await FileSaver.instance.saveFile(
       name: name,
@@ -66,5 +63,21 @@ class FinanceRepositoryImpl implements FinanceRepository {
     );
 
     return '$name.$extension';
+  }
+
+  /// A file name the operating system will actually accept.
+  ///
+  /// The period label is written for a human — `هذا الشهر (أغسطس 2026)`,
+  /// `2026/08/01 — 2026/08/10` — and a calendar or custom window puts a slash
+  /// in it. A slash is a path separator, not a character, so the download either
+  /// fails or lands somewhere nobody asked for. Everything outside the safe set
+  /// collapses to an underscore, and runs of them collapse to one.
+  static String exportFileName(String periodLabel, String stamp) {
+    final safeLabel = periodLabel
+        .replaceAll(RegExp(r'[\\/:*?"<>|()\[\]—–]'), ' ')
+        .trim();
+    return 'التقرير_المالي_${safeLabel}_$stamp'
+        .replaceAll(RegExp(r'\s+'), '_')
+        .replaceAll(RegExp(r'_{2,}'), '_');
   }
 }

@@ -39,9 +39,28 @@ class FinanceMoneyStatementsPanel extends StatelessWidget {
     return DashboardPanel(
       sectionId: DashboardSectionIds.financeStatements,
       icon: Icons.account_balance_rounded,
-      title: 'القوائم الثلاث',
+      title: 'القوائم الثلاث والتسوية',
       subtitle:
           'الإيراد والنقدية والالتزامات — ثلاثة أرقام مستقلة، $periodLabel',
+      
+      // Starts closed so the overview leads with the owner's question rather
+      // than with the accountant's. That is only safe because a broken control
+      // identity is promoted into «يحتاج المتابعة» above — hiding this panel
+      // can never hide a break.
+      initiallyExpanded: false,
+      collapsedSummary: Text(
+        'إيراد ${FinanceFormat.money(statements.revenue)} • '
+        'نقدية ${FinanceFormat.money(statements.cash)} • '
+        'التزامات ${FinanceFormat.money(statements.liabilityEnd)}'
+        '${statements.identityHolds ? '' : ' • المعادلة غير متوازنة'}',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: statements.identityHolds
+              ? Theme.of(context).colorScheme.onSurfaceVariant
+              : Theme.of(context).colorScheme.error,
+        ),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

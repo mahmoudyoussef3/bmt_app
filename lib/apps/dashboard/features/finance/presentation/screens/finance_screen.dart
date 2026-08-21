@@ -19,8 +19,14 @@ import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 /// The money module: what was earned, what is still owed, what went back, and
 /// what that means. It reads — payment verification, refund decisions and
 /// subscription changes live in the modules that own those workflows.
+///
+/// [onOpenModule] is how it stays read-only while still being useful: the
+/// attention panel and the transaction detail hand the operator off to the
+/// module that owns the decision rather than growing a decision of their own.
 class FinanceScreen extends StatelessWidget {
-  const FinanceScreen({super.key});
+  final ValueChanged<String>? onOpenModule;
+
+  const FinanceScreen({super.key, this.onOpenModule});
 
   @override
   Widget build(BuildContext context) {
@@ -46,7 +52,10 @@ class FinanceScreen extends StatelessWidget {
           message: message,
           onRetry: () => context.read<FinanceCubit>().load(),
         ),
-        FinanceLoaded() => _FinanceWorkspace(state: state),
+        FinanceLoaded() => _FinanceWorkspace(
+          state: state,
+          onOpenModule: onOpenModule,
+        ),
       },
     );
   }
@@ -54,8 +63,9 @@ class FinanceScreen extends StatelessWidget {
 
 class _FinanceWorkspace extends StatelessWidget {
   final FinanceLoaded state;
+  final ValueChanged<String>? onOpenModule;
 
-  const _FinanceWorkspace({required this.state});
+  const _FinanceWorkspace({required this.state, this.onOpenModule});
 
   @override
   Widget build(BuildContext context) {
@@ -81,8 +91,9 @@ class _FinanceWorkspace extends StatelessWidget {
             // The period bar is pinned: every figure on the page is scoped by
             // it, so an operator who cannot see it cannot read the page.
             pinned: FinancePeriodBar(
-              selected: state.period,
+              window: state.analytics.window,
               onSelected: cubit.setPeriod,
+              onCustomRange: cubit.setCustomRange,
               loadedAt: state.loadedAt,
               capReached: state.ledgerCapReached,
             ),
@@ -91,12 +102,19 @@ class _FinanceWorkspace extends StatelessWidget {
           _SectionTabs(
             selected: state.section,
             onSelected: cubit.selectSection,
+            attentionCount: state.attention.totalItems,
           ),
           const SizedBox(height: AppSpacing.medium),
           Expanded(
             child: switch (state.section) {
-              FinanceSection.overview => FinanceOverviewTab(state: state),
-              FinanceSection.ledger => FinanceLedgerTab(state: state),
+              FinanceSection.overview => FinanceOverviewTab(
+                state: state,
+                onOpenModule: onOpenModule,
+              ),
+              FinanceSection.ledger => FinanceLedgerTab(
+                state: state,
+                onOpenModule: onOpenModule,
+              ),
               FinanceSection.analytics => FinanceAnalyticsTab(state: state),
               FinanceSection.reports => FinanceReportsTab(state: state),
             },
@@ -111,7 +129,15 @@ class _SectionTabs extends StatelessWidget {
   final FinanceSection selected;
   final ValueChanged<FinanceSection> onSelected;
 
-  const _SectionTabs({required this.selected, required this.onSelected});
+  /// How many rows are waiting on a decision. Shown on the overview chip so an
+  /// operator working in الحركات or التقارير is not the last to know.
+  final int attentionCount;
+
+  const _SectionTabs({
+    required this.selected,
+    required this.onSelected,
+    this.attentionCount = 0,
+  });
 
   static const _icons = {
     FinanceSection.overview: Icons.dashboard_customize_outlined,
@@ -122,6 +148,8 @@ class _SectionTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+
     return AppCard(
       child: Wrap(
         spacing: AppSpacing.small,
@@ -130,7 +158,36 @@ class _SectionTabs extends StatelessWidget {
           for (final section in FinanceSection.values)
             ChoiceChip(
               avatar: Icon(_icons[section], size: 18),
-              label: Text(section.label),
+              label: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(section.label),
+                  if (section == FinanceSection.overview && attentionCount > 0)
+                    Padding(
+                      padding: const EdgeInsetsDirectional.only(
+                        start: AppSpacing.xSmall,
+                      ),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 1,
+                        ),
+                        decoration: BoxDecoration(
+                          color: scheme.error,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          '$attentionCount',
+                          style: Theme.of(context).textTheme.labelSmall
+                              ?.copyWith(
+                                color: scheme.onError,
+                                fontWeight: FontWeight.w900,
+                              ),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
               selected: selected == section,
               onSelected: (isSelected) {
                 if (isSelected) onSelected(section);

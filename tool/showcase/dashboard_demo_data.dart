@@ -12,6 +12,12 @@
 import 'package:bmt_app/apps/dashboard/features/bookings/domain/entities/operation_booking.dart';
 import 'package:bmt_app/apps/dashboard/features/business_overview/domain/entities/business_overview.dart';
 import 'package:bmt_app/apps/dashboard/features/captain_requests/domain/entities/captain_request.dart';
+import 'package:bmt_app/apps/dashboard/features/customers/domain/entities/customer.dart';
+import 'package:bmt_app/apps/dashboard/features/customers/domain/entities/customer_activity.dart';
+import 'package:bmt_app/apps/dashboard/features/customers/domain/entities/customer_payment.dart';
+import 'package:bmt_app/apps/dashboard/features/customers/domain/entities/customer_profile.dart';
+import 'package:bmt_app/apps/dashboard/features/customers/domain/entities/customer_subscription.dart';
+import 'package:bmt_app/apps/dashboard/features/customers/domain/entities/customer_trip.dart';
 import 'package:bmt_app/apps/dashboard/features/dashboard_home/domain/entities/dashboard_home_summary.dart';
 import 'package:bmt_app/apps/dashboard/features/finance/domain/entities/finance_entities.dart'
     as finance;
@@ -759,7 +765,10 @@ final List<finance.PaymentRecord> payments = [
     finance.PaymentRecord(
       id: 'PAY-${bookings[i].id}',
       clientName: bookings[i].passengerName,
-      tripCode: bookings[i].tripDetails.tripId,
+      // The route, not the trip id: production files the ledger under
+      // `operation_bookings.route`, and «أعلى المسارات إيراداً» is unreadable
+      // when the demo ranks trip codes instead.
+      tripCode: bookings[i].route,
       amount: bookings[i].paymentAmount,
       paymentMethod: switch (bookings[i].paymentMethod) {
         BookingPaymentMethod.cash => finance.FinancePaymentMethod.cash,
@@ -768,11 +777,32 @@ final List<finance.PaymentRecord> payments = [
         _ => finance.FinancePaymentMethod.card,
       },
       status: switch (bookings[i].paymentStatus) {
-        PaymentStatus.pending => finance.PaymentStatus.pending,
+        PaymentStatus.pending ||
+        PaymentStatus.submitted ||
+        PaymentStatus.underReview => finance.PaymentStatus.pending,
         PaymentStatus.refunded => finance.PaymentStatus.refunded,
+        PaymentStatus.rejected ||
+        PaymentStatus.failed ||
+        PaymentStatus.cancelled => finance.PaymentStatus.cancelled,
         _ => finance.PaymentStatus.success,
       },
       date: bookings[i].createdAt,
+      bookingState: switch (bookings[i].status) {
+        BookingStatus.cancelled => finance.FinanceBookingState.cancelled,
+        BookingStatus.boarded ||
+        BookingStatus.completed => finance.FinanceBookingState.travelled,
+        _ => finance.FinanceBookingState.live,
+      },
+      awaitingReview:
+          (bookings[i].paymentStatus == PaymentStatus.submitted ||
+              bookings[i].paymentStatus == PaymentStatus.underReview) &&
+          bookings[i].status != BookingStatus.cancelled,
+      context: finance.FinanceEntryContext(
+        reference: bookings[i].bookingNumber,
+        phone: bookings[i].phone,
+        serviceDate: DateTime.tryParse(bookings[i].date),
+        hasReceipt: bookings[i].paymentStatus != PaymentStatus.pending,
+      ),
     ),
 ];
 
@@ -1452,3 +1482,306 @@ const LicensingSettings licensingSettings = LicensingSettings(
   graceDays: 7,
   warnDaysBefore: 14,
 );
+
+// ── العملاء ─────────────────────────────────────────────────────────────────
+
+/// The customer directory, built from the same invented passengers the bookings
+/// use so the two screens tell one story.
+///
+/// Each row varies along the axes the module is read for — has a package or
+/// not, travels soon or not, active or dormant — so a single capture shows every
+/// treatment the table can render rather than twelve identical rows.
+final List<CustomerSummary> customers = List.generate(_passengers.length, (i) {
+  final hasPackage = i % 3 != 2;
+  final travelsSoon = i % 4 == 0;
+  final dormant = i % 5 == 4;
+  final rides = 6 + (i * 3) % 18;
+
+  return CustomerSummary(
+    clientId: 'client-${i + 1}',
+    fullName: _passengers[i],
+    phone: _phone(i + 1),
+    email: i.isEven ? 'passenger${i + 1}@example.com' : null,
+    status: 'active',
+    joinedAt: now.subtract(Duration(days: 120 + i * 9)),
+    bookingsTotal: 4 + (i * 5) % 23,
+    bookingsCompleted: 2 + (i * 3) % 15,
+    bookingsCancelled: i % 4,
+    firstBookingAt: now.subtract(Duration(days: 110 + i * 8)),
+    lastActivityAt: now.subtract(
+      dormant ? Duration(days: 96 + i) : Duration(hours: 3 + i * 7),
+    ),
+    nextTripDate: travelsSoon ? _midnight.add(Duration(days: 1 + i % 3)) : null,
+    activePackageName: hasPackage
+        ? const [
+            'أسبوع عمل (٥ أيام)',
+            'أسبوعين عمل (١٠ أيام)',
+            'ثلاثة أشهر',
+          ][i % 3]
+        : null,
+    activePackageEndDate: hasPackage
+        ? _midnight.add(Duration(days: 6 + i * 4))
+        : null,
+    activePackageTripsCount: hasPackage ? rides : null,
+    activePackageTripsUsed: hasPackage ? (i * 2) % rides : null,
+    totalPaid: 640 + (i * 437) % 5200,
+    // Not every customer has a wallet — the tile must be able to show that a
+    // wallet was never opened, which is not a zero balance.
+    walletBalance: i % 3 == 0 ? 45.0 + (i * 31) % 400 : null,
+    walletStatus: i % 3 == 0 ? 'active' : null,
+  );
+});
+
+final CustomersOverview customersOverview = CustomersOverview(
+  totalCustomers: customers.length,
+  activeCustomers: customers
+      .where(
+        (c) =>
+            c.lastActivityAt != null &&
+            now.difference(c.lastActivityAt!).inDays <= 30,
+      )
+      .length,
+  withActiveSubscription: customers
+      .where((c) => c.hasActiveSubscription)
+      .length,
+  withUpcomingTrip: customers.where((c) => c.hasUpcomingTrip).length,
+  newCustomers: 3,
+);
+
+/// The customer the 360 workspace opens on. Deliberately a rich one: a live
+/// package, an upcoming trip, a wallet, a no-show and a couple of cancellations,
+/// so the header chips and every tab have something real to draw.
+final CustomerProfile showcaseCustomerProfile = CustomerProfile(
+  client: CustomerIdentity(
+    clientId: 'client-1',
+    fullName: _passengers[0],
+    phone: _phone(1),
+    email: 'passenger1@example.com',
+    status: 'active',
+    joinedAt: now.subtract(const Duration(days: 214)),
+  ),
+  metrics: CustomerMetrics(
+    bookingsTotal: 27,
+    bookingsUpcoming: 2,
+    bookingsCompleted: 21,
+    bookingsCancelled: 3,
+    firstBookingAt: now.subtract(const Duration(days: 208)),
+    lastBookingAt: now.subtract(const Duration(hours: 5)),
+    nextTripDate: _midnight.add(const Duration(days: 1)),
+    boardedCount: 19,
+    noShowCount: 2,
+    totalPaid: 6420,
+    paymentsCount: 24,
+    lastPaymentAt: now.subtract(const Duration(hours: 5)),
+    subscriptionsTotal: 4,
+    activeSubscriptions: 1,
+    walletBalance: 168,
+    walletStatus: 'active',
+    walletCurrency: 'EGP',
+    lastWalletAt: now.subtract(const Duration(days: 6)),
+    reviewsCount: 5,
+    avgOfficeRating: 4.6,
+    ticketsTotal: 2,
+    ticketsOpen: 0,
+    refundsSettledAmount: 180,
+  ),
+  activeSubscription: CustomerSubscription(
+    id: 'sub-1',
+    packageName: 'أسبوعين عمل (١٠ أيام)',
+    routeName: _routeNames[0],
+    status: 'active',
+    startDate: _midnight.subtract(const Duration(days: 5)),
+    endDate: _midnight.add(const Duration(days: 9)),
+    tripsCount: 20,
+    tripsUsed: 7,
+    tripsRemaining: 13,
+    usagePercent: 35,
+    totalPrice: 1580,
+    paidAmount: 1580,
+    remainingAmount: 0,
+    renewalsCount: 2,
+    paymentMethod: 'instapay',
+    paymentReviewStatus: 'accepted',
+    createdAt: now.subtract(const Duration(days: 5)),
+    isCurrent: true,
+  ),
+  topRoutes: [
+    CustomerRoute(route: _routeNames[0], trips: 12),
+    CustomerRoute(route: _routeNames[1], trips: 7),
+    CustomerRoute(route: _routeNames[2], trips: 3),
+  ],
+);
+
+final CustomerTripsPage showcaseCustomerPastTrips = CustomerTripsPage(
+  total: 21,
+  rows: List.generate(6, (i) {
+    final boarding = switch (i) {
+      1 => 'no_show',
+      4 => 'reserved',
+      _ => 'completed',
+    };
+    return CustomerTrip(
+      bookingId: 'booking-$i',
+      bookingNumber: 'BK-${(94210 + i * 137)}',
+      route: _routeNames[i % _routeNames.length],
+      tripDate: _midnight.subtract(Duration(days: 2 + i * 3)),
+      tripTime: _departureTimes[i % _departureTimes.length],
+      seat: '${7 + i}',
+      pickupPointName: 'محطة ${i + 1}',
+      dropoffPointName: 'محطة ${i + 4}',
+      status: i == 3 ? 'cancelled' : 'completed',
+      paymentStatus: i == 3 ? 'refunded' : 'approved',
+      paymentAmount: _fares[i % _fares.length],
+      paymentMethod: i.isEven ? 'instapay' : 'cash',
+      cancelledAt: i == 3
+          ? _midnight.subtract(Duration(days: 3 + i * 3))
+          : null,
+      cancellationReason: i == 3 ? 'ظرف طارئ للعميل' : null,
+      createdAt: _midnight.subtract(Duration(days: 3 + i * 3)),
+      viaSubscription: i % 2 == 0,
+      subscriptionName: i % 2 == 0 ? 'أسبوعين عمل (١٠ أيام)' : null,
+      tripStatus: 'completed',
+      tripCode: 'TR-${90120 + i}',
+      boardingStatus: boarding,
+      boardedAt: boarding == 'completed'
+          ? _midnight.subtract(Duration(days: 2 + i * 3))
+          : null,
+      noShowReason: boarding == 'no_show' ? 'لم يصل إلى المحطة' : null,
+    );
+  }),
+);
+
+final List<CustomerSubscription> showcaseCustomerSubscriptions = [
+  showcaseCustomerProfile.activeSubscription!,
+  CustomerSubscription(
+    id: 'sub-2',
+    packageName: 'أسبوع عمل (٥ أيام)',
+    routeName: _routeNames[1],
+    status: 'expired',
+    startDate: _midnight.subtract(const Duration(days: 40)),
+    endDate: _midnight.subtract(const Duration(days: 26)),
+    tripsCount: 10,
+    tripsUsed: 10,
+    tripsRemaining: 0,
+    usagePercent: 100,
+    totalPrice: 860,
+    paidAmount: 860,
+    remainingAmount: 0,
+    renewalsCount: 1,
+    paymentMethod: 'cash',
+    createdAt: now.subtract(const Duration(days: 40)),
+  ),
+  // A package with no ride allowance: the card must say why there is no
+  // percentage rather than draw an empty bar.
+  CustomerSubscription(
+    id: 'sub-3',
+    packageName: 'اشتراك مفتوح',
+    routeName: _routeNames[2],
+    status: 'cancelled',
+    startDate: _midnight.subtract(const Duration(days: 96)),
+    endDate: _midnight.subtract(const Duration(days: 66)),
+    totalPrice: 1200,
+    paidAmount: 700,
+    remainingAmount: 500,
+    createdAt: now.subtract(const Duration(days: 96)),
+  ),
+];
+
+final CustomerPaymentsPage showcaseCustomerPayments = CustomerPaymentsPage(
+  total: 24,
+  totalApproved: 6420,
+  rows: List.generate(6, (i) {
+    return CustomerPayment(
+      id: 'pay-$i',
+      bookingId: 'booking-$i',
+      bookingNumber: 'BK-${(94210 + i * 137)}',
+      route: _routeNames[i % _routeNames.length],
+      tripDate: _midnight.subtract(Duration(days: 2 + i * 3)),
+      method: i.isEven ? 'instapay' : 'cash',
+      amount: _fares[i % _fares.length],
+      currency: 'EGP',
+      status: i == 3 ? 'submitted' : 'approved',
+      paymentReference: i.isEven ? 'REF-${71230 + i}' : null,
+      submittedAt: now.subtract(Duration(days: 2 + i * 3, hours: i)),
+      reviewedAt: i == 3
+          ? null
+          : now.subtract(Duration(days: 2 + i * 3, hours: i - 1)),
+    );
+  }),
+  wallet: const CustomerWallet(
+    balance: 168,
+    availableBalance: 168,
+    reservedBalance: 0,
+    currency: 'EGP',
+    status: 'active',
+    lifetimeCredited: 640,
+    lifetimeDebited: 472,
+  ),
+  walletTransactions: List.generate(4, (i) {
+    final kind = ['refund', 'cashback', 'manual_debit', 'manual_credit'][i];
+    return CustomerWalletEntry(
+      id: 'wtx-$i',
+      kind: kind,
+      category: 'trip_cancelled',
+      amount: [180.0, 24.0, 60.0, 100.0][i],
+      currency: 'EGP',
+      balanceAfter: [168.0, 348.0, 324.0, 384.0][i],
+      reason: [
+        'استرداد رحلة ملغاة',
+        'كاش باك على اشتراك',
+        'تسوية فرق تذكرة',
+        'رصيد ترويجي',
+      ][i],
+      createdAt: now.subtract(Duration(days: 6 + i * 5)),
+      performedByName: 'محمود يوسف',
+    );
+  }),
+);
+
+final List<CustomerActivityEvent> showcaseCustomerActivity = [
+  CustomerActivityEvent(
+    kind: CustomerActivityKind.bookingCreated,
+    at: now.subtract(const Duration(hours: 5)),
+    subject: _routeNames[0],
+    reference: 'BK-94210',
+  ),
+  CustomerActivityEvent(
+    kind: CustomerActivityKind.paymentApproved,
+    at: now.subtract(const Duration(hours: 6)),
+    subject: 'انستا باي',
+    reference: 'REF-71230',
+    amount: 180,
+  ),
+  CustomerActivityEvent(
+    kind: CustomerActivityKind.boarded,
+    at: now.subtract(const Duration(days: 1, hours: 3)),
+    subject: 'TR-90120',
+    reference: 'مقعد 7',
+  ),
+  CustomerActivityEvent(
+    kind: CustomerActivityKind.subscriptionCreated,
+    at: now.subtract(const Duration(days: 5)),
+    subject: 'أسبوعين عمل (١٠ أيام)',
+    reference: _routeNames[0],
+    amount: 1580,
+  ),
+  CustomerActivityEvent(
+    kind: CustomerActivityKind.walletRefund,
+    at: now.subtract(const Duration(days: 6)),
+    subject: 'استرداد رحلة ملغاة',
+    reference: 'trip_cancelled',
+    amount: 180,
+  ),
+  CustomerActivityEvent(
+    kind: CustomerActivityKind.reviewSubmitted,
+    at: now.subtract(const Duration(days: 8)),
+    subject: _routeNames[1],
+    reference: '5',
+  ),
+  CustomerActivityEvent(
+    kind: CustomerActivityKind.noShow,
+    at: now.subtract(const Duration(days: 11)),
+    subject: 'TR-90121',
+    reference: 'لم يصل إلى المحطة',
+  ),
+];

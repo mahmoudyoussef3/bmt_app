@@ -45,6 +45,7 @@ undifferentiated icons.
 المبيعات
   الحجوزات
   الاشتراكات                                           (owner)
+  العملاء                                              ← Customer 360
 الأسطول
   إدارة الأسطول                                        (owner)
   طلبات الكباتن                                         (owner)
@@ -69,7 +70,13 @@ undifferentiated icons.
 ```
 
 A support agent's sidebar is the three top-level entries minus نظرة تنفيذية, plus
-العمليات المباشرة, الحجوزات, محفظة العملاء, الشكاوى and الإشعارات. Nine rows.
+العمليات المباشرة, الحجوزات, العملاء, محفظة العملاء, الشكاوى and الإشعارات. Ten
+rows.
+
+العملاء is the one module in المبيعات a support agent can open. It aggregates
+bookings, wallets and tickets — three surfaces they already read in full — into
+one view of the person, and it writes nothing. See
+`customers/CLIENTS_FEATURES.md` §3.
 
 ---
 

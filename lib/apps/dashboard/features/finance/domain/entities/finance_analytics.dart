@@ -56,7 +56,10 @@ class FinanceBreakdownRow {
 /// A refunded booking is counted once into [grossReceived] and once into
 /// [refunded], so it contributes exactly zero to [netRevenue] — never twice.
 class FinanceAnalytics {
-  final FinancePeriod period;
+  /// The resolved reporting window — bounds, the words for them, and the
+  /// window the deltas are measured against.
+  final FinanceWindow window;
+
   final FinanceDateRange range;
 
   /// Ledger rows inside the window, newest first.
@@ -71,8 +74,14 @@ class FinanceAnalytics {
   /// Invoiced but not collected yet.
   final double pending;
 
-  /// Rejected / failed — money that will never arrive.
+  /// Rejected, failed, or owed on a seat that no longer exists — money that
+  /// will never arrive.
   final double cancelled;
+
+  /// The unpaid tail of part-paid packages that were sold in this window.
+  /// Outstanding like [pending], but on a row that has already contributed
+  /// some collected money, so it cannot simply be added to the pending count.
+  final double partPaidOutstanding;
 
   final double bookingsRevenue;
   final double subscriptionsRevenue;
@@ -103,13 +112,14 @@ class FinanceAnalytics {
   final FinanceMoneyStatements statements;
 
   const FinanceAnalytics._({
-    required this.period,
+    required this.window,
     required this.range,
     required this.entries,
     required this.netRevenue,
     required this.refunded,
     required this.pending,
     required this.cancelled,
+    required this.partPaidOutstanding,
     required this.bookingsRevenue,
     required this.subscriptionsRevenue,
     required this.transactionCount,
@@ -132,44 +142,45 @@ class FinanceAnalytics {
     required FinancePeriod period,
     required DateTime now,
     WalletFinancePosition wallet = const WalletFinancePosition.empty(),
+    FinanceDateRange? customRange,
   }) {
-    return FinanceAnalytics._compute(
-      period: period,
+    return FinanceAnalytics.forWindow(
       ledger: ledger,
-      range: FinanceDateRange(start: period.startFrom(now), end: now),
+      window: FinanceWindow.resolve(period, now, custom: customRange),
       wallet: wallet,
-      previous: _previousWindow(
-        ledger: ledger,
-        period: period,
-        now: now,
-        wallet: wallet,
-      ),
     );
   }
 
-  static FinanceAnalytics? _previousWindow({
+  /// The general entry point: analytics over an already-resolved window.
+  ///
+  /// The previous window comes from the window itself rather than being
+  /// re-derived here, so "what does السابقة mean" is answered once, in
+  /// [FinanceWindow], for calendar months and rolling spans alike.
+  factory FinanceAnalytics.forWindow({
     required List<FinanceLedgerEntry> ledger,
-    required FinancePeriod period,
-    required DateTime now,
-    required WalletFinancePosition wallet,
+    required FinanceWindow window,
+    WalletFinancePosition wallet = const WalletFinancePosition.empty(),
   }) {
-    final previousStart = period.previousStartFrom(now);
-    if (previousStart == null) return null;
-    
-    final previousEnd = period
-        .startFrom(now)!
-        .subtract(const Duration(microseconds: 1));
+    final before = window.previous;
     return FinanceAnalytics._compute(
-      period: period,
+      window: window,
       ledger: ledger,
-      range: FinanceDateRange(start: previousStart, end: previousEnd),
+      range: window.range,
       wallet: wallet,
-      previous: null,
+      previous: before == null
+          ? null
+          : FinanceAnalytics._compute(
+              window: before,
+              ledger: ledger,
+              range: before.range,
+              wallet: wallet,
+              previous: null,
+            ),
     );
   }
 
   static FinanceAnalytics _compute({
-    required FinancePeriod period,
+    required FinanceWindow window,
     required List<FinanceLedgerEntry> ledger,
     required FinanceDateRange range,
     required WalletFinancePosition wallet,
@@ -179,7 +190,7 @@ class FinanceAnalytics {
       ..sort((a, b) => b.date.compareTo(a.date));
 
     double net = 0, refunded = 0, pending = 0, cancelled = 0;
-    double bookings = 0, subscriptions = 0;
+    double bookings = 0, subscriptions = 0, partPaidOutstanding = 0;
     var paidCount = 0, pendingCount = 0, refundedCount = 0;
 
     final byMethod = <FinancePaymentMethod, _Bucket>{};
@@ -220,6 +231,8 @@ class FinanceAnalytics {
           cancelled += entry.amount;
       }
 
+      partPaidOutstanding += entry.outstanding;
+
       if (!entry.isRealised) continue;
       final method = entry.method;
       if (method != null) {
@@ -235,7 +248,7 @@ class FinanceAnalytics {
     }
 
     return FinanceAnalytics._(
-      period: period,
+      window: window,
       range: range,
       entries: entries,
       netRevenue: net,
@@ -244,6 +257,7 @@ class FinanceAnalytics {
       cancelled: cancelled,
       bookingsRevenue: bookings,
       subscriptionsRevenue: subscriptions,
+      partPaidOutstanding: partPaidOutstanding,
       transactionCount: entries.length,
       paidCount: paidCount,
       pendingCount: pendingCount,
@@ -259,18 +273,55 @@ class FinanceAnalytics {
       
       statements: FinanceMoneyStatements.from(
         soldFare: net + refunded,
-        externalTender: net + refunded,
+        
+        // Revenue is keyed on the fare, cash on the tender, and the two differ
+        // by exactly the fares paid out of a wallet balance — those raise no
+        // external money. `wallet_spend` is reserved and unemitted in V1, so
+        // this subtracts zero today; wiring it now is what keeps the control
+        // identity balanced on the day wallet checkout ships, instead of
+        // turning the panel red for a healthy office.
+        externalTender: net + refunded - _walletTender(wallet, range),
         wallet: wallet,
         range: range,
       ),
     );
   }
 
+  /// Fares tendered from a customer's wallet balance inside [range], as a
+  /// positive figure. Wallet debits are stored negative.
+  static double _walletTender(
+    WalletFinancePosition wallet,
+    FinanceDateRange range,
+  ) {
+    var total = 0.0;
+    for (final movement in wallet.movements) {
+      if (movement.kind != WalletMovementKind.walletSpend) continue;
+      if (!range.contains(movement.date)) continue;
+      total += movement.amount.abs();
+    }
+    return total;
+  }
+
+  /// The preset behind [window]. Kept as a shorthand because most of the module
+  /// only ever wants the label or the identity of the selection.
+  FinancePeriod get period => window.period;
+
+  /// What the period bar and the panel subtitles call this window.
+  String get periodLabel => window.label;
+
   /// Every pound that reached the office in the window, reversals included.
   double get grossReceived => netRevenue + refunded;
 
-  /// Everything invoiced in the window, collected or not.
-  double get billed => grossReceived + pending;
+  /// Everything still genuinely owed to the office from this window's rows:
+  /// unpaid fares on live seats, plus the unpaid tail of part-paid packages.
+  /// Cancelled seats are not here — nobody is waiting for that money.
+  double get receivable => pending + partPaidOutstanding;
+
+  /// Everything invoiced in the window that either arrived or is still live —
+  /// the denominator [collectionRate] is a share of. Written-off money
+  /// ([cancelled]) is deliberately outside it: an office is not failing to
+  /// collect a fare whose seat was released.
+  double get billed => grossReceived + receivable;
 
   /// Share of invoiced money that actually arrived.
   double get collectionRate => billed <= 0 ? 0 : grossReceived / billed;
@@ -347,7 +398,7 @@ class FinanceAnalytics {
 
   FinanceStatement toStatement({required DateTime generatedAt}) {
     return FinanceStatement(
-      periodLabel: period.label,
+      periodLabel: window.label,
       generatedAt: generatedAt,
       summary: [
         FinanceStatementLine('إيرادات الحجوزات', bookingsRevenue),

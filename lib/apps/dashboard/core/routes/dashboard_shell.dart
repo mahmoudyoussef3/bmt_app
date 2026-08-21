@@ -24,6 +24,8 @@ import '../../features/live_ops/presentation/bloc/fleet_tracking_bloc.dart';
 import '../../features/live_ops/presentation/bloc/fleet_tracking_event.dart';
 import '../../features/live_ops/presentation/cubit/live_ops_cubit.dart';
 import '../../features/live_ops/presentation/screens/live_ops_screen.dart';
+import '../../features/customers/presentation/cubit/customers_cubit.dart';
+import '../../features/customers/presentation/screens/customers_screen.dart';
 import '../../features/wallet/presentation/cubit/wallet_cubit.dart';
 import '../../features/wallet/presentation/screens/wallet_screen.dart';
 import '../../features/notifications/presentation/cubit/notifications_dispatch_cubit.dart';
@@ -282,6 +284,18 @@ class _DashboardShellState extends State<DashboardShell> {
       selectedIcon: DashboardIcons.subscriptionsActive,
       permission: DashboardPermission.subscriptions,
       feature: FeatureKeys.passengerPackages,
+      group: _navSales,
+    ),
+    // العملاء closes المبيعات: الحجوزات and الاشتراكات are what the office
+    // sells, and this is who it sold them to. It carries no `feature:` — the
+    // module aggregates data the office already owns rather than adding a
+    // capability, so there is nothing here to license or to lock.
+    _DashboardNavItem(
+      label: 'العملاء',
+      route: DashboardRoutes.customers,
+      icon: DashboardIcons.customers,
+      selectedIcon: DashboardIcons.customersActive,
+      permission: DashboardPermission.customers,
       group: _navSales,
     ),
     _DashboardNavItem(
@@ -792,6 +806,10 @@ class _DashboardShellState extends State<DashboardShell> {
         create: (_) => dashboardDi<RoutesCubit>()..load(),
         child: const RoutesScreen(),
       ),
+      DashboardRoutes.customers => BlocProvider(
+        create: (_) => dashboardDi<CustomersCubit>()..load(),
+        child: const CustomersScreen(),
+      ),
       DashboardRoutes.users => const UsersScreen(),
       DashboardRoutes.subscriptions => BlocProvider(
         create: (_) => dashboardDi<SubscriptionsCubit>()..load(),
@@ -803,7 +821,7 @@ class _DashboardShellState extends State<DashboardShell> {
       ),
       DashboardRoutes.payments => BlocProvider(
         create: (_) => dashboardDi<FinanceCubit>()..load(),
-        child: const FinanceScreen(),
+        child: FinanceScreen(onOpenModule: _openRoute),
       ),
       DashboardRoutes.wallet => BlocProvider(
         create: (_) => dashboardDi<WalletCubit>()..load(),
