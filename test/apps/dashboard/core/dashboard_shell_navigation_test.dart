@@ -96,6 +96,19 @@ Future<void> _pumpAt(WidgetTester tester, Size size) async {
   addTearDown(tester.view.resetDevicePixelRatio);
   await tester.pumpWidget(_shell());
   await tester.pump();
+  // A second `_pumpAt` in the same test reuses the (unkeyed) sidebar's State
+  // rather than remounting it, so the rail↔full-width `AnimatedContainer`
+  // genuinely animates instead of snapping to its new value — settle it, or a
+  // tap right after lands on content still clipped by the old, narrower width.
+  await tester.pump(const Duration(milliseconds: 250));
+}
+
+/// The sidebar is an accordion — only one group's items are built at a time —
+/// so a test after anything but the home route's own (group-less) items has to
+/// open that item's group first, the same way an operator would.
+Future<void> _expandGroup(WidgetTester tester, String groupLabel) async {
+  await tester.tap(find.text(groupLabel));
+  await tester.pump(const Duration(milliseconds: 400));
 }
 
 void main() {
@@ -119,7 +132,9 @@ void main() {
     }
 
     // No section may share its name with an item inside it: "المالية" the
-    // group, "المدفوعات" the screen.
+    // group, "المدفوعات" the screen — opened, since the accordion starts with
+    // every group but the active route's own closed.
+    await _expandGroup(tester, 'المالية');
     expect(find.text('المدفوعات'), findsOneWidget);
     expect(find.text('مكتب النيل'), findsOneWidget);
   });
@@ -148,6 +163,7 @@ void main() {
     tester,
   ) async {
     await _pumpAt(tester, const Size(1600, 1400));
+    await _expandGroup(tester, 'التشغيل');
 
     expect(find.text('الرحلات'), findsOneWidget);
 
@@ -169,6 +185,7 @@ void main() {
     expect(find.byTooltip('الرحلات'), findsOneWidget);
 
     await _pumpAt(tester, const Size(1600, 1200));
+    await _expandGroup(tester, 'التشغيل');
     expect(find.text('الرحلات'), findsOneWidget);
   });
 
@@ -179,7 +196,13 @@ void main() {
 
     expect(find.text('الرحلات'), findsNothing);
     await tester.tap(find.byTooltip('القائمة'));
-    await tester.pump(const Duration(milliseconds: 400));
+    // The drawer slides in from the trailing edge (RTL: the right, off past
+    // the 700px viewport) — `find.text` would still see it mid-slide since the
+    // child is always built, but the group-header tap below needs it actually
+    // on screen, so this settles the full slide before that happens.
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump(const Duration(milliseconds: 300));
+    await _expandGroup(tester, 'التشغيل');
 
     expect(find.text('الرحلات'), findsOneWidget);
   });
@@ -195,6 +218,7 @@ void main() {
 
     // Settings, because it is the one module in the shell that mounts without
     // a feature cubit — this test is about the frame, not about Settings.
+    await _expandGroup(tester, 'النظام');
     await tester.tap(find.text('الإعدادات'));
     await tester.pump(const Duration(milliseconds: 400));
 

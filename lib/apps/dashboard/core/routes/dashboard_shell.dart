@@ -6,7 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
-import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_status_chip.dart';
 
 import '../../features/bookings/presentation/cubit/bookings_cubit.dart';
 import '../../features/bookings/presentation/models/booking_queue_tab.dart';
@@ -106,11 +106,11 @@ const Key topBarTitleKey = Key('dashboard-topbar-title');
 const Key topBarSubtitleKey = Key('dashboard-topbar-subtitle');
 
 /// Sidebar width when it shows labels, and when it is collapsed to icons.
-const double _sidebarWidth = 268;
+const double _sidebarWidth = 256;
 const double _sidebarRailWidth = 76;
 
 /// Below this the shell swaps the sidebar for a drawer; between it and
-/// [_railBreakpoint] the sidebar defaults to the icon rail, because a 268px
+/// [_railBreakpoint] the sidebar defaults to the icon rail, because a 256px
 /// sidebar on a 1000px laptop eats a quarter of the working area.
 const double _drawerBreakpoint = 920;
 const double _railBreakpoint = 1180;
@@ -767,8 +767,9 @@ class _DashboardShellState extends State<DashboardShell> {
             create: (_) => dashboardDi<LiveOpsCubit>()..startWatching(),
           ),
           BlocProvider(
-            create: (_) => dashboardDi<FleetTrackingBloc>()
-              ..add(const FleetTrackingStarted()),
+            create: (_) =>
+                dashboardDi<FleetTrackingBloc>()
+                  ..add(const FleetTrackingStarted()),
           ),
         ],
         child: LiveOpsScreen(
@@ -844,8 +845,9 @@ class _DashboardShellState extends State<DashboardShell> {
       // was — the Home tile and the نظرة تنفيذية KPI both point at it — and
       // lands on the review queue with the operator's other filters cleared.
       DashboardRoutes.paymentVerification => BlocProvider(
-        create: (_) => dashboardDi<BookingsCubit>()
-          ..load(presetTab: BookingQueueTab.needsReview),
+        create: (_) =>
+            dashboardDi<BookingsCubit>()
+              ..load(presetTab: BookingQueueTab.needsReview),
         child: const BookingsScreen(),
       ),
       DashboardRoutes.tickets => BlocProvider(
@@ -970,7 +972,7 @@ class _DashboardNavItem {
   });
 }
 
-class _DashboardSidebar extends StatelessWidget {
+class _DashboardSidebar extends StatefulWidget {
   final List<_DashboardNavItem> items;
   final OfficeContext office;
   final DashboardRole role;
@@ -997,8 +999,45 @@ class _DashboardSidebar extends StatelessWidget {
   });
 
   @override
+  State<_DashboardSidebar> createState() => _DashboardSidebarState();
+}
+
+class _DashboardSidebarState extends State<_DashboardSidebar> {
+  /// The one open accordion group. Follows the active route: opening a
+  /// different group is the operator's own choice, but landing on a route
+  /// whose group is closed (e.g. drilling in from a Home card) always reopens
+  /// the group that route lives in, so the active item is never hidden.
+  String? _expandedGroup;
+
+  String _searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _expandedGroup = _groupOf(widget.route);
+  }
+
+  @override
+  void didUpdateWidget(covariant _DashboardSidebar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.route != oldWidget.route) {
+      final group = _groupOf(widget.route);
+      if (group != null && group != _expandedGroup) {
+        _expandedGroup = group;
+      }
+    }
+  }
+
+  String? _groupOf(String route) {
+    for (final item in widget.items) {
+      if (item.route == route) return item.group;
+    }
+    return null;
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final width = collapsed ? _sidebarRailWidth : _sidebarWidth;
+    final width = widget.collapsed ? _sidebarRailWidth : _sidebarWidth;
 
     return AnimatedContainer(
       duration: AppTokens.motionBase,
@@ -1025,43 +1064,80 @@ class _DashboardSidebar extends StatelessWidget {
   Widget _content(BuildContext context) {
     return Padding(
       padding: EdgeInsets.symmetric(
-        horizontal: collapsed ? AppSpacing.small : AppSpacing.medium,
+        horizontal: widget.collapsed ? AppSpacing.small : AppSpacing.medium,
         vertical: AppSpacing.medium,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _OfficeIdentityHeader(
-            office: office,
-            collapsed: collapsed,
-            onToggleCollapsed: onToggleCollapsed,
+            office: widget.office,
+            collapsed: widget.collapsed,
+            onToggleCollapsed: widget.onToggleCollapsed,
           ),
           const SizedBox(height: AppSpacing.medium),
+          if (!widget.collapsed) ...[
+            _NavSearchField(
+              value: _searchQuery,
+              onChanged: (value) => setState(() => _searchQuery = value),
+            ),
+            const SizedBox(height: AppSpacing.small),
+          ],
           Expanded(child: _buildNavList(context)),
           const SizedBox(height: AppSpacing.small),
           Divider(height: 1, color: DashboardColors.divider(context)),
           const SizedBox(height: AppSpacing.small),
 
-          if (kDebugMode && !collapsed) ...[
-            _RoleSelector(role: role, onChanged: onRoleChanged),
+          if (kDebugMode && !widget.collapsed) ...[
+            _RoleSelector(role: widget.role, onChanged: widget.onRoleChanged),
             const SizedBox(height: AppSpacing.small),
           ],
-          _AccountFooter(office: office, role: role, collapsed: collapsed),
+          _AccountFooter(
+            office: widget.office,
+            role: widget.role,
+            collapsed: widget.collapsed,
+          ),
         ],
       ),
     );
   }
 
   Widget _buildNavList(BuildContext context) {
-    final topLevel = items.where((i) => i.group == null);
+    final query = _searchQuery.trim();
+    final searching = query.isNotEmpty && !widget.collapsed;
+
+    bool matches(_DashboardNavItem item) =>
+        !searching || item.label.contains(query);
+
+    final topLevel = widget.items.where((i) => i.group == null && matches(i));
     final children = <Widget>[for (final item in topLevel) _navButton(item)];
 
     for (final group in _navGroupOrder) {
-      final groupItems = items.where((i) => i.group == group).toList();
+      final groupItems = widget.items.where((i) => i.group == group).toList();
       if (groupItems.isEmpty) continue;
-      children
-        ..add(_NavSectionHeader(label: group, collapsed: collapsed))
-        ..addAll(groupItems.map(_navButton));
+      final visibleItems = groupItems.where(matches).toList();
+      if (searching && visibleItems.isEmpty) continue;
+
+      final open =
+          widget.collapsed || (searching ? true : _expandedGroup == group);
+      children.add(
+        _NavSectionHeader(
+          label: group,
+          count: groupItems.length,
+          collapsed: widget.collapsed,
+          expanded: open,
+          onTap: widget.collapsed
+              ? null
+              : () => setState(() {
+                  _expandedGroup = _expandedGroup == group ? null : group;
+                }),
+        ),
+      );
+      if (open) {
+        children.addAll(
+          (searching ? visibleItems : groupItems).map(_navButton),
+        );
+      }
     }
 
     return ListView.separated(
@@ -1075,21 +1151,76 @@ class _DashboardSidebar extends StatelessWidget {
 
   Widget _navButton(_DashboardNavItem item) => _NavButton(
     item: item,
-    selected: item.route == route,
-    collapsed: collapsed,
-    locked: lockedRoutes.contains(item.route),
-    onTap: () => onRouteChanged(item.route),
+    selected: item.route == widget.route,
+    collapsed: widget.collapsed,
+    locked: widget.lockedRoutes.contains(item.route),
+    onTap: () => widget.onRouteChanged(item.route),
   );
 }
 
-/// The label above each nav group. Collapsed, the label has nowhere to go, so
-/// the group boundary is drawn as a short rule instead of being dropped —
-/// otherwise the rail becomes nineteen undifferentiated icons.
+/// Quick-jump filter across every nav item's label. Client-side only — the
+/// sidebar has no more than a few dozen destinations, so there is nothing to
+/// fetch and nothing to debounce.
+class _NavSearchField extends StatelessWidget {
+  const _NavSearchField({required this.value, required this.onChanged});
+
+  final String value;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 36,
+      child: TextField(
+        onChanged: onChanged,
+        style: Theme.of(context).textTheme.bodySmall,
+        decoration: InputDecoration(
+          isDense: true,
+          hintText: 'بحث سريع…',
+          prefixIcon: Icon(
+            Icons.search_rounded,
+            size: 18,
+            color: DashboardColors.faintInk(context),
+          ),
+          prefixIconConstraints: const BoxConstraints(minWidth: 36),
+          filled: true,
+          fillColor: DashboardColors.nested(context),
+          contentPadding: const EdgeInsets.symmetric(vertical: 8),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide.none,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// The accordion header above each nav group: label, item count, and a
+/// chevron that rotates open/closed. Collapsed to icons, the label has
+/// nowhere to go, so the group boundary is drawn as a short rule instead of
+/// being dropped — otherwise the rail becomes nineteen undifferentiated icons.
 class _NavSectionHeader extends StatelessWidget {
   final String label;
+  final int count;
   final bool collapsed;
+  final bool expanded;
 
-  const _NavSectionHeader({required this.label, this.collapsed = false});
+  /// Null when [collapsed] — a rail has no room for an accordion, so every
+  /// group's items stay visible and there is nothing to toggle.
+  final VoidCallback? onTap;
+
+  const _NavSectionHeader({
+    required this.label,
+    this.count = 0,
+    this.collapsed = false,
+    this.expanded = true,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1103,20 +1234,58 @@ class _NavSectionHeader extends StatelessWidget {
       );
     }
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppSpacing.medium,
-        AppSpacing.medium,
-        AppSpacing.medium,
-        AppSpacing.xSmall,
+    final label_ = Text(
+      label,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+        color: DashboardColors.sidebarSectionInk(context),
+        fontWeight: FontWeight.w800,
+        letterSpacing: 0.4,
       ),
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: DashboardColors.sidebarSectionInk(context),
-          fontWeight: FontWeight.w800,
-          letterSpacing: 0.4,
-        ),
+    );
+
+    final row = Row(
+      children: [
+        Expanded(child: label_),
+        if (count > 0) ...[
+          const SizedBox(width: AppSpacing.xSmall),
+          Text(
+            '$count',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: DashboardColors.faintInk(context),
+            ),
+          ),
+        ],
+        if (onTap != null) ...[
+          const SizedBox(width: 2),
+          AnimatedRotation(
+            turns: expanded ? 0.5 : 0,
+            duration: AppTokens.motionFast,
+            child: Icon(
+              Icons.expand_more_rounded,
+              size: 16,
+              color: DashboardColors.faintInk(context),
+            ),
+          ),
+        ],
+      ],
+    );
+
+    final padding = const EdgeInsets.fromLTRB(
+      AppSpacing.medium,
+      AppSpacing.medium,
+      AppSpacing.medium,
+      AppSpacing.xSmall,
+    );
+
+    if (onTap == null) return Padding(padding: padding, child: row);
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        child: Padding(padding: padding, child: row),
       ),
     );
   }
@@ -1449,7 +1618,7 @@ class _DashboardTopBar extends StatelessWidget {
             icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
           ),
           const SizedBox(width: AppSpacing.small),
-          StatusChip(label: role.label),
+          DashboardStatusChip(label: role.label),
         ],
       ),
     );
@@ -1535,7 +1704,7 @@ class _NavButton extends StatelessWidget {
         : DashboardColors.sidebarInk(context);
 
     final ink = locked ? baseInk.withValues(alpha: 0.55) : baseInk;
-    final radius = BorderRadius.circular(AppTokens.radiusSmall);
+    final radius = BorderRadius.circular(8);
 
     final icon = Icon(
       selected ? item.selectedIcon : item.icon,
@@ -1543,44 +1712,64 @@ class _NavButton extends StatelessWidget {
       color: ink,
     );
 
-    final button = Material(
-      color: selected
-          ? DashboardColors.sidebarSelected(context)
-          : Colors.transparent,
-      borderRadius: radius,
-      child: InkWell(
-        onTap: onTap,
+    // The selected row's fill is warm/lifted rather than brand-tinted — the
+    // brand itself is spent entirely on this 2px inline edge, so the sidebar
+    // never reads as a wall of blue the way a filled-blue selection would.
+    final button = Container(
+      decoration: BoxDecoration(
+        border: selected
+            ? BorderDirectional(
+                start: BorderSide(
+                  color: DashboardColors.navSelectedEdge(context),
+                  width: 2,
+                ),
+              )
+            : null,
+      ),
+      child: Material(
+        color: selected
+            ? DashboardColors.sidebarSelected(context)
+            : Colors.transparent,
         borderRadius: radius,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: radius,
 
-        hoverColor: DashboardColors.tableRowHover(context),
-        child: Padding(
-          padding: EdgeInsets.symmetric(
-            horizontal: collapsed ? AppSpacing.small : AppSpacing.medium,
-            vertical: AppSpacing.small,
-          ),
-          child: collapsed
-              ? SizedBox(height: 24, child: Center(child: icon))
-              : Row(
-                  children: [
-                    icon,
-                    const SizedBox(width: AppSpacing.small),
-                    Expanded(
-                      child: Text(
-                        item.label,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: ink,
-                          fontWeight: selected
-                              ? FontWeight.w700
-                              : FontWeight.w500,
+          hoverColor: DashboardColors.tableRowHover(context),
+          child: Padding(
+            padding: EdgeInsetsDirectional.only(
+              start:
+                  (collapsed ? AppSpacing.small : AppSpacing.medium) -
+                  (selected ? 2 : 0),
+              end: collapsed ? AppSpacing.small : AppSpacing.medium,
+              top: AppSpacing.small,
+              bottom: AppSpacing.small,
+            ),
+            child: collapsed
+                ? SizedBox(height: 24, child: Center(child: icon))
+                : Row(
+                    children: [
+                      icon,
+                      const SizedBox(width: AppSpacing.small),
+                      Expanded(
+                        child: Text(
+                          item.label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: ink,
+                                fontWeight: selected
+                                    ? FontWeight.w700
+                                    : FontWeight.w500,
+                              ),
                         ),
                       ),
-                    ),
-                    if (locked)
-                      Icon(DashboardIcons.locked, size: 14, color: ink),
-                  ],
-                ),
+                      if (locked)
+                        Icon(DashboardIcons.locked, size: 14, color: ink),
+                    ],
+                  ),
+          ),
         ),
       ),
     );

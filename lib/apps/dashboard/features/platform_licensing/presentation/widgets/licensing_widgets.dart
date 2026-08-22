@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
-import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_status_chip.dart';
 
 import '../../../../core/theme/dashboard_colors.dart';
 import '../../../../core/theme/dashboard_icons.dart';
@@ -30,7 +30,7 @@ class LicenseStatusChip extends StatelessWidget {
       'suspended' || 'cancelled' || 'expired' => scheme.error,
       _ => scheme.outline,
     };
-    return StatusChip(
+    return DashboardStatusChip(
       label: label ?? status,
       color: color.withAlpha(24),
       textColor: color,
@@ -56,7 +56,7 @@ class EnforcementBadge extends StatelessWidget {
       message: isEnforced
           ? 'مفعّلة فعليًا: يوجد كود يطبّقها.'
           : 'معلنة فقط: مُدرجة في الكتالوج ولا يوجد كود يطبّقها بعد.',
-      child: StatusChip(
+      child: DashboardStatusChip(
         label: isEnforced ? 'مطبَّقة' : 'غير مفعّلة بعد',
         color: color.withAlpha(24),
         textColor: color,
@@ -280,7 +280,7 @@ class FeatureSourceChip extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        StatusChip(label: label, color: color.withAlpha(20), textColor: color),
+        DashboardStatusChip(label: label, color: color.withAlpha(20), textColor: color),
         if (blockedBy != null) ...[
           const SizedBox(width: AppSpacing.xSmall),
           Tooltip(
@@ -497,7 +497,7 @@ class HealthList extends StatelessWidget {
                   style: text.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
                 ),
               ),
-              StatusChip(
+              DashboardStatusChip(
                 label: '${rows.length}',
                 color: (rows.isEmpty ? scheme.outline : scheme.tertiary)
                     .withAlpha(24),

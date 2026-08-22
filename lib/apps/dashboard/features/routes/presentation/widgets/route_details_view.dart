@@ -8,7 +8,7 @@ import 'package:bmt_app/core/maps/map_route_stop.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
-import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_status_chip.dart';
 import 'package:bmt_app/core/widgets/route_direction_text.dart';
 
 import '../../domain/entities/operation_route.dart';
@@ -98,7 +98,7 @@ class _DetailsHeader extends StatelessWidget {
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   RouteCodeBadge(code: route.routeCode),
-                  StatusChip(label: route.status.label),
+                  DashboardStatusChip(label: route.status.label),
                 ],
               ),
               const SizedBox(height: AppSpacing.small),

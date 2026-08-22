@@ -1,10 +1,10 @@
 /// Visual QA harness for the Dashboard Home landing screen — the composition
 /// root that pulls nine other features' data into one page: the greeting
-/// banner, four KPIs, the "يحتاج إلى إجراء" attention panel, today's
-/// departures beside the newest bookings, the revenue line and top routes,
-/// then fleet/team counts beside the activity feed. None of that layout, nor
-/// the LIGHT-mode card treatment ([AppSurfaceStyle.dashboardLight]) it is
-/// meant to showcase, can be judged from code.
+/// line, four KPIs, the "يحتاج إلى إجراء" attention grid, and today's
+/// departure board beside the revenue and fleet rail. None of that layout,
+/// nor the EWT redesign's warm-paper card treatment
+/// ([AppSurfaceStyle.ewt], via [DashboardAppTheme]) it is meant to showcase,
+/// can be judged from code.
 ///
 /// Not a test of behaviour and deliberately not part of the suite's assertions:
 /// run it with `--update-goldens` and look at the PNGs it writes to
@@ -21,13 +21,13 @@ import 'package:flutter/services.dart' show FontLoader;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:bmt_app/core/theme/app_dark_colors.dart';
-import 'package:bmt_app/core/theme/app_light_colors.dart';
-import 'package:bmt_app/core/theme/app_surface_style.dart';
-import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/apps/dashboard/core/permissions/dashboard_role.dart';
 import 'package:bmt_app/apps/dashboard/core/session/office_context.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_color_scheme.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_dark_colors.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_light_colors.dart';
 import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
+import 'package:bmt_app/core/theme/app_surface_style.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/domain/entities/operation_booking.dart';
 import 'package:bmt_app/apps/dashboard/features/captain_requests/domain/entities/captain_request.dart';
 import 'package:bmt_app/apps/dashboard/features/dashboard_home/domain/entities/dashboard_home_summary.dart';
@@ -1203,31 +1203,32 @@ Future<void> _capture(
   await expectLater(find.byKey(key), matchesGoldenFile('_captures/$name.png'));
 }
 
-/// See the note in the customers/bookings harnesses: the real themes build
-/// their text theme through google_fonts, which the test binding's blocked
-/// network turns into a post-test throw. The palette is the real one; only
-/// the glyphs differ. Light mode goes through [AppSurfaceStyle.dashboardLight]
-/// — the factory this whole audit exists to judge — while dark keeps the
-/// existing flat treatment for comparison only.
+/// See the note in the customers/bookings harnesses: [DashboardAppTheme]
+/// itself builds its text theme through `GoogleFonts.cairoTextTheme()`, which
+/// the test binding's blocked network turns into a hard failure rather than a
+/// tolerable post-test throw — so this hand-builds a [ThemeData] from the same
+/// [DashboardLightColors]/[DashboardDarkColors] source and
+/// [AppSurfaceStyle.ewt] card treatment `DashboardAppTheme` uses, with the
+/// host font substituted directly rather than routed through google_fonts at
+/// all. The palette and card language are the real ones; only the glyphs
+/// differ.
 ThemeData _themeWithHostFont({required bool dark}) {
-  final scheme = dark
-      ? darkColorSchemeFromPalette()
-      : lightColorSchemeFromPalette();
+  final scheme = dark ? dashboardDarkColorScheme() : dashboardLightColorScheme();
+  final background = dark
+      ? DashboardDarkColors.background
+      : DashboardLightColors.background;
+  final shadow = dark ? DashboardDarkColors.shadow : DashboardLightColors.shadow;
   return ThemeData(
     useMaterial3: true,
     brightness: dark ? Brightness.dark : Brightness.light,
     colorScheme: scheme,
     fontFamily: _captureFont,
-    scaffoldBackgroundColor: dark
-        ? AppDarkColors.background
-        : AppLightColors.background,
-    canvasColor: dark ? AppDarkColors.background : AppLightColors.background,
+    scaffoldBackgroundColor: background,
+    canvasColor: background,
     cardColor: scheme.surface,
     dividerColor: scheme.outline,
-    shadowColor: dark ? AppDarkColors.shadow : AppLightColors.shadow,
-    extensions: [
-      dark ? AppSurfaceStyle.flat(scheme) : AppSurfaceStyle.dashboardLight(scheme),
-    ],
+    shadowColor: shadow,
+    extensions: [AppSurfaceStyle.ewt(scheme)],
   );
 }
 

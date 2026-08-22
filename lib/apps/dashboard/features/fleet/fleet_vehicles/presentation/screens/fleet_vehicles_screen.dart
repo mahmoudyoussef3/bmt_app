@@ -300,12 +300,86 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
                 }
               }
 
+              final toolbar = _VehicleTableToolbar(
+                opsFilter: _opsFilter,
+                onOpsFilterChanged: (filter) {
+                  setState(() {
+                    _opsFilter = filter;
+                    _page = 0;
+                  });
+                },
+                onSearch: cubit.search,
+                sortField: _sortField,
+                sortAscending: _sortAscending,
+                onSortChanged: _applySort,
+                onToggleSort: () =>
+                    setState(() => _sortAscending = !_sortAscending),
+                selectedCount: state.selectedIds.length,
+                onSuspend: state.selectedIds.isEmpty
+                    ? null
+                    : () async {
+                        final scheme = Theme.of(context).colorScheme;
+                        final confirm = await showDialog<bool>(
+                          context: context,
+                          builder: (_) => AlertDialog(
+                            title: const Text('إيقاف تشغيل المركبات'),
+                            content: Text(
+                              'هل أنت متأكد من إيقاف ${state.selectedIds.length} من المركبات المحددة؟',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context, false),
+                                child: const Text('إلغاء'),
+                              ),
+                              FilledButton(
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: scheme.error,
+                                ),
+                                onPressed: () => Navigator.pop(context, true),
+                                child: const Text('إيقاف مؤقت'),
+                              ),
+                            ],
+                          ),
+                        );
+                        if (confirm == true) {
+                          await cubit.bulkSuspendVehicles();
+                          if (context.mounted) {
+                            await context
+                                .read<FleetOverviewCubit>()
+                                .loadWorkspace();
+                          }
+                        }
+                      },
+              );
+
               final browsing = Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _buildReadinessSummary(context, state.vehicles, workspace),
-                  const SizedBox(height: AppSpacing.large),
-                  _buildToolbar(context, state, cubit, workspace),
+                  Align(
+                    alignment: AlignmentDirectional.centerEnd,
+                    child: FilledButton.icon(
+                      onPressed: () => _showVehicleForm(
+                        context,
+                        cubit,
+                        workspace,
+                        null,
+                        context.read<FleetDocumentsCubit>(),
+                      ),
+                      icon: const Icon(Icons.add_rounded),
+                      label: const Text('إضافة مركبة'),
+                      style: FilledButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 16,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                            AppTokens.radius,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: AppSpacing.medium),
                   _buildListBody(
                     context,
@@ -314,6 +388,7 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
                     workspace,
                     cubit,
                     isDesktop,
+                    toolbar,
                   ),
                 ],
               );
@@ -379,33 +454,51 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
     FleetWorkspace workspace,
     FleetVehiclesCubit cubit,
     bool isDesktop,
+    Widget toolbar,
   ) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final useCards = !isDesktop || constraints.maxWidth < 1200;
         if (useCards) {
-          return FleetVehiclesCardList(
-            vehicles: sorted,
-            workspace: workspace,
-            onViewDetails: (v) =>
-                _openVehicle(context, state, workspace, v, cubit, isDesktop),
-            onEdit: (v) => _showVehicleForm(
-              context,
-              cubit,
-              workspace,
-              v,
-              context.read<FleetDocumentsCubit>(),
-            ),
-            onDelete: _confirmDeleteVehicle,
-            page: _page,
-            pageSize: _pageSize,
-            onPageChanged: (newPage) => setState(() => _page = newPage),
+          // No [OpsDataTable] card to host the toolbar in card-list mode, so
+          // it renders standalone above the cards instead — same controls,
+          // just not inside the table's bordered panel.
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              toolbar,
+              const SizedBox(height: AppSpacing.medium),
+              FleetVehiclesCardList(
+                vehicles: sorted,
+                workspace: workspace,
+                onViewDetails: (v) => _openVehicle(
+                  context,
+                  state,
+                  workspace,
+                  v,
+                  cubit,
+                  isDesktop,
+                ),
+                onEdit: (v) => _showVehicleForm(
+                  context,
+                  cubit,
+                  workspace,
+                  v,
+                  context.read<FleetDocumentsCubit>(),
+                ),
+                onDelete: _confirmDeleteVehicle,
+                page: _page,
+                pageSize: _pageSize,
+                onPageChanged: (newPage) => setState(() => _page = newPage),
+              ),
+            ],
           );
         }
 
         return FleetVehiclesTable(
           vehicles: sorted,
           workspace: workspace,
+          toolbar: toolbar,
           onView: (v) =>
               _openVehicle(context, state, workspace, v, cubit, isDesktop),
           onEdit: (v) => _showVehicleForm(
@@ -419,158 +512,6 @@ class _FleetVehiclesScreenState extends State<FleetVehiclesScreen> {
           page: _page,
           pageSize: _pageSize,
           onPageChanged: (newPage) => setState(() => _page = newPage),
-        );
-      },
-    );
-  }
-
-  Widget _buildToolbar(
-    BuildContext context,
-    FleetVehiclesLoaded state,
-    FleetVehiclesCubit cubit,
-    FleetWorkspace workspace,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: _VehicleFilterBar(
-                  selected: _opsFilter,
-                  onSelected: (filter) {
-                    setState(() {
-                      _opsFilter = filter;
-                      _page = 0;
-                    });
-                  },
-                ),
-              ),
-            ),
-            const SizedBox(width: AppSpacing.medium),
-            FilledButton.icon(
-              onPressed: () => _showVehicleForm(
-                context,
-                cubit,
-                workspace,
-                null,
-                context.read<FleetDocumentsCubit>(),
-              ),
-              icon: const Icon(Icons.add_rounded),
-              label: const Text('إضافة مركبة'),
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 16,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppTokens.radius),
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.medium),
-        _VehicleSearchSortActions(
-          selectedCount: state.selectedIds.length,
-          sortField: _sortField,
-          sortAscending: _sortAscending,
-          onSearch: cubit.search,
-          onSortChanged: _applySort,
-          onToggleSort: () => setState(() => _sortAscending = !_sortAscending),
-          onSuspend: state.selectedIds.isEmpty
-              ? null
-              : () async {
-                  final scheme = Theme.of(context).colorScheme;
-                  final confirm = await showDialog<bool>(
-                    context: context,
-                    builder: (_) => AlertDialog(
-                      title: const Text('إيقاف تشغيل المركبات'),
-                      content: Text(
-                        'هل أنت متأكد من إيقاف ${state.selectedIds.length} من المركبات المحددة؟',
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, false),
-                          child: const Text('إلغاء'),
-                        ),
-                        FilledButton(
-                          style: FilledButton.styleFrom(
-                            backgroundColor: scheme.error,
-                          ),
-                          onPressed: () => Navigator.pop(context, true),
-                          child: const Text('إيقاف مؤقت'),
-                        ),
-                      ],
-                    ),
-                  );
-                  if (confirm == true) {
-                    await cubit.bulkSuspendVehicles();
-                    if (context.mounted) {
-                      await context.read<FleetOverviewCubit>().loadWorkspace();
-                    }
-                  }
-                },
-        ),
-      ],
-    );
-  }
-
-  Widget _buildReadinessSummary(
-    BuildContext context,
-    List<FleetVehicle> vehicles,
-    FleetWorkspace workspace,
-  ) {
-    int countWhere(FleetOperationalStatus status) => vehicles
-        .where((vehicle) => workspace.operationalStatusOf(vehicle) == status)
-        .length;
-
-    final summaries = <_VehicleSummaryItem>[
-      _VehicleSummaryItem(
-        label: 'متاحة الآن',
-        value: countWhere(FleetOperationalStatus.available),
-        icon: Icons.task_alt_rounded,
-      ),
-      _VehicleSummaryItem(
-        label: 'في رحلة',
-        value: countWhere(FleetOperationalStatus.onTrip),
-        icon: Icons.directions_bus_filled_rounded,
-      ),
-      _VehicleSummaryItem(
-        label: 'مُعيّنة لرحلة',
-        value: countWhere(FleetOperationalStatus.assigned),
-        icon: Icons.event_available_rounded,
-      ),
-      _VehicleSummaryItem(
-        label: 'وثائق تحتاج متابعة',
-        value: vehicles
-            .where(
-              (vehicle) =>
-                  vehicle.hasExpiredDocument || vehicle.hasDocumentExpiringSoon,
-            )
-            .length,
-        icon: Icons.warning_amber_rounded,
-      ),
-    ];
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isNarrow = constraints.maxWidth < 720;
-        return Wrap(
-          spacing: AppSpacing.small,
-          runSpacing: AppSpacing.small,
-          children: summaries
-              .map(
-                (item) => SizedBox(
-                  width: isNarrow
-                      ? (constraints.maxWidth - AppSpacing.small) / 2
-                      : (constraints.maxWidth - AppSpacing.small * 3) / 4,
-                  child: _VehicleSummaryTile(item: item),
-                ),
-              )
-              .toList(),
         );
       },
     );
@@ -706,23 +647,33 @@ class _VehicleFilterBar extends StatelessWidget {
   }
 }
 
-class _VehicleSearchSortActions extends StatelessWidget {
-  const _VehicleSearchSortActions({
-    required this.selectedCount,
+/// Search, ops filter chips and sort/bulk-suspend controls — the EWT
+/// "isTable" toolbar shape, mirroring `_TripsTableToolbar` in
+/// `trips_screen.dart`. Rendered inside [FleetVehiclesTable]'s
+/// [OpsDataTable] card on desktop, and standalone above
+/// [FleetVehiclesCardList] on narrow/mobile, so the same controls stay
+/// reachable no matter which list rendering is active.
+class _VehicleTableToolbar extends StatelessWidget {
+  const _VehicleTableToolbar({
+    required this.opsFilter,
+    required this.onOpsFilterChanged,
+    required this.onSearch,
     required this.sortField,
     required this.sortAscending,
-    required this.onSearch,
     required this.onSortChanged,
     required this.onToggleSort,
+    required this.selectedCount,
     required this.onSuspend,
   });
 
-  final int selectedCount;
+  final _VehicleOpsFilter opsFilter;
+  final ValueChanged<_VehicleOpsFilter> onOpsFilterChanged;
+  final ValueChanged<String> onSearch;
   final FleetSortField sortField;
   final bool sortAscending;
-  final ValueChanged<String> onSearch;
   final ValueChanged<FleetSortField> onSortChanged;
   final VoidCallback onToggleSort;
+  final int selectedCount;
   final VoidCallback? onSuspend;
 
   String get _sortLabel {
@@ -738,8 +689,14 @@ class _VehicleSearchSortActions extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isNarrow = constraints.maxWidth < 680;
         final search = _VehicleSearchField(onChanged: onSearch);
+        final filterChips = SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: _VehicleFilterBar(
+            selected: opsFilter,
+            onSelected: onOpsFilterChanged,
+          ),
+        );
         final controls = _VehicleSortActions(
           selectedCount: selectedCount,
           sortField: sortField,
@@ -750,11 +707,13 @@ class _VehicleSearchSortActions extends StatelessWidget {
           onSuspend: onSuspend,
         );
 
-        if (isNarrow) {
+        if (constraints.maxWidth < 760) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               search,
+              const SizedBox(height: AppSpacing.small),
+              filterChips,
               const SizedBox(height: AppSpacing.small),
               controls,
             ],
@@ -763,7 +722,9 @@ class _VehicleSearchSortActions extends StatelessWidget {
 
         return Row(
           children: [
-            Expanded(child: search),
+            SizedBox(width: 260, child: search),
+            const SizedBox(width: AppSpacing.medium),
+            Expanded(child: filterChips),
             const SizedBox(width: AppSpacing.medium),
             controls,
           ],
@@ -876,53 +837,3 @@ class _VehicleSortActions extends StatelessWidget {
   }
 }
 
-class _VehicleSummaryItem {
-  const _VehicleSummaryItem({
-    required this.label,
-    required this.value,
-    required this.icon,
-  });
-
-  final String label;
-  final int value;
-  final IconData icon;
-}
-
-class _VehicleSummaryTile extends StatelessWidget {
-  const _VehicleSummaryTile({required this.item});
-
-  final _VehicleSummaryItem item;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.large),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withAlpha(50),
-        borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
-        border: Border.all(color: scheme.outlineVariant.withAlpha(70)),
-      ),
-      child: Row(
-        children: [
-          Icon(item.icon, color: scheme.primary, size: 20),
-          const SizedBox(width: AppSpacing.small),
-          Expanded(
-            child: Text(
-              item.label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.labelMedium,
-            ),
-          ),
-          Text(
-            item.value.toString(),
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
-          ),
-        ],
-      ),
-    );
-  }
-}

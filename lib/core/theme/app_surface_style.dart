@@ -82,6 +82,30 @@ class AppSurfaceStyle extends ThemeExtension<AppSurfaceStyle> {
     ],
   );
 
+  /// The EWT console redesign's card look: depth comes from the border and the
+  /// surface ladder, not from lift. A 12px radius (down from [dashboardLight]'s
+  /// 16) and a single 2px contact shadow replace the two-layer 32px ambient
+  /// blur — see `DashboardLightColors.softShadow` for why a floating card was
+  /// the wrong metaphor for a console page that is mostly cards.
+  ///
+  /// One factory for both brightnesses, like [flat]: [scheme] is expected to be
+  /// built from `DashboardLightColors`/`DashboardDarkColors`, so `scheme.outline`
+  /// and `scheme.shadow` already carry the console's own border/shadow tint.
+  factory AppSurfaceStyle.ewt(ColorScheme scheme) {
+    final dark = scheme.brightness == Brightness.dark;
+    return AppSurfaceStyle(
+      radius: 12,
+      borderColor: scheme.outline,
+      shadow: [
+        BoxShadow(
+          color: scheme.shadow.withAlpha(dark ? 89 : 13),
+          blurRadius: 2,
+          offset: const Offset(0, 1),
+        ),
+      ],
+    );
+  }
+
   @override
   AppSurfaceStyle copyWith({
     double? radius,

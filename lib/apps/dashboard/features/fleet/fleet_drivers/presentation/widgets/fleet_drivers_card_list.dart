@@ -7,7 +7,7 @@ import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/widget
 import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
-import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_status_chip.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
@@ -183,7 +183,7 @@ class _DriverListCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppSpacing.small),
-              StatusChip(
+              DashboardStatusChip(
                 label: snapshot.status.label,
                 color: healthColor.withAlpha(24),
                 textColor: healthColor,

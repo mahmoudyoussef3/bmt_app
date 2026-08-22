@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
@@ -263,18 +264,16 @@ class _DashboardCollapsibleSectionState
       axisAlignment: -1,
       child: FadeTransition(
         opacity: _inverseCurve,
-        
+
         child: Padding(padding: widget.bodyPadding, child: summary),
       ),
     );
   }
 
   Widget _buildBody() {
-    
     if (!_bodyEverBuilt) return const SizedBox.shrink();
 
     return Offstage(
-      
       offstage: _settledCollapsed,
       child: TickerMode(
         enabled: !_settledCollapsed,
@@ -326,25 +325,25 @@ class _SectionHeader extends StatelessWidget {
 
     return Semantics(
       button: true,
-      
+
       expanded: expanded,
       child: Material(
         color: Colors.transparent,
-        borderRadius: const BorderRadius.vertical(
-          top: Radius.circular(AppTokens.radius),
-        ),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
         child: InkWell(
           onTap: onToggle,
-          borderRadius: const BorderRadius.vertical(
-            top: Radius.circular(AppTokens.radius),
-          ),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
           child: Padding(
             padding: padding,
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 if (icon != null) ...[
-                  Icon(icon, color: scheme.primary, size: 20),
+                  Icon(
+                    icon,
+                    color: DashboardColors.mutedInk(context),
+                    size: 18,
+                  ),
                   const SizedBox(width: AppSpacing.small),
                 ],
                 Expanded(
@@ -356,8 +355,8 @@ class _SectionHeader extends StatelessWidget {
                         title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
+                        style: theme.textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
                       if (subtitle != null) ...[

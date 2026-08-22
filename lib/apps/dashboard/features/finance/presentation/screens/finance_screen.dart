@@ -5,7 +5,6 @@ import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
-import 'package:bmt_app/core/widgets/app_card.dart';
 
 import '../cubit/finance_cubit.dart';
 import '../cubit/finance_state.dart';
@@ -148,53 +147,67 @@ class _SectionTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    return AppCard(
-      child: Wrap(
-        spacing: AppSpacing.small,
-        runSpacing: AppSpacing.small,
-        children: [
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: SegmentedButton<FinanceSection>(
+        segments: [
           for (final section in FinanceSection.values)
-            ChoiceChip(
-              avatar: Icon(_icons[section], size: 18),
-              label: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(section.label),
-                  if (section == FinanceSection.overview && attentionCount > 0)
-                    Padding(
-                      padding: const EdgeInsetsDirectional.only(
-                        start: AppSpacing.xSmall,
-                      ),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 1,
-                        ),
-                        decoration: BoxDecoration(
-                          color: scheme.error,
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: Text(
-                          '$attentionCount',
-                          style: Theme.of(context).textTheme.labelSmall
-                              ?.copyWith(
-                                color: scheme.onError,
-                                fontWeight: FontWeight.w900,
-                              ),
-                        ),
-                      ),
-                    ),
-                ],
+            ButtonSegment(
+              value: section,
+              icon: Icon(_icons[section]),
+              label: _SegmentLabel(
+                text: section.label,
+                badgeCount: section == FinanceSection.overview
+                    ? attentionCount
+                    : 0,
               ),
-              selected: selected == section,
-              onSelected: (isSelected) {
-                if (isSelected) onSelected(section);
-              },
             ),
         ],
+        selected: {selected},
+        showSelectedIcon: false,
+        onSelectionChanged: (selection) => onSelected(selection.first),
       ),
+    );
+  }
+}
+
+/// A segment's label with an optional red count badge — used only for the
+/// overview segment, which is where the attention panel lives.
+class _SegmentLabel extends StatelessWidget {
+  final String text;
+  final int badgeCount;
+
+  const _SegmentLabel({required this.text, this.badgeCount = 0});
+
+  @override
+  Widget build(BuildContext context) {
+    if (badgeCount <= 0) return Text(text);
+
+    final scheme = Theme.of(context).colorScheme;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(text),
+        Padding(
+          padding: const EdgeInsetsDirectional.only(start: AppSpacing.xSmall),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+            decoration: BoxDecoration(
+              color: scheme.error,
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              '$badgeCount',
+              style: Theme.of(
+                context,
+              ).textTheme.labelSmall?.copyWith(
+                color: scheme.onError,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

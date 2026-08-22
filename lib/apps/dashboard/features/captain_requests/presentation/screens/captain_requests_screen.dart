@@ -6,7 +6,7 @@ import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_snackbar.dart';
 import 'package:bmt_app/core/widgets/empty_state.dart';
-import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_status_chip.dart';
 
 import '../../domain/entities/captain_request.dart';
 import '../cubit/captain_requests_cubit.dart';
@@ -92,7 +92,7 @@ class _CaptainRequestsScreenState extends State<CaptainRequestsScreen> {
             subtitle:
                 'راجع طلبات الكباتن الجدد ووافق عليها أو ارفضها مع بيان السبب.',
             actions: [
-              StatusChip(label: '$pendingCount قيد المراجعة'),
+              DashboardStatusChip(label: '$pendingCount قيد المراجعة'),
               SegmentedButton<bool>(
                 segments: const [
                   ButtonSegment(value: true, label: Text('قيد المراجعة')),

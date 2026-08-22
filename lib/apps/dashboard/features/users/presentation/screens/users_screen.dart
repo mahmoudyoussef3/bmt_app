@@ -8,7 +8,7 @@ import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/empty_state.dart';
-import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_status_chip.dart';
 import 'package:bmt_app/core/widgets/debounced_search_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -290,7 +290,7 @@ class _UsersToolbar extends StatelessWidget {
           ],
           onChanged: onRoleChanged,
         );
-        final chip = StatusChip(label: '$filteredCount/${users.length} مستخدم');
+        final chip = DashboardStatusChip(label: '$filteredCount/${users.length} مستخدم');
         if (compact) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -412,7 +412,7 @@ class _UserAccessRow extends StatelessWidget {
           ),
           if (!user.isActive) ...[
             const SizedBox(width: AppSpacing.small),
-            StatusChip(
+            DashboardStatusChip(
               label: 'معطّل',
               color: scheme.errorContainer.withAlpha(70),
               textColor: scheme.error,

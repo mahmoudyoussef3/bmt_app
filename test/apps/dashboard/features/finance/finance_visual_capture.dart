@@ -23,10 +23,10 @@ import 'package:flutter/services.dart' show FontLoader;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:bmt_app/core/theme/app_dark_colors.dart';
-import 'package:bmt_app/core/theme/app_light_colors.dart';
 import 'package:bmt_app/core/theme/app_surface_style.dart';
-import 'package:bmt_app/core/theme/colors.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_color_scheme.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_dark_colors.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_light_colors.dart';
 import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_filter_memory.dart';
 import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/features/finance/domain/entities/finance_entities.dart';
@@ -478,31 +478,30 @@ Future<void> _capture(
   await expectLater(find.byKey(key), matchesGoldenFile('_captures/$name.png'));
 }
 
-/// See the note in the customers/bookings harnesses: the real themes build
-/// their text theme through google_fonts, which the test binding's blocked
-/// network turns into a post-test throw. The palette is the real one; only
-/// the glyphs differ.
+/// [DashboardAppTheme] itself builds its text theme through
+/// `GoogleFonts.cairoTextTheme()`, which the test binding's blocked network
+/// turns into a hard failure — so this hand-builds a [ThemeData] from the
+/// same [DashboardLightColors]/[DashboardDarkColors] source and
+/// [AppSurfaceStyle.ewt] card treatment `DashboardAppTheme` uses, with the
+/// host font substituted directly. The palette and card language are the
+/// real EWT ones; only the glyphs differ.
 ThemeData _themeWithHostFont({required bool dark}) {
-  final scheme = dark
-      ? darkColorSchemeFromPalette()
-      : lightColorSchemeFromPalette();
+  final scheme = dark ? dashboardDarkColorScheme() : dashboardLightColorScheme();
+  final background = dark
+      ? DashboardDarkColors.background
+      : DashboardLightColors.background;
+  final shadow = dark ? DashboardDarkColors.shadow : DashboardLightColors.shadow;
   return ThemeData(
     useMaterial3: true,
     brightness: dark ? Brightness.dark : Brightness.light,
     colorScheme: scheme,
     fontFamily: _captureFont,
-    scaffoldBackgroundColor: dark
-        ? AppDarkColors.background
-        : AppLightColors.background,
-    canvasColor: dark ? AppDarkColors.background : AppLightColors.background,
+    scaffoldBackgroundColor: background,
+    canvasColor: background,
     cardColor: scheme.surface,
     dividerColor: scheme.outline,
-    shadowColor: dark ? AppDarkColors.shadow : AppLightColors.shadow,
-    extensions: [
-      dark
-          ? AppSurfaceStyle.flat(scheme)
-          : AppSurfaceStyle.dashboardLight(scheme),
-    ],
+    shadowColor: shadow,
+    extensions: [AppSurfaceStyle.ewt(scheme)],
   );
 }
 

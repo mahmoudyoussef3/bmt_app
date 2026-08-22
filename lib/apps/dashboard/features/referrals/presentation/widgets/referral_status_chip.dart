@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/core/theme/colors.dart';
-import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_status_chip.dart';
 
 import '../../domain/entities/referral_record.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
@@ -30,7 +30,7 @@ class ReferralStatusChip extends StatelessWidget {
       ReferralStatus.rewardGranted => context.status(AppStatusTone.success).ink,
       ReferralStatus.unknown => context.status(AppStatusTone.neutral).ink,
     };
-    return StatusChip(
+    return DashboardStatusChip(
       label: referralStatusLabel(status),
       color: color.withAlpha(28),
       textColor: color,
@@ -55,7 +55,7 @@ class ReferralRewardStatusChip extends StatelessWidget {
       'pending' => 'قيد الانتظار',
       _ => status,
     };
-    return StatusChip(
+    return DashboardStatusChip(
       label: label,
       color: color.withAlpha(28),
       textColor: color,

@@ -17,10 +17,8 @@ import 'package:bmt_app/apps/dashboard/features/tickets/domain/entities/complain
     show TicketPriority;
 import 'package:bmt_app/apps/dashboard/features/dashboard_home/presentation/widgets/action_required_section.dart';
 import 'package:bmt_app/apps/dashboard/features/dashboard_home/presentation/widgets/home_kpi_grid.dart';
-import 'package:bmt_app/apps/dashboard/features/dashboard_home/presentation/widgets/recent_bookings_section.dart';
 import 'package:bmt_app/apps/dashboard/features/dashboard_home/presentation/widgets/revenue_trend_section.dart';
 import 'package:bmt_app/apps/dashboard/features/dashboard_home/presentation/widgets/today_trips_section.dart';
-import 'package:bmt_app/apps/dashboard/features/dashboard_home/presentation/widgets/top_routes_section.dart';
 
 import 'dashboard_home_test_fixtures.dart';
 
@@ -291,38 +289,6 @@ void main() {
     );
   });
 
-  testWidgets('recent bookings list the newest passengers with payment state', (
-    tester,
-  ) async {
-    _useTallViewport(tester);
-    final summary = buildSummary(
-      bookings: [
-        buildBooking(
-          id: 'b1',
-          date: DateTime.now(),
-          passengerName: 'سارة',
-          paymentStatus: PaymentStatus.approved,
-        ),
-      ],
-    );
-
-    await tester.pumpWidget(_wrap(homeState: DashboardHomeLoaded(summary)));
-    await tester.pumpAndSettle();
-
-    final section = find.byType(RecentBookingsSection);
-    expect(
-      find.descendant(of: section, matching: find.text('سارة')),
-      findsOneWidget,
-    );
-    expect(
-      find.descendant(
-        of: section,
-        matching: find.text(PaymentStatus.approved.label),
-      ),
-      findsOneWidget,
-    );
-  });
-
   testWidgets(
     'derived operational queues appear as attention items and route',
     (tester) async {
@@ -377,7 +343,7 @@ void main() {
     );
   });
 
-  testWidgets('revenue trend plots collected bookings and switches window', (
+  testWidgets('revenue trend plots real collected bookings, no fabricated total', (
     tester,
   ) async {
     _useTallViewport(tester);
@@ -396,56 +362,11 @@ void main() {
     await tester.pumpAndSettle();
 
     final section = find.byType(RevenueTrendSection);
-    const headline = 'إجمالي 300 ج.م من 1 حجز مدفوع';
     expect(
-      find.descendant(of: section, matching: find.text(headline)),
-      findsOneWidget,
-    );
-
-    await tester.tap(
-      find.descendant(of: section, matching: find.text('٣٠ يوم')),
-    );
-    await tester.pumpAndSettle();
-
-    // Same money, longer window — the panel must not invent extra revenue.
-    expect(
-      find.descendant(of: section, matching: find.text(headline)),
-      findsOneWidget,
-    );
-  });
-
-  testWidgets('top routes rank by real occupancy', (tester) async {
-    _useTallViewport(tester);
-    final now = DateTime.now();
-    final summary = buildSummary(
-      trips: [
-        buildTrip(
-          id: 't1',
-          at: now,
-          route: 'بنها - القاهرة',
-          capacity: 10,
-          bookedSeats: 8,
-        ),
-        buildTrip(
-          id: 't2',
-          at: now,
-          route: 'طنطا - القاهرة',
-          capacity: 10,
-          bookedSeats: 3,
-        ),
-      ],
-    );
-
-    await tester.pumpWidget(_wrap(homeState: DashboardHomeLoaded(summary)));
-    await tester.pumpAndSettle();
-
-    final section = find.byType(TopRoutesSection);
-    expect(
-      find.descendant(of: section, matching: find.text('80%')),
-      findsOneWidget,
-    );
-    expect(
-      find.descendant(of: section, matching: find.text('30%')),
+      find.descendant(
+        of: section,
+        matching: find.text('إجمالي 300 ج.م من 1 حجز خلال آخر 14 يوماً'),
+      ),
       findsOneWidget,
     );
   });
@@ -492,9 +413,10 @@ void main() {
         ),
         findsOneWidget,
       );
-      // The read alert still shows in the chronological activity feed, but
-      // never in the actionable "needs attention" list — that's the whole
-      // point of the two sections being separate.
+      // A read alert never belongs in the actionable "needs attention" list —
+      // Home no longer carries a chronological activity feed at all (that's
+      // one click away in the notifications centre), so it should not appear
+      // anywhere on the page.
       expect(
         find.descendant(
           of: actionRequired,
@@ -502,7 +424,7 @@ void main() {
         ),
         findsNothing,
       );
-      expect(find.text('إشعار مقروء بالفعل'), findsOneWidget);
+      expect(find.text('إشعار مقروء بالفعل'), findsNothing);
 
       await tester.tap(
         find.descendant(

@@ -18,29 +18,24 @@ import '../../domain/entities/dashboard_home_summary.dart';
 /// uses for realised revenue. Subscription income is not in the list this
 /// screen loads, so it is honestly excluded and the panel says so rather than
 /// implying a total it cannot compute.
-class RevenueTrendSection extends StatefulWidget {
+///
+/// A fixed 14-day window, no toggle: this card lives in Home's narrow side
+/// rail next to the fleet strip, not as a full-width panel, and a
+/// period-switcher wide enough to tap comfortably does not fit that column.
+/// The full, window-adjustable read of this same series lives one click away
+/// in Finance.
+class RevenueTrendSection extends StatelessWidget {
   const RevenueTrendSection({super.key, required this.summary});
 
   final DashboardHomeSummary summary;
 
-  @override
-  State<RevenueTrendSection> createState() => _RevenueTrendSectionState();
-}
-
-class _RevenueTrendSectionState extends State<RevenueTrendSection> {
-  static const _windows = <int, String>{
-    7: '٧ أيام',
-    30: '٣٠ يوم',
-    90: '٣ شهور',
-  };
-
-  int _days = 7;
+  static const _days = 14;
 
   @override
   Widget build(BuildContext context) {
     final palette = DashboardChartPalette.of(context);
     final scheme = Theme.of(context).colorScheme;
-    final series = widget.summary.bookingRevenueSeries(days: _days);
+    final series = summary.bookingRevenueSeries(days: _days);
     final total = series.fold<double>(0, (sum, point) => sum + point.amount);
     final paidBookings = series.fold<int>(
       0,
@@ -52,19 +47,8 @@ class _RevenueTrendSectionState extends State<RevenueTrendSection> {
       icon: DashboardIcons.trend,
       title: 'إيراد الحجوزات المحصّل',
       subtitle: total <= 0
-          ? 'المدفوعات المقبولة فقط'
-          : 'إجمالي ${total.toStringAsFixed(0)} ج.م من $paidBookings حجز مدفوع',
-      trailing: SegmentedButton<int>(
-        showSelectedIcon: false,
-        style: const ButtonStyle(visualDensity: VisualDensity.compact),
-        segments: [
-          for (final entry in _windows.entries)
-            ButtonSegment<int>(value: entry.key, label: Text(entry.value)),
-        ],
-        selected: {_days},
-        onSelectionChanged: (selection) =>
-            setState(() => _days = selection.first),
-      ),
+          ? 'آخر $_days يوماً · المدفوعات المقبولة فقط'
+          : 'إجمالي ${total.toStringAsFixed(0)} ج.م من $paidBookings حجز خلال آخر $_days يوماً',
       child: total <= 0
           ? const DashboardEmptyState(
               icon: DashboardIcons.revenue,

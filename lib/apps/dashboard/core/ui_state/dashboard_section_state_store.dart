@@ -57,10 +57,7 @@ class DashboardSectionIds {
   static const homeActionRequired = 'home.actionRequired';
   static const homeRevenueTrend = 'home.revenueTrend';
   static const homeTodayTrips = 'home.todayTrips';
-  static const homeRecentBookings = 'home.recentBookings';
-  static const homeTopRoutes = 'home.topRoutes';
   static const homeFleetTeam = 'home.fleetTeam';
-  static const homeRecentActivity = 'home.recentActivity';
 
   static const businessKpis = 'business.kpis';
   static const businessHealth = 'business.health';
@@ -73,6 +70,7 @@ class DashboardSectionIds {
 
   static const tripsHeader = 'trips.header';
   static const tripsFilters = 'trips.filters';
+  static const tripsAnalytics = 'trips.analytics';
   static const tripsStatusMix = 'trips.statusMix';
   static const tripsOccupancy = 'trips.occupancy';
   static const tripsTopRoutes = 'trips.topRoutes';

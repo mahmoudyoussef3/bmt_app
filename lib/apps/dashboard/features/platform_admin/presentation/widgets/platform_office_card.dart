@@ -4,7 +4,7 @@ import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
-import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_status_chip.dart';
 
 import '../../domain/entities/platform_analytics.dart';
 import '../../domain/entities/platform_office.dart';
@@ -112,7 +112,7 @@ class PlatformOfficeCard extends StatelessWidget {
                 spacing: AppSpacing.xSmall,
                 children: [
                   if (metrics case final m?)
-                    StatusChip(
+                    DashboardStatusChip(
                       label: m.activityLevel.label,
                       color: switch (m.activityLevel) {
                         ActivityLevel.active => scheme.primary.withAlpha(18),
@@ -125,7 +125,7 @@ class PlatformOfficeCard extends StatelessWidget {
                         ActivityLevel.never => scheme.onSurfaceVariant,
                       },
                     ),
-                  StatusChip(
+                  DashboardStatusChip(
                     label: office.listingLabel,
                     color: office.isListed
                         ? scheme.primary.withAlpha(18)
@@ -134,7 +134,7 @@ class PlatformOfficeCard extends StatelessWidget {
                         ? scheme.primary
                         : scheme.onSurfaceVariant,
                   ),
-                  StatusChip(
+                  DashboardStatusChip(
                     label: office.statusLabel,
                     color: office.status == 'active'
                         ? scheme.primary.withAlpha(18)

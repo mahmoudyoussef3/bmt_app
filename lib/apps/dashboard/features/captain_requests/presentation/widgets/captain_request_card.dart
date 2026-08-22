@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
-import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_status_chip.dart';
 
 import '../../domain/entities/captain_request.dart';
 import 'package:bmt_app/core/theme/colors.dart';
@@ -134,6 +134,6 @@ class _StatusBadge extends StatelessWidget {
         scheme.error,
       ),
     };
-    return StatusChip(label: status.label, color: color, textColor: text);
+    return DashboardStatusChip(label: status.label, color: color, textColor: text);
   }
 }

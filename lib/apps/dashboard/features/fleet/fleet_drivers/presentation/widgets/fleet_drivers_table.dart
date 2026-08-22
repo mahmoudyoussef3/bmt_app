@@ -8,7 +8,7 @@ import 'package:bmt_app/apps/dashboard/features/fleet/fleet_drivers/presentation
 import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_snackbar.dart';
-import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_status_chip.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
 /// Sortable column indices exposed by the drivers table header. Kept in one
@@ -30,6 +30,11 @@ class FleetDriversTable extends StatelessWidget {
   final bool sortAscending;
   final ValueChanged<FleetSortField> onSortField;
 
+  /// Search, ops filters and sort/bulk-archive controls, rendered inside the
+  /// same bordered card as the sticky column header — the EWT "isTable"
+  /// template every module table screen shares.
+  final Widget? toolbar;
+
   const FleetDriversTable({
     super.key,
     required this.drivers,
@@ -44,6 +49,7 @@ class FleetDriversTable extends StatelessWidget {
     required this.sortField,
     required this.sortAscending,
     required this.onSortField,
+    this.toolbar,
   });
 
   String _vehicleName(String vehicleId) {
@@ -159,6 +165,7 @@ class FleetDriversTable extends StatelessWidget {
         : drivers.sublist(start, end);
 
     return OpsDataTable(
+      toolbar: toolbar,
       total: drivers.length,
       currentPage: page,
       pageSize: pageSize,
@@ -194,16 +201,16 @@ class FleetDriversTable extends StatelessWidget {
           ),
           Tooltip(
             message: snapshot.primaryReason,
-            child: StatusChip(
+            child: DashboardStatusChip(
               label: snapshot.health.label,
               color: healthBg,
               textColor: healthFg,
             ),
           ),
-          StatusChip(label: snapshot.status.label),
+          DashboardStatusChip(label: snapshot.status.label),
           
           vehicle.isEmpty
-              ? StatusChip(
+              ? DashboardStatusChip(
                   label: 'بدون سيارة',
                   color: context.status(AppStatusTone.warning).tint,
                   textColor: context.status(AppStatusTone.warning).ink,

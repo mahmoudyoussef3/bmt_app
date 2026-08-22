@@ -34,8 +34,10 @@ class HomeKpiGrid extends StatelessWidget {
     final open = onOpenModule;
 
     return DashboardKpiGrid(
+      itemExtent: 116,
       children: [
         DashboardKpiCard(
+          emphasized: true,
           label: 'رحلات اليوم',
           value: '${summary.todayTripsCount}',
           detail: cancelledToday > 0
@@ -47,6 +49,7 @@ class HomeKpiGrid extends StatelessWidget {
           tapHint: 'فتح الرحلات',
         ),
         DashboardKpiCard(
+          emphasized: true,
           label: 'الحجوزات اليوم',
           value: '${summary.todayBookingsCount}',
           detail: 'من إجمالي ${summary.bookings.length} حجز',
@@ -56,6 +59,7 @@ class HomeKpiGrid extends StatelessWidget {
           tapHint: 'فتح الحجوزات',
         ),
         DashboardKpiCard(
+          emphasized: true,
           label: 'إيرادات اليوم',
           value: '${summary.revenue.todayRevenue.toStringAsFixed(0)} ج.م',
           detail:
@@ -66,6 +70,7 @@ class HomeKpiGrid extends StatelessWidget {
           tapHint: 'فتح المدفوعات',
         ),
         DashboardKpiCard(
+          emphasized: true,
           label: 'نسبة الإشغال',
           value: summary.todayTrips.isEmpty ? '—' : '$occupancyPercent%',
           detail: summary.todayTrips.isEmpty

@@ -16,6 +16,9 @@ import 'package:bmt_app/apps/dashboard/features/routes/presentation/cubit/routes
 import 'package:bmt_app/apps/dashboard/features/routes/presentation/cubit/routes_state.dart';
 import 'package:bmt_app/apps/dashboard/features/routes/presentation/widgets/route_details_view.dart';
 import 'package:bmt_app/apps/dashboard/features/routes/presentation/widgets/routes_list_view.dart';
+import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/operation_trip.dart';
+import 'package:bmt_app/apps/dashboard/features/trips/trip_management/domain/repositories/trips_repository.dart';
+import 'package:bmt_app/apps/dashboard/features/trips/trip_management/domain/usecases/trip_management_usecases.dart';
 
 const _banhaCairo = OperationRoute(
   id: 'route-1',
@@ -85,10 +88,23 @@ class _UnusedRepository implements RoutesRepository {
       throw UnimplementedError('the screen tests never hit the repository');
 }
 
+/// [RoutesCubit] loads trips alongside routes purely to compute the board's
+/// derived stats (occupancy, weekly trips, price) — a failure here degrades
+/// to an empty list rather than failing the load, so an empty answer is a
+/// realistic double, not just a stub.
+class _EmptyTripsRepository implements TripsRepository {
+  @override
+  Future<List<OperationTrip>> getTrips() async => const [];
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
 RoutesCubit _cubit() {
   final repository = _UnusedRepository();
   return RoutesCubit(
     getRoutes: GetOperationRoutesUseCase(repository),
+    getTrips: GetOperationTripsUseCase(_EmptyTripsRepository()),
     createRoute: CreateRouteUseCase(repository),
     updateRoute: UpdateRouteUseCase(repository),
     deleteRoute: DeleteRouteUseCase(repository),
@@ -124,27 +140,27 @@ void main() {
   }
 
   group('routes list', () {
-    testWidgets('a card leads with the direction and the chain of places', (
+    testWidgets('a table row shows the direction, stations and status', (
       tester,
     ) async {
       await pump(
         tester,
-        const RoutesListView(
+        RoutesListView(
           state: RoutesLoaded(
-            routes: [_banhaCairo],
+            routes: const [_banhaCairo],
             selectedRouteId: 'route-1',
           ),
         ),
       );
 
-      expect(find.text('بنها'), findsWidgets);
-      expect(find.text('القاهرة'), findsWidgets);
-      expect(find.text('RT-01'), findsOneWidget);
-      expect(find.text('4 نقاط'), findsOneWidget);
-      expect(find.text('التفاصيل'), findsOneWidget);
-      expect(find.text('تعديل'), findsOneWidget);
-      // The whole journey is on the card, not just its endpoints.
-      expect(find.textContaining('شبين القناطر'), findsOneWidget);
+      // The direction is one Text.rich span, not a standalone Text per
+      // endpoint — textContaining still matches inside its plain text.
+      expect(find.textContaining('بنها'), findsWidgets);
+      expect(find.textContaining('القاهرة'), findsWidgets);
+      expect(find.text('4 محطات، 1 س 10 د'), findsOneWidget);
+      expect(find.text('نشط'), findsOneWidget);
+      expect(find.byTooltip('عرض التفاصيل'), findsOneWidget);
+      expect(find.byTooltip('المزيد'), findsOneWidget);
     });
 
     testWidgets(
@@ -152,8 +168,8 @@ void main() {
       (tester) async {
         await pump(
           tester,
-          const RoutesListView(
-            state: RoutesLoaded(routes: [], selectedRouteId: ''),
+          RoutesListView(
+            state: RoutesLoaded(routes: const [], selectedRouteId: ''),
           ),
         );
 
@@ -168,9 +184,9 @@ void main() {
     ) async {
       await pump(
         tester,
-        const RoutesListView(
+        RoutesListView(
           state: RoutesLoaded(
-            routes: [_banhaCairo],
+            routes: const [_banhaCairo],
             selectedRouteId: 'route-1',
             searchQuery: 'طنطا',
           ),
@@ -185,7 +201,7 @@ void main() {
     testWidgets('leads with the direction and the point count', (tester) async {
       await pump(
         tester,
-        const RouteDetailsView(
+        RouteDetailsView(
           state: RoutesLoaded(
             routes: [_banhaCairo],
             selectedRouteId: 'route-1',
@@ -208,7 +224,7 @@ void main() {
     testWidgets('the direction survives Latin place names', (tester) async {
       await pump(
         tester,
-        const RouteDetailsView(
+        RouteDetailsView(
           state: RoutesLoaded(routes: [_newCairoZefta], selectedRouteId: 'r-2'),
         ),
       );
@@ -223,7 +239,7 @@ void main() {
     ) async {
       await pump(
         tester,
-        const RouteDetailsView(
+        RouteDetailsView(
           state: RoutesLoaded(
             routes: [_banhaCairo],
             selectedRouteId: 'route-1',
@@ -241,11 +257,11 @@ void main() {
       tester,
     ) async {
       cubit.emit(
-        const RoutesLoaded(routes: [_banhaCairo], selectedRouteId: 'route-1'),
+        RoutesLoaded(routes: [_banhaCairo], selectedRouteId: 'route-1'),
       );
       await pump(
         tester,
-        const RouteDetailsView(
+        RouteDetailsView(
           state: RoutesLoaded(
             routes: [_banhaCairo],
             selectedRouteId: 'route-1',

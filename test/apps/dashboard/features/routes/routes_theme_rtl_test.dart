@@ -22,6 +22,9 @@ import 'package:bmt_app/apps/dashboard/features/routes/presentation/widgets/rout
 import 'package:bmt_app/apps/dashboard/features/routes/presentation/widgets/route_details_view.dart';
 import 'package:bmt_app/apps/dashboard/features/routes/presentation/widgets/route_timeline_node.dart';
 import 'package:bmt_app/apps/dashboard/features/routes/presentation/widgets/routes_list_view.dart';
+import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/operation_trip.dart';
+import 'package:bmt_app/apps/dashboard/features/trips/trip_management/domain/repositories/trips_repository.dart';
+import 'package:bmt_app/apps/dashboard/features/trips/trip_management/domain/usecases/trip_management_usecases.dart';
 import 'package:bmt_app/core/geo/geo_models.dart';
 import 'package:bmt_app/core/geo/geo_service.dart';
 import 'package:bmt_app/core/theme/app_theme.dart';
@@ -40,6 +43,18 @@ class _OfflineGeoService implements GeoService {
 }
 
 class _UnusedRepository implements RoutesRepository {
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
+}
+
+/// [RoutesCubit] loads trips alongside routes purely to compute the board's
+/// derived stats (occupancy, weekly trips, price) — a failure here degrades
+/// to an empty list rather than failing the load, so an empty answer is a
+/// realistic double, not just a stub.
+class _EmptyTripsRepository implements TripsRepository {
+  @override
+  Future<List<OperationTrip>> getTrips() async => const [];
+
   @override
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError();
 }
@@ -73,7 +88,7 @@ const _route = OperationRoute(
   notes: [],
 );
 
-const _loaded = RoutesLoaded(routes: [_route], selectedRouteId: 'route-1');
+final _loaded = RoutesLoaded(routes: const [_route], selectedRouteId: 'route-1');
 
 void main() {
   late RoutesCubit routes;
@@ -82,6 +97,7 @@ void main() {
     final repository = _UnusedRepository();
     routes = RoutesCubit(
       getRoutes: GetOperationRoutesUseCase(repository),
+      getTrips: GetOperationTripsUseCase(_EmptyTripsRepository()),
       createRoute: CreateRouteUseCase(repository),
       updateRoute: UpdateRouteUseCase(repository),
       deleteRoute: DeleteRouteUseCase(repository),
@@ -145,7 +161,7 @@ void main() {
   ) async {
     await pumpBothThemes(
       tester,
-      const RoutesListView(state: _loaded),
+      RoutesListView(state: _loaded),
       label: 'routes list',
     );
   });
@@ -155,7 +171,7 @@ void main() {
   ) async {
     await pumpBothThemes(
       tester,
-      const RouteDetailsView(state: _loaded),
+      RouteDetailsView(state: _loaded),
       label: 'route details',
     );
   });
@@ -183,8 +199,8 @@ void main() {
   ) async {
     await pumpBothThemes(
       tester,
-      const RoutesListView(
-        state: RoutesLoaded(routes: [], selectedRouteId: ''),
+      RoutesListView(
+        state: RoutesLoaded(routes: const [], selectedRouteId: ''),
       ),
       label: 'empty routes list',
     );

@@ -2,15 +2,14 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
-import 'package:bmt_app/core/theme/app_surface_style.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
-import 'package:bmt_app/core/widgets/app_card.dart';
 
 /// Unified page header used by every dashboard module (Trips, Fleet, Routes…).
 ///
-/// One **compact identity bar** — a tinted glyph, the module's name, its line of
-/// explanation and the module's actions — with two optional bodies under it:
+/// A bare title block on the page — the module's name at 21/800, its line of
+/// explanation underneath and the module's actions on the same baseline — with
+/// two optional bodies under it:
 ///
 /// * [summary] is what the module *reports*: KPI strips, stat grids, headline
 ///   figures. It **folds away by default** and the operator opens it with the
@@ -34,6 +33,11 @@ import 'package:bmt_app/core/widgets/app_card.dart';
 /// expansion and is parked under an [Offstage] with muted tickers once folded,
 /// so a collapsed summary costs no layout, paint or animation while keeping its
 /// state.
+///
+/// The identity card the EWT redesign retired — a gradient-tinted bar with a
+/// glyph tile — is gone: the title sits directly on the page, which is what
+/// gave every module back the vertical space the card used to spend on saying
+/// its own name.
 class DashboardModuleHeader extends StatefulWidget {
   final IconData icon;
   final String title;
@@ -166,125 +170,85 @@ class _DashboardModuleHeaderState extends State<DashboardModuleHeader>
     }
   }
 
-  /// The radius the surrounding [AppCard] was themed with.
-  ///
-  /// Read rather than assumed: the tinted bar paints to the card's edge, and a
-  /// constant that is merely close to the card's radius shows as a squared-off
-  /// corner poking past a rounded one.
-  double _cardRadius(ThemeData theme) =>
-      (theme.extension<AppSurfaceStyle>() ??
-              AppSurfaceStyle.flat(theme.colorScheme))
-          .radius;
-
   @override
   Widget build(BuildContext context) {
-    return AppCard(
-      padding: EdgeInsets.zero,
-      child: ClipRRect(
-        // Clipping the whole stack — rather than rounding the bar's own bottom
-        // corners — is what keeps the card's shape right in every state: bar
-        // alone, bar over a folded summary, or bar over an open one.
-        borderRadius: BorderRadius.circular(_cardRadius(Theme.of(context))),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _buildBar(context),
-            if (_foldable) ...[_buildSummary(), _buildBody()],
-            if (widget.pinned != null)
-              _Divided(
-                child: Padding(
-                  padding: const EdgeInsets.all(AppSpacing.medium),
-                  child: widget.pinned!,
-                ),
-              ),
-          ],
-        ),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.large),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _buildBar(context),
+          if (_foldable) ...[_buildSummary(), _buildBody()],
+          if (widget.pinned != null)
+            Padding(
+              padding: const EdgeInsets.only(top: AppSpacing.medium),
+              child: widget.pinned!,
+            ),
+        ],
       ),
     );
   }
 
-  /// The identity bar. Tappable as a whole when there is something to unfold —
-  /// a 22px chevron is a poor target on a console meant to be driven quickly.
+  /// The bare title row: name, subtitle, actions on the same baseline. Tappable
+  /// as a whole when there is something to unfold — a 22px chevron is a poor
+  /// target on a console meant to be driven quickly.
   Widget _buildBar(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final topCorners = BorderRadius.vertical(
-      top: Radius.circular(_cardRadius(theme)),
-    );
-    final bar = Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.medium,
-        vertical: AppSpacing.small,
-      ),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: AlignmentDirectional.centerStart,
-          end: AlignmentDirectional.centerEnd,
-          colors: [
-            // Same tint ladder the KPI tiles use, so the bar reads as the same
-            // wash in both themes rather than vanishing on the dark page.
-            DashboardColors.kpiTint(context, scheme.primary),
-            scheme.primary.withAlpha(0),
-          ],
-        ),
-        borderRadius: topCorners,
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final identity = _TitleBlock(
-            icon: widget.icon,
-            title: widget.title,
-            subtitle: widget.subtitle,
-          );
-          final toggle = _foldable
-              ? _FoldToggle(
-                  animation: _curve,
-                  expanded: _expanded,
-                  label: widget.detailsLabel,
-                  onPressed: _toggle,
-                )
-              : null;
+    final bar = LayoutBuilder(
+      builder: (context, constraints) {
+        final identity = _TitleBlock(
+          title: widget.title,
+          subtitle: widget.subtitle,
+        );
+        final toggle = _foldable
+            ? _FoldToggle(
+                animation: _curve,
+                expanded: _expanded,
+                label: widget.detailsLabel,
+                onPressed: _toggle,
+              )
+            : null;
 
-          if (widget.actions.isEmpty) {
-            return Row(
-              children: [
-                Expanded(child: identity),
-                if (toggle != null) ...[
-                  const SizedBox(width: AppSpacing.small),
-                  toggle,
-                ],
-              ],
-            );
-          }
-
-          final actionBar = Wrap(
-            spacing: AppSpacing.small,
-            runSpacing: AppSpacing.xSmall,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [...widget.actions, ?toggle],
-          );
-
-          // Narrow consoles stack the action bar under the identity rather than
-          // squeezing both onto one line and eliding the title to nothing.
-          if (constraints.maxWidth < 780) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                identity,
-                const SizedBox(height: AppSpacing.small),
-                actionBar,
-              ],
-            );
-          }
+        if (widget.actions.isEmpty) {
           return Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Expanded(child: identity),
-              const SizedBox(width: AppSpacing.medium),
+              if (toggle != null) ...[
+                const SizedBox(width: AppSpacing.small),
+                toggle,
+              ],
+            ],
+          );
+        }
+
+        final actionBar = Wrap(
+          spacing: AppSpacing.small,
+          runSpacing: AppSpacing.xSmall,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [...widget.actions, ?toggle],
+        );
+
+        // Narrow consoles stack the action bar under the identity rather than
+        // squeezing both onto one line and eliding the title to nothing.
+        if (constraints.maxWidth < 780) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              identity,
+              const SizedBox(height: AppSpacing.small),
               actionBar,
             ],
           );
-        },
-      ),
+        }
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Expanded(child: identity),
+            const SizedBox(width: AppSpacing.medium),
+            actionBar,
+          ],
+        );
+      },
     );
 
     if (!_foldable) return bar;
@@ -294,14 +258,13 @@ class _DashboardModuleHeaderState extends State<DashboardModuleHeader>
       expanded: _expanded,
       child: Material(
         color: Colors.transparent,
-        borderRadius: topCorners,
-        child: InkWell(onTap: _toggle, borderRadius: topCorners, child: bar),
+        child: InkWell(onTap: _toggle, child: bar),
       ),
     );
   }
 
-  /// Grows in as the body folds away, on the same controller, so the card never
-  /// jumps between the two states.
+  /// Grows in as the body folds away, on the same controller, so the header
+  /// never jumps between the two states.
   Widget _buildSummary() {
     final summary = widget.collapsedSummary;
     if (summary == null || _settledExpanded) return const SizedBox.shrink();
@@ -310,11 +273,9 @@ class _DashboardModuleHeaderState extends State<DashboardModuleHeader>
       axisAlignment: -1,
       child: FadeTransition(
         opacity: _inverseCurve,
-        child: _Divided(
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.medium),
-            child: summary,
-          ),
+        child: Padding(
+          padding: const EdgeInsets.only(top: AppSpacing.small),
+          child: summary,
         ),
       ),
     );
@@ -333,11 +294,9 @@ class _DashboardModuleHeaderState extends State<DashboardModuleHeader>
             axisAlignment: -1,
             child: FadeTransition(
               opacity: _curve,
-              child: _Divided(
-                child: Padding(
-                  padding: const EdgeInsets.all(AppSpacing.medium),
-                  child: widget.summary!,
-                ),
+              child: Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.medium),
+                child: widget.summary!,
               ),
             ),
           ),
@@ -347,94 +306,42 @@ class _DashboardModuleHeaderState extends State<DashboardModuleHeader>
   }
 }
 
-/// A body separated from what sits above it by a hairline.
-///
-/// The rule belongs to the body rather than to the bar so it fades and slides
-/// away with the content it separates — a divider left hanging under a folded
-/// summary is the one thing that makes a collapsed card look broken.
-class _Divided extends StatelessWidget {
-  const _Divided({required this.child});
-
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(color: DashboardColors.divider(context)),
-        ),
-      ),
-      child: child,
-    );
-  }
-}
-
-/// Glyph, name, and the one line that says what the module is for.
-///
-/// The glyph sits in a tinted tile rather than floating beside the text: it
-/// gives the bar a fixed leading rhythm every module shares, and it is what
-/// keeps a header this short from reading as a bare paragraph.
+/// Name and the one line that says what the module is for. No glyph tile — the
+/// EWT redesign spends colour on the trend chip and the primary action, not on
+/// a page restating its own icon.
 class _TitleBlock extends StatelessWidget {
-  final IconData icon;
   final String title;
   final String subtitle;
 
-  const _TitleBlock({
-    required this.icon,
-    required this.title,
-    required this.subtitle,
-  });
+  const _TitleBlock({required this.title, required this.subtitle});
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-
-    return Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Container(
-          width: 34,
-          height: 34,
-          decoration: BoxDecoration(
-            color: DashboardColors.kpiTint(context, scheme.primary),
-            borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-            border: Border.all(
-              color: DashboardColors.kpiBorder(context, scheme.primary),
-            ),
+        Text(
+          title,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.displaySmall?.copyWith(
+            fontSize: 21,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.3,
           ),
-          child: Icon(icon, color: scheme.primary, size: 19),
         ),
-        const SizedBox(width: AppSpacing.small),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                title,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(height: 1),
-              // One line, always: the subtitle explains the module once and is
-              // never read again, so it gets the height of a caption. The full
-              // sentence stays reachable as a tooltip.
-              Tooltip(
-                message: subtitle,
-                child: Text(
-                  subtitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-            ],
+        const SizedBox(height: 3),
+        Tooltip(
+          message: subtitle,
+          child: Text(
+            subtitle,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: DashboardColors.mutedInk(context),
+            ),
           ),
         ),
       ],
@@ -463,13 +370,12 @@ class _FoldToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return Tooltip(
       message: expanded ? 'إخفاء $label' : 'إظهار $label',
       child: TextButton.icon(
         onPressed: onPressed,
         style: TextButton.styleFrom(
-          foregroundColor: scheme.onSurfaceVariant,
+          foregroundColor: DashboardColors.mutedInk(context),
           visualDensity: VisualDensity.compact,
           padding: const EdgeInsets.symmetric(
             horizontal: AppSpacing.small,

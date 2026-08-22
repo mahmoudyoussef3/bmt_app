@@ -4,38 +4,55 @@ import 'package:bmt_app/apps/dashboard/core/session/office_context.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
-import 'package:bmt_app/core/theme/tokens.dart';
 
-/// Who is signed in, which office they are looking at, what day it is — and
-/// the one action an operator starts the morning with.
+/// Who is signed in, what day it is, and the one action an operator starts
+/// the morning with — a bare line on the page, not a card.
 ///
-/// Reads entirely off [OfficeContext], which the shell already resolves at
-/// sign-in: no query of its own. Deliberately does not repeat the bell or a
-/// profile menu — the shell's top bar and sidebar carry both, and this is the
-/// screen body, not another copy of the chrome around it. The office's
-/// marketplace listing state moved to the sidebar for the same reason: it is
-/// standing context, not today's news.
+/// The EWT redesign retired the gradient hero: a full-bleed brand sweep whose
+/// only content was a name and a date cost the top of every session's first
+/// screen a card's worth of vertical space for something [DashboardKpiCard]
+/// says better one scroll further down. [DashboardModuleHeader] made the same
+/// trade for every other module; this is Home's own title block, styled the
+/// same way, because Home's line says more than a module title does — who,
+/// which office, how many trips, and when the numbers below it were last
+/// true.
+///
+/// Reads entirely off [OfficeContext] and [todayTripsCount], both already
+/// resolved by the time Home builds: no query of its own. Deliberately does
+/// not repeat the bell or a profile menu — the shell's top bar and sidebar
+/// already carry both.
 class HomeHeaderBanner extends StatelessWidget {
   const HomeHeaderBanner({
     super.key,
     required this.office,
+    required this.todayTripsCount,
     this.onRefresh,
     this.onCreateTrip,
-    this.onOpenBookings,
     this.now,
+    this.updatedAt,
   });
 
   final OfficeContext office;
+
+  /// Folded into the context line — "١٨ رحلة مجدولة اليوم" — so the greeting
+  /// answers "how busy is today" before the operator's eye even reaches the
+  /// KPI row underneath it.
+  final int todayTripsCount;
+
   final VoidCallback? onRefresh;
 
   /// Primary action. Opens the trip planner itself, not the trips list — the
   /// difference between one click and "navigate, then find the button".
   final VoidCallback? onCreateTrip;
 
-  final VoidCallback? onOpenBookings;
-
   /// Injectable clock, so the greeting and the date are testable.
   final DateTime? now;
+
+  /// When this load actually landed. Home rebuilds this banner exactly when
+  /// [DashboardHomeCubit] emits a fresh summary, so the caller can pass the
+  /// completion time of that fetch — never a guess, since there is no other
+  /// moment this widget could claim as "when the numbers went stale".
+  final DateTime? updatedAt;
 
   @override
   Widget build(BuildContext context) {
@@ -43,121 +60,104 @@ class HomeHeaderBanner extends StatelessWidget {
     final officeName = office.officeName.trim().isEmpty
         ? 'مكتبك'
         : office.officeName.trim();
-    final onHero = DashboardColors.onHero(context);
 
-    return Container(
-      // Deliberately shorter than a hero: the banner says who and when, and
-      // every pixel it takes is a pixel of today's numbers pushed down. Same
-      // trim the module headers took.
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.large,
-        vertical: AppSpacing.medium,
-      ),
-      decoration: BoxDecoration(
-        gradient: DashboardColors.heroGradient(context),
-        borderRadius: BorderRadius.circular(AppTokens.radius),
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final identity = _Identity(
-            greeting: _greetingFor(at),
-            name: office.displayName,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final identity = _Identity(
+          greeting: '${_greetingFor(at)}، ${office.displayName}',
+          contextLine: _contextLine(
             officeName: officeName,
-            date: _formatArabicDate(at),
-            onHero: onHero,
-          );
-          final actions = _Actions(
-            onCreateTrip: onCreateTrip,
-            onOpenBookings: onOpenBookings,
-            onRefresh: onRefresh,
-            onHero: onHero,
-          );
+            date: at,
+            tripsToday: todayTripsCount,
+            updatedAt: updatedAt,
+          ),
+        );
+        final actions = _Actions(
+          onCreateTrip: onCreateTrip,
+          onRefresh: onRefresh,
+        );
 
-          if (constraints.maxWidth < 720) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                identity,
-                const SizedBox(height: AppSpacing.medium),
-                actions,
-              ],
-            );
-          }
-          return Row(
+        if (constraints.maxWidth < 640) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(child: identity),
-              const SizedBox(width: AppSpacing.medium),
+              identity,
+              const SizedBox(height: AppSpacing.medium),
               actions,
             ],
           );
-        },
-      ),
+        }
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Expanded(child: identity),
+            const SizedBox(width: AppSpacing.large),
+            actions,
+          ],
+        );
+      },
     );
+  }
+
+  String _contextLine({
+    required String officeName,
+    required DateTime date,
+    required int tripsToday,
+    required DateTime? updatedAt,
+  }) {
+    final parts = <String>[
+      officeName,
+      _formatArabicDate(date),
+      tripsToday == 0 ? 'لا رحلات مجدولة اليوم' : '$tripsToday رحلة مجدولة اليوم',
+    ];
+    if (updatedAt != null) parts.add('آخر تحديث ${_formatClock(updatedAt)}');
+    return parts.join(' · ');
   }
 }
 
 class _Identity extends StatelessWidget {
-  const _Identity({
-    required this.greeting,
-    required this.name,
-    required this.officeName,
-    required this.date,
-    required this.onHero,
-  });
+  const _Identity({required this.greeting, required this.contextLine});
 
   final String greeting;
-  final String name;
-  final String officeName;
-  final String date;
-  final Color onHero;
+  final String contextLine;
 
   @override
   Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          '$greeting، $name',
+          greeting,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: text.titleLarge?.copyWith(
-            color: onHero,
-            fontWeight: FontWeight.w800,
-          ),
+          style: theme.textTheme.headlineSmall,
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: 3),
         Text(
-          '$officeName · $date',
+          contextLine,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: text.bodySmall?.copyWith(color: onHero.withAlpha(200)),
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: DashboardColors.mutedInk(context),
+          ),
         ),
       ],
     );
   }
 }
 
-/// One primary action, one secondary, one utility — in that order and no more.
-/// A header with five buttons makes the operator choose before they have read
-/// a single number.
+/// One primary action, one secondary — on the same baseline as the greeting,
+/// exactly where [DashboardModuleHeader] puts every other module's actions.
 class _Actions extends StatelessWidget {
-  const _Actions({
-    required this.onHero,
-    this.onCreateTrip,
-    this.onOpenBookings,
-    this.onRefresh,
-  });
+  const _Actions({this.onCreateTrip, this.onRefresh});
 
-  final Color onHero;
   final VoidCallback? onCreateTrip;
-  final VoidCallback? onOpenBookings;
   final VoidCallback? onRefresh;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return Wrap(
       spacing: AppSpacing.small,
       runSpacing: AppSpacing.small,
@@ -166,32 +166,14 @@ class _Actions extends StatelessWidget {
         if (onCreateTrip != null)
           FilledButton.icon(
             onPressed: onCreateTrip,
-            style: FilledButton.styleFrom(
-              backgroundColor: scheme.surface,
-              foregroundColor: scheme.primary,
-            ),
             icon: const Icon(DashboardIcons.add, size: 18),
             label: const Text('رحلة جديدة'),
           ),
-        if (onOpenBookings != null)
-          OutlinedButton.icon(
-            onPressed: onOpenBookings,
-            style: OutlinedButton.styleFrom(
-              foregroundColor: onHero,
-              side: BorderSide(color: onHero.withAlpha(110)),
-            ),
-            icon: const Icon(DashboardIcons.bookings, size: 18),
-            label: const Text('الحجوزات'),
-          ),
         if (onRefresh != null)
-          IconButton(
-            tooltip: 'تحديث البيانات',
+          OutlinedButton.icon(
             onPressed: onRefresh,
-            icon: const Icon(DashboardIcons.refresh, size: 20),
-            style: IconButton.styleFrom(
-              foregroundColor: onHero,
-              backgroundColor: onHero.withAlpha(28),
-            ),
+            icon: const Icon(DashboardIcons.refresh, size: 18),
+            label: const Text('تحديث'),
           ),
       ],
     );
@@ -241,4 +223,11 @@ String _formatArabicDate(DateTime date) {
   final weekday = _arabicWeekdays[date.weekday - 1];
   final month = _arabicMonths[date.month - 1];
   return '$weekday، ${_toArabicDigits('${date.day}')} $month ${_toArabicDigits('${date.year}')}';
+}
+
+/// 24h clock, plain digits — matches every other timestamp in the console
+/// (trip departures, table cells), which are ASCII throughout.
+String _formatClock(DateTime at) {
+  String two(int n) => n.toString().padLeft(2, '0');
+  return '${two(at.hour)}:${two(at.minute)}';
 }

@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
-import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/dashboard_sparkline.dart';
+import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
-import 'package:bmt_app/core/theme/tokens.dart';
 
 /// Which way a [KpiTrend] should be read, which is not the same as which way it
 /// points. Refunds rising is [negative] while revenue rising is [positive], and
@@ -36,14 +35,20 @@ class KpiTrend {
     this.tone = KpiTrendTone.neutral,
     this.caption,
   });
+
+  AppStatusTone get _statusTone => switch (tone) {
+    KpiTrendTone.positive => AppStatusTone.success,
+    KpiTrendTone.negative => AppStatusTone.error,
+    KpiTrendTone.neutral => AppStatusTone.neutral,
+  };
 }
 
 /// Unified KPI / stat tile used across every dashboard module.
 ///
-/// A tinted, bordered tile with an icon, a label, an optional [detail] line
-/// and a prominent [value]. Pair with [DashboardKpiGrid] for a responsive row
-/// of stats. Replaces the per-module tiles that previously diverged in
-/// padding, color and typography.
+/// A plain surface card — border and radius carry its shape, not a tinted
+/// background — with an icon, a label, an optional [detail] line and a
+/// prominent [value]. Pair with [DashboardKpiGrid] for a responsive row of
+/// stats.
 ///
 /// **Two shapes, one widget.** With neither [trend] nor [sparkline] the tile is
 /// the compact row it has always been — icon, label, value — and every existing
@@ -51,6 +56,11 @@ class KpiTrend {
 /// form: label and movement on top, the value beneath, and the shape of the
 /// last few periods along the bottom. Give the grid a larger `itemExtent`
 /// (~132) when using it, since the stacked form needs the height.
+///
+/// [color], where a caller still passes one, tints only the icon — the EWT
+/// redesign's rule is "a KPI is a plain card, and the only colour on it is the
+/// trend chip"; the icon keeps a faint accent so the per-metric signal callers
+/// already encode in [color] is not silently discarded.
 class DashboardKpiCard extends StatelessWidget {
   final String label;
   final String value;
@@ -76,6 +86,12 @@ class DashboardKpiCard extends StatelessWidget {
   /// minimum; fewer draws nothing.
   final List<double>? sparkline;
 
+  /// Forces the taller stacked form — big 27px value, label on its own row —
+  /// even with no [trend]/[sparkline] to trigger it. For a strip that wants
+  /// the EWT redesign's hero-KPI weight (Home's four numbers) without a
+  /// movement figure this dashboard has no historical snapshot to back.
+  final bool emphasized;
+
   const DashboardKpiCard({
     super.key,
     required this.label,
@@ -87,16 +103,18 @@ class DashboardKpiCard extends StatelessWidget {
     this.tapHint,
     this.trend,
     this.sparkline,
+    this.emphasized = false,
   });
 
-  bool get _isStacked => trend != null || (sparkline?.length ?? 0) >= 2;
+  bool get _isStacked =>
+      emphasized || trend != null || (sparkline?.length ?? 0) >= 2;
 
   @override
   Widget build(BuildContext context) {
     final tile = _isStacked ? _buildStackedTile(context) : _buildTile(context);
     if (onTap == null) return tile;
 
-    final radius = BorderRadius.circular(AppTokens.radiusSmall);
+    final radius = BorderRadius.circular(12);
     final tappable = Material(
       color: Colors.transparent,
       borderRadius: radius,
@@ -106,51 +124,54 @@ class DashboardKpiCard extends StatelessWidget {
     return hint == null ? tappable : Tooltip(message: hint, child: tappable);
   }
 
+  BoxDecoration _cardDecoration(BuildContext context) => BoxDecoration(
+    color: DashboardColors.panel(context),
+    borderRadius: BorderRadius.circular(12),
+    border: Border.all(color: DashboardColors.border(context)),
+    boxShadow: DashboardColors.panelShadow(context),
+  );
+
   /// The taller form: label + movement, then the value, then the shape.
-  ///
-  /// Shares the compact tile's tint, border and radius exactly — it is the same
-  /// tile with more to say, not a second design.
   Widget _buildStackedTile(BuildContext context) {
     final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final tint = color ?? scheme.primary;
+    final iconTint = color ?? DashboardColors.mutedInk(context);
     final spark = sparkline;
     final movement = trend;
 
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.medium),
-      decoration: BoxDecoration(
-        color: DashboardColors.kpiTint(context, tint),
-        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-        border: Border.all(color: DashboardColors.kpiBorder(context, tint)),
-      ),
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+      decoration: _cardDecoration(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
-              Icon(icon, color: tint, size: 18),
-              const SizedBox(width: AppSpacing.xSmall),
+              Icon(icon, size: 16, color: iconTint),
+              const SizedBox(width: 7),
               Expanded(
                 child: Text(
                   label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.labelMedium?.copyWith(
-                    color: scheme.onSurfaceVariant,
+                    color: DashboardColors.mutedInk(context),
                   ),
                 ),
               ),
               if (movement != null) _TrendChip(trend: movement),
             ],
           ),
-          const SizedBox(height: AppSpacing.xSmall),
+          const SizedBox(height: 8),
           Text(
             value,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.titleLarge?.copyWith(
-              fontWeight: FontWeight.bold,
+            style: theme.textTheme.displayMedium?.copyWith(
+              fontSize: 27,
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.6,
+              fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),
           if (detail != null || movement?.caption != null)
@@ -158,17 +179,19 @@ class DashboardKpiCard extends StatelessWidget {
               detail ?? movement!.caption!,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: scheme.onSurfaceVariant,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: DashboardColors.faintInk(context),
               ),
             ),
           if (spark != null && spark.length >= 2) ...[
             const SizedBox(height: AppSpacing.xSmall),
-            
             Expanded(
               child: Align(
                 alignment: Alignment.bottomCenter,
-                child: DashboardSparkline(values: spark, color: tint),
+                child: DashboardSparkline(
+                  values: spark,
+                  color: color ?? DashboardColors.accentFill(context),
+                ),
               ),
             ),
           ],
@@ -178,20 +201,15 @@ class DashboardKpiCard extends StatelessWidget {
   }
 
   Widget _buildTile(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final tint = color ?? scheme.primary;
+    final theme = Theme.of(context);
+    final iconTint = color ?? DashboardColors.mutedInk(context);
     return Container(
-      padding: const EdgeInsets.all(AppSpacing.medium),
-      
-      decoration: BoxDecoration(
-        color: DashboardColors.kpiTint(context, tint),
-        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-        border: Border.all(color: DashboardColors.kpiBorder(context, tint)),
-      ),
+      padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+      decoration: _cardDecoration(context),
       child: Row(
         children: [
-          Icon(icon, color: tint),
-          const SizedBox(width: AppSpacing.small),
+          Icon(icon, size: 16, color: iconTint),
+          const SizedBox(width: 7),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -201,8 +219,8 @@ class DashboardKpiCard extends StatelessWidget {
                   label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: scheme.onSurfaceVariant,
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    color: DashboardColors.mutedInk(context),
                   ),
                 ),
                 if (detail != null)
@@ -210,23 +228,26 @@ class DashboardKpiCard extends StatelessWidget {
                     detail!,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: scheme.onSurfaceVariant,
+                    style: theme.textTheme.labelSmall?.copyWith(
+                      color: DashboardColors.faintInk(context),
                     ),
                   ),
               ],
             ),
           ),
           const SizedBox(width: AppSpacing.small),
-          
           Flexible(
             child: Text(
               value,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+              textAlign: TextAlign.end,
+              style: theme.textTheme.displayMedium?.copyWith(
+                fontSize: 21,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.4,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
             ),
           ),
         ],
@@ -235,11 +256,8 @@ class DashboardKpiCard extends StatelessWidget {
   }
 }
 
-/// The arrow-and-figure pill in a stacked tile's header.
-///
-/// Tinted by the caller's verdict rather than by the arrow's direction, so
-/// "refunds up 30%" reads red and "revenue up 30%" reads green from the same
-/// widget.
+/// The arrow-and-figure badge in a stacked tile's header — a 6px rect, not a
+/// pill, matching every other status mark in the console.
 class _TrendChip extends StatelessWidget {
   const _TrendChip({required this.trend});
 
@@ -248,28 +266,26 @@ class _TrendChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final palette = DashboardChartPalette.of(context);
-    final tone = switch (trend.tone) {
-      KpiTrendTone.positive => palette.positive,
-      KpiTrendTone.negative => palette.negative,
-      KpiTrendTone.neutral => theme.colorScheme.onSurfaceVariant,
-    };
+    final tone = trend._statusTone;
+    final style = DashboardColors.status(context, tone);
+    final line = DashboardColors.statusLine(context, tone);
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: tone.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(999),
+        color: style.tint,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: line),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(trend.icon, size: 13, color: tone),
+          Icon(trend.icon, size: 12, color: style.ink),
           const SizedBox(width: 2),
           Text(
             trend.label,
             style: theme.textTheme.labelSmall?.copyWith(
-              color: tone,
+              color: style.ink,
               fontWeight: FontWeight.w700,
             ),
           ),

@@ -158,7 +158,7 @@ void main() {
     });
 
     test('handles empty routes list without throwing exceptions', () {
-      const state = RoutesLoaded(routes: [], selectedRouteId: '');
+      final state = RoutesLoaded(routes: const [], selectedRouteId: '');
 
       expect(state.selectedRoute, isNotNull);
       expect(state.selectedRoute.id, isEmpty);

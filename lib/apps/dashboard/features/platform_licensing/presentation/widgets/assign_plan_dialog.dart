@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
-import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_status_chip.dart';
 
 import '../../../../core/theme/dashboard_colors.dart';
 import '../../../../core/theme/dashboard_icons.dart';
@@ -237,7 +237,7 @@ class _PlanOption extends StatelessWidget {
                           ),
                           if (isCurrent) ...[
                             const SizedBox(width: AppSpacing.small),
-                            StatusChip(
+                            DashboardStatusChip(
                               label: 'الباقة الحالية',
                               color: scheme.secondary.withAlpha(24),
                               textColor: scheme.secondary,
@@ -245,7 +245,7 @@ class _PlanOption extends StatelessWidget {
                           ],
                           if (plan.status != 'active') ...[
                             const SizedBox(width: AppSpacing.xSmall),
-                            StatusChip(
+                            DashboardStatusChip(
                               label: plan.statusLabelAr,
                               color: scheme.tertiary.withAlpha(24),
                               textColor: scheme.tertiary,

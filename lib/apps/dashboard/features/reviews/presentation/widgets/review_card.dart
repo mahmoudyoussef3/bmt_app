@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
-import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_status_chip.dart';
 
 import '../../domain/entities/trip_review_entry.dart';
 import 'rating_stars.dart';
@@ -113,7 +113,7 @@ class _Header extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
             if (flagged)
-              StatusChip(
+              DashboardStatusChip(
                 label: 'تحتاج متابعة',
                 color: context.status(AppStatusTone.error).tint,
                 textColor: context.status(AppStatusTone.error).ink,

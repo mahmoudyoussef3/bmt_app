@@ -297,14 +297,87 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
           }
         }
 
+        final toolbar = _DriverTableToolbar(
+          opsFilter: _opsFilter,
+          onOpsFilterChanged: (filter) {
+            setState(() {
+              _opsFilter = filter;
+              _page = 0;
+            });
+          },
+          onSearch: cubit.search,
+          sortField: _sortField,
+          sortAscending: _sortAscending,
+          onSortChanged: (field) => setState(() => _sortField = field),
+          onToggleSort: () => setState(() => _sortAscending = !_sortAscending),
+          selectedCount: state.selectedIds.length,
+          onArchive: state.selectedIds.isEmpty
+              ? null
+              : () async {
+                  final confirm = await showDialog<bool>(
+                    context: context,
+                    builder: (_) => AlertDialog(
+                      title: const Text('أرشفة السائقين'),
+                      content: Text(
+                        'هل أنت متأكد من أرشفة ${state.selectedIds.length} من السائقين المحددين؟',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context, false),
+                          child: const Text('إلغاء'),
+                        ),
+                        FilledButton(
+                          onPressed: () => Navigator.pop(context, true),
+                          child: const Text('تأكيد الأرشفة'),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (confirm == true) {
+                    await cubit.bulkArchiveDrivers();
+                    if (context.mounted) {
+                      await context.read<FleetOverviewCubit>().loadWorkspace();
+                    }
+                  }
+                },
+        );
+
         final browsing = Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _buildReadinessSummary(context, state.drivers, workspace),
-            const SizedBox(height: AppSpacing.large),
-            _buildToolbar(context, state, cubit, workspace),
+            Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: FilledButton.icon(
+                onPressed: () => _showDriverForm(
+                  context,
+                  cubit,
+                  workspace,
+                  null,
+                  context.read<FleetDocumentsCubit>(),
+                ),
+                icon: const Icon(Icons.add_rounded),
+                label: const Text('إضافة سائق'),
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 16,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppTokens.radius),
+                  ),
+                ),
+              ),
+            ),
             const SizedBox(height: AppSpacing.medium),
-            _buildListBody(context, state, sorted, workspace, cubit, isDesktop),
+            _buildListBody(
+              context,
+              state,
+              sorted,
+              workspace,
+              cubit,
+              isDesktop,
+              toolbar,
+            ),
           ],
         );
 
@@ -364,32 +437,44 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
     FleetWorkspace workspace,
     FleetDriversCubit cubit,
     bool isDesktop,
+    Widget toolbar,
   ) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final useCards = !isDesktop || constraints.maxWidth < 1200;
         if (useCards) {
-          return FleetDriversCardList(
-            drivers: sorted,
-            workspace: workspace,
-            onViewDetails: (d) =>
-                _openDriver(context, state, workspace, d, cubit, isDesktop),
-            onEdit: (d) => _showDriverForm(
-              context,
-              cubit,
-              workspace,
-              d,
-              context.read<FleetDocumentsCubit>(),
-            ),
-            onDelete: _confirmDeleteDriver,
-            page: _page,
-            pageSize: _pageSize,
-            onPageChanged: (newPage) => setState(() => _page = newPage),
+          // No [OpsDataTable] card to host the toolbar in card-list mode, so
+          // it renders standalone above the cards instead — same controls,
+          // just not inside the table's bordered panel.
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              toolbar,
+              const SizedBox(height: AppSpacing.medium),
+              FleetDriversCardList(
+                drivers: sorted,
+                workspace: workspace,
+                onViewDetails: (d) =>
+                    _openDriver(context, state, workspace, d, cubit, isDesktop),
+                onEdit: (d) => _showDriverForm(
+                  context,
+                  cubit,
+                  workspace,
+                  d,
+                  context.read<FleetDocumentsCubit>(),
+                ),
+                onDelete: _confirmDeleteDriver,
+                page: _page,
+                pageSize: _pageSize,
+                onPageChanged: (newPage) => setState(() => _page = newPage),
+              ),
+            ],
           );
         }
         return FleetDriversTable(
           drivers: sorted,
           workspace: workspace,
+          toolbar: toolbar,
           onView: (d) =>
               _openDriver(context, state, workspace, d, cubit, isDesktop),
           onEdit: (d) => _showDriverForm(
@@ -409,97 +494,6 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
           onSortField: _applySort,
         );
       },
-    );
-  }
-
-  Widget _buildToolbar(
-    BuildContext context,
-    FleetDriversLoaded state,
-    FleetDriversCubit cubit,
-    FleetWorkspace workspace,
-  ) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: _DriverFilterBar(
-                  selected: _opsFilter,
-                  onSelected: (filter) {
-                    setState(() {
-                      _opsFilter = filter;
-                      _page = 0;
-                    });
-                  },
-                ),
-              ),
-            ),
-            const SizedBox(width: AppSpacing.medium),
-            FilledButton.icon(
-              onPressed: () => _showDriverForm(
-                context,
-                cubit,
-                workspace,
-                null,
-                context.read<FleetDocumentsCubit>(),
-              ),
-              icon: const Icon(Icons.add_rounded),
-              label: const Text('إضافة سائق'),
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 16,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppTokens.radius),
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.medium),
-        _DriverSearchSortActions(
-          selectedCount: state.selectedIds.length,
-          sortField: _sortField,
-          sortAscending: _sortAscending,
-          onSearch: cubit.search,
-          onSortChanged: (field) => setState(() => _sortField = field),
-          onToggleSort: () => setState(() => _sortAscending = !_sortAscending),
-          onArchive: state.selectedIds.isEmpty
-              ? null
-              : () async {
-                  final confirm = await showDialog<bool>(
-                    context: context,
-                    builder: (_) => AlertDialog(
-                      title: const Text('أرشفة السائقين'),
-                      content: Text(
-                        'هل أنت متأكد من أرشفة ${state.selectedIds.length} من السائقين المحددين؟',
-                      ),
-                      actions: [
-                        TextButton(
-                          onPressed: () => Navigator.pop(context, false),
-                          child: const Text('إلغاء'),
-                        ),
-                        FilledButton(
-                          onPressed: () => Navigator.pop(context, true),
-                          child: const Text('تأكيد الأرشفة'),
-                        ),
-                      ],
-                    ),
-                  );
-                  if (confirm == true) {
-                    await cubit.bulkArchiveDrivers();
-                    if (context.mounted) {
-                      await context.read<FleetOverviewCubit>().loadWorkspace();
-                    }
-                  }
-                },
-        ),
-      ],
     );
   }
 
@@ -596,82 +590,6 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
       AppSnackbar.error(context, error);
     }
   }
-
-  Widget _buildReadinessSummary(
-    BuildContext context,
-    List<FleetDriver> drivers,
-    FleetWorkspace workspace,
-  ) {
-    final summaries = <_DriverSummaryItem>[
-      _DriverSummaryItem(
-        label: 'متاح الآن',
-        value: drivers
-            .where(
-              (driver) =>
-                  DriverOperations.snapshot(driver, workspace).canAssign,
-            )
-            .length,
-        icon: Icons.task_alt_rounded,
-      ),
-      _DriverSummaryItem(
-        label: 'معين لمركبة',
-        value: drivers
-            .where(
-              (driver) =>
-                  DriverOperations.snapshot(driver, workspace).status ==
-                  DriverOperationalStatus.assigned,
-            )
-            .length,
-        icon: Icons.directions_bus_filled_outlined,
-      ),
-      _DriverSummaryItem(
-        label: 'يحتاج متابعة',
-        value: drivers
-            .where(
-              (driver) => DriverOperations.snapshot(
-                driver,
-                workspace,
-              ).requiresAttention,
-            )
-            .length,
-        icon: Icons.warning_amber_rounded,
-      ),
-      _DriverSummaryItem(
-        label: 'بدون مركبة',
-        value: drivers
-            .where(
-              (driver) =>
-                  DriverOperations.snapshot(
-                    driver,
-                    workspace,
-                  ).assignedVehicle ==
-                  null,
-            )
-            .length,
-        icon: Icons.person_off_outlined,
-      ),
-    ];
-
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final isNarrow = constraints.maxWidth < 720;
-        return Wrap(
-          spacing: AppSpacing.small,
-          runSpacing: AppSpacing.small,
-          children: summaries
-              .map(
-                (item) => SizedBox(
-                  width: isNarrow
-                      ? (constraints.maxWidth - AppSpacing.small) / 2
-                      : (constraints.maxWidth - AppSpacing.small * 3) / 4,
-                  child: _DriverSummaryTile(item: item),
-                ),
-              )
-              .toList(),
-        );
-      },
-    );
-  }
 }
 
 class _DriverFilterBar extends StatelessWidget {
@@ -704,31 +622,47 @@ class _DriverFilterBar extends StatelessWidget {
   }
 }
 
-class _DriverSearchSortActions extends StatelessWidget {
-  const _DriverSearchSortActions({
-    required this.selectedCount,
+/// Search, ops filter chips and sort/bulk-archive controls — the EWT
+/// "isTable" toolbar shape, mirroring `_TripsTableToolbar` in
+/// `trips_screen.dart`. Rendered inside [FleetDriversTable]'s
+/// [OpsDataTable] card on desktop, and standalone above
+/// [FleetDriversCardList] on narrow/mobile, so the same controls stay
+/// reachable no matter which list rendering is active.
+class _DriverTableToolbar extends StatelessWidget {
+  const _DriverTableToolbar({
+    required this.opsFilter,
+    required this.onOpsFilterChanged,
+    required this.onSearch,
     required this.sortField,
     required this.sortAscending,
-    required this.onSearch,
     required this.onSortChanged,
     required this.onToggleSort,
+    required this.selectedCount,
     required this.onArchive,
   });
 
-  final int selectedCount;
+  final _DriverOpsFilter opsFilter;
+  final ValueChanged<_DriverOpsFilter> onOpsFilterChanged;
+  final ValueChanged<String> onSearch;
   final FleetSortField sortField;
   final bool sortAscending;
-  final ValueChanged<String> onSearch;
   final ValueChanged<FleetSortField> onSortChanged;
   final VoidCallback onToggleSort;
+  final int selectedCount;
   final VoidCallback? onArchive;
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final isNarrow = constraints.maxWidth < 680;
         final search = _DriverSearchField(onChanged: onSearch);
+        final filterChips = SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: _DriverFilterBar(
+            selected: opsFilter,
+            onSelected: onOpsFilterChanged,
+          ),
+        );
         final controls = _DriverSortActions(
           selectedCount: selectedCount,
           sortField: sortField,
@@ -738,11 +672,13 @@ class _DriverSearchSortActions extends StatelessWidget {
           onArchive: onArchive,
         );
 
-        if (isNarrow) {
+        if (constraints.maxWidth < 760) {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               search,
+              const SizedBox(height: AppSpacing.small),
+              filterChips,
               const SizedBox(height: AppSpacing.small),
               controls,
             ],
@@ -751,7 +687,9 @@ class _DriverSearchSortActions extends StatelessWidget {
 
         return Row(
           children: [
-            Expanded(child: search),
+            SizedBox(width: 260, child: search),
+            const SizedBox(width: AppSpacing.medium),
+            Expanded(child: filterChips),
             const SizedBox(width: AppSpacing.medium),
             controls,
           ],
@@ -869,60 +807,3 @@ class _DriverSortActions extends StatelessWidget {
   }
 }
 
-class _DriverSummaryItem {
-  const _DriverSummaryItem({
-    required this.label,
-    required this.value,
-    required this.icon,
-  });
-
-  final String label;
-  final int value;
-  final IconData icon;
-}
-
-class _DriverSummaryTile extends StatelessWidget {
-  const _DriverSummaryTile({required this.item});
-
-  final _DriverSummaryItem item;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.large),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withAlpha(50),
-        borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
-        border: Border.all(color: scheme.outlineVariant.withAlpha(70)),
-        boxShadow: [
-          BoxShadow(
-            color: scheme.shadow.withAlpha(5),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Icon(item.icon, color: scheme.primary, size: 20),
-          const SizedBox(width: AppSpacing.small),
-          Expanded(
-            child: Text(
-              item.label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: Theme.of(context).textTheme.labelMedium,
-            ),
-          ),
-          Text(
-            item.value.toString(),
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
-          ),
-        ],
-      ),
-    );
-  }
-}

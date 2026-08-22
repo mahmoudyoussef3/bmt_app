@@ -176,7 +176,7 @@ class _FleetOverviewScreenState extends State<FleetOverviewScreen> {
                 children: [
                   _buildHeader(context),
                   const SizedBox(height: AppSpacing.large),
-                  FleetSummaryCards(summary: workspace.summary),
+                  FleetSummaryCards(workspace: workspace),
                   const SizedBox(height: AppSpacing.large),
                   FleetNeedsAttentionPanel(
                     items: buildFleetAttentionItems(workspace),
@@ -226,14 +226,31 @@ class _FleetOverviewScreenState extends State<FleetOverviewScreen> {
     return DashboardModuleHeader(
       icon: DashboardIcons.fleetActive,
       title: 'إدارة الأسطول',
-      subtitle: 'تحكم في بيانات السائقين والمركبات ووثائقهم من مكان واحد.',
+      subtitle: 'من يقود ماذا، وما المتاح، وما يحتاج إجراءً',
       actions: [
+        OutlinedButton.icon(
+          onPressed: () => _exportComingSoon(context),
+          icon: const Icon(Icons.download_rounded),
+          label: const Text('تصدير'),
+        ),
         OutlinedButton.icon(
           onPressed: () => context.read<FleetOverviewCubit>().loadWorkspace(),
           icon: const Icon(Icons.refresh_rounded),
           label: const Text('تحديث'),
         ),
+        // The mock's header carries one primary "+" action, but Fleet has two
+        // entity types (drivers/vehicles) behind a tab switcher, and each
+        // add flow needs that tab's own cubit/docs-cubit/workspace context —
+        // not available at this header's position in the tree. Each tab
+        // keeps its own "+ إضافة مركبة/سائق" button instead (see
+        // FleetVehiclesScreen/FleetDriversScreen).
       ],
+    );
+  }
+
+  void _exportComingSoon(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('تصدير الأسطول غير متاح بعد.')),
     );
   }
 }

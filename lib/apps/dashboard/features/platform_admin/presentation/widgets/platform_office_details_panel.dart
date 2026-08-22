@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
-import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_status_chip.dart';
 
 import '../../domain/entities/platform_analytics.dart';
 import '../../domain/entities/platform_office.dart';
@@ -236,7 +236,7 @@ class _IdentitySection extends StatelessWidget {
               runSpacing: AppSpacing.xSmall,
               children: [
                 for (final area in office.serviceAreas)
-                  StatusChip(
+                  DashboardStatusChip(
                     label: area,
                     color: scheme.surfaceContainerHighest,
                     textColor: scheme.onSurfaceVariant,
@@ -325,7 +325,7 @@ class _OperationalSection extends StatelessWidget {
     return _Section(
       title: 'التشغيل',
       icon: Icons.insights_outlined,
-      trailing: StatusChip(
+      trailing: DashboardStatusChip(
         label: office.statusLabel,
         color: office.status == 'active'
             ? scheme.primary.withAlpha(18)
@@ -390,7 +390,7 @@ class _PerformanceSection extends StatelessWidget {
     return _Section(
       title: 'الأداء خلال $windowDays يوم',
       icon: Icons.query_stats_outlined,
-      trailing: StatusChip(
+      trailing: DashboardStatusChip(
         label: level.label,
         color: switch (level) {
           ActivityLevel.active => scheme.primary.withAlpha(18),
@@ -556,7 +556,7 @@ class _MarketplaceSection extends StatelessWidget {
     return _Section(
       title: 'السوق',
       icon: Icons.storefront_outlined,
-      trailing: StatusChip(
+      trailing: DashboardStatusChip(
         label: office.listingLabel,
         color: office.isListed
             ? scheme.primary.withAlpha(18)
@@ -874,7 +874,7 @@ class _OperatorsSection extends StatelessWidget {
                             ],
                           ),
                         ),
-                        StatusChip(
+                        DashboardStatusChip(
                           label: operator.statusLabel,
                           color: operator.isActive
                               ? scheme.primary.withAlpha(18)

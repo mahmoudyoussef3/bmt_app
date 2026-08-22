@@ -115,14 +115,65 @@ void main() {
       });
 
       testWidgets('fleet summary cards @ $width', (tester) async {
+        // Large-but-plausible fleet, generated rather than hand-listed, to
+        // stress the same long/four-digit values the old hand-built
+        // `FleetSummary` exercised — this widget now computes its numbers
+        // from the workspace's vehicle/driver lists instead of a
+        // pre-aggregated summary.
+        final vehicles = List.generate(
+          412,
+          (i) => FleetVehicle(
+            id: 'v$i',
+            vehicleCode: 'V$i',
+            plateNumber: 'P$i',
+            vehicleType: 'hiace',
+            brand: 'Toyota',
+            model: 'Hiace',
+            manufactureYear: 2020,
+            color: 'أبيض',
+            capacity: 14,
+            seatLayoutType: 'hiace',
+            imageUrl: '',
+            notes: '',
+            status: i < 37
+                ? FleetVehicleStatus.maintenance
+                : FleetVehicleStatus.active,
+            seatConfiguration: const SeatConfiguration(
+              rows: 0,
+              columns: 0,
+              seats: [],
+            ),
+            licenseExpiry: '',
+            insuranceExpiry: '',
+            inspectionExpiry: '',
+          ),
+        );
+        final drivers = List.generate(
+          1284,
+          (i) => FleetDriver(
+            id: 'd$i',
+            employeeCode: 'D$i',
+            fullName: 'سائق $i',
+            phone: '',
+            emergencyPhone: '',
+            address: '',
+            nationalId: '',
+            profileImageUrl: '',
+            licenseNumber: '',
+            licenseExpiryDate: '',
+            hireDate: '',
+            notes: '',
+            status: FleetDriverStatus.active,
+          ),
+        );
         await _expectNoOverflow(
           tester,
-          const FleetSummaryCards(
-            summary: FleetSummary(
-              driversCount: 1284,
-              vehiclesCount: 412,
-              activeAssignmentsCount: 96,
-              documentsNeedFollowUpCount: 37,
+          FleetSummaryCards(
+            workspace: FleetWorkspace(
+              drivers: drivers,
+              vehicles: vehicles,
+              assignments: const [],
+              documents: const [],
             ),
           ),
           width: width,

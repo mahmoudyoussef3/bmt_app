@@ -6,7 +6,7 @@ import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/debounced_search_field.dart';
-import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_status_chip.dart';
 
 import '../../domain/entities/complaint.dart';
 import '../cubit/tickets_cubit.dart';
@@ -71,7 +71,7 @@ class _LoadedView extends StatelessWidget {
             title: 'مركز الشكاوى والدعم',
             subtitle: 'راجع شكاوى العملاء، أسندها لموظف، وتابعها حتى الإغلاق.',
             actions: [
-              StatusChip(label: '${state.tickets.length} تذكرة'),
+              DashboardStatusChip(label: '${state.tickets.length} تذكرة'),
               if (state.capReached)
                 const DashboardCapNotice(
                   rowCap: DashboardQueryCaps.tickets,
@@ -148,7 +148,7 @@ class _TicketsToolbar extends StatelessWidget {
           onChanged: cubit.setFilterPriority,
         );
 
-        final chip = StatusChip(
+        final chip = DashboardStatusChip(
           label:
               '${state.filteredTickets.length}/${state.tickets.length} تذكرة',
         );

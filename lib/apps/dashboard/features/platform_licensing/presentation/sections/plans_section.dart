@@ -6,7 +6,7 @@ import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/debounced_search_field.dart';
-import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_status_chip.dart';
 
 import '../../../../core/theme/dashboard_colors.dart';
 import '../../../../core/theme/dashboard_icons.dart';
@@ -606,7 +606,7 @@ class _PlanCard extends StatelessWidget {
                       ),
 
                       if (plan.status != 'active')
-                        StatusChip(
+                        DashboardStatusChip(
                           label: plan.statusLabelAr,
                           color: statusColor.withAlpha(24),
                           textColor: statusColor,
@@ -1003,7 +1003,7 @@ class _WorkspaceHeader extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(width: AppSpacing.small),
-                            StatusChip(
+                            DashboardStatusChip(
                               label: plan.statusLabelAr,
                               color: statusColor.withAlpha(24),
                               textColor: statusColor,
@@ -1496,7 +1496,7 @@ class _FeatureEditRow extends StatelessWidget {
                     ],
                     if (feature.isKillSwitched) ...[
                       const SizedBox(width: AppSpacing.xSmall),
-                      StatusChip(
+                      DashboardStatusChip(
                         label: 'موقوفة على مستوى المنصة',
                         color: scheme.error.withAlpha(24),
                         textColor: scheme.error,

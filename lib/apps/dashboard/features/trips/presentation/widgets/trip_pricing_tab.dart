@@ -6,7 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
-import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_status_chip.dart';
 
 import '../../shared/domain/entities/operation_trip.dart';
 import '../../shared/domain/entities/trip_pricable_package.dart';
@@ -276,7 +276,7 @@ class _PricingCard extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
               ),
-              StatusChip(label: pricing.isActive ? 'نشط' : 'غير نشط'),
+              DashboardStatusChip(label: pricing.isActive ? 'نشط' : 'غير نشط'),
             ],
           ),
           const SizedBox(height: AppSpacing.medium),

@@ -5,6 +5,13 @@ import '../../../shared/domain/entities/operation_trip.dart';
 import '../../domain/usecases/trip_management_usecases.dart';
 import 'package:bmt_app/apps/dashboard/core/query/dashboard_query_caps.dart';
 
+/// Rows per page in the trips table — matches the row count the office sees
+/// before paging, same order of magnitude as [customersPageSize].
+const int tripsPageSize = 20;
+
+String _ymd(DateTime date) =>
+    '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+
 /// How the loaded trips are laid out on screen.
 enum TripsViewMode {
   /// Single list driven by the [TripsListLoaded.quickFilter] chip.
@@ -48,6 +55,10 @@ class TripsListLoaded extends TripsListState {
   final String dateFilter;
   final TripsViewMode viewMode;
 
+  /// Zero-based page into [filteredTrips], reset to `0` by every filter/search
+  /// change so the operator never lands on a page a narrower filter emptied.
+  final int pageIndex;
+
   /// True when the query came back full at [DashboardQueryCaps.trips], so the
   /// planner is showing the newest slice of the schedule rather than every trip
   /// the office has ever run.
@@ -64,6 +75,7 @@ class TripsListLoaded extends TripsListState {
     this.occupancyFilter = 'الكل',
     this.dateFilter = 'الكل',
     this.viewMode = TripsViewMode.list,
+    this.pageIndex = 0,
   });
 
   bool _matchesSearchAndAdvancedFilters(OperationTrip trip) {
@@ -110,11 +122,13 @@ class TripsListLoaded extends TripsListState {
 
   List<OperationTrip> get filteredTrips {
     final now = DateTime.now();
-    final todayStr =
-        '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+    final todayStr = _ymd(now);
+    final tomorrowStr = _ymd(now.add(const Duration(days: 1)));
     return trips.where((trip) {
       final matchesQuick = switch (quickFilter) {
         'today' => trip.date == todayStr,
+        'tomorrow' => trip.date == tomorrowStr,
+        'noDriver' => trip.driverId.isEmpty && !_isTerminal(trip.status),
         'upcoming' =>
           (trip.status == OperationTripStatus.scheduled ||
                   trip.status == OperationTripStatus.openForBooking) &&
@@ -130,6 +144,17 @@ class TripsListLoaded extends TripsListState {
       return matchesQuick && _matchesSearchAndAdvancedFilters(trip);
     }).toList();
   }
+
+  /// The current page of [filteredTrips], sliced at [tripsPageSize].
+  List<OperationTrip> get pagedTrips {
+    final all = filteredTrips;
+    final start = pageIndex * tripsPageSize;
+    if (start >= all.length) return const [];
+    return all.sublist(start, (start + tripsPageSize).clamp(0, all.length));
+  }
+
+  int get pageCount =>
+      (filteredTrips.length / tripsPageSize).ceil().clamp(1, 9999);
 
   List<OperationTrip> _sortedByDeparture(Iterable<OperationTrip> source) {
     final list = source.toList();
@@ -241,6 +266,51 @@ class TripsListLoaded extends TripsListState {
       .where((trip) => trip.status == OperationTripStatus.completed)
       .length;
 
+  int get tomorrowTrips {
+    final tomorrowStr = _ymd(DateTime.now().add(const Duration(days: 1)));
+    return trips.where((trip) => trip.date == tomorrowStr).length;
+  }
+
+  /// Trips that still need a driver assigned before they can run — excludes
+  /// trips that are already done or cancelled, since those need nothing.
+  int get needsDriverTrips => trips
+      .where((trip) => trip.driverId.isEmpty && !_isTerminal(trip.status))
+      .length;
+
+  int get cancelledTrips => trips
+      .where((trip) => trip.status == OperationTripStatus.cancelled)
+      .length;
+
+  int get cancelledTodayTrips {
+    final todayStr = _ymd(DateTime.now());
+    return trips
+        .where(
+          (trip) =>
+              trip.date == todayStr &&
+              trip.status == OperationTripStatus.cancelled,
+        )
+        .length;
+  }
+
+  /// Average seat occupancy across today's trips with a known capacity, as a
+  /// whole percentage. `null` when there is nothing to average — an empty
+  /// schedule has no occupancy rate, not a zero one.
+  int? get averageOccupancyToday {
+    final todayStr = _ymd(DateTime.now());
+    final eligible = trips.where(
+      (trip) => trip.date == todayStr && trip.capacity > 0,
+    );
+    if (eligible.isEmpty) return null;
+    final sum = eligible
+        .map((trip) => trip.bookedSeats / trip.capacity)
+        .reduce((a, b) => a + b);
+    return (sum / eligible.length * 100).round();
+  }
+
+  static bool _isTerminal(OperationTripStatus status) =>
+      status == OperationTripStatus.completed ||
+      status == OperationTripStatus.cancelled;
+
   TripsListLoaded copyWith({
     List<OperationTrip>? trips,
     String? searchQuery,
@@ -253,6 +323,7 @@ class TripsListLoaded extends TripsListState {
     String? occupancyFilter,
     String? dateFilter,
     TripsViewMode? viewMode,
+    int? pageIndex,
   }) {
     return TripsListLoaded(
       trips: trips ?? this.trips,
@@ -267,6 +338,7 @@ class TripsListLoaded extends TripsListState {
       occupancyFilter: occupancyFilter ?? this.occupancyFilter,
       dateFilter: dateFilter ?? this.dateFilter,
       viewMode: viewMode ?? this.viewMode,
+      pageIndex: pageIndex ?? this.pageIndex,
     );
   }
 }
@@ -307,51 +379,61 @@ class TripsListCubit extends Cubit<TripsListState> {
   void search(String query) {
     final current = state;
     if (current is! TripsListLoaded) return;
-    emit(current.copyWith(searchQuery: query));
+    emit(current.copyWith(searchQuery: query, pageIndex: 0));
   }
 
   void filterQuick(String quickFilter) {
     final current = state;
     if (current is! TripsListLoaded) return;
-    emit(current.copyWith(quickFilter: quickFilter));
+    emit(current.copyWith(quickFilter: quickFilter, pageIndex: 0));
+  }
+
+  void setPage(int pageIndex) {
+    final current = state;
+    if (current is! TripsListLoaded) return;
+    emit(current.copyWith(pageIndex: pageIndex));
   }
 
   void filterStatus(OperationTripStatus? status) {
     final current = state;
     if (current is! TripsListLoaded) return;
     emit(
-      current.copyWith(statusFilter: status, clearStatusFilter: status == null),
+      current.copyWith(
+        statusFilter: status,
+        clearStatusFilter: status == null,
+        pageIndex: 0,
+      ),
     );
   }
 
   void filterRoute(String route) {
     final current = state;
     if (current is! TripsListLoaded) return;
-    emit(current.copyWith(routeFilter: route));
+    emit(current.copyWith(routeFilter: route, pageIndex: 0));
   }
 
   void filterDriver(String driver) {
     final current = state;
     if (current is! TripsListLoaded) return;
-    emit(current.copyWith(driverFilter: driver));
+    emit(current.copyWith(driverFilter: driver, pageIndex: 0));
   }
 
   void filterVehicle(String vehicle) {
     final current = state;
     if (current is! TripsListLoaded) return;
-    emit(current.copyWith(vehicleFilter: vehicle));
+    emit(current.copyWith(vehicleFilter: vehicle, pageIndex: 0));
   }
 
   void filterOccupancy(String occupancy) {
     final current = state;
     if (current is! TripsListLoaded) return;
-    emit(current.copyWith(occupancyFilter: occupancy));
+    emit(current.copyWith(occupancyFilter: occupancy, pageIndex: 0));
   }
 
   void filterDate(String date) {
     final current = state;
     if (current is! TripsListLoaded) return;
-    emit(current.copyWith(dateFilter: date));
+    emit(current.copyWith(dateFilter: date, pageIndex: 0));
   }
 
   void changeViewMode(TripsViewMode mode) {
@@ -371,6 +453,7 @@ class TripsListCubit extends Cubit<TripsListState> {
         vehicleFilter: 'الكل',
         occupancyFilter: 'الكل',
         dateFilter: 'الكل',
+        pageIndex: 0,
       ),
     );
   }
@@ -435,7 +518,6 @@ class TripsListCubit extends Cubit<TripsListState> {
       if (current is! TripsListLoaded) return;
       emit(current.copyWith(trips: trips));
     } catch (_) {
-      
     } finally {
       _refreshingFromSource = false;
     }

@@ -4,9 +4,13 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/apps/dashboard/core/di/dashboard_di.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_collapsible_section.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_empty_state.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_kpi_card.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/ops_data_table.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/operation_trip.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/trip_lifecycle.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/trip_creation/presentation/cubit/trip_creation_cubit.dart';
@@ -18,7 +22,7 @@ import 'package:bmt_app/apps/dashboard/features/trips/trip_seats/presentation/cu
 import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
-import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_status_chip.dart';
 import 'package:bmt_app/core/widgets/debounced_search_field.dart';
 
 import '../widgets/trips_analytics.dart';
@@ -132,7 +136,7 @@ class _TripsViewState extends State<_TripsView> {
               message: message,
               onRetry: () => context.read<TripsListCubit>().load(),
             ),
-            TripsListLoaded() => _LoadedTrips(
+            TripsListLoaded() => TripsLoadedView(
               state: state,
               onOpenModule: onOpenModule,
             ),
@@ -144,21 +148,30 @@ class _TripsViewState extends State<_TripsView> {
   }
 }
 
-class _LoadedTrips extends StatelessWidget {
-  const _LoadedTrips({required this.state, this.onOpenModule});
+/// The loaded trips screen body — header, KPI row, and whichever view
+/// ([TripsListLoaded.viewMode]) is active.
+///
+/// Public (unlike its sibling private widgets), solely so the visual-QA
+/// harness (`_scratch_trips_screen_capture.dart`) can pump it directly
+/// against a fabricated [TripsListLoaded] without standing up the full
+/// [TripsScreen] and its five-cubit DI graph — the same reason
+/// [TripDetailsWorkspace] is public.
+class TripsLoadedView extends StatelessWidget {
+  const TripsLoadedView({super.key, required this.state, this.onOpenModule});
 
   final TripsListLoaded state;
   final ValueChanged<String>? onOpenModule;
 
   @override
   Widget build(BuildContext context) {
+    final cubit = context.read<TripsListCubit>();
     return ListView(
       padding: const EdgeInsets.all(AppSpacing.large),
       children: [
         DashboardModuleHeader(
           icon: DashboardIcons.tripsActive,
-          title: 'إدارة الرحلات',
-          subtitle: 'تابع حركة الرحلات، الإشغال، والطاقم من مساحة عمل واحدة.',
+          title: 'الرحلات',
+          subtitle: 'كل رحلات الأسبوع — التعيينات والسعة والحالة',
           actions: [
             if (state.capReached)
               const DashboardCapNotice(
@@ -166,51 +179,438 @@ class _LoadedTrips extends StatelessWidget {
                 noun: 'رحلة',
                 hint: 'ضيّق الفلاتر للوصول لرحلات أقدم.',
               ),
+            OutlinedButton.icon(
+              onPressed: () => _exportComingSoon(context),
+              icon: const Icon(Icons.download_rounded),
+              label: const Text('تصدير'),
+            ),
             FilledButton.icon(
               onPressed: () => _createTrip(context),
               icon: const Icon(Icons.add_rounded),
               label: const Text('رحلة جديدة'),
             ),
           ],
-          sectionId: DashboardSectionIds.tripsHeader,
-          // Folded, the counts still show — a trip that has passed its
-          // departure time is the one thing on this screen nobody may miss
-          // because a panel happened to be closed.
-          collapsedSummary: DashboardSectionSummary(
-            items: [
-              // The warning leads the row, where a right-to-left reader starts.
-              if (state.staleTrips > 0) 'فات موعدها ${state.staleTrips}',
-              'اليوم ${state.todayTrips}',
-              'قيد التشغيل ${state.runningTrips}',
-              'قادمة ${state.upcomingTrips}',
-              'مكتملة ${state.completedTrips}',
-            ],
-          ),
-          summary: _SummaryStrip(state: state),
         ),
         const SizedBox(height: AppSpacing.medium),
-
-        TripsAnalytics(state: state),
-        const SizedBox(height: AppSpacing.medium),
-        _SimpleToolbar(state: state),
+        _TripsKpiRow(state: state),
         const SizedBox(height: AppSpacing.medium),
         switch (state.viewMode) {
-          TripsViewMode.list => _TripsList(state: state),
-          TripsViewMode.grouped => TripsGroupedView(
-            state: state,
-            onOpenDetails: (trip) => _openTripDetails(context, trip),
+          TripsViewMode.list => _TripsTable(state: state),
+          TripsViewMode.grouped => Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _ViewModeBar(
+                viewMode: state.viewMode,
+                onChanged: cubit.changeViewMode,
+              ),
+              const SizedBox(height: AppSpacing.medium),
+              TripsGroupedView(
+                state: state,
+                onOpenDetails: (trip) => _openTripDetails(context, trip),
+              ),
+            ],
           ),
-          TripsViewMode.timeline => TripsTimelineView(
-            trips: state.timelineTrips,
-            onOpenDetails: (trip) => _openTripDetails(context, trip),
+          TripsViewMode.timeline => Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _ViewModeBar(
+                viewMode: state.viewMode,
+                onChanged: cubit.changeViewMode,
+              ),
+              const SizedBox(height: AppSpacing.medium),
+              TripsTimelineView(
+                trips: state.timelineTrips,
+                onOpenDetails: (trip) => _openTripDetails(context, trip),
+              ),
+            ],
           ),
         },
+        const SizedBox(height: AppSpacing.medium),
+        DashboardCollapsibleSection(
+          sectionId: DashboardSectionIds.tripsAnalytics,
+          icon: Icons.insights_rounded,
+          title: 'تحليلات الرحلات',
+          initiallyExpanded: false,
+          collapsedSummary: const DashboardSectionSummary(
+            items: ['توزيع الحالات، الإشغال، وأكثر المسارات تشغيلاً'],
+          ),
+          child: TripsAnalytics(state: state),
+        ),
       ],
     );
   }
 
   void _createTrip(BuildContext context) =>
       openTripCreationWizard(context, onOpenModule: onOpenModule);
+
+  void _exportComingSoon(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('تصدير الرحلات غير متاح بعد.')),
+    );
+  }
+}
+
+/// The four numbers an operator needs before touching a filter: today's
+/// trips, how many still need a driver, how full today's trips are running,
+/// and how many open trips already missed their departure.
+///
+/// Same shape as [HomeKpiGrid] — a plain card, an icon tint as the only
+/// colour, no fabricated trend — so a KPI reads identically everywhere in the
+/// console.
+class _TripsKpiRow extends StatelessWidget {
+  const _TripsKpiRow({required this.state});
+
+  final TripsListLoaded state;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = DashboardChartPalette.of(context);
+    final scheme = Theme.of(context).colorScheme;
+    final occupancy = state.averageOccupancyToday;
+
+    return DashboardKpiGrid(
+      itemExtent: 116,
+      children: [
+        DashboardKpiCard(
+          emphasized: true,
+          label: 'رحلات اليوم',
+          value: '${state.todayTrips}',
+          detail: state.cancelledTodayTrips > 0
+              ? '${state.cancelledTodayTrips} ملغاة'
+              : 'لا رحلات ملغاة',
+          icon: DashboardIcons.tripsActive,
+          color: palette.active,
+        ),
+        DashboardKpiCard(
+          emphasized: true,
+          label: 'بدون سائق',
+          value: '${state.needsDriverTrips}',
+          detail: state.needsDriverTrips > 0
+              ? 'تحتاج تعييناً'
+              : 'كل الرحلات مغطاة',
+          icon: DashboardIcons.attention,
+          color: state.needsDriverTrips > 0 ? scheme.error : palette.positive,
+        ),
+        DashboardKpiCard(
+          emphasized: true,
+          label: 'متوسط الإشغال',
+          value: occupancy == null ? '—' : '$occupancy%',
+          detail: occupancy == null
+              ? 'لا رحلات اليوم'
+              : 'عبر ${state.todayTrips} رحلة',
+          icon: DashboardIcons.occupancy,
+          color: (occupancy ?? 0) >= 70 ? palette.positive : scheme.primary,
+        ),
+        DashboardKpiCard(
+          emphasized: true,
+          label: 'فات موعدها ومفتوحة',
+          value: '${state.staleTrips}',
+          detail: state.staleTrips > 0 ? 'أغلقها' : 'لا رحلات متأخرة',
+          icon: DashboardIcons.activity,
+          color: state.staleTrips > 0 ? scheme.error : palette.positive,
+        ),
+      ],
+    );
+  }
+}
+
+/// Switches between the flat table, the status-grouped sections and the
+/// timeline — kept above whichever view is active rather than embedded in one
+/// of them, since it must stay reachable no matter which view is on screen.
+class _ViewModeBar extends StatelessWidget {
+  const _ViewModeBar({required this.viewMode, required this.onChanged});
+
+  final TripsViewMode viewMode;
+  final ValueChanged<TripsViewMode> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: TripsViewModeSwitch(viewMode: viewMode, onChanged: onChanged),
+    );
+  }
+}
+
+/// The default trips view: the EWT table panel — search, quick filters and
+/// the advanced-filter trigger inside the same bordered card as the sticky
+/// column header, the rows and the pager.
+class _TripsTable extends StatelessWidget {
+  const _TripsTable({required this.state});
+
+  final TripsListLoaded state;
+
+  @override
+  Widget build(BuildContext context) {
+    final rows = state.pagedTrips;
+    return OpsDataTable(
+      toolbar: _TripsTableToolbar(state: state),
+      columns: const [
+        OpsColumn('الرحلة', flex: 3, minWidth: 200),
+        OpsColumn('السائق والمركبة', flex: 2, minWidth: 150),
+        OpsColumn('موعد القيام', flex: 2, minWidth: 90),
+        OpsColumn(
+          'الإشغال',
+          flex: 1,
+          minWidth: 70,
+          numeric: true,
+          sortable: true,
+        ),
+        OpsColumn('الحالة', flex: 2, minWidth: 100),
+        OpsColumn('', minWidth: 88),
+      ],
+      rows: [for (final trip in rows) _cells(context, trip)],
+      onRowTap: [
+        for (final trip in rows) () => _openTripDetails(context, trip),
+      ],
+      total: state.filteredTrips.length,
+      currentPage: state.pageIndex,
+      pageSize: tripsPageSize,
+      onPageChanged: context.read<TripsListCubit>().setPage,
+      emptyState: DashboardEmptyState(
+        icon: Icons.search_off_rounded,
+        title: 'لا توجد رحلات مطابقة',
+        message: 'جرّب تعديل البحث أو إزالة بعض عوامل التصفية.',
+        action: TextButton.icon(
+          onPressed: () =>
+              context.read<TripsListCubit>().clearAdvancedFilters(),
+          icon: const Icon(Icons.filter_alt_off_outlined),
+          label: const Text('مسح التصفية'),
+        ),
+      ),
+    );
+  }
+
+  List<Widget> _cells(BuildContext context, OperationTrip trip) {
+    final tripStatus = tripListStatus(trip);
+    final style = context.status(tripStatus.tone);
+    final driverLabel = trip.driverId.isEmpty ? 'بدون سائق' : trip.driver;
+    return [
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(
+            trip.route,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
+          Text(
+            '${formatTripPrice(trip.ticketPrice)} ${trip.currency}',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 11.5,
+              color: DashboardColors.mutedInk(context),
+            ),
+          ),
+        ],
+      ),
+      Text(
+        trip.vehicle.isEmpty ? driverLabel : '$driverLabel · ${trip.vehicle}',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      Text(
+        '${tripFriendlyDate(trip.date)}، ${trip.departure}',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      Text(
+        '${trip.bookedSeats}/${trip.capacity}',
+        style: const TextStyle(
+          fontWeight: FontWeight.w700,
+          fontFeatures: [FontFeature.tabularFigures()],
+        ),
+      ),
+      DashboardStatusChip(
+        label: tripStatus.label,
+        color: style.tint,
+        textColor: style.ink,
+      ),
+      Align(
+        alignment: AlignmentDirectional.centerEnd,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            IconButton(
+              tooltip: 'عرض التفاصيل',
+              onPressed: () => _openTripDetails(context, trip),
+              icon: const Icon(Icons.visibility_outlined, size: 19),
+              visualDensity: VisualDensity.compact,
+            ),
+            PopupMenuButton<String>(
+              tooltip: 'المزيد',
+              onSelected: (value) {
+                if (value == 'copy') _duplicateTrip(context, trip);
+                if (value == 'delete') _deleteTrip(context, trip);
+              },
+              itemBuilder: (_) => [
+                const PopupMenuItem(
+                  value: 'copy',
+                  child: ListTile(
+                    leading: Icon(Icons.copy_rounded),
+                    title: Text('نسخ الرحلة'),
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'delete',
+                  enabled: TripLifecycle.canDelete(trip),
+                  child: ListTile(
+                    enabled: TripLifecycle.canDelete(trip),
+                    leading: const Icon(Icons.delete_outline_rounded),
+                    title: const Text('حذف الرحلة'),
+                    subtitle: TripLifecycle.canDelete(trip)
+                        ? null
+                        : const Text('ألغِ الرحلة بدلاً من حذفها'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    ];
+  }
+
+  void _duplicateTrip(BuildContext context, OperationTrip trip) {
+    final listCubit = context.read<TripsListCubit>();
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => BlocProvider(
+        create: (_) => dashboardDi<TripCreationCubit>()..loadWizardData(),
+        child: TripCreationWizardDialog(prefillTrip: trip),
+      ),
+    ).then((_) => listCubit.load());
+  }
+
+  Future<void> _deleteTrip(BuildContext context, OperationTrip trip) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text('حذف الرحلة؟'),
+        content: Text('سيتم حذف رحلة ${trip.route} نهائياً.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('إلغاء'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('حذف'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && context.mounted) {
+      await context.read<TripsListCubit>().deleteTrip(trip.id);
+    }
+  }
+}
+
+/// Search, quick-filter chips and the advanced-filter trigger — rendered
+/// inside [_TripsTable]'s [OpsDataTable] card, above its column header.
+class _TripsTableToolbar extends StatelessWidget {
+  const _TripsTableToolbar({required this.state});
+
+  final TripsListLoaded state;
+
+  @override
+  Widget build(BuildContext context) {
+    final cubit = context.read<TripsListCubit>();
+    final chips = <(String, String, int?)>[
+      ('today', 'اليوم', null),
+      ('tomorrow', 'الغد', state.tomorrowTrips),
+      ('noDriver', 'بدون سائق', state.needsDriverTrips),
+      ('cancelled', 'ملغاة', state.cancelledTrips),
+    ];
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final search = DebouncedSearchField(
+          hintText: 'ابحث برقم الرحلة أو المسار…',
+          onChanged: cubit.search,
+        );
+        final advancedFilter = _AdvancedFilterButton(state: state);
+        final chipRow = Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: chips
+              .map(
+                (chip) => ChoiceChip(
+                  label: chip.$3 == null
+                      ? Text(chip.$2)
+                      : Text('${chip.$2} ${chip.$3}'),
+                  labelStyle: const TextStyle(fontWeight: FontWeight.w700),
+                  selected: state.quickFilter == chip.$1,
+                  showCheckmark: false,
+                  onSelected: (_) => cubit.filterQuick(chip.$1),
+                ),
+              )
+              .toList(),
+        );
+        if (constraints.maxWidth < 760) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Expanded(child: search),
+                  const SizedBox(width: 8),
+                  advancedFilter,
+                ],
+              ),
+              const SizedBox(height: 10),
+              chipRow,
+            ],
+          );
+        }
+        return Row(
+          children: [
+            SizedBox(width: 260, child: search),
+            const SizedBox(width: 12),
+            Expanded(child: chipRow),
+            const SizedBox(width: 12),
+            advancedFilter,
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _AdvancedFilterButton extends StatelessWidget {
+  const _AdvancedFilterButton({required this.state});
+
+  final TripsListLoaded state;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        OutlinedButton.icon(
+          onPressed: () => showTripsFilterSheet(context),
+          icon: const Icon(Icons.tune_rounded, size: 18),
+          label: const Text('تصفية متقدمة'),
+        ),
+        if (state.hasAdvancedFilters)
+          PositionedDirectional(
+            end: 6,
+            top: 6,
+            child: Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.error,
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
 }
 
 /// Opens the trip planner over whatever is on screen and refreshes the list
@@ -232,375 +632,6 @@ void openTripCreationWizard(
       child: TripCreationWizardDialog(onOpenModule: onOpenModule),
     ),
   ).then((_) => listCubit.load());
-}
-
-class _SummaryStrip extends StatelessWidget {
-  const _SummaryStrip({required this.state});
-
-  final TripsListLoaded state;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final columns = constraints.maxWidth >= 900
-            ? 4
-            : constraints.maxWidth >= 560
-            ? 2
-            : 1;
-        final width =
-            (constraints.maxWidth - ((columns - 1) * AppSpacing.small)) /
-            columns;
-        return Wrap(
-          spacing: AppSpacing.small,
-          runSpacing: AppSpacing.small,
-          children: [
-            _SummaryItem(
-              width: width,
-              icon: Icons.today_rounded,
-              label: 'رحلات اليوم',
-              value: state.todayTrips,
-              selected: state.quickFilter == 'today',
-              onTap: () => context.read<TripsListCubit>().filterQuick('today'),
-            ),
-            _SummaryItem(
-              width: width,
-              icon: Icons.directions_bus_filled_rounded,
-              label: 'قيد التشغيل',
-              value: state.runningTrips,
-              selected: state.quickFilter == 'active',
-              onTap: () => context.read<TripsListCubit>().filterQuick('active'),
-            ),
-            _SummaryItem(
-              width: width,
-              icon: Icons.upcoming_rounded,
-              label: 'رحلات قادمة',
-              value: state.upcomingTrips,
-              selected: state.quickFilter == 'upcoming',
-              onTap: () =>
-                  context.read<TripsListCubit>().filterQuick('upcoming'),
-            ),
-            _SummaryItem(
-              width: width,
-              icon: Icons.task_alt_rounded,
-              label: 'مكتملة',
-              value: state.completedTrips,
-              selected: state.quickFilter == 'completed',
-              onTap: () =>
-                  context.read<TripsListCubit>().filterQuick('completed'),
-            ),
-            if (state.staleTrips > 0)
-              _SummaryItem(
-                width: width,
-                icon: Icons.report_problem_rounded,
-                label: 'فات موعدها',
-                value: state.staleTrips,
-                selected: state.quickFilter == 'stale',
-                alert: true,
-                onTap: () =>
-                    context.read<TripsListCubit>().filterQuick('stale'),
-              ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _SummaryItem extends StatelessWidget {
-  const _SummaryItem({
-    required this.width,
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.selected,
-    required this.onTap,
-    this.alert = false,
-  });
-
-  final double width;
-  final IconData icon;
-  final String label;
-  final int value;
-  final bool selected;
-  final VoidCallback onTap;
-
-  /// Renders the tile as an operational warning rather than a neutral stat.
-  final bool alert;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final accent = alert ? scheme.error : scheme.primary;
-    return SizedBox(
-      width: width,
-      child: Material(
-        color: selected
-            ? accent.withAlpha(30)
-            : alert
-            ? scheme.errorContainer.withAlpha(60)
-            : scheme.surfaceContainerLowest,
-        borderRadius: BorderRadius.circular(AppTokens.radius),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(AppTokens.radius),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppTokens.radius),
-              border: Border.all(
-                color: selected || alert ? accent : scheme.outlineVariant,
-              ),
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  icon,
-                  size: 20,
-                  color: selected || alert ? accent : scheme.onSurfaceVariant,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    label,
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                ),
-                Text(
-                  '$value',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: selected || alert ? accent : null,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SimpleToolbar extends StatelessWidget {
-  const _SimpleToolbar({required this.state});
-
-  final TripsListLoaded state;
-
-  /// What the collapsed toolbar reports: the search term, the active quick
-  /// chip, how many advanced filters are on, and the resulting row count.
-  List<String> _summaryItems() {
-    final items = <String>[];
-
-    final query = state.searchQuery.trim();
-    if (query.isNotEmpty) items.add('بحث: $query');
-
-    const quickLabels = {
-      'today': 'اليوم',
-      'active': 'قيد التشغيل',
-      'upcoming': 'قادمة',
-      'completed': 'مكتملة',
-      'stale': 'فات موعدها',
-    };
-    final quick = quickLabels[state.quickFilter];
-    if (quick != null) items.add(quick);
-
-    // Named, not counted: a folded "٢ فلتر متقدم" forces the operator to
-    // reopen the sheet just to see which two are narrowing the board.
-    if (state.statusFilter != null) {
-      items.add('الحالة: ${state.statusFilter!.label}');
-    }
-    if (state.routeFilter != 'الكل') items.add('المسار: ${state.routeFilter}');
-    if (state.driverFilter != 'الكل') {
-      items.add('السائق: ${state.driverFilter}');
-    }
-    if (state.vehicleFilter != 'الكل') {
-      items.add('المركبة: ${state.vehicleFilter}');
-    }
-    if (state.occupancyFilter != 'الكل') {
-      items.add('الإشغال: ${state.occupancyFilter}');
-    }
-    if (state.dateFilter != 'الكل') items.add('التاريخ: ${state.dateFilter}');
-
-    if (items.isEmpty) return const ['بدون تصفية'];
-    items.add('${state.filteredTrips.length} رحلة ظاهرة');
-    return items;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final cubit = context.read<TripsListCubit>();
-    final filters = [
-      ('all', 'الكل'),
-      ('today', 'اليوم'),
-      ('active', 'قيد التشغيل'),
-      ('upcoming', 'قادمة'),
-      ('completed', 'مكتملة'),
-      if (state.staleTrips > 0) ('stale', 'فات موعدها'),
-    ];
-    return DashboardCollapsibleSection(
-      sectionId: DashboardSectionIds.tripsFilters,
-      icon: Icons.tune_rounded,
-      title: 'البحث والتصفية',
-
-      collapsedSummary: DashboardSectionSummary(items: _summaryItems()),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final search = DebouncedSearchField(
-            hintText: 'ابحث بالمسار، السائق، المركبة، أو رقم الرحلة',
-            onChanged: cubit.search,
-          );
-          final filterButton = Stack(
-            clipBehavior: Clip.none,
-            children: [
-              IconButton.outlined(
-                tooltip: 'فلاتر متقدمة',
-                onPressed: () => showTripsFilterSheet(context),
-                icon: const Icon(Icons.tune_rounded),
-              ),
-              if (state.hasAdvancedFilters)
-                Positioned(
-                  right: 6,
-                  top: 6,
-                  child: Container(
-                    width: 8,
-                    height: 8,
-                    decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.error,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ),
-            ],
-          );
-          final chips = Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: filters
-                .map(
-                  (item) => ChoiceChip(
-                    avatar: state.quickFilter == item.$1
-                        ? const Icon(Icons.check_rounded, size: 16)
-                        : null,
-                    label: Text(
-                      item.$2,
-                      style: const TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    selected: state.quickFilter == item.$1,
-                    showCheckmark: false,
-                    onSelected: (_) => cubit.filterQuick(item.$1),
-                  ),
-                )
-                .toList(),
-          );
-          final viewModeRow = SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: TripsViewModeSwitch(
-              viewMode: state.viewMode,
-              onChanged: cubit.changeViewMode,
-            ),
-          );
-          if (constraints.maxWidth < 760) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  children: [
-                    Expanded(child: search),
-                    const SizedBox(width: 8),
-                    filterButton,
-                  ],
-                ),
-                const SizedBox(height: 12),
-                chips,
-                const SizedBox(height: 12),
-                viewModeRow,
-              ],
-            );
-          }
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Row(
-                children: [
-                  SizedBox(width: 380, child: search),
-                  const SizedBox(width: 8),
-                  filterButton,
-                  const SizedBox(width: 16),
-                  Expanded(child: chips),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: viewModeRow,
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _TripsList extends StatelessWidget {
-  const _TripsList({required this.state});
-
-  final TripsListLoaded state;
-
-  @override
-  Widget build(BuildContext context) {
-    final trips = state.filteredTrips;
-    return AppCard(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(
-                _listTitle(state.quickFilter),
-                style: Theme.of(
-                  context,
-                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
-              ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 5,
-                ),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Text(
-                  '${trips.length} رحلة',
-                  style: const TextStyle(fontWeight: FontWeight.w700),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          if (trips.isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(vertical: 48),
-              child: Center(child: Text('لا توجد رحلات مطابقة للبحث الحالي.')),
-            )
-          else
-            ...trips.indexed.map(
-              (entry) => Padding(
-                padding: EdgeInsets.only(top: entry.$1 == 0 ? 0 : 10),
-                child: TripRowCard(
-                  trip: entry.$2,
-                  onOpenDetails: () => _openTripDetails(context, entry.$2),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
 }
 
 void _openTripDetails(BuildContext context, OperationTrip trip) {
@@ -736,7 +767,7 @@ class _DetailsHeader extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(width: 8),
-                        StatusChip(
+                        DashboardStatusChip(
                           label: trip.status.label,
                           color: tripStatusColor(
                             context,
@@ -1600,7 +1631,7 @@ class _PassengersTab extends StatelessWidget {
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      StatusChip(
+                      DashboardStatusChip(
                         label: paymentState.label,
                         color: tripSeatColor(context, paymentState),
                         textColor: tripSeatOnColor(context, paymentState),
@@ -1860,16 +1891,5 @@ String _actionLabel(OperationTripStatus status) {
     OperationTripStatus.inProgress => 'بدء الرحلة',
     OperationTripStatus.completed => 'إنهاء الرحلة',
     _ => status.label,
-  };
-}
-
-String _listTitle(String filter) {
-  return switch (filter) {
-    'today' => 'رحلات اليوم',
-    'active' => 'الرحلات قيد التشغيل',
-    'upcoming' => 'الرحلات القادمة',
-    'completed' => 'الرحلات المكتملة',
-    'stale' => 'رحلات فات موعدها وما زالت مفتوحة',
-    _ => 'كل الرحلات',
   };
 }

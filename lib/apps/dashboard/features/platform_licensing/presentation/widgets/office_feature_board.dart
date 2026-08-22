@@ -5,7 +5,7 @@ import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/debounced_search_field.dart';
-import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_status_chip.dart';
 
 import '../../../../core/entitlements/entitlement_context.dart';
 import '../../../../core/theme/dashboard_colors.dart';
@@ -744,7 +744,7 @@ class _FeatureRow extends StatelessWidget {
                     ],
                     if (feature.status == 'deprecated') ...[
                       const SizedBox(width: AppSpacing.xSmall),
-                      StatusChip(
+                      DashboardStatusChip(
                         label: 'مهجورة',
                         color: scheme.outline.withAlpha(24),
                         textColor: scheme.outline,

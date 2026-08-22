@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/core/theme/colors.dart';
-import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_status_chip.dart';
 
 import '../../domain/entities/user_subscription.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
@@ -74,7 +74,7 @@ class SubscriptionStatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = subscriptionStatusColor(context, status);
-    return StatusChip(
+    return DashboardStatusChip(
       label: status.label,
       color: color.withAlpha(28),
       textColor: color,

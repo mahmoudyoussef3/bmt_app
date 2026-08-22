@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/core/theme/spacing.dart';
-import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_status_chip.dart';
 
 import '../../../../core/entitlements/entitlement_context.dart';
 import '../../../../core/entitlements/licensing_dialogs.dart';
@@ -244,7 +244,7 @@ class _FeatureChip extends StatelessWidget {
       message: blocked
           ? 'تتطلب تفعيل ميزة أخرى أولًا'
           : (on ? 'متاحة في باقتك' : 'غير متاحة في باقتك الحالية'),
-      child: StatusChip(
+      child: DashboardStatusChip(
         label: feature.valueType == 'enum'
             ? '${feature.nameAr}: ${feature.value}'
             : feature.nameAr,
@@ -289,7 +289,7 @@ class _Invoices extends StatelessWidget {
                       children: [
                         Text(licensingMoney(invoice.total, invoice.currency)),
                         const SizedBox(width: AppSpacing.small),
-                        StatusChip(label: invoice.statusLabelAr),
+                        DashboardStatusChip(label: invoice.statusLabelAr),
                       ],
                     ),
                   ),

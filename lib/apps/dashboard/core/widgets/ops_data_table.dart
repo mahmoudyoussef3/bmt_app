@@ -52,6 +52,13 @@ class OpsDataTable extends StatelessWidget {
   /// [DashboardEmptyState] to say *why* it is empty and what to do about it.
   final Widget? emptyState;
 
+  /// Search + quick filters + advanced-filter trigger, rendered inside the same
+  /// card above the sticky header row. The EWT table modules (Trips, Routes,
+  /// Bookings, …) all share this shape — one bordered panel holding the search
+  /// bar, the column header and the rows — rather than a separate toolbar card
+  /// floating above the table.
+  final Widget? toolbar;
+
   const OpsDataTable({
     super.key,
     required this.columns,
@@ -67,6 +74,7 @@ class OpsDataTable extends StatelessWidget {
     this.onRowTap,
     this.rowTints,
     this.emptyState,
+    this.toolbar,
   });
 
   @override
@@ -89,6 +97,19 @@ class OpsDataTable extends StatelessWidget {
           padding: EdgeInsets.zero,
           child: Column(
             children: [
+              if (toolbar != null) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.medium,
+                    vertical: AppSpacing.small,
+                  ),
+                  child: toolbar,
+                ),
+                Divider(
+                  height: 1,
+                  color: DashboardColors.tableDivider(context),
+                ),
+              ],
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: SizedBox(
@@ -188,9 +209,11 @@ class _OpsHeaderRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final style = Theme.of(
-      context,
-    ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold);
+    final style = Theme.of(context).textTheme.labelSmall?.copyWith(
+      fontWeight: FontWeight.w800,
+      letterSpacing: 0.4,
+      color: DashboardColors.mutedInk(context),
+    );
     return Container(
       color: DashboardColors.tableHeader(context),
       padding: const EdgeInsets.symmetric(
@@ -346,27 +369,130 @@ class _OpsPaginationBar extends StatelessWidget {
           runSpacing: AppSpacing.xSmall,
           children: [
             Text('الإجمالي $total'),
-            Text('صفحة ${currentPage + 1} من $pages'),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                IconButton(
-                  tooltip: 'السابق',
-                  onPressed: currentPage == 0
-                      ? null
-                      : () => onPageChanged(currentPage - 1),
-                  icon: const Icon(DashboardIcons.paginationPrevious),
-                ),
-                IconButton(
-                  tooltip: 'التالي',
-                  onPressed: currentPage >= pages - 1
-                      ? null
-                      : () => onPageChanged(currentPage + 1),
-                  icon: const Icon(DashboardIcons.paginationNext),
-                ),
-              ],
+            _NumberedPager(
+              currentPage: currentPage,
+              pages: pages,
+              onPageChanged: onPageChanged,
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Compact numbered pager — first, last, a window around the current page and
+/// an ellipsis between — replacing the plain prev/next icon pair. A page
+/// number is a destination the operator can jump straight to; two arrows only
+/// ever answer "one step from here".
+class _NumberedPager extends StatelessWidget {
+  const _NumberedPager({
+    required this.currentPage,
+    required this.pages,
+    required this.onPageChanged,
+  });
+
+  final int currentPage;
+  final int pages;
+  final ValueChanged<int> onPageChanged;
+
+  /// Which zero-indexed pages to render as buttons, `null` standing in for an
+  /// ellipsis. Always includes the first and last page and a window of up to
+  /// two neighbours on each side of [currentPage].
+  List<int?> _slots() {
+    if (pages <= 7) return [for (var i = 0; i < pages; i++) i];
+
+    final slots = <int>{0, pages - 1};
+    for (var i = currentPage - 1; i <= currentPage + 1; i++) {
+      if (i > 0 && i < pages - 1) slots.add(i);
+    }
+    final sorted = slots.toList()..sort();
+    final result = <int?>[];
+    for (var i = 0; i < sorted.length; i++) {
+      if (i > 0 && sorted[i] - sorted[i - 1] > 1) result.add(null);
+      result.add(sorted[i]);
+    }
+    return result;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        IconButton(
+          tooltip: 'السابق',
+          onPressed: currentPage == 0
+              ? null
+              : () => onPageChanged(currentPage - 1),
+          icon: const Icon(DashboardIcons.paginationPrevious, size: 18),
+          visualDensity: VisualDensity.compact,
+        ),
+        for (final slot in _slots())
+          if (slot == null)
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 4),
+              child: Text('…'),
+            )
+          else
+            _PageNumberButton(
+              page: slot,
+              selected: slot == currentPage,
+              onTap: () => onPageChanged(slot),
+            ),
+        IconButton(
+          tooltip: 'التالي',
+          onPressed: currentPage >= pages - 1
+              ? null
+              : () => onPageChanged(currentPage + 1),
+          icon: const Icon(DashboardIcons.paginationNext, size: 18),
+          visualDensity: VisualDensity.compact,
+        ),
+      ],
+    );
+  }
+}
+
+class _PageNumberButton extends StatelessWidget {
+  const _PageNumberButton({
+    required this.page,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final int page;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final radius = BorderRadius.circular(6);
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 1),
+      child: Material(
+        color: selected
+            ? DashboardColors.accentFill(context)
+            : Colors.transparent,
+        borderRadius: radius,
+        child: InkWell(
+          onTap: selected ? null : onTap,
+          borderRadius: radius,
+          child: SizedBox(
+            width: 28,
+            height: 28,
+            child: Center(
+              child: Text(
+                '${page + 1}',
+                style: theme.textTheme.labelMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: selected
+                      ? DashboardColors.onHero(context)
+                      : DashboardColors.mutedInk(context),
+                ),
+              ),
+            ),
+          ),
         ),
       ),
     );

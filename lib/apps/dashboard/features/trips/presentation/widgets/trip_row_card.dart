@@ -9,7 +9,7 @@ import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/ope
 import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/trip_lifecycle.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/trip_creation/presentation/cubit/trip_creation_cubit.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/trip_management/presentation/cubit/trips_list_cubit.dart';
-import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_status_chip.dart';
 
 import 'trip_creation_wizard.dart';
 import 'trip_ui_helpers.dart';
@@ -91,7 +91,7 @@ class TripRowCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      StatusChip(
+                      DashboardStatusChip(
                         label: trip.status.label,
                         color: DashboardColors.kpiTint(
                           context,

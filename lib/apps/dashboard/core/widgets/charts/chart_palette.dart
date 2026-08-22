@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'package:bmt_app/core/theme/app_dark_colors.dart';
-import 'package:bmt_app/core/theme/app_light_colors.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_dark_colors.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_light_colors.dart';
 
 /// The dashboard's single chart colour vocabulary.
 ///
@@ -64,34 +64,37 @@ class DashboardChartPalette {
   final List<Color> sequential;
 
   static final DashboardChartPalette _light = DashboardChartPalette._(
-    positive: AppLightColors.onSuccessContainer,
-    warning: AppLightColors.onWarningContainer,
-    negative: AppLightColors.onDangerContainer,
-    active: AppLightColors.onInfoContainer,
-    neutral: AppLightColors.onNeutralContainer,
-    accent: AppLightColors.onSpecialContainer,
+    positive: DashboardLightColors.onSuccessContainer,
+    warning: DashboardLightColors.onWarningContainer,
+    negative: DashboardLightColors.onDangerContainer,
+    active: DashboardLightColors.onInfoContainer,
+    neutral: DashboardLightColors.onNeutralContainer,
+    accent: DashboardLightColors.onSpecialContainer,
     // Lightest → darkest brand blue, so "low" recedes toward the page and
     // "high" reads as the most saturated, most present tone — the ordering a
     // light page needs. Anchored on the same two tones [kpiTint]/badges
     // already use for this hue, just interpolated rather than jumping
     // straight from one to the other.
     sequential: _ramp(
-      AppLightColors.primaryContainer,
-      AppLightColors.onPrimaryContainer,
+      DashboardLightColors.primaryContainer,
+      DashboardLightColors.onPrimaryContainer,
     ),
   );
 
   static final DashboardChartPalette _dark = DashboardChartPalette._(
-    positive: AppDarkColors.successInk,
-    warning: AppDarkColors.warningInk,
-    negative: AppDarkColors.dangerInk,
-    active: AppDarkColors.primaryAccent,
-    neutral: AppDarkColors.onNeutralContainer,
-    accent: AppDarkColors.special,
+    positive: DashboardDarkColors.successInk,
+    warning: DashboardDarkColors.warningInk,
+    negative: DashboardDarkColors.dangerInk,
+    active: DashboardDarkColors.primaryAccent,
+    neutral: DashboardDarkColors.onNeutralContainer,
+    accent: DashboardDarkColors.special,
     // Same idea, mirrored: a dark page needs "low" to sink toward the dark
     // container tone and "high" to rise toward the bright accent ink, which
-    // is the pairing [AppDarkColors] itself already inverts for this reason.
-    sequential: _ramp(AppDarkColors.primaryContainer, AppDarkColors.primaryAccent),
+    // is the pairing [DashboardDarkColors] itself already inverts for this reason.
+    sequential: _ramp(
+      DashboardDarkColors.primaryContainer,
+      DashboardDarkColors.primaryAccent,
+    ),
   );
 
   static List<Color> _ramp(Color from, Color to, {int steps = 5}) => [

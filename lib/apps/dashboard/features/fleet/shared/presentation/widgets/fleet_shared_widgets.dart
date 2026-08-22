@@ -6,7 +6,7 @@ import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
-import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_status_chip.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
 class FleetAvatar extends StatelessWidget {
@@ -403,7 +403,7 @@ class FleetMetaRow extends StatelessWidget {
 
 /// The "what is this bus doing right now" chip.
 ///
-/// Sits next to the lifecycle [StatusChip] rather than replacing it, because the
+/// Sits next to the lifecycle [DashboardStatusChip] rather than replacing it, because the
 /// two answer different questions and are allowed to disagree — a vehicle marked
 /// for maintenance while a trip is under way reads "في الصيانة" and "في رحلة" side
 /// by side, which is exactly the contradiction a dispatcher needs to see.
@@ -446,7 +446,7 @@ class FleetOperationalChip extends StatelessWidget {
       ),
     };
 
-    final chip = StatusChip(
+    final chip = DashboardStatusChip(
       label: status.label,
       color: background,
       textColor: foreground,

@@ -5,7 +5,7 @@ import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_snackbar.dart';
-import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_status_chip.dart';
 import 'package:bmt_app/apps/dashboard/core/query/dashboard_query_caps.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_cap_notice.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_kpi_card.dart';
@@ -211,7 +211,7 @@ class _Header extends StatelessWidget {
       title: 'مركز عمليات الحجوزات',
       subtitle: 'راجع الطلبات، تحقق من الدفع، وافتح تفاصيل الحجز من مكان واحد.',
       actions: [
-        StatusChip(label: '${state.bookings.length} طلب'),
+        DashboardStatusChip(label: '${state.bookings.length} طلب'),
         if (state.capReached)
           const DashboardCapNotice(
             rowCap: DashboardQueryCaps.bookings,

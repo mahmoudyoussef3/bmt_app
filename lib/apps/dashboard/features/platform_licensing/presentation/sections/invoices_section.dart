@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
-import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_status_chip.dart';
 
 import '../../../../core/theme/dashboard_colors.dart';
 import '../../../../core/theme/dashboard_icons.dart';
@@ -118,7 +118,7 @@ class _InvoicesSectionState extends State<InvoicesSection> {
                       children: [
                         Text(licensingMoney(renewal['amount'] as num?)),
                         const SizedBox(width: AppSpacing.small),
-                        StatusChip(
+                        DashboardStatusChip(
                           label: renewal['auto_renew'] == true
                               ? 'تلقائي'
                               : 'يدوي',
@@ -188,7 +188,7 @@ class _InvoicesSectionState extends State<InvoicesSection> {
         licensingMoney(invoice.total, invoice.currency),
         style: text.bodySmall?.copyWith(fontWeight: FontWeight.bold),
       ),
-      StatusChip(label: invoice.statusLabelAr),
+      DashboardStatusChip(label: invoice.statusLabelAr),
       Row(
         mainAxisSize: MainAxisSize.min,
         children: [

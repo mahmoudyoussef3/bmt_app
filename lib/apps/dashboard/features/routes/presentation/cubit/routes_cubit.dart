@@ -1,4 +1,8 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
+import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/operation_trip.dart';
+import 'package:bmt_app/apps/dashboard/features/trips/trip_management/domain/usecases/trip_management_usecases.dart';
 
 import '../../domain/entities/operation_route.dart';
 import '../../domain/usecases/add_route_station_usecase.dart';
@@ -13,6 +17,7 @@ import 'routes_state.dart';
 
 class RoutesCubit extends Cubit<RoutesState> {
   final GetOperationRoutesUseCase _getRoutes;
+  final GetOperationTripsUseCase _getTrips;
   final CreateRouteUseCase _createRoute;
   final UpdateRouteUseCase _updateRoute;
   final DeleteRouteUseCase _deleteRoute;
@@ -23,6 +28,7 @@ class RoutesCubit extends Cubit<RoutesState> {
 
   RoutesCubit({
     required GetOperationRoutesUseCase getRoutes,
+    required GetOperationTripsUseCase getTrips,
     required CreateRouteUseCase createRoute,
     required UpdateRouteUseCase updateRoute,
     required DeleteRouteUseCase deleteRoute,
@@ -31,6 +37,7 @@ class RoutesCubit extends Cubit<RoutesState> {
     required DeleteRouteStationUseCase deleteStation,
     required ReorderRouteStationsUseCase reorderStations,
   }) : _getRoutes = getRoutes,
+       _getTrips = getTrips,
        _createRoute = createRoute,
        _updateRoute = updateRoute,
        _deleteRoute = deleteRoute,
@@ -44,8 +51,25 @@ class RoutesCubit extends Cubit<RoutesState> {
     emit(const RoutesLoading());
     try {
       final routes = await _getRoutes();
+
+      // Trips only back the board's derived numbers (occupancy, weekly
+      // trips, price) — a failure here must not blank the routes module
+      // itself, so it degrades to an empty list instead of failing the load.
+      var trips = const <OperationTrip>[];
+      try {
+        trips = await _getTrips();
+      } catch (error) {
+        debugPrint('[RoutesCubit] trips feed unavailable: $error');
+      }
+
       final selectedRouteId = routes.isNotEmpty ? routes.first.id : '';
-      emit(RoutesLoaded(routes: routes, selectedRouteId: selectedRouteId));
+      emit(
+        RoutesLoaded(
+          routes: routes,
+          trips: trips,
+          selectedRouteId: selectedRouteId,
+        ),
+      );
     } catch (error) {
       emit(RoutesError(error.toString()));
     }
@@ -129,7 +153,13 @@ class RoutesCubit extends Cubit<RoutesState> {
   void updateSearch(String query) {
     final current = state;
     if (current is! RoutesLoaded) return;
-    emit(current.copyWith(searchQuery: query, view: RoutesView.list));
+    emit(
+      current.copyWith(
+        searchQuery: query,
+        view: RoutesView.list,
+        pageIndex: 0,
+      ),
+    );
   }
 
   void updateStatusFilter(OperationRouteStatus? status) {
@@ -140,8 +170,15 @@ class RoutesCubit extends Cubit<RoutesState> {
         statusFilter: status,
         clearStatusFilter: status == null,
         view: RoutesView.list,
+        pageIndex: 0,
       ),
     );
+  }
+
+  void setPage(int pageIndex) {
+    final current = state;
+    if (current is! RoutesLoaded) return;
+    emit(current.copyWith(pageIndex: pageIndex));
   }
 
   /// Creates or updates the route the builder produced.

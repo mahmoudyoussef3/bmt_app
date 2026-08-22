@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/apps/dashboard/core/routes/dashboard_routes.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_empty_state.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_kpi_card.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/ops_data_table.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
-import 'package:bmt_app/core/theme/tokens.dart';
-import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/debounced_search_field.dart';
 import 'package:bmt_app/core/widgets/route_direction_text.dart';
 
@@ -46,19 +46,28 @@ class FinanceLedgerTab extends StatelessWidget {
     return ListView(
       padding: EdgeInsets.zero,
       children: [
-        _LedgerFilters(state: state, cubit: cubit),
-        const SizedBox(height: AppSpacing.medium),
-        _LedgerTotals(state: state, shownCount: entries.length),
+        _LedgerKpiRow(
+          state: state,
+          shownCount: entries.length,
+          onOpenModule: onOpenModule,
+        ),
         const SizedBox(height: AppSpacing.medium),
         OpsDataTable(
+          toolbar: _LedgerToolbar(state: state, cubit: cubit),
+          // `flex` equals `minWidth` on every column — see the Routes/Trips
+          // table trap: [OpsDataTable] splits its rendered width by flex
+          // *fraction*, not by minWidth, so at the exact-minWidth boundary a
+          // column whose flex-share undercuts its own minWidth still gets
+          // squeezed below it and overflows even though the table as a whole
+          // is wide enough. Matching the two exactly avoids that.
           columns: const [
-            OpsColumn('التاريخ', flex: 3, minWidth: 150),
-            OpsColumn('النوع', flex: 2, minWidth: 110),
-            OpsColumn('العميل', flex: 3, minWidth: 140),
-            OpsColumn('المرجع', flex: 4, minWidth: 180),
-            OpsColumn('طريقة الدفع', flex: 2, minWidth: 120),
-            OpsColumn('الحالة', flex: 2, minWidth: 130),
-            OpsColumn('المبلغ', flex: 2, numeric: true, minWidth: 130),
+            OpsColumn('التاريخ', flex: 150, minWidth: 150),
+            OpsColumn('النوع', flex: 110, minWidth: 110),
+            OpsColumn('العميل', flex: 140, minWidth: 140),
+            OpsColumn('المرجع', flex: 180, minWidth: 180),
+            OpsColumn('طريقة الدفع', flex: 120, minWidth: 120),
+            OpsColumn('الحالة', flex: 130, minWidth: 130),
+            OpsColumn('المبلغ', flex: 130, numeric: true, minWidth: 130),
           ],
           rows: [for (final entry in pageEntries) _row(context, entry)],
           onRowTap: [
@@ -251,258 +260,329 @@ class _ReferenceCell extends StatelessWidget {
   }
 }
 
-class _LedgerFilters extends StatelessWidget {
-  final FinanceLoaded state;
-  final FinanceCubit cubit;
-
-  const _LedgerFilters({required this.state, required this.cubit});
-
-  @override
-  Widget build(BuildContext context) {
-    final search = DebouncedSearchField(
-      hintText: 'بحث بالاسم، رقم الحجز، الهاتف، المسار أو الباقة...',
-      initialValue: state.searchQuery,
-      onChanged: cubit.setSearchQuery,
-    );
-
-    final typeFilter = DropdownButtonFormField<FinanceEntryType?>(
-      initialValue: state.typeFilter,
-      isExpanded: true,
-      decoration: const InputDecoration(
-        labelText: 'نوع الحركة',
-        border: OutlineInputBorder(),
-      ),
-      items: [
-        const DropdownMenuItem(value: null, child: Text('الكل')),
-        for (final type in FinanceEntryType.values)
-          DropdownMenuItem(value: type, child: Text(type.pluralLabel)),
-      ],
-      onChanged: cubit.setTypeFilter,
-    );
-
-    final methodFilter = DropdownButtonFormField<FinancePaymentMethod?>(
-      initialValue: state.methodFilter,
-      isExpanded: true,
-      decoration: const InputDecoration(
-        labelText: 'طريقة الدفع',
-        border: OutlineInputBorder(),
-      ),
-      items: [
-        const DropdownMenuItem(value: null, child: Text('الكل')),
-        for (final method in FinancePaymentMethod.values)
-          DropdownMenuItem(value: method, child: Text(method.label)),
-      ],
-      onChanged: cubit.setMethodFilter,
-    );
-
-    final statusFilter = DropdownButtonFormField<PaymentStatus?>(
-      initialValue: state.statusFilter,
-      isExpanded: true,
-      decoration: const InputDecoration(
-        labelText: 'الحالة',
-        border: OutlineInputBorder(),
-      ),
-      items: [
-        const DropdownMenuItem(value: null, child: Text('الكل')),
-        for (final status in PaymentStatus.values)
-          DropdownMenuItem(value: status, child: Text(status.label)),
-      ],
-      onChanged: cubit.setStatusFilter,
-    );
-
-    final sortFilter = DropdownButtonFormField<FinanceLedgerSort>(
-      initialValue: state.ledgerSort,
-      isExpanded: true,
-      decoration: const InputDecoration(
-        labelText: 'الترتيب',
-        border: OutlineInputBorder(),
-      ),
-      items: [
-        for (final sort in FinanceLedgerSort.values)
-          DropdownMenuItem(value: sort, child: Text(sort.label)),
-      ],
-      onChanged: (sort) {
-        if (sort != null) cubit.setLedgerSort(sort);
-      },
-    );
-
-    return AppCard(
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final narrow = constraints.maxWidth < 1100;
-          return Column(
-            children: [
-              if (narrow) ...[
-                search,
-                const SizedBox(height: AppSpacing.small),
-                Row(
-                  children: [
-                    Expanded(child: typeFilter),
-                    const SizedBox(width: AppSpacing.small),
-                    Expanded(child: methodFilter),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.small),
-                Row(
-                  children: [
-                    Expanded(child: statusFilter),
-                    const SizedBox(width: AppSpacing.small),
-                    Expanded(child: sortFilter),
-                  ],
-                ),
-              ] else
-                Row(
-                  children: [
-                    Expanded(flex: 3, child: search),
-                    const SizedBox(width: AppSpacing.small),
-                    Expanded(child: typeFilter),
-                    const SizedBox(width: AppSpacing.small),
-                    Expanded(child: methodFilter),
-                    const SizedBox(width: AppSpacing.small),
-                    Expanded(child: statusFilter),
-                    const SizedBox(width: AppSpacing.small),
-                    Expanded(child: sortFilter),
-                  ],
-                ),
-              const SizedBox(height: AppSpacing.small),
-              Row(
-                children: [
-                  Icon(
-                    Icons.touch_app_outlined,
-                    size: 16,
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                  const SizedBox(width: AppSpacing.xSmall),
-                  Expanded(
-                    child: Text(
-                      'اضغط أي حركة لعرض تفاصيلها الكاملة',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ),
-                  if (state.hasAnyFilter)
-                    TextButton.icon(
-                      onPressed: cubit.clearFilters,
-                      icon: const Icon(Icons.filter_alt_off_rounded, size: 18),
-                      label: const Text('مسح التصفية'),
-                    ),
-                ],
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-}
-
-/// Totals for what is actually on screen. A filtered ledger that still shows
-/// the period total would invite the operator to read the wrong number.
-class _LedgerTotals extends StatelessWidget {
+/// The four numbers an operator needs before touching a filter: what the
+/// window collected, what still needs a receipt decision, what is still
+/// outstanding, and what went back. Same shape as every other EWT table
+/// module (Routes, Trips) — a plain emphasized card, no fabricated figure.
+///
+/// "بانتظار المراجعة" is the one tile with somewhere to go: Finance never
+/// decides a receipt, so tapping it hands the operator to الحجوزات, exactly
+/// like [FinanceAttentionPanel] does for the same queue.
+class _LedgerKpiRow extends StatelessWidget {
   final FinanceLoaded state;
   final int shownCount;
+  final ValueChanged<String>? onOpenModule;
 
-  const _LedgerTotals({required this.state, required this.shownCount});
-
-  @override
-  Widget build(BuildContext context) {
-    final palette = DashboardChartPalette.of(context);
-    final scheme = Theme.of(context).colorScheme;
-    final analytics = state.analytics;
-
-    return AppCard(
-      child: Wrap(
-        spacing: AppSpacing.large,
-        runSpacing: AppSpacing.small,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          _Total(
-            label: state.hasAnyFilter ? 'المعروض حالياً' : 'حركات الفترة',
-            value: '${FinanceFormat.count(shownCount)} حركة',
-            color: palette.active,
-            icon: Icons.list_alt_rounded,
-          ),
-          _Total(
-            label: state.hasAnyFilter ? 'محصّل ضمن المعروض' : 'صافي المحصّل',
-            value: FinanceFormat.money(
-              state.hasAnyFilter ? state.filteredNet : analytics.netRevenue,
-            ),
-            color: palette.positive,
-            icon: Icons.payments_outlined,
-          ),
-          _Total(
-            label: 'قيد التحصيل',
-            value: FinanceFormat.money(analytics.receivable),
-            color: palette.warning,
-            icon: Icons.hourglass_bottom_rounded,
-          ),
-          _Total(
-            label: 'مرتجعات',
-            value: FinanceFormat.money(analytics.refunded),
-            color: palette.negative,
-            icon: Icons.undo_rounded,
-          ),
-          if (state.hasAnyFilter)
-            Text(
-              'التصفية تؤثر على العمود المعروض فقط، وليست على أرقام الفترة',
-              style: Theme.of(
-                context,
-              ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class _Total extends StatelessWidget {
-  final String label;
-  final String value;
-  final Color color;
-  final IconData icon;
-
-  const _Total({
-    required this.label,
-    required this.value,
-    required this.color,
-    required this.icon,
+  const _LedgerKpiRow({
+    required this.state,
+    required this.shownCount,
+    this.onOpenModule,
   });
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
+    final palette = DashboardChartPalette.of(context);
+    final analytics = state.analytics;
+
+    // Scoped to the selected window, unlike [FinanceAttention] (whole book) —
+    // every other figure on this tab is window-scoped and a mixed pair would
+    // silently disagree with the period bar above it.
+    final reviewEntries = analytics.entries.where((e) => e.awaitingReview);
+    final reviewCount = reviewEntries.length;
+    final reviewAmount = reviewEntries.fold(0.0, (sum, e) => sum + e.amount);
+
+    return DashboardKpiGrid(
+      itemExtent: 116,
       children: [
-        Container(
-          padding: const EdgeInsets.all(AppSpacing.small),
-          decoration: BoxDecoration(
-            color: color.withAlpha(28),
-            borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+        DashboardKpiCard(
+          emphasized: true,
+          icon: Icons.payments_outlined,
+          label: state.hasAnyFilter ? 'محصّل ضمن المعروض' : 'صافي المحصّل',
+          value: FinanceFormat.money(
+            state.hasAnyFilter ? state.filteredNet : analytics.netRevenue,
           ),
-          child: Icon(icon, size: 18, color: color),
+          detail: state.hasAnyFilter
+              ? '${FinanceFormat.count(shownCount)} من '
+                    '${FinanceFormat.count(analytics.entries.length)} حركة'
+              : analytics.periodLabel,
+          color: palette.positive,
         ),
-        const SizedBox(width: AppSpacing.small),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              label,
-              style: Theme.of(
-                context,
-              ).textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
-            ),
-            Text(
-              value,
-              style: Theme.of(
-                context,
-              ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900),
-            ),
-          ],
+        DashboardKpiCard(
+          emphasized: true,
+          icon: Icons.pending_actions_outlined,
+          label: 'بانتظار المراجعة',
+          value: FinanceFormat.count(reviewCount),
+          detail: '${FinanceFormat.money(reviewAmount)} · إيصالات',
+          color: palette.warning,
+          onTap: reviewCount == 0
+              ? null
+              : () => onOpenModule?.call(DashboardRoutes.paymentVerification),
+          tapHint: reviewCount == 0 ? null : 'راجع الإيصالات في الحجوزات',
+        ),
+        DashboardKpiCard(
+          emphasized: true,
+          icon: Icons.hourglass_bottom_rounded,
+          label: 'مستحق غير محصّل',
+          value: FinanceFormat.money(analytics.receivable),
+          detail: '${FinanceFormat.count(analytics.pendingCount)} عملية قائمة',
+          color: palette.warning,
+        ),
+        DashboardKpiCard(
+          emphasized: true,
+          icon: Icons.undo_rounded,
+          label: 'مرتجعات الفترة',
+          value: FinanceFormat.money(analytics.refunded),
+          detail: '${FinanceFormat.percent(analytics.refundRate)} من المتحصل',
+          color: palette.negative,
         ),
       ],
+    );
+  }
+}
+
+/// Search, quick status chips and the advanced-filter trigger — rendered
+/// inside [OpsDataTable]'s toolbar slot, above its sticky column header. Same
+/// shape every other EWT table module (Trips, Routes) uses.
+class _LedgerToolbar extends StatelessWidget {
+  final FinanceLoaded state;
+  final FinanceCubit cubit;
+
+  const _LedgerToolbar({required this.state, required this.cubit});
+
+  int _countOf(PaymentStatus? status) => status == null
+      ? state.analytics.entries.length
+      : state.analytics.entries.where((e) => e.status == status).length;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final search = DebouncedSearchField(
+          hintText: 'بحث بالاسم، رقم الحجز، الهاتف، المسار أو الباقة...',
+          initialValue: state.searchQuery,
+          onChanged: cubit.setSearchQuery,
+        );
+        final advancedFilter = _AdvancedFilterButton(state: state, cubit: cubit);
+        final chips = Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            _StatusChip(
+              label: 'الكل ${FinanceFormat.count(_countOf(null))}',
+              selected: state.statusFilter == null,
+              onSelected: () => cubit.setStatusFilter(null),
+            ),
+            for (final status in PaymentStatus.values)
+              _StatusChip(
+                label: '${status.label} ${FinanceFormat.count(_countOf(status))}',
+                selected: state.statusFilter == status,
+                onSelected: () => cubit.setStatusFilter(status),
+              ),
+          ],
+        );
+
+        if (constraints.maxWidth < 900) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Expanded(child: search),
+                  const SizedBox(width: 8),
+                  advancedFilter,
+                ],
+              ),
+              const SizedBox(height: 10),
+              chips,
+            ],
+          );
+        }
+        return Row(
+          children: [
+            SizedBox(width: 280, child: search),
+            const SizedBox(width: 12),
+            Expanded(child: chips),
+            const SizedBox(width: 12),
+            advancedFilter,
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _StatusChip extends StatelessWidget {
+  const _StatusChip({
+    required this.label,
+    required this.selected,
+    required this.onSelected,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return ChoiceChip(
+      label: Text(label),
+      labelStyle: const TextStyle(fontWeight: FontWeight.w700),
+      selected: selected,
+      showCheckmark: false,
+      onSelected: (_) => onSelected(),
+    );
+  }
+}
+
+/// The dimensions the quick chips leave out — نوع الحركة, طريقة الدفع and
+/// الترتيب — behind one "تصفية متقدمة" sheet rather than three dropdowns
+/// crowding the toolbar. Unlike [RoutesListView]'s single-choice sheet this
+/// one holds three independent groups, so a selection never auto-closes it.
+class _AdvancedFilterButton extends StatelessWidget {
+  const _AdvancedFilterButton({required this.state, required this.cubit});
+
+  final FinanceLoaded state;
+  final FinanceCubit cubit;
+
+  bool get _isActive => state.typeFilter != null || state.methodFilter != null;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        OutlinedButton.icon(
+          onPressed: () => _openSheet(context),
+          icon: const Icon(Icons.tune_rounded, size: 18),
+          label: const Text('تصفية متقدمة'),
+        ),
+        if (_isActive)
+          PositionedDirectional(
+            end: 6,
+            top: 6,
+            child: Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: Theme.of(context).colorScheme.error,
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  void _openSheet(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      isScrollControlled: true,
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _SheetHeading(text: 'نوع الحركة'),
+                RadioGroup<FinanceEntryType?>(
+                  groupValue: state.typeFilter,
+                  onChanged: cubit.setTypeFilter,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const RadioListTile<FinanceEntryType?>(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text('الكل'),
+                        value: null,
+                      ),
+                      for (final type in FinanceEntryType.values)
+                        RadioListTile<FinanceEntryType?>(
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(type.pluralLabel),
+                          value: type,
+                        ),
+                    ],
+                  ),
+                ),
+                const Divider(),
+                _SheetHeading(text: 'طريقة الدفع'),
+                RadioGroup<FinancePaymentMethod?>(
+                  groupValue: state.methodFilter,
+                  onChanged: cubit.setMethodFilter,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const RadioListTile<FinancePaymentMethod?>(
+                        contentPadding: EdgeInsets.zero,
+                        title: Text('الكل'),
+                        value: null,
+                      ),
+                      for (final method in FinancePaymentMethod.values)
+                        RadioListTile<FinancePaymentMethod?>(
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(method.label),
+                          value: method,
+                        ),
+                    ],
+                  ),
+                ),
+                const Divider(),
+                _SheetHeading(text: 'الترتيب'),
+                RadioGroup<FinanceLedgerSort>(
+                  groupValue: state.ledgerSort,
+                  onChanged: (sort) {
+                    if (sort != null) cubit.setLedgerSort(sort);
+                  },
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (final sort in FinanceLedgerSort.values)
+                        RadioListTile<FinanceLedgerSort>(
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(sort.label),
+                          value: sort,
+                        ),
+                    ],
+                  ),
+                ),
+                if (state.hasAnyFilter) ...[
+                  const SizedBox(height: AppSpacing.small),
+                  TextButton.icon(
+                    onPressed: () {
+                      cubit.clearFilters();
+                      Navigator.pop(sheetContext);
+                    },
+                    icon: const Icon(Icons.filter_alt_off_rounded, size: 18),
+                    label: const Text('مسح كل التصفية'),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SheetHeading extends StatelessWidget {
+  const _SheetHeading({required this.text});
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpacing.xSmall),
+      child: Text(
+        text,
+        style: Theme.of(
+          context,
+        ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+      ),
     );
   }
 }

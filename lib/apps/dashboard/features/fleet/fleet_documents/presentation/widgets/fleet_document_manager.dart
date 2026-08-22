@@ -9,7 +9,7 @@ import 'package:bmt_app/apps/dashboard/features/fleet/shared/core/utils/fleet_up
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_documents/presentation/cubit/fleet_documents_cubit.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
-import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_status_chip.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 
 class FleetDocumentManager extends StatefulWidget {
@@ -490,7 +490,7 @@ class _DocumentCard extends StatelessWidget {
                   ],
                 ),
               ),
-              StatusChip(
+              DashboardStatusChip(
                 label: doc.status.label,
                 color: docColor.withAlpha(30),
                 textColor: docColor,

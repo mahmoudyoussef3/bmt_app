@@ -169,6 +169,14 @@ Future<void> _pump(WidgetTester tester) async {
   await tester.pump();
 }
 
+/// The sidebar is an accordion — only one group's items are built at a time —
+/// so checking an item outside the home route's own (group-less) items means
+/// opening that item's group first, the same way an operator would.
+Future<void> _expandGroup(WidgetTester tester, String groupLabel) async {
+  await tester.tap(find.text(groupLabel));
+  await tester.pump(const Duration(milliseconds: 400));
+}
+
 void _registerShellDeps() {
   dashboardDi
     ..registerFactory<DashboardHomeCubit>(_FakeHomeCubit.new)
@@ -190,13 +198,16 @@ void main() {
 
     await _pump(tester);
 
-    // Sellable and unowned: visible, so the owner can discover and ask for it.
-    expect(find.text('محفظة العملاء'), findsOneWidget);
+    await _expandGroup(tester, 'التشغيل');
+    // Untouched by licensing.
+    expect(find.text('الرحلات'), findsOneWidget);
     // Unsellable and unowned: gone entirely — an upgrade prompt for something
     // the office cannot buy is noise.
     expect(find.text('العمليات المباشرة'), findsNothing);
-    // Untouched by licensing.
-    expect(find.text('الرحلات'), findsOneWidget);
+
+    await _expandGroup(tester, 'المالية');
+    // Sellable and unowned: visible, so the owner can discover and ask for it.
+    expect(find.text('محفظة العملاء'), findsOneWidget);
     // And it is visibly locked, not silently inert.
     expect(find.byIcon(DashboardIcons.locked), findsOneWidget);
   });
@@ -211,6 +222,7 @@ void main() {
     );
 
     await _pump(tester);
+    await _expandGroup(tester, 'المالية');
     await tester.tap(find.text('محفظة العملاء'));
     // Not pumpAndSettle: the home screen behind the dialog holds a loading
     // shimmer that never settles.
@@ -239,8 +251,12 @@ void main() {
 
     // Deploy day: the server serves everything, so the sidebar shows
     // everything, and no row wears a lock it would have to explain.
-    expect(find.text('محفظة العملاء'), findsOneWidget);
+    await _expandGroup(tester, 'التشغيل');
     expect(find.text('العمليات المباشرة'), findsOneWidget);
+    expect(find.byIcon(DashboardIcons.locked), findsNothing);
+
+    await _expandGroup(tester, 'المالية');
+    expect(find.text('محفظة العملاء'), findsOneWidget);
     expect(find.byIcon(DashboardIcons.locked), findsNothing);
   });
 
@@ -254,8 +270,12 @@ void main() {
 
     await _pump(tester);
 
-    expect(find.text('محفظة العملاء'), findsOneWidget);
+    await _expandGroup(tester, 'التشغيل');
     expect(find.text('العمليات المباشرة'), findsOneWidget);
+    expect(find.byIcon(DashboardIcons.locked), findsNothing);
+
+    await _expandGroup(tester, 'المالية');
+    expect(find.text('محفظة العملاء'), findsOneWidget);
     expect(find.byIcon(DashboardIcons.locked), findsNothing);
   });
 }

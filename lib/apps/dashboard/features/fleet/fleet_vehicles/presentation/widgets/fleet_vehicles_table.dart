@@ -7,7 +7,7 @@ import 'package:bmt_app/apps/dashboard/features/fleet/fleet_vehicles/presentatio
 import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_snackbar.dart';
-import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_status_chip.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
@@ -21,6 +21,11 @@ class FleetVehiclesTable extends StatelessWidget {
   final int pageSize;
   final ValueChanged<int> onPageChanged;
 
+  /// Search, ops filters and sort/bulk-suspend controls, rendered inside the
+  /// same bordered card as the sticky column header — the EWT "isTable"
+  /// template every module table screen shares.
+  final Widget? toolbar;
+
   const FleetVehiclesTable({
     super.key,
     required this.vehicles,
@@ -31,6 +36,7 @@ class FleetVehiclesTable extends StatelessWidget {
     required this.page,
     required this.pageSize,
     required this.onPageChanged,
+    this.toolbar,
   });
 
   String _driverName(String driverId) {
@@ -50,6 +56,7 @@ class FleetVehiclesTable extends StatelessWidget {
         : vehicles.sublist(start, end);
 
     return OpsDataTable(
+      toolbar: toolbar,
       columns: const [
         OpsColumn('تحديد', flex: 1, minWidth: 64),
         OpsColumn('المركبة', flex: 5, minWidth: 260),
@@ -75,7 +82,7 @@ class FleetVehiclesTable extends StatelessWidget {
           _VehicleIdentityCell(vehicle: vehicle),
           
           driverName.isEmpty
-              ? StatusChip(
+              ? DashboardStatusChip(
                   label: 'غير مخصص',
                   color: context.status(AppStatusTone.warning).tint,
                   textColor: context.status(AppStatusTone.warning).ink,
@@ -93,7 +100,7 @@ class FleetVehiclesTable extends StatelessWidget {
             underway: workspace.underwayDutyOf(vehicle),
             next: workspace.nextDutyOf(vehicle),
           ),
-          StatusChip(label: vehicle.status.label),
+          DashboardStatusChip(label: vehicle.status.label),
           _VehicleDocumentsCell(vehicle: vehicle),
           FleetLastUpdatedCell(updatedAt: vehicle.updatedAt),
           _VehicleRowActions(

@@ -5,7 +5,7 @@ import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/debounced_search_field.dart';
-import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_status_chip.dart';
 
 import '../../../../core/theme/dashboard_colors.dart';
 import '../../../../core/theme/dashboard_icons.dart';
@@ -585,7 +585,7 @@ class _FeatureDot extends StatelessWidget {
   }
 }
 
-/// A dense row marker — lighter than [StatusChip], which is sized for panels.
+/// A dense row marker — lighter than [DashboardStatusChip], which is sized for panels.
 class _RowMark extends StatelessWidget {
   const _RowMark({required this.label, required this.color});
 
@@ -711,22 +711,22 @@ class _DetailHeader extends StatelessWidget {
             spacing: AppSpacing.small,
             runSpacing: AppSpacing.xSmall,
             children: [
-              StatusChip(
+              DashboardStatusChip(
                 label: state.catalog.categoryName(feature.categoryKey),
               ),
-              StatusChip(
+              DashboardStatusChip(
                 label: feature.valueTypeLabelAr,
                 color: scheme.surfaceContainerHighest,
                 textColor: scheme.onSurfaceVariant,
               ),
               EnforcementBadge(isEnforced: feature.isEnforced),
-              StatusChip(
+              DashboardStatusChip(
                 label: feature.statusLabelAr,
                 color: statusColor.withAlpha(24),
                 textColor: statusColor,
               ),
               if (!feature.isPublic)
-                StatusChip(
+                DashboardStatusChip(
                   label: 'غير معروضة للعملاء',
                   color: scheme.surfaceContainerHighest,
                   textColor: scheme.onSurfaceVariant,
@@ -830,7 +830,7 @@ class _EnforcementPanel extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    StatusChip(label: gate.kindLabelAr),
+                    DashboardStatusChip(label: gate.kindLabelAr),
                     const SizedBox(width: AppSpacing.small),
                     Expanded(
                       child: Column(
@@ -871,7 +871,7 @@ class _EnforcementPanel extends StatelessWidget {
               spacing: AppSpacing.small,
               runSpacing: AppSpacing.xSmall,
               children: [
-                for (final key in feature.requires) StatusChip(label: key),
+                for (final key in feature.requires) DashboardStatusChip(label: key),
               ],
             ),
           ],

@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/dashboard/core/routes/dashboard_routes.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
-import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_empty_state.dart';
 import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_panel.dart';
@@ -11,8 +11,8 @@ import 'package:bmt_app/apps/dashboard/features/notifications/domain/entities/op
 import 'package:bmt_app/apps/dashboard/features/notifications/presentation/cubit/operational_alerts_cubit.dart';
 import 'package:bmt_app/apps/dashboard/features/notifications/presentation/cubit/operational_alerts_state.dart';
 import 'package:bmt_app/apps/dashboard/features/notifications/presentation/widgets/alert_tile.dart';
+import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
-import 'package:bmt_app/core/theme/tokens.dart';
 
 import '../../domain/entities/dashboard_home_summary.dart';
 
@@ -68,9 +68,10 @@ class ActionRequiredSection extends StatelessWidget {
                   message: 'لا يوجد ما يحتاج قراراً منك الآن.',
                 )
               : Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    for (final item in queues)
-                      _QueueRow(item: item, onOpenModule: onOpenModule),
+                    if (queues.isNotEmpty)
+                      _QueueGrid(items: queues, onOpenModule: onOpenModule),
                     if (queues.isNotEmpty && alerts.isNotEmpty)
                       const Divider(height: AppSpacing.large),
                     for (final alert in alerts.take(4))
@@ -95,114 +96,141 @@ class ActionRequiredSection extends StatelessWidget {
   }
 }
 
-/// One standing queue: what it is, how many, and one tap to the screen that
-/// clears it. The whole row is the target — an icon-sized button at the end of
-/// a row is a miss waiting to happen.
-class _QueueRow extends StatelessWidget {
-  const _QueueRow({required this.item, required this.onOpenModule});
+/// The standing queues as a grid — up to three columns, so six queues are
+/// visible at once instead of six full-width rows stacked to the floor. Each
+/// tile is its own tap target: what it is, how many, one click to clear it.
+class _QueueGrid extends StatelessWidget {
+  const _QueueGrid({required this.items, required this.onOpenModule});
+
+  final List<HomeAttentionItem> items;
+  final ValueChanged<String> onOpenModule;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final columns = constraints.maxWidth >= 760
+            ? 3
+            : constraints.maxWidth >= 480
+            ? 2
+            : 1;
+        return GridView.builder(
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          itemCount: items.length,
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: columns,
+            crossAxisSpacing: AppSpacing.medium,
+            mainAxisSpacing: AppSpacing.medium,
+            mainAxisExtent: 72,
+          ),
+          itemBuilder: (context, index) =>
+              _QueueTile(item: items[index], onOpenModule: onOpenModule),
+        );
+      },
+    );
+  }
+}
+
+/// One queue: an icon square carrying the only colour on the tile, the title
+/// and what clearing it means, then the count and a forward chevron. The EWT
+/// redesign's colour budget rule — a tinted icon reads as a category mark,
+/// while a whole tile tinted by severity turned six ordinary queues into six
+/// alert boxes shouting at once.
+class _QueueTile extends StatelessWidget {
+  const _QueueTile({required this.item, required this.onOpenModule});
 
   final HomeAttentionItem item;
   final ValueChanged<String> onOpenModule;
 
   @override
   Widget build(BuildContext context) {
-    final palette = DashboardChartPalette.of(context);
-    final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
-    final tone = switch (item.kind.severity) {
-      HomeAttentionSeverity.urgent => palette.negative,
-      HomeAttentionSeverity.warning => palette.warning,
-      HomeAttentionSeverity.info => palette.active,
-    };
+    final tone = _toneFor(item.kind.severity);
+    final style = DashboardColors.status(context, tone);
     final spec = _specFor(item.kind);
-    final radius = BorderRadius.circular(AppTokens.radiusSmall);
+    final radius = BorderRadius.circular(10);
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Material(
-        color: tone.withAlpha(15),
-        borderRadius: BorderRadius.circular(AppTokens.radius),
-        child: InkWell(
-          onTap: () => onOpenModule(spec.route),
-          borderRadius: BorderRadius.circular(AppTokens.radius),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppTokens.radius),
-              border: Border.all(
-                color: tone.withAlpha(50),
+    return Material(
+      color: DashboardColors.panel(context),
+      borderRadius: radius,
+      child: InkWell(
+        onTap: () => onOpenModule(spec.route),
+        borderRadius: radius,
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            borderRadius: radius,
+            border: Border.all(color: DashboardColors.border(context)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 34,
+                height: 34,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: style.tint,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: DashboardColors.statusLine(context, tone),
+                  ),
+                ),
+                child: Icon(spec.icon, size: 18, color: style.ink),
               ),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: tone.withAlpha(30),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(spec.icon, size: 22, color: tone),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        spec.title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: text.titleSmall?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
+              const SizedBox(width: 11),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      spec.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: text.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        spec.action,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: text.bodySmall?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: tone.withAlpha(30),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    '${item.count}',
-                    style: text.titleMedium?.copyWith(
-                      color: tone,
-                      fontWeight: FontWeight.w900,
                     ),
-                  ),
+                    const SizedBox(height: 2),
+                    Text(
+                      spec.action,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: text.labelSmall?.copyWith(
+                        color: DashboardColors.mutedInk(context),
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 12),
-                Icon(
-                  DashboardIcons.openModule,
-                  size: 20,
-                  color: scheme.onSurfaceVariant.withAlpha(180),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '${item.count}',
+                style: text.titleMedium?.copyWith(
+                  color: style.ink,
+                  fontWeight: FontWeight.w800,
+                  fontFeatures: const [FontFeature.tabularFigures()],
                 ),
-              ],
-            ),
+              ),
+              Icon(
+                DashboardIcons.openModule,
+                size: 18,
+                color: DashboardColors.faintInk(context),
+              ),
+            ],
           ),
         ),
       ),
     );
   }
 }
+
+AppStatusTone _toneFor(HomeAttentionSeverity severity) => switch (severity) {
+  HomeAttentionSeverity.urgent => AppStatusTone.error,
+  HomeAttentionSeverity.warning => AppStatusTone.warning,
+  HomeAttentionSeverity.info => AppStatusTone.info,
+};
 
 /// How a queue presents itself: what to call it, what clearing it means, where
 /// that happens, and the glyph that carries it.

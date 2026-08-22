@@ -617,6 +617,7 @@ void registerDashboardDependencies() {
     dashboardDi.registerFactory(
       () => RoutesCubit(
         getRoutes: dashboardDi<GetOperationRoutesUseCase>(),
+        getTrips: dashboardDi<GetOperationTripsUseCase>(),
         createRoute: dashboardDi<CreateRouteUseCase>(),
         updateRoute: dashboardDi<UpdateRouteUseCase>(),
         deleteRoute: dashboardDi<DeleteRouteUseCase>(),

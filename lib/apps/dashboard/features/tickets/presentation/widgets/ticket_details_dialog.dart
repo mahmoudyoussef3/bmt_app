@@ -4,7 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
-import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_status_chip.dart';
 
 import '../../domain/entities/complaint.dart';
 import '../cubit/tickets_cubit.dart';
@@ -731,7 +731,7 @@ class _TicketStatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = _statusColor(context, status);
-    return StatusChip(
+    return DashboardStatusChip(
       label: _statusLabel(status),
       color: color.withAlpha(24),
       textColor: color,
@@ -746,7 +746,7 @@ class _TicketPriorityBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = _priorityColor(context, priority);
-    return StatusChip(
+    return DashboardStatusChip(
       label: _priorityLabel(priority),
       color: color.withAlpha(24),
       textColor: color,

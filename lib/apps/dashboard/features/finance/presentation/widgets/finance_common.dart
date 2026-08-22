@@ -1,9 +1,11 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_status_chip.dart';
+import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
-import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/route_direction_text.dart';
 
 import '../../domain/entities/finance_analytics.dart';
@@ -325,41 +327,34 @@ class FinanceSparkline extends StatelessWidget {
   }
 }
 
-/// Status pill shared by the ledger table and the transaction breakdowns.
+/// Status mark shared by the ledger table and the transaction breakdowns —
+/// the console's six-tone status system ([AppStatusTone]/`context.status`),
+/// not a bespoke chart-palette blend, so a payment status reads exactly like
+/// every other status in the console.
 class FinanceStatusBadge extends StatelessWidget {
   final PaymentStatus status;
 
   const FinanceStatusBadge({super.key, required this.status});
 
-  /// Takes a [context] because the chart palette resolves per brightness —
-  /// the payment colours have to match the chart segments on the same screen.
-  static Color colorOf(BuildContext context, PaymentStatus status) {
-    final palette = DashboardChartPalette.of(context);
-    return switch (status) {
-      PaymentStatus.success => palette.positive,
-      PaymentStatus.pending => palette.warning,
-      PaymentStatus.cancelled => palette.negative,
-      PaymentStatus.refunded => palette.accent,
-    };
-  }
+  static AppStatusTone toneOf(PaymentStatus status) => switch (status) {
+    PaymentStatus.success => AppStatusTone.success,
+    PaymentStatus.pending => AppStatusTone.warning,
+    PaymentStatus.cancelled => AppStatusTone.error,
+    PaymentStatus.refunded => AppStatusTone.neutral,
+  };
+
+  /// Colour for a *bare* mark — the ledger's amount figure — never a chip
+  /// fill. Takes a [context] because status colours resolve per brightness.
+  static Color colorOf(BuildContext context, PaymentStatus status) =>
+      context.status(toneOf(status)).accent;
 
   @override
   Widget build(BuildContext context) {
-    final color = colorOf(context, status);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: color.withAlpha(30),
-        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-        border: Border.all(color: color.withAlpha(70)),
-      ),
-      child: Text(
-        status.label,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: color,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
+    final style = context.status(toneOf(status));
+    return DashboardStatusChip(
+      label: status.label,
+      color: style.tint,
+      textColor: style.ink,
     );
   }
 }

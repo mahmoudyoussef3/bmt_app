@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/dashboard/core/routes/dashboard_routes.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_empty_state.dart';
@@ -10,7 +11,7 @@ import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/ope
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/progress_bar.dart';
-import 'package:bmt_app/core/widgets/status_chip.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_status_chip.dart';
 
 import '../../domain/entities/dashboard_home_summary.dart';
 
@@ -28,12 +29,16 @@ class TodayTripsSection extends StatelessWidget {
     required this.onOpenModule,
     this.onCreateTrip,
     this.maxRows = 6,
+    this.now,
   });
 
   final DashboardHomeSummary summary;
   final ValueChanged<String> onOpenModule;
   final VoidCallback? onCreateTrip;
   final int maxRows;
+
+  /// Injectable clock for each row's relative-time label.
+  final DateTime? now;
 
   @override
   Widget build(BuildContext context) {
@@ -69,6 +74,7 @@ class TodayTripsSection extends StatelessWidget {
                   _TripRow(
                     trip: trip,
                     onOpen: () => onOpenModule(DashboardRoutes.trips),
+                    now: now,
                   ),
                   if (trip != shown.last)
                     const Divider(height: AppSpacing.medium),
@@ -88,10 +94,14 @@ class TodayTripsSection extends StatelessWidget {
 }
 
 class _TripRow extends StatelessWidget {
-  const _TripRow({required this.trip, required this.onOpen});
+  const _TripRow({required this.trip, required this.onOpen, this.now});
 
   final OperationTrip trip;
   final VoidCallback onOpen;
+
+  /// Injectable clock for the relative-time label, so tests don't race a real
+  /// departure against the wall clock.
+  final DateTime? now;
 
   @override
   Widget build(BuildContext context) {
@@ -104,6 +114,7 @@ class _TripRow extends StatelessWidget {
     final (statusColor, statusBg) = _statusColors(trip.status, scheme, palette);
     final noCaptain = trip.driver.trim().isEmpty;
     final radius = BorderRadius.circular(AppTokens.radiusSmall);
+    final relative = _relativeLabel(trip.scheduledAt, now ?? DateTime.now());
 
     return Material(
       color: Colors.transparent,
@@ -116,22 +127,47 @@ class _TripRow extends StatelessWidget {
             horizontal: AppSpacing.small,
             vertical: AppSpacing.small,
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Row(
-                children: [
-                  
-                  Text(
-                    trip.departure.isEmpty ? '--:--' : trip.departure,
-                    style: text.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      fontFeatures: const [FontFeature.tabularFigures()],
+              SizedBox(
+                width: 56,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      trip.departure.isEmpty ? '--:--' : trip.departure,
+                      style: text.titleSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: AppSpacing.small),
-                  Expanded(
-                    child: Text(
+                    if (relative != null)
+                      Text(
+                        relative,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: text.labelSmall?.copyWith(
+                          color: DashboardColors.faintInk(context),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.small),
+              SizedBox(
+                width: 1,
+                height: 34,
+                child: ColoredBox(color: DashboardColors.divider(context)),
+              ),
+              const SizedBox(width: AppSpacing.medium),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
                       trip.route.isEmpty ? 'رحلة بدون مسار' : trip.route,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -139,27 +175,14 @@ class _TripRow extends StatelessWidget {
                         fontWeight: FontWeight.w700,
                       ),
                     ),
-                  ),
-                  const SizedBox(width: AppSpacing.small),
-                  StatusChip(
-                    label: trip.status.label,
-                    color: statusBg,
-                    textColor: statusColor,
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.xSmall),
-              Row(
-                children: [
-                  Expanded(
-                    child: Wrap(
+                    const SizedBox(height: 2),
+                    Wrap(
                       spacing: AppSpacing.medium,
-                      runSpacing: 4,
+                      runSpacing: 2,
                       children: [
                         _MetaChip(
                           icon: DashboardIcons.captain,
                           label: noCaptain ? 'بدون سائق' : trip.driver,
-                          
                           tone: noCaptain ? palette.negative : null,
                         ),
                         _MetaChip(
@@ -170,25 +193,31 @@ class _TripRow extends StatelessWidget {
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(width: AppSpacing.small),
-                  SizedBox(
-                    width: 96,
-                    child: Row(
-                      children: [
-                        Expanded(child: AppProgressBar(progress: occupancy)),
-                        const SizedBox(width: AppSpacing.xSmall),
-                        Text(
-                          '${trip.bookedSeats}/${trip.capacity}',
-                          style: text.labelSmall?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                            fontFeatures: const [FontFeature.tabularFigures()],
-                          ),
-                        ),
-                      ],
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.medium),
+              SizedBox(
+                width: 92,
+                child: Row(
+                  children: [
+                    Expanded(child: AppProgressBar(progress: occupancy)),
+                    const SizedBox(width: AppSpacing.xSmall),
+                    Text(
+                      '${trip.bookedSeats}/${trip.capacity}',
+                      style: text.labelSmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.medium),
+              DashboardStatusChip(
+                label: trip.status.label,
+                color: statusBg,
+                textColor: statusColor,
               ),
             ],
           ),
@@ -223,6 +252,20 @@ class _TripRow extends StatelessWidget {
   }
 }
 
+/// "بعد ساعة" / "بعد ٩٠ د" / `null` once it has already left — Home only ever
+/// shows *today's* board, so this never has to reach for "غداً" or a weekday
+/// name.
+String? _relativeLabel(DateTime? scheduledAt, DateTime now) {
+  if (scheduledAt == null) return null;
+  final diff = scheduledAt.difference(now);
+  if (diff.inMinutes <= 0) return null;
+  if (diff.inMinutes < 60) return 'بعد ${diff.inMinutes} د';
+  final hours = (diff.inMinutes / 60).round();
+  if (hours <= 1) return 'بعد ساعة';
+  if (hours == 2) return 'بعد ساعتين';
+  return 'بعد $hours ساعات';
+}
+
 class _MetaChip extends StatelessWidget {
   const _MetaChip({required this.icon, required this.label, this.tone});
 
@@ -241,6 +284,8 @@ class _MetaChip extends StatelessWidget {
         const SizedBox(width: 4),
         Text(
           label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
             color: color,
             fontWeight: tone == null ? null : FontWeight.w700,

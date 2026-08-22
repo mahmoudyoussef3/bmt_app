@@ -59,6 +59,32 @@ String formatTripPrice(double value) {
   return value == intValue ? '$intValue' : value.toStringAsFixed(2);
 }
 
+/// The label + tone shown for a trip on the trips table — overrides the raw
+/// [OperationTrip.status] label with a more urgent operational fact when one
+/// applies, so the same two conditions the table's KPI row counts (no driver
+/// yet, past its departure day and still open) are visible on the row itself
+/// rather than only in a header number.
+({String label, AppStatusTone tone}) tripListStatus(OperationTrip trip) {
+  if (trip.isStaleBooking()) {
+    return (label: 'فات موعدها', tone: AppStatusTone.warning);
+  }
+  final isTerminal =
+      trip.status == OperationTripStatus.completed ||
+      trip.status == OperationTripStatus.cancelled;
+  if (trip.driverId.isEmpty && !isTerminal) {
+    return (label: 'تحتاج سائقاً', tone: AppStatusTone.error);
+  }
+  final tone = switch (trip.status) {
+    OperationTripStatus.inProgress ||
+    OperationTripStatus.boarding => AppStatusTone.success,
+    OperationTripStatus.completed ||
+    OperationTripStatus.cancelled => AppStatusTone.neutral,
+    OperationTripStatus.scheduled ||
+    OperationTripStatus.openForBooking => AppStatusTone.info,
+  };
+  return (label: trip.status.label, tone: tone);
+}
+
 /// Seat state → tile fill, shared by the cabin seat map and its legend so a
 /// colour never means two different things on the same screen.
 Color tripSeatColor(BuildContext context, TripSeatState state) {
