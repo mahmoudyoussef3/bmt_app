@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_dialog_header.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 
 import '../../shared/domain/entities/operation_trip.dart';
@@ -112,34 +113,11 @@ class _TripPricingEditorDialogState extends State<TripPricingEditorDialog> {
         height: dialogHeight,
         child: Column(
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppSpacing.medium,
-                AppSpacing.medium,
-                AppSpacing.medium,
-                AppSpacing.small,
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      widget.pricing == null ? 'إضافة تسعير' : 'تعديل التسعير',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: saving
-                        ? null
-                        : () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close_rounded),
-                    tooltip: 'إغلاق',
-                  ),
-                ],
-              ),
+            DashboardDialogHeader(
+              title: widget.pricing == null ? 'إضافة تسعير' : 'تعديل التسعير',
+              onClose: saving ? null : () => Navigator.of(context).pop(),
             ),
-            Divider(height: 1, color: scheme.outline.withAlpha(60)),
+            const DashboardDialogDivider(),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(AppSpacing.medium),
@@ -272,7 +250,7 @@ class _TripPricingEditorDialogState extends State<TripPricingEditorDialog> {
                 ),
               ),
             ),
-            Divider(height: 1, color: scheme.outline.withAlpha(60)),
+            const DashboardDialogDivider(),
             Padding(
               padding: const EdgeInsets.all(AppSpacing.medium),
               child: Row(

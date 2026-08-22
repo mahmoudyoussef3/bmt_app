@@ -12,11 +12,21 @@ import 'package:bmt_app/core/theme/app_theme.dart';
 class DashboardAppTheme {
   DashboardAppTheme._();
 
-  static ThemeData light() => _withCairo(AppTheme.lightTheme());
+  /// Light mode gets its own card treatment — [AppSurfaceStyle.dashboardLight]
+  /// — rather than the flatter one below. [AppSurfaceStyle.flat] reads as bare
+  /// and washed out against this console's near-white page (see the type's own
+  /// doc for why); the dashboard variant is tuned for a dense admin console
+  /// rather than borrowed from the client app's mobile card style. Dark mode
+  /// keeps the flat look untouched.
+  static ThemeData light() =>
+      _withCairo(AppTheme.lightTheme(), AppSurfaceStyle.dashboardLight);
 
-  static ThemeData dark() => _withCairo(AppTheme.darkTheme());
+  static ThemeData dark() => _withCairo(AppTheme.darkTheme(), AppSurfaceStyle.flat);
 
-  static ThemeData _withCairo(ThemeData base) {
+  static ThemeData _withCairo(
+    ThemeData base,
+    AppSurfaceStyle Function(ColorScheme) surfaceStyle,
+  ) {
     final scheme = base.colorScheme;
     final textTheme = _dashboardTextTheme(scheme);
     return base.copyWith(
@@ -24,7 +34,7 @@ class DashboardAppTheme {
         ...base.extensions.values.where((extension) {
           return extension is! AppSurfaceStyle;
         }),
-        AppSurfaceStyle.flat(scheme),
+        surfaceStyle(scheme),
       ],
       appBarTheme: base.appBarTheme.copyWith(centerTitle: false),
       textTheme: textTheme,

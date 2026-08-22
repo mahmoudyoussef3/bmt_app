@@ -49,6 +49,39 @@ class AppSurfaceStyle extends ThemeExtension<AppSurfaceStyle> {
     );
   }
 
+  /// The operations dashboard's LIGHT-mode card look.
+  ///
+  /// [flat]'s hairline border plus a 10-alpha blur reads as bare on a
+  /// near-white page: [background] and [surface] are only ~11 lightness units
+  /// apart, so a card needs its edge to do real work that a lightness jump
+  /// does for free in dark mode. Three changes carry that: the border runs at
+  /// **full** opacity rather than a further-thinned alpha over an already
+  /// light token — halving an already-subtle grey is how it disappeared; a
+  /// **layered** shadow — a tight contact blur that draws the edge plus a
+  /// soft ambient one that gives real lift, the pairing a single blur can't
+  /// reproduce; and tinting both with the palette's own slate
+  /// [ColorScheme.shadow] rather than raw black, which read muddy against a
+  /// cool page. `spreadRadius: -2` on the ambient layer keeps the lift from
+  /// bleeding sideways into whatever sits beside the card, which is what
+  /// "huge shadow" actually looks like.
+  factory AppSurfaceStyle.dashboardLight(ColorScheme scheme) => AppSurfaceStyle(
+    radius: 16,
+    borderColor: scheme.outline,
+    shadow: [
+      BoxShadow(
+        color: scheme.shadow.withAlpha(24),
+        blurRadius: 1,
+        offset: const Offset(0, 1),
+      ),
+      BoxShadow(
+        color: scheme.shadow.withAlpha(36),
+        blurRadius: 32,
+        offset: const Offset(0, 14),
+        spreadRadius: -2,
+      ),
+    ],
+  );
+
   @override
   AppSurfaceStyle copyWith({
     double? radius,

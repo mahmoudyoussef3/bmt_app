@@ -4,6 +4,7 @@ import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/dashboard/core/di/dashboard_di.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/operation_trip.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/trip_lifecycle.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/trip_creation/presentation/cubit/trip_creation_cubit.dart';
@@ -56,10 +57,10 @@ class TripRowCard extends StatelessWidget {
                         width: 44,
                         height: 44,
                         decoration: BoxDecoration(
-                          color: tripStatusColor(
+                          color: DashboardColors.kpiTint(
                             context,
-                            trip.status,
-                          ).withAlpha(22),
+                            tripStatusColor(context, trip.status),
+                          ),
                           borderRadius: BorderRadius.circular(AppTokens.radius),
                         ),
                         child: Icon(
@@ -92,12 +93,12 @@ class TripRowCard extends StatelessWidget {
                       const SizedBox(width: 8),
                       StatusChip(
                         label: trip.status.label,
-                        color: isStale
-                            ? scheme.error.withAlpha(28)
-                            : tripStatusColor(
-                                context,
-                                trip.status,
-                              ).withAlpha(28),
+                        color: DashboardColors.kpiTint(
+                          context,
+                          isStale
+                              ? scheme.error
+                              : tripStatusColor(context, trip.status),
+                        ),
                         textColor: isStale
                             ? scheme.error
                             : tripStatusColor(context, trip.status),
@@ -136,12 +137,14 @@ class TripRowCard extends StatelessWidget {
                             value: occupancy,
                             minHeight: 7,
                             backgroundColor: scheme.surfaceContainerHighest,
+                            color: tripOccupancyColor(context, trip),
                           ),
                         ),
                       ),
                       const SizedBox(width: 12),
                       Text(
-                        '${trip.bookedSeats} من ${trip.capacity} مقعد',
+                        '${trip.bookedSeats} من ${trip.capacity} مقعد'
+                        '  •  ${formatTripPrice(trip.ticketPrice)} ${trip.currency}',
                         style: Theme.of(context).textTheme.labelMedium
                             ?.copyWith(
                               fontWeight: FontWeight.w700,
@@ -174,7 +177,7 @@ class TripRowCard extends StatelessWidget {
                           title: Text('نسخ الرحلة'),
                         ),
                       ),
-                      
+
                       PopupMenuItem(
                         value: 'delete',
                         enabled: TripLifecycle.canDelete(trip),

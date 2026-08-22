@@ -5,14 +5,7 @@ import '../../../shared/domain/entities/operation_trip.dart';
 import '../../../shared/domain/entities/trip_lifecycle.dart';
 import '../../domain/usecases/trip_management_usecases.dart';
 
-enum TripWorkspaceTab {
-  overview,
-  passengers,
-  seats,
-  pricing,
-  payments,
-  history,
-}
+enum TripWorkspaceTab { overview, passengers, seats, pricing, history }
 
 sealed class TripDetailsState {
   const TripDetailsState();
@@ -215,7 +208,6 @@ class TripDetailsCubit extends Cubit<TripDetailsState> {
       if (latest is! TripDetailsLoaded) return;
       emit(latest.copyWith(trip: updated));
     } catch (_) {
-      
     } finally {
       _refreshingFromSource = false;
     }

@@ -254,9 +254,15 @@ class _PackageEntryCard extends StatelessWidget {
                       width: constraints.maxWidth,
                       child: TextField(
                         controller: entry.name,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'اسم الباقة',
                           hintText: 'مثال: أسبوع الجامعة',
+                          errorText: _fieldError(
+                            entry.isDraft &&
+                                _rowTouched(entry) &&
+                                entry.name.text.trim().isEmpty,
+                            'اسم الباقة مطلوب',
+                          ),
                         ),
                         onChanged: (_) => onChanged(),
                       ),
@@ -266,8 +272,14 @@ class _PackageEntryCard extends StatelessWidget {
                       child: TextField(
                         controller: entry.rides,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'عدد الرحلات',
+                          errorText: _fieldError(
+                            entry.isDraft &&
+                                _rowTouched(entry) &&
+                                entry.rideCount <= 0,
+                            'مطلوب',
+                          ),
                         ),
                         onChanged: (_) => onChanged(),
                       ),
@@ -277,8 +289,14 @@ class _PackageEntryCard extends StatelessWidget {
                       child: TextField(
                         controller: entry.days,
                         keyboardType: TextInputType.number,
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           labelText: 'مدة الصلاحية (أيام)',
+                          errorText: _fieldError(
+                            entry.isDraft &&
+                                _rowTouched(entry) &&
+                                entry.durationDays <= 0,
+                            'مطلوب',
+                          ),
                         ),
                         onChanged: (_) => onChanged(),
                       ),
@@ -293,6 +311,19 @@ class _PackageEntryCard extends StatelessWidget {
                         labelText: 'سعر الباقة',
                         helperText: _savingHelper(entry, baseFare),
                         suffixText: 'ج.م',
+                        // A draft row flags its price once any of its other
+                        // fields is touched; an existing (catalog) row only
+                        // once the operator has actually edited ITS price —
+                        // otherwise every catalog package would show a red
+                        // price error the moment the panel opens with no
+                        // base fare typed yet.
+                        errorText: _fieldError(
+                          (entry.isDraft
+                                  ? _rowTouched(entry)
+                                  : entry.priceEdited) &&
+                              entry.priceValue <= 0,
+                          'مطلوب',
+                        ),
                       ),
                       onChanged: (_) {
                         onPriceEdited();
@@ -319,6 +350,18 @@ class _PackageEntryCard extends StatelessWidget {
       ),
     );
   }
+
+  static String? _fieldError(bool show, String message) =>
+      show ? message : null;
+
+  /// True once the operator has put something into this specific row — the
+  /// signal for a draft row to start flagging whichever of its fields are
+  /// still empty. A blank new row shows no errors at all.
+  static bool _rowTouched(TripFarePackageEntry entry) =>
+      entry.name.text.trim().isNotEmpty ||
+      entry.priceValue > 0 ||
+      entry.rideCount > 0 ||
+      entry.durationDays > 0;
 
   Widget _title(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;

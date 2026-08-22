@@ -232,7 +232,9 @@ ThemeData _themeWithHostFont({required bool dark}) {
     cardColor: scheme.surface,
     dividerColor: scheme.outline,
     shadowColor: dark ? AppDarkColors.shadow : AppLightColors.shadow,
-    extensions: [AppSurfaceStyle.flat(scheme)],
+    extensions: [
+      dark ? AppSurfaceStyle.flat(scheme) : AppSurfaceStyle.dashboardLight(scheme),
+    ],
   );
 }
 

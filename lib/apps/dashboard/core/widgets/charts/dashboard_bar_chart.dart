@@ -11,6 +11,9 @@ class DashboardBarChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final labelStyle = Theme.of(
+      context,
+    ).textTheme.labelSmall?.copyWith(fontWeight: FontWeight.bold);
     final maxValue = data.fold<double>(0, (m, d) => d.value > m ? d.value : m);
     final maxY = (maxValue <= 0 ? 1 : maxValue) * 1.25;
     return SizedBox(
@@ -26,6 +29,20 @@ class DashboardBarChart extends StatelessWidget {
                 FlLine(color: scheme.outline.withAlpha(40), strokeWidth: 1),
           ),
           borderData: FlBorderData(show: false),
+          // Always-on value labels: rendered via the touch tooltip API with
+          // touch disabled and every rod pre-marked as "showing", the
+          // documented fl_chart way to get a permanent label rather than one
+          // that only appears on tap.
+          barTouchData: BarTouchData(
+            enabled: false,
+            touchTooltipData: BarTouchTooltipData(
+              getTooltipColor: (_) => Colors.transparent,
+              tooltipPadding: EdgeInsets.zero,
+              tooltipMargin: 8,
+              getTooltipItem: (group, groupIndex, rod, rodIndex) =>
+                  BarTooltipItem(rod.toY.toInt().toString(), labelStyle!),
+            ),
+          ),
           titlesData: FlTitlesData(
             topTitles: const AxisTitles(
               sideTitles: SideTitles(showTitles: false),
@@ -69,6 +86,7 @@ class DashboardBarChart extends StatelessWidget {
             for (var i = 0; i < data.length; i++)
               BarChartGroupData(
                 x: i,
+                showingTooltipIndicators: const [0],
                 barRods: [
                   BarChartRodData(
                     toY: data[i].value,

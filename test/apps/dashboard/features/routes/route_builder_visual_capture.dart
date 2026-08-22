@@ -15,6 +15,7 @@ import 'package:get_it/get_it.dart';
 import 'package:bmt_app/core/geo/geo_models.dart';
 import 'package:bmt_app/core/geo/geo_service.dart';
 import 'package:bmt_app/core/theme/app_dark_colors.dart';
+import 'package:bmt_app/core/theme/app_light_colors.dart';
 import 'package:bmt_app/core/theme/app_surface_style.dart';
 import 'package:bmt_app/core/theme/colors.dart';
 
@@ -209,6 +210,70 @@ void main() {
       },
     );
   });
+
+  group('light mode (forms UX pass)', () {
+    testWidgets('editing an existing route, light', (tester) async {
+      final draft = RouteDraft(
+        id: 'route-1',
+        nameOverride: 'بنها - القاهرة',
+        codeOverride: 'RT-07',
+        suggestedCode: 'RT-07',
+        distance: '42 كم',
+        duration: '1 س 10 د',
+        stops: [
+          RouteStopDraft(
+            key: RouteStopDraft.freshKey(),
+            name: 'بنها',
+            area: 'القليوبية',
+          ),
+          RouteStopDraft(
+            key: RouteStopDraft.freshKey(),
+            name: 'شبين القناطر',
+            area: 'القليوبية',
+            dwellMinutes: 5,
+          ),
+          RouteStopDraft(
+            key: RouteStopDraft.freshKey(),
+            name: 'القاهرة',
+            area: 'القاهرة',
+          ),
+        ],
+      );
+      await _capture(
+        tester,
+        'route_builder_7_editing_light',
+        draft: draft,
+        width: 1280,
+        height: 1300,
+        dark: false,
+      );
+    });
+
+    testWidgets('the stop editor dialog, light', (tester) async {
+      final draft = RouteDraft(
+        id: '',
+        suggestedCode: 'RT-03',
+        stops: [
+          RouteStopDraft(key: RouteStopDraft.freshKey(), name: 'بنها'),
+          RouteStopDraft(key: RouteStopDraft.freshKey(), name: 'القاهرة'),
+        ],
+      );
+      await _capture(
+        tester,
+        'route_builder_8_stop_editor_light',
+        draft: draft,
+        width: 1280,
+        height: 1000,
+        dark: false,
+        afterPump: (tester) async {
+          await tester.tap(find.text('إضافة نقطة').first);
+          await tester.pumpAndSettle();
+          await tester.enterText(find.byType(TextField).first, 'شبين القناطر');
+          await tester.pump();
+        },
+      );
+    });
+  });
 }
 
 Future<void> _capture(
@@ -217,6 +282,7 @@ Future<void> _capture(
   required RouteDraft draft,
   required double width,
   required double height,
+  bool dark = true,
   Future<void> Function(WidgetTester tester)? afterPump,
 }) async {
   tester.view.physicalSize = Size(width, height);
@@ -229,7 +295,7 @@ Future<void> _capture(
   await tester.pumpWidget(
     MaterialApp(
       debugShowCheckedModeBanner: false,
-      theme: _dashboardDarkWithHostFont(),
+      theme: _themeWithHostFont(dark: dark),
       builder: (context, child) => Directionality(
         textDirection: TextDirection.rtl,
         child: RepaintBoundary(key: key, child: child!),
@@ -254,18 +320,24 @@ Future<void> _capture(
   await expectLater(find.byKey(key), matchesGoldenFile('_captures/$name.png'));
 }
 
-ThemeData _dashboardDarkWithHostFont() {
-  final scheme = darkColorSchemeFromPalette();
+ThemeData _themeWithHostFont({required bool dark}) {
+  final scheme = dark
+      ? darkColorSchemeFromPalette()
+      : lightColorSchemeFromPalette();
   return ThemeData(
     useMaterial3: true,
-    brightness: Brightness.dark,
+    brightness: dark ? Brightness.dark : Brightness.light,
     colorScheme: scheme,
     fontFamily: _captureFont,
-    scaffoldBackgroundColor: AppDarkColors.background,
-    canvasColor: AppDarkColors.background,
+    scaffoldBackgroundColor: dark
+        ? AppDarkColors.background
+        : AppLightColors.background,
+    canvasColor: dark ? AppDarkColors.background : AppLightColors.background,
     cardColor: scheme.surface,
     dividerColor: scheme.outline,
-    shadowColor: AppDarkColors.shadow,
-    extensions: [AppSurfaceStyle.flat(scheme)],
+    shadowColor: dark ? AppDarkColors.shadow : AppLightColors.shadow,
+    extensions: [
+      dark ? AppSurfaceStyle.flat(scheme) : AppSurfaceStyle.dashboardLight(scheme),
+    ],
   );
 }

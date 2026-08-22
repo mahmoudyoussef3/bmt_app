@@ -11,6 +11,8 @@ import 'package:bmt_app/apps/dashboard/core/widgets/charts/dashboard_ranked_bars
 import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/operation_trip.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/trip_management/presentation/cubit/trips_list_cubit.dart';
 
+import 'trip_ui_helpers.dart';
+
 /// Real-data analytics for the trips workspace — everything below is computed
 /// from the already-loaded trips list (no extra fetch, no mock data).
 class TripsAnalytics extends StatelessWidget {
@@ -107,21 +109,17 @@ class TripsAnalytics extends StatelessWidget {
         high++;
       }
     }
-    
+
+    // One blue ramp, lightest → darkest, matching `tripOccupancyColor`'s
+    // buckets — occupancy is "how full", a single dimension, not five
+    // unrelated categories.
+    final blues = palette.sequential;
     return [
-      ChartDatum(
-        label: 'فارغة',
-        value: empty.toDouble(),
-        color: palette.negative,
-      ),
-      ChartDatum(label: 'منخفض', value: low.toDouble(), color: palette.warning),
-      ChartDatum(label: 'متوسط', value: mid.toDouble(), color: palette.accent),
-      ChartDatum(label: 'مرتفع', value: high.toDouble(), color: palette.active),
-      ChartDatum(
-        label: 'ممتلئة',
-        value: full.toDouble(),
-        color: palette.positive,
-      ),
+      ChartDatum(label: 'فارغة', value: empty.toDouble(), color: blues[0]),
+      ChartDatum(label: 'منخفض', value: low.toDouble(), color: blues[1]),
+      ChartDatum(label: 'متوسط', value: mid.toDouble(), color: blues[2]),
+      ChartDatum(label: 'مرتفع', value: high.toDouble(), color: blues[3]),
+      ChartDatum(label: 'ممتلئة', value: full.toDouble(), color: blues[4]),
     ];
   }
 
@@ -132,25 +130,22 @@ class TripsAnalytics extends StatelessWidget {
     }
     final sorted = counts.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
+    // One consistent blue for every bar: these are routes ranked by the same
+    // metric, not distinct categories, so bar length plus the value already
+    // shown say everything a colour cycle would only muddy.
     return [
-      for (final (index, entry) in sorted.take(5).indexed)
+      for (final entry in sorted.take(5))
         ChartDatum(
           label: entry.key,
           value: entry.value.toDouble(),
-          color: palette.categoryAt(index),
+          color: palette.active,
         ),
     ];
   }
 }
 
-Color _statusColor(BuildContext context, OperationTripStatus status) {
-  final palette = DashboardChartPalette.of(context);
-  return switch (status) {
-    OperationTripStatus.scheduled => palette.neutral,
-    OperationTripStatus.openForBooking => palette.active,
-    OperationTripStatus.boarding => palette.warning,
-    OperationTripStatus.inProgress => palette.accent,
-    OperationTripStatus.completed => palette.positive,
-    OperationTripStatus.cancelled => palette.negative,
-  };
-}
+/// Delegates to [tripStatusColor] — the same accent the list/grouped/timeline
+/// rows and the details header use — so the status donut never teaches the
+/// operator a colour that means something different one screen over.
+Color _statusColor(BuildContext context, OperationTripStatus status) =>
+    tripStatusColor(context, status);

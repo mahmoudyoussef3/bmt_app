@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
+import 'package:bmt_app/core/widgets/debounced_search_field.dart';
 
 import '../../domain/entities/platform_analytics.dart';
 import '../../domain/entities/platform_office_filter.dart';
@@ -13,7 +14,7 @@ import '../../domain/entities/platform_office_filter.dart';
 /// question, "which offices are waiting to be published" is a marketplace one.
 /// One combined dropdown would have to invent rows like "active but withdrawn"
 /// and would make either question unreliable to ask.
-class PlatformOfficeFilters extends StatefulWidget {
+class PlatformOfficeFilters extends StatelessWidget {
   const PlatformOfficeFilters({
     super.key,
     required this.filter,
@@ -43,31 +44,6 @@ class PlatformOfficeFilters extends StatefulWidget {
   /// silently does nothing is worse than one that is not there yet.
   final bool hasMetrics;
 
-  @override
-  State<PlatformOfficeFilters> createState() => _PlatformOfficeFiltersState();
-}
-
-class _PlatformOfficeFiltersState extends State<PlatformOfficeFilters> {
-  late final TextEditingController _searchController = TextEditingController(
-    text: widget.filter.query,
-  );
-
-  @override
-  void didUpdateWidget(PlatformOfficeFilters oldWidget) {
-    super.didUpdateWidget(oldWidget);
-
-    if (widget.filter.query != _searchController.text &&
-        widget.filter.query.isEmpty) {
-      _searchController.clear();
-    }
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
-  }
-
   static const _statusOptions = <String, String>{
     'active': 'نشط',
     'paused': 'متوقف مؤقتًا',
@@ -84,7 +60,7 @@ class _PlatformOfficeFiltersState extends State<PlatformOfficeFilters> {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final isFiltered = !widget.filter.isEmpty;
+    final isFiltered = !filter.isEmpty;
 
     return AppCard(
       padding: const EdgeInsets.all(AppSpacing.medium),
@@ -98,45 +74,34 @@ class _PlatformOfficeFiltersState extends State<PlatformOfficeFilters> {
             children: [
               SizedBox(
                 width: 280,
-                child: TextField(
-                  controller: _searchController,
-                  onChanged: widget.onSearch,
-                  textInputAction: TextInputAction.search,
-                  decoration: InputDecoration(
-                    isDense: true,
-                    hintText: 'ابحث باسم المكتب أو المعرّف أو المالك',
-                    prefixIcon: const Icon(Icons.search_rounded, size: 20),
-                    suffixIcon: widget.filter.query.isEmpty
-                        ? null
-                        : IconButton(
-                            icon: const Icon(Icons.close_rounded, size: 18),
-                            tooltip: 'مسح البحث',
-                            onPressed: () {
-                              _searchController.clear();
-                              widget.onSearch('');
-                            },
-                          ),
-                    border: const OutlineInputBorder(),
-                  ),
+                child: DebouncedSearchField(
+                  // Remounts (with the field's own fresh controller) whenever
+                  // the query changes from outside — the "مسح عوامل التصفية"
+                  // button included — so an external clear is reflected here
+                  // too, not just in the filtered list.
+                  key: ValueKey('platform-office-search-${filter.query}'),
+                  initialValue: filter.query,
+                  hintText: 'ابحث باسم المكتب أو المعرّف أو المالك',
+                  onChanged: onSearch,
                 ),
               ),
               _FilterDropdown(
                 label: 'الحالة التشغيلية',
-                value: widget.filter.status,
+                value: filter.status,
                 options: _statusOptions,
-                onChanged: widget.onStatus,
+                onChanged: onStatus,
               ),
               _FilterDropdown(
                 label: 'حالة العرض في السوق',
-                value: widget.filter.listingStatus,
+                value: filter.listingStatus,
                 options: _listingOptions,
-                onChanged: widget.onListingStatus,
+                onChanged: onListingStatus,
               ),
-              if (widget.hasMetrics) ...[
+              if (hasMetrics) ...[
                 SizedBox(
                   width: 180,
                   child: DropdownButtonFormField<ActivityLevel?>(
-                    initialValue: widget.filter.activity,
+                    initialValue: filter.activity,
                     isDense: true,
                     decoration: const InputDecoration(
                       isDense: true,
@@ -154,13 +119,13 @@ class _PlatformOfficeFiltersState extends State<PlatformOfficeFilters> {
                           child: Text(level.label),
                         ),
                     ],
-                    onChanged: widget.onActivity,
+                    onChanged: onActivity,
                   ),
                 ),
                 SizedBox(
                   width: 200,
                   child: DropdownButtonFormField<PlatformOfficeSort>(
-                    initialValue: widget.filter.sort,
+                    initialValue: filter.sort,
                     isDense: true,
                     decoration: const InputDecoration(
                       isDense: true,
@@ -172,14 +137,14 @@ class _PlatformOfficeFiltersState extends State<PlatformOfficeFilters> {
                         DropdownMenuItem(value: sort, child: Text(sort.label)),
                     ],
                     onChanged: (sort) {
-                      if (sort != null) widget.onSort(sort);
+                      if (sort != null) onSort(sort);
                     },
                   ),
                 ),
               ],
               if (isFiltered)
                 TextButton.icon(
-                  onPressed: widget.onClear,
+                  onPressed: onClear,
                   icon: const Icon(Icons.filter_alt_off_outlined, size: 18),
                   label: const Text('مسح عوامل التصفية'),
                 ),
@@ -188,9 +153,9 @@ class _PlatformOfficeFiltersState extends State<PlatformOfficeFilters> {
           if (isFiltered) ...[
             const SizedBox(height: AppSpacing.small),
             Text(
-              widget.resultCount == 0
-                  ? 'لا توجد مكاتب مطابقة من إجمالي ${widget.totalCount}'
-                  : 'عرض ${widget.resultCount} من ${widget.totalCount} مكتب',
+              resultCount == 0
+                  ? 'لا توجد مكاتب مطابقة من إجمالي $totalCount'
+                  : 'عرض $resultCount من $totalCount مكتب',
               style: Theme.of(
                 context,
               ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),

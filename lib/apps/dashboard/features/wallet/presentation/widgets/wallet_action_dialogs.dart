@@ -110,6 +110,9 @@ class _WalletReverseDialogState extends State<WalletReverseDialog> {
           child: const Text('إلغاء'),
         ),
         FilledButton(
+          style: FilledButton.styleFrom(
+            backgroundColor: Theme.of(context).colorScheme.error,
+          ),
           onPressed: _submitting ? null : _submit,
           child: const Text('تنفيذ العكس'),
         ),
@@ -220,6 +223,11 @@ class _WalletFreezeDialogState extends State<WalletFreezeDialog> {
           child: const Text('إلغاء'),
         ),
         FilledButton(
+          style: _freezing
+              ? FilledButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.error,
+                )
+              : null,
           onPressed: _submitting ? null : _submit,
           child: Text(_freezing ? 'تجميد' : 'إلغاء التجميد'),
         ),
@@ -382,6 +390,11 @@ class _RefundDecisionDialogState extends State<RefundDecisionDialog> {
           child: const Text('إلغاء'),
         ),
         FilledButton(
+          style: widget.approve
+              ? null
+              : FilledButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.error,
+                ),
           onPressed: _submitting ? null : _submit,
           child: Text(widget.approve ? 'اعتماد وتنفيذ' : 'رفض'),
         ),

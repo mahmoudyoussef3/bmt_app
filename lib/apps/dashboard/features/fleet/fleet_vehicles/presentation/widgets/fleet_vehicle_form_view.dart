@@ -11,6 +11,7 @@ import 'package:bmt_app/apps/dashboard/features/fleet/shared/core/utils/fleet_va
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/core/utils/fleet_upload_helpers.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/core/utils/vehicle_seat_configuration.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_vehicles/presentation/widgets/fleet_seat_layout_visualizer.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_dialog_header.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/vehicles/vehicles.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
@@ -72,6 +73,7 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
 
   String _globalError = '';
   bool _saving = false;
+  bool _hasChanges = false;
 
   @override
   void initState() {
@@ -118,7 +120,7 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
     if (value == null || value == vehicleType) return;
     setState(() {
       vehicleType = value;
-      
+
       _applyTypeCapacity();
     });
   }
@@ -178,222 +180,206 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
     super.dispose();
   }
 
+  Future<void> _handleBack() async {
+    if (_saving) return;
+    if (!_hasChanges) {
+      widget.onBack();
+      return;
+    }
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('تخلٍّ عن التغييرات؟'),
+        content: const Text('لديك تغييرات غير محفوظة. هل تريد الخروج؟'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('متابعة التعديل'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('خروج بدون حفظ'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed == true && mounted) widget.onBack();
+  }
+
   @override
   Widget build(BuildContext context) {
     final isEdit = widget.vehicle != null;
     final scheme = Theme.of(context).colorScheme;
 
-    return Dialog(
-      backgroundColor: Colors.transparent,
-      elevation: 0,
-      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 1000),
-        decoration: BoxDecoration(
-          color: scheme.surface,
-          borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
-          border: Border.all(color: scheme.outlineVariant.withAlpha(50)),
-          boxShadow: [
-            BoxShadow(
-              color: scheme.shadow.withAlpha(20),
-              blurRadius: 40,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              decoration: BoxDecoration(
-                color: scheme.primary.withAlpha(10),
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(24),
-                ),
-                border: Border(
-                  bottom: BorderSide(
-                    color: scheme.outlineVariant.withAlpha(50),
-                  ),
-                ),
+    return PopScope(
+      canPop: !_hasChanges && !_saving,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _handleBack();
+      },
+      child: Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 1000),
+          child: Column(
+            children: [
+              DashboardDialogHeader(
+                icon: isEdit
+                    ? Icons.edit_rounded
+                    : Icons.directions_bus_rounded,
+                title: isEdit
+                    ? 'تعديل المركبة: ${widget.vehicle!.vehicleNumber}'
+                    : 'إضافة مركبة جديدة',
+                onClose: _saving ? null : _handleBack,
               ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: scheme.primary,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      isEdit
-                          ? Icons.edit_rounded
-                          : Icons.directions_bus_rounded,
-                      color: scheme.onPrimary,
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Text(
-                      isEdit
-                          ? 'تعديل المركبة: ${widget.vehicle!.vehicleNumber}'
-                          : 'إضافة مركبة جديدة',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: _saving ? null : widget.onBack,
-                    icon: const Icon(Icons.close_rounded),
-                    style: IconButton.styleFrom(
-                      backgroundColor: scheme.surfaceContainerHighest,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: Form(
-                key: _formKey,
-                autovalidateMode: AutovalidateMode.onUserInteraction,
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: AppSpacing.large),
-                      LayoutBuilder(
-                        builder: (context, constraints) {
-                          final isDesktop = constraints.maxWidth >= 980;
+              const DashboardDialogDivider(),
+              Expanded(
+                child: Form(
+                  key: _formKey,
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                  onChanged: () {
+                    if (!_hasChanges) setState(() => _hasChanges = true);
+                  },
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: AppSpacing.large),
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            final isDesktop = constraints.maxWidth >= 980;
 
-                          if (isDesktop) {
-                            return Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            if (isDesktop) {
+                              return Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    flex: 5,
+                                    child: _VehicleMainInfoCard(
+                                      child: _buildMainFields(columns: 2),
+                                    ),
+                                  ),
+                                  const SizedBox(width: AppSpacing.large),
+                                  Expanded(
+                                    flex: 3,
+                                    child: Column(
+                                      children: [
+                                        _VehicleImagePickerCard(
+                                          existingUrls: _existingImageUrls,
+                                          newFiles: _newPickedFiles,
+                                          newBytes: _newPickedBytes,
+                                          onPick: _pickVehicleImages,
+                                          onRemoveExisting:
+                                              _removeExistingImage,
+                                          onRemoveNew: _removeNewImage,
+                                        ),
+                                        const SizedBox(
+                                          height: AppSpacing.medium,
+                                        ),
+                                        _VehicleDriverCard(
+                                          selectedDriverId: selectedDriverId,
+                                          drivers: _getAvailableDrivers(),
+                                          onChanged: (val) {
+                                            setState(
+                                              () => selectedDriverId = val,
+                                            );
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ],
+                              );
+                            }
+
+                            return Column(
                               children: [
-                                Expanded(
-                                  flex: 5,
-                                  child: _VehicleMainInfoCard(
-                                    child: _buildMainFields(columns: 2),
-                                  ),
+                                _VehicleImagePickerCard(
+                                  existingUrls: _existingImageUrls,
+                                  newFiles: _newPickedFiles,
+                                  newBytes: _newPickedBytes,
+                                  onPick: _pickVehicleImages,
+                                  onRemoveExisting: _removeExistingImage,
+                                  onRemoveNew: _removeNewImage,
                                 ),
-                                const SizedBox(width: AppSpacing.large),
-                                Expanded(
-                                  flex: 3,
-                                  child: Column(
-                                    children: [
-                                      _VehicleImagePickerCard(
-                                        existingUrls: _existingImageUrls,
-                                        newFiles: _newPickedFiles,
-                                        newBytes: _newPickedBytes,
-                                        onPick: _pickVehicleImages,
-                                        onRemoveExisting: _removeExistingImage,
-                                        onRemoveNew: _removeNewImage,
-                                      ),
-                                      const SizedBox(height: AppSpacing.medium),
-                                      _VehicleDriverCard(
-                                        selectedDriverId: selectedDriverId,
-                                        drivers: _getAvailableDrivers(),
-                                        onChanged: (val) {
-                                          setState(
-                                            () => selectedDriverId = val,
-                                          );
-                                        },
-                                      ),
-                                    ],
-                                  ),
+                                const SizedBox(height: AppSpacing.medium),
+                                _VehicleMainInfoCard(
+                                  child: _buildMainFields(columns: 1),
+                                ),
+                                const SizedBox(height: AppSpacing.medium),
+                                _VehicleDriverCard(
+                                  selectedDriverId: selectedDriverId,
+                                  drivers: _getAvailableDrivers(),
+                                  onChanged: (val) =>
+                                      setState(() => selectedDriverId = val),
                                 ),
                               ],
                             );
-                          }
+                          },
+                        ),
+                        const SizedBox(height: AppSpacing.large),
 
-                          return Column(
-                            children: [
-                              _VehicleImagePickerCard(
-                                existingUrls: _existingImageUrls,
-                                newFiles: _newPickedFiles,
-                                newBytes: _newPickedBytes,
-                                onPick: _pickVehicleImages,
-                                onRemoveExisting: _removeExistingImage,
-                                onRemoveNew: _removeNewImage,
+                        FleetSeatLayoutVisualizer(
+                          seatConfig: _previewSeatConfiguration(),
+                          vehicleType: vehicleType,
+                        ),
+                        const SizedBox(height: AppSpacing.large),
+                        FleetDocumentsInlineSection(
+                          isDriver: false,
+                          existingDocuments: _vehicleDocuments(),
+                          onChanged: (docs) => _pendingDocs = docs,
+                        ),
+                        if (_globalError.isNotEmpty) ...[
+                          const SizedBox(height: AppSpacing.medium),
+                          Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(AppSpacing.medium),
+                            decoration: BoxDecoration(
+                              color: scheme.error.withAlpha(18),
+                              borderRadius: BorderRadius.circular(
+                                AppTokens.radius,
                               ),
-                              const SizedBox(height: AppSpacing.medium),
-                              _VehicleMainInfoCard(
-                                child: _buildMainFields(columns: 1),
+                              border: Border.all(
+                                color: scheme.error.withAlpha(55),
                               ),
-                              const SizedBox(height: AppSpacing.medium),
-                              _VehicleDriverCard(
-                                selectedDriverId: selectedDriverId,
-                                drivers: _getAvailableDrivers(),
-                                onChanged: (val) =>
-                                    setState(() => selectedDriverId = val),
-                              ),
-                            ],
-                          );
-                        },
-                      ),
-                      const SizedBox(height: AppSpacing.large),
-                      
-                      FleetSeatLayoutVisualizer(
-                        seatConfig: _previewSeatConfiguration(),
-                        vehicleType: vehicleType,
-                      ),
-                      const SizedBox(height: AppSpacing.large),
-                      FleetDocumentsInlineSection(
-                        isDriver: false,
-                        existingDocuments: _vehicleDocuments(),
-                        onChanged: (docs) => _pendingDocs = docs,
-                      ),
-                      if (_globalError.isNotEmpty) ...[
-                        const SizedBox(height: AppSpacing.medium),
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(AppSpacing.medium),
-                          decoration: BoxDecoration(
-                            color: scheme.error.withAlpha(18),
-                            borderRadius: BorderRadius.circular(
-                              AppTokens.radius,
                             ),
-                            border: Border.all(
-                              color: scheme.error.withAlpha(55),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.error_outline_rounded,
-                                color: scheme.error,
-                              ),
-                              const SizedBox(width: AppSpacing.small),
-                              Expanded(
-                                child: Text(
-                                  _globalError,
-                                  style: TextStyle(
-                                    color: scheme.error,
-                                    fontWeight: FontWeight.w800,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.error_outline_rounded,
+                                  color: scheme.error,
+                                ),
+                                const SizedBox(width: AppSpacing.small),
+                                Expanded(
+                                  child: Text(
+                                    _globalError,
+                                    style: TextStyle(
+                                      color: scheme.error,
+                                      fontWeight: FontWeight.w800,
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                        ),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
                 ),
               ),
-            ),
-            
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
-              child: FleetFormActionsBar(
-                saving: _saving,
-                onCancel: widget.onBack,
-                onSave: _onSave,
-                saveLabel: isEdit ? 'حفظ التعديلات' : 'إضافة المركبة',
+
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+                child: FleetFormActionsBar(
+                  saving: _saving,
+                  onCancel: _handleBack,
+                  onSave: _onSave,
+                  saveLabel: isEdit ? 'حفظ التعديلات' : 'إضافة المركبة',
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -606,6 +592,7 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
       setState(() {
         _newPickedFiles.addAll(validFiles);
         _newPickedBytes.addAll(validBytes);
+        if (validFiles.isNotEmpty) _hasChanges = true;
       });
     } catch (e) {
       setState(() => _globalError = 'تعذر اختيار الصور: $e');
@@ -615,6 +602,7 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
   void _removeExistingImage(int index) {
     setState(() {
       _existingImageUrls.removeAt(index);
+      _hasChanges = true;
     });
   }
 
@@ -622,6 +610,7 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
     setState(() {
       _newPickedFiles.removeAt(index);
       _newPickedBytes.removeAt(index);
+      _hasChanges = true;
     });
   }
 
@@ -698,7 +687,7 @@ class _FleetVehicleFormViewState extends State<FleetVehicleFormView> {
       );
 
       final error = await widget.onSave(finalVehicle, _pendingDocs);
-      
+
       if (mounted && error != null) {
         setState(() => _globalError = error);
       }
@@ -773,7 +762,6 @@ class _VehicleImagePickerCard extends StatelessWidget {
             GestureDetector(
               onTap: onPick,
               child: Container(
-                
                 constraints: const BoxConstraints(minHeight: 140),
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(

@@ -30,6 +30,7 @@ class DashboardChartPalette {
     required this.active,
     required this.neutral,
     required this.accent,
+    required this.sequential,
   });
 
   /// Healthy / available / succeeded.
@@ -50,23 +51,52 @@ class DashboardChartPalette {
   /// Secondary emphasis, for a category that is none of the above.
   final Color accent;
 
-  static const DashboardChartPalette _light = DashboardChartPalette._(
+  /// Five-stop, low→high intensity **blue** ramp for data that is ordinal or
+  /// otherwise a single dimension in disguise (occupancy bands, a status
+  /// progression from scheduled to in-progress) rather than genuinely
+  /// unrelated categories.
+  ///
+  /// [categorical] answers "which kind" with one hue per kind; this answers
+  /// "how much" with one hue, shaded by degree — the calmer, single-brand
+  /// read a dense admin console wants instead of six unrelated hues (several
+  /// of which land in the same red used for destructive actions) standing in
+  /// for what is really "a little" through "a lot".
+  final List<Color> sequential;
+
+  static final DashboardChartPalette _light = DashboardChartPalette._(
     positive: AppLightColors.onSuccessContainer,
     warning: AppLightColors.onWarningContainer,
     negative: AppLightColors.onDangerContainer,
     active: AppLightColors.onInfoContainer,
     neutral: AppLightColors.onNeutralContainer,
     accent: AppLightColors.onSpecialContainer,
+    // Lightest → darkest brand blue, so "low" recedes toward the page and
+    // "high" reads as the most saturated, most present tone — the ordering a
+    // light page needs. Anchored on the same two tones [kpiTint]/badges
+    // already use for this hue, just interpolated rather than jumping
+    // straight from one to the other.
+    sequential: _ramp(
+      AppLightColors.primaryContainer,
+      AppLightColors.onPrimaryContainer,
+    ),
   );
 
-  static const DashboardChartPalette _dark = DashboardChartPalette._(
+  static final DashboardChartPalette _dark = DashboardChartPalette._(
     positive: AppDarkColors.successInk,
     warning: AppDarkColors.warningInk,
     negative: AppDarkColors.dangerInk,
     active: AppDarkColors.primaryAccent,
     neutral: AppDarkColors.onNeutralContainer,
     accent: AppDarkColors.special,
+    // Same idea, mirrored: a dark page needs "low" to sink toward the dark
+    // container tone and "high" to rise toward the bright accent ink, which
+    // is the pairing [AppDarkColors] itself already inverts for this reason.
+    sequential: _ramp(AppDarkColors.primaryContainer, AppDarkColors.primaryAccent),
   );
+
+  static List<Color> _ramp(Color from, Color to, {int steps = 5}) => [
+    for (var i = 0; i < steps; i++) Color.lerp(from, to, i / (steps - 1))!,
+  ];
 
   static DashboardChartPalette of(BuildContext context) =>
       resolve(Theme.of(context).brightness);

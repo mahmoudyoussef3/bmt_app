@@ -6,9 +6,9 @@ import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/widget
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/widgets/fleet_documents_inline_section.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/core/utils/fleet_input_formatters.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/core/utils/fleet_validators.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_dialog_header.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
-import 'package:bmt_app/core/theme/tokens.dart';
 
 /// Single comprehensive driver create/edit form with inline per-field
 /// validation and an embedded documents section (no multi-step wizard).
@@ -175,7 +175,7 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
 
     setState(() => _saving = true);
     final error = await widget.onSave(driver, _pendingDocs);
-    
+
     if (!mounted) return;
     setState(() {
       _saving = false;
@@ -195,76 +195,19 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
         if (!didPop) _handleBack();
       },
       child: Dialog(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
         insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-        child: Container(
+        child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 800),
-          decoration: BoxDecoration(
-            color: scheme.surface,
-            borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
-            border: Border.all(color: scheme.outlineVariant.withAlpha(50)),
-            boxShadow: [
-              BoxShadow(
-                color: scheme.shadow.withAlpha(20),
-                blurRadius: 40,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
           child: Column(
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 16,
-                ),
-                decoration: BoxDecoration(
-                  color: scheme.primary.withAlpha(10),
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(24),
-                  ),
-                  border: Border(
-                    bottom: BorderSide(
-                      color: scheme.outlineVariant.withAlpha(50),
-                    ),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: scheme.primary,
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        isEdit ? Icons.edit_rounded : Icons.person_add_rounded,
-                        color: scheme.onPrimary,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Text(
-                        isEdit
-                            ? 'تعديل السائق: ${widget.driver!.name}'
-                            : 'إضافة سائق جديد',
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: _handleBack,
-                      icon: const Icon(Icons.close_rounded),
-                      style: IconButton.styleFrom(
-                        backgroundColor: scheme.surfaceContainerHighest,
-                      ),
-                    ),
-                  ],
-                ),
+              DashboardDialogHeader(
+                icon: isEdit ? Icons.edit_rounded : Icons.person_add_rounded,
+                title: isEdit
+                    ? 'تعديل السائق: ${widget.driver!.name}'
+                    : 'إضافة سائق جديد',
+                onClose: _handleBack,
               ),
+              const DashboardDialogDivider(),
               Expanded(
                 child: Form(
                   key: _formKey,
@@ -433,7 +376,7 @@ class _FleetDriverFormViewState extends State<FleetDriverFormView> {
                   ),
                 ),
               ),
-              
+
               Padding(
                 padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
                 child: FleetFormActionsBar(

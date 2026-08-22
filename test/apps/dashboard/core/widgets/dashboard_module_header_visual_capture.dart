@@ -233,6 +233,6 @@ ThemeData _lightWithHostFont() {
     cardColor: scheme.surface,
     dividerColor: scheme.outline,
     shadowColor: AppLightColors.shadow,
-    extensions: [AppSurfaceStyle.flat(scheme)],
+    extensions: [AppSurfaceStyle.dashboardLight(scheme)],
   );
 }

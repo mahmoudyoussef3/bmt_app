@@ -6,6 +6,8 @@ import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/apps/dashboard/core/routes/dashboard_routes.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_dialog_header.dart';
+import 'package:bmt_app/core/theme/app_surface_style.dart';
 
 import '../../../routes/domain/entities/operation_route.dart';
 import '../../shared/domain/entities/operation_trip.dart';
@@ -16,7 +18,7 @@ import '../../trip_creation/domain/entities/trip_driver_option.dart';
 import '../../trip_creation/presentation/cubit/trip_creation_cubit.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
-class TripCreationWizardDialog extends StatelessWidget {
+class TripCreationWizardDialog extends StatefulWidget {
   const TripCreationWizardDialog({
     super.key,
     this.prefillTrip,
@@ -27,6 +29,21 @@ class TripCreationWizardDialog extends StatelessWidget {
   /// Switches the shell to another module. Supplied so the planner can send an
   /// operator to Fleet when the driver they picked has no vehicle assigned.
   final ValueChanged<String>? onOpenModule;
+
+  @override
+  State<TripCreationWizardDialog> createState() =>
+      _TripCreationWizardDialogState();
+}
+
+class _TripCreationWizardDialogState extends State<TripCreationWizardDialog> {
+  /// The wizard's data, kept once it has loaded even while later states pass
+  /// through — a rejected submit (a duplicate trip code, a stale conflict)
+  /// re-emits [TripCreationLoading] then [TripCreationError] on the *same*
+  /// cubit that holds this data. Rebuilding straight off `state` used to swap
+  /// [TripCreationWizard] out for an unrelated loading/error widget on every
+  /// failed submit, which tore down its State and silently wiped everything
+  /// the operator had entered — route, driver, schedule, fare, the lot.
+  TripCreationWizardDataLoaded? _lastLoaded;
 
   @override
   Widget build(BuildContext context) {
@@ -57,6 +74,28 @@ class TripCreationWizardDialog extends StatelessWidget {
         }
       },
       builder: (context, state) {
+        // Normally set from `listener`, which only fires on emissions made
+        // after this widget subscribes. Also set here so a cubit that is
+        // already sitting on TripCreationWizardDataLoaded the first time
+        // this widget builds — never true from `openTripCreationWizard`
+        // today, but not an invariant this widget should have to trust —
+        // is picked up immediately rather than rendered as a blank dialog.
+        if (state is TripCreationWizardDataLoaded) _lastLoaded = state;
+        final loaded = _lastLoaded;
+        if (loaded != null) {
+          // Data has loaded before: keep the wizard mounted for every later
+          // state (submitting, success, a rejected submit) so a failed
+          // submit never rebuilds it from scratch.
+          return TripCreationWizard(
+            routes: loaded.routes.map(_parseRoute).toList(),
+            drivers: loaded.drivers,
+            packages: loaded.packages,
+            prefillTrip: widget.prefillTrip,
+            onOpenModule: widget.onOpenModule,
+            submitting: state is TripCreationLoading,
+          );
+        }
+
         if (state is TripCreationLoading) {
           return const Dialog(
             child: SizedBox(
@@ -90,16 +129,6 @@ class TripCreationWizardDialog extends StatelessWidget {
                 ],
               ),
             ),
-          );
-        }
-
-        if (state is TripCreationWizardDataLoaded) {
-          return TripCreationWizard(
-            routes: state.routes.map(_parseRoute).toList(),
-            drivers: state.drivers,
-            packages: state.packages,
-            prefillTrip: prefillTrip,
-            onOpenModule: onOpenModule,
           );
         }
 
@@ -155,6 +184,11 @@ class TripCreationWizard extends StatefulWidget {
   final OperationTrip? prefillTrip;
   final ValueChanged<String>? onOpenModule;
 
+  /// True while a create request from an earlier submit is still in flight.
+  /// Driven by the dialog wrapper's cubit state rather than local state, so
+  /// the wizard has no submit path of its own that could race the cubit's.
+  final bool submitting;
+
   const TripCreationWizard({
     super.key,
     required this.routes,
@@ -162,6 +196,7 @@ class TripCreationWizard extends StatefulWidget {
     required this.packages,
     this.prefillTrip,
     this.onOpenModule,
+    this.submitting = false,
   });
 
   @override
@@ -356,95 +391,26 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
   }
 
   Widget _buildPlannerHeader(ColorScheme scheme) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.large,
-        vertical: AppSpacing.medium,
-      ),
-      decoration: BoxDecoration(
-        color: scheme.surface,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(AppTokens.radiusLarge),
-          topRight: Radius.circular(AppTokens.radiusLarge),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: scheme.shadow.withAlpha(15),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.small),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [scheme.primary, scheme.primary.withAlpha(180)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(AppTokens.radius),
-              boxShadow: [
-                BoxShadow(
-                  color: scheme.primary.withAlpha(60),
-                  blurRadius: 8,
-                  offset: const Offset(0, 3),
-                ),
-              ],
-            ),
-            child: Icon(
-              Icons.rocket_launch_rounded,
-              color: scheme.onPrimary,
-              size: 28,
-            ),
-          ),
-          const SizedBox(width: AppSpacing.medium),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  widget.prefillTrip == null
-                      ? 'مخطط رحلة جديد'
-                      : 'نسخ رحلة وتشغيلها',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: -0.5,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'اختر الأساسيات، راجع الجاهزية، ثم أنشئ الرحلة من شاشة واحدة.',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          AnimatedSwitcher(
+    return Column(
+      children: [
+        DashboardDialogHeader(
+          icon: Icons.rocket_launch_rounded,
+          title: widget.prefillTrip == null
+              ? 'مخطط رحلة جديد'
+              : 'نسخ رحلة وتشغيلها',
+          description:
+              'اختر الأساسيات، راجع الجاهزية، ثم أنشئ الرحلة من شاشة واحدة.',
+          trailing: AnimatedSwitcher(
             duration: AppTokens.motionBase,
             child: _PlannerReadinessPill(
               key: ValueKey(_isTripReady()),
               ready: _isTripReady(),
             ),
           ),
-          const SizedBox(width: AppSpacing.medium),
-          Container(
-            decoration: BoxDecoration(
-              color: scheme.surfaceContainerHighest.withAlpha(100),
-              shape: BoxShape.circle,
-            ),
-            child: IconButton(
-              tooltip: 'إغلاق',
-              onPressed: () => Navigator.of(context).pop(),
-              icon: const Icon(Icons.close_rounded),
-            ),
-          ),
-        ],
-      ),
+          onClose: () => Navigator.of(context).pop(),
+        ),
+        const DashboardDialogDivider(),
+      ],
     );
   }
 
@@ -478,98 +444,109 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
 
   Widget _buildPlannerFooter(ColorScheme scheme) {
     final ready = _isTripReady();
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.large,
-        vertical: AppSpacing.medium,
-      ),
-      decoration: BoxDecoration(
-        color: scheme.surface,
-        borderRadius: const BorderRadius.only(
-          bottomLeft: Radius.circular(AppTokens.radiusLarge),
-          bottomRight: Radius.circular(AppTokens.radiusLarge),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: scheme.shadow.withAlpha(15),
-            blurRadius: 10,
-            offset: const Offset(0, -4),
+    return Column(
+      children: [
+        const DashboardDialogDivider(),
+        Padding(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.large,
+            vertical: AppSpacing.medium,
           ),
-        ],
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final message = AnimatedSwitcher(
-            duration: AppTokens.motionBase,
-            child: Text(
-              ready ? 'كل شيء جاهز للتشغيل' : _readinessMessage(),
-              key: ValueKey(ready ? 'ready' : _readinessMessage()),
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: ready ? scheme.primary : scheme.onSurfaceVariant,
-                fontWeight: ready ? FontWeight.w700 : FontWeight.w500,
-              ),
-            ),
-          );
-          final actions = [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text('إلغاء'),
-            ),
-            OutlinedButton.icon(
-              onPressed: _resetPlanner,
-              icon: const Icon(Icons.restart_alt_rounded),
-              label: const Text('إعادة ضبط'),
-            ),
-            FilledButton.icon(
-              onPressed: ready ? _onSubmitTrip : null,
-              icon: const Icon(Icons.check_circle_rounded),
-              label: const Text('إنشاء الرحلة'),
-              style: FilledButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppSpacing.large,
-                  vertical: AppSpacing.medium,
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final message = AnimatedSwitcher(
+                duration: AppTokens.motionBase,
+                child: Text(
+                  widget.submitting
+                      ? 'جارٍ إنشاء الرحلة...'
+                      : ready
+                      ? 'كل شيء جاهز للتشغيل'
+                      : _readinessMessage(),
+                  key: ValueKey(
+                    widget.submitting
+                        ? 'submitting'
+                        : ready
+                        ? 'ready'
+                        : _readinessMessage(),
+                  ),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: ready ? scheme.primary : scheme.onSurfaceVariant,
+                    fontWeight: ready ? FontWeight.w700 : FontWeight.w500,
+                  ),
                 ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppTokens.radius),
+              );
+              final actions = [
+                TextButton(
+                  onPressed: widget.submitting
+                      ? null
+                      : () => Navigator.of(context).pop(),
+                  child: const Text('إلغاء'),
                 ),
-              ),
-            ),
-          ];
+                OutlinedButton.icon(
+                  onPressed: widget.submitting ? null : _resetPlanner,
+                  icon: const Icon(Icons.restart_alt_rounded),
+                  label: const Text('إعادة ضبط'),
+                ),
+                FilledButton.icon(
+                  onPressed: ready && !widget.submitting ? _onSubmitTrip : null,
+                  icon: widget.submitting
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.check_circle_rounded),
+                  label: Text(
+                    widget.submitting ? 'جارٍ الإنشاء...' : 'إنشاء الرحلة',
+                  ),
+                  style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.large,
+                      vertical: AppSpacing.medium,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppTokens.radius),
+                    ),
+                  ),
+                ),
+              ];
 
-          if (constraints.maxWidth < 720) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                message,
-                const SizedBox(height: AppSpacing.medium),
-                Wrap(
-                  spacing: AppSpacing.small,
-                  runSpacing: AppSpacing.small,
-                  alignment: WrapAlignment.end,
-                  children: actions,
-                ),
-              ],
-            );
-          }
+              if (constraints.maxWidth < 720) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    message,
+                    const SizedBox(height: AppSpacing.medium),
+                    Wrap(
+                      spacing: AppSpacing.small,
+                      runSpacing: AppSpacing.small,
+                      alignment: WrapAlignment.end,
+                      children: actions,
+                    ),
+                  ],
+                );
+              }
 
-          return Row(
-            children: [
-              actions[0],
-              const SizedBox(width: AppSpacing.small),
-              actions[1],
-              const SizedBox(width: AppSpacing.medium),
-              Expanded(
-                child: Align(
-                  alignment: AlignmentDirectional.centerEnd,
-                  child: message,
-                ),
-              ),
-              const SizedBox(width: AppSpacing.medium),
-              actions[2],
-            ],
-          );
-        },
-      ),
+              return Row(
+                children: [
+                  actions[0],
+                  const SizedBox(width: AppSpacing.small),
+                  actions[1],
+                  const SizedBox(width: AppSpacing.medium),
+                  Expanded(
+                    child: Align(
+                      alignment: AlignmentDirectional.centerEnd,
+                      child: message,
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.medium),
+                  actions[2],
+                ],
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -1200,11 +1177,11 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
 
     final cubit = context.read<TripCreationCubit>();
 
-    final created = await cubit.submitTrip(input, const [], _fare.offers);
-
-    if (mounted && created != null) {
-      Navigator.of(context).pop();
-    }
+    // The dialog wrapper's BlocConsumer.listener owns closing the dialog and
+    // showing the success snackbar once the cubit emits TripCreationSuccess.
+    // Popping again here as well used to double-pop the Navigator on every
+    // successful submit, closing an extra screen behind the wizard.
+    await cubit.submitTrip(input, const [], _fare.offers);
   }
 }
 
@@ -1224,88 +1201,64 @@ class _PlannerSectionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Container(
+    final surfaceStyle =
+        Theme.of(context).extension<AppSurfaceStyle>() ??
+        AppSurfaceStyle.flat(scheme);
+    return AnimatedContainer(
+      duration: AppTokens.motionBase,
+      padding: const EdgeInsets.all(AppSpacing.large),
       decoration: BoxDecoration(
         color: scheme.surface,
-        borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
+        borderRadius: BorderRadius.circular(surfaceStyle.radius),
         border: Border.all(
-          color: done
-              ? scheme.primary.withAlpha(40)
-              : scheme.outline.withAlpha(40),
-          width: 1,
+          color: done ? scheme.primary.withAlpha(90) : surfaceStyle.borderColor,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: scheme.shadow.withAlpha(5),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: surfaceStyle.shadow,
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
-        child: AnimatedContainer(
-          duration: AppTokens.motionBase,
-          decoration: BoxDecoration(
-            border: BorderDirectional(
-              start: BorderSide(
-                color: done ? scheme.primary : Colors.transparent,
-                width: 4,
-              ),
-            ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.large),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: done
-                            ? scheme.primaryContainer.withAlpha(100)
-                            : scheme.surfaceContainerHighest.withAlpha(100),
-                        borderRadius: BorderRadius.circular(
-                          AppTokens.radiusSmall,
-                        ),
-                      ),
-                      child: Icon(
-                        icon,
-                        color: done ? scheme.primary : scheme.onSurfaceVariant,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.medium),
-                    Expanded(
-                      child: Text(
-                        title,
-                        style: Theme.of(context).textTheme.titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w700),
-                      ),
-                    ),
-                    AnimatedSwitcher(
-                      duration: AppTokens.motionBase,
-                      child: Icon(
-                        done
-                            ? Icons.check_circle_rounded
-                            : Icons.radio_button_unchecked,
-                        key: ValueKey(done),
-                        color: done
-                            ? scheme.primary
-                            : scheme.outline.withAlpha(100),
-                        size: 24,
-                      ),
-                    ),
-                  ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: done
+                      ? scheme.primaryContainer.withAlpha(100)
+                      : scheme.surfaceContainerHighest.withAlpha(100),
+                  borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
                 ),
-                const SizedBox(height: AppSpacing.large),
-                child,
-              ],
-            ),
+                child: Icon(
+                  icon,
+                  color: done ? scheme.primary : scheme.onSurfaceVariant,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: AppSpacing.medium),
+              Expanded(
+                child: Text(
+                  title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              AnimatedSwitcher(
+                duration: AppTokens.motionBase,
+                child: Icon(
+                  done
+                      ? Icons.check_circle_rounded
+                      : Icons.radio_button_unchecked,
+                  key: ValueKey(done),
+                  color: done ? scheme.primary : scheme.outline.withAlpha(100),
+                  size: 24,
+                ),
+              ),
+            ],
           ),
-        ),
+          const SizedBox(height: AppSpacing.large),
+          child,
+        ],
       ),
     );
   }
@@ -1522,96 +1475,70 @@ class _AssignedVehicleCard extends StatelessWidget {
     final current = driver;
     final vehicle = current?.assignedVehicle;
 
-    final (Color tint, Color line, IconData icon) = switch (current) {
-      null => (
-        scheme.surfaceContainerHighest,
-        scheme.outline,
-        Icons.directions_bus_outlined,
-      ),
-      _ when vehicle == null => (
-        scheme.errorContainer,
-        scheme.error,
-        Icons.report_problem_outlined,
-      ),
+    final (Color line, IconData icon) = switch (current) {
+      null => (scheme.outline, Icons.directions_bus_outlined),
+      _ when vehicle == null => (scheme.error, Icons.report_problem_outlined),
       _ when !vehicle.isSchedulable || busyTrip != null => (
-        scheme.tertiaryContainer,
         scheme.tertiary,
         Icons.build_circle_outlined,
       ),
-      _ => (
-        scheme.primaryContainer,
-        scheme.primary,
-        Icons.airport_shuttle_rounded,
-      ),
+      _ => (scheme.primary, Icons.airport_shuttle_rounded),
     };
 
+    final surfaceStyle =
+        Theme.of(context).extension<AppSurfaceStyle>() ??
+        AppSurfaceStyle.flat(scheme);
     return Container(
+      padding: const EdgeInsets.all(AppSpacing.large),
       decoration: BoxDecoration(
         color: scheme.surface,
-        borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
-        border: Border.all(color: line.withAlpha(40)),
-        boxShadow: [
-          BoxShadow(
-            color: scheme.shadow.withAlpha(5),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
+        borderRadius: BorderRadius.circular(surfaceStyle.radius),
+        border: Border.all(color: DashboardColors.kpiBorder(context, line)),
+        boxShadow: surfaceStyle.shadow,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: DashboardColors.kpiTint(context, line),
+                  borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+                ),
+                child: Icon(icon, color: line, size: 20),
+              ),
+              const SizedBox(width: AppSpacing.medium),
+              Expanded(
+                child: Text(
+                  'السيارة المخصصة للسائق',
+                  style: text.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              Icon(
+                Icons.lock_rounded,
+                size: 18,
+                color: scheme.outline.withAlpha(150),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.medium),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(AppSpacing.medium),
+            decoration: BoxDecoration(
+              color: DashboardColors.kpiTint(context, line),
+              borderRadius: BorderRadius.circular(AppTokens.radius),
+              border: Border.all(
+                color: DashboardColors.kpiBorder(context, line),
+              ),
+            ),
+            child: _body(context, current, vehicle, line),
           ),
         ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
-        child: Container(
-          decoration: BoxDecoration(
-            border: BorderDirectional(start: BorderSide(color: line, width: 4)),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.large),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: tint.withAlpha(100),
-                        borderRadius: BorderRadius.circular(
-                          AppTokens.radiusSmall,
-                        ),
-                      ),
-                      child: Icon(icon, color: line, size: 20),
-                    ),
-                    const SizedBox(width: AppSpacing.medium),
-                    Expanded(
-                      child: Text(
-                        'السيارة المخصصة للسائق',
-                        style: text.titleMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                    Icon(
-                      Icons.lock_rounded,
-                      size: 18,
-                      color: scheme.outline.withAlpha(150),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppSpacing.medium),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(AppSpacing.medium),
-                  decoration: BoxDecoration(
-                    color: tint.withAlpha(30),
-                    borderRadius: BorderRadius.circular(AppTokens.radius),
-                    border: Border.all(color: line.withAlpha(40)),
-                  ),
-                  child: _body(context, current, vehicle, line),
-                ),
-              ],
-            ),
-          ),
-        ),
       ),
     );
   }

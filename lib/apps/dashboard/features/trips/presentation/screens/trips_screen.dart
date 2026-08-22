@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/dashboard/core/di/dashboard_di.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_collapsible_section.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart';
@@ -14,6 +15,7 @@ import 'package:bmt_app/apps/dashboard/features/trips/trip_management/presentati
 import 'package:bmt_app/apps/dashboard/features/trips/trip_passengers/presentation/cubit/trip_passengers_cubit.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/trip_pricing/presentation/cubit/trip_pricing_cubit.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/trip_seats/presentation/cubit/trip_seats_cubit.dart';
+import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/core/widgets/status_chip.dart';
@@ -403,15 +405,22 @@ class _SimpleToolbar extends StatelessWidget {
     final quick = quickLabels[state.quickFilter];
     if (quick != null) items.add(quick);
 
-    final advanced = [
-      state.statusFilter != null,
-      state.routeFilter != 'الكل',
-      state.driverFilter != 'الكل',
-      state.vehicleFilter != 'الكل',
-      state.occupancyFilter != 'الكل',
-      state.dateFilter != 'الكل',
-    ].where((active) => active).length;
-    if (advanced > 0) items.add('$advanced فلتر متقدم');
+    // Named, not counted: a folded "٢ فلتر متقدم" forces the operator to
+    // reopen the sheet just to see which two are narrowing the board.
+    if (state.statusFilter != null) {
+      items.add('الحالة: ${state.statusFilter!.label}');
+    }
+    if (state.routeFilter != 'الكل') items.add('المسار: ${state.routeFilter}');
+    if (state.driverFilter != 'الكل') {
+      items.add('السائق: ${state.driverFilter}');
+    }
+    if (state.vehicleFilter != 'الكل') {
+      items.add('المركبة: ${state.vehicleFilter}');
+    }
+    if (state.occupancyFilter != 'الكل') {
+      items.add('الإشغال: ${state.occupancyFilter}');
+    }
+    if (state.dateFilter != 'الكل') items.add('التاريخ: ${state.dateFilter}');
 
     if (items.isEmpty) return const ['بدون تصفية'];
     items.add('${state.filteredTrips.length} رحلة ظاهرة');
@@ -606,13 +615,19 @@ void _openTripDetails(BuildContext context, OperationTrip trip) {
         BlocProvider.value(value: context.read<TripPassengersCubit>()),
         BlocProvider.value(value: context.read<TripPricingCubit>()),
       ],
-      child: _TripDetailsDialog(),
+      child: TripDetailsWorkspace(),
     ),
   ).then((_) => detailsCubit.closeDetails());
 }
 
-class _TripDetailsDialog extends StatelessWidget {
-  const _TripDetailsDialog();
+/// The trip workspace body — header, tab rail, and the active tab's content.
+///
+/// Public (unlike its sibling private widgets) solely so the visual-QA
+/// harness (`trip_details_visual_capture.dart`) can pump it directly against
+/// a fake [TripDetailsCubit] without standing up the full [TripsScreen] and
+/// its five-cubit DI graph.
+class TripDetailsWorkspace extends StatelessWidget {
+  const TripDetailsWorkspace({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -733,12 +748,40 @@ class _DetailsHeader extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      '${tripFriendlyDate(trip.date)}، ${trip.departure}'
-                      '  •  ${trip.driver}',
+                      '${tripFriendlyDate(trip.date)}، ${trip.departure}',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: scheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    DefaultTextStyle.merge(
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: scheme.onSurfaceVariant,
+                      ),
+                      child: IconTheme.merge(
+                        data: IconThemeData(
+                          size: 14,
+                          color: scheme.onSurfaceVariant,
+                        ),
+                        child: Row(
+                          children: [
+                            Flexible(
+                              child: TripFact(
+                                icon: Icons.person_outline_rounded,
+                                text: trip.driver,
+                              ),
+                            ),
+                            const SizedBox(width: 14),
+                            Flexible(
+                              child: TripFact(
+                                icon: Icons.directions_bus_outlined,
+                                text: trip.vehicle,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
@@ -810,40 +853,56 @@ class _DetailsHeader extends StatelessWidget {
                     actions,
                   ],
                 );
-          if (!isStale) return header;
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              header,
-              const SizedBox(height: 12),
-              StaleTripBanner(
-                actions: Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    if (trip.status == OperationTripStatus.openForBooking)
-                      FilledButton.tonalIcon(
+          if (isStale) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                header,
+                const SizedBox(height: 12),
+                StaleTripBanner(
+                  actions: Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      if (trip.status == OperationTripStatus.openForBooking)
+                        FilledButton.tonalIcon(
+                          onPressed: state.isSaving
+                              ? null
+                              : () => _closeStale(
+                                  context,
+                                  StaleTripOutcome.operated,
+                                ),
+                          icon: const Icon(Icons.task_alt_rounded, size: 18),
+                          label: const Text('نُفّذت بالفعل — إنهاؤها'),
+                        ),
+                      TextButton.icon(
                         onPressed: state.isSaving
                             ? null
-                            : () => _closeStale(
-                                context,
-                                StaleTripOutcome.operated,
-                              ),
-                        icon: const Icon(Icons.task_alt_rounded, size: 18),
-                        label: const Text('نُفّذت بالفعل — إنهاؤها'),
+                            : () => _cancelTrip(context, trip),
+                        icon: const Icon(Icons.cancel_outlined, size: 18),
+                        label: const Text('لم تُنفَّذ — إلغاؤها'),
                       ),
-                    TextButton.icon(
-                      onPressed: state.isSaving
-                          ? null
-                          : () => _cancelTrip(context, trip),
-                      icon: const Icon(Icons.cancel_outlined, size: 18),
-                      label: const Text('لم تُنفَّذ — إلغاؤها'),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          );
+              ],
+            );
+          }
+          // A disabled action button only explains itself on hover, which a
+          // manager skimming the workspace never triggers — this is the one
+          // place the blocker was previously invisible until they tried the
+          // button and got nothing.
+          if (publishBlocker != null) {
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                header,
+                const SizedBox(height: 12),
+                _PublishBlockerNotice(blocker: publishBlocker),
+              ],
+            );
+          }
+          return header;
         },
       ),
     );
@@ -906,6 +965,46 @@ class _DetailsHeader extends StatelessWidget {
       SnackBar(
         content: Text(message?.isNotEmpty == true ? message! : fallback),
         duration: const Duration(seconds: 6),
+      ),
+    );
+  }
+}
+
+/// Why the next lifecycle action is disabled, spelled out where it is always
+/// visible instead of only inside the button's [Tooltip] — the one place a
+/// required action used to be discoverable only by hovering a button that
+/// does nothing when clicked.
+class _PublishBlockerNotice extends StatelessWidget {
+  const _PublishBlockerNotice({required this.blocker});
+
+  final TripPublishBlocker blocker;
+
+  @override
+  Widget build(BuildContext context) {
+    final tone = context.status(AppStatusTone.warning);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: tone.tint,
+        borderRadius: BorderRadius.circular(AppTokens.radius),
+        border: Border.all(color: tone.accent.withAlpha(90)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.lock_clock_rounded, size: 18, color: tone.ink),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              blocker.message,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: tone.ink,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1103,7 +1202,6 @@ class _TripWorkspaceBody extends StatelessWidget {
         child: TripPricingTab(trip: state.trip),
       ),
       TripWorkspaceTab.history => _HistoryTab(trip: state.trip),
-      TripWorkspaceTab.payments => _OverviewTab(trip: state.trip),
     };
   }
 }
@@ -1186,10 +1284,10 @@ class _OverviewTab extends StatelessWidget {
               ],
             ),
           ),
-          const SizedBox(height: 22),
+          const SizedBox(height: 18),
           const _SectionHeader(
-            title: 'بيانات التشغيل',
-            subtitle: 'الطاقم، المركبة، والسعة المتاحة',
+            title: 'السائق والمركبة والتكلفة',
+            subtitle: 'الطاقم المكلّف والسعر الأساسي لمقعد واحد',
           ),
           const SizedBox(height: 12),
           Wrap(
@@ -1207,18 +1305,59 @@ class _OverviewTab extends StatelessWidget {
                 value: trip.vehicle,
               ),
               _InfoCard(
-                icon: Icons.event_seat_rounded,
-                label: 'الإشغال',
-                value: '${trip.bookedSeats} من ${trip.capacity}',
-              ),
-              _InfoCard(
                 icon: Icons.payments_rounded,
                 label: 'سعر التذكرة',
-                value: '${trip.ticketPrice} ${trip.currency}',
+                value: '${formatTripPrice(trip.ticketPrice)} ${trip.currency}',
+                accent: context.status(AppStatusTone.special).ink,
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 8),
+          TextButton.icon(
+            onPressed: () => context
+                .read<TripDetailsCubit>()
+                .changeWorkspaceTab(TripWorkspaceTab.pricing),
+            icon: const Icon(Icons.receipt_long_rounded, size: 18),
+            label: const Text('عرض كل تسعير الرحلة والباقات'),
+          ),
+          const SizedBox(height: 18),
+          _SectionHeader(
+            title: 'الركاب والسعة',
+            subtitle: '${trip.bookedSeats} من ${trip.capacity} مقعد محجوز',
+          ),
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 12,
+            runSpacing: 12,
+            children: [
+              _InfoCard(
+                icon: Icons.event_seat_rounded,
+                label: 'الإشغال',
+                value: '${trip.bookedSeats} من ${trip.capacity}',
+                accent: tripOccupancyColor(context, trip),
+              ),
+            ],
+          ),
+          if (trip.seats.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Wrap(
+              spacing: 14,
+              runSpacing: 8,
+              children: [
+                for (final seatState in TripSeatState.values)
+                  if (trip.seats
+                      .where((seat) => seat.state == seatState)
+                      .isNotEmpty)
+                    _SeatLegend(
+                      state: seatState,
+                      count: trip.seats
+                          .where((seat) => seat.state == seatState)
+                          .length,
+                    ),
+              ],
+            ),
+          ],
+          const SizedBox(height: 18),
           _SectionHeader(
             title: 'محطات المسار',
             subtitle: '${trip.routePoints.length} نقاط توقف مرتبة',
@@ -1344,21 +1483,39 @@ class _InfoCard extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.value,
+    this.accent,
   });
 
   final IconData icon;
   final String label;
   final String value;
 
+  /// Tints the icon square so a card visually announces which category it
+  /// belongs to (financial vs. vehicle/driver vs. capacity) instead of every
+  /// fact in the workspace looking identical. Defaults to a neutral ink for
+  /// plain operational facts.
+  final Color? accent;
+
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final tint = accent ?? scheme.onSurfaceVariant;
     return SizedBox(
       width: 230,
       child: AppCard(
         padding: const EdgeInsets.all(16),
         child: Row(
           children: [
-            Icon(icon),
+            Container(
+              width: 36,
+              height: 36,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: DashboardColors.kpiTint(context, tint),
+                borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+              ),
+              child: Icon(icon, size: 18, color: tint),
+            ),
             const SizedBox(width: 10),
             Expanded(
               child: Column(
@@ -1410,6 +1567,12 @@ class _PassengersTab extends StatelessWidget {
             separatorBuilder: (_, _) => const SizedBox(height: 8),
             itemBuilder: (context, index) {
               final passenger = trip.passengers[index];
+              // The passenger's own `status` is written from the same values
+              // as a seat's state (see the datasource's booking→seat mapping),
+              // so the seat map's colour vocabulary applies here unchanged —
+              // "paid" never means a different colour on two tabs of the same
+              // trip.
+              final paymentState = TripSeatState.fromString(passenger.status);
               return AppCard(
                 padding: const EdgeInsets.symmetric(
                   horizontal: 14,
@@ -1430,12 +1593,19 @@ class _PassengersTab extends StatelessWidget {
                   ),
                   subtitle: Text(
                     '${passenger.phone}\n'
-                    'من ${passenger.pickup} إلى ${passenger.dropoff}',
+                    'من ${passenger.pickup} إلى ${passenger.dropoff}'
+                    '${passenger.paymentMethod.trim().isEmpty ? '' : ' • ${passenger.paymentMethod}'}',
                   ),
                   isThreeLine: true,
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      StatusChip(
+                        label: paymentState.label,
+                        color: tripSeatColor(context, paymentState),
+                        textColor: tripSeatOnColor(context, paymentState),
+                      ),
+                      const SizedBox(width: 6),
                       Chip(label: Text('مقعد ${passenger.seat}')),
                       IconButton(
                         tooltip: 'إلغاء الحجز',
@@ -1649,9 +1819,13 @@ class _EmptyInline extends StatelessWidget {
 }
 
 class _SeatLegend extends StatelessWidget {
-  const _SeatLegend({required this.state});
+  const _SeatLegend({required this.state, this.count});
 
   final TripSeatState state;
+
+  /// Shown as "label (n)" when set — lets the same swatch double as a
+  /// glance-able breakdown (Overview) instead of only a bare legend (Seats).
+  final int? count;
 
   @override
   Widget build(BuildContext context) {
@@ -1670,7 +1844,10 @@ class _SeatLegend extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 5),
-        Text(state.label, style: Theme.of(context).textTheme.labelMedium),
+        Text(
+          count == null ? state.label : '${state.label} ($count)',
+          style: Theme.of(context).textTheme.labelMedium,
+        ),
       ],
     );
   }

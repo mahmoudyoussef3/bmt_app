@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/operation_trip.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/trip_seats/presentation/cubit/trip_seats_cubit.dart';
+import 'package:bmt_app/core/theme/app_dark_colors.dart';
 import 'package:bmt_app/core/theme/app_light_colors.dart';
 import 'package:bmt_app/core/vehicles/vehicles.dart';
 import 'package:bmt_app/core/widgets/vehicle_seats/vehicle_seats.dart';
@@ -58,12 +59,11 @@ class _TripSeatMapState extends State<TripSeatMap> {
         children: [
           VehicleSeatLayout(
             blueprint: blueprint,
-            seats: [for (final seat in ordered) _seatData(seat)],
+            seats: [for (final seat in ordered) _seatData(context, seat)],
             mode: SeatLayoutMode.management,
             density: SeatLayoutDensity.compact,
             showLegend: true,
             labels: const VehicleSeatLabels(
-              
               occupied: 'مدفوع',
               reserved: 'محجوز',
               disabled: 'محظور',
@@ -85,7 +85,8 @@ class _TripSeatMapState extends State<TripSeatMap> {
   /// only needs to know the seat is taken — but an operator needs to tell them
   /// apart, so the subscription seat keeps its own glyph and hue. That is what
   /// the per-seat overrides exist for: a shade of a state, not a new state.
-  VehicleSeatData _seatData(TripSeat seat) {
+  VehicleSeatData _seatData(BuildContext context, TripSeat seat) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return VehicleSeatData(
       id: seat.id,
       label: seat.label,
@@ -100,7 +101,7 @@ class _TripSeatMapState extends State<TripSeatMap> {
           ? Icons.card_membership_rounded
           : null,
       accent: seat.state == TripSeatState.subscription
-          ? AppLightColors.special
+          ? (isDark ? AppDarkColors.special : AppLightColors.special)
           : null,
       tooltip: 'مقعد ${seat.label} • ${seat.state.label}',
     );

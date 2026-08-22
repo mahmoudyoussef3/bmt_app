@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_dialog_header.dart';
 import 'package:bmt_app/core/geo/geo_models.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
@@ -286,47 +287,15 @@ class _DialogHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.large),
-      child: Row(
-        children: [
-          CircleAvatar(
-            backgroundColor: scheme.primaryContainer,
-            child: Icon(switch (role) {
-              RouteStopRole.origin => Icons.trip_origin_rounded,
-              RouteStopRole.waypoint => Icons.pin_drop_outlined,
-              RouteStopRole.destination => Icons.flag_rounded,
-            }, color: scheme.primary),
-          ),
-          const SizedBox(width: AppSpacing.medium),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  isNew ? 'إضافة ${role.label}' : 'تعديل ${role.label}',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  role.hint,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          IconButton(
-            tooltip: 'إغلاق',
-            onPressed: () => Navigator.of(context).pop(),
-            icon: const Icon(Icons.close_rounded),
-          ),
-        ],
-      ),
+    return DashboardDialogHeader(
+      icon: switch (role) {
+        RouteStopRole.origin => Icons.trip_origin_rounded,
+        RouteStopRole.waypoint => Icons.pin_drop_outlined,
+        RouteStopRole.destination => Icons.flag_rounded,
+      },
+      title: isNew ? 'إضافة ${role.label}' : 'تعديل ${role.label}',
+      description: role.hint,
+      onClose: () => Navigator.of(context).pop(),
     );
   }
 }

@@ -80,12 +80,7 @@ class _FleetDocumentsInlineSectionState
               spacing: AppSpacing.small,
               runSpacing: AppSpacing.small,
               children: widget.existingDocuments
-                  .map(
-                    (d) => Chip(
-                      avatar: const Icon(Icons.verified_outlined, size: 18),
-                      label: Text('${d.type.label} · ${d.expiryDate}'),
-                    ),
-                  )
+                  .map((d) => _ExistingDocumentChip(document: d))
                   .toList(),
             ),
             const SizedBox(height: AppSpacing.medium),
@@ -145,6 +140,48 @@ class _FleetDocumentsInlineSectionState
           FleetDocumentAddForm(allowedTypes: _allowedTypes, onAdd: _add),
         ],
       ),
+    );
+  }
+}
+
+/// A saved document's chip, coloured and labelled by [FleetDocumentStatus] —
+/// the same mapping `fleet_document_manager.dart` uses for the documents tab.
+///
+/// An expired document silently excludes its driver/vehicle from pairing
+/// elsewhere in this same form (`_getAvailableVehicles`/`_getAvailableDrivers`),
+/// so the reason has to be visible right here, not just discoverable by
+/// noticing a shorter picker list.
+class _ExistingDocumentChip extends StatelessWidget {
+  const _ExistingDocumentChip({required this.document});
+
+  final FleetDocument document;
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final color = switch (document.status) {
+      FleetDocumentStatus.expired => scheme.error,
+      FleetDocumentStatus.expiringSoon => scheme.tertiary,
+      FleetDocumentStatus.valid => scheme.primary,
+    };
+    final icon = switch (document.status) {
+      FleetDocumentStatus.expired => Icons.error_outline_rounded,
+      FleetDocumentStatus.expiringSoon => Icons.warning_amber_rounded,
+      FleetDocumentStatus.valid => Icons.verified_outlined,
+    };
+    final label = document.status == FleetDocumentStatus.valid
+        ? '${document.type.label} · ${document.expiryDate}'
+        : '${document.type.label} · ${document.expiryDate} · ${document.status.label}';
+
+    return Chip(
+      avatar: Icon(icon, size: 18, color: color),
+      label: Text(label),
+      backgroundColor: document.status == FleetDocumentStatus.valid
+          ? null
+          : color.withAlpha(20),
+      side: document.status == FleetDocumentStatus.valid
+          ? null
+          : BorderSide(color: color.withAlpha(90)),
     );
   }
 }

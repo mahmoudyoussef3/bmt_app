@@ -176,12 +176,27 @@ abstract final class DashboardColors {
   /// A flat alpha does not work across both themes: 16/255 of a mid-tone over
   /// white is a visible tint, while the same over slate is nothing. Dark mode
   /// needs roughly twice the opacity to read as the same tile.
+  ///
+  /// Light was `20` — a KPI tile carries no shadow (nesting a card inside the
+  /// header/panel card it already sits in is the one thing this system
+  /// avoids), so tint and border are its *only* signal. At `20` four tiles in
+  /// a row were indistinguishable from the page behind them.
+  ///
+  /// `40`, not `32`: several of the accents this is called with (see
+  /// `DashboardChartPalette`'s `positive`/`active`/`neutral`) are `onXContainer`
+  /// *ink* tones — deliberately dark, low-chroma colours meant to sit as text on
+  /// their own light container, not to seed one. Alpha-blending a low-chroma
+  /// dark colour toward white moves mostly through grey; a vivid accent like
+  /// [ColorScheme.primary] or the warning/danger tones read fine at a lower
+  /// alpha, but the muted inks needed the extra room to still land as colour
+  /// rather than a slightly warm or cool grey. Checked across four KPI rows
+  /// (Home, Fleet, Finance, Customers) side by side.
   static Color kpiTint(BuildContext context, Color accent) =>
-      accent.withAlpha(_isDark(context) ? 38 : 20);
+      accent.withAlpha(_isDark(context) ? 38 : 40);
 
   /// The border for a KPI tile keyed to [accent].
   static Color kpiBorder(BuildContext context, Color accent) =>
-      accent.withAlpha(_isDark(context) ? 90 : 60);
+      accent.withAlpha(_isDark(context) ? 90 : 115);
 }
 
 /// `context.status(AppStatusTone.warning).ink` — the short form of
