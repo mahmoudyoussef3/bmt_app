@@ -69,6 +69,18 @@ class FleetDriversTable extends StatelessWidget {
         DriverHealthLevel.critical => AppStatusTone.error,
       };
 
+  /// The semantic status role a driver's availability maps to, so "التوفر"
+  /// reads as a coloured signal rather than every status sharing one flat
+  /// tint.
+  static AppStatusTone _availabilityTone(DriverOperationalStatus status) =>
+      switch (status) {
+        DriverOperationalStatus.available => AppStatusTone.success,
+        DriverOperationalStatus.assigned => AppStatusTone.info,
+        DriverOperationalStatus.blocked => AppStatusTone.error,
+        DriverOperationalStatus.suspended => AppStatusTone.error,
+        DriverOperationalStatus.archived => AppStatusTone.neutral,
+      };
+
   int? get _sortColumnIndex => switch (sortField) {
     FleetSortField.name => _kDriverCol,
     FleetSortField.licenseExpiry => _kLicenseCol,
@@ -163,6 +175,7 @@ class FleetDriversTable extends StatelessWidget {
     final paged = start >= drivers.length
         ? <FleetDriver>[]
         : drivers.sublist(start, end);
+    final suspendedTint = context.status(AppStatusTone.error).tint;
 
     return OpsDataTable(
       toolbar: toolbar,
@@ -173,6 +186,10 @@ class FleetDriversTable extends StatelessWidget {
       sortColumnIndex: _sortColumnIndex,
       sortDirection: sortAscending ? OpsSort.asc : OpsSort.desc,
       onSort: _handleSort,
+      rowTints: [
+        for (final driver in paged)
+          driver.status == FleetDriverStatus.suspended ? suspendedTint : null,
+      ],
       columns: const [
         OpsColumn('تحديد', flex: 1, minWidth: 64),
         OpsColumn('السائق', flex: 4, sortable: true, minWidth: 240),
@@ -207,8 +224,12 @@ class FleetDriversTable extends StatelessWidget {
               textColor: healthFg,
             ),
           ),
-          DashboardStatusChip(label: snapshot.status.label),
-          
+          DashboardStatusChip(
+            label: snapshot.status.label,
+            color: context.status(_availabilityTone(snapshot.status)).tint,
+            textColor: context.status(_availabilityTone(snapshot.status)).ink,
+          ),
+
           vehicle.isEmpty
               ? DashboardStatusChip(
                   label: 'بدون سيارة',

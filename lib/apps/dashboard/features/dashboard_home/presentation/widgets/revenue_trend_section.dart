@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_models.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
-import 'package:bmt_app/apps/dashboard/core/widgets/charts/dashboard_line_chart.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/charts/dashboard_bar_chart.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_empty_state.dart';
 import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_panel.dart';
@@ -57,14 +57,18 @@ class RevenueTrendSection extends StatelessWidget {
             )
           : Padding(
               padding: const EdgeInsets.only(top: AppSpacing.small),
-              child: DashboardLineChart(
-                lineColor: palette.positive,
+              child: DashboardBarChart(
                 data: [
                   for (final point in series)
                     ChartDatum(
-                      label: _dayLabel(point.day),
+                      label: _dayLabel(point.day, point == series.last),
                       value: point.amount,
-                      color: scheme.primary,
+                      // Today's bar carries the accent; the rest of the
+                      // window is a muted reference so "how are we doing
+                      // right now" reads at a glance without a legend.
+                      color: point == series.last
+                          ? scheme.primary
+                          : palette.neutral,
                     ),
                 ],
               ),
@@ -72,7 +76,8 @@ class RevenueTrendSection extends StatelessWidget {
     );
   }
 
-  /// `d/M` — short enough that a 90-day axis stays legible; the chart only
-  /// renders every fourth label anyway.
-  String _dayLabel(DateTime day) => '${day.day}/${day.month}';
+  /// `d/M`, or "اليوم" for the series' last point — short enough that a
+  /// 90-day axis stays legible, and today's bar reads without counting.
+  String _dayLabel(DateTime day, bool isToday) =>
+      isToday ? 'اليوم' : '${day.day}/${day.month}';
 }

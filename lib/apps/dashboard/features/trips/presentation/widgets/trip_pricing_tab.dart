@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
@@ -276,7 +278,23 @@ class _PricingCard extends StatelessWidget {
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
               ),
-              DashboardStatusChip(label: pricing.isActive ? 'نشط' : 'غير نشط'),
+              DashboardStatusChip(
+                label: pricing.isActive ? 'نشط' : 'غير نشط',
+                color: context
+                    .status(
+                      pricing.isActive
+                          ? AppStatusTone.success
+                          : AppStatusTone.neutral,
+                    )
+                    .tint,
+                textColor: context
+                    .status(
+                      pricing.isActive
+                          ? AppStatusTone.success
+                          : AppStatusTone.neutral,
+                    )
+                    .ink,
+              ),
             ],
           ),
           const SizedBox(height: AppSpacing.medium),

@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
-import 'package:bmt_app/core/widgets/empty_state.dart';
 
 import '../../domain/entities/report_entities.dart';
 import '../cubit/reports_state.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_empty_state.dart';
 
 class ReportDataTable extends StatelessWidget {
   final ReportsLoaded state;
@@ -38,9 +39,10 @@ class ReportDataTable extends StatelessWidget {
           ),
           const SizedBox(height: AppSpacing.medium),
           if (rows.isEmpty)
-            const EmptyState(
+            const DashboardEmptyState(
+              icon: DashboardIcons.reports,
               title: 'لا توجد سجلات بيانات لتحديد الفلتر الحالي',
-              subtitle:
+              message:
                   'يرجى تجربة تعديل فترة التصفية الزمنية أو خيارات الفلترة.',
             )
           else

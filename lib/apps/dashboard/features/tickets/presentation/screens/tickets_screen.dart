@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
@@ -84,15 +83,17 @@ class _LoadedView extends StatelessWidget {
                 label: const Text('تحديث'),
               ),
             ],
-            sectionId: DashboardSectionIds.ticketsHeader,
-            summary: SummaryStats(state: state),
-            // The toolbar stays out of the fold: search and the two filters are
-            // the only way to reach a ticket that is not on the first page.
-            pinned: _TicketsToolbar(state: state),
           ),
           const SizedBox(height: AppSpacing.medium),
+          SummaryStats(state: state),
+          const SizedBox(height: AppSpacing.medium),
           Expanded(
-            child: SingleChildScrollView(child: TicketsTable(state: state)),
+            child: SingleChildScrollView(
+              child: TicketsTable(
+                state: state,
+                toolbar: _TicketsToolbar(state: state),
+              ),
+            ),
           ),
         ],
       ),

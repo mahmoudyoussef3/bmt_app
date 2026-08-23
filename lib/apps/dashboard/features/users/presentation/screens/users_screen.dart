@@ -7,7 +7,7 @@ import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
-import 'package:bmt_app/core/widgets/empty_state.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_empty_state.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_status_chip.dart';
 import 'package:bmt_app/core/widgets/debounced_search_field.dart';
 import 'package:flutter/material.dart';
@@ -153,16 +153,18 @@ class _UsersViewState extends State<_UsersView> {
             ),
             const SizedBox(height: AppSpacing.medium),
             if (users.isEmpty)
-              const EmptyState(
+              const DashboardEmptyState(
+                icon: DashboardIcons.users,
                 title: 'لا يوجد مستخدمون مسجلون بعد',
-                subtitle:
+                message:
                     'أضف حساباً لكل موظف يحتاج الدخول إلى لوحة التحكم، وحدّد '
                     'دوره عند الإنشاء.',
               )
             else if (filtered.isEmpty)
-              const EmptyState(
+              const DashboardEmptyState(
+                icon: Icons.search_off_rounded,
                 title: 'لا توجد نتائج مطابقة',
-                subtitle: 'غيّر البحث أو فلتر الدور لعرض مستخدمين آخرين.',
+                message: 'غيّر البحث أو فلتر الدور لعرض مستخدمين آخرين.',
               )
             else
               ...filtered.map(

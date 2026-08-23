@@ -5,7 +5,12 @@ import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import '../../domain/entities/complaint.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_status_chip.dart';
 
+/// Same 6px-rect [DashboardStatusChip] every other module's table uses for
+/// status — this used to be a bespoke pill with a bigger radius, the one
+/// place in Tickets that didn't match Trips, Bookings, Fleet, or the ticket
+/// details dialog's own [DashboardStatusChip]-based badges.
 class StatusBadge extends StatelessWidget {
   final TicketStatus status;
   const StatusBadge({super.key, required this.status});
@@ -22,19 +27,10 @@ class StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tone = context.status(_tone);
-    final bg = tone.tint;
-    final fg = tone.ink;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(AppTokens.radius),
-        border: Border.all(color: fg.withValues(alpha: 0.35)),
-      ),
-      child: Text(
-        status.label,
-        style: TextStyle(color: fg, fontSize: 11, fontWeight: FontWeight.bold),
-      ),
+    return DashboardStatusChip(
+      label: status.label,
+      color: tone.tint,
+      textColor: tone.ink,
     );
   }
 }
@@ -53,19 +49,10 @@ class PriorityBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final tone = context.status(_tone);
-    final bg = tone.tint;
-    final fg = tone.ink;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(AppTokens.radius),
-        border: Border.all(color: fg.withValues(alpha: 0.35)),
-      ),
-      child: Text(
-        priority.label,
-        style: TextStyle(color: fg, fontSize: 11, fontWeight: FontWeight.bold),
-      ),
+    return DashboardStatusChip(
+      label: priority.label,
+      color: tone.tint,
+      textColor: tone.ink,
     );
   }
 }

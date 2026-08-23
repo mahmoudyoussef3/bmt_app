@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_empty_state.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_snackbar.dart';
-import 'package:bmt_app/core/widgets/empty_state.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_status_chip.dart';
 
 import '../../domain/entities/captain_request.dart';
@@ -112,12 +112,12 @@ class _CaptainRequestsScreenState extends State<CaptainRequestsScreen> {
         ),
         Expanded(
           child: visible.isEmpty
-              ? EmptyState(
-                  emoji: '🧑‍✈️',
+              ? DashboardEmptyState(
+                  icon: DashboardIcons.captainRequests,
                   title: _pendingOnly
                       ? 'لا توجد طلبات قيد المراجعة'
                       : 'لا توجد طلبات',
-                  subtitle:
+                  message:
                       'ستظهر هنا طلبات الكباتن الجدد فور تسجيلهم من التطبيق.',
                 )
               : ListView.separated(

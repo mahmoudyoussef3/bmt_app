@@ -54,6 +54,14 @@ class BookingsLoaded extends BookingsState {
   /// action buttons instead of allowing a double submit.
   final bool isProcessing;
 
+  /// True while a CSV export is in flight, kept apart from [isProcessing] so
+  /// exporting the queue never disables the review actions and vice versa.
+  final bool isExporting;
+
+  /// The file name of the export the operator just finished, surfaced as a
+  /// transient success snack bar the same way [actionError] surfaces a failure.
+  final String? exportedFileName;
+
   BookingsLoaded({
     required this.bookings,
     required this.filters,
@@ -65,6 +73,8 @@ class BookingsLoaded extends BookingsState {
     this.page = 0,
     this.actionError,
     this.isProcessing = false,
+    this.isExporting = false,
+    this.exportedFileName,
   });
 
   /// Computed once per state instance — the board reads this several times per
@@ -193,6 +203,45 @@ class BookingsLoaded extends BookingsState {
       countByPaymentStatus(PaymentStatus.rejected) +
       countByStatus(BookingStatus.cancelled);
 
+  /// Bookings created today (by wall-clock day), and the same for yesterday —
+  /// the pair the "حجوزات اليوم" tile compares against. Scoped by
+  /// [OperationBooking.createdAt] because that is the only timestamp the row
+  /// actually carries; there is no separate "cancelled at" column, so
+  /// [cancelledToday] below reads as *created and cancelled the same day*
+  /// rather than *cancelled today*, and says so.
+  List<OperationBooking> _createdOn(DateTime day) => bookings
+      .where(
+        (b) =>
+            b.createdAt.year == day.year &&
+            b.createdAt.month == day.month &&
+            b.createdAt.day == day.day,
+      )
+      .toList();
+
+  late final List<OperationBooking> _createdToday = _createdOn(DateTime.now());
+  late final int bookingsCreatedToday = _createdToday.length;
+  late final int bookingsCreatedYesterday = _createdOn(
+    DateTime.now().subtract(const Duration(days: 1)),
+  ).length;
+
+  /// Value of the bookings created today, regardless of payment outcome —
+  /// today's booking volume in money terms.
+  late final double todayBookingValue = _createdToday.fold<double>(
+    0,
+    (sum, b) => sum + b.paymentAmount,
+  );
+
+  /// Bookings created *and* cancelled today. See the doc above for why this is
+  /// not the same as "every booking cancelled today".
+  late final List<OperationBooking> _cancelledToday = _createdToday
+      .where((b) => b.status == BookingStatus.cancelled)
+      .toList();
+
+  late final int cancelledTodayCount = _cancelledToday.length;
+  late final int cancelledTodayRefundedCount = _cancelledToday
+      .where((b) => b.paymentStatus == PaymentStatus.refunded)
+      .length;
+
   /// Distinct routes present in the loaded set, for the route filter. Picking
   /// from what exists beats typing a substring that may match nothing.
   late final List<String> availableRoutes =
@@ -223,6 +272,9 @@ class BookingsLoaded extends BookingsState {
     String? actionError,
     bool clearActionError = false,
     bool? isProcessing,
+    bool? isExporting,
+    String? exportedFileName,
+    bool clearExportedFileName = false,
   }) {
     return BookingsLoaded(
       bookings: bookings ?? this.bookings,
@@ -237,6 +289,10 @@ class BookingsLoaded extends BookingsState {
       page: page ?? this.page,
       actionError: clearActionError ? null : actionError ?? this.actionError,
       isProcessing: isProcessing ?? this.isProcessing,
+      isExporting: isExporting ?? this.isExporting,
+      exportedFileName: clearExportedFileName
+          ? null
+          : exportedFileName ?? this.exportedFileName,
     );
   }
 }

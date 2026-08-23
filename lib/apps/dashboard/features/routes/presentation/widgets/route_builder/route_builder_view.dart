@@ -878,22 +878,25 @@ class _BuilderFooter extends StatelessWidget {
             onPressed: saving ? null : onCancel,
             child: const Text('إلغاء'),
           );
-          final save = FilledButton.icon(
-            key: const ValueKey('route-builder-save'),
-            onPressed: ready && !saving ? onSave : null,
-            icon: saving
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.check_rounded),
-            label: Text(
-              saving
-                  ? 'جارٍ الحفظ...'
-                  : draft.isEditing
-                  ? 'حفظ التعديلات'
-                  : 'حفظ المسار',
+          final save = Tooltip(
+            message: ready || saving ? '' : firstIssue!.message,
+            child: FilledButton.icon(
+              key: const ValueKey('route-builder-save'),
+              onPressed: ready && !saving ? onSave : null,
+              icon: saving
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.check_rounded),
+              label: Text(
+                saving
+                    ? 'جارٍ الحفظ...'
+                    : draft.isEditing
+                    ? 'حفظ التعديلات'
+                    : 'حفظ المسار',
+              ),
             ),
           );
 

@@ -1,64 +1,70 @@
 import 'package:flutter/material.dart';
 
-import 'package:bmt_app/core/theme/spacing.dart';
+import 'package:bmt_app/core/widgets/debounced_search_field.dart';
 
 import '../cubit/reviews_state.dart';
 
-/// Search + the three ways operations slices the feed.
+/// Search plus the three ways operations slices the feed — rendered inside
+/// [ReviewsTable]'s own card, above its sticky column header. The same "one
+/// bordered panel holding the search bar, the column header and the rows"
+/// shape every EWT table module (Trips, Tickets, Fleet…) uses, rather than a
+/// separate toolbar floating above the table.
 class ReviewsFilterBar extends StatelessWidget {
   const ReviewsFilterBar({
     super.key,
     required this.filter,
+    required this.query,
     required this.needsAttentionCount,
     required this.onFilterChanged,
     required this.onSearch,
-    required this.searchController,
   });
 
   final ReviewsFilter filter;
+  final String query;
   final int needsAttentionCount;
   final ValueChanged<ReviewsFilter> onFilterChanged;
   final ValueChanged<String> onSearch;
-  final TextEditingController searchController;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        TextField(
-          controller: searchController,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final search = DebouncedSearchField(
+          hintText: 'ابحث باسم العميل أو الكابتن أو رقم الحجز…',
+          initialValue: query,
           onChanged: onSearch,
-          decoration: InputDecoration(
-            hintText: 'ابحث باسم العميل أو الكابتن أو رقم الحجز…',
-            prefixIcon: const Icon(Icons.search_rounded),
-            isDense: true,
-            border: const OutlineInputBorder(),
-            suffixIcon: searchController.text.isEmpty
-                ? null
-                : IconButton(
-                    icon: const Icon(Icons.close_rounded),
-                    onPressed: () {
-                      searchController.clear();
-                      onSearch('');
-                    },
-                  ),
-          ),
-        ),
-        const SizedBox(height: AppSpacing.medium),
-        Wrap(
-          spacing: AppSpacing.small,
-          runSpacing: AppSpacing.small,
+        );
+
+        final chips = Wrap(
+          spacing: 8,
+          runSpacing: 8,
           children: [
             for (final option in ReviewsFilter.values)
               ChoiceChip(
                 label: Text(_labelFor(option)),
+                labelStyle: const TextStyle(fontWeight: FontWeight.w700),
                 selected: filter == option,
+                showCheckmark: false,
                 onSelected: (_) => onFilterChanged(option),
               ),
           ],
-        ),
-      ],
+        );
+
+        if (constraints.maxWidth < 760) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [search, const SizedBox(height: 10), chips],
+          );
+        }
+
+        return Row(
+          children: [
+            SizedBox(width: 280, child: search),
+            const SizedBox(width: 12),
+            Expanded(child: chips),
+          ],
+        );
+      },
     );
   }
 

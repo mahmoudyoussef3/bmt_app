@@ -4,7 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_snackbar.dart';
-import 'package:bmt_app/core/widgets/empty_state.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_empty_state.dart';
 
 import '../../domain/entities/user_subscription.dart';
 import '../cubit/subscriptions_cubit.dart';
@@ -138,21 +139,15 @@ class _MissingSubscriber extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(AppSpacing.large),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const EmptyState(
-            emoji: '🗂️',
-            title: 'لم يعد هذا الاشتراك متاحًا',
-            subtitle: 'تم تحديث القائمة ولم يعد هذا الاشتراك ضمنها.',
-          ),
-          const SizedBox(height: AppSpacing.medium),
-          OutlinedButton.icon(
-            onPressed: () => Navigator.of(context).pop(),
-            icon: const Icon(Icons.close_rounded),
-            label: const Text('إغلاق'),
-          ),
-        ],
+      child: DashboardEmptyState(
+        icon: DashboardIcons.subscriptions,
+        title: 'لم يعد هذا الاشتراك متاحًا',
+        message: 'تم تحديث القائمة ولم يعد هذا الاشتراك ضمنها.',
+        action: OutlinedButton.icon(
+          onPressed: () => Navigator.of(context).pop(),
+          icon: const Icon(Icons.close_rounded),
+          label: const Text('إغلاق'),
+        ),
       ),
     );
   }

@@ -10,6 +10,7 @@ import '../../domain/usecases/add_booking_note_usecase.dart';
 import '../../domain/usecases/approve_booking_usecase.dart';
 import '../../domain/usecases/bulk_approve_bookings_usecase.dart';
 import '../../domain/usecases/bulk_reject_bookings_usecase.dart';
+import '../../domain/usecases/export_bookings_usecase.dart';
 import '../../domain/usecases/get_operation_bookings_usecase.dart';
 import '../../domain/usecases/reassign_booking_usecase.dart';
 import '../../domain/usecases/reject_booking_usecase.dart';
@@ -31,6 +32,7 @@ class BookingsCubit extends Cubit<BookingsState> {
   final ReassignBookingUseCase _reassignBooking;
   final GetReassignmentTargetsUseCase _getReassignmentTargets;
   final AddBookingNoteUseCase _addNote;
+  final ExportBookingsUseCase _exportBookings;
 
   StreamSubscription<List<OperationBooking>>? _bookingsSubscription;
 
@@ -45,6 +47,7 @@ class BookingsCubit extends Cubit<BookingsState> {
     required ReassignBookingUseCase reassignBooking,
     required GetReassignmentTargetsUseCase getReassignmentTargets,
     required AddBookingNoteUseCase addNote,
+    required ExportBookingsUseCase exportBookings,
   }) : _getBookings = getBookings,
        _approveBooking = approveBooking,
        _rejectBooking = rejectBooking,
@@ -55,6 +58,7 @@ class BookingsCubit extends Cubit<BookingsState> {
        _reassignBooking = reassignBooking,
        _getReassignmentTargets = getReassignmentTargets,
        _addNote = addNote,
+       _exportBookings = exportBookings,
        super(const BookingsLoading());
 
   /// Loads the queue, optionally opening on [presetTab].
@@ -301,6 +305,38 @@ class BookingsCubit extends Cubit<BookingsState> {
     final current = state;
     if (current is! BookingsLoaded || current.actionError == null) return;
     emit(current.copyWith(clearActionError: true));
+  }
+
+  /// Exports the queue as the operator currently sees it — the active tab and
+  /// filters — rather than every loaded booking, so the file matches the board
+  /// on screen.
+  Future<void> exportBookings() async {
+    final current = state;
+    if (current is! BookingsLoaded || current.isExporting) return;
+    emit(current.copyWith(isExporting: true, clearActionError: true));
+    try {
+      final fileName = await _exportBookings(current.filteredBookings);
+      final latest = state;
+      if (latest is! BookingsLoaded) return;
+      emit(latest.copyWith(isExporting: false, exportedFileName: fileName));
+    } catch (error) {
+      final latest = state;
+      final base = latest is BookingsLoaded ? latest : current;
+      emit(
+        base.copyWith(
+          isExporting: false,
+          actionError: error.toString().replaceFirst('Exception: ', ''),
+        ),
+      );
+    }
+  }
+
+  void clearExportedFileName() {
+    final current = state;
+    if (current is! BookingsLoaded || current.exportedFileName == null) {
+      return;
+    }
+    emit(current.copyWith(clearExportedFileName: true));
   }
 
   void _emitUpdated(

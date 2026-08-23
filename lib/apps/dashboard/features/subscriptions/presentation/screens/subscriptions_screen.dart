@@ -9,8 +9,7 @@ import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
-import 'package:bmt_app/core/widgets/app_card.dart';
-import 'package:bmt_app/core/widgets/empty_state.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_empty_state.dart';
 
 import '../../plans/presentation/cubit/subscription_plans_cubit.dart';
 import '../../plans/presentation/screens/subscription_plans_screen.dart';
@@ -21,6 +20,7 @@ import '../widgets/subscription_card.dart';
 import '../widgets/subscription_details_sheet.dart';
 import '../widgets/subscription_formatting.dart';
 import '../widgets/subscriptions_analytics.dart';
+import '../widgets/subscriptions_table.dart';
 import '../widgets/subscriptions_toolbar.dart';
 import '../widgets/trip_focus_panel.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
@@ -211,6 +211,10 @@ class _SubscriberBoard extends StatelessWidget {
   final SubscriptionsLoaded state;
   final double width;
 
+  /// Below this the table's six columns stop fitting without horizontal
+  /// scrolling, and the card grid reads better.
+  static const double tableBreakpoint = 900;
+
   static int columnsFor(double width) {
     if (width >= 1560) return 3;
     if (width >= 940) return 2;
@@ -220,6 +224,14 @@ class _SubscriberBoard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (state.filteredSubscriptions.isEmpty) return _EmptyBoard(state: state);
+
+    // The whole-office list becomes a sortable table on wide screens, matching
+    // every other EWT module. A trip in focus keeps the card grid: its
+    // check-in action and link chip need more room per row than a table cell
+    // gives them.
+    if (state.tripBoard == null && width >= tableBreakpoint) {
+      return SubscriptionsTable(state: state);
+    }
 
     final cards = _cards(context);
     final columns = columnsFor(width);
@@ -293,17 +305,16 @@ class _EmptyBoard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppCard(
-      padding: EdgeInsets.zero,
-      child: EmptyState(
-        emoji: state.filters.hasTrip ? '🚌' : '📭',
-        title: state.filters.hasTrip
-            ? 'لا يوجد مشتركون على هذه الرحلة'
-            : 'لا توجد اشتراكات مطابقة',
-        subtitle: state.filters.hasTrip
-            ? 'لم يشترِ أحد باقة على هذه الرحلة، ولا يوجد اشتراك سارٍ على خط سيرها في هذا التاريخ.'
-            : 'جرّب تغيير التبويب أو مسح الفلاتر.',
-      ),
+    return DashboardEmptyState(
+      icon: state.filters.hasTrip
+          ? DashboardIcons.trips
+          : DashboardIcons.subscriptions,
+      title: state.filters.hasTrip
+          ? 'لا يوجد مشتركون على هذه الرحلة'
+          : 'لا توجد اشتراكات مطابقة',
+      message: state.filters.hasTrip
+          ? 'لم يشترِ أحد باقة على هذه الرحلة، ولا يوجد اشتراك سارٍ على خط سيرها في هذا التاريخ.'
+          : 'جرّب تغيير التبويب أو مسح الفلاتر.',
     );
   }
 }
@@ -338,6 +349,12 @@ class _OfficeKpis extends StatelessWidget {
           detail: 'يحتاج تجديدًا',
           icon: Icons.event_repeat_outlined,
           color: context.status(AppStatusTone.warning).ink,
+        ),
+        DashboardKpiCard(
+          label: 'قيمة الاشتراكات النشطة',
+          value: subscriptionMoney(state.activeSubscriptionsValue),
+          detail: 'عبر ${arabicNumber(state.activeCount)} اشتراك',
+          icon: Icons.monetization_on_outlined,
         ),
         DashboardKpiCard(
           label: 'محصّل',

@@ -32,6 +32,14 @@ class FleetVehiclesCardList extends StatelessWidget {
     required this.onPageChanged,
   });
 
+  static AppStatusTone _recordTone(FleetVehicleStatus status) =>
+      switch (status) {
+        FleetVehicleStatus.active => AppStatusTone.info,
+        FleetVehicleStatus.maintenance => AppStatusTone.warning,
+        FleetVehicleStatus.suspended => AppStatusTone.error,
+        FleetVehicleStatus.archived => AppStatusTone.neutral,
+      };
+
   String _driverName(String driverId) {
     if (driverId.isEmpty) return '';
     final match = workspace.drivers.where((d) => d.id == driverId);
@@ -143,7 +151,15 @@ class FleetVehiclesCardList extends StatelessWidget {
                                     ),
                                     duty: workspace.currentDutyOf(vehicle),
                                   ),
-                                  DashboardStatusChip(label: vehicle.status.label),
+                                  DashboardStatusChip(
+                                    label: vehicle.status.label,
+                                    color: context
+                                        .status(_recordTone(vehicle.status))
+                                        .tint,
+                                    textColor: context
+                                        .status(_recordTone(vehicle.status))
+                                        .ink,
+                                  ),
                                 ],
                               ),
                             ],

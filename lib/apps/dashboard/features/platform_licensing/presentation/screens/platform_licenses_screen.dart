@@ -1634,7 +1634,10 @@ class _BillingAndActivityTab extends StatelessWidget {
                               licensingMoney(invoice.total, invoice.currency),
                             ),
                             const SizedBox(width: AppSpacing.small),
-                            DashboardStatusChip(label: invoice.statusLabelAr),
+                            InvoiceStatusChip(
+                              status: invoice.status,
+                              label: invoice.statusLabelAr,
+                            ),
                           ],
                         ),
                       ),

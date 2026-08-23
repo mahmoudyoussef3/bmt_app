@@ -78,13 +78,32 @@ class FleetWorkspace {
   }
 
   FleetSummary get summary {
+    final nonArchivedVehicles = vehicles
+        .where((vehicle) => vehicle.status != FleetVehicleStatus.archived)
+        .toList();
+    var inService = 0;
+    var unassigned = 0;
+    var inMaintenance = 0;
+    for (final vehicle in nonArchivedVehicles) {
+      switch (operationalStatusOf(vehicle)) {
+        case FleetOperationalStatus.onTrip:
+        case FleetOperationalStatus.assigned:
+          inService++;
+        case FleetOperationalStatus.available:
+          unassigned++;
+        case FleetOperationalStatus.maintenance:
+          inMaintenance++;
+        case FleetOperationalStatus.unavailable:
+        case FleetOperationalStatus.retired:
+          break;
+      }
+    }
+
     return FleetSummary(
       driversCount: drivers
           .where((driver) => driver.status != FleetDriverStatus.archived)
           .length,
-      vehiclesCount: vehicles
-          .where((vehicle) => vehicle.status != FleetVehicleStatus.archived)
-          .length,
+      vehiclesCount: nonArchivedVehicles.length,
       activeAssignmentsCount: assignments
           .where(
             (assignment) => assignment.status == FleetAssignmentStatus.active,
@@ -97,6 +116,9 @@ class FleetWorkspace {
                 document.status == FleetDocumentStatus.expiringSoon,
           )
           .length,
+      inServiceVehiclesCount: inService,
+      unassignedVehiclesCount: unassigned,
+      inMaintenanceVehiclesCount: inMaintenance,
     );
   }
 }
@@ -107,10 +129,22 @@ class FleetSummary {
   final int activeAssignmentsCount;
   final int documentsNeedFollowUpCount;
 
+  /// Committed to a trip — on the road right now or booked for one ahead.
+  final int inServiceVehiclesCount;
+
+  /// Active and available, but nothing has claimed it.
+  final int unassignedVehiclesCount;
+
+  /// `vehicles.status = 'maintenance'`.
+  final int inMaintenanceVehiclesCount;
+
   const FleetSummary({
     required this.driversCount,
     required this.vehiclesCount,
     required this.activeAssignmentsCount,
     required this.documentsNeedFollowUpCount,
+    this.inServiceVehiclesCount = 0,
+    this.unassignedVehiclesCount = 0,
+    this.inMaintenanceVehiclesCount = 0,
   });
 }

@@ -1003,37 +1003,7 @@ class _DashboardSidebar extends StatefulWidget {
 }
 
 class _DashboardSidebarState extends State<_DashboardSidebar> {
-  /// The one open accordion group. Follows the active route: opening a
-  /// different group is the operator's own choice, but landing on a route
-  /// whose group is closed (e.g. drilling in from a Home card) always reopens
-  /// the group that route lives in, so the active item is never hidden.
-  String? _expandedGroup;
-
   String _searchQuery = '';
-
-  @override
-  void initState() {
-    super.initState();
-    _expandedGroup = _groupOf(widget.route);
-  }
-
-  @override
-  void didUpdateWidget(covariant _DashboardSidebar oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (widget.route != oldWidget.route) {
-      final group = _groupOf(widget.route);
-      if (group != null && group != _expandedGroup) {
-        _expandedGroup = group;
-      }
-    }
-  }
-
-  String? _groupOf(String route) {
-    for (final item in widget.items) {
-      if (item.route == route) return item.group;
-    }
-    return null;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -1118,26 +1088,12 @@ class _DashboardSidebarState extends State<_DashboardSidebar> {
       final visibleItems = groupItems.where(matches).toList();
       if (searching && visibleItems.isEmpty) continue;
 
-      final open =
-          widget.collapsed || (searching ? true : _expandedGroup == group);
       children.add(
-        _NavSectionHeader(
-          label: group,
-          count: groupItems.length,
-          collapsed: widget.collapsed,
-          expanded: open,
-          onTap: widget.collapsed
-              ? null
-              : () => setState(() {
-                  _expandedGroup = _expandedGroup == group ? null : group;
-                }),
-        ),
+        _NavSectionHeader(label: group, collapsed: widget.collapsed),
       );
-      if (open) {
-        children.addAll(
-          (searching ? visibleItems : groupItems).map(_navButton),
-        );
-      }
+      children.addAll(
+        (searching ? visibleItems : groupItems).map(_navButton),
+      );
     }
 
     return ListView.separated(
@@ -1200,27 +1156,17 @@ class _NavSearchField extends StatelessWidget {
   }
 }
 
-/// The accordion header above each nav group: label, item count, and a
-/// chevron that rotates open/closed. Collapsed to icons, the label has
-/// nowhere to go, so the group boundary is drawn as a short rule instead of
-/// being dropped — otherwise the rail becomes nineteen undifferentiated icons.
+/// The section title above each nav group. Every group stays expanded, so
+/// this is a plain label rather than an accordion trigger — its only job is
+/// to separate one group's items from the next. Collapsed to icons, the
+/// label has nowhere to go, so the group boundary is drawn as a short rule
+/// instead of being dropped — otherwise the rail becomes nineteen
+/// undifferentiated icons.
 class _NavSectionHeader extends StatelessWidget {
   final String label;
-  final int count;
   final bool collapsed;
-  final bool expanded;
 
-  /// Null when [collapsed] — a rail has no room for an accordion, so every
-  /// group's items stay visible and there is nothing to toggle.
-  final VoidCallback? onTap;
-
-  const _NavSectionHeader({
-    required this.label,
-    this.count = 0,
-    this.collapsed = false,
-    this.expanded = true,
-    this.onTap,
-  });
+  const _NavSectionHeader({required this.label, this.collapsed = false});
 
   @override
   Widget build(BuildContext context) {
@@ -1234,58 +1180,22 @@ class _NavSectionHeader extends StatelessWidget {
       );
     }
 
-    final label_ = Text(
-      label,
-      maxLines: 1,
-      overflow: TextOverflow.ellipsis,
-      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-        color: DashboardColors.sidebarSectionInk(context),
-        fontWeight: FontWeight.w800,
-        letterSpacing: 0.4,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppSpacing.medium,
+        AppSpacing.medium,
+        AppSpacing.medium,
+        AppSpacing.xSmall,
       ),
-    );
-
-    final row = Row(
-      children: [
-        Expanded(child: label_),
-        if (count > 0) ...[
-          const SizedBox(width: AppSpacing.xSmall),
-          Text(
-            '$count',
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: DashboardColors.faintInk(context),
-            ),
-          ),
-        ],
-        if (onTap != null) ...[
-          const SizedBox(width: 2),
-          AnimatedRotation(
-            turns: expanded ? 0.5 : 0,
-            duration: AppTokens.motionFast,
-            child: Icon(
-              Icons.expand_more_rounded,
-              size: 16,
-              color: DashboardColors.faintInk(context),
-            ),
-          ),
-        ],
-      ],
-    );
-
-    final padding = const EdgeInsets.fromLTRB(
-      AppSpacing.medium,
-      AppSpacing.medium,
-      AppSpacing.medium,
-      AppSpacing.xSmall,
-    );
-
-    if (onTap == null) return Padding(padding: padding, child: row);
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(padding: padding, child: row),
+      child: Text(
+        label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: DashboardColors.sidebarSectionInk(context),
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.4,
+        ),
       ),
     );
   }

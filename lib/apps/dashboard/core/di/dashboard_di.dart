@@ -55,6 +55,7 @@ import '../../features/bookings/domain/usecases/add_booking_note_usecase.dart';
 import '../../features/bookings/domain/usecases/approve_booking_usecase.dart';
 import '../../features/bookings/domain/usecases/bulk_approve_bookings_usecase.dart';
 import '../../features/bookings/domain/usecases/bulk_reject_bookings_usecase.dart';
+import '../../features/bookings/domain/usecases/export_bookings_usecase.dart';
 import '../../features/bookings/domain/usecases/get_operation_bookings_usecase.dart';
 import '../../features/bookings/domain/usecases/reassign_booking_usecase.dart';
 import '../../features/bookings/domain/usecases/reject_booking_usecase.dart';
@@ -505,6 +506,12 @@ void registerDashboardDependencies() {
     );
   }
 
+  if (!dashboardDi.isRegistered<ExportBookingsUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => ExportBookingsUseCase(dashboardDi<BookingsRepository>()),
+    );
+  }
+
   if (!dashboardDi.isRegistered<BookingsCubit>()) {
     dashboardDi.registerFactory(
       () => BookingsCubit(
@@ -518,6 +525,7 @@ void registerDashboardDependencies() {
         reassignBooking: dashboardDi<ReassignBookingUseCase>(),
         getReassignmentTargets: dashboardDi<GetReassignmentTargetsUseCase>(),
         addNote: dashboardDi<AddBookingNoteUseCase>(),
+        exportBookings: dashboardDi<ExportBookingsUseCase>(),
       ),
     );
   }

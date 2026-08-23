@@ -185,6 +185,13 @@ class SubscriptionsLoaded extends SubscriptionsState {
       .where((s) => s.isExpiringSoon)
       .length;
 
+  /// The contracted value of every currently-active subscription — what the
+  /// office's active book is worth, as distinct from [collectedRevenue] (cash
+  /// already in hand) and [outstandingRevenue] (still owed).
+  late final double activeSubscriptionsValue = subscriptions
+      .where((s) => s.status == SubscriptionStatus.active)
+      .fold<double>(0, (sum, s) => sum + s.price);
+
   /// Cash actually collected, not the value of everything sold.
   late final double collectedRevenue = subscriptions.fold<double>(
     0,

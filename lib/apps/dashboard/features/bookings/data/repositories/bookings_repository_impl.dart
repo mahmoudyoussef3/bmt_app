@@ -1,12 +1,19 @@
+import 'package:file_saver/file_saver.dart';
+
 import '../../domain/entities/operation_booking.dart';
 import '../../domain/entities/reassignment_target.dart';
 import '../../domain/repositories/bookings_repository.dart';
 import '../datasources/bookings_datasource.dart';
+import '../services/bookings_csv_export_service.dart';
 
 class BookingsRepositoryImpl implements BookingsRepository {
   final BookingsDatasource _datasource;
+  final BookingsCsvExportService _exportService;
 
-  const BookingsRepositoryImpl(this._datasource);
+  BookingsRepositoryImpl(
+    this._datasource, {
+    BookingsCsvExportService? exportService,
+  }) : _exportService = exportService ?? const BookingsCsvExportService();
 
   @override
   Future<List<OperationBooking>> getBookings() {
@@ -86,6 +93,22 @@ class BookingsRepositoryImpl implements BookingsRepository {
   @override
   Stream<List<OperationBooking>> watchBookings() =>
       _datasource.watchBookings().cast();
+
+  @override
+  Future<String> exportBookingsCsv(List<OperationBooking> bookings) {
+    return _guard(() async {
+      final bytes = await _exportService.generateCsvBytes(bookings);
+      final dateStr = DateTime.now().toString().substring(0, 10);
+      final fileName = 'حجوزات_$dateStr';
+      await FileSaver.instance.saveFile(
+        name: fileName,
+        bytes: bytes,
+        fileExtension: 'csv',
+        mimeType: MimeType.csv,
+      );
+      return '$fileName.csv';
+    }, 'تعذر تصدير الحجوزات');
+  }
 
   /// Runs [action], prefixing any failure with [message].
   ///

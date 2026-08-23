@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
+import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_status_chip.dart';
 
@@ -122,6 +123,20 @@ class _InvoicesSectionState extends State<InvoicesSection> {
                           label: renewal['auto_renew'] == true
                               ? 'تلقائي'
                               : 'يدوي',
+                          color: context
+                              .status(
+                                renewal['auto_renew'] == true
+                                    ? AppStatusTone.info
+                                    : AppStatusTone.neutral,
+                              )
+                              .tint,
+                          textColor: context
+                              .status(
+                                renewal['auto_renew'] == true
+                                    ? AppStatusTone.info
+                                    : AppStatusTone.neutral,
+                              )
+                              .ink,
                         ),
                       ],
                     ),
@@ -188,7 +203,7 @@ class _InvoicesSectionState extends State<InvoicesSection> {
         licensingMoney(invoice.total, invoice.currency),
         style: text.bodySmall?.copyWith(fontWeight: FontWeight.bold),
       ),
-      DashboardStatusChip(label: invoice.statusLabelAr),
+      InvoiceStatusChip(status: invoice.status, label: invoice.statusLabelAr),
       Row(
         mainAxisSize: MainAxisSize.min,
         children: [

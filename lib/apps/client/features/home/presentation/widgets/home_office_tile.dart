@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
@@ -22,6 +23,10 @@ import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_offi
 /// is a smaller printing of the same card rather than a different object: the
 /// tile used to end on a chevron floating in whitespace, which said neither
 /// what it opened nor that it opened anything.
+///
+/// The blurb sits directly under the name, ahead of the rating/coverage line —
+/// a rider recognises a company by what it says about itself before they read
+/// a number next to it.
 class HomeOfficeTile extends StatelessWidget {
   const HomeOfficeTile({super.key, required this.office, required this.onTap});
 
@@ -29,7 +34,7 @@ class HomeOfficeTile extends StatelessWidget {
   final VoidCallback onTap;
 
   static const double width = 230;
-  static const double height = 196;
+  static const double height = 228;
   static const double _bandHeight = 62;
   static const double _logoSize = 52;
 
@@ -98,6 +103,19 @@ class _Identity extends StatelessWidget {
             context,
           ).copyWith(fontWeight: FontWeight.w900, height: 1.3),
         ),
+        if (office.description.isNotEmpty) ...[
+          const SizedBox(height: 3),
+          Text(
+            office.description,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: ClientTypography.labelSmall(context).copyWith(
+              color: ClientColors.textSecondaryFor(context),
+              fontWeight: FontWeight.w500,
+              height: 1.4,
+            ),
+          ),
+        ],
         const Spacer(),
         HomeOfficeFootnote(office: office),
       ],

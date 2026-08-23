@@ -289,7 +289,10 @@ class _Invoices extends StatelessWidget {
                       children: [
                         Text(licensingMoney(invoice.total, invoice.currency)),
                         const SizedBox(width: AppSpacing.small),
-                        DashboardStatusChip(label: invoice.statusLabelAr),
+                        InvoiceStatusChip(
+                          status: invoice.status,
+                          label: invoice.statusLabelAr,
+                        ),
                       ],
                     ),
                   ),

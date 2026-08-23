@@ -4,8 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
-import 'package:bmt_app/core/widgets/empty_state.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_empty_state.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/ops_data_table.dart';
 
 import '../../domain/entities/booking_lifecycle.dart';
@@ -635,36 +635,27 @@ class _EmptyBoard extends StatelessWidget {
   Widget build(BuildContext context) {
     final filtered = state.filters.isActive;
 
-    return AppCard(
-      child: Column(
-        children: [
-          EmptyState(
-            emoji: filtered ? '🔍' : '📭',
-            title: filtered
-                ? 'لا توجد نتائج مطابقة'
-                : switch (state.activeTab) {
-                    BookingQueueTab.needsReview =>
-                      'لا توجد مدفوعات بانتظار المراجعة',
-                    BookingQueueTab.all => 'لا توجد حجوزات بعد',
-                    _ => 'لا توجد طلبات في «${state.activeTab.label}»',
-                  },
-            subtitle: filtered
-                ? 'جرّب توسيع نطاق البحث أو امسح الفلاتر لعرض كل طلبات هذا التبويب.'
-                : state.activeTab == BookingQueueTab.needsReview
-                ? 'كل الإيصالات المرفوعة تمت مراجعتها — لا شيء ينتظر قراراً.'
-                : 'ستظهر الطلبات هنا فور وصولها.',
-          ),
-          if (filtered)
-            Padding(
-              padding: const EdgeInsets.only(bottom: AppSpacing.medium),
-              child: FilledButton.tonalIcon(
-                onPressed: onClearFilters,
-                icon: const Icon(Icons.filter_alt_off_rounded),
-                label: const Text('مسح الفلاتر'),
-              ),
-            ),
-        ],
-      ),
+    return DashboardEmptyState(
+      icon: filtered ? Icons.search_off_rounded : DashboardIcons.bookings,
+      title: filtered
+          ? 'لا توجد نتائج مطابقة'
+          : switch (state.activeTab) {
+              BookingQueueTab.needsReview => 'لا توجد مدفوعات بانتظار المراجعة',
+              BookingQueueTab.all => 'لا توجد حجوزات بعد',
+              _ => 'لا توجد طلبات في «${state.activeTab.label}»',
+            },
+      message: filtered
+          ? 'جرّب توسيع نطاق البحث أو امسح الفلاتر لعرض كل طلبات هذا التبويب.'
+          : state.activeTab == BookingQueueTab.needsReview
+          ? 'كل الإيصالات المرفوعة تمت مراجعتها — لا شيء ينتظر قراراً.'
+          : 'ستظهر الطلبات هنا فور وصولها.',
+      action: filtered
+          ? FilledButton.tonalIcon(
+              onPressed: onClearFilters,
+              icon: const Icon(Icons.filter_alt_off_rounded),
+              label: const Text('مسح الفلاتر'),
+            )
+          : null,
     );
   }
 }

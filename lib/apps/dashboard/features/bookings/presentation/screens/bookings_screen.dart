@@ -38,11 +38,22 @@ class BookingsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocConsumer<BookingsCubit, BookingsState>(
       listenWhen: (previous, current) =>
-          current is BookingsLoaded && current.actionError != null,
+          current is BookingsLoaded &&
+          (current.actionError != null || current.exportedFileName != null),
       listener: (context, state) {
-        if (state is! BookingsLoaded || state.actionError == null) return;
-        AppSnackbar.error(context, state.actionError!);
-        context.read<BookingsCubit>().clearActionError();
+        if (state is! BookingsLoaded) return;
+        final cubit = context.read<BookingsCubit>();
+        if (state.actionError != null) {
+          AppSnackbar.error(context, state.actionError!);
+          cubit.clearActionError();
+        }
+        if (state.exportedFileName != null) {
+          AppSnackbar.success(
+            context,
+            'تم تصدير الملف: ${state.exportedFileName}',
+          );
+          cubit.clearExportedFileName();
+        }
       },
       builder: (context, state) => switch (state) {
         BookingsLoading() => const DashboardLoading(),
@@ -218,6 +229,17 @@ class _Header extends StatelessWidget {
             noun: 'حجز',
             hint: 'ضيّق الفلاتر للوصول لحجوزات أقدم.',
           ),
+        OutlinedButton.icon(
+          onPressed: state.isExporting ? null : cubit.exportBookings,
+          icon: state.isExporting
+              ? const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : const Icon(Icons.file_download_outlined, size: 18),
+          label: const Text('تصدير'),
+        ),
         IconButton(
           tooltip: 'تحديث البيانات',
           onPressed: state.isProcessing ? null : cubit.load,
@@ -225,15 +247,21 @@ class _Header extends StatelessWidget {
         ),
       ],
       sectionId: DashboardSectionIds.bookingsHeader,
+      // Unlike most module summaries, this strip starts open: it is the "today
+      // at a glance" reading the queue is opened for, not a once-a-shift figure
+      // worth folding away by default.
+      initiallyExpanded: true,
       summary: _SummaryCards(state: state),
     );
   }
 }
 
-/// The KPI strip, built on the shared [DashboardKpiCard] instead of a private
-/// tile, and reporting what an office is asked about — the review backlog and
-/// the money accepted — rather than six raw status tallies (the per-status
-/// counts now live on the queue tabs, next to the tab that opens them).
+/// The "today at a glance" strip, built on the shared [DashboardKpiCard].
+///
+/// Four numbers an operator opens this board to check first thing: how much
+/// came in today, what is still waiting on a decision, how much money that
+/// represents, and how much fell through — rather than the standing totals a
+/// shift-long queue already shows on its tabs.
 ///
 /// Tinted with each tone's `accent`, not its `ink`: a tile's fill is that same
 /// colour at low alpha, so the glyph on it is a standalone mark. `ink` is the
@@ -246,17 +274,33 @@ class _SummaryCards extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final diff = state.bookingsCreatedToday - state.bookingsCreatedYesterday;
+    final trendTone = diff > 0
+        ? KpiTrendTone.positive
+        : diff < 0
+        ? KpiTrendTone.negative
+        : KpiTrendTone.neutral;
+    final trendIcon = diff > 0
+        ? DashboardIcons.trendUp
+        : diff < 0
+        ? DashboardIcons.trendDown
+        : DashboardIcons.trendFlat;
 
     return DashboardKpiGrid(
-      maxColumns: 3,
+      maxColumns: 4,
+      itemExtent: 132,
       children: [
         DashboardKpiCard(
-          label: 'إجمالي الطلبات',
-          value: '${state.bookings.length}',
-          detail: 'كل الحجوزات المحمّلة',
+          label: 'حجوزات اليوم',
+          value: '${state.bookingsCreatedToday}',
           icon: Icons.receipt_long_rounded,
-          color: scheme.primary,
+          color: context.status(AppStatusTone.info).accent,
+          trend: KpiTrend(
+            label: diff == 0 ? 'بدون تغيير' : (diff > 0 ? '+$diff' : '$diff'),
+            icon: trendIcon,
+            tone: trendTone,
+            caption: 'مقارنة بأمس',
+          ),
         ),
         DashboardKpiCard(
           label: 'بانتظار المراجعة',
@@ -266,31 +310,19 @@ class _SummaryCards extends StatelessWidget {
           color: context.status(AppStatusTone.warning).accent,
         ),
         DashboardKpiCard(
-          label: 'محجوزة',
-          value: '${state.countByStatus(BookingStatus.reserved)}',
-          detail: 'مقاعد محجوزة لم تُؤكد',
-          icon: Icons.event_seat_rounded,
-          color: context.status(AppStatusTone.info).accent,
-        ),
-        DashboardKpiCard(
-          label: 'مؤكدة',
-          value: '${state.countByStatus(BookingStatus.confirmed)}',
-          detail: 'دفع معتمد وحجز مؤكد',
-          icon: Icons.verified_rounded,
+          label: 'قيمة اليوم',
+          value: '${state.todayBookingValue.toStringAsFixed(0)} ج.م',
+          detail: 'من حجوزات اليوم',
+          icon: Icons.account_balance_wallet_rounded,
           color: context.status(AppStatusTone.success).accent,
         ),
         DashboardKpiCard(
-          label: 'إيرادات معتمدة',
-          value: '${state.approvedRevenue.toStringAsFixed(0)} ج.م',
-          detail: 'مجموع المدفوعات المقبولة',
-          icon: Icons.payments_rounded,
-          color: context.status(AppStatusTone.success).accent,
-        ),
-        DashboardKpiCard(
-          label: 'مرفوضة أو ملغاة',
-          value: '${state.settledOutCount}',
-          detail: 'دفع مرفوض أو حجز ملغى',
-          icon: Icons.block_rounded,
+          label: 'ملغاة اليوم',
+          value: '${state.cancelledTodayCount}',
+          detail: state.cancelledTodayRefundedCount > 0
+              ? 'منها ${state.cancelledTodayRefundedCount} مسترد'
+              : null,
+          icon: Icons.event_busy_rounded,
           color: context.status(AppStatusTone.error).accent,
         ),
       ],

@@ -30,4 +30,8 @@ abstract class BookingsRepository {
   Future<OperationBooking> addNote(String bookingId, String note);
 
   Stream<List<OperationBooking>> watchBookings();
+
+  /// Exports [bookings] to CSV and hands the file to the platform's save /
+  /// download flow. Returns the saved file name.
+  Future<String> exportBookingsCsv(List<OperationBooking> bookings);
 }

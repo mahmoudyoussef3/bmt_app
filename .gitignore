@@ -58,3 +58,6 @@ test/apps/dashboard/features/bookings/_captures/
 
 # Throwaway subscriptions-board visual captures (subscriptions_visual_capture.dart)
 test/apps/dashboard/features/subscriptions/_captures/
+
+# FVM Version Cache
+.fvm/

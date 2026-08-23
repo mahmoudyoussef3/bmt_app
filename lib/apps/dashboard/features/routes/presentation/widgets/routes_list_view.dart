@@ -212,7 +212,7 @@ class _RoutesTable extends StatelessWidget {
 
   List<Widget> _cells(BuildContext context, OperationRoute route) {
     final stats = state.statsFor(route);
-    final tone = context.status(_routeStatusTone(route.status));
+    final tone = context.status(routeStatusTone(route.status));
     final stops = [
       route.startCity,
       route.endCity,
@@ -564,7 +564,7 @@ class _AdvancedFilterButton extends StatelessWidget {
   }
 }
 
-AppStatusTone _routeStatusTone(OperationRouteStatus status) => switch (status) {
+AppStatusTone routeStatusTone(OperationRouteStatus status) => switch (status) {
   OperationRouteStatus.active => AppStatusTone.success,
   OperationRouteStatus.paused => AppStatusTone.warning,
   OperationRouteStatus.draft => AppStatusTone.neutral,

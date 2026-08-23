@@ -7,6 +7,7 @@ enum SubscriptionSortField {
   endingSoon('الأقرب انتهاءً'),
   outstanding('الأعلى مديونية'),
   ridesLeft('الأكثر رصيدًا'),
+  price('الأعلى قيمة'),
   name('الاسم');
 
   final String label;
@@ -23,6 +24,7 @@ enum SubscriptionSortField {
     SubscriptionSortField.ridesLeft => a.remainingRides.compareTo(
       b.remainingRides,
     ),
+    SubscriptionSortField.price => a.price.compareTo(b.price),
     SubscriptionSortField.name => a.userName.compareTo(b.userName),
   };
 

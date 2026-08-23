@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
-import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_collapsible_section.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
@@ -14,14 +13,37 @@ import '../cubit/bookings_state.dart';
 import '../models/booking_filters.dart';
 import '../models/booking_queue_tab.dart';
 
-/// Queue tabs + the filter row beneath them.
+/// Queue tabs, the always-visible search, and the advanced filters an
+/// operator opens on demand.
 ///
+/// Search sits next to the tabs rather than behind the advanced toggle: it is
+/// the one field an operator reaches for on almost every visit, while route,
+/// trip date and payment method/status are the ones worth a second click.
 /// Priority filtering was removed because the concept has no backing column in
 /// `operation_bookings`.
-class BookingsToolbar extends StatelessWidget {
+class BookingsToolbar extends StatefulWidget {
   const BookingsToolbar({super.key, required this.state});
 
   final BookingsLoaded state;
+
+  @override
+  State<BookingsToolbar> createState() => _BookingsToolbarState();
+}
+
+class _BookingsToolbarState extends State<BookingsToolbar> {
+  late bool _advancedExpanded = DashboardSectionStateStore.instance.isExpanded(
+    DashboardSectionIds.bookingsFilters,
+    fallback: false,
+  );
+
+  void _toggleAdvanced() {
+    final next = !_advancedExpanded;
+    setState(() => _advancedExpanded = next);
+    DashboardSectionStateStore.instance.setExpanded(
+      DashboardSectionIds.bookingsFilters,
+      next,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,50 +51,121 @@ class BookingsToolbar extends StatelessWidget {
     final cubit = context.read<BookingsCubit>();
 
     return AppCard(
-      padding: EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppSpacing.medium,
-              AppSpacing.medium,
-              AppSpacing.medium,
-              0,
-            ),
-            child: BookingQueueTabBar(
-              state: state,
-              onSelected: cubit.switchTab,
-            ),
+          _MainRow(
+            state: widget.state,
+            cubit: cubit,
+            advancedExpanded: _advancedExpanded,
+            onToggleAdvanced: _toggleAdvanced,
           ),
-          const SizedBox(height: AppSpacing.medium),
-          Divider(height: 1, color: scheme.outline.withAlpha(60)),
-          
-          DashboardCollapsibleSection.bare(
-            sectionId: DashboardSectionIds.bookingsFilters,
-            icon: Icons.filter_alt_outlined,
-            title: 'التصفية',
-            collapsedSummary: DashboardSectionSummary(
-              items: _filterSummary(state.filters),
-            ),
-            child: _FiltersBar(state: state, cubit: cubit),
-          ),
+          if (_advancedExpanded) ...[
+            const SizedBox(height: AppSpacing.medium),
+            Divider(height: 1, color: scheme.outline.withAlpha(60)),
+            const SizedBox(height: AppSpacing.medium),
+            _AdvancedFiltersBar(state: widget.state, cubit: cubit),
+          ],
         ],
       ),
     );
   }
+}
 
-  /// Spells the active filters out rather than only counting them: "٢ فلتر" makes
-  /// an operator reopen the panel to find out *which* two.
-  static List<String> _filterSummary(BookingFilters filters) {
-    if (!filters.isActive) return const ['بدون تصفية'];
+/// The row that is always on screen: the advanced-filters toggle, the queue
+/// tabs, and search — in that visual order (right to left in this RTL app),
+/// matching the "تصفية متقدمة … search" bar the board is opened to.
+class _MainRow extends StatelessWidget {
+  const _MainRow({
+    required this.state,
+    required this.cubit,
+    required this.advancedExpanded,
+    required this.onToggleAdvanced,
+  });
+
+  final BookingsLoaded state;
+  final BookingsCubit cubit;
+  final bool advancedExpanded;
+  final VoidCallback onToggleAdvanced;
+
+  /// Filters the advanced panel actually owns — search lives in this row, so
+  /// it is not counted toward "how many are hiding behind that button".
+  int get _advancedActiveCount {
+    final filters = state.filters;
     return [
-      if (filters.search.trim().isNotEmpty) 'بحث: ${filters.search.trim()}',
-      if (filters.route.trim().isNotEmpty) 'مسار: ${filters.route.trim()}',
-      if (filters.date.trim().isNotEmpty) 'تاريخ: ${filters.date.trim()}',
-      if (filters.paymentMethod != null) filters.paymentMethod!.label,
-      if (filters.paymentStatus != null) filters.paymentStatus!.label,
-    ];
+      filters.route.trim().isNotEmpty,
+      filters.date.trim().isNotEmpty,
+      filters.paymentMethod != null,
+      filters.paymentStatus != null,
+    ].where((active) => active).length;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final filters = state.filters;
+    final activeCount = _advancedActiveCount;
+
+    final advancedButton = OutlinedButton.icon(
+      onPressed: onToggleAdvanced,
+      style: OutlinedButton.styleFrom(
+        foregroundColor: advancedExpanded || activeCount > 0
+            ? scheme.primary
+            : null,
+        side: BorderSide(
+          color: advancedExpanded || activeCount > 0
+              ? scheme.primary
+              : scheme.outline.withAlpha(90),
+        ),
+      ),
+      icon: Icon(
+        advancedExpanded ? Icons.expand_less_rounded : Icons.tune_rounded,
+        size: 18,
+      ),
+      label: Text(
+        activeCount > 0 ? 'تصفية متقدمة ($activeCount)' : 'تصفية متقدمة',
+      ),
+    );
+
+    final search = DebouncedSearchField(
+      key: ValueKey('booking-search-${filters.search}'),
+      initialValue: filters.search,
+      hintText: 'ابحث برقم الحجز أو اسم الراكب أو الهاتف',
+      onChanged: (value) =>
+          cubit.updateFilters(filters.copyWith(search: value)),
+    );
+
+    final tabs = BookingQueueTabBar(state: state, onSelected: cubit.switchTab);
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 760) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              tabs,
+              const SizedBox(height: AppSpacing.small),
+              search,
+              const SizedBox(height: AppSpacing.small),
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: advancedButton,
+              ),
+            ],
+          );
+        }
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            SizedBox(width: 280, child: search),
+            const SizedBox(width: AppSpacing.medium),
+            Expanded(child: tabs),
+            const SizedBox(width: AppSpacing.medium),
+            advancedButton,
+          ],
+        );
+      },
+    );
   }
 }
 
@@ -104,7 +197,7 @@ class BookingQueueTabBar extends StatelessWidget {
                 label: tab.label,
                 count: state.countForTab(tab),
                 selected: state.activeTab == tab,
-                
+
                 urgent: tab == BookingQueueTab.needsReview,
                 onTap: () => onSelected(tab),
               ),
@@ -183,8 +276,8 @@ class _QueueTab extends StatelessWidget {
                     color: isUrgentAlert
                         ? scheme.error
                         : selected
-                            ? scheme.onPrimary.withAlpha(55)
-                            : accent.withAlpha(28),
+                        ? scheme.onPrimary.withAlpha(55)
+                        : accent.withAlpha(28),
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Text(
@@ -194,8 +287,8 @@ class _QueueTab extends StatelessWidget {
                       color: isUrgentAlert
                           ? scheme.onError
                           : selected
-                              ? scheme.onPrimary
-                              : accent,
+                          ? scheme.onPrimary
+                          : accent,
                       fontWeight: FontWeight.w900,
                     ),
                   ),
@@ -209,8 +302,10 @@ class _QueueTab extends StatelessWidget {
   }
 }
 
-class _FiltersBar extends StatelessWidget {
-  const _FiltersBar({required this.state, required this.cubit});
+/// Route, trip date and payment method/status — the filters an operator opens
+/// a second click for, shown under the toggle in [_MainRow].
+class _AdvancedFiltersBar extends StatelessWidget {
+  const _AdvancedFiltersBar({required this.state, required this.cubit});
 
   final BookingsLoaded state;
   final BookingsCubit cubit;
@@ -224,7 +319,7 @@ class _FiltersBar extends StatelessWidget {
       builder: (context, constraints) {
         final full = constraints.maxWidth;
         final compact = full < 720;
-        
+
         final double fieldWidth = compact
             ? full
             : full < 1080
@@ -236,16 +331,6 @@ class _FiltersBar extends StatelessWidget {
           runSpacing: AppSpacing.small,
           crossAxisAlignment: WrapCrossAlignment.center,
           children: [
-            SizedBox(
-              width: compact ? full : (full < 1080 ? fieldWidth : 280),
-              child: DebouncedSearchField(
-                
-                key: ValueKey('booking-search-${filters.search}'),
-                initialValue: filters.search,
-                hintText: 'اسم، هاتف، رقم حجز، مقعد',
-                onChanged: (value) => update(filters.copyWith(search: value)),
-              ),
-            ),
             SizedBox(
               width: fieldWidth,
               child: _RouteFilter(
@@ -354,7 +439,6 @@ class _RouteFilter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    
     final items = {...routes, ?value}.toList()..sort();
 
     return DropdownButtonFormField<String?>(
@@ -394,7 +478,7 @@ class _TripDateFilter extends StatelessWidget {
 
   static String _iso(DateTime date) {
     String two(int v) => v.toString().padLeft(2, '0');
-    
+
     return '${date.year}-${two(date.month)}-${two(date.day)}';
   }
 

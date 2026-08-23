@@ -128,8 +128,6 @@ class _RouteStopEditorDialogState extends State<_RouteStopEditorDialog> {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
     return Dialog(
       insetPadding: const EdgeInsets.all(AppSpacing.large),
       shape: RoundedRectangleBorder(
@@ -216,58 +214,45 @@ class _RouteStopEditorDialogState extends State<_RouteStopEditorDialog> {
                 AppSpacing.large,
                 AppSpacing.large,
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Wrap(
+                alignment: WrapAlignment.end,
+                spacing: AppSpacing.small,
+                runSpacing: AppSpacing.small,
                 children: [
-                  if (!_canSave) ...[
-                    Text(
-                      'أدخل اسم النقطة للمتابعة',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.small),
-                  ],
-                  Wrap(
-                    alignment: WrapAlignment.end,
-                    spacing: AppSpacing.small,
-                    runSpacing: AppSpacing.small,
-                    children: [
-                      OutlinedButton(
-                        onPressed: () => Navigator.of(context).pop(),
-                        child: const Text('إلغاء'),
-                      ),
-                      // Only offered while adding a brand-new waypoint — the
-                      // one action an operator repeats several times per route.
-                      if (widget.isNew && !widget.role.isEndpoint)
-                        OutlinedButton.icon(
-                          key: const ValueKey('route-stop-editor-save-next'),
-                          onPressed: _canSave
-                              ? () => Navigator.of(context).pop((
-                                  stop: _stop.copyWith(name: _name.text.trim()),
-                                  addAnother: true,
-                                ))
-                              : null,
-                          icon: const Icon(
-                            Icons.playlist_add_rounded,
-                            size: 18,
-                          ),
-                          label: const Text('حفظ والتالي'),
-                        ),
-                      FilledButton.icon(
-                        key: const ValueKey('route-stop-editor-save'),
+                  OutlinedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('إلغاء'),
+                  ),
+                  // Only offered while adding a brand-new waypoint — the
+                  // one action an operator repeats several times per route.
+                  if (widget.isNew && !widget.role.isEndpoint)
+                    Tooltip(
+                      message: _canSave ? '' : 'أدخل اسم النقطة أولاً',
+                      child: OutlinedButton.icon(
+                        key: const ValueKey('route-stop-editor-save-next'),
                         onPressed: _canSave
                             ? () => Navigator.of(context).pop((
                                 stop: _stop.copyWith(name: _name.text.trim()),
-                                addAnother: false,
+                                addAnother: true,
                               ))
                             : null,
-                        icon: const Icon(Icons.check_rounded),
-                        label: Text(
-                          widget.isNew ? 'إضافة النقطة' : 'حفظ النقطة',
-                        ),
+                        icon: const Icon(Icons.playlist_add_rounded, size: 18),
+                        label: const Text('حفظ والتالي'),
                       ),
-                    ],
+                    ),
+                  Tooltip(
+                    message: _canSave ? '' : 'أدخل اسم النقطة أولاً',
+                    child: FilledButton.icon(
+                      key: const ValueKey('route-stop-editor-save'),
+                      onPressed: _canSave
+                          ? () => Navigator.of(context).pop((
+                              stop: _stop.copyWith(name: _name.text.trim()),
+                              addAnother: false,
+                            ))
+                          : null,
+                      icon: const Icon(Icons.check_rounded),
+                      label: Text(widget.isNew ? 'إضافة النقطة' : 'حفظ النقطة'),
+                    ),
                   ),
                 ],
               ),
@@ -410,10 +395,13 @@ class _StopNameFieldState extends State<_StopNameField> {
           onChanged: _onChanged,
           textInputAction: TextInputAction.next,
           decoration: InputDecoration(
-            labelText: 'اسم النقطة',
+            labelText: 'اسم النقطة *',
             hintText: widget.library.isEmpty
                 ? 'مثال: شبين القناطر'
                 : 'ابحث عن نقطة موجودة أو اكتب اسماً جديداً',
+            helperText: query.trim().isEmpty
+                ? 'مطلوب — هذا الاسم يظهر للركاب والكباتن'
+                : null,
             prefixIcon: const Icon(Icons.search_rounded),
             isDense: true,
             border: const OutlineInputBorder(),

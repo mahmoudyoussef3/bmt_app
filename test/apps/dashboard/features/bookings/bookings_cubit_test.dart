@@ -6,6 +6,7 @@ import 'package:bmt_app/apps/dashboard/features/bookings/domain/usecases/add_boo
 import 'package:bmt_app/apps/dashboard/features/bookings/domain/usecases/approve_booking_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/domain/usecases/bulk_approve_bookings_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/domain/usecases/bulk_reject_bookings_usecase.dart';
+import 'package:bmt_app/apps/dashboard/features/bookings/domain/usecases/export_bookings_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/domain/usecases/get_operation_bookings_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/domain/usecases/reassign_booking_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/domain/usecases/reject_booking_usecase.dart';
@@ -116,6 +117,10 @@ class _FakeRepo implements BookingsRepository {
 
   @override
   Stream<List<OperationBooking>> watchBookings() => const Stream.empty();
+
+  @override
+  Future<String> exportBookingsCsv(List<OperationBooking> bookings) async =>
+      'حجوزات.csv';
 }
 
 BookingsCubit _cubit(_FakeRepo repo) {
@@ -130,6 +135,7 @@ BookingsCubit _cubit(_FakeRepo repo) {
     reassignBooking: ReassignBookingUseCase(repo),
     getReassignmentTargets: GetReassignmentTargetsUseCase(repo),
     addNote: AddBookingNoteUseCase(repo),
+    exportBookings: ExportBookingsUseCase(repo),
   );
 }
 
@@ -144,20 +150,23 @@ void main() {
       setUp(DashboardFilterMemory.instance.clear);
       tearDown(DashboardFilterMemory.instance.clear);
 
-      test('a preset opens the review tab and ignores remembered filters', () async {
-        DashboardFilterMemory.instance.write(
-          DashboardFilterIds.bookings,
-          const BookingFilters(search: 'أحمد'),
-        );
+      test(
+        'a preset opens the review tab and ignores remembered filters',
+        () async {
+          DashboardFilterMemory.instance.write(
+            DashboardFilterIds.bookings,
+            const BookingFilters(search: 'أحمد'),
+          );
 
-        final cubit = _cubit(_FakeRepo([_booking('1')]));
-        await cubit.load(presetTab: BookingQueueTab.needsReview);
+          final cubit = _cubit(_FakeRepo([_booking('1')]));
+          await cubit.load(presetTab: BookingQueueTab.needsReview);
 
-        final state = cubit.state as BookingsLoaded;
-        expect(state.activeTab, BookingQueueTab.needsReview);
-        expect(state.filters.search, isEmpty);
-        await cubit.close();
-      });
+          final state = cubit.state as BookingsLoaded;
+          expect(state.activeTab, BookingQueueTab.needsReview);
+          expect(state.filters.search, isEmpty);
+          await cubit.close();
+        },
+      );
 
       test('without a preset the remembered filters are restored', () async {
         DashboardFilterMemory.instance.write(

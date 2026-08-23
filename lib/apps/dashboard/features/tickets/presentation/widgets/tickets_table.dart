@@ -22,7 +22,13 @@ enum _TicketSort { ticketNumber, client, priority, sla, createdAt }
 
 class TicketsTable extends StatefulWidget {
   final TicketsLoaded state;
-  const TicketsTable({super.key, required this.state});
+
+  /// Search + the status/priority filters, rendered inside the table's own
+  /// card above the sticky column header — the same "one bordered panel"
+  /// shape every other EWT table module (Trips, Fleet, Customers…) uses.
+  final Widget? toolbar;
+
+  const TicketsTable({super.key, required this.state, this.toolbar});
 
   @override
   State<TicketsTable> createState() => _TicketsTableState();
@@ -104,6 +110,7 @@ class _TicketsTableState extends State<TicketsTable> {
     final errorTint = context.status(AppStatusTone.error).tint;
 
     return OpsDataTable(
+      toolbar: widget.toolbar,
       columns: const [
         OpsColumn('رقم التذكرة', flex: 2, minWidth: 118, sortable: true),
         OpsColumn('العنوان', flex: 3, minWidth: 170),

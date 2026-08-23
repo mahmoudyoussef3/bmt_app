@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_status_chip.dart';
@@ -34,6 +35,36 @@ class LicenseStatusChip extends StatelessWidget {
       label: label ?? status,
       color: color.withAlpha(24),
       textColor: color,
+    );
+  }
+}
+
+/// A platform invoice's lifecycle (`draft` → `issued` → `paid`/`overdue`/
+/// `void`/`refunded`), in the same six-role status vocabulary as the rest of
+/// the console. Shared by the licensing, billing and office-billing screens
+/// so `invoice.statusLabelAr` always renders with the same colour.
+class InvoiceStatusChip extends StatelessWidget {
+  const InvoiceStatusChip({super.key, required this.status, this.label});
+
+  final String status;
+  final String? label;
+
+  static AppStatusTone _tone(String status) => switch (status) {
+    'paid' => AppStatusTone.success,
+    'issued' => AppStatusTone.info,
+    'overdue' => AppStatusTone.error,
+    'void' => AppStatusTone.neutral,
+    'refunded' => AppStatusTone.special,
+    _ => AppStatusTone.neutral, // draft
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final style = context.status(_tone(status));
+    return DashboardStatusChip(
+      label: label ?? status,
+      color: style.tint,
+      textColor: style.ink,
     );
   }
 }

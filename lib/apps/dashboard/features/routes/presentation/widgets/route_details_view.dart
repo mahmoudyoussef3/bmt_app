@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:latlong2/latlong.dart';
@@ -16,7 +17,7 @@ import '../cubit/routes_cubit.dart';
 import '../cubit/routes_state.dart';
 import 'route_preview_map.dart';
 import 'route_timeline_node.dart';
-import 'routes_list_view.dart' show RouteCodeBadge;
+import 'routes_list_view.dart' show RouteCodeBadge, routeStatusTone;
 
 /// One route, read top to bottom: where it goes, then the journey itself.
 ///
@@ -98,7 +99,13 @@ class _DetailsHeader extends StatelessWidget {
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   RouteCodeBadge(code: route.routeCode),
-                  DashboardStatusChip(label: route.status.label),
+                  DashboardStatusChip(
+                    label: route.status.label,
+                    color: context.status(routeStatusTone(route.status)).tint,
+                    textColor: context
+                        .status(routeStatusTone(route.status))
+                        .ink,
+                  ),
                 ],
               ),
               const SizedBox(height: AppSpacing.small),

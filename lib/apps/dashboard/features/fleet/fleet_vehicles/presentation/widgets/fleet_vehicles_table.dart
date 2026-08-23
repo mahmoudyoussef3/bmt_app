@@ -46,6 +46,17 @@ class FleetVehiclesTable extends StatelessWidget {
     return match.first.name;
   }
 
+  /// The semantic status role a vehicle's lifecycle status maps to, so
+  /// "حالة السجل" reads as a coloured signal (in service / needs maintenance
+  /// / suspended / archived) rather than every status sharing one flat tint.
+  static AppStatusTone _recordTone(FleetVehicleStatus status) =>
+      switch (status) {
+        FleetVehicleStatus.active => AppStatusTone.info,
+        FleetVehicleStatus.maintenance => AppStatusTone.warning,
+        FleetVehicleStatus.suspended => AppStatusTone.error,
+        FleetVehicleStatus.archived => AppStatusTone.neutral,
+      };
+
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<FleetVehiclesCubit>();
@@ -54,6 +65,7 @@ class FleetVehiclesTable extends StatelessWidget {
     final paged = start >= vehicles.length
         ? <FleetVehicle>[]
         : vehicles.sublist(start, end);
+    final suspendedTint = context.status(AppStatusTone.error).tint;
 
     return OpsDataTable(
       toolbar: toolbar,
@@ -72,6 +84,12 @@ class FleetVehiclesTable extends StatelessWidget {
       currentPage: page,
       pageSize: pageSize,
       onPageChanged: onPageChanged,
+      rowTints: [
+        for (final vehicle in paged)
+          vehicle.status == FleetVehicleStatus.suspended
+              ? suspendedTint
+              : null,
+      ],
       rows: paged.map((vehicle) {
         final driverName = _driverName(vehicle.currentDriverId);
         return [
@@ -100,7 +118,11 @@ class FleetVehiclesTable extends StatelessWidget {
             underway: workspace.underwayDutyOf(vehicle),
             next: workspace.nextDutyOf(vehicle),
           ),
-          DashboardStatusChip(label: vehicle.status.label),
+          DashboardStatusChip(
+            label: vehicle.status.label,
+            color: context.status(_recordTone(vehicle.status)).tint,
+            textColor: context.status(_recordTone(vehicle.status)).ink,
+          ),
           _VehicleDocumentsCell(vehicle: vehicle),
           FleetLastUpdatedCell(updatedAt: vehicle.updatedAt),
           _VehicleRowActions(

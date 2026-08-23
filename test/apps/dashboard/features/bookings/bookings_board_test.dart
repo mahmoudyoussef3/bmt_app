@@ -12,6 +12,7 @@ import 'package:bmt_app/apps/dashboard/features/bookings/domain/usecases/add_boo
 import 'package:bmt_app/apps/dashboard/features/bookings/domain/usecases/approve_booking_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/domain/usecases/bulk_approve_bookings_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/domain/usecases/bulk_reject_bookings_usecase.dart';
+import 'package:bmt_app/apps/dashboard/features/bookings/domain/usecases/export_bookings_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/domain/usecases/get_operation_bookings_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/domain/usecases/reassign_booking_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/domain/usecases/reject_booking_usecase.dart';
@@ -96,6 +97,10 @@ class _FakeRepo implements BookingsRepository {
 
   @override
   Stream<List<OperationBooking>> watchBookings() => const Stream.empty();
+
+  @override
+  Future<String> exportBookingsCsv(List<OperationBooking> bookings) async =>
+      'حجوزات.csv';
 }
 
 BookingsCubit _cubit(List<OperationBooking> seed) => BookingsCubit(
@@ -109,6 +114,7 @@ BookingsCubit _cubit(List<OperationBooking> seed) => BookingsCubit(
   reassignBooking: ReassignBookingUseCase(_FakeRepo(seed)),
   getReassignmentTargets: GetReassignmentTargetsUseCase(_FakeRepo(seed)),
   addNote: AddBookingNoteUseCase(_FakeRepo(seed)),
+  exportBookings: ExportBookingsUseCase(_FakeRepo(seed)),
 );
 
 Future<BookingsCubit> _pumpScreen(
