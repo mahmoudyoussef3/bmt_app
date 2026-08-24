@@ -22,8 +22,9 @@ import 'package:bmt_app/apps/client/features/routes/presentation/cubit/routes_di
 import 'package:bmt_app/apps/client/features/routes/presentation/cubit/routes_directory_state.dart';
 import 'package:bmt_app/core/theme/app_layout.dart';
 
-/// Loaded home layout: pinned status-bar strip, hero canvas with the
-/// quick-action tiles overlapping its lower edge, then the content sections.
+/// Loaded home layout: pinned status-bar strip, hero canvas whose arch is
+/// crossed by the search card, then the quick-action tiles and the content
+/// sections on the page background below it.
 ///
 /// Everything below the hero is a sliver, so the full departure board scrolls
 /// lazily instead of building every card up front.
@@ -40,8 +41,6 @@ class HomeContent extends StatelessWidget {
   final void Function(String route, [Object? arguments]) onOpenRoute;
   final VoidCallback onOpenNotifications;
   final void Function(String tab) onSwitchTab;
-
-  static const double _tileOverlap = HomeQuickActions.height / 2;
 
   /// The hero card's one navigation. A complete pair goes straight to the
   /// matching routes; anything less opens the full search screen carrying
@@ -130,44 +129,39 @@ class HomeContent extends StatelessWidget {
     );
   }
 
+  /// The hero and the tiles beneath it. The tiles clear the arch instead of
+  /// sitting on it: the search card is the only thing that crosses the curve,
+  /// so the header reads as one shape rather than a stack of overlaps.
   Widget _buildHeroWithActions(
     BuildContext context,
     bool isTablet,
     double horizontalPadding,
     double maxWidth,
   ) {
-    return Stack(
-      clipBehavior: Clip.none,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: _tileOverlap),
-          child: HomeHeroHeader(
-            topInset: 0,
-            bottomSpace: _tileOverlap + ClientSpacing.md,
-            horizontalPadding: horizontalPadding,
-            maxContentWidth: maxWidth,
-            onOpenNotifications: onOpenNotifications,
-            onSearch: _openSearch,
-          ),
+        HomeHeroHeader(
+          topInset: 0,
+          bottomSpace: ClientSpacing.lg,
+          horizontalPadding: horizontalPadding,
+          maxContentWidth: maxWidth,
+          onOpenNotifications: onOpenNotifications,
+          onSearch: _openSearch,
         ),
-        PositionedDirectional(
-          start: 0,
-          end: 0,
-          bottom: 0,
-          child: Center(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: maxWidth),
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-                child: HomeEntrance(
-                  order: 1,
-                  child: HomeQuickActions(
-                    onTrips: () => onSwitchTab('trips'),
-                    onSubscription: () =>
-                        onOpenRoute(PackagesRoutes.mySubscription),
-                    onOffices: () => onOpenRoute(OfficesRoutes.directory),
-                    onRoutes: () => onSwitchTab('routes'),
-                  ),
+        Center(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: maxWidth),
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+              child: HomeEntrance(
+                order: 1,
+                child: HomeQuickActions(
+                  onTrips: () => onSwitchTab('trips'),
+                  onSubscription: () =>
+                      onOpenRoute(PackagesRoutes.mySubscription),
+                  onOffices: () => onOpenRoute(OfficesRoutes.directory),
+                  onRoutes: () => onSwitchTab('routes'),
                 ),
               ),
             ),

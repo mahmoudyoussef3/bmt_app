@@ -6,7 +6,7 @@ import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/pressable_scale.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
-/// Elevated service tiles that overlap the hero's lower edge —
+/// Elevated service tiles sitting just under the hero's arch —
 /// the fastest paths into the app's four main journeys.
 class HomeQuickActions extends StatelessWidget {
   const HomeQuickActions({
@@ -26,7 +26,7 @@ class HomeQuickActions extends StatelessWidget {
   final VoidCallback onOffices;
   final VoidCallback onRoutes;
 
-  /// Fixed height so the hero overlap in the home layout stays stable.
+  /// Fixed height so the row reads as one band whatever the labels do.
   static const double height = 102;
 
   @override
