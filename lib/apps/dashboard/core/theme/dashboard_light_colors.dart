@@ -34,7 +34,11 @@ abstract final class DashboardLightColors {
 
   static const Color onSurface = Color(0xFF1C1917);
   static const Color onSurfaceMuted = Color(0xFF6B6258);
-  static const Color onSurfaceFaint = Color(0xFF9C948A);
+
+  /// Placeholders and disabled text. Darkened one step off the original
+  /// #9C948A (2026-08-24): that value sat under 3.2:1 on white, so an unfilled
+  /// hint read as barely-there rather than quietly secondary.
+  static const Color onSurfaceFaint = Color(0xFF877C6F);
   static const Color onFilled = Color(0xFFFFFFFF);
 
   /// Card borders. Warm enough to sit on the paper page without reading grey.
@@ -53,10 +57,16 @@ abstract final class DashboardLightColors {
   static const Color primary = Color(0xFF2563EB);
   static const Color onPrimary = Color(0xFFFFFFFF);
   static const Color primaryAccent = Color(0xFF1D4ED8);
-  static const Color primaryContainer = Color(0xFFEAF0FD);
+  static const Color primaryContainer = Color(0xFFE1EBFC);
   static const Color onPrimaryContainer = Color(0xFF16389B);
-  static const Color primaryLine = Color(0xFFC9D9FB);
+  static const Color primaryLine = Color(0xFFBBD0FA);
   static const Color primaryDeep = Color(0xFF4338CA);
+
+  /// The focused-input border and floating label. Split off from
+  /// [primaryAccent] (which stays doing link/ink duty) so a focused field can
+  /// be tuned for visibility alone rather than sharing a value with quieter
+  /// accent uses.
+  static const Color focus = Color(0xFF2F6FED);
 
   static const LinearGradient brandGradient = LinearGradient(
     colors: [primary, primaryDeep],
@@ -66,22 +76,23 @@ abstract final class DashboardLightColors {
 
   static const Color success = Color(0xFF0E7490);
   static const Color successInk = Color(0xFF0E7490);
-  static const Color successContainer = Color(0xFFE3F4F6);
+  static const Color successContainer = Color(0xFFD9F0F3);
   static const Color onSuccessContainer = Color(0xFF0B5A70);
-  static const Color successLine = Color(0xFFBEE3E8);
+  static const Color successLine = Color(0xFFA9D9E0);
 
-  static const Color warning = Color(0xFFB45309);
-  static const Color warningInk = Color(0xFFB45309);
-  static const Color warningContainer = Color(0xFFFBF0DB);
+  /// Warmed one step off #B45309 (2026-08-24) for a livelier alert read.
+  static const Color warning = Color(0xFFB8560A);
+  static const Color warningInk = Color(0xFFB8560A);
+  static const Color warningContainer = Color(0xFFFCE7BE);
   static const Color onWarningContainer = Color(0xFF7C3D07);
-  static const Color warningLine = Color(0xFFEBD5AE);
+  static const Color warningLine = Color(0xFFE7C98C);
 
   static const Color danger = Color(0xFFC62828);
   static const Color onDanger = Color(0xFFFFFFFF);
   static const Color dangerInk = Color(0xFFC62828);
-  static const Color dangerContainer = Color(0xFFFBEAE7);
+  static const Color dangerContainer = Color(0xFFFADEDA);
   static const Color onDangerContainer = Color(0xFF8C1D18);
-  static const Color dangerLine = Color(0xFFF0CFC9);
+  static const Color dangerLine = Color(0xFFEBBFB7);
 
   static const Color info = primaryAccent;
   static const Color infoContainer = primaryContainer;
@@ -92,11 +103,11 @@ abstract final class DashboardLightColors {
   static const Color onNeutralContainer = onSurfaceMuted;
 
   static const Color special = Color(0xFF6D28D9);
-  static const Color specialContainer = Color(0xFFF1ECFD);
+  static const Color specialContainer = Color(0xFFEAE1FC);
   static const Color onSpecialContainer = Color(0xFF4C1D95);
-  static const Color specialLine = Color(0xFFDDD1FA);
+  static const Color specialLine = Color(0xFFD2C2F8);
 
-  static const Color rating = Color(0xFFB45309);
+  static const Color rating = Color(0xFFB8560A);
 
   /// Warm shadow tint — a neutral black shadow over paper reads grey and dirty.
   static const Color shadow = Color(0xFF1C1917);

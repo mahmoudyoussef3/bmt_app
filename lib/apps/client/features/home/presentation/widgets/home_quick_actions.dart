@@ -11,20 +11,20 @@ import 'package:bmt_app/core/localization/l10n_context.dart';
 class HomeQuickActions extends StatelessWidget {
   const HomeQuickActions({
     super.key,
-    required this.onRoutes,
     required this.onTrips,
     required this.onSubscription,
-    required this.onSupport,
+    required this.onOffices,
+    required this.onRoutes,
   });
 
-  final VoidCallback onRoutes;
   final VoidCallback onTrips;
 
   /// Opens the rider's own subscription. There is no plan catalogue to send
   /// them to: plans live on the office profiles that sell them and are bought
   /// in the booking wizard.
   final VoidCallback onSubscription;
-  final VoidCallback onSupport;
+  final VoidCallback onOffices;
+  final VoidCallback onRoutes;
 
   /// Fixed height so the hero overlap in the home layout stays stable.
   static const double height = 102;
@@ -34,29 +34,21 @@ class HomeQuickActions extends StatelessWidget {
     final l10n = context.l10n;
     final actions = [
       (
-        icon: Icons.route_rounded,
-        label: l10n.nav_routes,
-        color: ClientColors.primaryFor(context),
-        onTap: onRoutes,
-      ),
-      (
         icon: Icons.confirmation_number_outlined,
         label: l10n.home_myTrips,
-        color: ClientColors.journeyCyan,
         onTap: onTrips,
       ),
       (
         icon: Icons.card_membership_rounded,
         label: l10n.mySubscription_title,
-        color: ClientColors.journeyPurple,
         onTap: onSubscription,
       ),
       (
-        icon: Icons.support_agent_rounded,
-        label: l10n.common_support,
-        color: ClientColors.journeyAmber,
-        onTap: onSupport,
+        icon: Icons.storefront_rounded,
+        label: l10n.home_offices,
+        onTap: onOffices,
       ),
+      (icon: Icons.route_rounded, label: l10n.nav_routes, onTap: onRoutes),
     ];
 
     return MediaQuery.withClampedTextScaling(
@@ -71,7 +63,6 @@ class HomeQuickActions extends StatelessWidget {
                 child: _QuickActionTile(
                   icon: action.icon,
                   label: action.label,
-                  color: action.color,
                   onTap: action.onTap,
                 ),
               ),
@@ -87,17 +78,17 @@ class _QuickActionTile extends StatelessWidget {
   const _QuickActionTile({
     required this.icon,
     required this.label,
-    required this.color,
     required this.onTap,
   });
 
   final IconData icon;
   final String label;
-  final Color color;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
+    final accent = ClientColors.primaryFor(context);
+
     return PressableScale(
       onTap: onTap,
       scale: 0.96,
@@ -116,10 +107,10 @@ class _QuickActionTile extends StatelessWidget {
               width: 42,
               height: 42,
               decoration: BoxDecoration(
-                color: color.withAlpha(20),
+                color: accent.withAlpha(20),
                 borderRadius: BorderRadius.circular(14),
               ),
-              child: Icon(icon, color: color, size: 21),
+              child: Icon(icon, color: accent, size: 21),
             ),
             const SizedBox(height: 8),
             Text(
@@ -129,7 +120,7 @@ class _QuickActionTile extends StatelessWidget {
               textAlign: TextAlign.center,
               style: ClientTypography.labelSmall(
                 context,
-              ).copyWith(fontWeight: FontWeight.w800, fontSize: 11),
+              ).copyWith(fontWeight: FontWeight.w700, fontSize: 11),
             ),
           ],
         ),

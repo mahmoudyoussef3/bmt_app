@@ -14,6 +14,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:bmt_app/apps/client/core/di/client_di.dart';
 import 'package:bmt_app/apps/client/core/theme/client_app_theme.dart';
 import 'package:bmt_app/apps/client/core/theme/client_theme.dart';
+import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_search_query.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_search_cubit.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_search_state.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_wizard_confirm_cubit.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_wizard_confirm_state.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_wizard_cubit.dart';
@@ -30,12 +33,14 @@ import 'package:bmt_app/apps/client/features/home/presentation/screens/client_sh
 import 'package:bmt_app/apps/client/features/loyalty/presentation/cubit/loyalty_cubit.dart';
 import 'package:bmt_app/apps/client/features/loyalty/presentation/cubit/loyalty_state.dart';
 import 'package:bmt_app/apps/client/features/loyalty/presentation/screens/loyalty_screen.dart';
+import 'package:bmt_app/apps/client/features/notifications/presentation/cubit/notification_badge_cubit.dart';
 import 'package:bmt_app/apps/client/features/offices/presentation/cubit/office_profile_cubit.dart';
 import 'package:bmt_app/apps/client/features/offices/presentation/cubit/office_profile_state.dart';
 import 'package:bmt_app/apps/client/features/offices/presentation/cubit/offices_directory_cubit.dart';
 import 'package:bmt_app/apps/client/features/offices/presentation/cubit/offices_directory_state.dart';
 import 'package:bmt_app/apps/client/features/offices/presentation/screens/office_profile_screen.dart';
 import 'package:bmt_app/apps/client/features/offices/presentation/screens/offices_directory_screen.dart';
+import 'package:bmt_app/apps/client/features/routes/presentation/screens/routes_directory_screen.dart';
 import 'package:bmt_app/apps/client/features/packages/presentation/cubit/my_subscription_cubit.dart';
 import 'package:bmt_app/apps/client/features/packages/presentation/cubit/my_subscription_state.dart';
 import 'package:bmt_app/apps/client/features/packages/presentation/cubit/packages_cubit.dart';
@@ -44,6 +49,8 @@ import 'package:bmt_app/apps/client/features/packages/presentation/screens/my_su
 import 'package:bmt_app/apps/client/features/payments/domain/entities/payment_models.dart';
 import 'package:bmt_app/apps/client/features/payments/domain/repositories/payment_repository.dart';
 import 'package:bmt_app/apps/client/features/payments/domain/usecases/get_payment_methods_usecase.dart';
+import 'package:bmt_app/apps/client/features/routes/presentation/cubit/routes_directory_cubit.dart';
+import 'package:bmt_app/apps/client/features/routes/presentation/cubit/routes_directory_state.dart';
 import 'package:bmt_app/apps/client/features/seat_selection/presentation/cubit/seat_selection_cubit.dart';
 import 'package:bmt_app/apps/client/features/seat_selection/presentation/cubit/seat_selection_state.dart';
 import 'package:bmt_app/apps/client/features/tracking/presentation/bloc/live_tracking_bloc.dart';
@@ -76,6 +83,43 @@ class _FakeHome extends Cubit<HomeState> implements HomeCubit {
 class _FakeDirectory extends Cubit<OfficesDirectoryState>
     implements OfficesDirectoryCubit {
   _FakeDirectory() : super(const OfficesDirectoryLoaded(demo.offices));
+  @override
+  Future<void> load() async {}
+  @override
+  dynamic noSuchMethod(Invocation i) => null;
+}
+
+/// Home's hero search card is a real form, so the harness hands it a query
+/// that is already filled in — an empty card says nothing about the design.
+class _FakeBookingSearch extends Cubit<BookingSearchState>
+    implements BookingSearchCubit {
+  _FakeBookingSearch()
+    : super(
+        const BookingSearchState(
+          query: demo.searchQuery,
+          optionsStatus: SearchOptionsStatus.loaded,
+        ),
+      );
+  @override
+  void init(BookingSearchQuery initial, {required String todayDate}) {}
+  @override
+  Future<void> loadOptions() async {}
+  @override
+  dynamic noSuchMethod(Invocation i) => null;
+}
+
+/// The hero's bell badge. A hard-coded count so the harness shows the badge
+/// rather than the bare bell — the real cubit would open a Supabase stream.
+class _FakeNotificationBadge extends Cubit<int>
+    implements NotificationBadgeCubit {
+  _FakeNotificationBadge() : super(2);
+  @override
+  dynamic noSuchMethod(Invocation i) => null;
+}
+
+class _FakeRoutesDirectory extends Cubit<RoutesDirectoryState>
+    implements RoutesDirectoryCubit {
+  _FakeRoutesDirectory() : super(RoutesDirectoryLoaded(demo.featuredRoutes));
   @override
   Future<void> load() async {}
   @override
@@ -232,6 +276,9 @@ void registerClientShowcaseFakes() {
   clientGetIt
     ..registerFactory<HomeCubit>(_FakeHome.new)
     ..registerFactory<OfficesDirectoryCubit>(_FakeDirectory.new)
+    ..registerFactory<RoutesDirectoryCubit>(_FakeRoutesDirectory.new)
+    ..registerFactory<BookingSearchCubit>(_FakeBookingSearch.new)
+    ..registerLazySingleton<NotificationBadgeCubit>(_FakeNotificationBadge.new)
     ..registerFactory<OfficeProfileCubit>(_FakeOfficeProfile.new)
     ..registerFactory<TripsCubit>(_FakeTrips.new)
     ..registerFactory<RouteResultsCubit>(_FakeRouteResults.new)
@@ -300,6 +347,10 @@ final Map<String, Widget Function()> clientScreens = {
   'client-offices': () => BlocProvider<OfficesDirectoryCubit>(
     create: (_) => clientGetIt<OfficesDirectoryCubit>(),
     child: const OfficesDirectoryScreen(),
+  ),
+  'client-routes': () => BlocProvider<RoutesDirectoryCubit>(
+    create: (_) => clientGetIt<RoutesDirectoryCubit>(),
+    child: RoutesDirectoryScreen(onOpenRoute: (_, [_]) {}),
   ),
   'client-office-profile': () => BlocProvider<OfficeProfileCubit>(
     create: (_) => clientGetIt<OfficeProfileCubit>(),

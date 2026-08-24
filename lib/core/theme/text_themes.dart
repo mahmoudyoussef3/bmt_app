@@ -98,6 +98,19 @@ class AppTextThemes {
     return GoogleFonts.outfitTextTheme(baseTextTheme);
   }
 
+  /// [textThemeFor]'s exact scale, set in Cairo instead of Outfit.
+  ///
+  /// Outfit carries no Arabic glyphs, so an Arabic string styled with it falls
+  /// through to whatever face the platform happens to pick — which is why an
+  /// Arabic screen never matches its Latin counterpart, or itself across
+  /// devices. Cairo covers both scripts and is already the face the captain
+  /// and dashboard apps render.
+  ///
+  /// Only the family changes: sizes, weights, heights, tracking and colours
+  /// all come from [textThemeFor].
+  static TextTheme cairoTextThemeFor(ColorScheme colorScheme) =>
+      GoogleFonts.cairoTextTheme(textThemeFor(colorScheme));
+
   static TextStyle headlineStrong(ColorScheme cs) =>
       textThemeFor(cs).displayLarge!;
   static TextStyle subtitle(ColorScheme cs) => textThemeFor(cs).displaySmall!;

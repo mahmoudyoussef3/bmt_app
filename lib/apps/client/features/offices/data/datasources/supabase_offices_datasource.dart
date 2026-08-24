@@ -22,9 +22,39 @@ class SupabaseOfficesDatasource implements OfficesDatasource {
         .order('rating', ascending: false)
         .order('name', ascending: true);
 
+    final routeCounts = await _fetchActiveRouteCounts();
+
     return rows
-        .map((row) => OfficeSummaryModel.fromJson(row))
+        .map(
+          (row) => OfficeSummaryModel.fromJson({
+            ...row,
+            'routes_count': routeCounts[row['id']] ?? 0,
+          }),
+        )
         .toList(growable: false);
+  }
+
+  /// How many active routes each listed office runs, tallied in one pass.
+  ///
+  /// The directory card advertises the size of an operator's network, and
+  /// `public_offices` carries no such column — asking per office would be one
+  /// round trip per card. The marketplace RLS policy on `operation_routes`
+  /// already narrows an unfiltered read to active routes of listed offices,
+  /// which is exactly the set being counted, so no office filter is needed
+  /// here; the status filter mirrors the policy rather than relaxing it.
+  Future<Map<String, int>> _fetchActiveRouteCounts() async {
+    final rows = await _supabase
+        .from('operation_routes')
+        .select('office_id')
+        .eq('status', 'active');
+
+    final counts = <String, int>{};
+    for (final row in rows) {
+      final officeId = row['office_id'] as String?;
+      if (officeId == null || officeId.isEmpty) continue;
+      counts[officeId] = (counts[officeId] ?? 0) + 1;
+    }
+    return counts;
   }
 
   /// Active routes of one office. The marketplace RLS policy on

@@ -3,19 +3,17 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 
-/// Standard section intro on home: eyebrow + title + optional subtitle,
-/// with an optional trailing "View all" action.
+/// Standard section intro on home: title + optional subtitle, with an
+/// optional trailing "View all" action.
 class HomeSectionHeader extends StatelessWidget {
   const HomeSectionHeader({
     super.key,
-    required this.eyebrow,
     required this.title,
     this.subtitle,
     this.actionLabel,
     this.onAction,
   });
 
-  final String eyebrow;
   final String title;
   final String? subtitle;
   final String? actionLabel;
@@ -30,15 +28,6 @@ class HomeSectionHeader extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                eyebrow.toUpperCase(),
-                style: ClientTypography.labelSmall(context).copyWith(
-                  color: ClientColors.primaryFor(context),
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.0,
-                ),
-              ),
-              const SizedBox(height: 5),
               Text(title, style: ClientTypography.headingMedium(context)),
               if (subtitle != null) ...[
                 const SizedBox(height: 3),

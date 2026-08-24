@@ -19,9 +19,17 @@ class AppTheme {
   /// read as "a Flutter app" while dark mode read as a designed product: the
   /// default `Switch` is violet, the default `SnackBar` is a neutral charcoal,
   /// and neither has anything to do with this palette.
-  static ThemeData lightTheme() {
+  /// [textThemeBuilder] swaps the typeface for the whole theme — every
+  /// component style below is derived from `textTheme`, so passing one here
+  /// reaches the app bar, inputs and dialogs too, which a later
+  /// `copyWith(textTheme: ...)` would not. Defaults to Outfit.
+  static ThemeData lightTheme({
+    TextTheme Function(ColorScheme)? textThemeBuilder,
+  }) {
     final colorScheme = lightColorSchemeFromPalette();
-    final textTheme = AppTextThemes.textThemeFor(colorScheme);
+    final textTheme = (textThemeBuilder ?? AppTextThemes.textThemeFor)(
+      colorScheme,
+    );
 
     final hairline = BorderSide(color: colorScheme.outline);
 
@@ -45,7 +53,7 @@ class AppTheme {
 
       appBarTheme: AppBarTheme(
         centerTitle: false,
-        
+
         backgroundColor: AppLightColors.background,
         foregroundColor: colorScheme.onSurface,
         elevation: 0,
@@ -237,7 +245,6 @@ class AppTheme {
         ),
       ),
       tooltipTheme: TooltipThemeData(
-        
         decoration: BoxDecoration(
           color: AppLightColors.onSurface,
           borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
@@ -409,9 +416,17 @@ class AppTheme {
   /// to opt in. Anything left to Material's defaults is where the old
   /// inconsistency crept back — an untinted `Chip`, a `SnackBar` in Material's
   /// own grey, a `Switch` in the default purple.
-  static ThemeData darkTheme() {
+  /// [textThemeBuilder] swaps the typeface for the whole theme — every
+  /// component style below is derived from `textTheme`, so passing one here
+  /// reaches the app bar, inputs and dialogs too, which a later
+  /// `copyWith(textTheme: ...)` would not. Defaults to Outfit.
+  static ThemeData darkTheme({
+    TextTheme Function(ColorScheme)? textThemeBuilder,
+  }) {
     final colorScheme = darkColorSchemeFromPalette();
-    final textTheme = AppTextThemes.textThemeFor(colorScheme);
+    final textTheme = (textThemeBuilder ?? AppTextThemes.textThemeFor)(
+      colorScheme,
+    );
 
     final hairline = BorderSide(color: colorScheme.outline);
 
@@ -435,7 +450,7 @@ class AppTheme {
 
       appBarTheme: AppBarTheme(
         centerTitle: false,
-        
+
         backgroundColor: AppDarkColors.background,
         foregroundColor: colorScheme.onSurface,
         elevation: 0,
@@ -534,7 +549,6 @@ class AppTheme {
           BorderSide(color: colorScheme.outlineVariant),
         ),
         focusedBorder: inputBorder(
-          
           const BorderSide(color: AppDarkColors.primaryAccent, width: 2),
         ),
         errorBorder: inputBorder(

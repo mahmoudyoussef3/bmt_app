@@ -77,6 +77,10 @@ class DashboardAppTheme {
     final primaryContainer = dark
         ? DashboardDarkColors.primaryContainer
         : DashboardLightColors.primaryContainer;
+    // Light mode gets a focus ring split off from primaryAccent so a focused
+    // field reads as active on its own, without recoloring links/accent ink;
+    // dark mode is untouched and keeps sharing primaryAccent for both roles.
+    final focus = dark ? primaryAccent : DashboardLightColors.focus;
     final dangerInk = dark
         ? DashboardDarkColors.dangerInk
         : DashboardLightColors.dangerInk;
@@ -206,14 +210,12 @@ class DashboardAppTheme {
         disabledBorder: inputBorder(
           BorderSide(color: colorScheme.outlineVariant),
         ),
-        focusedBorder: inputBorder(BorderSide(color: primaryAccent, width: 2)),
+        focusedBorder: inputBorder(BorderSide(color: focus, width: 2)),
         errorBorder: inputBorder(BorderSide(color: dangerInk)),
         focusedErrorBorder: inputBorder(BorderSide(color: dangerInk, width: 2)),
         hintStyle: textTheme.bodyMedium?.copyWith(color: onSurfaceFaint),
         labelStyle: textTheme.bodyMedium?.copyWith(color: onSurfaceMuted),
-        floatingLabelStyle: textTheme.bodyMedium?.copyWith(
-          color: primaryAccent,
-        ),
+        floatingLabelStyle: textTheme.bodyMedium?.copyWith(color: focus),
         helperStyle: textTheme.bodySmall?.copyWith(color: onSurfaceMuted),
         errorStyle: textTheme.bodySmall?.copyWith(color: dangerInk),
         prefixIconColor: onSurfaceMuted,
@@ -224,9 +226,9 @@ class DashboardAppTheme {
         ),
       ),
       textSelectionTheme: TextSelectionThemeData(
-        cursorColor: primaryAccent,
-        selectionColor: primaryAccent.withAlpha(dark ? 60 : 50),
-        selectionHandleColor: primaryAccent,
+        cursorColor: focus,
+        selectionColor: focus.withAlpha(dark ? 60 : 50),
+        selectionHandleColor: focus,
       ),
 
       bottomSheetTheme: BottomSheetThemeData(

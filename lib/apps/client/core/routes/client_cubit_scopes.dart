@@ -7,16 +7,20 @@ import 'package:bmt_app/apps/client/features/auth/presentation/cubit/forgot_pass
 import 'package:bmt_app/apps/client/features/auth/presentation/cubit/reset_password_cubit.dart';
 import 'package:bmt_app/apps/client/features/auth/presentation/cubit/social_auth_cubit.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
+import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_search_query.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_search_cubit.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_wizard_confirm_cubit.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_wizard_cubit.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_wizard_step_cubit.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/daily_booking_cubit.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/popular_routes_cubit.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/widgets/search_date_options.dart';
 import 'package:bmt_app/apps/client/features/communication/presentation/cubit/chat_thread_cubit.dart';
 import 'package:bmt_app/apps/client/features/communication/presentation/cubit/communication_cubit.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/cubit/home_cubit.dart';
 import 'package:bmt_app/apps/client/features/loyalty/presentation/cubit/loyalty_cubit.dart';
 import 'package:bmt_app/apps/client/features/wallet/presentation/cubit/client_wallet_cubit.dart';
+import 'package:bmt_app/apps/client/features/notifications/presentation/cubit/notification_badge_cubit.dart';
 import 'package:bmt_app/apps/client/features/notifications/presentation/cubit/notifications_cubit.dart';
 import 'package:bmt_app/apps/client/features/packages/presentation/cubit/my_subscription_cubit.dart';
 import 'package:bmt_app/apps/client/features/payments/presentation/cubit/payment_cubit.dart';
@@ -183,17 +187,44 @@ abstract final class ClientCubitScopes {
         child: child,
       );
 
-  /// Home runs on two independent loads: its own data, and the marketplace
-  /// directory behind the companies rail. They are scoped together so a slow
-  /// or failed directory never holds up the departure board.
-  static Widget home(Widget child) => MultiBlocProvider(
-    providers: [
-      BlocProvider<HomeCubit>(create: (_) => clientGetIt<HomeCubit>()..load()),
-      BlocProvider<OfficesDirectoryCubit>(
-        create: (_) => clientGetIt<OfficesDirectoryCubit>()..load(),
-      ),
-    ],
-    child: child,
+  /// Home runs on three independent loads: its own data, the marketplace
+  /// directory behind the companies rail, and the routes catalog behind the
+  /// featured-routes shelf. They are scoped together so a slow or failed
+  /// directory never holds up the departure board.
+  ///
+  /// [BookingSearchCubit] joins them because the hero's search card is a real
+  /// form now — it holds the rider's pickup/destination on Home itself. It is
+  /// left lazy on purpose: its station options are fetched the first time the
+  /// card builds, not while Home is still a skeleton. Its today-date label is
+  /// read from the [Builder] above the providers — a `create` callback may not
+  /// depend on inherited widgets like `Localizations`.
+  static Widget home(Widget child) => Builder(
+    builder: (context) {
+      final todayDate = todaySearchDateLabel(context);
+      return MultiBlocProvider(
+        providers: [
+          BlocProvider<HomeCubit>(
+            create: (_) => clientGetIt<HomeCubit>()..load(),
+          ),
+          // Singleton, not a factory: the hero's bell badge reads the same live
+          // unread stream for the whole session, so Home must never close it.
+          BlocProvider<NotificationBadgeCubit>.value(
+            value: clientGetIt<NotificationBadgeCubit>(),
+          ),
+          BlocProvider<OfficesDirectoryCubit>(
+            create: (_) => clientGetIt<OfficesDirectoryCubit>()..load(),
+          ),
+          BlocProvider<RoutesDirectoryCubit>(
+            create: (_) => clientGetIt<RoutesDirectoryCubit>()..load(),
+          ),
+          BlocProvider<BookingSearchCubit>(
+            create: (_) => clientGetIt<BookingSearchCubit>()
+              ..init(const BookingSearchQuery(), todayDate: todayDate),
+          ),
+        ],
+        child: child,
+      );
+    },
   );
 
   /// Scopes one office's profile, loading its routes fresh from its id.

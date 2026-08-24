@@ -1,11 +1,12 @@
 import 'dart:math' as math;
 
-import 'package:bmt_app/apps/client/features/support/presentation/routes/support_routes.dart';
+import 'package:bmt_app/apps/client/features/offices/presentation/routes/offices_routes.dart';
 import 'package:bmt_app/apps/client/features/packages/presentation/routes/packages_routes.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_search_query.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/routes/booking_routes.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
@@ -17,6 +18,8 @@ import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_quic
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_sections.dart';
 import 'package:bmt_app/apps/client/features/offices/presentation/cubit/offices_directory_cubit.dart';
 import 'package:bmt_app/apps/client/features/offices/presentation/cubit/offices_directory_state.dart';
+import 'package:bmt_app/apps/client/features/routes/presentation/cubit/routes_directory_cubit.dart';
+import 'package:bmt_app/apps/client/features/routes/presentation/cubit/routes_directory_state.dart';
 import 'package:bmt_app/core/theme/app_layout.dart';
 
 /// Loaded home layout: pinned status-bar strip, hero canvas with the
@@ -40,11 +43,14 @@ class HomeContent extends StatelessWidget {
 
   static const double _tileOverlap = HomeQuickActions.height / 2;
 
-  void _openSearch([String? destination]) {
-    onOpenRoute(BookingRoutes.search, <String, String>{
-      'destination': ?destination,
-    });
-  }
+  /// The hero card's one navigation. A complete pair goes straight to the
+  /// matching routes; anything less opens the full search screen carrying
+  /// what the rider already chose, where date, time and popular routes are
+  /// also on offer.
+  void _openSearch(BookingSearchQuery query) => onOpenRoute(
+    query.isComplete ? BookingRoutes.routeSelection : BookingRoutes.search,
+    query.toArguments(),
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +58,7 @@ class HomeContent extends StatelessWidget {
     final isTablet = width >= 720;
     final horizontalPadding = isTablet ? ClientSpacing.xl : ClientSpacing.md;
     final maxWidth = AppLayout.maxContentWidth(width);
-    
+
     final sideInset = math.max(horizontalPadding, (width - maxWidth) / 2);
 
     return ColoredBox(
@@ -96,18 +102,26 @@ class HomeContent extends StatelessWidget {
                 sideInset,
                 ClientSpacing.section,
               ),
-              sliver: BlocBuilder<OfficesDirectoryCubit, OfficesDirectoryState>(
-                builder: (context, state) => HomeSections(
-                  data: data,
-                  offices: switch (state) {
-                    OfficesDirectoryLoaded(:final offices) => offices,
-                    
-                    _ => const [],
-                  },
-                  officesLoading: state is OfficesDirectoryLoading,
-                  onOpenRoute: onOpenRoute,
-                  onSwitchTab: onSwitchTab,
-                ),
+              sliver: BlocBuilder<RoutesDirectoryCubit, RoutesDirectoryState>(
+                builder: (context, routesState) =>
+                    BlocBuilder<OfficesDirectoryCubit, OfficesDirectoryState>(
+                      builder: (context, officesState) => HomeSections(
+                        data: data,
+                        offices: switch (officesState) {
+                          OfficesDirectoryLoaded(:final offices) => offices,
+                          _ => const [],
+                        },
+                        officesLoading: officesState is OfficesDirectoryLoading,
+                        featuredRoutes: switch (routesState) {
+                          RoutesDirectoryLoaded(:final routes) => routes,
+                          _ => const [],
+                        },
+                        featuredRoutesLoading:
+                            routesState is RoutesDirectoryLoading,
+                        onOpenRoute: onOpenRoute,
+                        onSwitchTab: onSwitchTab,
+                      ),
+                    ),
               ),
             ),
           ],
@@ -128,15 +142,12 @@ class HomeContent extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(bottom: _tileOverlap),
           child: HomeHeroHeader(
-            userName: data.userName,
-            destinations: data.destinationSuggestions,
             topInset: 0,
-            bottomSpace: _tileOverlap + ClientSpacing.lg,
+            bottomSpace: _tileOverlap + ClientSpacing.md,
             horizontalPadding: horizontalPadding,
             maxContentWidth: maxWidth,
             onOpenNotifications: onOpenNotifications,
             onSearch: _openSearch,
-            onSelectDestination: _openSearch,
           ),
         ),
         PositionedDirectional(
@@ -151,11 +162,11 @@ class HomeContent extends StatelessWidget {
                 child: HomeEntrance(
                   order: 1,
                   child: HomeQuickActions(
-                    onRoutes: () => onSwitchTab('routes'),
                     onTrips: () => onSwitchTab('trips'),
                     onSubscription: () =>
                         onOpenRoute(PackagesRoutes.mySubscription),
-                    onSupport: () => onOpenRoute(SupportRoutes.center),
+                    onOffices: () => onOpenRoute(OfficesRoutes.directory),
+                    onRoutes: () => onSwitchTab('routes'),
                   ),
                 ),
               ),

@@ -1557,6 +1557,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get splash_tagline => 'Your journey, simplified.';
 
   @override
+  String get home_brandTagline => 'EasyWay Transport';
+
+  @override
   String get common_today => 'Today';
 
   @override
@@ -1747,6 +1750,54 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get home_searchTrips => 'Search Trips';
+
+  @override
+  String get home_heroHeadline => 'Your next trip starts here';
+
+  @override
+  String get home_heroSubtitle =>
+      'Compare transport office trips, book your seat, and track your ride live.';
+
+  @override
+  String get common_from => 'From';
+
+  @override
+  String get common_to => 'To';
+
+  @override
+  String get home_departureStation => 'Departure station';
+
+  @override
+  String get home_arrivalStation => 'Arrival station';
+
+  @override
+  String get home_ongoingTrip => 'Your trip is in progress';
+
+  @override
+  String get home_liveLocationBadge => 'Live location';
+
+  @override
+  String home_seatNumber(Object seat) {
+    return 'Seat $seat';
+  }
+
+  @override
+  String get home_offices => 'Offices';
+
+  @override
+  String get home_discoverEyebrow => 'Discover';
+
+  @override
+  String get home_featuredRoutesTitle => 'Featured routes';
+
+  @override
+  String get home_featuredRoutesSubtitle =>
+      'Popular routes between cities, with the nearest available trip.';
+
+  @override
+  String home_viaStations(Object stations) {
+    return 'Via $stations';
+  }
 
   @override
   String home_seatsOnlyLeft(int count) {
@@ -5072,6 +5123,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get offices_openProfile => 'Departures & routes';
+
+  @override
+  String offices_routesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count operating routes',
+      one: '1 operating route',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String offices_ratingsCountCompact(int count) {
+    return '($count)';
+  }
 
   @override
   String get offices_serves => 'Serves';

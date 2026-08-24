@@ -1554,6 +1554,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get splash_tagline => 'رحلتك، ببساطة.';
 
   @override
+  String get home_brandTagline => 'إيزي واي للنقل';
+
+  @override
   String get common_today => 'اليوم';
 
   @override
@@ -1746,6 +1749,54 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get home_searchTrips => 'ابحث عن الرحلات';
+
+  @override
+  String get home_heroHeadline => 'رحلتك القادمة تبدأ من هنا';
+
+  @override
+  String get home_heroSubtitle =>
+      'قارن رحلات مكاتب النقل، احجز مقعدك، وتتبع عربيتك مباشرةً.';
+
+  @override
+  String get common_from => 'من';
+
+  @override
+  String get common_to => 'إلى';
+
+  @override
+  String get home_departureStation => 'محطة الانطلاق';
+
+  @override
+  String get home_arrivalStation => 'محطة الوصول';
+
+  @override
+  String get home_ongoingTrip => 'رحلتك جارية الآن';
+
+  @override
+  String get home_liveLocationBadge => 'الموقع مباشر';
+
+  @override
+  String home_seatNumber(Object seat) {
+    return 'المقعد رقم $seat';
+  }
+
+  @override
+  String get home_offices => 'المكاتب';
+
+  @override
+  String get home_discoverEyebrow => 'استكشف';
+
+  @override
+  String get home_featuredRoutesTitle => 'خطوط مميزة';
+
+  @override
+  String get home_featuredRoutesSubtitle =>
+      'أشهر الخطوط بين المدن، مع أقرب موعد متاح.';
+
+  @override
+  String home_viaStations(Object stations) {
+    return 'عبر $stations';
+  }
 
   @override
   String home_seatsOnlyLeft(int count) {
@@ -5043,6 +5094,24 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get offices_openProfile => 'المواعيد وخطوط السير';
+
+  @override
+  String offices_routesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count خط تشغيل',
+      few: '$count خطوط تشغيل',
+      two: 'خطا تشغيل',
+      one: 'خط تشغيل واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String offices_ratingsCountCompact(int count) {
+    return '($count)';
+  }
 
   @override
   String get offices_serves => 'يخدم';

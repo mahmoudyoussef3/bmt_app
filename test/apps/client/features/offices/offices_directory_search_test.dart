@@ -41,6 +41,12 @@ OfficesDirectoryCubit _cubit([List<OfficeSummary> offices = _offices]) {
 }
 
 Future<void> _pump(WidgetTester tester, OfficesDirectoryCubit cubit) async {
+  // A real phone height, not the default 800x600 test surface: the office
+  // card carries a full photo banner now, so the default surface's cache
+  // extent no longer builds all three cards without a taller viewport.
+  addTearDown(() => tester.binding.setSurfaceSize(null));
+  await tester.binding.setSurfaceSize(const Size(430, 932));
+
   await tester.pumpWidget(
     clientTestApp(
       BlocProvider<OfficesDirectoryCubit>.value(

@@ -2906,6 +2906,12 @@ abstract class AppLocalizations {
   /// **'Your journey, simplified.'**
   String get splash_tagline;
 
+  /// No description provided for @home_brandTagline.
+  ///
+  /// In en, this message translates to:
+  /// **'EasyWay Transport'**
+  String get home_brandTagline;
+
   /// No description provided for @common_today.
   ///
   /// In en, this message translates to:
@@ -3265,6 +3271,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Search Trips'**
   String get home_searchTrips;
+
+  /// No description provided for @home_heroHeadline.
+  ///
+  /// In en, this message translates to:
+  /// **'Your next trip starts here'**
+  String get home_heroHeadline;
+
+  /// No description provided for @home_heroSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Compare transport office trips, book your seat, and track your ride live.'**
+  String get home_heroSubtitle;
+
+  /// No description provided for @common_from.
+  ///
+  /// In en, this message translates to:
+  /// **'From'**
+  String get common_from;
+
+  /// No description provided for @common_to.
+  ///
+  /// In en, this message translates to:
+  /// **'To'**
+  String get common_to;
+
+  /// No description provided for @home_departureStation.
+  ///
+  /// In en, this message translates to:
+  /// **'Departure station'**
+  String get home_departureStation;
+
+  /// No description provided for @home_arrivalStation.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrival station'**
+  String get home_arrivalStation;
+
+  /// No description provided for @home_ongoingTrip.
+  ///
+  /// In en, this message translates to:
+  /// **'Your trip is in progress'**
+  String get home_ongoingTrip;
+
+  /// No description provided for @home_liveLocationBadge.
+  ///
+  /// In en, this message translates to:
+  /// **'Live location'**
+  String get home_liveLocationBadge;
+
+  /// No description provided for @home_seatNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'Seat {seat}'**
+  String home_seatNumber(Object seat);
+
+  /// No description provided for @home_offices.
+  ///
+  /// In en, this message translates to:
+  /// **'Offices'**
+  String get home_offices;
+
+  /// No description provided for @home_discoverEyebrow.
+  ///
+  /// In en, this message translates to:
+  /// **'Discover'**
+  String get home_discoverEyebrow;
+
+  /// No description provided for @home_featuredRoutesTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Featured routes'**
+  String get home_featuredRoutesTitle;
+
+  /// No description provided for @home_featuredRoutesSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Popular routes between cities, with the nearest available trip.'**
+  String get home_featuredRoutesSubtitle;
+
+  /// No description provided for @home_viaStations.
+  ///
+  /// In en, this message translates to:
+  /// **'Via {stations}'**
+  String home_viaStations(Object stations);
 
   /// No description provided for @home_seatsOnlyLeft.
   ///
@@ -9007,6 +9097,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Departures & routes'**
   String get offices_openProfile;
+
+  /// No description provided for @offices_routesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 operating route} other{{count} operating routes}}'**
+  String offices_routesCount(int count);
+
+  /// No description provided for @offices_ratingsCountCompact.
+  ///
+  /// In en, this message translates to:
+  /// **'({count})'**
+  String offices_ratingsCountCompact(int count);
 
   /// No description provided for @offices_serves.
   ///

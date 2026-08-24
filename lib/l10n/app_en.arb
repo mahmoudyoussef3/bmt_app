@@ -701,6 +701,7 @@
   "auth_createAccountAndStart": "Create account and get started",
   "auth_invalidPhoneShort": "Invalid number",
   "splash_tagline": "Your journey, simplified.",
+  "home_brandTagline": "EasyWay Transport",
   "common_today": "Today",
   "common_date": "Date",
   "common_time": "Time",
@@ -775,6 +776,20 @@
   "home_whereAreYouGoing": "Where are you going?",
   "home_selectTime": "Select time",
   "home_searchTrips": "Search Trips",
+  "home_heroHeadline": "Your next trip starts here",
+  "home_heroSubtitle": "Compare transport office trips, book your seat, and track your ride live.",
+  "common_from": "From",
+  "common_to": "To",
+  "home_departureStation": "Departure station",
+  "home_arrivalStation": "Arrival station",
+  "home_ongoingTrip": "Your trip is in progress",
+  "home_liveLocationBadge": "Live location",
+  "home_seatNumber": "Seat {seat}",
+  "home_offices": "Offices",
+  "home_discoverEyebrow": "Discover",
+  "home_featuredRoutesTitle": "Featured routes",
+  "home_featuredRoutesSubtitle": "Popular routes between cities, with the nearest available trip.",
+  "home_viaStations": "Via {stations}",
   "home_seatsOnlyLeft": "Only {count} left",
   "@home_seatsOnlyLeft": {
     "placeholders": {
@@ -2639,6 +2654,22 @@
     }
   },
   "offices_openProfile": "Departures & routes",
+  "offices_routesCount": "{count, plural, =1{1 operating route} other{{count} operating routes}}",
+  "@offices_routesCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "offices_ratingsCountCompact": "({count})",
+  "@offices_ratingsCountCompact": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "offices_serves": "Serves",
   "offices_statRating": "Rating",
   "offices_unrated": "Unrated",

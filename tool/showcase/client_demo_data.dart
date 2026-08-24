@@ -14,6 +14,10 @@ import 'package:bmt_app/apps/client/features/offices/domain/entities/office_trip
 import 'package:bmt_app/apps/client/features/packages/domain/entities/my_subscription.dart';
 import 'package:bmt_app/apps/client/features/packages/domain/entities/package_plan.dart';
 import 'package:bmt_app/apps/client/features/payments/domain/entities/payment_models.dart';
+import 'package:bmt_app/apps/client/features/routes/domain/entities/route_availability.dart';
+import 'package:bmt_app/apps/client/features/routes/domain/entities/route_summary.dart';
+import 'package:bmt_app/apps/client/features/routes/domain/entities/route_stop.dart'
+    as route_catalog;
 import 'package:bmt_app/apps/client/features/seat_selection/domain/entities/seat_option.dart';
 import 'package:bmt_app/apps/client/features/tracking/domain/entities/tracking_trip.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip.dart';
@@ -47,6 +51,7 @@ const OfficeSummary nileOffice = OfficeSummary(
   rating: 4.7,
   ratingsCount: 1284,
   serviceAreas: ['القاهرة', 'الجيزة', 'الإسكندرية', 'الغردقة'],
+  routesCount: 6,
 );
 
 const List<OfficeSummary> offices = [
@@ -58,6 +63,7 @@ const List<OfficeSummary> offices = [
     rating: 4.5,
     ratingsCount: 862,
     serviceAreas: ['الدقهلية', 'الغربية', 'دمياط'],
+    routesCount: 4,
   ),
   OfficeSummary(
     id: 'office-3',
@@ -66,6 +72,7 @@ const List<OfficeSummary> offices = [
     rating: 4.4,
     ratingsCount: 517,
     serviceAreas: ['أسيوط', 'سوهاج', 'المنيا', 'قنا'],
+    routesCount: 3,
   ),
   OfficeSummary(
     id: 'office-4',
@@ -74,6 +81,7 @@ const List<OfficeSummary> offices = [
     rating: 4.6,
     ratingsCount: 394,
     serviceAreas: ['البحر الأحمر', 'جنوب سيناء'],
+    routesCount: 2,
   ),
 ];
 
@@ -910,6 +918,76 @@ final RouteOptionData deltaRoute = RouteOptionData(
 
 final List<RouteOptionData> routeResults = [bookingRoute, deltaRoute];
 
+// ── Featured routes (Home shelf / routes catalog) ──────────────────────────
+
+final List<RouteSummary> featuredRoutes = [
+  RouteSummary(
+    id: 'route-cat-1',
+    name: 'القاهرة — طنطا',
+    startCity: 'القاهرة',
+    endCity: 'طنطا',
+    distance: '94 كم',
+    duration: '1 س 45 د',
+    officeId: nileOffice.id,
+    officeName: nileOffice.name,
+    stops: [
+      const route_catalog.RouteStop(id: 's-1', name: 'القاهرة', order: 1),
+      const route_catalog.RouteStop(id: 's-2', name: 'الجيزة', order: 2),
+      const route_catalog.RouteStop(id: 's-3', name: 'بنها', order: 3),
+      const route_catalog.RouteStop(id: 's-4', name: 'طنطا', order: 4),
+    ],
+    availability: RouteAvailability(
+      status: RouteAvailabilityStatus.bookable,
+      nextDepartureDate: _today,
+      nextDepartureTime: '09:30',
+      seatsLeft: 14,
+      tripCount: 3,
+    ),
+  ),
+  RouteSummary(
+    id: 'route-cat-2',
+    name: 'القاهرة — المنصورة',
+    startCity: 'القاهرة',
+    endCity: 'المنصورة',
+    distance: '128 كم',
+    duration: '2 س 30 د',
+    officeId: nileOffice.id,
+    officeName: nileOffice.name,
+    stops: [
+      const route_catalog.RouteStop(id: 's-5', name: 'القاهرة', order: 1),
+      const route_catalog.RouteStop(id: 's-6', name: 'بنها', order: 2),
+      const route_catalog.RouteStop(id: 's-7', name: 'الزقازيق', order: 3),
+      const route_catalog.RouteStop(id: 's-8', name: 'المنصورة', order: 4),
+    ],
+    availability: RouteAvailability(
+      status: RouteAvailabilityStatus.bookable,
+      nextDepartureDate: _today,
+      nextDepartureTime: '10:00',
+      seatsLeft: 9,
+      tripCount: 2,
+    ),
+  ),
+  RouteSummary(
+    id: 'route-cat-3',
+    name: 'القاهرة — الإسكندرية',
+    startCity: 'القاهرة',
+    endCity: 'الإسكندرية',
+    distance: '220 كم',
+    duration: '3 س 0 د',
+    officeId: 'office-2',
+    officeName: 'شركة الدلتا للرحلات',
+    stops: [
+      const route_catalog.RouteStop(id: 's-9', name: 'القاهرة', order: 1),
+      const route_catalog.RouteStop(id: 's-10', name: 'طنطا', order: 2),
+      const route_catalog.RouteStop(id: 's-11', name: 'دمنهور', order: 3),
+      const route_catalog.RouteStop(id: 's-12', name: 'الإسكندرية', order: 4),
+    ],
+    availability: const RouteAvailability(
+      status: RouteAvailabilityStatus.soldOut,
+    ),
+  ),
+];
+
 // ── Live tracking ───────────────────────────────────────────────────────────
 //
 // Same Cairo → Alexandria corridor as the booking wizard's demo route, so the
@@ -928,9 +1006,7 @@ final List<RouteStop> trackingStops = [
       longitude: point.longitude!,
       order: point.order,
       plannedArrival: now.add(Duration(minutes: 20 * (point.order - 1))),
-      plannedDeparture: now.add(
-        Duration(minutes: 20 * (point.order - 1) + 3),
-      ),
+      plannedDeparture: now.add(Duration(minutes: 20 * (point.order - 1) + 3)),
     ),
 ];
 

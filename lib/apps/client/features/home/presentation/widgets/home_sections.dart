@@ -1,5 +1,7 @@
 import 'package:bmt_app/apps/client/features/offices/domain/entities/office_summary.dart';
 import 'package:bmt_app/apps/client/features/offices/presentation/routes/offices_routes.dart';
+import 'package:bmt_app/apps/client/features/routes/domain/entities/route_summary.dart';
+import 'package:bmt_app/apps/client/features/routes/presentation/routes/routes_feature_routes.dart';
 import 'package:bmt_app/apps/client/features/tracking/presentation/routes/tracking_routes.dart';
 import 'package:bmt_app/apps/client/features/packages/presentation/routes/packages_routes.dart';
 import 'package:flutter/material.dart';
@@ -11,6 +13,8 @@ import 'package:bmt_app/apps/client/features/home/domain/entities/home_data.dart
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_active_package_card.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_bookings_list.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_entrance.dart';
+import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_featured_routes_section.dart';
+import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_live_trip_banner.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_offices_rail.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_section_header.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_upcoming_trips_list.dart';
@@ -28,6 +32,8 @@ class HomeSections extends StatelessWidget {
     required this.data,
     required this.offices,
     required this.officesLoading,
+    required this.featuredRoutes,
+    required this.featuredRoutesLoading,
     required this.onOpenRoute,
     required this.onSwitchTab,
   });
@@ -38,6 +44,10 @@ class HomeSections extends StatelessWidget {
   /// entirely — a rider is never shown an empty shelf.
   final List<OfficeSummary> offices;
   final bool officesLoading;
+
+  /// The routes catalog's shelf of corridors. Empty hides the section too.
+  final List<RouteSummary> featuredRoutes;
+  final bool featuredRoutesLoading;
 
   final void Function(String route, [Object? arguments]) onOpenRoute;
   final void Function(String tab) onSwitchTab;
@@ -50,6 +60,9 @@ class HomeSections extends StatelessWidget {
 
   void _openOffice(OfficeSummary office) =>
       onOpenRoute(OfficesRoutes.profile, office);
+
+  void _openFeaturedRoute(RouteSummary route) =>
+      onOpenRoute(RoutesFeatureRoutes.details, {'routeId': route.id});
 
   /// Carries the exact departure the rider tapped into the booking flow, so
   /// the route/date/time are already chosen when they land there.
@@ -66,22 +79,55 @@ class HomeSections extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     final showOffices = officesLoading || offices.isNotEmpty;
+    final showFeaturedRoutes =
+        featuredRoutesLoading || featuredRoutes.isNotEmpty;
     var order = 2;
+
+    // The soonest booking a rider can actually follow gets the hero
+    // treatment up front; the rest — and an under-review booking with
+    // nothing to track yet — keep the plainer boarding-pass list below.
+    final liveBooking =
+        data.bookings.isNotEmpty && data.bookings.first.status.isTrackable
+        ? data.bookings.first
+        : null;
+    final remainingBookings = liveBooking == null
+        ? data.bookings
+        : data.bookings.skip(1).toList();
 
     return SliverMainAxisGroup(
       slivers: [
-        if (data.bookings.isNotEmpty)
+        if (liveBooking != null)
+          SliverToBoxAdapter(
+            child: HomeEntrance(
+              order: order++,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: ClientSpacing.xl),
+                child: HomeLiveTripBanner(
+                  booking: liveBooking,
+                  onTrack: () => _trackBooking(liveBooking),
+                ),
+              ),
+            ),
+          ),
+        if (showFeaturedRoutes)
+          HomeFeaturedRoutesSection(
+            routes: featuredRoutes,
+            isLoading: featuredRoutesLoading,
+            order: order++,
+            onOpenRoute: _openFeaturedRoute,
+            onViewAll: () => onSwitchTab('routes'),
+          ),
+        if (remainingBookings.isNotEmpty)
           _BoxSection(
             order: order++,
             header: HomeSectionHeader(
-              eyebrow: l10n.home_yourJourney,
-              title: data.bookings.length == 1
+              title: remainingBookings.length == 1
                   ? l10n.home_yourBooking
                   : l10n.home_yourBookings,
               subtitle: l10n.home_seatsYouHold,
             ),
             child: HomeBookingsList(
-              bookings: data.bookings,
+              bookings: remainingBookings,
               onTrack: _trackBooking,
             ),
           ),
@@ -89,7 +135,6 @@ class HomeSections extends StatelessWidget {
           _BoxSection(
             order: order++,
             header: HomeSectionHeader(
-              eyebrow: l10n.home_travelWith,
               title: l10n.home_companies,
               subtitle: l10n.home_companiesSubtitle,
               actionLabel: l10n.home_viewAll,
@@ -107,7 +152,6 @@ class HomeSections extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.only(bottom: ClientSpacing.md),
               child: HomeSectionHeader(
-                eyebrow: l10n.home_bookASeat,
                 title: l10n.home_nextDepartures,
                 subtitle: data.upcomingTrips.isEmpty
                     ? l10n.home_tripsOpenSoonest
@@ -128,7 +172,6 @@ class HomeSections extends StatelessWidget {
             order: order++,
             topSpacing: ClientSpacing.xl,
             header: HomeSectionHeader(
-              eyebrow: l10n.home_yourPackage,
               title: l10n.home_activeSubscription,
               actionLabel: l10n.common_manage,
               onAction: _openMySubscription,

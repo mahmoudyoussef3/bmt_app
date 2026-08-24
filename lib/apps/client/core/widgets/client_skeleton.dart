@@ -229,67 +229,42 @@ class _SkeletonOfficeCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: ClientColors.surfaceFor(context),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: ClientColors.borderFor(context)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ClientSkeleton(height: 56, width: 56, borderRadius: 17),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          ClientSkeleton(height: 15, width: 150),
-                          const SizedBox(height: 8),
-                          ClientSkeleton(height: 11, width: 190),
-                          const SizedBox(height: 6),
-                          ClientSkeleton(height: 11, width: 120),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    ClientSkeleton(height: 24, width: 46, borderRadius: 8),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    ClientSkeleton(height: 22, width: 62, borderRadius: 8),
-                    const SizedBox(width: 6),
-                    ClientSkeleton(height: 22, width: 54, borderRadius: 8),
-                    const SizedBox(width: 6),
-                    ClientSkeleton(height: 22, width: 70, borderRadius: 8),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          Container(
-            height: 37,
-            decoration: BoxDecoration(
-              color: ClientColors.surfaceSubtleFor(context),
-              border: Border(
-                top: BorderSide(color: ClientColors.borderFor(context)),
-              ),
-              borderRadius: const BorderRadius.vertical(
-                bottom: Radius.circular(23),
+      child: Padding(
+        padding: const EdgeInsets.all(4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const ClientSkeleton(height: 112, borderRadius: 16),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 2),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      ClientSkeleton(height: 13, width: 110, borderRadius: 6),
+                      ClientSkeleton(height: 13, width: 72, borderRadius: 6),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  const ClientSkeleton(height: 11, width: double.infinity),
+                  const SizedBox(height: 6),
+                  ClientSkeleton(height: 11, width: 180),
+                  const SizedBox(height: 12),
+                  ClientSkeleton(height: 13, width: 96, borderRadius: 6),
+                ],
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

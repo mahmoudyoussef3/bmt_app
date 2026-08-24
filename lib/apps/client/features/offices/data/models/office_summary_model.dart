@@ -11,6 +11,7 @@ class OfficeSummaryModel extends OfficeSummary {
     super.rating,
     super.ratingsCount,
     super.serviceAreas,
+    super.routesCount,
   });
 
   factory OfficeSummaryModel.fromJson(Map<String, dynamic> json) {
@@ -24,6 +25,7 @@ class OfficeSummaryModel extends OfficeSummary {
       serviceAreas:
           (json['service_areas'] as List?)?.map((e) => e.toString()).toList() ??
           const [],
+      routesCount: (json['routes_count'] as num?)?.toInt() ?? 0,
     );
   }
 }

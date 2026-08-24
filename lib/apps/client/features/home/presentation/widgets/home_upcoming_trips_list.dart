@@ -314,9 +314,10 @@ class _BrowseAllCard extends StatelessWidget {
   }
 }
 
-/// A calm, centred placeholder rather than a shrunken banner — the departure
-/// board's own header already says "nothing to show", so this panel spends its
-/// space explaining why and handing the rider the one action that fixes it.
+/// A single quiet row rather than a panel: the departure board's header
+/// already announces the section and offers "all routes", so an empty board
+/// only has to say it is empty and stay out of the way of the sections under
+/// it. The whole row is the tap target into the route list.
 class _NoDepartures extends StatelessWidget {
   const _NoDepartures({required this.onBrowseRoutes});
 
@@ -324,57 +325,52 @@ class _NoDepartures extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(
-        horizontal: ClientSpacing.lg,
-        vertical: ClientSpacing.xl,
-      ),
-      decoration: BoxDecoration(
-        color: ClientColors.surfaceFor(context),
-        borderRadius: BorderRadius.circular(ClientRadius.lg),
-        border: Border.all(color: ClientColors.borderFor(context)),
-        boxShadow: ClientElevation.sm(context),
-      ),
-      child: Column(
-        children: [
-          Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              color: ClientColors.primaryFor(context).withAlpha(20),
-              shape: BoxShape.circle,
+    final muted = ClientColors.textSecondaryFor(context);
+
+    return PressableScale(
+      onTap: onBrowseRoutes,
+      scale: 0.99,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(
+          horizontal: ClientSpacing.md,
+          vertical: ClientSpacing.sm,
+        ),
+        decoration: BoxDecoration(
+          color: ClientColors.surfaceFor(context),
+          borderRadius: BorderRadius.circular(ClientRadius.md),
+          border: Border.all(color: ClientColors.borderFor(context)),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.event_busy_rounded, size: 20, color: muted),
+            const SizedBox(width: ClientSpacing.sm),
+            Expanded(
+              child: Text(
+                context.l10n.home_noDepartures,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: ClientTypography.bodyMedium(
+                  context,
+                ).copyWith(color: muted),
+              ),
             ),
-            child: Icon(
-              Icons.event_busy_rounded,
-              size: 32,
+            const SizedBox(width: ClientSpacing.sm),
+            Text(
+              context.l10n.home_browseRoutes,
+              style: ClientTypography.labelMedium(context).copyWith(
+                color: ClientColors.primaryFor(context),
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(width: ClientSpacing.xxs),
+            DirectionalIcon(
+              Icons.arrow_forward_rounded,
+              size: 16,
               color: ClientColors.primaryFor(context),
             ),
-          ),
-          const SizedBox(height: ClientSpacing.md),
-          Text(
-            context.l10n.home_noDepartures,
-            textAlign: TextAlign.center,
-            style: ClientTypography.headingSmall(
-              context,
-            ).copyWith(fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            context.l10n.home_noDeparturesBody,
-            textAlign: TextAlign.center,
-            style: ClientTypography.bodySmall(
-              context,
-            ).copyWith(color: ClientColors.textSecondaryFor(context)),
-          ),
-          const SizedBox(height: ClientSpacing.lg),
-          ClientButton(
-            label: context.l10n.home_browseRoutes,
-            icon: const DirectionalIcon(Icons.arrow_forward_rounded),
-            expand: false,
-            onPressed: onBrowseRoutes,
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

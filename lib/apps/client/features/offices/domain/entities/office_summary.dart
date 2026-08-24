@@ -12,6 +12,7 @@ class OfficeSummary {
     this.rating = 0,
     this.ratingsCount = 0,
     this.serviceAreas = const [],
+    this.routesCount = 0,
   });
 
   final String id;
@@ -24,6 +25,15 @@ class OfficeSummary {
   final double rating;
   final int ratingsCount;
   final List<String> serviceAreas;
+
+  /// Active routes this operator runs, counted off `operation_routes` rather
+  /// than stored on the office. It is the one operational fact the directory
+  /// can honestly claim about a company before a rider opens it — how big a
+  /// network is behind the name — so it closes the card.
+  ///
+  /// Zero also means "not known yet" for anything built without the
+  /// directory's count query; the card falls back to naming what it opens.
+  final int routesCount;
 
   bool get hasRating => ratingsCount > 0 && rating > 0;
 

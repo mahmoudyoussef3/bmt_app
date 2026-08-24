@@ -78,8 +78,8 @@ void main() {
   testWidgets('lists every route before anything is searched', (tester) async {
     await _pumpCatalog(tester);
 
-    expect(find.text('Mansoura'), findsOneWidget);
-    expect(find.text('Zagazig'), findsOneWidget);
+    expect(find.textContaining('Mansoura'), findsOneWidget);
+    expect(find.textContaining('Zagazig'), findsOneWidget);
     expect(find.textContaining('Passing through'), findsNothing);
   });
 
@@ -92,7 +92,7 @@ void main() {
 
     expect(find.text('Cairo Express'), findsOneWidget);
     expect(find.text('Passing through Banha'), findsOneWidget);
-    expect(find.text('Zagazig'), findsNothing);
+    expect(find.textContaining('Zagazig'), findsNothing);
   });
 
   testWidgets('an endpoint search is never captioned as a way point', (
@@ -131,7 +131,7 @@ void main() {
     await tester.tap(find.text('Clear search'));
     await tester.pump();
 
-    expect(find.text('Mansoura'), findsOneWidget);
-    expect(find.text('Zagazig'), findsOneWidget);
+    expect(find.textContaining('Mansoura'), findsOneWidget);
+    expect(find.textContaining('Zagazig'), findsOneWidget);
   });
 }
