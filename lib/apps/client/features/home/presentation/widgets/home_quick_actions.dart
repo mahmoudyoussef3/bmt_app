@@ -99,28 +99,33 @@ class _QuickActionTile extends StatelessWidget {
           border: Border.all(color: ClientColors.borderFor(context)),
           boxShadow: ClientElevation.sm(context),
         ),
-        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 12),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 42,
-              height: 42,
+              width: 38,
+              height: 38,
               decoration: BoxDecoration(
                 color: accent.withAlpha(20),
-                borderRadius: BorderRadius.circular(14),
+                borderRadius: BorderRadius.circular(13),
               ),
-              child: Icon(icon, color: accent, size: 21),
+              child: Icon(icon, color: accent, size: 20),
             ),
             const SizedBox(height: 8),
+            // Two lines at a legible size rather than one line squeezed to
+            // 11sp: a tile is a quarter of the row, and a label like "My
+            // Subscription" has no single-line reading of itself that fits.
             Text(
               label,
-              maxLines: 1,
+              maxLines: 2,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
-              style: ClientTypography.labelSmall(
-                context,
-              ).copyWith(fontWeight: FontWeight.w700, fontSize: 11),
+              style: ClientTypography.labelSmall(context).copyWith(
+                fontWeight: FontWeight.w700,
+                fontSize: 12,
+                height: 1.15,
+              ),
             ),
           ],
         ),
