@@ -1,6 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+/// The captain app's type scale.
+///
+/// Tajawal is the imported design's typeface: it carries a real 800/900 and its
+/// Arabic counters stay open at the 11–13px the dense rows on these screens run
+/// at, which is what the scale below is actually built out of. Titles sit at
+/// w800 rather than w700 to match — the design leans on weight, not size, to
+/// rank a card's heading against its body.
 class CaptainTypography {
   static final Map<bool, TextTheme> _cache = {};
 
@@ -22,7 +29,7 @@ class CaptainTypography {
         ? const Color(0xFF94A3B8)
         : const Color(0xFF64748B);
 
-    final base = GoogleFonts.cairoTextTheme().apply(
+    final base = GoogleFonts.tajawalTextTheme().apply(
       bodyColor: color,
       displayColor: color,
     );
@@ -50,37 +57,37 @@ class CaptainTypography {
       ),
       headlineLarge: base.headlineLarge?.copyWith(
         fontSize: 28,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w800,
         color: color,
         height: 1.3,
       ),
       headlineMedium: base.headlineMedium?.copyWith(
         fontSize: 24,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w800,
         color: color,
         height: 1.3,
       ),
       headlineSmall: base.headlineSmall?.copyWith(
         fontSize: 22,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w800,
         color: color,
         height: 1.3,
       ),
       titleLarge: base.titleLarge?.copyWith(
         fontSize: 20,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w800,
         color: color,
         height: 1.4,
       ),
       titleMedium: base.titleMedium?.copyWith(
         fontSize: 18,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w800,
         color: color,
         height: 1.4,
       ),
       titleSmall: base.titleSmall?.copyWith(
         fontSize: 16,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w800,
         color: color,
         height: 1.4,
       ),
@@ -98,7 +105,7 @@ class CaptainTypography {
       ),
       bodySmall: base.bodySmall?.copyWith(
         fontSize: 13,
-        fontWeight: FontWeight.w500,
+        fontWeight: FontWeight.w600,
         color: color,
         height: 1.5,
       ),

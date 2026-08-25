@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/captain/core/routes/captain_nav.dart';
+import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_bottom_nav.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_dev_mode_sheet.dart';
@@ -24,7 +25,7 @@ class TripHistoryPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
+      backgroundColor: CaptainColors.backgroundFor(context),
       body: BlocBuilder<TripHistoryCubit, TripHistoryState>(
         builder: (context, state) => switch (state) {
           TripHistoryLoading() => const TripHistorySkeleton(),

@@ -6,6 +6,13 @@ import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 
 import '../cubit/passenger_manifest_state.dart';
 
+/// How far boarding has got, in one bar.
+///
+/// This used to be four number tiles — boarded, waiting, absent, expected —
+/// above the bar. The filter chips underneath now carry the same three counts
+/// *and* let the captain act on them, so the tiles were the same figures stated
+/// twice, one copy of which did nothing. What is left is the one thing the
+/// chips cannot say: how close the vehicle is to full.
 class PassengerStatsRow extends StatelessWidget {
   const PassengerStatsRow({super.key, required this.counts});
 
@@ -13,118 +20,72 @@ class PassengerStatsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final done = counts.expected > 0 && counts.boarded >= counts.expected;
+    final tint = done
+        ? CaptainColors.successFor(context)
+        : CaptainColors.primaryInkFor(context);
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsetsDirectional.fromSTEB(
+        CaptainDesignTokens.s16,
+        CaptainDesignTokens.s16,
+        CaptainDesignTokens.s16,
+        CaptainDesignTokens.s4,
+      ),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: CaptainColors.surfaceFor(context),
           borderRadius: CaptainDesignTokens.br16,
-          boxShadow: CaptainDesignTokens.softShadow(context),
+          border: CaptainDesignTokens.hairline(context),
         ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // The three live tallies share one colour on purpose — their icons
-            // and labels say which is which, and a row that recolours itself as
-            // boarding progresses is noise the captain has to re-read.
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _Stat(
-                  icon: Icons.check_circle_rounded,
-                  label: 'صعد',
-                  value: counts.boarded,
+                Expanded(
+                  child: Text(
+                    done ? 'اكتمل صعود الركاب' : 'الركاب الصاعدون',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: CaptainTypography.labelMedium(context).copyWith(
+                      color: done
+                          ? tint
+                          : CaptainColors.textSecondaryFor(context),
+                      letterSpacing: 0,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ),
-                _Stat(
-                  icon: Icons.hourglass_top_rounded,
-                  label: 'بانتظار',
-                  value: counts.pending,
-                ),
-                _Stat(
-                  icon: Icons.person_off_rounded,
-                  label: 'غائب',
-                  value: counts.absent,
-                ),
-                _Stat(
-                  icon: Icons.people_alt_rounded,
-                  label: 'المتوقعون',
-                  value: counts.expected,
-                  muted: true,
+                const SizedBox(width: CaptainDesignTokens.s8),
+                // A tally reads left-to-right in any locale.
+                Directionality(
+                  textDirection: TextDirection.ltr,
+                  child: Text(
+                    '${counts.boarded} / ${counts.expected}',
+                    style: CaptainTypography.labelMedium(context).copyWith(
+                      color: CaptainColors.textPrimaryFor(context),
+                      letterSpacing: 0,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            _BoardingProgress(ratio: counts.boardedRatio),
+            const SizedBox(height: CaptainDesignTokens.s8),
+            ClipRRect(
+              borderRadius: CaptainDesignTokens.brPill,
+              child: LinearProgressIndicator(
+                value: counts.boardedRatio,
+                minHeight: 8,
+                backgroundColor: CaptainColors.surfaceAltFor(context),
+                valueColor: AlwaysStoppedAnimation<Color>(tint),
+              ),
+            ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _BoardingProgress extends StatelessWidget {
-  const _BoardingProgress({required this.ratio});
-
-  final double ratio;
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRRect(
-      borderRadius: CaptainDesignTokens.br8,
-      child: LinearProgressIndicator(
-        value: ratio,
-        minHeight: 6,
-        backgroundColor: CaptainColors.primary.withValues(alpha: 0.1),
-        valueColor: const AlwaysStoppedAnimation<Color>(CaptainColors.primary),
-      ),
-    );
-  }
-}
-
-class _Stat extends StatelessWidget {
-  const _Stat({
-    required this.icon,
-    required this.label,
-    required this.value,
-    this.muted = false,
-  });
-
-  final IconData icon;
-  final String label;
-  final int value;
-  final bool muted;
-
-  @override
-  Widget build(BuildContext context) {
-    final secondary = CaptainColors.textSecondaryFor(context);
-    final accent = muted ? secondary : CaptainColors.primary;
-
-    return Expanded(
-      child: Column(
-        children: [
-          Text(
-            '$value',
-            style: CaptainTypography.titleLarge(
-              context,
-            ).copyWith(color: accent, fontWeight: FontWeight.w900),
-          ),
-          const SizedBox(height: 4),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 12, color: secondary),
-              const SizedBox(width: 4),
-              Flexible(
-                child: Text(
-                  label,
-                  overflow: TextOverflow.ellipsis,
-                  style: CaptainTypography.labelSmall(
-                    context,
-                  ).copyWith(color: secondary, fontWeight: FontWeight.w700),
-                ),
-              ),
-            ],
-          ),
-        ],
       ),
     );
   }

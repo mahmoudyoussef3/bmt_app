@@ -21,21 +21,29 @@ class TripHistoryTimeStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // All three children are flexible so the row divides the width it has
+    // instead of asking for the width the words want. The endpoints are loose —
+    // at an ordinary text size they take only what they need — but each is
+    // capped at a third of the strip, which is what stops an enlarged system
+    // font from pushing "الوصول" off the card.
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        _Endpoint(
-          label: 'المغادرة',
-          time: CaptainFormats.clock(departure),
-          alignment: CrossAxisAlignment.start,
+        Flexible(
+          child: _Endpoint(
+            label: 'المغادرة',
+            time: CaptainFormats.clock(departure),
+            alignment: CrossAxisAlignment.start,
+          ),
         ),
-
         Expanded(child: _Link(duration: duration)),
-        _Endpoint(
-          label: 'الوصول',
-          time: CaptainFormats.clock(arrival),
-          alignment: CrossAxisAlignment.end,
+        Flexible(
+          child: _Endpoint(
+            label: 'الوصول',
+            time: CaptainFormats.clock(arrival),
+            alignment: CrossAxisAlignment.end,
+          ),
         ),
       ],
     );

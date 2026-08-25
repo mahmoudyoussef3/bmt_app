@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 
 import '../theme/captain_colors.dart';
@@ -18,6 +16,15 @@ class CaptainNavTab {
   final IconData activeIcon;
 }
 
+/// The design's tab bar: a flat, full-width band on `--surface`, separated from
+/// the page by a single `--border` hairline.
+///
+/// It used to be a floating blurred pill with a tinted capsule around the
+/// active tab. That spent a rounded card, a shadow and a coloured fill on
+/// navigation — chrome outranking the trip above it — and the capsule made the
+/// active tab jump width as the label changed. Here the active tab is stated
+/// twice and cheaply: the icon and its label turn brand blue and the label goes
+/// to w800. Nothing moves when the tab changes.
 class CaptainBottomNav extends StatelessWidget {
   const CaptainBottomNav({
     super.key,
@@ -26,12 +33,17 @@ class CaptainBottomNav extends StatelessWidget {
     required this.onTabChanged,
   });
 
-  static const double barHeight = 64;
+  static const double barHeight = 62;
 
-  static const double _margin = CaptainDesignTokens.s16;
-
+  /// How much bottom padding a scrolling tab page has to reserve.
+  ///
+  /// The shell runs with `extendBody: true`, so a page that under-reserves
+  /// paints its last card's action underneath the bar. The extra [s16] is the
+  /// breathing room between that last card and the hairline.
   static double reservedSpace(BuildContext context) =>
-      barHeight + _margin * 2 + MediaQuery.viewPaddingOf(context).bottom;
+      barHeight +
+      CaptainDesignTokens.s16 +
+      MediaQuery.viewPaddingOf(context).bottom;
 
   final int currentIndex;
   final List<CaptainNavTab> tabs;
@@ -39,34 +51,28 @@ class CaptainBottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(_margin, 0, _margin, _margin),
-        child: Container(
-          decoration: BoxDecoration(
-            color: CaptainColors.surfaceFor(context),
-            borderRadius: CaptainDesignTokens.br32,
-            boxShadow: CaptainDesignTokens.floatingShadow(context),
-          ),
-          child: ClipRRect(
-            borderRadius: CaptainDesignTokens.br32,
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-              child: SizedBox(
-                height: barHeight,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    for (var i = 0; i < tabs.length; i++)
-                      _NavItem(
-                        tab: tabs[i],
-                        isActive: i == currentIndex,
-                        onTap: () => onTabChanged(i),
-                      ),
-                  ],
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: CaptainColors.surfaceFor(context),
+        border: Border(
+          top: BorderSide(color: CaptainColors.borderFor(context)),
+        ),
+      ),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: barHeight,
+          child: Row(
+            children: [
+              for (var i = 0; i < tabs.length; i++)
+                Expanded(
+                  child: _NavItem(
+                    tab: tabs[i],
+                    isActive: i == currentIndex,
+                    onTap: () => onTabChanged(i),
+                  ),
                 ),
-              ),
-            ),
+            ],
           ),
         ),
       ),
@@ -88,36 +94,30 @@ class _NavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = isActive
-        ? CaptainColors.primary
+        ? CaptainColors.primaryInkFor(context)
         : CaptainColors.textSecondaryFor(context);
 
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOutCubic,
-        padding: const EdgeInsets.symmetric(
-          horizontal: CaptainDesignTokens.s20,
-          vertical: 6,
-        ),
-        decoration: BoxDecoration(
-          color: isActive
-              ? CaptainColors.primary.withValues(alpha: 0.1)
-              : Colors.transparent,
-          borderRadius: CaptainDesignTokens.br24,
-        ),
+    return Semantics(
+      selected: isActive,
+      button: true,
+      child: InkWell(
+        onTap: onTap,
         child: Column(
-          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(isActive ? tab.activeIcon : tab.icon, size: 22, color: color),
-            const SizedBox(height: 2),
-            Text(
-              tab.label,
-              style: CaptainTypography.labelSmall(context).copyWith(
-                color: color,
-                fontWeight: isActive ? FontWeight.w800 : FontWeight.w600,
+            Icon(isActive ? tab.activeIcon : tab.icon, size: 21, color: color),
+            const SizedBox(height: 3),
+            Flexible(
+              child: Text(
+                tab.label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: CaptainTypography.labelSmall(context).copyWith(
+                  color: color,
+                  letterSpacing: 0,
+                  fontWeight: isActive ? FontWeight.w800 : FontWeight.w700,
+                ),
               ),
             ),
           ],

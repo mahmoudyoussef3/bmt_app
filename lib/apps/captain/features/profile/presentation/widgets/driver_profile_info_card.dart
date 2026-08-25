@@ -4,6 +4,7 @@ import 'package:bmt_app/apps/captain/core/widgets/captain_list_group.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_section_label.dart';
 
 import '../../domain/entities/driver_profile.dart';
+import 'driver_profile_rating_pill.dart';
 
 class DriverProfileInfoCard extends StatelessWidget {
   const DriverProfileInfoCard({super.key, required this.profile});
@@ -37,6 +38,17 @@ class DriverProfileInfoCard extends StatelessWidget {
                 label: 'رقم الرخصة',
                 value: profile.licenseNumber!,
                 valueIsIdentifier: true,
+              ),
+            // The rating is how the captain is seen from the other side of the
+            // app, and it is the one line here they did not enter themselves —
+            // it belongs on the screen that is about them.
+            if (profile.hasRating)
+              CaptainListRow(
+                icon: Icons.star_rounded,
+                label: 'التقييم',
+                trailing: DriverProfileRatingPill(
+                  rating: profile.averageRating,
+                ),
               ),
           ],
         ),

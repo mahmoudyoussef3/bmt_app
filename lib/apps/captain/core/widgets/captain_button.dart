@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+
+import '../theme/captain_colors.dart';
 import '../theme/captain_design_tokens.dart';
+import '../theme/captain_typography.dart';
 
 enum CaptainButtonVariant { primary, secondary, danger, outline }
 
@@ -22,6 +25,13 @@ class _Icon extends StatelessWidget {
   }
 }
 
+/// The design's button set.
+///
+/// `primary` is the only variant that fills: the brand gradient plus a tinted
+/// glow beneath it, so on any screen the one thing the captain is meant to
+/// press is unmistakable at a glance and through a windscreen's worth of glare.
+/// Everything else is a hairline outline on the page — a screen with two filled
+/// buttons has no primary action.
 class CaptainButton extends StatelessWidget {
   const CaptainButton({
     super.key,
@@ -48,32 +58,33 @@ class CaptainButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
+    final isDisabled = onPressed == null;
 
-    Color bgColor;
+    Gradient? gradient;
+    Color bgColor = Colors.transparent;
     Color fgColor;
     Color? borderColor;
 
     switch (variant) {
       case CaptainButtonVariant.primary:
-        bgColor = scheme.primary;
-        fgColor = scheme.onPrimary;
+        gradient = CaptainColors.primaryGradient(context);
+        fgColor = CaptainColors.onPrimary;
       case CaptainButtonVariant.secondary:
-        bgColor = scheme.surfaceContainerHighest;
-        fgColor = scheme.onSurface;
+        bgColor = CaptainColors.surfaceAltFor(context);
+        fgColor = CaptainColors.textPrimaryFor(context);
       case CaptainButtonVariant.danger:
-        bgColor = scheme.error;
-        fgColor = scheme.onError;
+        bgColor = CaptainColors.dangerFor(context);
+        fgColor = Colors.white;
       case CaptainButtonVariant.outline:
-        bgColor = Colors.transparent;
-        fgColor = scheme.onSurface;
-        borderColor = scheme.outline;
+        bgColor = CaptainColors.surfaceFor(context);
+        fgColor = CaptainColors.textPrimaryFor(context);
+        borderColor = CaptainColors.borderFor(context);
     }
 
-    if (onPressed == null) {
-      bgColor = scheme.surfaceContainerHighest.withAlpha(120);
-      fgColor = scheme.onSurfaceVariant.withAlpha(120);
+    if (isDisabled) {
+      gradient = null;
+      bgColor = CaptainColors.surfaceAltFor(context);
+      fgColor = CaptainColors.textSecondaryFor(context).withValues(alpha: 0.6);
       borderColor = null;
     }
 
@@ -100,10 +111,9 @@ class CaptainButton extends StatelessWidget {
             fit: BoxFit.scaleDown,
             child: Text(
               label,
-              style: theme.textTheme.titleMedium?.copyWith(
-                color: fgColor,
-                fontWeight: FontWeight.w700,
-              ),
+              style: CaptainTypography.titleSmall(
+                context,
+              ).copyWith(color: fgColor, fontWeight: FontWeight.w800),
               maxLines: 1,
             ),
           ),
@@ -121,18 +131,16 @@ class CaptainButton extends StatelessWidget {
           horizontal: CaptainDesignTokens.s16,
         ),
         decoration: BoxDecoration(
-          color: bgColor,
+          color: gradient == null ? bgColor : null,
+          gradient: gradient,
           borderRadius: CaptainDesignTokens.br16,
           border: borderColor != null ? Border.all(color: borderColor) : null,
-          boxShadow:
-              variant == CaptainButtonVariant.primary && onPressed != null
-              ? [
-                  BoxShadow(
-                    color: scheme.primary.withAlpha(50),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ]
+          boxShadow: variant == CaptainButtonVariant.primary && !isDisabled
+              ? CaptainDesignTokens.glow(
+                  context,
+                  CaptainColors.primary,
+                  alpha: 0.45,
+                )
               : null,
         ),
         child: buttonContent,

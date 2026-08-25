@@ -5,6 +5,11 @@ import '../theme/captain_design_tokens.dart';
 import '../theme/captain_typography.dart';
 import '../utils/captain_text_direction.dart';
 
+/// A grouped list in the design's idiom: one `--surface` block behind a
+/// hairline `--border`, rows split by that same hairline edge to edge.
+///
+/// The heading belongs *outside* the group (see [CaptainSectionLabel]) — a
+/// title as the group's first row makes it look like another tappable entry.
 class CaptainListGroup extends StatelessWidget {
   const CaptainListGroup({super.key, required this.children});
 
@@ -15,8 +20,8 @@ class CaptainListGroup extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: CaptainColors.surfaceFor(context),
-        borderRadius: CaptainDesignTokens.br20,
-        boxShadow: CaptainDesignTokens.softShadow(context),
+        borderRadius: CaptainDesignTokens.br16,
+        border: CaptainDesignTokens.hairline(context),
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -33,7 +38,7 @@ class CaptainListGroup extends StatelessWidget {
 }
 
 class CaptainRowDivider extends StatelessWidget {
-  const CaptainRowDivider({super.key, this.indent = 52});
+  const CaptainRowDivider({super.key, this.indent = 0});
 
   final double indent;
 
@@ -43,7 +48,7 @@ class CaptainRowDivider extends StatelessWidget {
       height: 1,
       thickness: 1,
       indent: indent,
-      color: CaptainColors.dividerFor(context).withValues(alpha: 0.7),
+      color: CaptainColors.borderFor(context),
     );
   }
 }

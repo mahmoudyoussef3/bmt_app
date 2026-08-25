@@ -48,7 +48,7 @@ class _CompletionHero extends StatelessWidget {
           begin: AlignmentDirectional.topStart,
           end: AlignmentDirectional.bottomEnd,
         ),
-        borderRadius: CaptainDesignTokens.br24,
+        borderRadius: CaptainDesignTokens.br16,
         boxShadow: [
           BoxShadow(
             color: CaptainColors.primary.withValues(alpha: 0.3),
@@ -58,7 +58,7 @@ class _CompletionHero extends StatelessWidget {
         ],
       ),
       child: ClipRRect(
-        borderRadius: CaptainDesignTokens.br24,
+        borderRadius: CaptainDesignTokens.br16,
         child: Stack(
           children: [
             const PositionedDirectional(top: -48, end: -36, child: _Glow(180)),
@@ -274,9 +274,8 @@ class _NextAssignmentCard extends StatelessWidget {
       padding: const EdgeInsets.all(CaptainDesignTokens.s20),
       decoration: BoxDecoration(
         color: CaptainColors.surfaceFor(context),
-        borderRadius: CaptainDesignTokens.br24,
+        borderRadius: CaptainDesignTokens.br16,
         border: Border.all(color: CaptainColors.dividerFor(context)),
-        boxShadow: CaptainDesignTokens.softShadow(context),
       ),
       child: Column(
         children: [

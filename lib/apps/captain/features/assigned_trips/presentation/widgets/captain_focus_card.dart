@@ -32,13 +32,10 @@ class CaptainFocusCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: CaptainColors.surfaceFor(context),
             borderRadius: CaptainDesignTokens.br24,
-            boxShadow: [
-              BoxShadow(
-                color: accent.withValues(alpha: 0.16),
-                blurRadius: 24,
-                offset: const Offset(0, 10),
-              ),
-            ],
+            border: CaptainDesignTokens.hairline(context),
+            // The only shadow on the home screen, and it is brand-tinted: this
+            // is the trip the captain is on, lifted off the day's other cards.
+            boxShadow: CaptainDesignTokens.glow(context, accent, alpha: 0.25),
           ),
           clipBehavior: Clip.antiAlias,
           child: Column(
@@ -48,10 +45,12 @@ class CaptainFocusCard extends StatelessWidget {
                 isRunning: stage.isLive,
                 label: CaptainTripStageLabels.eyebrow(stage),
                 accent: accent,
-                trailing: TripStatusBadge(status: trip.status),
+                trailing: FocusCrownNote(
+                  text: assignedTripStatusLabel(trip.status),
+                ),
               ),
               Padding(
-                padding: const EdgeInsets.all(CaptainDesignTokens.s20),
+                padding: const EdgeInsets.all(18),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -65,7 +64,7 @@ class CaptainFocusCard extends StatelessWidget {
                         height: 1.3,
                       ),
                     ),
-                    const SizedBox(height: CaptainDesignTokens.s12),
+                    const SizedBox(height: 10),
                     Row(
                       children: [
                         FocusFact(

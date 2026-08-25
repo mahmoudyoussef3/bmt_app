@@ -4,6 +4,12 @@ import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 
+/// The captain's rating, in the design's neutral pill: `--surface2` behind it,
+/// and the only colour is the star.
+///
+/// A brand-tinted pill with a brand border made the rating look like a control
+/// to be tapped. It is a fact about the captain, so it is drawn the way every
+/// other fact on this screen is.
 class DriverProfileRatingPill extends StatelessWidget {
   const DriverProfileRatingPill({super.key, required this.rating});
 
@@ -14,14 +20,13 @@ class DriverProfileRatingPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsetsDirectional.fromSTEB(
         CaptainDesignTokens.s8,
-        CaptainDesignTokens.s4,
+        5,
         CaptainDesignTokens.s12,
-        CaptainDesignTokens.s4,
+        5,
       ),
       decoration: BoxDecoration(
-        color: CaptainColors.primary.withAlpha(20),
+        color: CaptainColors.surfaceAltFor(context),
         borderRadius: CaptainDesignTokens.brPill,
-        border: Border.all(color: CaptainColors.primary.withAlpha(40)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -33,9 +38,11 @@ class DriverProfileRatingPill extends StatelessWidget {
               '${rating.toStringAsFixed(1)} · ${_ratingLabel(rating)}',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: CaptainTypography.labelMedium(
-                context,
-              ).copyWith(color: CaptainColors.textPrimaryFor(context)),
+              style: CaptainTypography.labelMedium(context).copyWith(
+                color: CaptainColors.textPrimaryFor(context),
+                letterSpacing: 0,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
         ],

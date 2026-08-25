@@ -7,6 +7,13 @@ import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 import '../../domain/entities/passenger.dart';
 import 'passenger_status_presentation.dart';
 
+/// A passenger's boarding status, as the design draws it: one neutral
+/// `--surface2` pill for every state, with the word inside carrying the colour.
+///
+/// Filling the pill itself would put a solid green block against a solid red
+/// block in a scrolling list — the colours would fight each other and the names
+/// beside them. Keeping the fill constant means the *text* is the signal, which
+/// is also what survives being read at a glance in daylight.
 class PassengerStatusBadge extends StatelessWidget {
   const PassengerStatusBadge({super.key, required this.status});
 
@@ -14,50 +21,13 @@ class PassengerStatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final emphasis = status.emphasis;
-    // A cancelled booking is a dead row, so it drops to the same muted tone the
-    // rest of the card uses for secondary text. Every live status keeps the one
-    // primary blue; the fill weight and the icon carry the difference.
-    final accent = emphasis == PassengerStatusEmphasis.muted
-        ? CaptainColors.textSecondaryFor(context)
-        : status.color;
-
-    final (
-      Color background,
-      Color border,
-      Color foreground,
-    ) = switch (emphasis) {
-      PassengerStatusEmphasis.solid => (
-        accent,
-        accent,
-        CaptainColors.onPrimary,
-      ),
-      PassengerStatusEmphasis.tinted => (
-        accent.withAlpha(28),
-        accent.withAlpha(60),
-        accent,
-      ),
-      PassengerStatusEmphasis.outlined => (
-        Colors.transparent,
-        accent.withAlpha(140),
-        accent,
-      ),
-      PassengerStatusEmphasis.muted => (
-        Colors.transparent,
-        accent.withAlpha(80),
-        accent,
-      ),
-    };
+    final foreground = status.colorFor(context);
 
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: CaptainDesignTokens.s8,
-        vertical: CaptainDesignTokens.s4,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
       decoration: BoxDecoration(
-        color: background,
-        borderRadius: CaptainDesignTokens.br8,
-        border: Border.all(color: border),
+        color: CaptainColors.surfaceAltFor(context),
+        borderRadius: CaptainDesignTokens.brPill,
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -66,9 +36,11 @@ class PassengerStatusBadge extends StatelessWidget {
           const SizedBox(width: CaptainDesignTokens.s4),
           Text(
             status.label,
-            style: CaptainTypography.labelSmall(
-              context,
-            ).copyWith(color: foreground, fontWeight: FontWeight.w800),
+            style: CaptainTypography.labelSmall(context).copyWith(
+              color: foreground,
+              letterSpacing: 0,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ],
       ),

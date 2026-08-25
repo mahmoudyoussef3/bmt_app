@@ -4,6 +4,10 @@ import '../theme/captain_colors.dart';
 import '../theme/captain_design_tokens.dart';
 import '../theme/captain_typography.dart';
 
+/// A section heading, sized to sit *outside* the block it names.
+///
+/// It is deliberately smaller and quieter than the content under it: it is a
+/// caption for a group, not a title competing with the rows inside.
 class CaptainSectionLabel extends StatelessWidget {
   const CaptainSectionLabel(this.text, {super.key, this.trailing});
 
@@ -30,7 +34,7 @@ class CaptainSectionLabel extends StatelessWidget {
               style: CaptainTypography.labelMedium(context).copyWith(
                 color: CaptainColors.textSecondaryFor(context),
                 fontWeight: FontWeight.w800,
-                letterSpacing: 0.4,
+                letterSpacing: 0,
               ),
             ),
           ),

@@ -37,8 +37,8 @@ class AssignedTripCard extends StatelessWidget {
         return Container(
           decoration: BoxDecoration(
             color: CaptainColors.surfaceFor(context),
-            borderRadius: CaptainDesignTokens.br20,
-            boxShadow: CaptainDesignTokens.softShadow(context),
+            borderRadius: CaptainDesignTokens.br16,
+            border: CaptainDesignTokens.hairline(context),
           ),
           clipBehavior: Clip.antiAlias,
           child: Opacity(
@@ -213,7 +213,10 @@ class _Summary extends StatelessWidget {
               ),
             ),
             const SizedBox(width: CaptainDesignTokens.s8),
-            TripStatusBadge(status: trip.status),
+            // Flexible, not fixed: at a large system font the status word is
+            // wide enough to push the route off the card, and a truncated
+            // status is a smaller loss than a truncated destination.
+            Flexible(child: TripStatusBadge(status: trip.status)),
           ],
         ),
         const SizedBox(height: 6),
@@ -259,7 +262,7 @@ class _BoardingBar extends StatelessWidget {
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 6,
-              backgroundColor: accent.withValues(alpha: 0.14),
+              backgroundColor: CaptainColors.surfaceAltFor(context),
               valueColor: AlwaysStoppedAnimation<Color>(accent),
             ),
           ),
@@ -331,7 +334,6 @@ class _ManifestIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
 
     return Tooltip(
       message: 'كشف الركاب',
@@ -348,13 +350,14 @@ class _ManifestIconButton extends StatelessWidget {
               borderRadius: CaptainDesignTokens.br16,
               child: DecoratedBox(
                 decoration: BoxDecoration(
+                  color: CaptainColors.surfaceFor(context),
                   borderRadius: CaptainDesignTokens.br16,
-                  border: Border.all(color: scheme.outline),
+                  border: CaptainDesignTokens.hairline(context),
                 ),
                 child: Icon(
                   Icons.group_rounded,
                   size: 20,
-                  color: scheme.onSurface,
+                  color: CaptainColors.textPrimaryFor(context),
                 ),
               ),
             ),

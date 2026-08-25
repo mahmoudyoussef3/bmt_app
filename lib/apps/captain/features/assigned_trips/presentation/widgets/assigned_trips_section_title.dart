@@ -34,14 +34,18 @@ class _Count extends StatelessWidget {
         vertical: 2,
       ),
       decoration: BoxDecoration(
-        color: CaptainColors.primary.withValues(alpha: 0.10),
+        color: CaptainColors.surfaceAltFor(context),
         borderRadius: CaptainDesignTokens.brPill,
       ),
       child: Text(
         '$count',
         style: CaptainTypography.labelSmall(
           context,
-        ).copyWith(color: CaptainColors.primary, fontWeight: FontWeight.w900),
+        ).copyWith(
+          color: CaptainColors.textSecondaryFor(context),
+          letterSpacing: 0,
+          fontWeight: FontWeight.w800,
+        ),
       ),
     );
   }

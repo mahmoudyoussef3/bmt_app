@@ -20,8 +20,8 @@ class VerificationCard extends StatelessWidget {
         const CaptainSectionLabel('التحقق والتوثيق'),
         CaptainListGroup(
           children: [
-            _licenseRow(profile),
-            _accountRow(profile.accountStatus),
+            _licenseRow(context, profile),
+            _accountRow(context, profile.accountStatus),
             if (profile.hireDate != null)
               CaptainListRow(
                 icon: Icons.event_available_rounded,
@@ -34,14 +34,14 @@ class VerificationCard extends StatelessWidget {
     );
   }
 
-  CaptainListRow _licenseRow(DriverProfile profile) {
+  CaptainListRow _licenseRow(BuildContext context, DriverProfile profile) {
     final expiry = profile.licenseExpiryDate;
     if (expiry == null) {
-      return const CaptainListRow(
+      return CaptainListRow(
         icon: Icons.badge_outlined,
         label: 'رخصة القيادة',
         detail: 'غير مسجّلة',
-        accentColor: CaptainColors.offline,
+        accentColor: CaptainColors.textSecondaryFor(context),
       );
     }
 
@@ -51,7 +51,7 @@ class VerificationCard extends StatelessWidget {
         icon: Icons.error_rounded,
         label: 'رخصة القيادة منتهية',
         detail: 'انتهت في $dateLabel',
-        accentColor: CaptainColors.error,
+        accentColor: CaptainColors.dangerFor(context),
       );
     }
     if (profile.isLicenseExpiringSoon) {
@@ -59,36 +59,39 @@ class VerificationCard extends StatelessWidget {
         icon: Icons.warning_amber_rounded,
         label: 'رخصة القيادة تنتهي قريباً',
         detail: 'تنتهي في $dateLabel — يُنصح بالتجديد',
-        accentColor: CaptainColors.warning,
+        accentColor: CaptainColors.warningFor(context),
       );
     }
     return CaptainListRow(
       icon: Icons.check_circle_rounded,
       label: 'رخصة القيادة سارية',
       detail: 'حتى $dateLabel',
-      accentColor: CaptainColors.success,
+      accentColor: CaptainColors.successFor(context),
     );
   }
 
-  CaptainListRow _accountRow(DriverAccountStatus status) {
+  CaptainListRow _accountRow(
+    BuildContext context,
+    DriverAccountStatus status,
+  ) {
     final (icon, label, detail, color) = switch (status) {
       DriverAccountStatus.active => (
         Icons.check_circle_rounded,
         'الحساب نشط',
         'يمكنك استلام الرحلات',
-        CaptainColors.success,
+        CaptainColors.successFor(context),
       ),
       DriverAccountStatus.suspended => (
         Icons.pause_circle_rounded,
         'الحساب موقوف مؤقتاً',
         'تواصل مع الإدارة',
-        CaptainColors.warning,
+        CaptainColors.warningFor(context),
       ),
       DriverAccountStatus.archived => (
         Icons.archive_rounded,
         'الحساب مؤرشف',
         'تواصل مع الإدارة',
-        CaptainColors.error,
+        CaptainColors.dangerFor(context),
       ),
     };
     return CaptainListRow(

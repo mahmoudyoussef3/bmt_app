@@ -9,33 +9,18 @@ class TripHistoryPalette {
 
   static const Color accentDeep = CaptainColors.primaryDeep;
 
-  static const Color attention = CaptainColors.warning;
+  /// A trip that came up short is still said in brand blue, not amber: history
+  /// is a finished record, so a shortfall is something to read — not an alarm
+  /// the captain can still act on. The words carry the fact; the colour only
+  /// separates it from the muted metadata around it.
+  static const Color attention = accent;
 
   static Color neutral(BuildContext context) =>
       CaptainColors.textSecondaryFor(context);
-
-  static Color wash(BuildContext context) {
-    return accent.withValues(
-      alpha: Theme.of(context).brightness == Brightness.dark ? 0.16 : 0.05,
-    );
-  }
-
-  static Color boarding(double rate) => rate >= 1 ? accent : attention;
 
   static const LinearGradient markGradient = LinearGradient(
     colors: [accent, accentDeep],
     begin: AlignmentDirectional.topStart,
     end: AlignmentDirectional.bottomEnd,
   );
-
-  static const LinearGradient shortfallGradient = LinearGradient(
-    colors: [attention, accentDeep],
-    begin: AlignmentDirectional.topStart,
-    end: AlignmentDirectional.bottomEnd,
-  );
-
-  static LinearGradient mark({required int boarded, required int total}) {
-    if (total == 0 || boarded >= total) return markGradient;
-    return shortfallGradient;
-  }
 }

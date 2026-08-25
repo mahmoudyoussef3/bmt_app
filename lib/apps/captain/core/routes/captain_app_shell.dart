@@ -20,8 +20,6 @@ class CaptainAppShell extends StatefulWidget {
 
 class _CaptainAppShellState extends State<CaptainAppShell> {
   static const _todayTab = 0;
-  static const _historyTab = 1;
-  static const _profileTab = 2;
 
   int _currentIndex = _todayTab;
 
@@ -67,10 +65,7 @@ class _CaptainAppShellState extends State<CaptainAppShell> {
         body: IndexedStack(
           index: _currentIndex,
           children: [
-            AssignedTripsPage(
-              onOpenHistory: () => _openTab(_historyTab),
-              onOpenProfile: () => _openTab(_profileTab),
-            ),
+            const AssignedTripsPage(),
             const TripHistoryPage(),
             const DriverProfilePage(),
           ],

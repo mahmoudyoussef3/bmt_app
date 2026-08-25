@@ -30,9 +30,8 @@ class TripGpsStatusCard extends StatelessWidget {
       padding: const EdgeInsets.all(CaptainDesignTokens.s20),
       decoration: BoxDecoration(
         color: CaptainColors.surfaceFor(context),
-        borderRadius: CaptainDesignTokens.br24,
+        borderRadius: CaptainDesignTokens.br16,
         border: Border.all(color: CaptainColors.dividerFor(context)),
-        boxShadow: CaptainDesignTokens.softShadow(context),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

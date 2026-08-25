@@ -6,6 +6,19 @@ import 'package:bmt_app/apps/captain/core/widgets/captain_status_chip.dart';
 
 import '../../domain/entities/assigned_trip.dart';
 
+/// The status word a trip carries wherever it appears.
+///
+/// Lives apart from [TripStatusBadge] because the focus card's gradient crown
+/// states the same status as plain white text rather than as a chip — one
+/// wording, two presentations.
+String assignedTripStatusLabel(AssignedTripStatus status) => switch (status) {
+  AssignedTripStatus.scheduled => 'لم تُفتح',
+  AssignedTripStatus.openForBooking => 'الحجز مفتوح',
+  AssignedTripStatus.boarding => 'صعود',
+  AssignedTripStatus.inProgress => 'جارية',
+  AssignedTripStatus.completed => 'مكتملة',
+};
+
 class TripStatusBadge extends StatelessWidget {
   const TripStatusBadge({super.key, required this.status});
 

@@ -28,8 +28,8 @@ class StationTimeline extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: CaptainColors.surfaceFor(context),
-        borderRadius: CaptainDesignTokens.br20,
-        boxShadow: CaptainDesignTokens.softShadow(context),
+        borderRadius: CaptainDesignTokens.br16,
+        border: CaptainDesignTokens.hairline(context),
       ),
       padding: const EdgeInsets.symmetric(
         horizontal: CaptainDesignTokens.s16,
@@ -67,7 +67,7 @@ class _StationRow extends StatelessWidget {
     final done = station.hasDeparted;
 
     final color = done || isCurrent
-        ? CaptainColors.primary
+        ? CaptainColors.primaryInkFor(context)
         : CaptainColors.textSecondaryFor(context);
 
     return IntrinsicHeight(
@@ -153,7 +153,7 @@ class _BoardingChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final complete = station.boardingResolved;
     final color = complete
-        ? CaptainColors.primary
+        ? CaptainColors.successFor(context)
         : CaptainColors.textSecondaryFor(context);
 
     return Container(
@@ -162,14 +162,20 @@ class _BoardingChip extends StatelessWidget {
         vertical: CaptainDesignTokens.s4,
       ),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.12),
+        color: CaptainColors.surfaceAltFor(context),
         borderRadius: CaptainDesignTokens.brPill,
       ),
-      child: Text(
-        '${station.boardedCount}/${station.expectedBoardings}',
-        style: CaptainTypography.labelSmall(
-          context,
-        ).copyWith(color: color, fontWeight: FontWeight.w900),
+      // A tally reads left-to-right whatever surrounds it.
+      child: Directionality(
+        textDirection: TextDirection.ltr,
+        child: Text(
+          '${station.boardedCount}/${station.expectedBoardings}',
+          style: CaptainTypography.labelSmall(context).copyWith(
+            color: color,
+            letterSpacing: 0,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
       ),
     );
   }
@@ -190,7 +196,7 @@ class _Spine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final line = CaptainColors.dividerFor(context);
+    final line = CaptainColors.borderFor(context);
 
     return SizedBox(
       width: 20,

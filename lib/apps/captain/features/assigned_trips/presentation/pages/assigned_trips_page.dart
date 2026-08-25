@@ -8,10 +8,9 @@ import 'package:bmt_app/core/widgets/widgets.dart';
 import 'package:bmt_app/apps/captain/core/routes/captain_nav.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
-import 'package:bmt_app/apps/captain/core/widgets/captain_awaiting_trips_view.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_bottom_nav.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_dev_mode_sheet.dart';
-import 'package:bmt_app/apps/captain/core/widgets/captain_list_group.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_empty_state.dart';
 
 import '../../domain/entities/assigned_trip.dart';
 import '../../domain/entities/captain_day_summary.dart';
@@ -27,28 +26,17 @@ import '../widgets/captain_focus_card.dart';
 import '../widgets/new_assignments_banner.dart';
 
 class AssignedTripsPage extends StatelessWidget {
-  const AssignedTripsPage({
-    super.key,
-    required this.onOpenHistory,
-    required this.onOpenProfile,
-  });
-
-  final VoidCallback onOpenHistory;
-  final VoidCallback onOpenProfile;
+  const AssignedTripsPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.surfaceContainerLowest,
+      backgroundColor: CaptainColors.backgroundFor(context),
       body: BlocBuilder<AssignedTripsCubit, AssignedTripsState>(
         builder: (context, state) => switch (state) {
           AssignedTripsLoading() => const AssignedTripsSkeleton(),
           AssignedTripsError(:final message) => _ErrorBody(message: message),
-          AssignedTripsLoaded() => _Content(
-            state: state,
-            onOpenHistory: onOpenHistory,
-            onOpenProfile: onOpenProfile,
-          ),
+          AssignedTripsLoaded() => _Content(state: state),
         },
       ),
     );
@@ -74,44 +62,9 @@ class _ErrorBody extends StatelessWidget {
 }
 
 class _Content extends StatelessWidget {
-  const _Content({
-    required this.state,
-    required this.onOpenHistory,
-    required this.onOpenProfile,
-  });
+  const _Content({required this.state});
 
   final AssignedTripsLoaded state;
-  final VoidCallback onOpenHistory;
-  final VoidCallback onOpenProfile;
-
-  List<Widget> _idleShortcuts(BuildContext context) {
-    return [
-      CaptainListRow(
-        icon: Icons.history_rounded,
-        label: 'سجل رحلاتك',
-        detail: 'الرحلات التي أنهيتها سابقاً',
-        iconColor: CaptainColors.primary,
-        showChevron: true,
-        onTap: onOpenHistory,
-      ),
-      CaptainListRow(
-        icon: Icons.notifications_none_rounded,
-        label: 'الإشعارات',
-        detail: 'آخر ما وصلك من العمليات',
-        iconColor: CaptainColors.primary,
-        showChevron: true,
-        onTap: () => context.openNotifications(),
-      ),
-      CaptainListRow(
-        icon: Icons.badge_outlined,
-        label: 'ملفي وحالة التوثيق',
-        detail: 'بياناتك والمركبة المخصصة لك',
-        iconColor: CaptainColors.primary,
-        showChevron: true,
-        onTap: onOpenProfile,
-      ),
-    ];
-  }
 
   Future<void> _refresh(BuildContext context) async {
     final succeeded = await context.read<AssignedTripsCubit>().refresh();
@@ -153,15 +106,14 @@ class _Content extends StatelessWidget {
               CaptainBottomNav.reservedSpace(context),
             ),
             sliver: summary.isEmpty
-                ? SliverToBoxAdapter(
-                    child: CaptainAwaitingTripsView(
-                      onRefresh: () => _refresh(context),
-                      isRefreshing: state.isRefreshing,
-                      title: 'لا توجد رحلات اليوم',
-                      message:
-                          'فور إسناد رحلة من العمليات ستظهر هنا تلقائياً — '
-                          'لا حاجة لإعادة تسجيل الدخول.',
-                      shortcuts: _idleShortcuts(context),
+                ? const SliverFillRemaining(
+                    hasScrollBody: false,
+                    child: Center(
+                      child: CaptainEmptyState(
+                        title: 'لا توجد رحلات مسندة',
+                        subtitle: 'ستظهر رحلاتك هنا فور إسنادها من العمليات.',
+                        icon: Icons.route_rounded,
+                      ),
                     ),
                   )
                 : _DaySlivers(

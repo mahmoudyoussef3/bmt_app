@@ -14,8 +14,6 @@ Future<void> showPassengerStatusSheet(
   BuildContext context,
   Passenger passenger,
 ) async {
-  final cubit = context.read<PassengerManifestCubit>();
-
   final status = await showModalBottomSheet<PassengerBoardingStatus>(
     context: context,
     backgroundColor: Colors.transparent,
@@ -26,10 +24,24 @@ Future<void> showPassengerStatusSheet(
   );
   if (status == null || !context.mounted) return;
 
-  // Boarding and un-boarding are the captain's own observation. Marking someone
-  // absent takes a paying rider off the vehicle's obligation list, so it asks
-  // for the same reason the station flow asks for — one no-show flow in the app,
-  // matching the one no-show path in the database.
+  await applyPassengerStatus(context, passenger, status);
+}
+
+/// Applies one boarding status to one passenger, from wherever the captain
+/// asked for it — the status sheet, or the card's inline buttons.
+///
+/// Boarding and un-boarding are the captain's own observation. Marking someone
+/// absent takes a paying rider off the vehicle's obligation list, so it asks
+/// for the same reason the station flow asks for — one no-show flow in the app,
+/// matching the one no-show path in the database. The inline buttons route
+/// through here so a shortcut on the card cannot skip that prompt.
+Future<void> applyPassengerStatus(
+  BuildContext context,
+  Passenger passenger,
+  PassengerBoardingStatus status,
+) async {
+  final cubit = context.read<PassengerManifestCubit>();
+
   if (status == PassengerBoardingStatus.absent) {
     final resolution = await showNoShowReasonSheet(
       context,
@@ -141,7 +153,7 @@ class _StatusOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = status.color;
+    final color = status.colorFor(context);
 
     return Padding(
       padding: const EdgeInsetsDirectional.only(

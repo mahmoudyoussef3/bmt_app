@@ -6,6 +6,12 @@ import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 
 import '../../domain/entities/captain_day_summary.dart';
 
+/// The day at a glance: three tiles, each a number over the word for it.
+///
+/// The earlier strip packed all three into one bordered box as icon-plus-inline
+/// text, which made them read as a sentence to be parsed rather than three
+/// figures to be scanned. Separate tiles with the number at the top of the type
+/// scale is the design's shape, and it survives a glance at arm's length.
 class AssignedTripsStatsStrip extends StatelessWidget {
   const AssignedTripsStatsStrip({super.key, required this.summary});
 
@@ -13,94 +19,92 @@ class AssignedTripsStatsStrip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(CaptainDesignTokens.s16),
-      decoration: BoxDecoration(
-        color: CaptainColors.surfaceFor(context).withValues(alpha: 0.4),
-        borderRadius: CaptainDesignTokens.br16,
-        border: Border.all(color: CaptainColors.dividerFor(context)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // IntrinsicHeight, not `CrossAxisAlignment.stretch`: the strip is laid
+        // out in an unbounded-height list, where stretch asks each tile to be
+        // infinitely tall. This keeps the three tiles level when one label
+        // wraps and the others do not.
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _Stat(
-                icon: Icons.route_rounded,
-                value: '${summary.totalTrips}',
-                label: 'رحلات',
-              ),
-              _Stat(
-                icon: Icons.bolt_rounded,
-                value: '${summary.activeTrips}',
+              _Tile(value: summary.totalTrips, label: 'رحلات اليوم'),
+              const SizedBox(width: 10),
+              _Tile(value: summary.passengers, label: 'ركاب'),
+              const SizedBox(width: 10),
+              _Tile(
+                value: summary.activeTrips,
                 label: 'نشطة',
-                color: summary.activeTrips > 0 ? CaptainColors.warning : null,
-              ),
-              _Stat(
-                icon: Icons.people_alt_rounded,
-                value: '${summary.passengers}',
-                label: 'ركاب',
+                highlight: summary.activeTrips > 0,
               ),
             ],
           ),
-          if (summary.passengers > 0) ...[
-            const SizedBox(height: CaptainDesignTokens.s12),
-            _BoardingLine(summary: summary),
-          ],
+        ),
+        if (summary.passengers > 0) ...[
+          const SizedBox(height: CaptainDesignTokens.s12),
+          _BoardingLine(summary: summary),
         ],
-      ),
+      ],
     );
   }
 }
 
-class _Stat extends StatelessWidget {
-  const _Stat({
-    required this.icon,
+class _Tile extends StatelessWidget {
+  const _Tile({
     required this.value,
     required this.label,
-    this.color,
+    this.highlight = false,
   });
 
-  final IconData icon;
-  final String value;
+  final int value;
   final String label;
 
-  final Color? color;
+  /// A live trip is the one figure here that can need acting on, so it is the
+  /// only one allowed to take colour.
+  final bool highlight;
 
   @override
   Widget build(BuildContext context) {
-    final tint = color ?? CaptainColors.textSecondaryFor(context);
-
     return Expanded(
-      child: Row(
-        children: [
-          Icon(icon, size: 16, color: tint),
-          const SizedBox(width: 6),
-          Flexible(
-            child: RichText(
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          vertical: CaptainDesignTokens.s12,
+          horizontal: CaptainDesignTokens.s8,
+        ),
+        decoration: BoxDecoration(
+          color: CaptainColors.surfaceFor(context),
+          borderRadius: CaptainDesignTokens.br16,
+          border: CaptainDesignTokens.hairline(context),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '$value',
               maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              text: TextSpan(
-                children: [
-                  TextSpan(
-                    text: value,
-                    style: CaptainTypography.bodyMedium(context).copyWith(
-                      color: color ?? CaptainColors.textPrimaryFor(context),
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                  TextSpan(
-                    text: ' $label',
-                    style: CaptainTypography.labelMedium(context).copyWith(
-                      color: CaptainColors.textSecondaryFor(context),
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ],
+              style: CaptainTypography.titleLarge(context).copyWith(
+                fontWeight: FontWeight.w800,
+                color: highlight
+                    ? CaptainColors.warningFor(context)
+                    : CaptainColors.textPrimaryFor(context),
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 2),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: CaptainTypography.labelSmall(context).copyWith(
+                color: CaptainColors.textSecondaryFor(context),
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -114,30 +118,44 @@ class _BoardingLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final done = summary.boardingProgress >= 1;
-    final tint = done ? CaptainColors.success : CaptainColors.primary;
+    final tint = done
+        ? CaptainColors.successFor(context)
+        : CaptainColors.primaryInkFor(context);
 
-    return Row(
-      children: [
-        Expanded(
-          child: ClipRRect(
-            borderRadius: CaptainDesignTokens.brPill,
-            child: LinearProgressIndicator(
-              value: summary.boardingProgress,
-              minHeight: 4,
-              backgroundColor: tint.withValues(alpha: 0.14),
-              valueColor: AlwaysStoppedAnimation<Color>(tint),
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 14,
+        vertical: CaptainDesignTokens.s12,
+      ),
+      decoration: BoxDecoration(
+        color: CaptainColors.surfaceFor(context),
+        borderRadius: CaptainDesignTokens.br16,
+        border: CaptainDesignTokens.hairline(context),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: ClipRRect(
+              borderRadius: CaptainDesignTokens.brPill,
+              child: LinearProgressIndicator(
+                value: summary.boardingProgress,
+                minHeight: 6,
+                backgroundColor: CaptainColors.surfaceAltFor(context),
+                valueColor: AlwaysStoppedAnimation<Color>(tint),
+              ),
             ),
           ),
-        ),
-        const SizedBox(width: CaptainDesignTokens.s12),
-        Text(
-          'صعد ${summary.boarded} من ${summary.passengers}',
-          style: CaptainTypography.labelSmall(context).copyWith(
-            color: CaptainColors.textSecondaryFor(context),
-            fontWeight: FontWeight.w700,
+          const SizedBox(width: CaptainDesignTokens.s12),
+          Text(
+            'صعد ${summary.boarded} من ${summary.passengers}',
+            style: CaptainTypography.labelSmall(context).copyWith(
+              color: CaptainColors.textSecondaryFor(context),
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

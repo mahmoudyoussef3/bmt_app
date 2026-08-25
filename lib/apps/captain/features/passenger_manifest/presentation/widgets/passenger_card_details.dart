@@ -1,10 +1,19 @@
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
+import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
+import 'package:bmt_app/apps/captain/core/utils/captain_text_direction.dart';
 
 import '../../domain/entities/passenger.dart';
-import 'passenger_status_badge.dart';
 
+/// The name and the two facts under it.
+///
+/// The design collapses the old four-line block — seat, pickup, destination,
+/// time, each on its own row with its own glyph — into the name plus one
+/// supporting line. Seat has moved into the disc beside it, and where the
+/// passenger is going matters far less to the captain at the door than where
+/// they are getting on, which is the thing being matched against the person
+/// standing in front of them.
 class PassengerCardDetails extends StatelessWidget {
   const PassengerCardDetails({super.key, required this.passenger});
 
@@ -12,46 +21,37 @@ class PassengerCardDetails extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final muted = CaptainColors.textSecondaryFor(context);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Flexible(
-              child: Text(
-                passenger.name,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w800),
-              ),
-            ),
-            const SizedBox(width: 8),
-            PassengerStatusBadge(status: passenger.status),
-          ],
-        ),
-        const SizedBox(height: 6),
-        Wrap(
-          crossAxisAlignment: WrapCrossAlignment.center,
-          spacing: 6,
-          children: [
-            _MutedText('مقعد ${passenger.seat}'),
-            const _MutedText('•'),
-            _MutedText(passenger.pickupPoint),
-          ],
-        ),
-        if (passenger.destination.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          _IconLine(
-            icon: Icons.arrow_forward_rounded,
-            text: passenger.destination,
+        Text(
+          passenger.name,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: CaptainTypography.bodyMedium(context).copyWith(
+            fontWeight: FontWeight.w700,
+            color: CaptainColors.textPrimaryFor(context),
           ),
-        ],
-        if (passenger.pickupTime.isNotEmpty) ...[
-          const SizedBox(height: 8),
-          _IconLine(
-            icon: Icons.schedule_rounded,
-            text: passenger.pickupTime,
-            color: CaptainColors.primary,
+        ),
+        const SizedBox(height: 3),
+        _SupportingLine(passenger: passenger),
+        if (passenger.pickupTime.isNotEmpty ||
+            passenger.destination.isNotEmpty) ...[
+          const SizedBox(height: 3),
+          Text(
+            [
+              if (passenger.pickupTime.isNotEmpty) passenger.pickupTime,
+              if (passenger.destination.isNotEmpty) passenger.destination,
+            ].join(' · '),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: CaptainTypography.labelSmall(context).copyWith(
+              color: muted,
+              letterSpacing: 0,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       ],
@@ -59,48 +59,53 @@ class PassengerCardDetails extends StatelessWidget {
   }
 }
 
-class _MutedText extends StatelessWidget {
-  const _MutedText(this.text);
+class _SupportingLine extends StatelessWidget {
+  const _SupportingLine({required this.passenger});
 
-  final String text;
+  final Passenger passenger;
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-        color: Theme.of(context).colorScheme.onSurface.withAlpha(170),
-        fontWeight: FontWeight.w600,
-      ),
+    final muted = CaptainColors.textSecondaryFor(context);
+    final style = CaptainTypography.labelSmall(context).copyWith(
+      color: muted,
+      letterSpacing: 0,
+      fontWeight: FontWeight.w600,
     );
-  }
-}
-
-class _IconLine extends StatelessWidget {
-  const _IconLine({required this.icon, required this.text, this.color});
-
-  final IconData icon;
-  final String text;
-  final Color? color;
-
-  @override
-  Widget build(BuildContext context) {
-    final resolved =
-        color ?? Theme.of(context).colorScheme.onSurface.withAlpha(170);
+    final phone = passenger.phone.trim();
 
     return Row(
       children: [
-        Icon(icon, size: 14, color: resolved),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            text,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: resolved,
-              fontWeight: color == null ? FontWeight.w600 : FontWeight.w700,
+        // The station is `Expanded` and the number is not: a clipped phone
+        // number is a *different* number, while a clipped station name costs a
+        // word the captain is already looking at out of the windscreen. So the
+        // name is the one that gives way. `Flexible` on the number keeps it
+        // ellipsising rather than overflowing in the impossible case.
+        if (passenger.pickupPoint.isNotEmpty)
+          Expanded(
+            child: Text(
+              passenger.pickupPoint,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: style,
             ),
           ),
-        ),
+        if (passenger.pickupPoint.isNotEmpty && phone.isNotEmpty)
+          Text(' · ', style: style),
+        if (phone.isNotEmpty)
+          // A phone number is an identifier: RTL would reorder its groups and
+          // hand the captain a number that dials someone else.
+          Flexible(
+            child: Directionality(
+              textDirection: CaptainTextDirection.ofIdentifier(phone),
+              child: Text(
+                phone,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: style,
+              ),
+            ),
+          ),
       ],
     );
   }

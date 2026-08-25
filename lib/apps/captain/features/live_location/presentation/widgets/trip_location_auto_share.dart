@@ -175,13 +175,12 @@ class _AutoShareCard extends StatelessWidget {
       padding: const EdgeInsets.all(CaptainDesignTokens.s20),
       decoration: BoxDecoration(
         color: CaptainColors.surfaceFor(context),
-        borderRadius: CaptainDesignTokens.br24,
+        borderRadius: CaptainDesignTokens.br16,
         border: Border.all(
           color: status.health == LocationSharingHealth.stale
               ? CaptainColors.error.withValues(alpha: 0.5)
               : CaptainColors.dividerFor(context),
         ),
-        boxShadow: CaptainDesignTokens.softShadow(context),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bmt_app/apps/captain/core/theme/captain_theme.dart';
 import 'package:bmt_app/apps/captain/features/notifications/domain/entities/captain_notification.dart';
+import 'package:bmt_app/apps/captain/features/notifications/presentation/pages/captain_notifications_page.dart';
 import 'package:bmt_app/apps/captain/features/passenger_manifest/domain/entities/passenger.dart';
 import 'package:bmt_app/apps/captain/features/passenger_manifest/presentation/cubit/passenger_manifest_state.dart';
 import 'package:bmt_app/apps/captain/features/passenger_manifest/presentation/widgets/passenger_card.dart';
@@ -57,6 +58,7 @@ void main() {
                 SliverToBoxAdapter(
                   child: PassengerFilterChips(
                     current: PassengerBoardingStatus.boarded,
+                    counts: _counts(),
                     onSelect: (_) {},
                   ),
                 ),
@@ -80,9 +82,11 @@ void main() {
 
         expect(tester.takeException(), isNull);
         // The boarding tallies are the reason the captain opened this screen.
-        // "صعد" reads as a tally, a filter and a badge, so several are correct.
+        // "صعد" reads as a filter, a badge and a board button, so several are
+        // correct. The expected head-count is now stated once, as the boarding
+        // bar's tally, rather than as a fourth stat tile duplicating the chips.
         expect(find.text('صعد'), findsWidgets);
-        expect(find.text('المتوقعون'), findsOneWidget);
+        expect(find.text('الركاب الصاعدون'), findsOneWidget);
       });
 
       testWidgets('notification tiles hold $at', (tester) async {
@@ -97,7 +101,10 @@ void main() {
                 for (final notification in _notifications())
                   Padding(
                     padding: const EdgeInsets.only(bottom: 8),
-                    child: _NotificationTileHarness(notification: notification),
+                    child: CaptainNotificationTile(
+                      notification: notification,
+                      onMarkRead: () {},
+                    ),
                   ),
               ],
             ),
@@ -198,51 +205,3 @@ List<CaptainNotification> _notifications() => [
 /// shape here. If the page's tile drifts from this, the page's own rendering is
 /// what changed — this harness stays a faithful stand-in for the layout under
 /// test (icon + flexible text column + unread dot in a Row).
-class _NotificationTileHarness extends StatelessWidget {
-  const _NotificationTileHarness({required this.notification});
-
-  final CaptainNotification notification;
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: notification.isRead ? cs.surface : cs.primaryContainer,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: cs.outlineVariant),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(Icons.notifications_outlined, color: cs.primary, size: 22),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(notification.title, style: tt.labelLarge),
-                const SizedBox(height: 3),
-                Text(
-                  notification.body,
-                  style: tt.bodySmall,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-          if (!notification.isRead)
-            Container(
-              width: 8,
-              height: 8,
-              margin: const EdgeInsetsDirectional.only(top: 4),
-              decoration: BoxDecoration(color: cs.primary, shape: BoxShape.circle),
-            ),
-        ],
-      ),
-    );
-  }
-}

@@ -29,7 +29,7 @@ class DriverProfileSettingsCard extends StatelessWidget {
             CaptainListRow(
               icon: Icons.logout_rounded,
               label: 'تسجيل الخروج',
-              accentColor: CaptainColors.error,
+              accentColor: CaptainColors.dangerFor(context),
               onTap: () => confirmAndSignOut(context),
             ),
           ],

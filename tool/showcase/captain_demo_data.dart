@@ -15,6 +15,7 @@ import 'package:bmt_app/apps/captain/features/trip_map/domain/entities/captain_l
 import 'package:bmt_app/apps/captain/features/trip_map/domain/entities/pickup_plan.dart';
 import 'package:bmt_app/apps/captain/features/trip_map/presentation/cubit/captain_trip_map_state.dart';
 import 'package:bmt_app/core/tracking/progress/route_progress_snapshot.dart';
+import 'package:bmt_app/core/tracking/progress/station_board.dart';
 import 'package:bmt_app/core/tracking/progress/route_stop.dart';
 import 'package:bmt_app/core/tracking/progress/stop_progress.dart';
 
@@ -102,6 +103,64 @@ const TripExecutionSnapshot executionSnapshot = TripExecutionSnapshot(
   boardedCount: 7,
   arrivedStationsCount: 2,
 );
+
+/// The station board behind the live trip: two stops worked and left, the
+/// vehicle now driving to the third. Kept consistent with
+/// [executionSnapshot] — two stations arrived, seven of eleven riders aboard.
+final StationBoard stationBoard = StationBoard([
+  TripStation(
+    id: 'st-1',
+    name: _stops[0].name,
+    sequence: 1,
+    status: TripStationStatus.departed,
+    expectedArrivalAt: _at(13, 0),
+    expectedDepartureAt: _at(13, 10),
+    actualArrivalAt: _at(13, 2),
+    actualDepartureAt: _at(13, 12),
+    expectedBoardings: 4,
+    boardedCount: 4,
+  ),
+  TripStation(
+    id: 'st-2',
+    name: _stops[1].name,
+    sequence: 2,
+    status: TripStationStatus.departed,
+    expectedArrivalAt: _at(13, 25),
+    expectedDepartureAt: _at(13, 35),
+    actualArrivalAt: _at(13, 27),
+    actualDepartureAt: _at(13, 38),
+    expectedBoardings: 3,
+    boardedCount: 3,
+  ),
+  TripStation(
+    id: 'st-3',
+    name: _stops[2].name,
+    sequence: 3,
+    status: TripStationStatus.arriving,
+    expectedArrivalAt: _at(14, 40),
+    expectedDepartureAt: _at(14, 55),
+    minDwell: const Duration(minutes: 15),
+    expectedBoardings: 2,
+    pendingCount: 2,
+  ),
+  TripStation(
+    id: 'st-4',
+    name: _stops[3].name,
+    sequence: 4,
+    status: TripStationStatus.upcoming,
+    expectedArrivalAt: _at(15, 50),
+    expectedDepartureAt: _at(15, 58),
+    expectedBoardings: 2,
+    pendingCount: 2,
+  ),
+  TripStation(
+    id: 'st-5',
+    name: _stops[4].name,
+    sequence: 5,
+    status: TripStationStatus.upcoming,
+    expectedArrivalAt: _at(16, 15),
+  ),
+]);
 
 // ── Passenger manifest ──────────────────────────────────────────────────────
 

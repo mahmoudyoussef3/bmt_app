@@ -56,7 +56,7 @@ class _Separator extends StatelessWidget {
       thickness: 1,
       indent: CaptainDesignTokens.s12,
       endIndent: CaptainDesignTokens.s12,
-      color: CaptainColors.dividerFor(context).withValues(alpha: 0.7),
+      color: CaptainColors.borderFor(context),
     );
   }
 }
@@ -77,8 +77,8 @@ class _QuickAction extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = destructive
-        ? CaptainColors.error
-        : CaptainColors.textPrimaryFor(context);
+        ? CaptainColors.dangerFor(context)
+        : CaptainColors.textSecondaryFor(context);
 
     return Material(
       color: Colors.transparent,
@@ -96,8 +96,8 @@ class _QuickAction extends StatelessWidget {
                 icon,
                 size: 18,
                 color: destructive
-                    ? CaptainColors.error
-                    : CaptainColors.primary,
+                    ? CaptainColors.dangerFor(context)
+                    : CaptainColors.primaryInkFor(context),
               ),
               const SizedBox(width: 6),
               Flexible(

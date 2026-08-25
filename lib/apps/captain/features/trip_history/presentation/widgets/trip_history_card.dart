@@ -6,6 +6,7 @@ import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 import 'package:bmt_app/apps/captain/core/utils/captain_formats.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_card.dart';
 import '../../domain/entities/trip_history_item.dart';
+import '../utils/trip_history_labels.dart';
 import '../utils/trip_history_palette.dart';
 import 'trip_history_boarding_bar.dart';
 import 'trip_history_chip.dart';
@@ -47,6 +48,7 @@ class TripHistoryCard extends StatelessWidget {
                     alignment: AlignmentDirectional.centerStart,
                     child: TripHistoryChip(
                       icon: Icons.person_off_rounded,
+                      label: TripHistoryLabels.notBoarded(missing),
                       color: TripHistoryPalette.attention,
                     ),
                   ),
@@ -71,8 +73,8 @@ class _CardHeader extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(CaptainDesignTokens.s16),
       decoration: BoxDecoration(
-        color: TripHistoryPalette.wash(context),
-        borderRadius: const BorderRadius.vertical(top: CaptainDesignTokens.r24),
+        color: CaptainColors.surfaceAltFor(context),
+        borderRadius: const BorderRadius.vertical(top: CaptainDesignTokens.r20),
       ),
       child: Row(
         children: [
@@ -125,8 +127,8 @@ class _RouteMark extends StatelessWidget {
     return Container(
       width: 40,
       height: 40,
-      decoration: BoxDecoration(
-        color: CaptainColors.primary,
+      decoration: const BoxDecoration(
+        gradient: TripHistoryPalette.markGradient,
         borderRadius: CaptainDesignTokens.br12,
       ),
       child: const Icon(
@@ -146,15 +148,22 @@ class _VehicleFooter extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final chips = <Widget>[
+      // The plate is what is written on the vehicle; the fleet code is what
+      // operations says on the radio. Checking a finished trip against a
+      // logbook needs both, so the card carries both.
       if (trip.vehicleNumber.isNotEmpty)
         TripHistoryChip(
           icon: Icons.directions_bus_rounded,
+          label: trip.vehicleNumber,
           color: TripHistoryPalette.neutral(context),
+          isIdentifier: true,
         ),
       if (trip.plateNumber.isNotEmpty)
         TripHistoryChip(
           icon: Icons.confirmation_number_rounded,
+          label: trip.plateNumber,
           color: TripHistoryPalette.neutral(context),
+          isIdentifier: true,
         ),
     ];
 
@@ -166,7 +175,7 @@ class _VehicleFooter extends StatelessWidget {
         Divider(
           height: 1,
           thickness: 1,
-          color: CaptainColors.dividerFor(context).withValues(alpha: 0.7),
+          color: CaptainColors.borderFor(context),
         ),
         const SizedBox(height: CaptainDesignTokens.s12),
         Align(

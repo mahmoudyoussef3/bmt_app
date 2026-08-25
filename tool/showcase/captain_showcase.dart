@@ -28,6 +28,8 @@ import 'package:bmt_app/apps/captain/features/passenger_manifest/presentation/cu
 import 'package:bmt_app/apps/captain/features/passenger_manifest/presentation/pages/passenger_list_page.dart';
 import 'package:bmt_app/apps/captain/features/profile/presentation/cubit/driver_profile_cubit.dart';
 import 'package:bmt_app/apps/captain/features/profile/presentation/cubit/driver_profile_state.dart';
+import 'package:bmt_app/apps/captain/features/station_progress/presentation/cubit/station_progress_cubit.dart';
+import 'package:bmt_app/apps/captain/features/station_progress/presentation/cubit/station_progress_state.dart';
 import 'package:bmt_app/apps/captain/features/trip_execution/presentation/cubit/trip_execution_cubit.dart';
 import 'package:bmt_app/apps/captain/features/trip_execution/presentation/cubit/trip_execution_state.dart';
 import 'package:bmt_app/apps/captain/features/trip_execution/presentation/pages/trip_execution_page.dart';
@@ -112,6 +114,20 @@ class _FakeNotifications extends Cubit<CaptainNotificationsState>
 class _FakeExecution extends Cubit<TripExecutionCubitState>
     implements TripExecutionCubit {
   _FakeExecution() : super(const TripExecutionIdle(demo.executionSnapshot));
+  @override
+  dynamic noSuchMethod(Invocation i) => null;
+}
+
+/// The trip screen reads its stations from this cubit. Without a fake here the
+/// page throws on an unregistered dependency — and in a release web build a
+/// thrown widget is a plain grey rectangle, which is what this screen used to
+/// photograph as.
+class _FakeStationProgress extends Cubit<StationProgressState>
+    implements StationProgressCubit {
+  _FakeStationProgress()
+    : super(StationProgressState(board: demo.stationBoard, isLoading: false));
+  @override
+  Future<void> watch(String tripId) async {}
   @override
   dynamic noSuchMethod(Invocation i) => null;
 }
@@ -204,6 +220,7 @@ void registerCaptainShowcaseFakes() {
     ..registerLazySingleton<CaptainNotificationBadgeCubit>(_FakeBadge.new)
     ..registerFactory<CaptainNotificationsCubit>(_FakeNotifications.new)
     ..registerFactory<TripExecutionCubit>(_FakeExecution.new)
+    ..registerFactory<StationProgressCubit>(_FakeStationProgress.new)
     ..registerFactory<PassengerManifestCubit>(_FakeManifest.new)
     ..registerFactory<CaptainTripMapCubit>(_FakeTripMap.new)
     ..registerLazySingleton<LiveLocationCubit>(_FakeLiveLocation.new);

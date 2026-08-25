@@ -1,9 +1,18 @@
 import 'package:flutter/material.dart';
 import '../theme/captain_colors.dart';
 import '../theme/captain_design_tokens.dart';
+import '../theme/captain_typography.dart';
 
 enum CaptainStatusVariant { info, success, warning, error, neutral }
 
+/// A status pill in the design's idiom: one neutral `--surface2` fill for every
+/// variant, and the **text** carries the colour.
+///
+/// The earlier chip tinted its own background and drew a matching border, so a
+/// row of four statuses put four coloured rectangles on the screen and the
+/// captain had to read the shapes before the words. Keeping the fill constant
+/// means a list of statuses reads as a column of labels, and the one that is
+/// red is the only thing that catches the eye.
 class CaptainStatusChip extends StatelessWidget {
   const CaptainStatusChip({
     super.key,
@@ -16,53 +25,42 @@ class CaptainStatusChip extends StatelessWidget {
   final CaptainStatusVariant variant;
   final IconData? icon;
 
+  Color _foreground(BuildContext context) => switch (variant) {
+    CaptainStatusVariant.info => CaptainColors.primaryInkFor(context),
+    CaptainStatusVariant.success => CaptainColors.successFor(context),
+    CaptainStatusVariant.warning => CaptainColors.warningFor(context),
+    CaptainStatusVariant.error => CaptainColors.dangerFor(context),
+    CaptainStatusVariant.neutral => CaptainColors.textSecondaryFor(context),
+  };
+
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-
-    Color fgColor;
-    Color bgColor;
-
-    switch (variant) {
-      case CaptainStatusVariant.info:
-        fgColor = CaptainColors.primary;
-        bgColor = CaptainColors.primary.withAlpha(25);
-      case CaptainStatusVariant.success:
-        fgColor = CaptainColors.success;
-        bgColor = CaptainColors.success.withAlpha(25);
-      case CaptainStatusVariant.warning:
-        fgColor = CaptainColors.warning;
-        bgColor = CaptainColors.warning.withAlpha(25);
-      case CaptainStatusVariant.error:
-        fgColor = scheme.error;
-        bgColor = scheme.error.withAlpha(25);
-      case CaptainStatusVariant.neutral:
-        fgColor = scheme.onSurfaceVariant;
-        bgColor = scheme.surfaceContainerHighest;
-    }
+    final fgColor = _foreground(context);
 
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: CaptainDesignTokens.s8,
-        vertical: CaptainDesignTokens.s4,
+        horizontal: 10,
+        vertical: 5,
       ),
       decoration: BoxDecoration(
-        color: bgColor,
+        color: CaptainColors.surfaceAltFor(context),
         borderRadius: CaptainDesignTokens.brPill,
-        border: Border.all(color: fgColor.withAlpha(50)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           if (icon != null) ...[
-            Icon(icon, size: 14, color: fgColor),
+            Icon(icon, size: 13, color: fgColor),
             const SizedBox(width: CaptainDesignTokens.s4),
           ],
-          Text(
-            label,
-            style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              color: fgColor,
-              fontWeight: FontWeight.w700,
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: CaptainTypography.labelSmall(
+                context,
+              ).copyWith(color: fgColor, fontWeight: FontWeight.w800),
             ),
           ),
         ],

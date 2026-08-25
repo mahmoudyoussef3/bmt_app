@@ -70,8 +70,8 @@ class _Tool extends StatelessWidget {
       icon: icon,
       label: label,
       detail: detail,
-      accentColor: destructive ? CaptainColors.error : null,
-      iconColor: CaptainColors.primary,
+      accentColor: destructive ? CaptainColors.dangerFor(context) : null,
+      iconColor: CaptainColors.primaryInkFor(context),
       showChevron: true,
       onTap: onTap,
     );

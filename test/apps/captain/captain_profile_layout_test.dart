@@ -140,6 +140,14 @@ void main() {
       // The captain's name is the header's title — there is no separate screen
       // title to assert on.
       expect(find.text('محمود عبد الرحمن السيد'), findsOneWidget);
+
+      // The rating sits with the rest of the account facts, which is below the
+      // fold on the smallest phone — and a sliver list does not build what it
+      // has not scrolled to. Dragging to the bottom also lays out every row on
+      // the page, which is what the overflow assertion below is really for.
+      await tester.drag(find.byType(CustomScrollView), const Offset(0, -1200));
+      await tester.pumpAndSettle();
+
       expect(find.textContaining('ممتاز'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });

@@ -8,6 +8,7 @@ import 'package:bmt_app/apps/captain/features/assigned_trips/domain/entities/ass
 import 'package:bmt_app/apps/captain/features/trip_execution/domain/entities/trip_execution_state.dart';
 import 'package:bmt_app/apps/captain/features/trip_execution/presentation/cubit/trip_execution_state.dart';
 import 'package:bmt_app/apps/captain/features/trip_execution/presentation/widgets/trip_execution_action_bar.dart';
+import 'package:bmt_app/apps/captain/features/trip_execution/presentation/widgets/trip_execution_sos_button.dart';
 import 'package:bmt_app/apps/captain/features/trip_execution/presentation/widgets/trip_execution_canopy.dart';
 import 'package:bmt_app/apps/captain/features/trip_execution/presentation/widgets/trip_execution_tools.dart';
 import 'package:bmt_app/apps/captain/features/station_progress/domain/entities/station_passenger.dart';
@@ -189,14 +190,14 @@ void main() {
 
     await pumpAt(CaptainTripStage.underway, TripExecutionStatus.inProgress);
     await tester.pumpAndSettle();
-    expect(find.byIcon(Icons.sos_rounded), findsOneWidget);
+    expect(find.byType(TripExecutionSosButton), findsOneWidget);
 
     await pumpAt(
       CaptainTripStage.awaitingRelease,
       TripExecutionStatus.scheduled,
     );
     await tester.pumpAndSettle();
-    expect(find.byIcon(Icons.sos_rounded), findsNothing);
+    expect(find.byType(TripExecutionSosButton), findsNothing);
   });
 }
 

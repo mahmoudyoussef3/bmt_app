@@ -21,7 +21,7 @@ class TripHistoryBoardingBar extends StatelessWidget {
     if (total == 0) return const _NoPassengers();
 
     final rate = (boarded / total).clamp(0.0, 1.0);
-    final color = TripHistoryPalette.boarding(rate);
+    const color = TripHistoryPalette.accent;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

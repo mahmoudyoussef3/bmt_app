@@ -78,9 +78,9 @@ class _JourneyCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(CaptainDesignTokens.s16),
             decoration: BoxDecoration(
-              color: TripHistoryPalette.wash(context),
+              color: CaptainColors.surfaceAltFor(context),
               borderRadius: const BorderRadius.vertical(
-                top: CaptainDesignTokens.r24,
+                top: CaptainDesignTokens.r20,
               ),
             ),
             child: TripHistoryTimeStrip(
@@ -92,12 +92,75 @@ class _JourneyCard extends StatelessWidget {
           Padding(
             padding: const EdgeInsets.all(CaptainDesignTokens.s16),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 TripHistoryBoardingBar(
                   boarded: trip.boardedCount,
                   total: trip.passengerCount,
                 ),
+                const SizedBox(height: CaptainDesignTokens.s12),
+                _Outcome(trip: trip),
               ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// How the trip turned out, said in words.
+///
+/// The bar above it plots the ratio; this states the conclusion the captain
+/// came to the page for, so nobody has to subtract 18 from 20 to find out
+/// whether anything went wrong.
+class _Outcome extends StatelessWidget {
+  const _Outcome({required this.trip});
+
+  final TripHistoryItem trip;
+
+  @override
+  Widget build(BuildContext context) {
+    final missing = trip.passengerCount - trip.boardedCount;
+    final shortfall = trip.passengerCount > 0 && missing > 0;
+    final tint = shortfall
+        ? TripHistoryPalette.attention
+        : TripHistoryPalette.neutral(context);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: CaptainDesignTokens.s12,
+        vertical: 10,
+      ),
+      decoration: BoxDecoration(
+        color: CaptainColors.surfaceAltFor(context),
+        borderRadius: CaptainDesignTokens.br12,
+      ),
+      child: Row(
+        children: [
+          Icon(
+            shortfall
+                ? Icons.error_outline_rounded
+                : Icons.check_circle_outline_rounded,
+            size: 16,
+            color: tint,
+          ),
+          const SizedBox(width: CaptainDesignTokens.s8),
+          Expanded(
+            child: Text(
+              TripHistoryLabels.outcome(
+                trip.boardedCount,
+                trip.passengerCount,
+              ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: CaptainTypography.labelMedium(context).copyWith(
+                color: shortfall
+                    ? tint
+                    : CaptainColors.textSecondaryFor(context),
+                letterSpacing: 0,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
         ],

@@ -106,6 +106,7 @@ class _PassengerListView extends StatelessWidget {
       SliverToBoxAdapter(
         child: PassengerFilterChips(
           current: state.statusFilter,
+          counts: state.counts,
           onSelect: cubit.toggleStatusFilter,
         ),
       ),
@@ -117,10 +118,10 @@ class _PassengerListView extends StatelessWidget {
       else
         SliverPadding(
           padding: const EdgeInsetsDirectional.fromSTEB(
-            CaptainDesignTokens.s24,
-            CaptainDesignTokens.s24,
-            CaptainDesignTokens.s24,
-            CaptainDesignTokens.s48,
+            CaptainDesignTokens.s16,
+            CaptainDesignTokens.s12,
+            CaptainDesignTokens.s16,
+            CaptainDesignTokens.s32,
           ),
           sliver: SliverList.builder(
             itemCount: state.visiblePassengers.length,
@@ -128,7 +129,7 @@ class _PassengerListView extends StatelessWidget {
               final passenger = state.visiblePassengers[i];
               return Padding(
                 padding: const EdgeInsetsDirectional.only(
-                  bottom: CaptainDesignTokens.s24,
+                  bottom: CaptainDesignTokens.s8,
                 ),
                 child: PassengerCard(
                   passenger: passenger,

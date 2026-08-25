@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/captain/core/di/captain_di.dart';
+import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
+import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
+import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
+import 'package:bmt_app/apps/captain/core/widgets/captain_empty_state.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_sliver_header.dart';
 
 import '../../domain/entities/captain_notification.dart';
@@ -25,8 +29,8 @@ class _CaptainNotificationsView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
     return Scaffold(
+      backgroundColor: CaptainColors.backgroundFor(context),
       body: CustomScrollView(
         slivers: [
           CaptainSliverHeader(
@@ -36,16 +40,16 @@ class _CaptainNotificationsView extends StatelessWidget {
                 builder: (context, state) {
                   if (state is CaptainNotificationsLoaded &&
                       state.unreadCount > 0) {
-                    return TextButton(
-                      onPressed: () => context
+                    return _MarkAllReadButton(
+                      onTap: () => context
                           .read<CaptainNotificationsCubit>()
                           .markAllAsRead(),
-                      child: const Text('قراءة الكل'),
                     );
                   }
                   return const SizedBox.shrink();
                 },
               ),
+              const SizedBox(width: CaptainDesignTokens.s8),
             ],
           ),
           BlocBuilder<CaptainNotificationsCubit, CaptainNotificationsState>(
@@ -54,49 +58,47 @@ class _CaptainNotificationsView extends StatelessWidget {
                 child: Center(child: CircularProgressIndicator()),
               ),
               CaptainNotificationsError(:final message) => SliverFillRemaining(
+                hasScrollBody: false,
                 child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.error_outline_rounded,
-                        size: 48,
-                        color: cs.error,
-                      ),
-                      const SizedBox(height: 12),
-                      Text(message, textAlign: TextAlign.center),
-                      const SizedBox(height: 16),
-                      FilledButton(
-                        onPressed: () => context
-                            .read<CaptainNotificationsCubit>()
-                            .startWatching(),
-                        child: const Text('إعادة المحاولة'),
-                      ),
-                    ],
+                  child: CaptainEmptyState(
+                    icon: Icons.wifi_off_rounded,
+                    title: 'تعذر تحميل الإشعارات',
+                    subtitle: message,
+                    action: TextButton(
+                      onPressed: () => context
+                          .read<CaptainNotificationsCubit>()
+                          .startWatching(),
+                      child: const Text('إعادة المحاولة'),
+                    ),
                   ),
                 ),
               ),
               CaptainNotificationsLoaded(:final notifications) =>
                 notifications.isEmpty
                     ? const SliverFillRemaining(
+                        hasScrollBody: false,
                         child: Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.notifications_none_rounded, size: 56),
-                              SizedBox(height: 12),
-                              Text('لا توجد إشعارات'),
-                            ],
+                          child: CaptainEmptyState(
+                            icon: Icons.notifications_none_rounded,
+                            title: 'لا توجد إشعارات',
+                            subtitle:
+                                'كل ما يصلك من العمليات — رحلة جديدة، تغيير '
+                                'مركبة، رسالة — سيظهر هنا.',
                           ),
                         ),
                       )
                     : SliverPadding(
-                        padding: const EdgeInsets.all(16),
+                        padding: const EdgeInsetsDirectional.fromSTEB(
+                          CaptainDesignTokens.s16,
+                          CaptainDesignTokens.s12,
+                          CaptainDesignTokens.s16,
+                          CaptainDesignTokens.s20,
+                        ),
                         sliver: SliverList.separated(
                           itemCount: notifications.length,
                           separatorBuilder: (_, index) =>
-                              const SizedBox(height: 8),
-                          itemBuilder: (_, i) => _CaptainNotifTile(
+                              const SizedBox(height: CaptainDesignTokens.s8),
+                          itemBuilder: (_, i) => CaptainNotificationTile(
                             notification: notifications[i],
                             onMarkRead: () => context
                                 .read<CaptainNotificationsCubit>()
@@ -113,8 +115,36 @@ class _CaptainNotificationsView extends StatelessWidget {
   }
 }
 
-class _CaptainNotifTile extends StatelessWidget {
-  const _CaptainNotifTile({
+class _MarkAllReadButton extends StatelessWidget {
+  const _MarkAllReadButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton(
+      onPressed: onTap,
+      child: Text(
+        'تعليم الكل كمقروء',
+        style: CaptainTypography.labelMedium(context).copyWith(
+          color: CaptainColors.primaryInkFor(context),
+          letterSpacing: 0,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+}
+
+/// One notification, in the design's flat idiom.
+///
+/// Unread is carried by a single brand dot, not by tinting the whole card. A
+/// list where every unread row is a filled blue rectangle has no hierarchy left
+/// to say which one is urgent — the dot leaves the card neutral so the
+/// emergency glyph beside it is the only coloured thing on the screen.
+class CaptainNotificationTile extends StatelessWidget {
+  const CaptainNotificationTile({
+    super.key,
     required this.notification,
     required this.onMarkRead,
   });
@@ -124,65 +154,76 @@ class _CaptainNotifTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final tt = Theme.of(context).textTheme;
-    return GestureDetector(
-      onTap: notification.isRead ? null : onMarkRead,
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: notification.isRead
-              ? cs.surface
-              : cs.primaryContainer.withAlpha(60),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: notification.isRead
-                ? cs.outlineVariant
-                : cs.primary.withAlpha(50),
+    final muted = CaptainColors.textSecondaryFor(context);
+    final isUnread = !notification.isRead;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: notification.isRead ? null : onMarkRead,
+        borderRadius: CaptainDesignTokens.br14,
+        child: Container(
+          padding: const EdgeInsets.all(13),
+          decoration: BoxDecoration(
+            color: CaptainColors.surfaceFor(context),
+            borderRadius: CaptainDesignTokens.br14,
+            border: CaptainDesignTokens.hairline(context),
           ),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Icon(
-              _categoryIcon(notification.category),
-              color: _categoryColor(notification.category, cs),
-              size: 22,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    notification.title,
-                    style: tt.labelLarge?.copyWith(
-                      fontWeight: notification.isRead
-                          ? FontWeight.w500
-                          : FontWeight.w700,
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    notification.body,
-                    style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-            if (!notification.isRead)
-              Container(
-                width: 8,
-                height: 8,
-                margin: const EdgeInsetsDirectional.only(top: 4),
-                decoration: BoxDecoration(
-                  color: cs.primary,
-                  shape: BoxShape.circle,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(
+                padding: const EdgeInsetsDirectional.only(top: 3),
+                child: Icon(
+                  _categoryIcon(notification.category),
+                  size: 20,
+                  color: _categoryColor(context, notification.category),
                 ),
               ),
-          ],
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      notification.title,
+                      style: CaptainTypography.bodySmall(context).copyWith(
+                        fontSize: 13.5,
+                        color: CaptainColors.textPrimaryFor(context),
+                        fontWeight: isUnread
+                            ? FontWeight.w700
+                            : FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      notification.body,
+                      style: CaptainTypography.labelMedium(context).copyWith(
+                        color: muted,
+                        letterSpacing: 0,
+                        fontWeight: FontWeight.w600,
+                        height: 1.5,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+              if (isUnread) ...[
+                const SizedBox(width: CaptainDesignTokens.s8),
+                Container(
+                  width: 8,
+                  height: 8,
+                  margin: const EdgeInsetsDirectional.only(top: 6),
+                  decoration: BoxDecoration(
+                    color: CaptainColors.primaryInkFor(context),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ],
+            ],
+          ),
         ),
       ),
     );
@@ -197,6 +238,8 @@ class _CaptainNotifTile extends StatelessWidget {
     _ => Icons.notifications_outlined,
   };
 
-  Color _categoryColor(CaptainNotificationCategory c, ColorScheme cs) =>
-      c == CaptainNotificationCategory.emergency ? cs.error : cs.primary;
+  Color _categoryColor(BuildContext context, CaptainNotificationCategory c) =>
+      c == CaptainNotificationCategory.emergency
+      ? CaptainColors.dangerFor(context)
+      : CaptainColors.primaryInkFor(context);
 }
