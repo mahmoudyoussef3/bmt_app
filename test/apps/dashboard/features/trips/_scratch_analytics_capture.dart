@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show FontLoader;
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:bmt_app/core/theme/app_theme.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_app_theme.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/presentation/widgets/trips_analytics.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/operation_trip.dart';
@@ -21,6 +20,17 @@ OperationTrip _trip({
   required int capacity,
   required int bookedSeats,
 }) {
+  final seats = List<TripSeat>.generate(
+    capacity,
+    (index) => TripSeat(
+      id: '$id-s$index',
+      label: '${index + 1}',
+      row: index ~/ 2,
+      column: index % 2,
+      state: index < bookedSeats ? TripSeatState.paid : TripSeatState.available,
+    ),
+  );
+
   return OperationTrip(
     id: id,
     routeId: 'r-$id',
@@ -37,23 +47,70 @@ OperationTrip _trip({
     status: status,
     capacity: capacity,
     ticketPrice: 50,
-    seats: const [],
+    seats: seats,
     passengers: const [],
     events: const [],
     notes: const [],
-    bookedSeats: bookedSeats,
   );
 }
 
 final _trips = [
-  _trip(id: '1', route: 'marg - new cairo', status: OperationTripStatus.completed, capacity: 14, bookedSeats: 14),
-  _trip(id: '2', route: 'marg - new cairo', status: OperationTripStatus.completed, capacity: 14, bookedSeats: 12),
-  _trip(id: '3', route: 'marg - new cairo', status: OperationTripStatus.completed, capacity: 14, bookedSeats: 0),
-  _trip(id: '4', route: 'test new route', status: OperationTripStatus.openForBooking, capacity: 14, bookedSeats: 6),
-  _trip(id: '5', route: 'test new route', status: OperationTripStatus.scheduled, capacity: 14, bookedSeats: 3),
-  _trip(id: '6', route: 'Banha - American Uni', status: OperationTripStatus.cancelled, capacity: 14, bookedSeats: 0),
-  _trip(id: '7', route: 'American University i', status: OperationTripStatus.boarding, capacity: 14, bookedSeats: 11),
-  _trip(id: '8', route: 'Zefta - American Univ', status: OperationTripStatus.inProgress, capacity: 14, bookedSeats: 14),
+  _trip(
+    id: '1',
+    route: 'marg - new cairo',
+    status: OperationTripStatus.completed,
+    capacity: 14,
+    bookedSeats: 14,
+  ),
+  _trip(
+    id: '2',
+    route: 'marg - new cairo',
+    status: OperationTripStatus.completed,
+    capacity: 14,
+    bookedSeats: 12,
+  ),
+  _trip(
+    id: '3',
+    route: 'marg - new cairo',
+    status: OperationTripStatus.completed,
+    capacity: 14,
+    bookedSeats: 0,
+  ),
+  _trip(
+    id: '4',
+    route: 'test new route',
+    status: OperationTripStatus.openForBooking,
+    capacity: 14,
+    bookedSeats: 6,
+  ),
+  _trip(
+    id: '5',
+    route: 'test new route',
+    status: OperationTripStatus.scheduled,
+    capacity: 14,
+    bookedSeats: 3,
+  ),
+  _trip(
+    id: '6',
+    route: 'Banha - American Uni',
+    status: OperationTripStatus.cancelled,
+    capacity: 14,
+    bookedSeats: 0,
+  ),
+  _trip(
+    id: '7',
+    route: 'American University i',
+    status: OperationTripStatus.boarding,
+    capacity: 14,
+    bookedSeats: 11,
+  ),
+  _trip(
+    id: '8',
+    route: 'Zefta - American Univ',
+    status: OperationTripStatus.inProgress,
+    capacity: 14,
+    bookedSeats: 14,
+  ),
 ];
 
 void main() {
@@ -72,7 +129,9 @@ void main() {
     addTearDown(tester.view.reset);
 
     final theme = DashboardAppTheme.light().copyWith(
-      textTheme: DashboardAppTheme.light().textTheme.apply(fontFamily: _captureFont),
+      textTheme: DashboardAppTheme.light().textTheme.apply(
+        fontFamily: _captureFont,
+      ),
     );
 
     final key = GlobalKey();

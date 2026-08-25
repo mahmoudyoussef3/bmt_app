@@ -60,7 +60,7 @@ class _DashboardLoginScreenState extends State<DashboardLoginScreen> {
           builder: (context, state) {
             final loading = state is DashboardAuthLoading;
             
-            final inputDecoration = (
+            InputDecoration inputDecoration(
               String label,
               Widget prefix, {
               Widget? suffix,
@@ -70,7 +70,7 @@ class _DashboardLoginScreenState extends State<DashboardLoginScreen> {
                 prefixIcon: prefix,
                 suffixIcon: suffix,
                 filled: true,
-                fillColor: scheme.onSurface.withOpacity(0.03),
+                fillColor: scheme.onSurface.withValues(alpha: 0.03),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppTokens.radius),
                   borderSide: BorderSide.none,
@@ -78,7 +78,7 @@ class _DashboardLoginScreenState extends State<DashboardLoginScreen> {
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppTokens.radius),
                   borderSide: BorderSide(
-                    color: scheme.outlineVariant.withOpacity(0.5),
+                    color: scheme.outlineVariant.withValues(alpha: 0.5),
                   ),
                 ),
                 focusedBorder: OutlineInputBorder(
@@ -93,7 +93,7 @@ class _DashboardLoginScreenState extends State<DashboardLoginScreen> {
                   vertical: 18,
                 ),
               );
-            };
+            }
 
             return Center(
               child: ConstrainedBox(
@@ -122,7 +122,7 @@ class _DashboardLoginScreenState extends State<DashboardLoginScreen> {
                                     shape: BoxShape.circle,
                                     boxShadow: [
                                       BoxShadow(
-                                        color: scheme.primary.withOpacity(0.15),
+                                        color: scheme.primary.withValues(alpha: 0.15),
                                         blurRadius: 40,
                                         spreadRadius: 10,
                                       ),
@@ -138,17 +138,17 @@ class _DashboardLoginScreenState extends State<DashboardLoginScreen> {
                                       end: Alignment.bottomRight,
                                       colors: [
                                         scheme.primary,
-                                        scheme.primary.withOpacity(0.8),
+                                        scheme.primary.withValues(alpha: 0.8),
                                       ],
                                     ),
                                     borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
                                     border: Border.all(
-                                      color: scheme.onPrimary.withOpacity(0.2),
+                                      color: scheme.onPrimary.withValues(alpha: 0.2),
                                       width: 1,
                                     ),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: scheme.primary.withOpacity(0.3),
+                                        color: scheme.primary.withValues(alpha: 0.3),
                                         blurRadius: 16,
                                         offset: const Offset(0, 8),
                                       ),

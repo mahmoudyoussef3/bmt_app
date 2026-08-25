@@ -1,10 +1,11 @@
+/*
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
-/*
+
 /// The three things a rider worries about at the moment of paying, answered
 /// before they ask. Concrete promises about how this checkout behaves — not
 /// decorative "secure payment" badges.

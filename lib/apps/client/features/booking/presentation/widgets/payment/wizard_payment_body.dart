@@ -7,7 +7,7 @@ import 'package:bmt_app/apps/client/features/booking/presentation/widgets/paymen
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/payment/wizard_receipt_upload.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/payment/wizard_transfer_panel.dart';
 import 'package:bmt_app/apps/client/features/payments/domain/entities/payment_models.dart';
-import 'package:bmt_app/apps/client/features/payments/presentation/widgets/checkout/checkout_assurance.dart';
+// import 'package:bmt_app/apps/client/features/payments/presentation/widgets/checkout/checkout_assurance.dart';
 import 'package:bmt_app/apps/client/features/payments/presentation/widgets/checkout/checkout_fare_card.dart';
 import 'package:bmt_app/apps/client/features/payments/presentation/widgets/checkout/checkout_method_picker.dart';
 import 'package:bmt_app/apps/client/features/payments/presentation/widgets/checkout/checkout_notice.dart';
@@ -78,7 +78,7 @@ class WizardPaymentBody extends StatelessWidget {
               CheckoutFareCard(
                 data: data,
                 promoDiscount: 0,
-                
+
                 promoField: const SizedBox.shrink(),
               ),
               const SizedBox(height: 22),
@@ -103,8 +103,8 @@ class WizardPaymentBody extends StatelessWidget {
                   onPick: onPickReceipt,
                 ),
               ],
-             // const SizedBox(height: 16),
-            //  CheckoutAssurance(requiresReceipt: needsReceipt),
+              // const SizedBox(height: 16),
+              //  CheckoutAssurance(requiresReceipt: needsReceipt),
             ],
           ),
         ),

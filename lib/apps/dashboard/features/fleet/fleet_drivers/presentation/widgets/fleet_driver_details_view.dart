@@ -625,19 +625,17 @@ class _HistoryTimeline extends StatelessWidget {
   final String title;
   final List<FleetHistoryItem> items;
   final IconData icon;
-  final Color? color;
 
   const _HistoryTimeline({
     required this.title,
     required this.items,
     required this.icon,
-    this.color,
   });
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final iconColor = color ?? scheme.primary;
+    final iconColor = scheme.primary;
 
     return AppCard(
       padding: const EdgeInsets.all(AppSpacing.large),

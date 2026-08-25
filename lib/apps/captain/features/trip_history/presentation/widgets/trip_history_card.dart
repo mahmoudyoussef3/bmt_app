@@ -6,7 +6,6 @@ import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 import 'package:bmt_app/apps/captain/core/utils/captain_formats.dart';
 import 'package:bmt_app/apps/captain/core/widgets/captain_card.dart';
 import '../../domain/entities/trip_history_item.dart';
-import '../utils/trip_history_labels.dart';
 import '../utils/trip_history_palette.dart';
 import 'trip_history_boarding_bar.dart';
 import 'trip_history_chip.dart';

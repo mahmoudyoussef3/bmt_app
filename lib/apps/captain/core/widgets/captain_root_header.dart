@@ -2,8 +2,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import 'package:bmt_app/core/widgets/widgets.dart';
-
 import '../theme/captain_colors.dart';
 import '../theme/captain_design_tokens.dart';
 import '../theme/captain_typography.dart';

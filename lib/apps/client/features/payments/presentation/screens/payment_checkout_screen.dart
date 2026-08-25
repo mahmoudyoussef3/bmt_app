@@ -9,7 +9,7 @@ import 'package:bmt_app/apps/client/features/payments/presentation/cubit/payment
 import 'package:bmt_app/apps/client/features/payments/presentation/cubit/payment_state.dart';
 import 'package:bmt_app/apps/client/features/payments/presentation/screens/payment_processing_screen.dart';
 import 'package:bmt_app/apps/client/features/payments/presentation/screens/receipt_upload_screen.dart';
-import 'package:bmt_app/apps/client/features/payments/presentation/widgets/checkout/checkout_assurance.dart';
+// import 'package:bmt_app/apps/client/features/payments/presentation/widgets/checkout/checkout_assurance.dart';
 import 'package:bmt_app/apps/client/features/payments/presentation/widgets/checkout/checkout_fare_card.dart';
 import 'package:bmt_app/apps/client/features/payments/presentation/widgets/checkout/checkout_header.dart';
 import 'package:bmt_app/apps/client/features/payments/presentation/widgets/checkout/checkout_method_picker.dart';
@@ -168,8 +168,8 @@ class _PaymentCheckoutScreenState extends State<PaymentCheckoutScreen> {
             total: total,
             onSelect: cubit.selectMethod,
           ),
-        //  const SizedBox(height: 16),
-      //    CheckoutAssurance(requiresReceipt: state.requiresReceipt),
+          //  const SizedBox(height: 16),
+          //    CheckoutAssurance(requiresReceipt: state.requiresReceipt),
         ],
       ),
     );
