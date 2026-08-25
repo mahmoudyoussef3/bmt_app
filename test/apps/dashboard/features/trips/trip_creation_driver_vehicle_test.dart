@@ -258,7 +258,7 @@ void main() {
 
       await tester.tap(find.text('تعيين سيارة للسائق'));
       await tester.pumpAndSettle();
-      expect(openedModule, '/assignments');
+      expect(openedModule, '/drivers');
     });
 
     testWidgets('a driver whose bus is in maintenance is refused too', (

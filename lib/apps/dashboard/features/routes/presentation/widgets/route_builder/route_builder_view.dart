@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:latlong2/latlong.dart';
 
 import 'package:bmt_app/apps/dashboard/core/di/dashboard_di.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/forms/forms.dart';
 import 'package:bmt_app/core/maps/map_route_stop.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
@@ -80,7 +81,7 @@ class RouteBuilderView extends StatelessWidget {
   }
 }
 
-class _RouteBuilderBody extends StatelessWidget {
+class _RouteBuilderBody extends StatefulWidget {
   final bool saving;
   final String saveError;
   final VoidCallback onCancel;
@@ -92,6 +93,69 @@ class _RouteBuilderBody extends StatelessWidget {
     required this.onCancel,
     required this.onSave,
   });
+
+  @override
+  State<_RouteBuilderBody> createState() => _RouteBuilderBodyState();
+}
+
+class _RouteBuilderBodyState extends State<_RouteBuilderBody> {
+  /// A handle onto the folded details card, so an outstanding name/code issue
+  /// can open it. Without this the footer could say "أدخل اسم المسار" while
+  /// the field to type it in was collapsed out of sight, with no control that
+  /// would reveal it.
+  final _detailsKey = GlobalKey<_DetailsSectionState>();
+
+  /// The route as the builder opened it. Compared on cancel, so abandoning an
+  /// untouched builder is silent and abandoning six typed-in stops is not.
+  String? _openingSignature;
+
+  /// Everything about a draft an operator can change: the ordered stops with
+  /// their names, pins, boarding rules and dwell, plus the route's own
+  /// identity fields.
+  static String _signatureOf(RouteBuilderState state) {
+    final draft = state.draft;
+    return [
+      for (final stop in draft.stops)
+        [
+          stop.name,
+          stop.description,
+          stop.point?.lat,
+          stop.point?.lng,
+          stop.boarding.name,
+          stop.dwellMinutes,
+        ].join(','),
+      draft.nameOverride,
+      draft.codeOverride,
+      draft.status.name,
+      draft.distance,
+      draft.duration,
+    ].join(';');
+  }
+
+  Future<void> _guardedCancel(RouteBuilderState state) async {
+    if (widget.saving) return;
+    final opening = _openingSignature;
+    if (opening == null || _signatureOf(state) == opening) {
+      widget.onCancel();
+      return;
+    }
+    final discard = await confirmDiscardChanges(
+      context,
+      message: 'لديك مسار غير محفوظ. الخروج الآن يفقد نقاطه وبياناته.',
+    );
+    if (discard && mounted) widget.onCancel();
+  }
+
+  /// Takes the operator to the outstanding issue: a stop issue focuses the
+  /// stop in the timeline, and anything else lives in the details card, which
+  /// is opened rather than left folded over the field that needs typing in.
+  void _focusIssue(RouteBuilderCubit cubit, RouteDraftIssue issue) {
+    if (issue.stopIndex != null) {
+      cubit.focusNextIssue();
+      return;
+    }
+    _detailsKey.currentState?.reveal();
+  }
 
   SearchPlacesUseCase? _searchPlaces(RouteBuilderState state) =>
       state.geoEnabled ? dashboardDi<SearchPlacesUseCase>() : null;
@@ -162,6 +226,7 @@ class _RouteBuilderBody extends StatelessWidget {
 
     return BlocBuilder<RouteBuilderCubit, RouteBuilderState>(
       builder: (context, state) {
+        _openingSignature ??= _signatureOf(state);
         final draft = state.draft;
         final issueIndex = draft.issues
             .map((issue) => issue.stopIndex)
@@ -174,7 +239,10 @@ class _RouteBuilderBody extends StatelessWidget {
               child: ListView(
                 padding: const EdgeInsets.all(AppSpacing.large),
                 children: [
-                  _BuilderHeader(state: state, onCancel: onCancel),
+                  _BuilderHeader(
+                    state: state,
+                    onCancel: () => _guardedCancel(state),
+                  ),
                   const SizedBox(height: AppSpacing.medium),
                   Center(
                     child: ConstrainedBox(
@@ -224,7 +292,11 @@ class _RouteBuilderBody extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: AppSpacing.medium),
-                          _DetailsSection(state: state, cubit: cubit),
+                          _DetailsSection(
+                            key: _detailsKey,
+                            state: state,
+                            cubit: cubit,
+                          ),
                           const SizedBox(height: AppSpacing.medium),
                           _MapSection(state: state),
                         ],
@@ -243,16 +315,16 @@ class _RouteBuilderBody extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  if (saveError.isNotEmpty) ...[
-                    _SaveErrorBar(message: saveError),
+                  if (widget.saveError.isNotEmpty) ...[
+                    _SaveErrorBar(message: widget.saveError),
                     const SizedBox(height: AppSpacing.medium),
                   ],
                   _BuilderFooter(
                     state: state,
-                    saving: saving,
-                    onCancel: onCancel,
-                    onFocusIssue: cubit.focusNextIssue,
-                    onSave: () => onSave(state.draft.toRoute()),
+                    saving: widget.saving,
+                    onCancel: () => _guardedCancel(state),
+                    onFocusIssue: (issue) => _focusIssue(cubit, issue),
+                    onSave: () => widget.onSave(state.draft.toRoute()),
                   ),
                 ],
               ),
@@ -387,13 +459,31 @@ class _DetailsSection extends StatefulWidget {
   final RouteBuilderState state;
   final RouteBuilderCubit cubit;
 
-  const _DetailsSection({required this.state, required this.cubit});
+  const _DetailsSection({super.key, required this.state, required this.cubit});
 
   @override
   State<_DetailsSection> createState() => _DetailsSectionState();
 }
 
 class _DetailsSectionState extends State<_DetailsSection> {
+  /// Opens the card and puts the caret in the name field — the pair of actions
+  /// the footer's "اذهب إليها" means when the outstanding issue is in here.
+  void reveal() {
+    setState(() => _open = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final target = context;
+      Scrollable.ensureVisible(
+        target,
+        duration: const Duration(milliseconds: 260),
+        curve: Curves.easeOutCubic,
+        alignment: 0.1,
+      );
+      _nameFocus.requestFocus();
+    });
+  }
+
+  final _nameFocus = FocusNode();
   late final TextEditingController _name;
   late final TextEditingController _code;
   late final TextEditingController _distance;
@@ -429,6 +519,7 @@ class _DetailsSectionState extends State<_DetailsSection> {
 
   @override
   void dispose() {
+    _nameFocus.dispose();
     _name.dispose();
     _code.dispose();
     _distance.dispose();
@@ -456,6 +547,7 @@ class _DetailsSectionState extends State<_DetailsSection> {
         children: [
           TextField(
             controller: _name,
+            focusNode: _nameFocus,
             onChanged: cubit.setName,
             decoration: InputDecoration(
               labelText: 'اسم المسار',
@@ -805,7 +897,11 @@ class _BuilderFooter extends StatelessWidget {
   final RouteBuilderState state;
   final bool saving;
   final VoidCallback onCancel;
-  final VoidCallback onFocusIssue;
+
+  /// Takes the operator to the named issue. Called for every kind of issue,
+  /// including the ones with no stop behind them — a route whose only problem
+  /// is an empty name used to name the problem and offer nothing to press.
+  final ValueChanged<RouteDraftIssue> onFocusIssue;
   final VoidCallback onSave;
 
   const _BuilderFooter({
@@ -834,20 +930,36 @@ class _BuilderFooter extends StatelessWidget {
         ),
         const SizedBox(width: AppSpacing.small),
         Flexible(
-          child: Text(
-            ready ? _readySummary(draft, state) : firstIssue!.message,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: ready ? scheme.primary : scheme.onSurfaceVariant,
-              fontWeight: ready ? FontWeight.bold : null,
-            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                ready ? _readySummary(draft, state) : firstIssue!.message,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: ready ? scheme.primary : scheme.onSurfaceVariant,
+                  fontWeight: ready ? FontWeight.bold : null,
+                ),
+              ),
+              // Says how much is behind the sentence without turning it into a
+              // checklist: the operator learns there is more to do, and still
+              // only has to think about one thing at a time.
+              if (issues.length > 1)
+                Text(
+                  'و${issues.length - 1} أخرى بعدها',
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: scheme.onSurfaceVariant,
+                  ),
+                ),
+            ],
           ),
         ),
-        if (!ready && firstIssue?.stopIndex != null) ...[
+        if (!ready) ...[
           const SizedBox(width: AppSpacing.xSmall),
           TextButton(
-            onPressed: onFocusIssue,
+            onPressed: () => onFocusIssue(firstIssue!),
             style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
             child: const Text('اذهب إليها'),
           ),

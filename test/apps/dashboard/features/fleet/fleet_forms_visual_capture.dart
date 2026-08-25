@@ -129,7 +129,7 @@ void main() {
       vehicle: _vehicle,
       afterPump: (tester) async {
         await tester.enterText(
-          find.widgetWithText(TextFormField, 'كود المركبة الداخلي'),
+          find.widgetWithText(TextFormField, 'كود المركبة'),
           'BUS-999',
         );
         await tester.pump();

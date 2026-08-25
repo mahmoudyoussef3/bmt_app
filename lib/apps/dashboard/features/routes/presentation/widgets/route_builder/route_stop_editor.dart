@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_dialog_header.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/forms/forms.dart';
 import 'package:bmt_app/core/geo/geo_models.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
@@ -395,13 +396,17 @@ class _StopNameFieldState extends State<_StopNameField> {
           onChanged: _onChanged,
           textInputAction: TextInputAction.next,
           decoration: InputDecoration(
-            labelText: 'اسم النقطة *',
+            label: const DashboardFieldLabel(text: 'اسم النقطة'),
             hintText: widget.library.isEmpty
                 ? 'مثال: شبين القناطر'
                 : 'ابحث عن نقطة موجودة أو اكتب اسماً جديداً',
+            // While empty the helper says what to do; once named it says what
+            // the name is for. The same line, doing the useful job at each
+            // stage rather than repeating the label.
             helperText: query.trim().isEmpty
-                ? 'مطلوب — هذا الاسم يظهر للركاب والكباتن'
-                : null,
+                ? 'أدخل اسم النقطة للمتابعة'
+                : 'هذا الاسم يظهر للركاب والكباتن — اختر اسماً معروفاً محلياً.',
+            helperMaxLines: 2,
             prefixIcon: const Icon(Icons.search_rounded),
             isDense: true,
             border: const OutlineInputBorder(),

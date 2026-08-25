@@ -7,6 +7,7 @@ import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/apps/dashboard/core/routes/dashboard_routes.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_dialog_header.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/forms/forms.dart';
 import 'package:bmt_app/core/theme/app_surface_style.dart';
 
 import '../../../routes/domain/entities/operation_route.dart';
@@ -235,10 +236,62 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
   bool _checkingAvailability = false;
   int _availabilityRequestId = 0;
 
+  /// Where each part of the plan lives on screen, so the readiness chips can
+  /// scroll to the one that is not done instead of only naming it.
+  final _routeAnchor = GlobalKey();
+  final _driverAnchor = GlobalKey();
+  final _scheduleAnchor = GlobalKey();
+  final _pricingAnchor = GlobalKey();
+
+  /// The plan's four requirements, declared once. Readiness, the footer's
+  /// next-step line, the chips and the submit button all read from this, so
+  /// they can never disagree about whether the trip can be created.
+  late final DashboardFormController _plan;
+
+  /// The schedule the planner opened with. A plan that still matches it —
+  /// nothing picked, nothing priced — is not worth a discard prompt.
+  late final String _openingSchedule;
+
   @override
   void initState() {
     super.initState();
     _applyDefaultSchedule();
+    _openingSchedule = _scheduleSignature;
+    _plan = DashboardFormController([
+      DashboardFormFieldSpec(
+        id: 'route',
+        label: 'المسار',
+        anchorKey: _routeAnchor,
+        validate: () => _selectedRoute == null
+            ? 'اختر المسار الذي ستسير عليه الرحلة'
+            : null,
+      ),
+      DashboardFormFieldSpec(
+        id: 'driver',
+        label: 'السائق',
+        anchorKey: _driverAnchor,
+        validate: _validateDriver,
+      ),
+      DashboardFormFieldSpec(
+        id: 'schedule',
+        label: 'الموعد',
+        anchorKey: _scheduleAnchor,
+        validate: () =>
+            (_dateController.text.isEmpty ||
+                _timeController.text.isEmpty ||
+                _arrivalController.text.isEmpty)
+            ? 'حدد تاريخ الرحلة ووقتي الانطلاق والوصول'
+            : null,
+      ),
+      DashboardFormFieldSpec(
+        id: 'pricing',
+        label: 'السعر',
+        anchorKey: _pricingAnchor,
+        validate: () => _fare.isValid
+            ? null
+            : 'أدخل سعر تذكرة صحيحاً، وأكمل بيانات أي باقة مضافة',
+      ),
+    ]);
     final prefill = widget.prefillTrip;
     if (prefill != null) {
       _selectedRoute = widget.routes
@@ -370,21 +423,27 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
     final dialogWidth = (viewport.width - 32).clamp(380.0, 1280.0);
     final dialogHeight = (viewport.height - 32).clamp(620.0, 860.0);
 
-    return Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      backgroundColor: scheme.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
-      ),
-      child: SizedBox(
-        width: dialogWidth,
-        height: dialogHeight,
-        child: Column(
-          children: [
-            _buildPlannerHeader(scheme),
-            Expanded(child: _buildPlannerWorkspace()),
-            _buildPlannerFooter(scheme),
-          ],
+    return PopScope(
+      canPop: !_hasPlanChanges && !widget.submitting,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _closePlanner();
+      },
+      child: Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        backgroundColor: scheme.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
+        ),
+        child: SizedBox(
+          width: dialogWidth,
+          height: dialogHeight,
+          child: Column(
+            children: [
+              _buildPlannerHeader(scheme),
+              Expanded(child: _buildPlannerWorkspace()),
+              _buildPlannerFooter(scheme),
+            ],
+          ),
         ),
       ),
     );
@@ -407,7 +466,7 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
               ready: _isTripReady(),
             ),
           ),
-          onClose: () => Navigator.of(context).pop(),
+          onClose: widget.submitting ? null : _closePlanner,
         ),
         const DashboardDialogDivider(),
       ],
@@ -454,32 +513,44 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
           ),
           child: LayoutBuilder(
             builder: (context, constraints) {
-              final message = AnimatedSwitcher(
-                duration: AppTokens.motionBase,
-                child: Text(
-                  widget.submitting
-                      ? 'جارٍ إنشاء الرحلة...'
-                      : ready
-                      ? 'كل شيء جاهز للتشغيل'
-                      : _readinessMessage(),
-                  key: ValueKey(
-                    widget.submitting
-                        ? 'submitting'
-                        : ready
-                        ? 'ready'
-                        : _readinessMessage(),
+              final message = Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DashboardFormProgress(
+                    filled: _plan.requiredFilled,
+                    total: _plan.requiredTotal,
+                    compact: true,
                   ),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: ready ? scheme.primary : scheme.onSurfaceVariant,
-                    fontWeight: ready ? FontWeight.w700 : FontWeight.w500,
+                  const SizedBox(height: AppSpacing.xSmall),
+                  AnimatedSwitcher(
+                    duration: AppTokens.motionBase,
+                    child: Text(
+                      widget.submitting
+                          ? 'جارٍ إنشاء الرحلة...'
+                          : ready
+                          ? 'كل شيء جاهز للتشغيل'
+                          : _readinessMessage(),
+                      key: ValueKey(
+                        widget.submitting
+                            ? 'submitting'
+                            : ready
+                            ? 'ready'
+                            : _readinessMessage(),
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: ready ? scheme.primary : scheme.onSurfaceVariant,
+                        fontWeight: ready ? FontWeight.w700 : FontWeight.w500,
+                      ),
+                    ),
                   ),
-                ),
+                ],
               );
               final actions = [
                 TextButton(
-                  onPressed: widget.submitting
-                      ? null
-                      : () => Navigator.of(context).pop(),
+                  onPressed: widget.submitting ? null : _closePlanner,
                   child: const Text('إلغاء'),
                 ),
                 OutlinedButton.icon(
@@ -533,12 +604,7 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
                   const SizedBox(width: AppSpacing.small),
                   actions[1],
                   const SizedBox(width: AppSpacing.medium),
-                  Expanded(
-                    child: Align(
-                      alignment: AlignmentDirectional.centerEnd,
-                      child: message,
-                    ),
-                  ),
+                  Expanded(child: message),
                   const SizedBox(width: AppSpacing.medium),
                   actions[2],
                 ],
@@ -559,6 +625,7 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
     return Column(
       children: [
         _PlannerSectionCard(
+          key: _routeAnchor,
           title: 'المسار',
           icon: Icons.alt_route_rounded,
           done: _selectedRoute != null,
@@ -566,9 +633,10 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
         ),
         const SizedBox(height: AppSpacing.medium),
         _PlannerSectionCard(
+          key: _driverAnchor,
           title: 'السائق',
           icon: Icons.person_outline_rounded,
-          done: _selectedDriver != null,
+          done: _validateDriver() == null,
           child: _buildDriverPicker(),
         ),
         const SizedBox(height: AppSpacing.medium),
@@ -595,6 +663,7 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
         _buildPlannerSummary(),
         const SizedBox(height: AppSpacing.medium),
         _PlannerSectionCard(
+          key: _scheduleAnchor,
           title: 'الجدولة والتوقيت',
           icon: Icons.calendar_month_rounded,
           done:
@@ -605,6 +674,7 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
         ),
         const SizedBox(height: AppSpacing.medium),
         _PlannerSectionCard(
+          key: _pricingAnchor,
           title: 'التسعير',
           icon: Icons.payments_outlined,
           done: _fare.isValid,
@@ -630,8 +700,9 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
 
           isExpanded: true,
           decoration: const InputDecoration(
-            labelText: 'اختر المسار',
+            label: DashboardFieldLabel(text: 'اختر المسار'),
             prefixIcon: Icon(Icons.route_outlined),
+            helperText: 'محطات المسار وأوقاته تُبنى من هذا الاختيار.',
           ),
           items: widget.routes
               .map(
@@ -680,8 +751,10 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
           initialValue: _selectedDriver?.id,
           isExpanded: true,
           decoration: InputDecoration(
-            labelText: 'اختر السائق',
+            label: const DashboardFieldLabel(text: 'اختر السائق'),
             prefixIcon: const Icon(Icons.badge_outlined),
+            helperText: 'السيارة تأتي مع السائق — لا يوجد اختيار منفصل لها.',
+            helperMaxLines: 2,
             suffixIcon: _checkingAvailability
                 ? const Padding(
                     padding: EdgeInsets.all(14),
@@ -801,7 +874,7 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  ready ? _tripSummaryLine() : _readinessMessage(),
+                  ready ? _tripSummaryLine() : _remainingSummary(),
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: scheme.onSurfaceVariant,
                   ),
@@ -810,21 +883,29 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
             ),
           ),
 
+          // Not a legend: each chip scrolls the workspace to the part of the
+          // plan it stands for, so "what is missing" and "take me to it" are
+          // the same gesture.
           Flexible(
             child: Wrap(
               alignment: WrapAlignment.end,
               spacing: AppSpacing.xSmall,
               runSpacing: AppSpacing.xSmall,
               children: [
-                _PlannerStatusChip(label: 'مسار', done: _selectedRoute != null),
+                _PlannerStatusChip(
+                  label: 'مسار',
+                  done: _selectedRoute != null,
+                  onTap: () => _plan.jumpTo('route'),
+                ),
                 _PlannerStatusChip(
                   label: 'سائق',
                   done: _selectedDriver != null,
+                  onTap: () => _plan.jumpTo('driver'),
                 ),
-
                 _PlannerStatusChip(
                   label: 'سيارة',
                   done: _selectedDriver?.isSchedulable ?? false,
+                  onTap: () => _plan.jumpTo('driver'),
                 ),
                 _PlannerStatusChip(
                   label: 'موعد',
@@ -832,8 +913,13 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
                       _dateController.text.isNotEmpty &&
                       _timeController.text.isNotEmpty &&
                       _arrivalController.text.isNotEmpty,
+                  onTap: () => _plan.jumpTo('schedule'),
                 ),
-                _PlannerStatusChip(label: 'سعر', done: _fare.isValid),
+                _PlannerStatusChip(
+                  label: 'سعر',
+                  done: _fare.isValid,
+                  onTap: () => _plan.jumpTo('pricing'),
+                ),
               ],
             ),
           ),
@@ -873,6 +959,16 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
             ),
           ],
         ),
+        if (_crossesMidnight) ...[
+          const SizedBox(height: AppSpacing.medium),
+          _ScheduleNotice(
+            icon: Icons.nightlight_round,
+            message:
+                'وقت الوصول يسبق وقت الانطلاق أو يساويه — ستُنشأ الرحلة على '
+                'أنها تعبر منتصف الليل وتصل في اليوم التالي. إن لم يكن هذا '
+                'مقصوداً فصحّح أحد الوقتين.',
+          ),
+        ],
         const SizedBox(height: AppSpacing.medium),
         Wrap(
           spacing: AppSpacing.small,
@@ -964,33 +1060,81 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
   /// A driver with no bus — or a bus that is out of service — is not a complete plan.
   /// The submit button stays disabled rather than letting the operator discover it from
   /// a server refusal.
-  bool _isTripReady() {
-    return _selectedRoute != null &&
-        (_selectedDriver?.isSchedulable ?? false) &&
-        _dateController.text.isNotEmpty &&
-        _timeController.text.isNotEmpty &&
-        _arrivalController.text.isNotEmpty &&
-        _fare.isValid;
+  bool _isTripReady() => _plan.isValid;
+
+  String? _validateDriver() {
+    final driver = _selectedDriver;
+    if (driver == null) return 'اختر السائق الذي سيشغّل الرحلة';
+    if (!driver.hasVehicle) {
+      return 'هذا السائق غير مرتبط بسيارة حالياً — عيّن له سيارة أولاً';
+    }
+    if (!driver.isSchedulable) {
+      return 'السيارة المخصصة لهذا السائق غير متاحة للتشغيل حالياً';
+    }
+    return null;
   }
 
+  /// The next thing to do, spelled out — never a list of everything at once.
+  /// The plan's issues are already ordered the way the columns read, so the
+  /// first one is the one an operator scanning the dialog would meet next.
+  ///
+  /// The footer says this; the summary card above says [_remainingSummary]
+  /// instead. Two readouts of one model, deliberately answering different
+  /// questions — "what do I do now" and "how much is left" — rather than
+  /// printing the same sentence twice.
   String _readinessMessage() {
-    final driver = _selectedDriver;
-    if (driver != null && !driver.hasVehicle) {
-      return 'هذا السائق غير مرتبط بسيارة حالياً — عيّن له سيارة أولاً.';
+    final outstanding = _plan.issues;
+    return outstanding.isEmpty ? 'جاهز' : outstanding.first.message;
+  }
+
+  /// What the plan is still short of, named rather than explained.
+  String _remainingSummary() {
+    final outstanding = _plan.issues;
+    if (outstanding.isEmpty) return 'جاهز';
+    return 'المتبقي: ${outstanding.map((issue) => issue.label).join('، ')}';
+  }
+
+  /// Everything the operator has chosen or typed, as one string. Compared with
+  /// the value taken when the planner opened, so closing an untouched planner
+  /// never prompts and closing a half-built one always does.
+  String get _scheduleSignature => [
+    _selectedRoute?.id ?? '',
+    _selectedDriver?.id ?? '',
+    _dateController.text,
+    _timeController.text,
+    _arrivalController.text,
+    _fare.oneTime.text,
+  ].join('|');
+
+  bool get _hasPlanChanges => _scheduleSignature != _openingSchedule;
+
+  /// Closes the planner, asking first when there is work to lose.
+  ///
+  /// The planner used to pop straight to the trips list from both the header
+  /// close button and the footer's cancel, so a mis-click at the end of
+  /// filling in a route, a driver, a schedule and a whole package menu threw
+  /// all of it away with no way back.
+  Future<void> _closePlanner() async {
+    if (widget.submitting) return;
+    if (!_hasPlanChanges) {
+      Navigator.of(context).pop();
+      return;
     }
-    if (driver != null && !driver.isSchedulable) {
-      return 'السيارة المخصصة لهذا السائق غير متاحة للتشغيل حالياً.';
-    }
-    final missing = <String>[
-      if (_selectedRoute == null) 'المسار',
-      if (driver == null) 'السائق',
-      if (_dateController.text.isEmpty ||
-          _timeController.text.isEmpty ||
-          _arrivalController.text.isEmpty)
-        'الموعد',
-      if (!_fare.isValid) 'السعر',
-    ];
-    return missing.isEmpty ? 'جاهز' : 'المتبقي: ${missing.join('، ')}';
+    final discard = await confirmDiscardChanges(
+      context,
+      message: 'لديك خطة رحلة غير محفوظة. الخروج الآن يلغيها بالكامل.',
+    );
+    if (discard && mounted) Navigator.of(context).pop();
+  }
+
+  /// True when the arrival clock reads at or before the departure clock — a
+  /// legitimate overnight run, but also exactly what a mistyped hour looks
+  /// like, so the planner says which one it is about to create.
+  bool get _crossesMidnight {
+    final departure = _parseClock(_timeController.text);
+    final arrival = _parseClock(_arrivalController.text);
+    if (departure == null || arrival == null) return false;
+    return !arrival.isAfter(departure);
   }
 
   String _tripSummaryLine() {
@@ -1095,11 +1239,14 @@ class _TripCreationWizardState extends State<TripCreationWizard> {
 
   Future<void> _pickTripDate() async {
     final initial = DateTime.tryParse(_dateController.text) ?? DateTime.now();
+    final today = DateTime.now();
+    // Never earlier than today: the Client App only lists trips dated today or
+    // later, so a back-dated trip is created invisible and unsellable.
     final date = await showDatePicker(
       context: context,
-      initialDate: initial,
-      firstDate: DateTime.now().subtract(const Duration(days: 1)),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
+      initialDate: initial.isBefore(today) ? today : initial,
+      firstDate: DateTime(today.year, today.month, today.day),
+      lastDate: today.add(const Duration(days: 365)),
     );
     if (date == null) return;
     setState(() => _dateController.text = _formatDate(date));
@@ -1192,6 +1339,7 @@ class _PlannerSectionCard extends StatelessWidget {
   final Widget child;
 
   const _PlannerSectionCard({
+    super.key,
     required this.title,
     required this.icon,
     required this.done,
@@ -1290,14 +1438,20 @@ class _PlannerReadinessPill extends StatelessWidget {
 class _PlannerStatusChip extends StatelessWidget {
   final String label;
   final bool done;
+  final VoidCallback? onTap;
 
-  const _PlannerStatusChip({required this.label, required this.done});
+  const _PlannerStatusChip({
+    required this.label,
+    required this.done,
+    this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Chip(
+    return ActionChip(
       visualDensity: VisualDensity.compact,
+      tooltip: done ? 'انتقل إلى $label' : 'ناقص — انتقل إلى $label',
       avatar: Icon(
         done ? Icons.check_rounded : Icons.more_horiz_rounded,
         size: 16,
@@ -1308,6 +1462,7 @@ class _PlannerStatusChip extends StatelessWidget {
           ? scheme.primaryContainer.withAlpha(70)
           : scheme.surfaceContainerHighest.withAlpha(60),
       side: BorderSide(color: scheme.outline.withAlpha(60)),
+      onPressed: onTap,
     );
   }
 }
@@ -1396,6 +1551,44 @@ class _InteractiveTimeTile extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// A schedule remark that is a consequence, not an error: the plan is valid,
+/// but it will not do what a hurried operator might assume.
+class _ScheduleNotice extends StatelessWidget {
+  const _ScheduleNotice({required this.icon, required this.message});
+
+  final IconData icon;
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    final tone = context.status(AppStatusTone.warning);
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppSpacing.medium),
+      decoration: BoxDecoration(
+        color: tone.tint,
+        borderRadius: BorderRadius.circular(AppTokens.radius),
+        border: Border.all(color: tone.ink.withAlpha(60)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 18, color: tone.ink),
+          const SizedBox(width: AppSpacing.small),
+          Expanded(
+            child: Text(
+              message,
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: tone.ink),
+            ),
+          ),
+        ],
       ),
     );
   }

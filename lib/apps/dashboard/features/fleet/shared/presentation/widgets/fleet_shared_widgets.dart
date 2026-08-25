@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/forms/forms.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_operational_status.dart';
 import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
@@ -194,6 +195,9 @@ class FleetFormActionsBar extends StatelessWidget {
     required this.onCancel,
     required this.onSave,
     required this.saveLabel,
+    this.hint,
+    this.requiredFilled,
+    this.requiredTotal,
   });
 
   final bool saving;
@@ -201,10 +205,23 @@ class FleetFormActionsBar extends StatelessWidget {
   final VoidCallback onSave;
   final String saveLabel;
 
+  /// Replaces the generic "review before saving" line with something specific
+  /// — what is still outstanding, or what is about to be written.
+  final String? hint;
+
+  /// When both are supplied, the bar carries a live completion readout, so the
+  /// operator can see how much is left without scrolling back up the form.
+  final int? requiredFilled;
+  final int? requiredTotal;
+
   @override
   Widget build(BuildContext context) {
-    final hint = Text(
-      saving ? 'جاري الحفظ والرفع...' : 'راجع البيانات قبل الحفظ النهائي.',
+    final hasProgress = requiredFilled != null && requiredTotal != null;
+
+    final hintLine = Text(
+      saving
+          ? 'جاري الحفظ والرفع...'
+          : (hint ?? 'راجع البيانات قبل الحفظ النهائي.'),
       maxLines: 2,
       overflow: TextOverflow.ellipsis,
       style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -212,6 +229,22 @@ class FleetFormActionsBar extends StatelessWidget {
         fontWeight: FontWeight.w700,
       ),
     );
+
+    final status = hasProgress
+        ? Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DashboardFormProgress(
+                filled: requiredFilled!,
+                total: requiredTotal!,
+                compact: true,
+              ),
+              const SizedBox(height: AppSpacing.xSmall),
+              hintLine,
+            ],
+          )
+        : hintLine;
 
     final cancel = OutlinedButton(
       onPressed: saving ? null : onCancel,
@@ -234,14 +267,13 @@ class FleetFormActionsBar extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.medium),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          
           final scale = MediaQuery.textScalerOf(context).scale(14) / 14;
           final roomForHint = constraints.maxWidth >= 520 * scale;
 
           if (roomForHint) {
             return Row(
               children: [
-                Expanded(child: hint),
+                Expanded(child: status),
                 const SizedBox(width: AppSpacing.medium),
                 cancel,
                 const SizedBox(width: AppSpacing.small),
@@ -250,11 +282,28 @@ class FleetFormActionsBar extends StatelessWidget {
             );
           }
 
-          return Row(
+          final buttons = Row(
             children: [
               Expanded(child: cancel),
               const SizedBox(width: AppSpacing.small),
               Expanded(child: save),
+            ],
+          );
+
+          // The hint is the first thing to go when there is no room; the
+          // progress track survives it, being one line tall and the only
+          // signal of how much work is left.
+          if (!hasProgress) return buttons;
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DashboardFormProgress(
+                filled: requiredFilled!,
+                total: requiredTotal!,
+                compact: true,
+              ),
+              const SizedBox(height: AppSpacing.small),
+              buttons,
             ],
           );
         },
@@ -478,7 +527,9 @@ class FleetTripCell extends StatelessWidget {
     final scheme = Theme.of(context).colorScheme;
 
     if (underway != null) {
-      final route = underway!.routeName.isEmpty ? '' : ' • ${underway!.routeName}';
+      final route = underway!.routeName.isEmpty
+          ? ''
+          : ' • ${underway!.routeName}';
       return Text(
         'الآن: ${underway!.tripCode}$route',
         maxLines: 2,
