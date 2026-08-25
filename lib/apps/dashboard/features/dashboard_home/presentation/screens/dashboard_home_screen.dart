@@ -3,14 +3,18 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/dashboard/core/session/office_context.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
+import 'package:bmt_app/core/theme/spacing.dart';
 import '../../domain/entities/dashboard_home_summary.dart';
 import '../cubit/dashboard_home_cubit.dart';
 import '../cubit/dashboard_home_state.dart';
 import '../widgets/action_required_section.dart';
+import '../widgets/customer_pulse_section.dart';
 import '../widgets/fleet_team_section.dart';
 import '../widgets/home_header_banner.dart';
 import '../widgets/home_kpi_grid.dart';
+import '../widgets/recent_bookings_section.dart';
 import '../widgets/revenue_trend_section.dart';
+import '../widgets/route_performance_section.dart';
 import '../widgets/today_trips_section.dart';
 
 /// The dashboard's landing screen — every role sees this first.
@@ -19,21 +23,45 @@ import '../widgets/today_trips_section.dart';
 /// cases every other module already calls, so every number here matches its
 /// full module screen for this office.
 ///
-/// The page answers three questions in the order an operator asks them:
+/// ## The page, in the order an operator asks
 ///
-/// 1. *How are we doing today?* — the greeting line and four KPIs.
+/// 1. *How are we doing, and what is happening this minute?* — the greeting,
+///    the pulse strip (next departure, buses rolling, seats still on sale) and
+///    four KPIs, each carrying the shape of its own last week.
 /// 2. *Is anything broken?* — the attention panel, full width, directly under
-///    the KPIs, as a grid rather than a stacked list so every standing queue
-///    is visible without scrolling. It is the one thing that must never be
+///    the KPIs, as a grid rather than a stacked list so every standing queue is
+///    visible without scrolling. It is the one thing that must never be
 ///    scrolled past.
-/// 3. *What is running, and what does the standing picture look like?* —
-///    today's departure board beside a rail of revenue and fleet capacity.
+/// 3. *What is running?* — today's departure board beside the money.
+/// 4. *What is selling, and is the business healthy?* — the newest bookings and
+///    the customer ratings.
+/// 5. *Where should the next bus go?* — route occupancy over the month, beside
+///    the standing fleet and roster.
 ///
-/// Everything that answered none of those was cut rather than moved: a donut
-/// of today's trips by status (the KPI row and the trip rows already say it),
-/// running totals of every booking ever taken, the newest-bookings list and
-/// the activity feed (each one click away in its own module), and a
-/// duplicate of the office-profile marketplace card.
+/// ## Why the page grew
+///
+/// The first version of this screen cut everything that did not answer one of
+/// three questions, and cut correctly — a donut of today's trips by status, a
+/// running total of every booking ever taken, a duplicate of the office-profile
+/// marketplace card. But the trim went one step past the mark: the summary was
+/// still *computing* route occupancy, the newest bookings and the review
+/// averages on every single load, and drawing none of them. Three real answers
+/// were being derived and thrown away, and the console's landing page ended a
+/// third of the way down a desktop window with two-thirds of it blank.
+///
+/// So the rule here is not "show less", it is **show what was already true**.
+/// Every panel added back is rendered from a figure [DashboardHomeSummary]
+/// already had; nothing new is fetched, and no panel exists that a sibling
+/// module could not confirm.
+///
+/// ## Layout
+///
+/// Three two-column bands, wide panel beside narrow companion, each folding to
+/// a single column when the window can no longer hold both. The bands are
+/// paired so the columns stay roughly level: the tall departure board sits
+/// against the tall money panel, and the two short panels sit against each
+/// other, which is what stops one column running a screen further than its
+/// neighbour.
 class DashboardHomeScreen extends StatelessWidget {
   const DashboardHomeScreen({
     super.key,
@@ -89,6 +117,11 @@ class _LoadedView extends StatelessWidget {
   /// readable much under that.
   static const double _splitBreakpoint = 900;
 
+  /// The gap between bands, and between the two panels of one band. One value
+  /// so a band never reads as more closely related to the band under it than
+  /// to its own other half.
+  static const double _bandGap = 24;
+
   @override
   Widget build(BuildContext context) {
     return ListView(
@@ -96,33 +129,46 @@ class _LoadedView extends StatelessWidget {
       children: [
         HomeHeaderBanner(
           office: office,
-          todayTripsCount: summary.todayTripsCount,
+          summary: summary,
           updatedAt: DateTime.now(),
           onRefresh: () => context.read<DashboardHomeCubit>().load(),
           onCreateTrip: onCreateTrip,
         ),
         if (summary.unavailable.isNotEmpty) ...[
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpacing.large),
           DashboardPartialDataNotice(sources: summary.unavailable),
         ],
-        const SizedBox(height: 24),
+        const SizedBox(height: _bandGap),
         HomeKpiGrid(summary: summary, onOpenModule: onOpenModule),
-        const SizedBox(height: 24),
+        const SizedBox(height: _bandGap),
         ActionRequiredSection(summary: summary, onOpenModule: onOpenModule),
-        const SizedBox(height: 24),
+        const SizedBox(height: _bandGap),
         _Band(
           main: TodayTripsSection(
             summary: summary,
             onOpenModule: onOpenModule,
             onCreateTrip: onCreateTrip,
           ),
-          side: Column(
-            children: [
-              RevenueTrendSection(summary: summary),
-              const SizedBox(height: 24),
-              FleetTeamSection(summary: summary, onOpenModule: onOpenModule),
-            ],
+          side: RevenueTrendSection(summary: summary),
+        ),
+        const SizedBox(height: _bandGap),
+        _Band(
+          main: RecentBookingsSection(
+            summary: summary,
+            onOpenModule: onOpenModule,
           ),
+          side: CustomerPulseSection(
+            summary: summary,
+            onOpenModule: onOpenModule,
+          ),
+        ),
+        const SizedBox(height: _bandGap),
+        _Band(
+          main: RoutePerformanceSection(
+            summary: summary,
+            onOpenModule: onOpenModule,
+          ),
+          side: FleetTeamSection(summary: summary, onOpenModule: onOpenModule),
         ),
       ],
     );
@@ -145,7 +191,7 @@ class _Band extends StatelessWidget {
           return Column(
             children: [
               main,
-              const SizedBox(height: 24),
+              const SizedBox(height: _LoadedView._bandGap),
               side,
             ],
           );
@@ -154,7 +200,7 @@ class _Band extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Expanded(flex: 3, child: main),
-            const SizedBox(width: 24),
+            const SizedBox(width: _LoadedView._bandGap),
             Expanded(flex: 2, child: side),
           ],
         );

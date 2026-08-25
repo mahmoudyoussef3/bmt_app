@@ -131,7 +131,7 @@ class _TripRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               SizedBox(
-                width: 56,
+                width: 60,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
@@ -263,7 +263,11 @@ String? _relativeLabel(DateTime? scheduledAt, DateTime now) {
   final hours = (diff.inMinutes / 60).round();
   if (hours <= 1) return 'بعد ساعة';
   if (hours == 2) return 'بعد ساعتين';
-  return 'بعد $hours ساعات';
+  // 'بعد ٣ ساعات' spelled out does not fit the departure column and elided to
+  // 'بعد ٣ ساع…', which reads as a typo rather than as three hours. The short
+  // unit is the same one the booking and alert ages use, so the whole page
+  // says "س" for an hour.
+  return 'بعد $hours س';
 }
 
 class _MetaChip extends StatelessWidget {

@@ -375,6 +375,187 @@ class DashboardHomeSummary {
     return items;
   }();
 
+  // ───────────────────────────────────────────────────────────────────────
+  // Daily series & day-over-day movement
+  //
+  // The KPI strip shows each headline number with the shape of the last week
+  // behind it and how it moved since yesterday. Both are *derived from the
+  // same list the headline itself is counted from* — `dailyTripCounts` and
+  // `todayTripsCount` read one `trips`, `dailyBookingCounts` and
+  // `todayBookingsCount` read one `bookings` — so a tile can never disagree
+  // with its own sparkline.
+  //
+  // This is the one shape of trend this console is allowed to draw. It holds
+  // no historical snapshots, so a *period-over-period* figure (this month vs
+  // last, this week vs last) would be a guess; a day counted out of a list
+  // that is already in memory is not. Both feeds are capped newest-first
+  // (`DashboardQueryCaps.trips` = 1500 by trip date, `.bookings` = 2000 by
+  // creation) and a seven-day window sits far inside either ceiling.
+  // ───────────────────────────────────────────────────────────────────────
+
+  /// The [days] days ending today, oldest first.
+  static List<DateTime> _window(int days, DateTime? now) {
+    final today = _startOfDay(now ?? DateTime.now());
+    return [
+      for (var i = days - 1; i >= 0; i--) today.subtract(Duration(days: i)),
+    ];
+  }
+
+  /// How many trips each of the last [days] days holds, oldest first.
+  ///
+  /// Every trip scheduled on the day, cancelled ones included — the same set
+  /// [todayTrips] gathers, so this series' last point *is* the "رحلات اليوم"
+  /// tile's value. (The tile names the cancelled share on its own line, which
+  /// is where that distinction belongs; [topRoutes] drops cancelled trips
+  /// because it is answering a different question — how full a corridor ran.)
+  List<int> dailyTripCounts({int days = 7, DateTime? now}) {
+    final window = _window(days, now);
+    final counts = {for (final day in window) day: 0};
+
+    for (final trip in trips) {
+      final at = trip.scheduledAt;
+      if (at == null) continue;
+      final day = _startOfDay(at);
+      if (!counts.containsKey(day)) continue;
+      counts[day] = counts[day]! + 1;
+    }
+
+    return [for (final day in window) counts[day]!];
+  }
+
+  /// How many bookings each of the last [days] days is carrying, oldest first.
+  ///
+  /// Dated by the booking's **travel day** (`date`), not by when it was taken —
+  /// which is exactly the rule [todayBookingsCount] applies, so this series'
+  /// last point *is* that tile's value rather than a near-miss of it. The other
+  /// clock is deliberate elsewhere: [bookingRevenueSeries] dates by
+  /// `created_at` because money is realised when it is collected, not when the
+  /// passenger travels.
+  List<int> dailyBookingCounts({int days = 7, DateTime? now}) {
+    final window = _window(days, now);
+    final counts = {for (final day in window) day: 0};
+
+    for (final booking in bookings) {
+      final at = DateTime.tryParse(booking.date);
+      if (at == null) continue;
+      final day = _startOfDay(at);
+      if (!counts.containsKey(day)) continue;
+      counts[day] = counts[day]! + 1;
+    }
+
+    return [for (final day in window) counts[day]!];
+  }
+
+  /// Seat occupancy on each of the last [days] days, oldest first, as a
+  /// fraction.
+  ///
+  /// Booked seats over offered seats across every trip on the day — the same
+  /// sum [todayOccupancyRate] takes, so the last point matches the tile. A day
+  /// whose trips offered no seats at all reads 0 rather than dividing by zero.
+  List<double> dailyOccupancyRates({int days = 7, DateTime? now}) {
+    final window = _window(days, now);
+    final booked = {for (final day in window) day: 0};
+    final capacity = {for (final day in window) day: 0};
+
+    for (final trip in trips) {
+      final at = trip.scheduledAt;
+      if (at == null) continue;
+      final day = _startOfDay(at);
+      if (!capacity.containsKey(day)) continue;
+      booked[day] = booked[day]! + trip.bookedSeats;
+      capacity[day] = capacity[day]! + trip.capacity;
+    }
+
+    return [
+      for (final day in window)
+        capacity[day] == 0 ? 0.0 : booked[day]! / capacity[day]!,
+    ];
+  }
+
+  late final List<int> _tripCountsWeek = dailyTripCounts();
+  late final List<int> _bookingCountsWeek = dailyBookingCounts();
+  late final List<double> _occupancyWeek = dailyOccupancyRates();
+
+  /// Trips per day over the last week, oldest first — the shape behind the
+  /// "رحلات اليوم" tile.
+  List<int> get tripCountsThisWeek => _tripCountsWeek;
+
+  List<int> get bookingCountsThisWeek => _bookingCountsWeek;
+
+  List<double> get occupancyThisWeek => _occupancyWeek;
+
+  /// Today's trip count against yesterday's.
+  late final HomeDelta tripsDelta = HomeDelta.fromSeries(_tripCountsWeek);
+
+  late final HomeDelta bookingsDelta = HomeDelta.fromSeries(_bookingCountsWeek);
+
+  /// Today's occupancy against yesterday's, in **percentage points**.
+  late final HomeDelta occupancyDelta = HomeDelta.fromSeries([
+    for (final rate in _occupancyWeek) rate * 100,
+  ]);
+
+  /// Today's revenue against the daily average of the week it sits in.
+  ///
+  /// The only movement [RevenueMetrics] can support: it reports today, the
+  /// week and the month as totals and holds no per-day history, so there is no
+  /// "yesterday" to compare against — but a week's total divided by seven is a
+  /// real baseline and the tile says which one it used. Null when the week
+  /// collected nothing, since "up ∞% from zero" is not a reading.
+  HomeDelta? get revenueAgainstWeeklyAverage {
+    if (revenue.weeklyRevenue <= 0) return null;
+    return HomeDelta(
+      current: revenue.todayRevenue,
+      previous: revenue.weeklyRevenue / 7,
+    );
+  }
+
+  // ───────────────────────────────────────────────────────────────────────
+  // Today at a glance — the header's pulse line
+  // ───────────────────────────────────────────────────────────────────────
+
+  /// Today's trips that are already moving — boarding at the station or under
+  /// way.
+  late final List<OperationTrip> tripsRunningNow = todayTrips
+      .where(
+        (trip) =>
+            trip.status == OperationTripStatus.boarding ||
+            trip.status == OperationTripStatus.inProgress,
+      )
+      .toList();
+
+  /// The next bus out of the station today, or null once the board is done.
+  ///
+  /// Skips anything cancelled or already completed: the question is "what
+  /// leaves next", and neither of those ever will.
+  OperationTrip? nextDeparture({DateTime? now}) {
+    final at = now ?? DateTime.now();
+    for (final trip in todayTripsByDeparture) {
+      if (trip.status == OperationTripStatus.cancelled ||
+          trip.status == OperationTripStatus.completed) {
+        continue;
+      }
+      final scheduled = trip.scheduledAt;
+      if (scheduled != null && scheduled.isAfter(at)) return trip;
+    }
+    return null;
+  }
+
+  /// Seats still on sale across today's trips that have not left or been
+  /// cancelled — the inventory an operator can still fill this morning.
+  int seatsAvailableToday({DateTime? now}) {
+    final at = now ?? DateTime.now();
+    return todayTrips
+        .where((trip) {
+          if (trip.status == OperationTripStatus.cancelled ||
+              trip.status == OperationTripStatus.completed) {
+            return false;
+          }
+          final scheduled = trip.scheduledAt;
+          return scheduled == null || !scheduled.isBefore(at);
+        })
+        .fold<int>(0, (sum, trip) => sum + trip.availableSeats);
+  }
+
   Map<T, int> _tally<T>(Iterable<T> values) {
     final counts = <T, int>{};
     for (final value in values) {
@@ -403,6 +584,43 @@ class DailyRevenuePoint {
     required this.amount,
     required this.bookings,
   });
+}
+
+/// A figure and the same figure one period earlier, so a tile can state a
+/// movement it actually measured.
+///
+/// Deliberately dumb: it holds two numbers and the arithmetic between them,
+/// and says nothing about whether the movement is *good*. Refunds rising and
+/// revenue rising are the same arithmetic and opposite news, and only the call
+/// site knows which figure it is holding — the same split [KpiTrendTone]
+/// already makes.
+class HomeDelta {
+  final num current;
+  final num previous;
+
+  const HomeDelta({required this.current, required this.previous});
+
+  /// Today against yesterday, from a series ordered oldest-first. A series
+  /// shorter than two points has no baseline and reads flat.
+  factory HomeDelta.fromSeries(List<num> series) {
+    if (series.length < 2) {
+      return HomeDelta(current: series.isEmpty ? 0 : series.last, previous: 0);
+    }
+    return HomeDelta(current: series.last, previous: series[series.length - 2]);
+  }
+
+  num get change => current - previous;
+
+  bool get isFlat => change == 0;
+
+  bool get isUp => change > 0;
+
+  /// The movement as a share of the baseline, or null when there is no
+  /// baseline to take a share of.
+  double? get percentChange {
+    if (previous == 0) return null;
+    return (current - previous) / previous.abs() * 100;
+  }
 }
 
 /// How full one route ran over the window the home screen ranks.

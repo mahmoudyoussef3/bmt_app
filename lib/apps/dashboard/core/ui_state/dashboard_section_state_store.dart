@@ -58,6 +58,9 @@ class DashboardSectionIds {
   static const homeRevenueTrend = 'home.revenueTrend';
   static const homeTodayTrips = 'home.todayTrips';
   static const homeFleetTeam = 'home.fleetTeam';
+  static const homeRoutePerformance = 'home.routePerformance';
+  static const homeRecentBookings = 'home.recentBookings';
+  static const homeCustomerPulse = 'home.customerPulse';
 
   static const businessKpis = 'business.kpis';
   static const businessHealth = 'business.health';

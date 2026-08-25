@@ -10,15 +10,23 @@ import 'package:bmt_app/core/theme/spacing.dart';
 
 import '../../domain/entities/dashboard_home_summary.dart';
 
-/// Standing capacity: what the office has to run trips with today, read as a
-/// single dimension — each vehicle's operational status — rather than four
-/// unrelated tallies. [FleetSummary.inServiceVehiclesCount] /
-/// `unassignedVehiclesCount` / `inMaintenanceVehiclesCount` already partition
-/// every non-archived vehicle exactly once (see `FleetWorkspace.summary`), so
-/// the three bars below always add up to the fleet total.
+/// Standing capacity: what the office has to run trips with today.
 ///
-/// Anything here that needs a *decision* (expiring documents, join requests)
-/// is raised by the attention panel instead; this is inventory, not a queue.
+/// Two readings, in the order they are asked. **Where the buses are** —
+/// [FleetSummary.inServiceVehiclesCount] / `unassignedVehiclesCount` /
+/// `inMaintenanceVehiclesCount` already partition every non-archived vehicle
+/// exactly once (see `FleetWorkspace.summary`), so the three bars always add up
+/// to the fleet total and the split is a real one rather than three tallies
+/// that happen to share a panel. **Who and how many** — the roster totals
+/// underneath: drivers, buses, live pairings.
+///
+/// The roster line is why the panel can honestly be called الأسطول والفريق
+/// again. It reported vehicles only for a while, under a title that promised
+/// the team too, and an operator asking "do I have drivers for tomorrow" got no
+/// answer from the screen that claimed to be about exactly that.
+///
+/// Anything here that needs a *decision* (expiring documents, join requests) is
+/// raised by the attention panel instead; this is inventory, not a queue.
 class FleetTeamSection extends StatelessWidget {
   const FleetTeamSection({
     super.key,
@@ -38,7 +46,8 @@ class FleetTeamSection extends StatelessWidget {
     return DashboardPanel(
       sectionId: DashboardSectionIds.homeFleetTeam,
       icon: DashboardIcons.fleetActive,
-      title: 'حالة الأسطول',
+      title: 'الأسطول والفريق',
+      subtitle: total == 0 ? null : 'الطاقة المتاحة للتشغيل',
       trailing: TextButton(
         onPressed: () => onOpenModule(DashboardRoutes.fleet),
         child: const Text('التفاصيل'),
@@ -75,6 +84,29 @@ class FleetTeamSection extends StatelessWidget {
                   color: palette.warning,
                   onTap: () => onOpenModule(DashboardRoutes.vehicles),
                 ),
+                const Divider(height: AppSpacing.large),
+                _RosterStrip(
+                  cells: [
+                    _RosterCell(
+                      icon: DashboardIcons.captain,
+                      label: 'السائقون',
+                      value: fleet.driversCount,
+                      onTap: () => onOpenModule(DashboardRoutes.drivers),
+                    ),
+                    _RosterCell(
+                      icon: DashboardIcons.vehicle,
+                      label: 'المركبات',
+                      value: total,
+                      onTap: () => onOpenModule(DashboardRoutes.vehicles),
+                    ),
+                    _RosterCell(
+                      icon: DashboardIcons.captainRequestsActive,
+                      label: 'تعيينات نشطة',
+                      value: fleet.activeAssignmentsCount,
+                      onTap: () => onOpenModule(DashboardRoutes.fleet),
+                    ),
+                  ],
+                ),
               ],
             ),
     );
@@ -109,11 +141,17 @@ class _FleetStatusRow extends StatelessWidget {
         child: Row(
           children: [
             SizedBox(
-              width: 72,
+              width: 46,
               child: Text(
                 '$count',
                 style: text.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w800,
+                  // A zero bar is an empty track, which reads as a broken
+                  // widget rather than as "none in maintenance"; muting the
+                  // figure too makes the whole row say "nothing here".
+                  color: count == 0
+                      ? DashboardColors.faintInk(context)
+                      : DashboardColors.ink(context),
                   fontFeatures: const [FontFeature.tabularFigures()],
                 ),
               ),
@@ -123,11 +161,24 @@ class _FleetStatusRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    label,
-                    style: text.labelLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
-                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          label,
+                          style: text.labelLarge?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        'من $total',
+                        style: text.labelSmall?.copyWith(
+                          color: DashboardColors.faintInk(context),
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        ),
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 6),
                   ClipRRect(
@@ -135,11 +186,92 @@ class _FleetStatusRow extends StatelessWidget {
                     child: LinearProgressIndicator(
                       value: progress,
                       minHeight: 8,
-                      backgroundColor: DashboardColors.divider(context),
+                      backgroundColor: DashboardColors.well(context),
                       valueColor: AlwaysStoppedAnimation(color),
                     ),
                   ),
                 ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The roster totals as one row of three — who the office has, not where they
+/// are right now.
+class _RosterStrip extends StatelessWidget {
+  const _RosterStrip({required this.cells});
+
+  final List<_RosterCell> cells;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        for (var i = 0; i < cells.length; i++) ...[
+          Expanded(child: cells[i]),
+          if (i != cells.length - 1)
+            Container(
+              width: 1,
+              height: 26,
+              color: DashboardColors.divider(context),
+            ),
+        ],
+      ],
+    );
+  }
+}
+
+class _RosterCell extends StatelessWidget {
+  const _RosterCell({
+    required this.icon,
+    required this.label,
+    required this.value,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final int value;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, size: 13, color: DashboardColors.mutedInk(context)),
+                const SizedBox(width: 4),
+                Flexible(
+                  child: Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: text.labelSmall?.copyWith(
+                      color: DashboardColors.mutedInk(context),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 2),
+            Text(
+              '$value',
+              style: text.titleMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+                fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
           ],

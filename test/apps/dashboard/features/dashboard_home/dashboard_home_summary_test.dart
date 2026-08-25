@@ -3,6 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:bmt_app/apps/dashboard/features/bookings/domain/entities/operation_booking.dart';
 import 'package:bmt_app/apps/dashboard/features/captain_requests/domain/entities/captain_request.dart';
 import 'package:bmt_app/apps/dashboard/features/dashboard_home/domain/entities/dashboard_home_summary.dart';
+import 'package:bmt_app/apps/dashboard/features/finance/domain/entities/finance_entities.dart'
+    show RevenueMetrics;
 import 'package:bmt_app/apps/dashboard/features/subscriptions/domain/entities/user_subscription.dart';
 import 'package:bmt_app/apps/dashboard/features/tickets/domain/entities/complaint.dart';
 import 'package:bmt_app/apps/dashboard/features/trips/shared/domain/entities/operation_trip.dart';
@@ -497,6 +499,179 @@ void main() {
           HomeAttentionSeverity.info,
         ]);
       });
+    });
+  });
+
+  // The KPI strip draws a headline number and, right underneath it, the shape
+  // of the last week. Those two are only trustworthy together if they are
+  // counted the same way, and the failure mode is silent — a sparkline whose
+  // last point is one off the number above it looks fine and is wrong. Each
+  // series is therefore pinned to the tile it sits under.
+  group('DashboardHomeSummary — weekly series & movement', () {
+    final now = DateTime(2026, 8, 25, 10);
+
+    test('trip counts end on today and agree with todayTripsCount', () {
+      final summary = buildSummary(
+        trips: [
+          buildTrip(id: 'a', at: now),
+          buildTrip(id: 'b', at: now),
+          buildTrip(
+            id: 'cancelled-today',
+            at: now,
+            status: OperationTripStatus.cancelled,
+          ),
+          buildTrip(id: 'y1', at: now.subtract(const Duration(days: 1))),
+          buildTrip(id: 'old', at: now.subtract(const Duration(days: 30))),
+        ],
+      );
+
+      final series = summary.dailyTripCounts(days: 7, now: now);
+      expect(series, hasLength(7));
+      // A cancelled trip still counts, because todayTrips counts it too.
+      expect(series.last, 3);
+      expect(series[series.length - 2], 1);
+      // Outside the window, so it never reaches the line.
+      expect(series.reduce((a, b) => a + b), 4);
+    });
+
+    test('booking counts are dated by travel day, like todayBookingsCount', () {
+      // Taken today for a trip tomorrow: it belongs to tomorrow's load, and
+      // both the tile and the series have to agree on that.
+      final summary = buildSummary(
+        bookings: [
+          buildBooking(id: 'today', date: now),
+          buildBooking(
+            id: 'yesterday',
+            date: now.subtract(const Duration(days: 1)),
+          ),
+          buildBooking(
+            id: 'yesterday-2',
+            date: now.subtract(const Duration(days: 1)),
+          ),
+        ],
+      );
+
+      final series = summary.dailyBookingCounts(days: 7, now: now);
+      expect(series.last, 1);
+      expect(series[series.length - 2], 2);
+    });
+
+    test('occupancy per day is booked over offered, zero when nothing ran', () {
+      final summary = buildSummary(
+        trips: [
+          buildTrip(id: 't', at: now, capacity: 10, bookedSeats: 5),
+          buildTrip(id: 'u', at: now, capacity: 10, bookedSeats: 3),
+        ],
+      );
+
+      final series = summary.dailyOccupancyRates(days: 7, now: now);
+      expect(series.last, closeTo(0.4, 0.0001));
+      expect(series.first, 0);
+    });
+
+    test('the delta is today against yesterday, and flat means flat', () {
+      final summary = buildSummary(
+        trips: [
+          buildTrip(id: 'a', at: DateTime.now()),
+          buildTrip(id: 'b', at: DateTime.now()),
+          buildTrip(
+            id: 'y',
+            at: DateTime.now().subtract(const Duration(days: 1)),
+          ),
+        ],
+      );
+
+      expect(summary.tripsDelta.change, 1);
+      expect(summary.tripsDelta.isUp, isTrue);
+      expect(buildSummary().tripsDelta.isFlat, isTrue);
+    });
+
+    test('revenue compares against the week average, and not against zero', () {
+      final quiet = buildSummary();
+      expect(quiet.revenueAgainstWeeklyAverage, isNull);
+
+      final busy = buildSummary(
+        revenue: const RevenueMetrics(
+          todayRevenue: 200,
+          weeklyRevenue: 700,
+          monthlyRevenue: 3000,
+          activeSubscriptions: 0,
+          totalBookingsRevenue: 3000,
+        ),
+      );
+      final delta = busy.revenueAgainstWeeklyAverage!;
+      expect(delta.previous, 100);
+      expect(delta.percentChange, closeTo(100, 0.0001));
+    });
+  });
+
+  group('DashboardHomeSummary — today at a glance', () {
+    // These read `todayTrips`, which filters against the real wall clock, so
+    // the fixtures have to be built on whatever day the suite runs. A literal
+    // date here passes on the day it is written and silently stops exercising
+    // anything the next morning, when every trip falls outside "today".
+    final today = DateTime.now();
+    DateTime at(int hour) => DateTime(today.year, today.month, today.day, hour);
+    final now = at(9);
+
+    test('nextDeparture skips what has left, been cancelled, or finished', () {
+      final summary = buildSummary(
+        trips: [
+          buildTrip(id: 'gone', at: at(7)),
+          buildTrip(
+            id: 'cancelled',
+            at: at(10),
+            status: OperationTripStatus.cancelled,
+          ),
+          buildTrip(id: 'next', at: at(11)),
+          buildTrip(id: 'later', at: at(13)),
+        ],
+      );
+
+      expect(summary.nextDeparture(now: now)?.id, 'next');
+    });
+
+    test('nextDeparture is null once the board is done', () {
+      final summary = buildSummary(
+        trips: [buildTrip(id: 'gone', at: at(7))],
+      );
+
+      expect(summary.nextDeparture(now: now), isNull);
+    });
+
+    test('tripsRunningNow counts only buses boarding or under way', () {
+      final summary = buildSummary(
+        trips: [
+          buildTrip(
+            id: 'boarding',
+            at: DateTime.now(),
+            status: OperationTripStatus.boarding,
+          ),
+          buildTrip(
+            id: 'moving',
+            at: DateTime.now(),
+            status: OperationTripStatus.inProgress,
+          ),
+          buildTrip(
+            id: 'scheduled',
+            at: DateTime.now(),
+            status: OperationTripStatus.scheduled,
+          ),
+        ],
+      );
+
+      expect(summary.tripsRunningNow, hasLength(2));
+    });
+
+    test('seats on sale exclude trips that have already left', () {
+      final summary = buildSummary(
+        trips: [
+          buildTrip(id: 'gone', at: at(7), capacity: 10, bookedSeats: 2),
+          buildTrip(id: 'ahead', at: at(12), capacity: 10, bookedSeats: 4),
+        ],
+      );
+
+      expect(summary.seatsAvailableToday(now: now), 6);
     });
   });
 }

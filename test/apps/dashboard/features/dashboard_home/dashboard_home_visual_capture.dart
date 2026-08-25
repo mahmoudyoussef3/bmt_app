@@ -66,7 +66,7 @@ void main() {
       'dashboard_home_1_full_light',
       dark: false,
       width: 1440,
-      height: 3150,
+      height: 2600,
     );
   });
 
@@ -76,7 +76,7 @@ void main() {
       'dashboard_home_2_full_dark',
       dark: true,
       width: 1440,
-      height: 3150,
+      height: 2600,
     );
   });
 
@@ -88,7 +88,7 @@ void main() {
       'dashboard_home_3_narrow_light',
       dark: false,
       width: 900,
-      height: 4300,
+      height: 4600,
     );
   });
 }

@@ -10,7 +10,7 @@ import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_panel.dart';
 import 'package:bmt_app/apps/dashboard/features/notifications/domain/entities/operational_alert.dart';
 import 'package:bmt_app/apps/dashboard/features/notifications/presentation/cubit/operational_alerts_cubit.dart';
 import 'package:bmt_app/apps/dashboard/features/notifications/presentation/cubit/operational_alerts_state.dart';
-import 'package:bmt_app/apps/dashboard/features/notifications/presentation/widgets/alert_tile.dart';
+import 'package:bmt_app/apps/dashboard/features/notifications/presentation/widgets/alert_icon_resolver.dart';
 import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 
@@ -71,22 +71,42 @@ class ActionRequiredSection extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     if (queues.isNotEmpty)
-                      _QueueGrid(items: queues, onOpenModule: onOpenModule),
-                    if (queues.isNotEmpty && alerts.isNotEmpty)
+                      _PanelGrid(
+                        rowHeight: 72,
+                        children: [
+                          for (final item in queues)
+                            _QueueTile(item: item, onOpenModule: onOpenModule),
+                        ],
+                      ),
+                    if (queues.isNotEmpty && alerts.isNotEmpty) ...[
                       const Divider(height: AppSpacing.large),
-                    for (final alert in alerts.take(4))
-                      AlertTile(
-                        alert: alert,
-                        onTap: () {
-                          context.read<OperationalAlertsCubit>().markAsRead(
-                            alert.id,
-                          );
-                          final route = _routeForAlert(alert.type);
-                          if (route != null) onOpenModule(route);
-                        },
-                        onMarkRead: () => context
-                            .read<OperationalAlertsCubit>()
-                            .markAsRead(alert.id),
+                      _SubHeading(label: 'مستجدات', count: alerts.length),
+                      const SizedBox(height: AppSpacing.small),
+                    ],
+                    if (alerts.isNotEmpty)
+                      _PanelGrid(
+                        rowHeight: 56,
+                        // Two columns, not the queues' three: an alert carries
+                        // a sentence of body text where a queue carries a
+                        // count, and a third of this panel is not enough width
+                        // to say anything before eliding.
+                        maxColumns: 2,
+                        children: [
+                          for (final alert in alerts.take(4))
+                            _AlertRow(
+                              alert: alert,
+                              onTap: () {
+                                context
+                                    .read<OperationalAlertsCubit>()
+                                    .markAsRead(alert.id);
+                                final route = _routeForAlert(alert.type);
+                                if (route != null) onOpenModule(route);
+                              },
+                              onMarkRead: () => context
+                                  .read<OperationalAlertsCubit>()
+                                  .markAsRead(alert.id),
+                            ),
+                        ],
                       ),
                   ],
                 ),
@@ -96,36 +116,46 @@ class ActionRequiredSection extends StatelessWidget {
   }
 }
 
-/// The standing queues as a grid — up to three columns, so six queues are
-/// visible at once instead of six full-width rows stacked to the floor. Each
-/// tile is its own tap target: what it is, how many, one click to clear it.
-class _QueueGrid extends StatelessWidget {
-  const _QueueGrid({required this.items, required this.onOpenModule});
+/// The panel's column rule, shared by both of its halves.
+///
+/// This panel is full-page width, and a full-width row is why its two halves
+/// used to read so differently: the queue tiles were already a grid, while the
+/// alerts underneath were single rows stretched across 1400px, leaving a hand's
+/// width of blank paper between a two-word body and its timestamp. Both are
+/// short records; both belong in columns. Only how many columns differs, which
+/// is the one thing a caller passes.
+class _PanelGrid extends StatelessWidget {
+  const _PanelGrid({
+    required this.children,
+    required this.rowHeight,
+    this.maxColumns = 3,
+  });
 
-  final List<HomeAttentionItem> items;
-  final ValueChanged<String> onOpenModule;
+  final List<Widget> children;
+  final double rowHeight;
+  final int maxColumns;
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final columns = constraints.maxWidth >= 760
+        final fitted = constraints.maxWidth >= 760
             ? 3
             : constraints.maxWidth >= 480
             ? 2
             : 1;
+        final columns = fitted > maxColumns ? maxColumns : fitted;
         return GridView.builder(
           shrinkWrap: true,
           physics: const NeverScrollableScrollPhysics(),
-          itemCount: items.length,
+          itemCount: children.length,
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
             crossAxisCount: columns,
             crossAxisSpacing: AppSpacing.medium,
-            mainAxisSpacing: AppSpacing.medium,
-            mainAxisExtent: 72,
+            mainAxisSpacing: AppSpacing.small,
+            mainAxisExtent: rowHeight,
           ),
-          itemBuilder: (context, index) =>
-              _QueueTile(item: items[index], onOpenModule: onOpenModule),
+          itemBuilder: (context, index) => children[index],
         );
       },
     );
@@ -224,6 +254,161 @@ class _QueueTile extends StatelessWidget {
       ),
     );
   }
+}
+
+/// A label for a run of rows inside a panel that already has a title —
+/// «مستجدات» over the event feed, so the operator can tell at a glance which
+/// half of the panel is a standing queue and which half is news.
+class _SubHeading extends StatelessWidget {
+  const _SubHeading({required this.label, required this.count});
+
+  final String label;
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    return Row(
+      children: [
+        Text(
+          label,
+          style: text.labelMedium?.copyWith(
+            color: DashboardColors.mutedInk(context),
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          '$count',
+          style: text.labelSmall?.copyWith(
+            color: DashboardColors.faintInk(context),
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// One unread event, at the density of the queue tiles above it.
+///
+/// Not the notifications module's [AlertTile]: that row is built for a
+/// full-page inbox — 16px padding around a 44px circular glyph and a two-line
+/// body — and four of them turned Home's attention panel into a column half a
+/// screen tall for news that is one click from the bell anyway. This is the
+/// same content at the panel's own rhythm: a 28px glyph square matching
+/// `_QueueTile`, one line of title, one of body, the age, and a way to dismiss
+/// it without leaving the page.
+class _AlertRow extends StatelessWidget {
+  const _AlertRow({
+    required this.alert,
+    required this.onTap,
+    required this.onMarkRead,
+  });
+
+  final OperationalAlert alert;
+  final VoidCallback onTap;
+  final VoidCallback onMarkRead;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    final (tone, icon) = AlertIconResolver.resolve(alert.type);
+    final style = DashboardColors.status(context, tone);
+    final radius = BorderRadius.circular(8);
+
+    return Material(
+      color: DashboardColors.panel(context),
+      borderRadius: radius,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: radius,
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.small,
+            vertical: AppSpacing.small,
+          ),
+          decoration: BoxDecoration(
+            borderRadius: radius,
+            border: Border.all(color: DashboardColors.border(context)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 28,
+                height: 28,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: style.tint,
+                  borderRadius: BorderRadius.circular(7),
+                  border: Border.all(
+                    color: DashboardColors.statusLine(context, tone),
+                  ),
+                ),
+                child: Icon(icon, size: 15, color: style.ink),
+              ),
+              const SizedBox(width: AppSpacing.small),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      alert.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: text.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    if (alert.body.trim().isNotEmpty)
+                      Text(
+                        alert.body,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: text.labelSmall?.copyWith(
+                          color: DashboardColors.mutedInk(context),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.small),
+              Text(
+                _ageLabel(alert.createdAt),
+                style: text.labelSmall?.copyWith(
+                  color: DashboardColors.faintInk(context),
+                ),
+              ),
+              IconButton(
+                onPressed: onMarkRead,
+                icon: const Icon(DashboardIcons.allClear, size: 16),
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints.tightFor(
+                  width: 28,
+                  height: 28,
+                ),
+                color: DashboardColors.faintInk(context),
+                tooltip: 'تعليم كمقروء',
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// "منذ ٤٠ د" / "منذ ٣ س" / "منذ يومين" — the coarsest unit that still says
+/// something. An operational alert older than a week is not news, so the scale
+/// stops at days.
+String _ageLabel(DateTime createdAt) {
+  final diff = DateTime.now().difference(createdAt);
+  if (diff.inMinutes < 1) return 'الآن';
+  if (diff.inMinutes < 60) return 'منذ ${diff.inMinutes} د';
+  if (diff.inHours < 24) return 'منذ ${diff.inHours} س';
+  return 'منذ ${diff.inDays} ي';
 }
 
 AppStatusTone _toneFor(HomeAttentionSeverity severity) => switch (severity) {

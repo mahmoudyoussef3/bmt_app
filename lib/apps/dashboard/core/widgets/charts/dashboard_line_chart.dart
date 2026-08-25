@@ -67,6 +67,13 @@ class DashboardLineChart extends StatelessWidget {
               sideTitles: SideTitles(
                 showTitles: true,
                 reservedSize: 28,
+                // One tick per data point. Without it fl_chart chooses its own
+                // spacing from the axis range, which on a wide chart lands on
+                // fractional positions — 3.0 and 3.5 both floor to index 3 —
+                // and the same date is drawn twice side by side. Thinning is
+                // `labelStep`'s job below; this only makes the ticks line up
+                // with the points they name.
+                interval: 1,
                 getTitlesWidget: (value, meta) {
                   final index = value.toInt();
                   if (index < 0 ||
