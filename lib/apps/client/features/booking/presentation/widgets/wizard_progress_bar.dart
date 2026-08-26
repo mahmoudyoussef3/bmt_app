@@ -1,8 +1,17 @@
 import 'package:flutter/material.dart';
-import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
-import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_step_progress.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
+/// The booking wizard's header.
+///
+/// Replaces the old single filled rule: a bar can only say "you are 4/6 of the
+/// way", while the marker row names and numbers every step, so a rider can see
+/// that seat selection is behind them and payment is still two screens off
+/// without reading a counter.
+///
+/// The horizontal padding is narrower than a screen gutter on purpose — six
+/// steps have to share the width, and every pixel taken here comes out of the
+/// step labels.
 class WizardProgressBar extends StatelessWidget {
   const WizardProgressBar({super.key, required this.step});
 
@@ -19,47 +28,10 @@ class WizardProgressBar extends StatelessWidget {
       l10n.booking_summary,
       l10n.payments_stepPayment,
     ];
-    final progress = (step + 1) / labels.length;
+
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 6, 20, 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: Text(
-                  labels[step],
-                  style: ClientTypography.labelMedium(
-                    context,
-                  ).copyWith(color: ClientColors.primaryFor(context)),
-                ),
-              ),
-              Text(
-                l10n.booking_stepXOfY(step + 1, labels.length),
-                style: ClientTypography.labelSmall(
-                  context,
-                ).copyWith(color: ClientColors.textSecondaryFor(context)),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(999),
-            child: TweenAnimationBuilder<double>(
-              tween: Tween(end: progress),
-              duration: const Duration(milliseconds: 280),
-              builder: (context, value, _) => LinearProgressIndicator(
-                value: value,
-                minHeight: 5,
-                color: ClientColors.primaryFor(context),
-                backgroundColor: ClientColors.surfaceMutedFor(context),
-              ),
-            ),
-          ),
-        ],
-      ),
+      padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
+      child: ClientStepProgress(labels: labels, currentIndex: step),
     );
   }
 }

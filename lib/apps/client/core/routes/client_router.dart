@@ -18,7 +18,6 @@ import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_opt
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_search_query.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/booking_search_cubit.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/map_pins_cubit.dart';
-import 'package:bmt_app/apps/client/features/booking/presentation/cubit/route_packages_cubit.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/route_results_cubit.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/vehicle_details_cubit.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/vehicle_listing_cubit.dart';
@@ -175,14 +174,8 @@ abstract final class ClientRouter {
     },
     BookingRoutes.routeSelection: (context) {
       final query = BookingSearchQuery.fromArguments(_args(context));
-      return MultiBlocProvider(
-        providers: [
-          BlocProvider(
-            create: (_) => clientGetIt<RouteResultsCubit>()..load(query),
-          ),
-          
-          BlocProvider(create: (_) => clientGetIt<RoutePackagesCubit>()),
-        ],
+      return BlocProvider(
+        create: (_) => clientGetIt<RouteResultsCubit>()..load(query),
         child: RouteSelectionScreen(query: query),
       );
     },

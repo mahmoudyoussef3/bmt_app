@@ -50,7 +50,17 @@ class HomeLiveTripBanner extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(ClientSpacing.lg),
         decoration: BoxDecoration(
-          gradient: ClientColors.heroGradientFor(context),
+          // The design gives the live-trip card the brand gradient
+          // (`--primary` → `--primary-2`), not the hero's navy: stacked
+          // directly under the header, two identical gradients read as one
+          // long block instead of a card sitting on a page.
+          //
+          // Deliberately the fixed light-palette ramp in both themes rather
+          // than `primaryGradientFor`. Everything drawn on this card is white
+          // — the glass chips, the divider, the live badge, and a white pill
+          // whose ink is the on-white brand blue — and the dark theme's brand
+          // is a light cyan that none of those survive.
+          gradient: ClientColors.primaryGradient,
           borderRadius: BorderRadius.circular(ClientRadius.lg),
           boxShadow: ClientElevation.md(context),
         ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:bmt_app/apps/client/core/theme/client_seat_palette.dart';
 
 import 'package:bmt_app/apps/client/core/widgets/client_seat_labels.dart';
 import 'package:bmt_app/apps/client/features/trips/domain/entities/trip_seat.dart';
@@ -39,11 +40,11 @@ class TripSeatMap extends StatelessWidget {
     );
 
     return VehicleSeatLayout(
+      palette: ClientSeatPalette.of(context),
       blueprint: blueprint,
       seats: [
         for (final seat in ordered)
           VehicleSeatData(
-            
             id: '${seat.row}-${seat.column}',
             label: seat.displayLabel,
             state: switch (seat.state) {

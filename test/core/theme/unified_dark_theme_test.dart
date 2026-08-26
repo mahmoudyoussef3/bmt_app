@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_theme.dart';
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/theme/client_palette.dart';
 import 'package:bmt_app/apps/client/core/theme/client_theme.dart';
 import 'package:bmt_app/core/theme/app_dark_colors.dart';
 
@@ -104,9 +105,15 @@ void main() {
       expect(client.muted, captain.muted);
 
       // …and that shared value is the documented token, not a coincidence.
-      expect(client.background, AppDarkColors.background);
-      expect(client.surface, AppDarkColors.surface);
-      expect(client.border, AppDarkColors.border);
+      //
+      // The token is `ClientPalette.dark`, not `AppDarkColors`: the client
+      // moved onto its own two-brightness palette with the EWT design import,
+      // and the captain followed when `CaptainColors` became an alias onto
+      // `ClientColors`. `AppDarkColors` is still the dashboard's palette, which
+      // is why it survives further down this file.
+      expect(client.background, ClientPalette.dark.bg);
+      expect(client.surface, ClientPalette.dark.surface);
+      expect(client.border, ClientPalette.dark.border);
     });
 
     testWidgets('the scaffold a screen gets matches the app tokens it draws '
@@ -116,29 +123,33 @@ void main() {
       // the app's own token class. If these two ever disagree again, a page
       // shows two different "backgrounds" at once.
       for (final theme in [ClientTheme.dark(), CaptainTheme.dark()]) {
-        expect(theme.scaffoldBackgroundColor, AppDarkColors.background);
-        expect(theme.colorScheme.surface, AppDarkColors.surface);
+        expect(theme.scaffoldBackgroundColor, ClientPalette.dark.bg);
+        expect(theme.colorScheme.surface, ClientPalette.dark.surface);
       }
     });
 
     testWidgets('client surfaces climb the ladder instead of repeating it', (
       tester,
     ) async {
-      final tiers = await underTheme(
+      final read = await underTheme(
         tester,
         ClientTheme.dark(),
-        (context) => [
-          ClientColors.backgroundFor(context),
-          ClientColors.surfaceSubtleFor(context),
-          ClientColors.surfaceFor(context),
-          ClientColors.surfaceRaisedFor(context),
-          ClientColors.surfaceMutedFor(context),
-        ],
+        (context) => (
+          tiers: [
+            ClientColors.backgroundFor(context),
+            ClientColors.surfaceSubtleFor(context),
+            ClientColors.surfaceFor(context),
+            ClientColors.surfaceMutedFor(context),
+          ],
+          surface: ClientColors.surfaceFor(context),
+          raised: ClientColors.surfaceRaisedFor(context),
+        ),
       );
 
       // Dark mode reads elevation as lightness, so each tier must actually be
       // lighter than the one below it — a ladder with a flat rung loses the
       // boundary between a card and what it sits on.
+      final tiers = read.tiers;
       for (var i = 1; i < tiers.length; i++) {
         expect(
           luminance(tiers[i]),
@@ -146,6 +157,13 @@ void main() {
           reason: 'surface tier $i is not lighter than tier ${i - 1}',
         );
       }
+
+      // `surfaceRaised` is deliberately *not* a rung of its own. The EWT design
+      // draws one card colour and lifts a card with a shadow rather than with a
+      // lighter fill, so raised resolves to the same `--surface`. It is asserted
+      // rather than dropped: if the two ever diverge, the ladder above has a
+      // tier it is no longer checking.
+      expect(read.raised, read.surface);
     });
   });
 
@@ -257,25 +275,36 @@ void main() {
       }
     });
 
-    testWidgets('primary ink and primary fill are different tones in dark', (
-      tester,
-    ) async {
+    testWidgets('primary works as both ink and fill in dark', (tester) async {
       final tones = await underTheme(
         tester,
         ClientTheme.dark(),
         (context) => (
           ink: ClientColors.primaryFor(context),
           fill: ClientColors.primaryFillFor(context),
+          onFill: ClientColors.onPrimaryFor(context),
         ),
       );
 
-      expect(tones.ink, isNot(tones.fill));
-      // Ink has to read on the page; fill has to carry white.
+      // The client used to carry two brand tones in dark — a readable ink and a
+      // separate fill — because the fill was a deep blue that could not be read
+      // as text. The EWT palette instead makes dark `--primary` a bright cyan
+      // and flips `--on-primary` to near-black, so one tone does both jobs.
+      expect(tones.ink, tones.fill);
+
+      // Ink has to read on the page…
       expect(
-        contrast(tones.ink, AppDarkColors.background),
+        contrast(tones.ink, ClientPalette.dark.bg),
         greaterThanOrEqualTo(4.5),
       );
-      expect(contrast(Colors.white, tones.fill), greaterThanOrEqualTo(4.5));
+      // …and the fill has to carry its own on-colour. Note that is *not* white:
+      // white on this cyan is 2.4:1, which is exactly why the palette declares
+      // `onPrimary` per brightness instead of assuming it.
+      expect(
+        contrast(tones.onFill, tones.fill),
+        greaterThanOrEqualTo(4.5),
+        reason: 'onPrimary is unreadable on the primary fill',
+      );
     });
   });
 }

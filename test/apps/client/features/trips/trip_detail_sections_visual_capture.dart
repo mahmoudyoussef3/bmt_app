@@ -4,7 +4,7 @@
 //   flutter test test/apps/client/features/trips/trip_detail_sections_visual_capture.dart \
 //     --update-goldens
 //
-// Writes PNGs of the crew (captain + bus) and payment cards across the states
+// Writes PNGs of the captain, bus, stops and payment cards across the states
 // that change their shape — a booking awaiting approval, a paid trip under way,
 // a finished trip inviting a rating — in Arabic RTL, English LTR, and dark mode,
 // so the density can be judged by eye.
@@ -77,6 +77,34 @@ List<TripSeat> _hiaceSeats({Set<int> occupied = const {}, int? mine}) {
   ];
 }
 
+/// A corridor of [count] stations with the rider boarding at index 1 and
+/// getting off two stops later — the shape that exercises the leg panel, the
+/// badges and the faded off-leg rows all at once.
+List<TripStop> _stops({
+  required bool arabic,
+  int count = 4,
+  int boarding = 1,
+  int dropoff = 3,
+}) {
+  const ar = ['القاهرة', 'بنها', 'طنطا', 'المحلة', 'سمنود', 'المنصورة'];
+  const en = ['Cairo', 'Banha', 'Tanta', 'Mahalla', 'Samannoud', 'Mansoura'];
+  final names = arabic ? ar : en;
+
+  return [
+    for (var i = 0; i < count; i++)
+      TripStop(
+        id: 'p$i',
+        stationId: 's$i',
+        name: names[i % names.length],
+        order: i,
+        arrivalOffset: '0$i:30',
+        departureOffset: '0$i:35',
+        isBoarding: i == boarding,
+        isDropoff: i == dropoff,
+      ),
+  ];
+}
+
 TripData _trip({
   required TripStatus status,
   required PaymentStatus paymentStatus,
@@ -86,6 +114,7 @@ TripData _trip({
   List<String> seats = const ['A3'],
   double rating = 4.8,
   int ratingCount = 126,
+  List<TripStop> stops = const [],
   List<String> vehicleImageUrls = const [
     'https://example.test/bus-1.png',
     'https://example.test/bus-2.png',
@@ -105,11 +134,19 @@ TripData _trip({
     driverInitials: arabic ? 'م ع' : 'MA',
     driverRating: rating,
     driverRatingCount: ratingCount,
-    vehicleName: arabic ? 'تويوتا هايس 2022' : 'Toyota Hiace 2022',
+    vehicleName: arabic ? 'تويوتا' : 'Toyota',
     vehicleType: 'Hiace',
     vehicleId: 'v1',
     vehiclePlate: 'ب ن ط 4821',
+    vehicleModel: arabic ? 'هايس' : 'Hiace',
+    vehicleColor: arabic ? 'أبيض' : 'White',
+    vehicleYear: 2022,
+    vehicleSeatCapacity: 14,
+    vehicleSeatLayout: '2+1',
+    vehicleRating: 4.6,
+    vehicleRatingCount: 58,
     vehicleImageUrls: vehicleImageUrls,
+    stops: stops,
     seats: seats,
     seatMap: seatMap,
     paymentStatus: paymentStatus,
@@ -176,6 +213,7 @@ void main() {
         paymentStatus: PaymentStatus.underReview,
         bookingState: BookingState.reserved,
         seatMap: _hiaceSeats(occupied: const {2, 5, 9}, mine: 4),
+        stops: _stops(arabic: true),
       ),
     );
 
@@ -189,6 +227,7 @@ void main() {
         paymentStatus: PaymentStatus.paid,
         seatMap: _hiaceSeats(occupied: const {1, 2, 3, 6, 7, 11}, mine: 8),
         seats: const ['A3', 'A4'],
+        stops: _stops(arabic: true, count: 8, boarding: 3, dropoff: 5),
       ),
     );
 
@@ -222,6 +261,7 @@ void main() {
         rating: 0,
         ratingCount: 0,
         vehicleImageUrls: const [],
+        stops: _stops(arabic: true, boarding: -1, dropoff: -1),
       ),
     );
 
@@ -235,6 +275,7 @@ void main() {
         status: TripStatus.inProgress,
         paymentStatus: PaymentStatus.paid,
         seatMap: _hiaceSeats(occupied: const {2, 5, 9}, mine: 4),
+        stops: _stops(arabic: true, count: 5, boarding: 1, dropoff: 3),
       ),
     );
 
@@ -247,6 +288,7 @@ void main() {
         status: TripStatus.inProgress,
         paymentStatus: PaymentStatus.paid,
         seatMap: _hiaceSeats(occupied: const {2, 5, 9}, mine: 4),
+        stops: _stops(arabic: false, count: 6, boarding: 1, dropoff: 4),
       ),
     );
 
@@ -264,6 +306,7 @@ void main() {
         paymentStatus: PaymentStatus.underReview,
         seatMap: _hiaceSeats(occupied: const {2, 5, 9}, mine: 4),
         seats: const ['A3', 'A4', 'B1'],
+        stops: _stops(arabic: true, count: 6, boarding: 1, dropoff: 3),
       ),
     );
   });

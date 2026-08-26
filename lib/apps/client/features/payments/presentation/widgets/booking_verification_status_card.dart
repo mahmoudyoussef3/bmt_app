@@ -38,10 +38,10 @@ class BookingVerificationStatusCard extends StatelessWidget {
           height: 120,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            gradient: LinearGradient(colors: phase.gradient),
+            color: phase.color,
             boxShadow: [
               BoxShadow(
-                color: phase.gradient.first.withAlpha(55),
+                color: phase.color.withAlpha(55),
                 blurRadius: 24,
                 offset: const Offset(0, 8),
               ),
@@ -139,10 +139,7 @@ class BookingVerificationStatusCard extends StatelessWidget {
     final l10n = context.l10n;
     if (_isApproved) {
       return _StatusPhase(
-        gradient: const [
-          ClientColors.journeyCyan,
-          ClientColors.journeyCyanStrong,
-        ],
+        color: ClientColors.journeyCyan,
         icon: Icons.check_circle_rounded,
         title: l10n.payments_paymentApprovedTitle,
         subtitle: l10n.payments_paymentApprovedSubtitle,
@@ -152,10 +149,7 @@ class BookingVerificationStatusCard extends StatelessWidget {
     }
     if (_isRejected) {
       return _StatusPhase(
-        gradient: const [
-          ClientColors.journeyRed,
-          ClientColors.journeyRedStrong,
-        ],
+        color: ClientColors.journeyRed,
         icon: Icons.cancel_rounded,
         title: l10n.payments_paymentRejectedTitle,
         subtitle: l10n.payments_paymentRejectedSubtitle,
@@ -164,11 +158,7 @@ class BookingVerificationStatusCard extends StatelessWidget {
       );
     }
     return _StatusPhase(
-      
-      gradient: const [
-        ClientColors.journeyAmber,
-        ClientColors.journeyAmberStrong,
-      ],
+      color: ClientColors.journeyAmber,
       icon: Icons.hourglass_top_rounded,
       title: l10n.payments_paymentReceiptSubmittedTitle,
       subtitle: l10n.payments_paymentReceiptSubmittedSubtitle,
@@ -212,7 +202,7 @@ class BookingVerificationStatusCard extends StatelessWidget {
 
 class _StatusPhase {
   const _StatusPhase({
-    required this.gradient,
+    required this.color,
     required this.icon,
     required this.title,
     required this.subtitle,
@@ -220,7 +210,7 @@ class _StatusPhase {
     required this.statusColor,
   });
 
-  final List<Color> gradient;
+  final Color color;
   final IconData icon;
   final String title;
   final String subtitle;

@@ -17,16 +17,12 @@ class TicketDetailsAgentNote extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 24),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            ClientColors.journeyAmber.withAlpha(25),
-            ClientColors.journeyAmber.withAlpha(5),
-          ],
-        ),
+        color: ClientColors.journeyAmber.withAlpha(18),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: ClientColors.journeyAmber.withAlpha(50), width: 1.5),
+        border: Border.all(
+          color: ClientColors.journeyAmber.withAlpha(50),
+          width: 1.5,
+        ),
         boxShadow: [
           BoxShadow(
             color: ClientColors.journeyAmber.withAlpha(10),

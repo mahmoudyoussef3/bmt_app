@@ -1387,6 +1387,18 @@
   },
   "trips_crewSubtitle": "Who is driving, and which bus",
   "trips_vehicleNumberLabel": "Vehicle number",
+  "trips_vehicleTitle": "Your bus",
+  "trips_stationsSubtitle": "Every stop, in departure order",
+  "trips_stationsShowAll": "Show all {count} stops",
+  "@trips_stationsShowAll": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "trips_stationsShowLess": "Show fewer",
+  "trips_stationsOffLegNote": "Stops outside your leg are shown faded — they are why the trip takes as long as it does.",
   "trips_paymentNotePaid": "Your payment is confirmed.",
   "trips_paymentNotePending": "Waiting for your payment.",
   "trips_paymentNoteUnderReview": "Our team is reviewing your payment.",
@@ -2377,6 +2389,8 @@
   "booking_isThisRouteSuitable": "Is this route suitable?",
   "booking_closestRoutesForSearch": "Closest routes for your search",
   "booking_editStops": "Edit stops",
+  "booking_stationsLabel": "Stations",
+  "booking_pickTripNextStep": "You'll choose your trip and seat in the next steps.",
   "booking_noBookableRouteFound": "No bookable route found",
   "booking_tryDifferentDepartureDest": "Try a different departure, destination, or travel time.",
   "booking_distance": "Distance",

@@ -3,8 +3,10 @@ import 'dart:async';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../domain/entities/trip_seat.dart';
+import '../../domain/entities/trip_stop.dart';
 import '../mappers/trip_mapper.dart';
 import '../mappers/trip_seat_mapper.dart';
+import '../mappers/trip_stop_mapper.dart';
 import '../models/trip_model.dart';
 import 'trips_datasource.dart';
 
@@ -61,8 +63,9 @@ class SupabaseTripsDatasource implements TripsDatasource {
       tripId: tripId,
       mySeatLabel: response['seat']?.toString() ?? '',
     );
+    final stops = await _loadStops(tripId: tripId, booking: response);
 
-    return TripMapper.fromBookingRow(response, seatMap: seatMap);
+    return TripMapper.fromBookingRow(response, seatMap: seatMap, stops: stops);
   }
 
   /// Cancels the booking and hands its seat back to the trip. The RPC — not
@@ -123,6 +126,41 @@ class SupabaseTripsDatasource implements TripsDatasource {
     }
   }
 
+  /// The stations this trip calls at, from `trip_route_points` — the per-trip
+  /// snapshot of the route's stops, so a corridor re-drawn after the ticket was
+  /// sold still describes the journey the rider bought.
+  ///
+  /// The booking's own pickup/drop-off point comes along so the mapper can flag
+  /// the two stops that are this rider's. Best-effort, like the seat map: a
+  /// corridor that fails to load must never blank the whole Trip Details
+  /// screen, so it degrades to no stops and the section simply isn't drawn.
+  Future<List<TripStop>> _loadStops({
+    required String tripId,
+    required Map<String, dynamic> booking,
+  }) async {
+    if (tripId.isEmpty) return const [];
+    try {
+      final rows = await _supabase
+          .from('trip_route_points')
+          .select(
+            'id, route_point_id, point_name, point_order, '
+            'arrival_offset, departure_offset, latitude, longitude',
+          )
+          .eq('trip_id', tripId)
+          .order('point_order', ascending: true);
+
+      return TripStopMapper.fromRows(
+        rows,
+        pickupPointId: booking['pickup_point_id']?.toString() ?? '',
+        dropoffPointId: booking['dropoff_point_id']?.toString() ?? '',
+        pickupPointName: booking['pickup_point_name']?.toString() ?? '',
+        dropoffPointName: booking['dropoff_point_name']?.toString() ?? '',
+      );
+    } catch (_) {
+      return const [];
+    }
+  }
+
   @override
   Stream<void> watchTripChanges() {
     final userId = _supabase.auth.currentUser?.id;
@@ -146,7 +184,6 @@ class SupabaseTripsDatasource implements TripsDatasource {
           ),
           callback: notify,
         )
-        
         .onPostgresChanges(
           event: PostgresChangeEvent.all,
           schema: 'public',

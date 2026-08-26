@@ -81,7 +81,6 @@ class _IdentityCard extends StatelessWidget {
       alignment: Alignment.topCenter,
       children: [
         Padding(
-          
           padding: const EdgeInsets.only(top: _logoSize / 2),
           child: ClientCard(
             padding: const EdgeInsets.fromLTRB(
@@ -132,7 +131,11 @@ class _IdentityCard extends StatelessWidget {
             ),
           ),
         ),
-        OfficeLogoTile(logoUrl: office.logoUrl, size: _logoSize),
+        OfficeLogoTile(
+          logoUrl: office.logoUrl,
+          size: _logoSize,
+          brandKey: office.id,
+        ),
       ],
     );
   }

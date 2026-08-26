@@ -1,17 +1,34 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_error_card.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
-import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/route_details_map_background.dart';
-import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/route_details_sheet_content.dart';
-import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/route_details_sheet_surface.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/route_alternatives_section.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/route_departures_section.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/route_details_map_hero.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/route_details_skeleton.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/route_empty_state.dart';
-import 'package:bmt_app/apps/client/features/packages/domain/entities/package_plan.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/route_identity_card.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/route_stop_timeline.dart';
+import 'package:bmt_app/core/theme/app_layout.dart';
 
-/// Route Details' body: full-bleed map (with a graceful fallback when no
-/// stop has coordinates — spec FR-007) behind a draggable sheet of section
-/// cards.
+/// Route Details' body: a map of the line, what the line is, the stations it
+/// serves, when it runs, and the other lines that also answer the search.
+///
+/// **What this screen deliberately does not carry.** It used to also price the
+/// route, list selectable departures with a fare each, sell commute packages
+/// and badge the operator — five decisions stacked on the one screen whose
+/// only question is *is this the right line?*. Every one of those is settled
+/// later, by a wizard step built for it (stops → trip → seat → package →
+/// summary → payment), and every price among them depends on a pickup and
+/// drop-off the rider has not chosen yet. Quoting one here would be quoting a
+/// journey they have not described.
+///
+/// The layout is a plain vertical scroll rather than the old draggable sheet
+/// over a live map. That fixes the gesture ambiguity (a drag meant either
+/// *pan the map* or *move the sheet*), and it lets the stations — the thing a
+/// rider is actually here to read — occupy the screen instead of a 48%-tall
+/// window over it.
 class RouteDetailsBody extends StatelessWidget {
   const RouteDetailsBody({
     super.key,
@@ -19,26 +36,22 @@ class RouteDetailsBody extends StatelessWidget {
     required this.errorMessage,
     required this.routes,
     required this.selectedRoute,
-    required this.selectedTripId,
     required this.onRetry,
     required this.onMap,
     required this.onSelectRoute,
-    required this.onSelectTrip,
-    required this.onSelectPackage,
   });
 
   final bool isLoading;
   final String? errorMessage;
   final List<RouteOptionData> routes;
   final RouteOptionData? selectedRoute;
-  final String? selectedTripId;
   final VoidCallback onRetry;
-  final VoidCallback onMap;
-  final ValueChanged<RouteOptionData> onSelectRoute;
-  final ValueChanged<RouteTripOptionData> onSelectTrip;
 
-  /// Starts the booking with a commute plan already chosen.
-  final ValueChanged<PackagePlan> onSelectPackage;
+  /// Opens the map picker, where the rider can inspect the line full-screen or
+  /// change the stations they searched with.
+  final VoidCallback onMap;
+
+  final ValueChanged<RouteOptionData> onSelectRoute;
 
   @override
   Widget build(BuildContext context) {
@@ -49,53 +62,109 @@ class RouteDetailsBody extends StatelessWidget {
         onRetry: onRetry,
       );
     }
+
     final route = selectedRoute;
     if (route == null) return RouteEmptyState(onRetry: onRetry);
 
+    return ColoredBox(
+      color: ClientColors.backgroundFor(context),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: AppLayout.maxContentWidth(
+              MediaQuery.sizeOf(context).width,
+            ),
+          ),
+          child: _Sections(
+            key: ValueKey(route.id),
+            route: route,
+            routes: routes,
+            onMap: onMap,
+            onSelectRoute: onSelectRoute,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _Sections extends StatelessWidget {
+  const _Sections({
+    super.key,
+    required this.route,
+    required this.routes,
+    required this.onMap,
+    required this.onSelectRoute,
+  });
+
+  final RouteOptionData route;
+  final List<RouteOptionData> routes;
+  final VoidCallback onMap;
+  final ValueChanged<RouteOptionData> onSelectRoute;
+
+  @override
+  Widget build(BuildContext context) {
     final orderedPoints = [...route.points]
       ..sort((a, b) => a.order.compareTo(b.order));
-    final mapPins = orderedPoints
-        .where((p) => p.latitude != null && p.longitude != null)
+
+    return ListView(
+      // The trailing inset clears the sticky booking bar, which floats over
+      // the scroll rather than shortening it.
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+      children: [
+        RouteDetailsMapHero(
+          routeId: route.id,
+          mapPins: _mapPins(orderedPoints),
+          stopCount: orderedPoints.length,
+          onOpenMap: onMap,
+        ),
+        const SizedBox(height: 14),
+        RouteIdentityCard(route: route, stopCount: orderedPoints.length),
+        const SizedBox(height: 14),
+        RouteStopTimeline(points: orderedPoints, onEditStops: onMap),
+        const SizedBox(height: 14),
+        RouteDeparturesSection(trips: route.availableTrips),
+        if (routes.length > 1) ...[
+          const SizedBox(height: 14),
+          RouteAlternativesSection(
+            routes: routes,
+            selectedRouteId: route.id,
+            onSelectRoute: onSelectRoute,
+          ),
+        ],
+      ],
+    );
+  }
+
+  /// Pins for the hero map, dropping any stop whose coordinates the operator
+  /// has not filled in — or filled in wrongly. A `(0, 0)` stop is the Gulf of
+  /// Guinea, and one of those in the list drags the camera off the route
+  /// entirely, so it is treated as missing rather than plotted.
+  List<MapPinOption> _mapPins(List<RoutePointData> points) {
+    return points
+        .where(_hasUsableCoordinates)
         .map(
-          (p) => MapPinOption(
-            label: p.name,
+          (point) => MapPinOption(
+            label: point.name,
             subtitle: '',
-            x: p.latitude!,
-            y: p.longitude!,
+            x: point.latitude!,
+            y: point.longitude!,
           ),
         )
         .toList();
+  }
 
-    return Stack(
-      children: [
-        Positioned.fill(
-          child: RouteDetailsMapBackground(routeId: route.id, mapPins: mapPins),
-        ),
-        DraggableScrollableSheet(
-          initialChildSize: 0.48,
-          minChildSize: 0.30,
-          maxChildSize: 0.96,
-          snap: true,
-          snapSizes: const [0.30, 0.48, 0.96],
-          
-          builder: (context, scrollController) {
-            return RouteDetailsSheetSurface(
-              child: RouteDetailsSheetContent(
-                key: ValueKey(route.id),
-                scrollController: scrollController,
-                route: route,
-                routes: routes,
-                orderedPoints: orderedPoints,
-                selectedTripId: selectedTripId,
-                onMap: onMap,
-                onSelectRoute: onSelectRoute,
-                onSelectTrip: onSelectTrip,
-                onSelectPackage: onSelectPackage,
-              ),
-            );
-          },
-        ),
-      ],
-    );
+  bool _hasUsableCoordinates(RoutePointData point) {
+    final latitude = point.latitude;
+    final longitude = point.longitude;
+    return latitude != null &&
+        longitude != null &&
+        latitude.isFinite &&
+        longitude.isFinite &&
+        (latitude != 0 || longitude != 0) &&
+        latitude >= -90 &&
+        latitude <= 90 &&
+        longitude >= -180 &&
+        longitude <= 180;
   }
 }

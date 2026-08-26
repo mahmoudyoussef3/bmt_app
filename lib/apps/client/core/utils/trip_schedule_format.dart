@@ -35,16 +35,61 @@ String formatTripTime(BuildContext context, String rawTime) {
   );
 }
 
+/// Clock label for a stop that sits [offset] into the trip.
+///
+/// A stop's `arrival_offset` / `departure_offset` is an `"HH:MM"` **duration
+/// measured from the route's start**, not a time of day — the contract
+/// `parse_route_offset` states in the database. So the clock a rider reads is
+/// the trip's own departure plus that duration, wrapping past midnight on a
+/// long overnight run.
+///
+/// Empty when either half is missing: a stop the operator never timed is shown
+/// without a time rather than with the departure time repeated at it.
+String formatStopClock(
+  BuildContext context,
+  String rawDeparture,
+  String offset,
+) {
+  final departure = _parseClock(rawDeparture);
+  final minutes = _parseOffsetMinutes(offset);
+  if (departure == null || minutes == null) return '';
+
+  final total =
+      (departure.hour * 60 + departure.minute + minutes) %
+      Duration.minutesPerDay;
+  return MaterialLocalizations.of(context).formatTimeOfDay(
+    TimeOfDay(hour: total ~/ 60, minute: total % 60),
+    alwaysUse24HourFormat: MediaQuery.alwaysUse24HourFormatOf(context),
+  );
+}
+
+/// An `"HH:MM"` duration as whole minutes. Null — not zero — when the string is
+/// not one, so a missing offset stays distinguishable from a stop the bus
+/// reaches at the moment it departs.
+int? _parseOffsetMinutes(String offset) {
+  final parts = offset.trim().split(':');
+  if (parts.length < 2) return null;
+
+  final hours = int.tryParse(parts[0]);
+  final minutes = int.tryParse(parts[1]);
+  if (hours == null || minutes == null || hours < 0 || minutes < 0) return null;
+  if (minutes > 59) return null;
+  return hours * 60 + minutes;
+}
+
 /// How long the ride takes, as "1h 19m", between two raw `HH:mm:ss` times.
 /// An arrival earlier than the departure is read as crossing midnight rather
 /// than as a negative ride.
-String formatTripDuration(BuildContext context, String rawDeparture, String rawArrival) {
+String formatTripDuration(
+  BuildContext context,
+  String rawDeparture,
+  String rawArrival,
+) {
   final from = _parseClock(rawDeparture);
   final to = _parseClock(rawArrival);
   if (from == null || to == null) return '';
 
-  var minutes =
-      (to.hour * 60 + to.minute) - (from.hour * 60 + from.minute);
+  var minutes = (to.hour * 60 + to.minute) - (from.hour * 60 + from.minute);
   if (minutes < 0) minutes += Duration.minutesPerDay;
   if (minutes == 0) return '';
 

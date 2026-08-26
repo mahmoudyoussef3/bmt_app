@@ -150,13 +150,18 @@ void main() {
     expect(find.text('Seats'), findsNothing);
   });
 
-  testWidgets('a bus with no photos on file offers no gallery', (tester) async {
+  testWidgets('a bus with no photos on file says so, and offers no gallery', (
+    tester,
+  ) async {
     await _pump(
       tester,
       _trip(status: TripStatus.inProgress, paymentStatus: PaymentStatus.paid),
     );
 
-    expect(find.textContaining('photos'), findsNothing);
+    // The frame still draws, labelled: an empty gap reads as a broken screen.
+    // What must not appear is the count chip, which promises a gallery.
+    expect(find.text('No photos of this vehicle yet'), findsOneWidget);
+    expect(find.textContaining(RegExp(r'\d+ photos')), findsNothing);
   });
 
   testWidgets('a photographed bus can be tapped open', (tester) async {

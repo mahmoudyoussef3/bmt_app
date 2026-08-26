@@ -24,9 +24,15 @@ class TimelineStopDot extends StatelessWidget {
   final int order;
   final bool isLast;
 
+  /// Every one of these resolves through the palette rather than naming a
+  /// literal. The origin used to take the bare `ClientColors.journeyCyan`
+  /// constant, which is the *light* palette's brand blue whatever the theme —
+  /// so in dark mode the "start" chip drew navy text on a navy tint and became
+  /// unreadable. The light-mode result is unchanged: `journeyCyan` and the
+  /// palette primary are the same blue there.
   static Color accentFor(BuildContext context, TimelineStopKind kind) {
     return switch (kind) {
-      TimelineStopKind.origin => ClientColors.journeyCyan,
+      TimelineStopKind.origin => ClientColors.journeyCyanFor(context),
       TimelineStopKind.destination => ClientColors.primaryFor(context),
       TimelineStopKind.waypoint => ClientColors.textTertiaryFor(context),
     };

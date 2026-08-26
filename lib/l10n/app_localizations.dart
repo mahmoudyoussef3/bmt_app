@@ -5318,6 +5318,36 @@ abstract class AppLocalizations {
   /// **'Vehicle number'**
   String get trips_vehicleNumberLabel;
 
+  /// No description provided for @trips_vehicleTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your bus'**
+  String get trips_vehicleTitle;
+
+  /// No description provided for @trips_stationsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Every stop, in departure order'**
+  String get trips_stationsSubtitle;
+
+  /// No description provided for @trips_stationsShowAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Show all {count} stops'**
+  String trips_stationsShowAll(int count);
+
+  /// No description provided for @trips_stationsShowLess.
+  ///
+  /// In en, this message translates to:
+  /// **'Show fewer'**
+  String get trips_stationsShowLess;
+
+  /// No description provided for @trips_stationsOffLegNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Stops outside your leg are shown faded — they are why the trip takes as long as it does.'**
+  String get trips_stationsOffLegNote;
+
   /// No description provided for @trips_paymentNotePaid.
   ///
   /// In en, this message translates to:
@@ -8281,6 +8311,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Edit stops'**
   String get booking_editStops;
+
+  /// No description provided for @booking_stationsLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Stations'**
+  String get booking_stationsLabel;
+
+  /// No description provided for @booking_pickTripNextStep.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll choose your trip and seat in the next steps.'**
+  String get booking_pickTripNextStep;
 
   /// No description provided for @booking_noBookableRouteFound.
   ///

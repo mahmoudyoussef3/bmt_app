@@ -47,7 +47,6 @@ class ReferralRewardsScreen extends StatefulWidget {
 }
 
 class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
-  
   int _currentView = 1;
 
   ReferralRewardsData? _data;
@@ -207,7 +206,6 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
                         child: Stack(
                           alignment: Alignment.center,
                           children: [
-                            
                             Padding(
                               padding: const EdgeInsets.all(20.0),
                               child: Column(
@@ -215,27 +213,25 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
                                 children: [
                                   Text(
                                     voucher.amount,
-                                    style: ClientTypography.priceHero(
-                                      context,
-                                    ).copyWith(
-                                      fontSize: 32,
-                                      fontWeight: FontWeight.w900,
-                                      color: scheme.primary,
-                                    ),
+                                    style: ClientTypography.priceHero(context)
+                                        .copyWith(
+                                          fontSize: 32,
+                                          fontWeight: FontWeight.w900,
+                                          color: scheme.primary,
+                                        ),
                                   ),
                                   const SizedBox(height: 6),
                                   Text(
                                     voucher.description,
                                     textAlign: TextAlign.center,
-                                    style: ClientTypography.labelSmall(
-                                      context,
-                                    ).copyWith(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.normal,
-                                      color: ClientColors.textSecondaryFor(
-                                        context,
-                                      ),
-                                    ),
+                                    style: ClientTypography.labelSmall(context)
+                                        .copyWith(
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.normal,
+                                          color: ClientColors.textSecondaryFor(
+                                            context,
+                                          ),
+                                        ),
                                   ),
                                   const SizedBox(height: 12),
                                   Container(
@@ -255,14 +251,15 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
                                       children: [
                                         Text(
                                           voucher.promoCode,
-                                          style: ClientTypography.bodyMedium(
-                                            context,
-                                          ).copyWith(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.bold,
-                                            color: scheme.primary,
-                                            letterSpacing: 1,
-                                          ),
+                                          style:
+                                              ClientTypography.bodyMedium(
+                                                context,
+                                              ).copyWith(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.bold,
+                                                color: scheme.primary,
+                                                letterSpacing: 1,
+                                              ),
                                         ),
                                         const SizedBox(width: 8),
                                         Icon(
@@ -288,18 +285,18 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
                                     final localPos = renderBox.globalToLocal(
                                       details.globalPosition,
                                     );
-                                    
+
                                     final cardOffset = Offset(
                                       localPos.dx - 48,
                                       localPos.dy - 100,
                                     );
                                     setModalState(() {
                                       _scratchPoints.add(cardOffset);
-                                      
+
                                       if (_scratchPoints.length > 80) {
                                         _scratchCompleted = true;
                                         _confetti.fire();
-                                        
+
                                         setState(() {
                                           context
                                               .read<ReferralRewardsCubit>()
@@ -311,7 +308,7 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
                                 },
                                 onPanEnd: (_) {
                                   setModalState(() {
-                                    _scratchPoints.add(null); 
+                                    _scratchPoints.add(null);
                                   });
                                 },
                                 child: CustomPaint(
@@ -369,7 +366,6 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
         }
 
         return PopScope(
-          
           canPop: _currentView == 1,
           onPopInvokedWithResult: (didPop, _) {
             if (!didPop) _onBackPress();
@@ -398,7 +394,6 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
                 ),
                 ReferralRewardsLoaded() => Stack(
                   children: [
-                    
                     AnimatedSwitcher(
                       duration: const Duration(milliseconds: 250),
                       child: _buildCurrentView(scheme),
@@ -430,7 +425,6 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 30),
       children: [
-        
         _buildMilestoneProgressCard(scheme),
         const SizedBox(height: 18),
 
@@ -545,9 +539,10 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
               ),
               Text(
                 context.l10n.referral_egpTotal(entry.totalRewards),
-                style: ClientTypography.labelSmall(
-                  context,
-                ).copyWith(fontWeight: FontWeight.normal, color: scheme.onSurfaceVariant),
+                style: ClientTypography.labelSmall(context).copyWith(
+                  fontWeight: FontWeight.normal,
+                  color: scheme.onSurfaceVariant,
+                ),
               ),
             ],
           ),
@@ -585,9 +580,7 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [scheme.primary.withAlpha(50), scheme.tertiary.withAlpha(20)],
-        ),
+        color: scheme.primary.withAlpha(38),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: scheme.primary.withAlpha(80)),
       ),
@@ -890,9 +883,11 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
                           children: [
                             Text(
                               title,
-                              style: ClientTypography.bodyMedium(
-                                context,
-                              ).copyWith(fontWeight: FontWeight.bold, fontSize: 13),
+                              style: ClientTypography.bodyMedium(context)
+                                  .copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 13,
+                                  ),
                             ),
                             if (badgeText != null) ...[
                               const SizedBox(width: 8),
@@ -902,16 +897,19 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
                                   vertical: 2,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: ClientColors.journeyAmber.withAlpha(40),
+                                  color: ClientColors.journeyAmber.withAlpha(
+                                    40,
+                                  ),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Text(
                                   badgeText,
-                                  style: ClientTypography.labelSmall(context).copyWith(
-                                    fontSize: 8,
-                                    color: ClientColors.journeyAmber,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                                  style: ClientTypography.labelSmall(context)
+                                      .copyWith(
+                                        fontSize: 8,
+                                        color: ClientColors.journeyAmber,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                 ),
                               ),
                             ],
@@ -961,7 +959,6 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              
               Container(
                 width: 180,
                 height: 180,
@@ -1007,7 +1004,6 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 0, 16, 30),
       children: [
-        
         _buildInviteShareHeader(scheme),
         const SizedBox(height: 16),
 
@@ -1047,11 +1043,12 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
                         children: [
                           Text(
                             _referralCode,
-                            style: ClientTypography.bodyMedium(context).copyWith(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 1,
-                            ),
+                            style: ClientTypography.bodyMedium(context)
+                                .copyWith(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 1,
+                                ),
                           ),
                           GestureDetector(
                             onTap: _copyReferralCode,
@@ -1249,7 +1246,9 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
           const SizedBox(height: 8),
           Text(
             label,
-            style: ClientTypography.labelSmall(context).copyWith(fontWeight: FontWeight.bold),
+            style: ClientTypography.labelSmall(
+              context,
+            ).copyWith(fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -1376,7 +1375,6 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(20),
       children: [
-        
         _buildWalletBalancesCard(scheme),
         const SizedBox(height: 24),
 
@@ -1400,14 +1398,7 @@ class _ReferralRewardsScreenState extends State<ReferralRewardsScreen> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            scheme.primary.withAlpha(18),
-            scheme.secondaryContainer.withAlpha(22),
-          ],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: scheme.primary.withAlpha(20),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: scheme.primary.withAlpha(50)),
       ),

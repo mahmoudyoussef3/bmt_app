@@ -19,7 +19,8 @@ class WizardAppBar extends StatelessWidget implements PreferredSizeWidget {
   /// half-written.
   final VoidCallback? onBack;
 
-  static const _progressHeight = 70.0;
+  /// Marker band + label, plus the progress bar's own vertical padding.
+  static const _progressHeight = 74.0;
 
   @override
   Size get preferredSize =>

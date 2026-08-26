@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:bmt_app/apps/client/core/theme/client_seat_palette.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
@@ -81,7 +82,7 @@ class _SeatBody extends StatelessWidget {
         final rowCompare = a.row.compareTo(b.row);
         return rowCompare != 0 ? rowCompare : a.column.compareTo(b.column);
       });
-    
+
     final blueprint = VehicleSeatLayouts.resolveRaw(
       vehicleType: state.data.vehicleType,
       seats: [for (final seat in seats) (row: seat.row, column: seat.column)],
@@ -114,6 +115,7 @@ class _SeatBody extends StatelessWidget {
               ),
               const SizedBox(height: 16),
               VehicleSeatLayout(
+                palette: ClientSeatPalette.of(context),
                 blueprint: blueprint,
                 seats: [
                   for (var i = 0; i < seats.length; i++)
@@ -191,7 +193,6 @@ class _SeatBody extends StatelessWidget {
     int index,
     String? selectedSeatId,
   ) {
-    
     final slot = blueprint.seatSlotAt(index);
     return VehicleSeatData(
       id: seat.id,

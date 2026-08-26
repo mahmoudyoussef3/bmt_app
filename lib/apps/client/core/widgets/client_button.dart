@@ -4,15 +4,22 @@ import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/widgets/pressable_scale.dart';
 
-/// The standard call-to-action button for the client app.
+/// The standard call-to-action for the client app.
 ///
-/// Comes in three variants:
-/// - `ClientButton` (default) — primary filled, full-width by default
-/// - `ClientButton.secondary` — outlined, full-width by default
-/// - `ClientButton.text` — text-only, no background
+/// The four variants are the design file's four button constants, one to one:
 ///
-/// All variants support an inline [isLoading] state that replaces the label
-/// with a [CircularProgressIndicator] and disables the tap target.
+/// - `ClientButton` — `BTN_PRIMARY`: filled brand, with the coloured
+///   `--primary-tint` lift the design puts under a primary action instead of a
+///   neutral shadow.
+/// - `ClientButton.secondary` — `BTN_OUTLINE`: a 1.5px brand outline on no
+///   fill.
+/// - `ClientButton.danger` — `BTN_DANGER`: the same outline in `--danger`, for
+///   cancel-booking and other destructive confirmations.
+/// - `ClientButton.text` — the inline link treatment.
+///
+/// All variants share one geometry (14px radius, 52px tall, 700-weight label)
+/// and support an inline [isLoading] state that replaces the label with a
+/// spinner and disables the tap target.
 class ClientButton extends StatelessWidget {
   const ClientButton({
     super.key,
@@ -31,6 +38,15 @@ class ClientButton extends StatelessWidget {
     this.isLoading = false,
     this.expand = true,
   }) : _variant = _ClientButtonVariant.secondary;
+
+  const ClientButton.danger({
+    super.key,
+    required this.label,
+    required this.onPressed,
+    this.icon,
+    this.isLoading = false,
+    this.expand = true,
+  }) : _variant = _ClientButtonVariant.danger;
 
   const ClientButton.text({
     super.key,
@@ -51,83 +67,121 @@ class ClientButton extends StatelessWidget {
 
   final _ClientButtonVariant _variant;
 
+  /// `padding:15px` on a 15px/1.4 label — the design's CTA height.
+  static const double _height = 52;
+
   @override
   Widget build(BuildContext context) {
     final effective = isLoading ? null : onPressed;
-    final child = _buildChild(context);
     final shape = RoundedRectangleBorder(
-      borderRadius: BorderRadius.circular(ClientRadius.pill),
+      borderRadius: BorderRadius.circular(ClientRadius.control),
     );
-    final minSize = expand ? const Size.fromHeight(56) : const Size(0, 56);
+    final minSize = expand
+        ? const Size.fromHeight(_height)
+        : const Size(0, _height);
 
     Widget button = switch (_variant) {
-      _ClientButtonVariant.primary => PressableScale(
-        onTap: effective,
-        scale: 0.96,
-        child: Container(
-          constraints: BoxConstraints(minHeight: minSize.height),
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          decoration: BoxDecoration(
-            color: effective == null
-                ? ClientColors.surfaceMutedFor(context)
-                : ClientColors.primaryFor(context),
-            borderRadius: BorderRadius.circular(ClientRadius.pill),
-          ),
-          // `heightFactor: 1` keeps the button at its content height instead of
-          // filling the parent: a bare `alignment` stretches to the incoming
-          // max height, which swallows whole screens in bounded slots such as
-          // Scaffold's `bottomNavigationBar`.
-          child: Align(
-            alignment: Alignment.center,
-            heightFactor: 1,
-            child: DefaultTextStyle(
-              style: ClientTypography.labelLarge(context).copyWith(
-                color: effective == null
-                    ? ClientColors.textTertiaryFor(context)
-                    : ClientColors.textInverse,
-              ),
-              child: IconTheme(
-                data: IconThemeData(
-                  color: effective == null
-                      ? ClientColors.textTertiaryFor(context)
-                      : ClientColors.textInverse,
-                  size: 20,
-                ),
-                child: child,
-              ),
-            ),
-          ),
-        ),
+      _ClientButtonVariant.primary => _filled(context, effective, minSize),
+      _ClientButtonVariant.secondary => _outlined(
+        context,
+        effective,
+        minSize,
+        shape,
+        ClientColors.primaryFor(context),
       ),
-      _ClientButtonVariant.secondary => OutlinedButton(
-        onPressed: effective,
-        style: OutlinedButton.styleFrom(
-          foregroundColor: Theme.of(context).colorScheme.primary,
-          side: BorderSide(
-            color: isLoading
-                ? Theme.of(context).colorScheme.primary.withAlpha(80)
-                : Theme.of(context).colorScheme.primary,
-          ),
-          minimumSize: minSize,
-          shape: shape,
-          textStyle: ClientTypography.labelLarge(context),
-        ),
-        child: child,
+      _ClientButtonVariant.danger => _outlined(
+        context,
+        effective,
+        minSize,
+        shape,
+        ClientColors.journeyRedFor(context),
       ),
       _ClientButtonVariant.text => TextButton(
         onPressed: effective,
         style: TextButton.styleFrom(
-          foregroundColor: Theme.of(context).colorScheme.primary,
+          foregroundColor: ClientColors.primaryFor(context),
           minimumSize: const Size(0, 44),
-          shape: shape,
-          textStyle: ClientTypography.labelLarge(context),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(ClientRadius.xs),
+          ),
+          textStyle: _labelStyle(context),
         ),
-        child: child,
+        child: _buildChild(context),
       ),
     };
 
     return expand ? SizedBox(width: double.infinity, child: button) : button;
   }
+
+  Widget _filled(BuildContext context, VoidCallback? effective, Size minSize) {
+    final enabled = effective != null;
+    final foreground = enabled
+        ? ClientColors.onPrimaryFor(context)
+        : ClientColors.textDisabledFor(context);
+
+    return PressableScale(
+      onTap: effective,
+      scale: 0.96,
+      child: Container(
+        constraints: BoxConstraints(minHeight: minSize.height),
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        decoration: BoxDecoration(
+          color: enabled
+              ? ClientColors.primaryFor(context)
+              : ClientColors.surfaceMutedFor(context),
+          borderRadius: BorderRadius.circular(ClientRadius.control),
+          // The design lifts a live CTA with the brand tint, not with neutral
+          // shadow — a disabled button is flat because it is not an offer.
+          boxShadow: enabled ? ClientElevation.primary(context) : null,
+        ),
+        // `heightFactor: 1` keeps the button at its content height instead of
+        // filling the parent: a bare `alignment` stretches to the incoming
+        // max height, which swallows whole screens in bounded slots such as
+        // Scaffold's `bottomNavigationBar`.
+        child: Align(
+          alignment: Alignment.center,
+          heightFactor: 1,
+          child: DefaultTextStyle(
+            style: _labelStyle(context).copyWith(color: foreground),
+            child: IconTheme(
+              data: IconThemeData(color: foreground, size: 18),
+              child: _buildChild(context),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _outlined(
+    BuildContext context,
+    VoidCallback? effective,
+    Size minSize,
+    OutlinedBorder shape,
+    Color accent,
+  ) {
+    return OutlinedButton(
+      onPressed: effective,
+      style: OutlinedButton.styleFrom(
+        foregroundColor: accent,
+        disabledForegroundColor: ClientColors.textDisabledFor(context),
+        backgroundColor: Colors.transparent,
+        side: BorderSide(
+          color: isLoading ? accent.withValues(alpha: 0.4) : accent,
+          width: 1.5,
+        ),
+        minimumSize: minSize,
+        shape: shape,
+        textStyle: _labelStyle(context),
+      ),
+      child: _buildChild(context),
+    );
+  }
+
+  /// `font-weight:700;font-size:15px;letter-spacing:.2px`.
+  TextStyle _labelStyle(BuildContext context) => ClientTypography.labelLarge(
+    context,
+  ).copyWith(fontSize: 15, fontWeight: FontWeight.w700, letterSpacing: 0.2);
 
   Widget _buildChild(BuildContext context) {
     if (isLoading) {
@@ -138,8 +192,10 @@ class ClientButton extends StatelessWidget {
           strokeWidth: 2.5,
           valueColor: AlwaysStoppedAnimation<Color>(
             _variant == _ClientButtonVariant.primary
-                ? ClientColors.textInverse
-                : ClientColors.primary,
+                ? ClientColors.onPrimaryFor(context)
+                : _variant == _ClientButtonVariant.danger
+                ? ClientColors.journeyRedFor(context)
+                : ClientColors.primaryFor(context),
           ),
         ),
       );
@@ -171,4 +227,4 @@ class ClientButton extends StatelessWidget {
   }
 }
 
-enum _ClientButtonVariant { primary, secondary, text }
+enum _ClientButtonVariant { primary, secondary, danger, text }

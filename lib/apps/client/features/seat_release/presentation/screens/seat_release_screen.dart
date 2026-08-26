@@ -35,7 +35,6 @@ class SeatReleaseScreen extends StatefulWidget {
 
 class _SeatReleaseScreenState extends State<SeatReleaseScreen>
     with TickerProviderStateMixin {
-  
   int _currentView = 1;
 
   String _packageName = '';
@@ -48,7 +47,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
   int _remainingDays = 0;
   int _releasedSeatsThisMonth = 0;
   int _successfullyRebookedSeats = 0;
-  int _totalCompensationEarned = 0; 
+  int _totalCompensationEarned = 0;
 
   UpcomingTrip? _selectedTripForRelease;
   String _selectedReason = 'Personal Plans';
@@ -56,7 +55,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
 
   SeatReleaseRecord? _activeRecord;
 
-  String _historyFilter = 'All'; 
+  String _historyFilter = 'All';
   final TextEditingController _historySearchController =
       TextEditingController();
   String _historySearchQuery = '';
@@ -124,7 +123,6 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
 
   void _onBackPress() {
     if (_currentView == 4) {
-      
       setState(() => _currentView = 1);
     } else if (_currentView > 1) {
       setState(() => _currentView = 1);
@@ -230,7 +228,6 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
           body: SafeArea(
             child: Stack(
               children: [
-                
                 AnimatedSwitcher(
                   duration: const Duration(milliseconds: 250),
                   child: _buildCurrentView(scheme),
@@ -264,7 +261,6 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 30),
       children: [
-        
         _buildPackageHeaderCard(scheme),
         const SizedBox(height: 18),
 
@@ -299,11 +295,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [scheme.primary, scheme.secondary],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: scheme.primary,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
@@ -646,7 +638,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
                   ],
                 ),
                 const SizedBox(height: 10),
-                
+
                 Row(
                   children: [
                     Column(
@@ -714,7 +706,6 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
                       children: [
                         TextButton(
                           onPressed: () {
-                            
                             final recordIdx = _pastReleases.indexWhere(
                               (r) => r.tripDate == trip.date,
                             );
@@ -741,7 +732,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
                           ),
                         ),
                         const SizedBox(width: 6),
-                        
+
                         Tooltip(
                           message: context.l10n.seatRelease_actionUnavailable,
                           child: ElevatedButton(
@@ -789,7 +780,6 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
             physics: const BouncingScrollPhysics(),
             padding: const EdgeInsets.all(20),
             children: [
-              
               _buildTripSummaryCard(trip, scheme),
               const SizedBox(height: 18),
 
@@ -1136,7 +1126,6 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
             ),
             const SizedBox(width: 14),
             Expanded(
-              
               child: Tooltip(
                 message: context.l10n.seatRelease_actionUnavailable,
                 child: ClientButton(
@@ -1164,7 +1153,6 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.all(24),
         children: [
-          
           const CircleAvatar(
             radius: 36,
             backgroundColor: ClientColors.journeyCyan,
@@ -1268,7 +1256,6 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(20),
       children: [
-        
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -1340,7 +1327,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
         _buildStatusTimeline(rec.status, scheme),
 
         const SizedBox(height: 30),
-        
+
         ClientButton(
           label: l10n.seatRelease_backToDashboardButton,
           expand: true,
@@ -1537,7 +1524,6 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(20),
       children: [
-        
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -1663,12 +1649,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [
-            scheme.primary.withAlpha(30),
-            scheme.secondary.withAlpha(20),
-          ],
-        ),
+        color: scheme.primary.withAlpha(26),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: scheme.primary.withAlpha(80)),
       ),
@@ -1760,7 +1741,6 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
     return Column(
       key: const ValueKey('view7'),
       children: [
-        
         Padding(
           padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
           child: TextField(
@@ -1856,7 +1836,7 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
             onTap: () {
               setState(() {
                 _activeRecord = log;
-                _currentView = 5; 
+                _currentView = 5;
               });
             },
             child: Padding(
@@ -2024,16 +2004,10 @@ class _SeatReleaseScreenState extends State<SeatReleaseScreen>
       physics: const BouncingScrollPhysics(),
       padding: const EdgeInsets.all(20),
       children: [
-        
         Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                scheme.primary.withAlpha(40),
-                scheme.secondary.withAlpha(20),
-              ],
-            ),
+            color: scheme.primary.withAlpha(32),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(color: scheme.primary.withAlpha(80)),
           ),

@@ -49,11 +49,7 @@ class OnboardingScene extends StatelessWidget {
       borderRadius: BorderRadius.circular(36),
       child: DecoratedBox(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [accent.withAlpha(46), accent.withAlpha(10), surface],
-          ),
+          color: Color.alphaBlend(accent.withAlpha(28), surface),
           border: Border.all(color: accent.withAlpha(40)),
         ),
         child: Stack(
@@ -105,11 +101,7 @@ class _CenterBadge extends StatelessWidget {
           width: 90,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [accent, Color.lerp(accent, Colors.black, 0.18)!],
-            ),
+            color: accent,
             boxShadow: [
               BoxShadow(
                 color: accent.withAlpha(90),

@@ -22,9 +22,7 @@ class DailyBookingHeader extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [theme.colorScheme.primary.withAlpha(20), Colors.transparent],
-        ),
+        color: theme.colorScheme.primary.withAlpha(14),
         border: Border(bottom: BorderSide(color: Colors.black.withAlpha(15))),
       ),
       child: Row(

@@ -1,4 +1,5 @@
 import '../../domain/entities/trip_seat.dart';
+import '../../domain/entities/trip_stop.dart';
 import '../models/trip_model.dart';
 import 'trip_status_mapper.dart';
 
@@ -9,6 +10,7 @@ abstract final class TripMapper {
   static TripModel fromBookingRow(
     Map<String, dynamic> data, {
     List<TripSeat> seatMap = const [],
+    List<TripStop> stops = const [],
   }) {
     final tripObj = data['operation_trips'] as Map<String, dynamic>?;
     final vehicleObj = tripObj?['vehicles'] as Map<String, dynamic>?;
@@ -18,7 +20,7 @@ abstract final class TripMapper {
     final routeParts = routeRaw.contains('→')
         ? routeRaw.split(RegExp(r'\s*→\s*'))
         : routeRaw.split(RegExp(r'\s+-\s+'));
-    
+
     final pickup = routeParts.isNotEmpty ? routeParts[0] : '';
     final destination = routeParts.length > 1 ? routeParts[1] : '';
 
@@ -48,7 +50,7 @@ abstract final class TripMapper {
       destination: destination,
       dateLabel: data['trip_date']?.toString() ?? '',
       timeLabel: data['trip_time']?.toString() ?? '',
-      
+
       driverName: driverObj?['full_name']?.toString() ?? '',
       driverPhone: driverObj?['phone']?.toString() ?? 'Not available',
       driverInitials: _initials(driverObj?['full_name']?.toString()),
@@ -60,7 +62,16 @@ abstract final class TripMapper {
       vehicleId: vehicleObj?['id']?.toString() ?? '',
       vehiclePlate: vehicleObj?['plate_number']?.toString().trim() ?? '',
       vehicleCode: vehicleObj?['vehicle_code']?.toString().trim() ?? '',
+      vehicleModel: vehicleObj?['model']?.toString().trim() ?? '',
+      vehicleColor: vehicleObj?['color']?.toString().trim() ?? '',
+      vehicleYear: (vehicleObj?['manufacture_year'] as num?)?.toInt() ?? 0,
+      vehicleSeatCapacity: (vehicleObj?['capacity'] as num?)?.toInt() ?? 0,
+      vehicleSeatLayout:
+          vehicleObj?['seat_layout_type']?.toString().trim() ?? '',
+      vehicleRating: (vehicleObj?['rating'] as num?)?.toDouble() ?? 0.0,
+      vehicleRatingCount: (vehicleObj?['rating_count'] as num?)?.toInt() ?? 0,
       vehicleImageUrls: _imageUrls(vehicleObj?['image_url']),
+      stops: stops,
       seats: _seats(data['seat']),
       paymentStatus: TripStatusMapper.paymentStatus(dbPaymentStatus),
       fare: 'EGP $fare',

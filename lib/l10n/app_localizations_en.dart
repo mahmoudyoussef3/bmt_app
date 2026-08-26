@@ -2928,6 +2928,24 @@ class AppLocalizationsEn extends AppLocalizations {
   String get trips_vehicleNumberLabel => 'Vehicle number';
 
   @override
+  String get trips_vehicleTitle => 'Your bus';
+
+  @override
+  String get trips_stationsSubtitle => 'Every stop, in departure order';
+
+  @override
+  String trips_stationsShowAll(int count) {
+    return 'Show all $count stops';
+  }
+
+  @override
+  String get trips_stationsShowLess => 'Show fewer';
+
+  @override
+  String get trips_stationsOffLegNote =>
+      'Stops outside your leg are shown faded — they are why the trip takes as long as it does.';
+
+  @override
   String get trips_paymentNotePaid => 'Your payment is confirmed.';
 
   @override
@@ -4638,6 +4656,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get booking_editStops => 'Edit stops';
+
+  @override
+  String get booking_stationsLabel => 'Stations';
+
+  @override
+  String get booking_pickTripNextStep =>
+      'You\'ll choose your trip and seat in the next steps.';
 
   @override
   String get booking_noBookableRouteFound => 'No bookable route found';

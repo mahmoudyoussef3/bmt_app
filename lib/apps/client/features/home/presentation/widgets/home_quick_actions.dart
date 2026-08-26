@@ -107,7 +107,9 @@ class _QuickActionTile extends StatelessWidget {
               width: 38,
               height: 38,
               decoration: BoxDecoration(
-                color: accent.withAlpha(20),
+                // `--primary-tint`, so the wash tracks the token in both
+                // themes instead of a fixed alpha that reads as grey on dark.
+                color: ClientColors.primaryTintFor(context),
                 borderRadius: BorderRadius.circular(13),
               ),
               child: Icon(icon, color: accent, size: 20),

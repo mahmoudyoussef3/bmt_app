@@ -1,11 +1,13 @@
 import 'reviewable_trip.dart';
 import 'trip_seat.dart';
 import 'trip_status.dart';
+import 'trip_stop.dart';
 
 export 'reviewable_trip.dart';
 export 'trip_attention.dart';
 export 'trip_policies.dart';
 export 'trip_status.dart';
+export 'trip_stop.dart';
 
 class TripData {
   const TripData({
@@ -27,7 +29,15 @@ class TripData {
     required this.vehicleId,
     this.vehiclePlate = '',
     this.vehicleCode = '',
+    this.vehicleModel = '',
+    this.vehicleColor = '',
+    this.vehicleYear = 0,
+    this.vehicleSeatCapacity = 0,
+    this.vehicleSeatLayout = '',
+    this.vehicleRating = 0,
+    this.vehicleRatingCount = 0,
     this.vehicleImageUrls = const [],
+    this.stops = const [],
     required this.seats,
     required this.paymentStatus,
     required this.fare,
@@ -98,8 +108,51 @@ class TripData {
   /// on file, so the vehicle is never left without an identifier.
   final String vehicleCode;
 
+  /// The model line under the brand carried by [vehicleName] — "Hiace" to a
+  /// "Toyota". Empty on a fleet record that only named the brand.
+  final String vehicleModel;
+
+  /// The bus's colour, as the office recorded it. Part of how a rider picks
+  /// their bus out of a row of them at the curb.
+  final String vehicleColor;
+
+  /// Year of manufacture, or zero when the fleet record does not say.
+  final int vehicleYear;
+
+  /// How many seats the *fleet record* says this bus has.
+  ///
+  /// Not the same number as [vehicleCapacity], which counts the seats this
+  /// trip actually opened for sale: a bus can run with rows blocked off. Both
+  /// are shown, and neither is derived from the other.
+  final int vehicleSeatCapacity;
+
+  /// The cabin's layout name ("2+1"), when the office configured one.
+  final String vehicleSeatLayout;
+
+  /// This bus's public average, aggregated from passenger reviews of the
+  /// vehicle itself.
+  final double vehicleRating;
+
+  /// How many reviews [vehicleRating] is built from. Zero means "not rated
+  /// yet" — a new bus must not be shown as a 0.0-star one.
+  final int vehicleRatingCount;
+
+  bool get hasVehicleRating => vehicleRatingCount > 0 && vehicleRating > 0;
+
+  /// What to call the bus on screen: brand and model together when the fleet
+  /// record carries both, else whichever one it has.
+  String get vehicleFullName => [
+    vehicleName.trim(),
+    vehicleModel.trim(),
+  ].where((part) => part.isNotEmpty).join(' ');
+
   /// Photos of this bus, as uploaded against the fleet record.
   final List<String> vehicleImageUrls;
+
+  /// Every station this trip calls at, in running order, with the rider's own
+  /// two flagged. Empty until details are loaded (list cards omit it) and on a
+  /// trip whose stops could not be read.
+  final List<TripStop> stops;
 
   /// How a passenger names this bus: its plate, else the fleet code, else
   /// nothing at all (never a placeholder dash — the presentation layer decides
@@ -128,6 +181,33 @@ class TripData {
     origin: pickup,
     destination: destination,
   );
+
+  bool get hasStops => stops.isNotEmpty;
+
+  /// Where the rider gets on and off, when the booking recorded points this
+  /// trip's corridor actually contains.
+  TripStop? get boardingStop => _stopWhere((stop) => stop.isBoarding);
+
+  TripStop? get dropoffStop => _stopWhere((stop) => stop.isDropoff);
+
+  TripStop? _stopWhere(bool Function(TripStop stop) test) {
+    final index = stops.indexWhere(test);
+    return index < 0 ? null : stops[index];
+  }
+
+  /// Whether the stop at [index] falls on the rider's own leg of the corridor.
+  ///
+  /// A trip whose boarding or drop-off point is unknown answers `true`
+  /// everywhere: the other stops are then not *outside* the journey, they are
+  /// simply unplaced, and dimming them would state something the data does not.
+  bool isOnRiderLeg(int index) {
+    final from = stops.indexWhere((stop) => stop.isBoarding);
+    final to = stops.indexWhere((stop) => stop.isDropoff);
+    if (from < 0 || to < 0) return true;
+    final first = from <= to ? from : to;
+    final last = from <= to ? to : from;
+    return index >= first && index <= last;
+  }
 
   bool get hasSeatMap => seatMap.isNotEmpty;
 

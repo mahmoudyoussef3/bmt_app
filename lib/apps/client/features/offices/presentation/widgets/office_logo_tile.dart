@@ -16,10 +16,14 @@ class OfficeLogoTile extends StatelessWidget {
     required this.logoUrl,
     required this.size,
     this.raised = true,
+    this.brandKey,
   });
 
   final String? logoUrl;
   final double size;
+
+  /// The office id, so the no-logo fallback keeps one brand ramp per operator.
+  final String? brandKey;
 
   /// Whether the tile lifts off the surface behind it. False where the tile
   /// sits inside a card that already carries the elevation.
@@ -39,7 +43,11 @@ class OfficeLogoTile extends StatelessWidget {
         border: Border.all(color: ClientColors.borderFor(context)),
         boxShadow: raised ? ClientElevation.sm(context) : null,
       ),
-      child: OfficeLogoAvatar(logoUrl: logoUrl, size: size - inset * 2),
+      child: OfficeLogoAvatar(
+        logoUrl: logoUrl,
+        size: size - inset * 2,
+        brandKey: brandKey,
+      ),
     );
   }
 }

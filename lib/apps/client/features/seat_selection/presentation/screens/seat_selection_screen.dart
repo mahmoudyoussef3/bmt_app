@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:bmt_app/apps/client/core/theme/client_seat_palette.dart';
 
 import 'package:bmt_app/apps/client/features/seat_selection/domain/entities/seat_option.dart';
 import 'package:bmt_app/apps/client/features/seat_selection/presentation/cubit/seat_selection_cubit.dart';
@@ -607,6 +608,7 @@ class _SeatMapGrid extends StatelessWidget {
     );
 
     return VehicleSeatLayout(
+      palette: ClientSeatPalette.of(context),
       blueprint: blueprint,
       seats: [
         for (final seat in ordered)

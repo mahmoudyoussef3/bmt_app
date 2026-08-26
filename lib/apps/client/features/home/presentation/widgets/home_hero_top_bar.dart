@@ -184,7 +184,10 @@ class _UnreadBadge extends StatelessWidget {
         label,
         textAlign: TextAlign.center,
         style: ClientTypography.labelSmall(context).copyWith(
-          color: Colors.white,
+          // Dark ink on amber, as the design specifies. White on the dark
+          // theme's lighter `--warning` was the one unreadable pair on the
+          // hero.
+          color: const Color(0xFF1A1300),
           fontSize: 12,
           height: 1.1,
           fontWeight: FontWeight.w800,

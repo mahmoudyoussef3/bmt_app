@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
+import 'package:bmt_app/apps/client/core/widgets/client_brand_avatar.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/utils/trip_schedule_format.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
+import 'package:bmt_app/core/widgets/directional_icon.dart';
 import 'package:bmt_app/core/widgets/route_direction_text.dart';
 
 import '../../domain/entities/route_availability.dart';
@@ -16,14 +18,20 @@ import '../../domain/entities/route_summary.dart';
 /// data — the way [OfficeCardBody] already unifies operators.
 ///
 /// Read top to bottom in the order a rider asks: where does it go (the
-/// direction), which towns does it touch (the via line), how far and how long
+/// direction), which towns does it touch (the via line), how long and how far
 /// (the meta line), then — under a rule, because this is the part they decide
-/// on — who runs it, whether it is selling, and when it next leaves.
+/// on — whether it is selling and who runs it.
 ///
 /// The endpoints are one composed [RouteDirectionText] line rather than two
 /// stacked names: the arrow is what makes a corridor read as a journey with a
-/// direction. Long Arabic city names are given a second line in the catalog
-/// ([dense] `false`) so nothing is ellipsised away on a narrow phone.
+/// direction, and it is picked from the ambient [Directionality] so it points
+/// origin→destination in Arabic and English alike. Long Arabic city names are
+/// given a second line in the catalog ([dense] `false`) so nothing is
+/// ellipsised away on a narrow phone.
+///
+/// Nothing on the card is a hardcoded string: every label comes from `l10n`,
+/// and the two glyphs that mean *forward* ride on [DirectionalIcon] /
+/// [routeDirectionLabel] rather than being drawn pointing right and left alone.
 class RouteCardBody extends StatelessWidget {
   const RouteCardBody({
     super.key,
@@ -40,9 +48,10 @@ class RouteCardBody extends StatelessWidget {
   /// at all. Home never searches, so its shelf never sets this.
   final String viaStop;
 
-  /// Tighter type and a single-line direction for Home's narrower shelf; the
-  /// catalog card gets the roomier defaults, its route name, and the searched
-  /// via-stop tag.
+  /// A tighter, single-line direction for Home's narrower shelf; the catalog
+  /// card gets the roomier heading, its route name, and the searched via-stop
+  /// tag. Everything below the direction line is printed at one size in both,
+  /// so a corridor is recognisably the same card on either screen.
   final bool dense;
 
   /// The corridor's intermediate stops — every stop but the two endpoints — in
@@ -94,10 +103,7 @@ class RouteCardBody extends StatelessWidget {
           const SizedBox(height: 6),
           _ViaStopsLine(stops: via),
         ],
-        if (_hasMeta) ...[
-          const SizedBox(height: ClientSpacing.sm),
-          _MetaLine(route: route),
-        ],
+        if (_hasMeta) ...[const SizedBox(height: 10), _MetaLine(route: route)],
         if (viaStop.isNotEmpty) ...[
           const SizedBox(height: ClientSpacing.sm),
           _SearchedStopTag(stopName: viaStop),
@@ -105,19 +111,7 @@ class RouteCardBody extends StatelessWidget {
         const SizedBox(height: ClientSpacing.sm),
         Divider(height: 1, color: ClientColors.borderFor(context)),
         const SizedBox(height: ClientSpacing.sm),
-        Row(
-          children: [
-            if (route.officeName.isNotEmpty)
-              Flexible(
-                child: _OperatorMark(
-                  name: route.officeName,
-                  logoUrl: route.officeLogoUrl,
-                ),
-              ),
-            const Spacer(),
-            _AvailabilityPill(status: route.availability.status),
-          ],
-        ),
+        _DecisionRow(route: route),
         if (route.availability.isKnown) _NextDeparture(route: route),
       ],
     );
@@ -141,8 +135,8 @@ class _DirectionRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final style =
         (dense
-                ? ClientTypography.bodyMedium(context)
-                : ClientTypography.bodyLarge(context))
+                ? ClientTypography.bodyLarge(context)
+                : ClientTypography.headingSmall(context))
             .copyWith(fontWeight: FontWeight.w800, height: 1.3);
 
     return Row(
@@ -164,7 +158,11 @@ class _DirectionRow extends StatelessWidget {
                 ),
         ),
         const SizedBox(width: ClientSpacing.xs),
-        Icon(
+        // Points *out* of the card — rightwards in English, leftwards in
+        // Arabic. `chevron_right_rounded` carries `matchTextDirection`, so
+        // [DirectionalIcon] hands it to [Icon] to mirror rather than flipping
+        // it a second time and cancelling the mirror out.
+        DirectionalIcon(
           Icons.chevron_right_rounded,
           size: 22,
           color: ClientColors.textTertiaryFor(context),
@@ -174,8 +172,13 @@ class _DirectionRow extends StatelessWidget {
   }
 }
 
-/// The towns the corridor passes through, pinned on one line. What turns two
-/// endpoints into a route a rider can actually board halfway along.
+/// The towns the corridor passes through, on one line under the endpoints.
+/// What turns two endpoints into a route a rider can actually board halfway
+/// along.
+///
+/// Plain text rather than an icon-led row: it is a continuation of the
+/// direction line above it — "Cairo → Tanta, *via Giza*" — and a pin in front
+/// of it made the card read as a form with three labelled fields.
 class _ViaStopsLine extends StatelessWidget {
   const _ViaStopsLine({required this.stops});
 
@@ -183,31 +186,23 @@ class _ViaStopsLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(
-          Icons.place_rounded,
-          size: 14,
-          color: ClientColors.textTertiaryFor(context),
-        ),
-        const SizedBox(width: 5),
-        Expanded(
-          child: Text(
-            context.l10n.home_viaStations(stops.join(' · ')),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: ClientTypography.labelSmall(
-              context,
-            ).copyWith(color: ClientColors.textSecondaryFor(context)),
-          ),
-        ),
-      ],
+    return Text(
+      context.l10n.home_viaStations(stops.join(' · ')),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+      style: ClientTypography.bodySmall(
+        context,
+      ).copyWith(color: ClientColors.textSecondaryFor(context)),
     );
   }
 }
 
-/// How far and how long, as plain captions rather than tinted chips — they are
+/// How long and how far, as plain captions rather than tinted chips — they are
 /// background detail on a card whose decision lives under the rule.
+///
+/// One clock leads the pair: the time is what a rider weighs, the distance
+/// carries its own unit and needs no glyph to be read as a distance. Two icons
+/// here turned a caption into a toolbar.
 class _MetaLine extends StatelessWidget {
   const _MetaLine({required this.route});
 
@@ -216,31 +211,32 @@ class _MetaLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final muted = ClientColors.textSecondaryFor(context);
-    final style = ClientTypography.labelSmall(context).copyWith(color: muted);
+    final style = ClientTypography.bodySmall(context).copyWith(color: muted);
+    final hasDuration = route.duration.isNotEmpty;
 
     return Row(
       children: [
+        if (hasDuration) ...[
+          Icon(Icons.schedule_rounded, size: 15, color: muted),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              route.duration,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: style,
+            ),
+          ),
+        ],
+        if (hasDuration && route.distance.isNotEmpty)
+          const SizedBox(width: ClientSpacing.md),
         if (route.distance.isNotEmpty)
           Flexible(
-            child: _MetaItem(
-              icon: Icons.route_outlined,
-              label: route.distance,
+            child: Text(
+              route.distance,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: style,
-              color: muted,
-            ),
-          ),
-        if (route.distance.isNotEmpty && route.duration.isNotEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Text('·', style: style),
-          ),
-        if (route.duration.isNotEmpty)
-          Flexible(
-            child: _MetaItem(
-              icon: Icons.schedule_rounded,
-              label: route.duration,
-              style: style,
-              color: muted,
             ),
           ),
       ],
@@ -248,41 +244,8 @@ class _MetaLine extends StatelessWidget {
   }
 }
 
-class _MetaItem extends StatelessWidget {
-  const _MetaItem({
-    required this.icon,
-    required this.label,
-    required this.style,
-    required this.color,
-  });
-
-  final IconData icon;
-  final String label;
-  final TextStyle style;
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 13, color: color),
-        const SizedBox(width: 4),
-        Flexible(
-          child: Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: style,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// "يمر عبر بنها" — why this corridor is in the results when neither of its
-/// endpoints is what the rider typed.
+/// "Passing through Banha" — why this corridor is in the results when neither
+/// of its endpoints is what the rider typed.
 ///
 /// Hugs its text so it reads as a tag on the card, not as another field, and
 /// is tinted where the via-stops line above it is grey: one is a fact about the
@@ -326,82 +289,118 @@ class _SearchedStopTag extends StatelessWidget {
   }
 }
 
-/// Who runs the corridor: the office's own mark, a brand check, and its name.
+/// The part of the card a rider decides on, under the rule: can I book this,
+/// and who am I booking from.
 ///
-/// The check states a fact true of every operator listed — each one passed
-/// platform onboarding before its routes could be sold here — rather than
-/// singling any one office out, the same claim [OfficeHeroBanner] makes.
+/// The verdict takes the leading edge — first thing read in either script —
+/// and the operator anchors the far corner with its mark last, so a column of
+/// cards lines up as a column of answers with a column of brands beside it.
+class _DecisionRow extends StatelessWidget {
+  const _DecisionRow({required this.route});
+
+  final RouteSummary route;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        _AvailabilityPill(status: route.availability.status),
+        if (route.officeName.isNotEmpty) ...[
+          const SizedBox(width: ClientSpacing.sm),
+          // Expanded + end-alignment rather than a [Spacer]: two flexible
+          // children would each take half the leftover width and leave a short
+          // operator name floating in the middle of the row instead of closing
+          // it.
+          Expanded(
+            child: Align(
+              alignment: AlignmentDirectional.centerEnd,
+              child: _OperatorMark(
+                name: route.officeName,
+                logoUrl: route.officeLogoUrl,
+                brandKey: route.officeId,
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// Who runs the corridor: the office's name, then its own mark closing the row.
 class _OperatorMark extends StatelessWidget {
-  const _OperatorMark({required this.name, required this.logoUrl});
+  const _OperatorMark({
+    required this.name,
+    required this.logoUrl,
+    this.brandKey,
+  });
 
   final String name;
   final String? logoUrl;
 
-  static const double _size = 28;
+  /// The office id, so its no-logo mark keeps one colour across the app.
+  final String? brandKey;
+
+  static const double _size = 30;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _OperatorAvatar(logoUrl: logoUrl, size: _size),
-        const SizedBox(width: 6),
-        Icon(
-          Icons.verified_rounded,
-          size: 15,
-          color: ClientColors.primaryFor(context),
-        ),
-        const SizedBox(width: 4),
         Flexible(
           child: Text(
             name,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: ClientTypography.labelSmall(context).copyWith(
-              color: ClientColors.textSecondaryFor(context),
+            textAlign: TextAlign.end,
+            style: ClientTypography.labelLarge(context).copyWith(
+              color: ClientColors.textPrimaryFor(context),
               fontWeight: FontWeight.w700,
             ),
           ),
         ),
+        const SizedBox(width: 8),
+        _OperatorAvatar(logoUrl: logoUrl, size: _size, brandKey: brandKey),
       ],
     );
   }
 }
 
-/// The office's picture when it has uploaded one, a storefront glyph when it
-/// has not — never a broken-image tile, the same answer [OfficeLogoAvatar]
-/// gives on every other screen that draws an operator.
+/// The office's picture when it has uploaded one, the design's gradient brand
+/// tile when it has not — never a broken-image tile, the same answer
+/// [OfficeLogoAvatar] gives on every other screen that draws an operator.
 ///
-/// Deliberately not the office's initials: they read as a brand mark only for
-/// a Latin acronym, and an Arabic trading name ("شركة الدلتا للنقل") reduces
-/// to two disconnected letters that identify nothing.
+/// Deliberately not the office's initials, which the design file fills this
+/// tile with: they read as a brand mark only for a Latin acronym, and an
+/// Arabic trading name ("شركة الدلتا للنقل") reduces to one disconnected
+/// letter that identifies nothing — the design's own mock shows "إيزي واي"
+/// collapsing to a bare stroke.
 class _OperatorAvatar extends StatelessWidget {
-  const _OperatorAvatar({required this.logoUrl, required this.size});
+  const _OperatorAvatar({
+    required this.logoUrl,
+    required this.size,
+    this.brandKey,
+  });
 
   final String? logoUrl;
   final double size;
+  final String? brandKey;
 
   @override
   Widget build(BuildContext context) {
     final url = logoUrl;
-    final fallback = Container(
-      width: size,
-      height: size,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: ClientColors.primaryContainerFor(context),
-        shape: BoxShape.circle,
-      ),
-      child: Icon(
-        Icons.storefront_rounded,
-        size: size * 0.52,
-        color: ClientColors.onPrimaryContainerFor(context),
-      ),
+    final radius = BorderRadius.circular(size * 0.32);
+    final fallback = ClientBrandAvatar.glyph(
+      icon: Icons.storefront_rounded,
+      size: size,
+      brandKey: brandKey,
     );
 
     if (url == null || url.isEmpty) return fallback;
 
-    return ClipOval(
+    return ClipRRect(
+      borderRadius: radius,
       child: Image.network(
         url,
         width: size,
@@ -433,50 +432,41 @@ class _AvailabilityPill extends StatelessWidget {
     }
 
     final l10n = context.l10n;
-    final (ClientJourneyStatus tone, String label) = switch (status) {
+    // The design's three availability tones are a traffic light — green on
+    // sale, amber full, grey nothing running — not three shades of brand. On a
+    // list of corridors that is the difference between scanning and reading:
+    // "bookable" used to wear the same blue as every other chip on the card.
+    final (Color ink, Color bg, String label) = switch (status) {
       RouteAvailabilityStatus.bookable => (
-        ClientJourneyStatus.upcoming,
+        ClientColors.onJourneyGreenFor(context),
+        ClientColors.journeyGreenLightFor(context),
         l10n.routes_availabilityBookable,
       ),
       RouteAvailabilityStatus.soldOut => (
-        ClientJourneyStatus.departing,
+        ClientColors.onJourneyAmberFor(context),
+        ClientColors.journeyAmberLightFor(context),
         l10n.routes_availabilitySoldOut,
       ),
       RouteAvailabilityStatus.none || RouteAvailabilityStatus.unknown => (
-        ClientJourneyStatus.completed,
+        ClientColors.onJourneySlateFor(context),
+        ClientColors.journeySlateLightFor(context),
         l10n.routes_availabilityNone,
       ),
     };
 
-    final colors = ClientColors.journeyBadgeFor(context, tone);
-
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
       decoration: BoxDecoration(
-        color: colors.bg,
+        color: bg,
         borderRadius: BorderRadius.circular(ClientRadius.pill),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 7,
-            height: 7,
-            decoration: BoxDecoration(
-              color: colors.label,
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: ClientTypography.labelSmall(
-              context,
-            ).copyWith(color: colors.fg, fontWeight: FontWeight.w800),
-          ),
-        ],
+      child: Text(
+        label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: ClientTypography.labelMedium(
+          context,
+        ).copyWith(color: ink, fontWeight: FontWeight.w800),
       ),
     );
   }
@@ -522,7 +512,7 @@ class _NextDeparture extends StatelessWidget {
     if (departure.isEmpty && !showSeats) return const SizedBox.shrink();
 
     return Padding(
-      padding: const EdgeInsets.only(top: 6),
+      padding: const EdgeInsets.only(top: 10),
       child: Row(
         children: [
           if (departure.isNotEmpty)
@@ -531,7 +521,7 @@ class _NextDeparture extends StatelessWidget {
                 departure,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: ClientTypography.labelSmall(
+                style: ClientTypography.bodySmall(
                   context,
                 ).copyWith(color: ClientColors.textSecondaryFor(context)),
               ),
@@ -544,7 +534,7 @@ class _NextDeparture extends StatelessWidget {
               context.l10n.routes_seatsLeft(availability.seatsLeft),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: ClientTypography.labelSmall(context).copyWith(
+              style: ClientTypography.bodySmall(context).copyWith(
                 color: ClientColors.journeyAmberFor(context),
                 fontWeight: FontWeight.w800,
               ),

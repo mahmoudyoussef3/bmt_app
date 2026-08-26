@@ -59,5 +59,8 @@ test/apps/dashboard/features/bookings/_captures/
 # Throwaway subscriptions-board visual captures (subscriptions_visual_capture.dart)
 test/apps/dashboard/features/subscriptions/_captures/
 
+# Throwaway route-details visual captures (route_details_visual_capture.dart)
+test/apps/client/features/booking/_captures/
+
 # FVM Version Cache
 .fvm/

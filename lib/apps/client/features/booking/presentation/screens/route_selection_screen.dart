@@ -12,6 +12,11 @@ import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Route details and decision screen for the current search.
+///
+/// It answers one question — *is this the right line?* — from the line's map,
+/// facts, stations and timetable. Which departure, which seat, which package
+/// and what it all costs are the wizard's questions, asked one step at a time
+/// once the rider has committed to the line.
 class RouteSelectionScreen extends StatelessWidget {
   const RouteSelectionScreen({super.key, required this.query});
 
@@ -42,7 +47,6 @@ class RouteSelectionScreen extends StatelessWidget {
             errorMessage: state is RouteResultsError ? state.message : null,
             routes: loaded?.routes ?? const <RouteOptionData>[],
             selectedRoute: loaded?.selectedRoute,
-            selectedTripId: loaded?.selectedTripId,
             onRetry: () => cubit.load(query),
             onMap: () => Navigator.pushNamed(
               context,
@@ -50,26 +54,14 @@ class RouteSelectionScreen extends StatelessWidget {
               arguments: query.toArguments(),
             ),
             onSelectRoute: (route) => cubit.selectRoute(route.id),
-            onSelectTrip: (trip) => cubit.selectTrip(trip.id),
-            onSelectPackage: (plan) {
-              final route = loaded?.selectedRoute;
-              if (route != null) _continueToBooking(context, route, plan.id);
-            },
           ),
         );
       },
     );
   }
 
-  /// [packageId] overrides whatever plan the search arrived carrying: a rider
-  /// who just tapped a plan on this screen has chosen it more recently than the
-  /// one they were reviewing before the search started.
-  void _continueToBooking(
-    BuildContext context,
-    RouteOptionData route, [
-    String? packageId,
-  ]) {
-    final initialPackageId = packageId ?? query.initialPackageId;
+  void _continueToBooking(BuildContext context, RouteOptionData route) {
+    final initialPackageId = query.initialPackageId;
     Navigator.pushNamed(
       context,
       BookingRoutes.wizard,

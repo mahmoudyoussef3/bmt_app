@@ -2912,6 +2912,24 @@ class AppLocalizationsAr extends AppLocalizations {
   String get trips_vehicleNumberLabel => 'رقم المركبة';
 
   @override
+  String get trips_vehicleTitle => 'حافلتك';
+
+  @override
+  String get trips_stationsSubtitle => 'كل المحطات بترتيب المرور';
+
+  @override
+  String trips_stationsShowAll(int count) {
+    return 'عرض كل المحطات ($count)';
+  }
+
+  @override
+  String get trips_stationsShowLess => 'عرض أقل';
+
+  @override
+  String get trips_stationsOffLegNote =>
+      'المحطات خارج مسارك تظهر باهتة — وهي سبب طول مدة الرحلة.';
+
+  @override
   String get trips_paymentNotePaid => 'تم تأكيد دفعتك.';
 
   @override
@@ -4609,6 +4627,13 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get booking_editStops => 'تعديل المحطات';
+
+  @override
+  String get booking_stationsLabel => 'المحطات';
+
+  @override
+  String get booking_pickTripNextStep =>
+      'ستختار رحلتك ومقعدك في الخطوات التالية.';
 
   @override
   String get booking_noBookableRouteFound => 'لا يوجد خط قابل للحجز';

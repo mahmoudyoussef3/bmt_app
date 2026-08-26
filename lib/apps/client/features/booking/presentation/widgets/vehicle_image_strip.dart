@@ -23,7 +23,6 @@ class VehicleImageStrip extends StatelessWidget {
       return _ImagePlaceholder(
         height: height,
         label: context.l10n.tracking_vehicle,
-        gradientIndex: 0,
       );
     }
 
@@ -34,11 +33,7 @@ class VehicleImageStrip extends StatelessWidget {
         onPageChanged: onPageChanged,
         itemCount: labels.length,
         itemBuilder: (context, index) {
-          return _ImagePlaceholder(
-            height: height,
-            label: labels[index],
-            gradientIndex: index,
-          );
+          return _ImagePlaceholder(height: height, label: labels[index]);
         },
       ),
     );
@@ -74,37 +69,24 @@ class VehicleImageDots extends StatelessWidget {
 }
 
 class _ImagePlaceholder extends StatelessWidget {
-  const _ImagePlaceholder({
-    required this.height,
-    required this.label,
-    required this.gradientIndex,
-  });
+  const _ImagePlaceholder({required this.height, required this.label});
 
   final double height;
   final String label;
-  final int gradientIndex;
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final palettes = [
-      [scheme.primary.withAlpha(90), scheme.secondary.withAlpha(50)],
-      [scheme.secondary.withAlpha(80), scheme.tertiary.withAlpha(45)],
-      [scheme.tertiary.withAlpha(70), scheme.primary.withAlpha(55)],
-      [scheme.surfaceContainerHighest, scheme.primary.withAlpha(60)],
-    ];
-    final colors = palettes[gradientIndex % palettes.length];
 
+    // Every page used to draw its own two-hue ramp, keyed off its index, so a
+    // gallery of stand-ins looked like four different vehicles. One brand tint
+    // for all of them: which page you are on is the dots' job, not the fill's.
     return Container(
       height: height,
       width: double.infinity,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(18),
-        gradient: LinearGradient(
-          colors: colors,
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
+        color: scheme.primary.withAlpha(60),
         border: Border.all(color: scheme.outline.withAlpha(100)),
       ),
       child: Stack(

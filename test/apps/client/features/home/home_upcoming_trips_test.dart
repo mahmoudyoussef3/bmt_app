@@ -181,13 +181,14 @@ void main() {
       expect(find.text('Fare not published yet'), findsOneWidget);
     });
 
-    testWidgets('with no trips it explains why and offers routes', (
-      tester,
-    ) async {
+    // Home hides the whole departures zone when nothing is on sale, so the
+    // rail must not leave an empty-state row (or its progress rule) behind.
+    testWidgets('with no trips it draws nothing at all', (tester) async {
       await _pumpList(tester, []);
 
-      expect(find.text('No departures scheduled'), findsOneWidget);
-      expect(find.text('Browse routes'), findsOneWidget);
+      expect(find.byType(HomeUpcomingTripCard), findsNothing);
+      expect(find.text('All routes'), findsNothing);
+      expect(find.byType(ListView), findsNothing);
     });
   });
 

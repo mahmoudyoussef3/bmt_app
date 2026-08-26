@@ -24,9 +24,12 @@ class ClientStatusBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = ClientColors.journeyBadge(status);
+    // `journeyBadgeFor` rather than `journeyBadge`: the bare form only ever
+    // answers the light palette, which left every badge in dark mode carrying
+    // a light-mode tint.
+    final colors = ClientColors.journeyBadgeFor(context, status);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: colors.bg,
         borderRadius: BorderRadius.circular(999),
@@ -39,10 +42,13 @@ class ClientStatusBadge extends StatelessWidget {
             const SizedBox(width: 5),
           ],
           Text(
+            // `font-size:11px;font-weight:700` — the design's status pill.
             label,
-            style: ClientTypography.labelMedium(
-              context,
-            ).copyWith(color: colors.fg),
+            style: ClientTypography.labelMedium(context).copyWith(
+              color: colors.fg,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ],
       ),

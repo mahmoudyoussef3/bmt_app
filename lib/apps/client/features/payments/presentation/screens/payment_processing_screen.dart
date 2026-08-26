@@ -213,16 +213,7 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
 
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              ClientColors.surfaceFor(context),
-              ClientColors.surfaceMutedFor(context),
-            ],
-          ),
-        ),
+        color: ClientColors.backgroundFor(context),
         child: SafeArea(
           child: Column(
             children: [
@@ -461,12 +452,7 @@ class _PaymentProcessingScreenState extends State<PaymentProcessingScreen>
                         height: 100,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          gradient: const LinearGradient(
-                            colors: [
-                              ClientColors.journeyCyan,
-                              ClientColors.journeyCyanStrong,
-                            ],
-                          ),
+                          color: ClientColors.journeyCyan,
                           boxShadow: [
                             BoxShadow(
                               color: ClientColors.journeyCyan.withAlpha(45),

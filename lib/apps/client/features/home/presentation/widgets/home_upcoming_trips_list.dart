@@ -58,11 +58,10 @@ class _HomeUpcomingTripsListState extends State<HomeUpcomingTripsList> {
 
   @override
   Widget build(BuildContext context) {
-    if (widget.trips.isEmpty) {
-      return SliverToBoxAdapter(
-        child: _NoDepartures(onBrowseRoutes: widget.onBrowseRoutes),
-      );
-    }
+    // Home drops the whole departures zone — its header included — when
+    // nothing is on sale, so an empty rail here draws nothing rather than
+    // leaving a stray rule and progress track behind.
+    if (widget.trips.isEmpty) return const SliverToBoxAdapter();
 
     return SliverToBoxAdapter(
       child: LayoutBuilder(
@@ -306,68 +305,6 @@ class _BrowseAllCard extends StatelessWidget {
               style: ClientTypography.headingSmall(
                 context,
               ).copyWith(fontWeight: FontWeight.w800),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// A single quiet row rather than a panel: the departure board's header
-/// already announces the section and offers "all routes", so an empty board
-/// only has to say it is empty and stay out of the way of the sections under
-/// it. The whole row is the tap target into the route list.
-class _NoDepartures extends StatelessWidget {
-  const _NoDepartures({required this.onBrowseRoutes});
-
-  final VoidCallback onBrowseRoutes;
-
-  @override
-  Widget build(BuildContext context) {
-    final muted = ClientColors.textSecondaryFor(context);
-
-    return PressableScale(
-      onTap: onBrowseRoutes,
-      scale: 0.99,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(
-          horizontal: ClientSpacing.md,
-          vertical: ClientSpacing.sm,
-        ),
-        decoration: BoxDecoration(
-          color: ClientColors.surfaceFor(context),
-          borderRadius: BorderRadius.circular(ClientRadius.md),
-          border: Border.all(color: ClientColors.borderFor(context)),
-        ),
-        child: Row(
-          children: [
-            Icon(Icons.event_busy_rounded, size: 20, color: muted),
-            const SizedBox(width: ClientSpacing.sm),
-            Expanded(
-              child: Text(
-                context.l10n.home_noDepartures,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: ClientTypography.bodyMedium(
-                  context,
-                ).copyWith(color: muted),
-              ),
-            ),
-            const SizedBox(width: ClientSpacing.sm),
-            Text(
-              context.l10n.home_browseRoutes,
-              style: ClientTypography.labelMedium(context).copyWith(
-                color: ClientColors.primaryFor(context),
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(width: ClientSpacing.xxs),
-            DirectionalIcon(
-              Icons.arrow_forward_rounded,
-              size: 16,
-              color: ClientColors.primaryFor(context),
             ),
           ],
         ),

@@ -26,7 +26,10 @@ import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_upco
 ///    already true.
 /// 2. **Book** — the departure board: every trip the marketplace can sell
 ///    right now. This is what Home exists for, so nothing browsable is
-///    allowed above it.
+///    allowed above it. With nothing on sale the whole zone — header
+///    included — is dropped rather than announced and then apologised for;
+///    the quick actions and the discovery shelves already carry a rider to
+///    the route list.
 /// 3. **Discover** — featured corridors and the operators running them. Both
 ///    are shelves into tabs of their own; they are where a rider goes when
 ///    the board did not have their trip, so they close the page.
@@ -156,30 +159,32 @@ class HomeSections extends StatelessWidget {
           ),
 
         // ── Book ───────────────────────────────────────────────────────
-        SliverToBoxAdapter(
-          child: HomeEntrance(
-            order: order++,
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: ClientSpacing.md),
-              child: HomeSectionHeader(
-                title: l10n.home_nextDepartures,
-                subtitle: data.upcomingTrips.isEmpty
-                    ? l10n.home_tripsOpenSoonest
-                    : l10n.home_departuresOpenCount(data.upcomingTrips.length),
-                actionLabel: l10n.home_allRoutes,
-                onAction: () => onSwitchTab('routes'),
+        if (data.upcomingTrips.isNotEmpty) ...[
+          SliverToBoxAdapter(
+            child: HomeEntrance(
+              order: order++,
+              child: Padding(
+                padding: const EdgeInsets.only(bottom: ClientSpacing.md),
+                child: HomeSectionHeader(
+                  title: l10n.home_nextDepartures,
+                  subtitle: l10n.home_departuresOpenCount(
+                    data.upcomingTrips.length,
+                  ),
+                  actionLabel: l10n.home_allRoutes,
+                  onAction: () => onSwitchTab('routes'),
+                ),
               ),
             ),
           ),
-        ),
-        SliverPadding(
-          padding: const EdgeInsets.only(bottom: _blockGap),
-          sliver: HomeUpcomingTripsList(
-            trips: data.upcomingTrips,
-            onBook: _bookTrip,
-            onBrowseRoutes: () => onSwitchTab('routes'),
+          SliverPadding(
+            padding: const EdgeInsets.only(bottom: _blockGap),
+            sliver: HomeUpcomingTripsList(
+              trips: data.upcomingTrips,
+              onBook: _bookTrip,
+              onBrowseRoutes: () => onSwitchTab('routes'),
+            ),
           ),
-        ),
+        ],
 
         // ── Discover ───────────────────────────────────────────────────
         if (showFeaturedRoutes)

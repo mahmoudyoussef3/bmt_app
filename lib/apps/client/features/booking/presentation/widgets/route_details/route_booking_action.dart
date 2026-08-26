@@ -5,12 +5,19 @@ import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/apps/client/features/booking/domain/entities/booking_option.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/widgets/booking_step_components.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/route_fact_line.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 import 'package:bmt_app/core/widgets/directional_icon.dart';
+import 'package:bmt_app/core/widgets/route_direction_text.dart';
 
-/// Route Details' single, unambiguous sticky booking CTA (spec FR-006):
-/// a summary of the selected route plus the one action that continues into
-/// the existing booking wizard.
+/// Route Details' single, unambiguous sticky CTA (spec FR-006): a summary of
+/// the line under review plus the one action that continues into the booking
+/// wizard.
+///
+/// The summary names the line and how long it takes. It no longer carries a
+/// fare: the price of a seat depends on the pickup and drop-off the rider
+/// picks inside the wizard, so a figure on this bar would be advertising a
+/// journey they have not chosen yet.
 class RouteBookingAction extends StatelessWidget {
   const RouteBookingAction({
     super.key,
@@ -47,33 +54,36 @@ class _Summary extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
+        Icon(
+          Icons.alt_route_rounded,
+          size: 18,
+          color: ClientColors.primaryFor(context),
+        ),
+        const SizedBox(width: 10),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                route.routeName,
+              RouteDirectionText(
+                origin: route.pickup,
+                destination: route.destination,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: ClientTypography.labelLarge(
                   context,
                 ).copyWith(fontWeight: FontWeight.w800),
               ),
-              Text(
-                '${route.duration} · ${context.l10n.booking_seatsAvailableCount(route.availableSeats)}',
-                style: ClientTypography.bodySmall(
-                  context,
-                ).copyWith(color: ClientColors.textSecondaryFor(context)),
+              const SizedBox(height: 2),
+              RouteFactLine(
+                facts: [
+                  route.duration,
+                  context.l10n.booking_seatsAvailableCount(
+                    route.availableSeats,
+                  ),
+                ],
               ),
             ],
           ),
-        ),
-        const SizedBox(width: 12),
-        Text(
-          route.startingPrice,
-          style: ClientTypography.priceSmall(
-            context,
-          ).copyWith(color: ClientColors.primaryFor(context)),
         ),
       ],
     );
