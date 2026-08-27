@@ -63,6 +63,24 @@ String formatStopClock(
   );
 }
 
+/// How far into the trip a stop sits, as "1h 19m", from its `"HH:MM"` offset.
+///
+/// The fallback for a route whose trips carry no departure clock: a rider can
+/// still read "35m after departure" when nobody can yet say at what hour that
+/// departure happens. Empty for the starting stop (offset zero) and for a stop
+/// the operator never timed.
+String formatStopOffsetDuration(BuildContext context, String offset) {
+  final minutes = _parseOffsetMinutes(offset);
+  if (minutes == null || minutes == 0) return '';
+
+  final hours = minutes ~/ 60;
+  final rest = minutes % 60;
+  final l10n = context.l10n;
+  if (hours == 0) return l10n.common_durationMinutes(rest);
+  if (rest == 0) return l10n.common_durationHours(hours);
+  return l10n.common_durationHoursMinutes(hours, rest);
+}
+
 /// An `"HH:MM"` duration as whole minutes. Null — not zero — when the string is
 /// not one, so a missing offset stays distinguishable from a stop the bus
 /// reaches at the moment it departs.

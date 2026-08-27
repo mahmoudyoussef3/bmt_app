@@ -4688,6 +4688,40 @@ class AppLocalizationsEn extends AppLocalizations {
       'Route stations will appear here once available.';
 
   @override
+  String booking_stopArrivalAt(String time) {
+    return 'Arrives $time';
+  }
+
+  @override
+  String booking_stopDepartureAt(String time) {
+    return 'Departs $time';
+  }
+
+  @override
+  String booking_stopAfterDeparture(String duration) {
+    return '$duration after departure';
+  }
+
+  @override
+  String booking_estimatedTimesFromDeparture(String time) {
+    return 'Estimated times for the $time departure — traffic can shift them.';
+  }
+
+  @override
+  String get booking_estimatedTimesNote =>
+      'Station times are estimated from the start of the trip — traffic can shift them.';
+
+  @override
+  String get booking_openInMaps => 'Open in maps';
+
+  @override
+  String get booking_mapsAppUnavailable =>
+      'Couldn\'t open a maps app on this device.';
+
+  @override
+  String get booking_routeMapTitle => 'Route map';
+
+  @override
   String get booking_routeTimeline => 'Route timeline';
 
   @override

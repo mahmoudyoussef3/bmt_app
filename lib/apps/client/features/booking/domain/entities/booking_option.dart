@@ -62,6 +62,8 @@ class RoutePointData {
     this.dropoffAllowed = true,
     this.latitude,
     this.longitude,
+    this.arrivalOffset = '',
+    this.departureOffset = '',
   });
 
   final String id;
@@ -71,6 +73,31 @@ class RoutePointData {
   final bool dropoffAllowed;
   final double? latitude;
   final double? longitude;
+
+  /// When the bus is planned to reach this station and to pull away from it,
+  /// each an `"HH:MM"` **duration measured from the route's start** — the
+  /// contract `parse_route_offset` states in the database, not a time of day.
+  /// The clock a rider reads is a trip's own departure plus this duration, so
+  /// one route serves every departure on its timetable.
+  ///
+  /// Empty when the operator never timed the station: an untimed stop is shown
+  /// without a time rather than with a made-up one.
+  final String arrivalOffset;
+  final String departureOffset;
+
+  bool get hasCoordinates {
+    final lat = latitude;
+    final lng = longitude;
+    return lat != null &&
+        lng != null &&
+        lat.isFinite &&
+        lng.isFinite &&
+        (lat != 0 || lng != 0) &&
+        lat >= -90 &&
+        lat <= 90 &&
+        lng >= -180 &&
+        lng <= 180;
+  }
 }
 
 class RouteTripOptionData {

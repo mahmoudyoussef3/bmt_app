@@ -43,6 +43,8 @@ class EasyWayRouteMapView extends StatefulWidget {
     this.interactive = true,
     this.info,
     this.liveVehicle,
+    this.onStopDirections,
+    this.directionsLabel = '',
   });
 
   final MapPinOption? pickup;
@@ -58,6 +60,13 @@ class EasyWayRouteMapView extends StatefulWidget {
   /// Optional live captain position. Nothing renders when null.
   final SimpleVehicleData? liveVehicle;
 
+  /// Offers "open this stop in a maps app" inside the tap callout. Left null
+  /// on the preview maps, where the card is a picture rather than a place to
+  /// act; the full-screen route map passes it, along with [directionsLabel]
+  /// for the button's text.
+  final void Function(MapRouteStop stop)? onStopDirections;
+  final String directionsLabel;
+
   @override
   State<EasyWayRouteMapView> createState() => _EasyWayRouteMapViewState();
 }
@@ -65,7 +74,7 @@ class EasyWayRouteMapView extends StatefulWidget {
 class _EasyWayRouteMapViewState extends State<EasyWayRouteMapView>
     with TickerProviderStateMixin {
   final MapController _mapController = MapController();
-  
+
   late final RouteCameraAnimator _camera;
 
   List<MapRouteStop> _stops = const [];
@@ -116,14 +125,14 @@ class _EasyWayRouteMapViewState extends State<EasyWayRouteMapView>
         .toList(growable: false);
 
     _road = RouteGeometryService.instance.cached(_stopCoordinates);
-    
+
     _loadingRoad = _road == null && _stopCoordinates.length > 1;
     if (_loadingRoad) _loadRoadGeometry(_stopCoordinates);
   }
 
   Future<void> _loadRoadGeometry(List<LatLng> requested) async {
     final road = await RouteGeometryService.instance.load(requested);
-    
+
     if (!mounted || !identical(requested, _stopCoordinates)) return;
     setState(() {
       _loadingRoad = false;
@@ -163,7 +172,7 @@ class _EasyWayRouteMapViewState extends State<EasyWayRouteMapView>
 
   void _onMapReady() {
     _mapReady = true;
-    
+
     _fitRoute();
   }
 
@@ -243,6 +252,10 @@ class _EasyWayRouteMapViewState extends State<EasyWayRouteMapView>
                     stop: active,
                     index: _activeIndex!,
                     count: stops.length,
+                    onDirections: widget.onStopDirections == null
+                        ? null
+                        : () => widget.onStopDirections!(active),
+                    directionsLabel: widget.directionsLabel,
                   ),
                 ],
               ),

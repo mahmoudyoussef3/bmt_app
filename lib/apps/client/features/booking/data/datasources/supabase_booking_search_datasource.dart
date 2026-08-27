@@ -50,7 +50,9 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
         : await _supabase
               .from('route_stations')
               .select(
-                'id, route_id, name, sort_order, latitude, longitude, pickup_allowed, dropoff_allowed',
+                'id, route_id, name, sort_order, latitude, longitude, '
+                'pickup_allowed, dropoff_allowed, '
+                'arrival_offset, departure_offset',
               )
               .inFilter('route_id', routeIds)
               .order('sort_order', ascending: true);
@@ -355,6 +357,8 @@ class SupabaseBookingSearchDatasource implements BookingSearchDatasource {
                 dropoffAllowed: station['dropoff_allowed'] as bool? ?? true,
                 latitude: _toDouble(station['latitude']),
                 longitude: _toDouble(station['longitude']),
+                arrivalOffset: station['arrival_offset']?.toString() ?? '',
+                departureOffset: station['departure_offset']?.toString() ?? '',
               );
             })
             .whereType<RoutePointModel>()

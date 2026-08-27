@@ -26,6 +26,7 @@ import 'package:bmt_app/apps/client/features/booking/presentation/screens/bookin
 import 'package:bmt_app/apps/client/features/booking/presentation/screens/daily_booking_flow_screen.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/screens/map_route_selection_screen.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/screens/popular_routes_screen.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/screens/route_map_screen.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/screens/route_overview_screen.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/screens/route_selection_screen.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/screens/search_trip_screen.dart';
@@ -101,7 +102,6 @@ abstract final class ClientRouter {
   /// are resolved here rather than by rewriting historical data.
   static Map<String, WidgetBuilder> get _serverAliases =>
       <String, WidgetBuilder>{
-        
         PackagesRoutes.legacyExpiryAlias: (_) =>
             ClientCubitScopes.mySubscription(const MySubscriptionScreen()),
       };
@@ -140,7 +140,7 @@ abstract final class ClientRouter {
     AuthRoutes.signUp: (_) => ClientCubitScopes.auth(const SignUpScreen()),
     AuthRoutes.forgotPassword: (_) =>
         ClientCubitScopes.forgotPassword(const ForgotPasswordScreen()),
-    
+
     AuthRoutes.resetPassword: (_) =>
         ClientCubitScopes.resetPassword(const ResetPasswordScreen()),
     AuthRoutes.success: (context) {
@@ -149,12 +149,12 @@ abstract final class ClientRouter {
         email: args is Map ? args['email']?.toString() : null,
       );
     },
-    
+
     AuthRoutes.phoneLogin: (_) =>
         ClientCubitScopes.socialAuth(const PhoneLoginScreen()),
     AuthRoutes.otpVerification: (context) {
       final args = OtpVerificationArguments.fromArguments(_args(context));
-      
+
       if (!args.isValid) {
         return ClientCubitScopes.socialAuth(const PhoneLoginScreen());
       }
@@ -190,6 +190,11 @@ abstract final class ClientRouter {
         create: (_) => clientGetIt<MapPinsCubit>()..load(query),
         child: const MapRouteSelectionScreen(),
       );
+    },
+    BookingRoutes.routeMap: (context) {
+      final route = _args(context);
+      if (route is! RouteOptionData) return const SizedBox.shrink();
+      return RouteMapScreen(route: route);
     },
     BookingRoutes.vehicleListing: (context) {
       final query = BookingSearchQuery.fromArguments(_args(context));
@@ -283,7 +288,7 @@ abstract final class ClientRouter {
         ClientCubitScopes.support(const SupportCenterScreen()),
     SupportRoutes.createTicket: (_) =>
         ClientCubitScopes.support(const CreateSupportTicketScreen()),
-    
+
     SupportRoutes.ticketDetails: (context) {
       final ticketId = _args(context);
       if (ticketId is! String || ticketId.trim().isEmpty) {
@@ -301,7 +306,7 @@ abstract final class ClientRouter {
         ClientCubitScopes.communication(const CommunicationScreen()),
     CommunicationRoutes.chatThread: (context) {
       final args = ChatThreadArguments.fromArguments(_args(context));
-      
+
       if (!args.isValid) {
         return ClientCubitScopes.communication(const CommunicationScreen());
       }
@@ -324,7 +329,7 @@ abstract final class ClientRouter {
         ClientCubitScopes.referralRewards(const ReferralRewardsScreen()),
     LoyaltyRoutes.loyalty: (_) =>
         ClientCubitScopes.loyalty(const LoyaltyScreen()),
-    
+
     WalletRoutes.wallet: (_) =>
         ClientCubitScopes.wallet(const ClientWalletScreen()),
   };

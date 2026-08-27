@@ -10,20 +10,27 @@ import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_trip
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_trip_facts.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_trip_journey.dart';
 
-/// One bookable departure, laid out as a boarding pass so a rider reads it in
-/// the order they decide in:
+/// One bookable departure, laid out as a boarding pass a rider reads in the
+/// order they decide in:
 ///
-/// 1. the tinted band — when it leaves, which route it runs, and their stake
-///    in it
-/// 2. the journey — where it picks them up and drops them off
-/// 3. the facts — how long it takes and what is left on it
-/// 4. below the tear line — what it costs, and the button that takes the seat
+/// 1. their own stake in it, if any — a seat already held, a bus already at the
+///    kerb
+/// 2. when it leaves, and who is running it
+/// 3. where it picks them up and drops them off
+/// 4. how long it takes and what is left on it
+/// 5. below the tear line — what it costs, and the button that takes the seat
 ///
-/// The card lives in a rail, so it takes the height it is given and pins its
-/// zones to it: the journey holds a fixed two-line slot per stop and the facts
-/// sit on the floor of the body. Swiping the rail then moves one ticket aside
-/// to reveal the next with every line already in the same place — a rider
-/// compares departures instead of re-reading layouts.
+/// It is the same boarding pass [HomeBookingCard] prints for a seat the rider
+/// already holds: full width, one card per row, the same status strip, the same
+/// journey rail, the same tear line and full-width action. The two used to be
+/// different objects — a wide card for a held seat, a narrow fixed-height
+/// ticket in a side-scrolling rail for a bookable one — which left the part of
+/// Home that actually sells a seat looking like it came from another app.
+///
+/// The card takes the height its content needs. The rail's fixed height forced
+/// every zone to be padded out to a worst case that most departures never hit,
+/// so a card with short stop names carried two holes of dead air; here a short
+/// departure is simply a shorter card.
 class HomeUpcomingTripCard extends StatelessWidget {
   const HomeUpcomingTripCard({
     super.key,
@@ -34,26 +41,17 @@ class HomeUpcomingTripCard extends StatelessWidget {
   final UpcomingTripData trip;
   final VoidCallback onBook;
 
-  /// The tallest a ticket in this rail needs to be: every zone at its worst
-  /// case (two-line stop names, and the booked strip when any departure in the
-  /// rail carries one), grown with the rider's text size.
-  ///
-  /// One height for the whole rail rather than per card — cards of different
-  /// heights sliding past each other read as a broken list, not a deck.
-  static double heightFor(BuildContext context, {required bool anyBooked}) {
-    final scale = MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 1.6);
-    return (282 + (anyBooked ? 38 : 0)) * scale;
-  }
-
   @override
   Widget build(BuildContext context) {
+    // A departure the rider holds a seat on is outlined in that booking's
+    // colour, so it is picked out of the column before a word is read.
     final borderColor = trip.isBooked
         ? trip.bookedStatus!.accent.withAlpha(90)
         : ClientColors.borderFor(context);
 
     return PressableScale(
       onTap: trip.isSoldOut ? null : onBook,
-      scale: 0.98,
+      scale: 0.99,
       child: Container(
         decoration: BoxDecoration(
           color: ClientColors.surfaceFor(context),
@@ -65,38 +63,25 @@ class HomeUpcomingTripCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             HomeTripCardHeader(trip: trip),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  ClientSpacing.md,
-                  12,
-                  ClientSpacing.md,
-                  10,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // The card is sized for the worst case — two stop names of
-                    // two lines each — so most tickets have slack to spend.
-                    // Split above and below the journey rather than pooling it
-                    // all into one hole over the facts.
-                    const Spacer(flex: 2),
-                    HomeTripJourney(
-                      pickup: trip.pickup,
-                      destination: trip.destination,
-                      dense: true,
-                    ),
-                    const Spacer(flex: 3),
-                    HomeTripFacts(trip: trip),
-                  ],
-                ),
+            Padding(
+              padding: const EdgeInsets.all(ClientSpacing.md),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  HomeTripJourney(
+                    pickup: trip.pickup,
+                    destination: trip.destination,
+                  ),
+                  const SizedBox(height: ClientSpacing.md),
+                  HomeTripFacts(trip: trip),
+                ],
               ),
             ),
             const TicketTearLine(),
             Padding(
               padding: const EdgeInsets.fromLTRB(
                 ClientSpacing.md,
-                0,
+                ClientSpacing.xs,
                 ClientSpacing.md,
                 ClientSpacing.md,
               ),

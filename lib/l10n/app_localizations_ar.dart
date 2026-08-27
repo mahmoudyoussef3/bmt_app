@@ -4659,6 +4659,40 @@ class AppLocalizationsAr extends AppLocalizations {
       'ستظهر محطات الخط هنا عند توفرها.';
 
   @override
+  String booking_stopArrivalAt(String time) {
+    return 'الوصول $time';
+  }
+
+  @override
+  String booking_stopDepartureAt(String time) {
+    return 'المغادرة $time';
+  }
+
+  @override
+  String booking_stopAfterDeparture(String duration) {
+    return 'بعد $duration من الانطلاق';
+  }
+
+  @override
+  String booking_estimatedTimesFromDeparture(String time) {
+    return 'أوقات تقديرية محسوبة على رحلة $time، وقد تتغير حسب حركة المرور.';
+  }
+
+  @override
+  String get booking_estimatedTimesNote =>
+      'أوقات المحطات تقديرية محسوبة من بداية الرحلة، وقد تتغير حسب حركة المرور.';
+
+  @override
+  String get booking_openInMaps => 'فتح في الخرائط';
+
+  @override
+  String get booking_mapsAppUnavailable =>
+      'تعذر فتح تطبيق الخرائط على هذا الجهاز.';
+
+  @override
+  String get booking_routeMapTitle => 'خريطة الخط';
+
+  @override
   String get booking_routeTimeline => 'خط سير الرحلة';
 
   @override

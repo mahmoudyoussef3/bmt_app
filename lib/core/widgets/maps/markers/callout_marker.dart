@@ -8,20 +8,27 @@ import 'package:bmt_app/core/widgets/maps/map_style.dart';
 /// A floating card for the tapped stop, parked directly above its pin: it
 /// clears the pin's own box (plus the ~14% the pin grows while selected) so it
 /// never covers the badge the passenger just tapped.
+///
+/// Pass [onDirections] (with the label to print on it) to offer handing the
+/// stop's coordinates to a maps app; the card grows to fit the action, and
+/// omits it entirely when there is nothing to hand over.
 Marker buildCalloutMarker(
   BuildContext context, {
   required MapRouteStop stop,
   required int index,
   required int count,
+  VoidCallback? onDirections,
+  String directionsLabel = '',
 }) {
   final prominent = index == 0 || index == count - 1;
   final clearance = MapStyle.pinBox(prominent).height * 1.14 + 6;
+  final showDirections = onDirections != null && directionsLabel.isNotEmpty;
 
   return Marker(
     point: stop.coordinate,
     width: 232,
-    height: clearance + 82,
-    
+    height: clearance + (showDirections ? 124 : 82),
+
     alignment: MapStyle.pinAnchor,
     child: Padding(
       padding: EdgeInsets.only(bottom: clearance),
@@ -30,6 +37,8 @@ Marker buildCalloutMarker(
         role: MapStyle.roleFor(index, count),
         color: MapStyle.colorFor(context, index, count),
         icon: MapStyle.iconFor(index, count),
+        onDirections: showDirections ? onDirections : null,
+        directionsLabel: directionsLabel,
       ),
     ),
   );
@@ -41,12 +50,16 @@ class _Callout extends StatelessWidget {
     required this.role,
     required this.color,
     required this.icon,
+    this.onDirections,
+    this.directionsLabel = '',
   });
 
   final String name;
   final String role;
   final Color color;
   final IconData icon;
+  final VoidCallback? onDirections;
+  final String directionsLabel;
 
   @override
   Widget build(BuildContext context) {
@@ -75,45 +88,74 @@ class _Callout extends StatelessWidget {
         border: Border.all(color: MapStyle.border(context)),
         boxShadow: MapStyle.shadow(context),
       ),
-      child: Row(
+      child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            width: 26,
-            height: 26,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: color.withAlpha(30),
-              borderRadius: BorderRadius.circular(9),
-            ),
-            child: Icon(icon, size: 14, color: color),
-          ),
-          const SizedBox(width: 9),
-          Flexible(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  role,
-                  style: AppTextThemes.caption(scheme).copyWith(
-                    color: color,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 10,
-                    height: 1.2,
-                  ),
+          Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 26,
+                height: 26,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: color.withAlpha(30),
+                  borderRadius: BorderRadius.circular(9),
                 ),
-                Text(
-                  name.isEmpty ? 'Route stop' : name,
-                  maxLines: 2,
+                child: Icon(icon, size: 14, color: color),
+              ),
+              const SizedBox(width: 9),
+              Flexible(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      role,
+                      style: AppTextThemes.caption(scheme).copyWith(
+                        color: color,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 10,
+                        height: 1.2,
+                      ),
+                    ),
+                    Text(
+                      name.isEmpty ? 'Route stop' : name,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextThemes.caption(
+                        scheme,
+                      ).copyWith(fontWeight: FontWeight.w800, height: 1.25),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (onDirections != null) ...[
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.tonalIcon(
+                onPressed: onDirections,
+                icon: const Icon(Icons.directions_rounded, size: 15),
+                label: Text(
+                  directionsLabel,
+                  maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: AppTextThemes.caption(
-                    scheme,
-                  ).copyWith(fontWeight: FontWeight.w800, height: 1.25),
                 ),
-              ],
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                  minimumSize: const Size.fromHeight(32),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  textStyle: AppTextThemes.caption(
+                    scheme,
+                  ).copyWith(fontWeight: FontWeight.w800),
+                ),
+              ),
             ),
-          ),
+          ],
         ],
       ),
     );

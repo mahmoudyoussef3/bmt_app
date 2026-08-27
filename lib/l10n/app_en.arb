@@ -2398,6 +2398,42 @@
   "booking_priceRange": "Price range",
   "booking_stopsNotPublishedYet": "Stops are not published yet",
   "booking_routeStationsWillAppear": "Route stations will appear here once available.",
+  "booking_stopArrivalAt": "Arrives {time}",
+  "@booking_stopArrivalAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "booking_stopDepartureAt": "Departs {time}",
+  "@booking_stopDepartureAt": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "booking_stopAfterDeparture": "{duration} after departure",
+  "@booking_stopAfterDeparture": {
+    "placeholders": {
+      "duration": {
+        "type": "String"
+      }
+    }
+  },
+  "booking_estimatedTimesFromDeparture": "Estimated times for the {time} departure — traffic can shift them.",
+  "@booking_estimatedTimesFromDeparture": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "booking_estimatedTimesNote": "Station times are estimated from the start of the trip — traffic can shift them.",
+  "booking_openInMaps": "Open in maps",
+  "booking_mapsAppUnavailable": "Couldn't open a maps app on this device.",
+  "booking_routeMapTitle": "Route map",
   "booking_routeTimeline": "Route timeline",
   "booking_whereGetOnOffShort": "Where you can get on and off",
   "booking_oneStop": "1 stop",

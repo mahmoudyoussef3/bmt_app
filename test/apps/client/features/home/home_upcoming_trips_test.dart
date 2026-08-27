@@ -61,6 +61,20 @@ Future<void> _pumpList(
   );
 }
 
+/// Renders on a viewport tall enough to hold the whole board at once. The board
+/// is a sliver and builds its cards lazily, so a default 600pt test screen only
+/// ever reaches the first two — which is right in a rider's hand and useless
+/// when the assertion is about how many cards the board decided to print.
+Future<void> _pumpWholeBoard(
+  WidgetTester tester,
+  List<UpcomingTripData> trips,
+) async {
+  tester.view.physicalSize = const Size(400, 2600);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
+  await _pumpList(tester, trips);
+}
+
 /// Renders at the width of the smallest phone the client app ships to, so a
 /// layout that only fits on a tablet fails here rather than in a rider's hand.
 Future<void> _pumpOnNarrowPhone(
@@ -182,13 +196,39 @@ void main() {
     });
 
     // Home hides the whole departures zone when nothing is on sale, so the
-    // rail must not leave an empty-state row (or its progress rule) behind.
+    // board must not leave an empty-state row (or a "view all") behind.
     testWidgets('with no trips it draws nothing at all', (tester) async {
       await _pumpList(tester, []);
 
       expect(find.byType(HomeUpcomingTripCard), findsNothing);
-      expect(find.text('All routes'), findsNothing);
-      expect(find.byType(ListView), findsNothing);
+      expect(find.text('View all'), findsNothing);
+    });
+
+    // The board carries up to fifty departures and Home is not a catalog, so it
+    // prints a preview — but it must then say that there is more, or the
+    // departures past the cap are simply lost.
+    testWidgets('prints a preview and offers the rest', (tester) async {
+      final trips = [
+        for (var i = 0; i < HomeUpcomingTripsList.previewCount + 3; i++)
+          _trip(departureTime: '0${i + 1}:00:00'),
+      ];
+      await _pumpWholeBoard(tester, trips);
+
+      expect(
+        find.byType(HomeUpcomingTripCard),
+        findsNWidgets(HomeUpcomingTripsList.previewCount),
+      );
+      expect(find.text('View all'), findsOneWidget);
+    });
+
+    testWidgets('a board that fits offers no way to see more', (tester) async {
+      await _pumpWholeBoard(tester, [
+        _trip(),
+        _trip(departureTime: '09:30:00'),
+      ]);
+
+      expect(find.byType(HomeUpcomingTripCard), findsNWidgets(2));
+      expect(find.text('View all'), findsNothing);
     });
   });
 
@@ -237,8 +277,9 @@ void main() {
     });
   });
 
-  // The card is a boarding pass: a tinted departure band, the journey, a facts
-  // panel, then the fare and the action below a tear line. Each zone carries
+  // The card is a boarding pass: a status strip when the rider has a stake in
+  // the trip, the departure stamp beside the service, the journey, a facts
+  // line, then the fare and the action below a tear line. Each zone carries
   // text that can grow — a long route name, a two-line status, a booked note —
   // so every state has to survive the narrowest phone the app ships to. An
   // overflow here fails the test rather than shipping a striped card.

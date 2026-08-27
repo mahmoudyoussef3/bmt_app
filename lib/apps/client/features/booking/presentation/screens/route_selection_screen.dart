@@ -48,11 +48,15 @@ class RouteSelectionScreen extends StatelessWidget {
             routes: loaded?.routes ?? const <RouteOptionData>[],
             selectedRoute: loaded?.selectedRoute,
             onRetry: () => cubit.load(query),
-            onMap: () => Navigator.pushNamed(
-              context,
-              BookingRoutes.mapSelection,
-              arguments: query.toArguments(),
-            ),
+            onMap: () {
+              final route = loaded?.selectedRoute;
+              if (route == null) return;
+              Navigator.pushNamed(
+                context,
+                BookingRoutes.routeMap,
+                arguments: route,
+              );
+            },
             onSelectRoute: (route) => cubit.selectRoute(route.id),
           ),
         );

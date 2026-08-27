@@ -29,6 +29,7 @@ import 'package:bmt_app/apps/client/features/booking/domain/entities/transport_o
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/route_results_cubit.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/cubit/route_results_state.dart';
 import 'package:bmt_app/apps/client/features/booking/presentation/screens/route_selection_screen.dart';
+import 'package:bmt_app/apps/client/features/booking/presentation/widgets/route_details/route_stop_timeline.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
 
 const _captureFont = 'CaptureArabic';
@@ -92,6 +93,10 @@ void main() {
       routes: [_bareRoute()],
     );
   });
+
+  testWidgets('the stations card alone, with mapped stations', (tester) async {
+    await _captureStations(tester, 'route_details_5_ar_stations');
+  });
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -121,6 +126,8 @@ RoutePointData _stop(
   double? lng,
   bool pickup = true,
   bool dropoff = true,
+  String arrival = '',
+  String departure = '',
 }) {
   return RoutePointData(
     id: 'stop-$order',
@@ -130,6 +137,8 @@ RoutePointData _stop(
     dropoffAllowed: dropoff,
     latitude: lat,
     longitude: lng,
+    arrivalOffset: arrival,
+    departureOffset: departure,
   );
 }
 
@@ -171,11 +180,19 @@ RouteOptionData _mainRoute() {
     priceRange: 'EGP 100 - 140',
     office: _office,
     points: [
-      _stop('American University in Cairo (AUC) - New Cairo', 1,
-          dropoff: false),
-      _stop('موقف السلام', 2),
-      _stop('Police Academy', 3),
-      _stop('Banha', 4, pickup: false),
+      // Offsets are durations from the line's start, so the clocks a rider
+      // reads are these plus the soonest departure (07:30).
+      _stop(
+        'American University in Cairo (AUC) - New Cairo',
+        1,
+        dropoff: false,
+        arrival: '00:00',
+        departure: '00:00',
+      ),
+      _stop('موقف السلام', 2, arrival: '00:22', departure: '00:25'),
+      // A station the bus passes without waiting: one clock, not two.
+      _stop('Police Academy', 3, arrival: '00:41', departure: '00:41'),
+      _stop('Banha', 4, pickup: false, arrival: '01:06', departure: '01:06'),
     ],
     availableTrips: [
       _trip(
@@ -217,10 +234,7 @@ RouteOptionData _alternativeRoute() {
     priceRange: 'EGP 85 - 110',
     office: _office,
     matchQuality: RouteMatchQuality.partial,
-    points: [
-      _stop('Banha', 1),
-      _stop('مدينة نصر', 2),
-    ],
+    points: [_stop('Banha', 1), _stop('مدينة نصر', 2)],
     availableTrips: const [],
   );
 }
@@ -240,6 +254,79 @@ RouteOptionData _bareRoute() {
     availableTrips: [],
   );
 }
+
+/// The stations card on its own, with coordinates on every stop so the
+/// per-station "open in maps" action renders.
+///
+/// It is captured apart from the page because coordinates are exactly what
+/// makes the hero map reach for tiles and road geometry, which the test
+/// binding blocks — see the fixture note above. The card is the same widget
+/// the page embeds.
+Future<void> _captureStations(WidgetTester tester, String name) async {
+  tester.view.physicalSize = const Size(420, 700);
+  tester.view.devicePixelRatio = 1.0;
+  addTearDown(tester.view.reset);
+
+  final key = GlobalKey();
+  await tester.pumpWidget(
+    MaterialApp(
+      debugShowCheckedModeBanner: false,
+      locale: const Locale('ar'),
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      theme: _themeWithHostFont(dark: false),
+      home: Directionality(
+        textDirection: TextDirection.rtl,
+        child: Scaffold(
+          body: RepaintBoundary(
+            key: key,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: RouteStopTimeline(
+                points: _mappedStops(),
+                referenceDeparture: '07:30:00',
+              ),
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+  await tester.pump(const Duration(milliseconds: 400));
+
+  await expectLater(find.byKey(key), matchesGoldenFile('_captures/$name.png'));
+}
+
+/// The same corridor with the coordinates the operator mapped.
+List<RoutePointData> _mappedStops() => [
+  _stop(
+    'American University in Cairo (AUC) - New Cairo',
+    1,
+    dropoff: false,
+    lat: 30.0199,
+    lng: 31.4993,
+    arrival: '00:00',
+    departure: '00:00',
+  ),
+  _stop(
+    'موقف السلام',
+    2,
+    lat: 30.1281,
+    lng: 31.3742,
+    arrival: '00:22',
+    departure: '00:25',
+  ),
+  _stop('Police Academy', 3, arrival: '00:41', departure: '00:41'),
+  _stop(
+    'Banha',
+    4,
+    pickup: false,
+    lat: 30.4599,
+    lng: 31.1837,
+    arrival: '01:06',
+    departure: '01:06',
+  ),
+];
 
 Future<void> _capture(
   WidgetTester tester,

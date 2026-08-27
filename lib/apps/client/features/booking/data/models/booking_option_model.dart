@@ -157,8 +157,7 @@ class TripVehicleProfileModel {
       vehicleRating: _toDouble(vehicleJson['rating']),
       vehicleRatingCount: _toInt(vehicleJson['rating_count']),
       driverName: driverJson['full_name']?.toString().trim() ?? '',
-      driverImageUrl:
-          driverJson['profile_image_url']?.toString().trim() ?? '',
+      driverImageUrl: driverJson['profile_image_url']?.toString().trim() ?? '',
       driverRating: _toDouble(driverJson['rating']),
       driverRatingCount: _toInt(driverJson['rating_count']),
     );
@@ -223,6 +222,8 @@ class RoutePointModel {
     this.dropoffAllowed = true,
     this.latitude,
     this.longitude,
+    this.arrivalOffset = '',
+    this.departureOffset = '',
   });
 
   final String id;
@@ -233,6 +234,11 @@ class RoutePointModel {
   final double? latitude;
   final double? longitude;
 
+  /// `route_stations.arrival_offset` / `departure_offset` — see
+  /// [RoutePointData.arrivalOffset].
+  final String arrivalOffset;
+  final String departureOffset;
+
   RoutePointData toEntity() {
     return RoutePointData(
       id: id,
@@ -242,6 +248,8 @@ class RoutePointModel {
       dropoffAllowed: dropoffAllowed,
       latitude: latitude,
       longitude: longitude,
+      arrivalOffset: arrivalOffset,
+      departureOffset: departureOffset,
     );
   }
 }

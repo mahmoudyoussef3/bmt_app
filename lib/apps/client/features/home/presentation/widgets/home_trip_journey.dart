@@ -5,161 +5,106 @@ import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
 /// Pickup → destination as a vertical timeline, so stop names like "American
-/// University in Cairo" stay readable instead of being squeezed side by side.
+/// University in Cairo (AUC)" stay readable instead of being squeezed side by
+/// side.
 ///
-/// Two dressings of the same rail:
-///
-/// * the default — captioned stops, for the full-width booking card;
-/// * [dense] — captions dropped and each name held in a fixed two-line slot,
-///   for the ticket rail on Home. The fixed slot is what lets a rail of cards
-///   share one height and put the drop-off line in the same place on every
-///   card, so swiping compares departures rather than re-reading layouts.
+/// The rail is drawn *per stop* rather than as one fixed dot–line–dot column
+/// standing beside the names. A stop name that wraps to a second line pushes
+/// everything under it down, and a rail of fixed height then leaves its bottom
+/// dot floating somewhere in the middle of the card — the exact stop names this
+/// marketplace carries are long enough for that to be the common case, not the
+/// edge case. Here the connector stretches to whatever height the pickup block
+/// actually took, and the drop-off's dot is met by a short segment above it, so
+/// the line lands on the first line of both names at any text size.
 class HomeTripJourney extends StatelessWidget {
   const HomeTripJourney({
     super.key,
     required this.pickup,
     required this.destination,
-    this.dense = false,
   });
 
   final String pickup;
   final String destination;
-  final bool dense;
 
-  @override
-  Widget build(BuildContext context) {
-    if (dense) {
-      return _DenseJourney(pickup: pickup, destination: destination);
-    }
+  /// Gap between the rail and the stop names.
+  static const double _railGap = 12;
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const _JourneyTrack(),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _Stop(label: pickup, caption: context.l10n.common_pickup),
-              const SizedBox(height: 14),
-              _Stop(label: destination, caption: context.l10n.common_dropOff),
-            ],
-          ),
-        ),
-      ],
-    );
+  /// Air under the pickup block, crossed by the connector.
+  static const double _stopGap = 14;
+
+  /// Drops a dot onto the middle of its stop's *first* name line: clear the
+  /// caption above it, then half a line of the name itself. Measured rather
+  /// than nudged by hand so it still lands there at the rider's text size.
+  static double _dotTop(BuildContext context) {
+    final scaler = MediaQuery.textScalerOf(context);
+    final caption = scaler.scale(_Stop.captionSize) * _Stop.captionHeight;
+    final name = scaler.scale(_Stop.nameSize) * _Stop.nameHeight;
+    return caption + _Stop.captionGap + name / 2 - _TrackDot.size / 2;
   }
-}
-
-/// The rail card's journey: dot, name, connector, dot, name.
-///
-/// The captions are carried by the dots — cyan where the rider gets on, amber
-/// where they get off, top to bottom — and by the semantics label, so a card
-/// narrow enough to sit in a rail spends its width on the stop names.
-class _DenseJourney extends StatelessWidget {
-  const _DenseJourney({required this.pickup, required this.destination});
-
-  final String pickup;
-  final String destination;
-
-  /// Gap between the two stop slots — the length of the connector.
-  static const double _gap = 12;
 
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
-    // Two lines of the stop-name style, grown with the rider's text size, is
-    // the slot every stop gets whether or not it fills it.
-    final slot = MediaQuery.textScalerOf(context).scale(14) * 1.25 * 2;
+    final dotTop = _dotTop(context);
 
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _DenseStop(
-          label: pickup,
-          caption: l10n.common_pickup,
-          color: ClientColors.journeyCyanFor(context),
-          slot: slot,
-          connectorHeight: slot + _gap - _DenseStop.dotSize,
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(
+                width: _TrackDot.size,
+                child: Column(
+                  children: [
+                    SizedBox(height: dotTop),
+                    _TrackDot(color: ClientColors.journeyCyanFor(context)),
+                    const Expanded(child: _Connector()),
+                  ],
+                ),
+              ),
+              const SizedBox(width: _railGap),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: _stopGap),
+                  child: _Stop(label: pickup, caption: l10n.common_pickup),
+                ),
+              ),
+            ],
+          ),
         ),
-        _DenseStop(
-          label: destination,
-          caption: l10n.common_dropOff,
-          color: ClientColors.journeyAmberFor(context),
-          slot: slot,
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: _TrackDot.size,
+              child: Column(
+                children: [
+                  SizedBox(height: dotTop, child: const _Connector()),
+                  _TrackDot(color: ClientColors.journeyAmberFor(context)),
+                ],
+              ),
+            ),
+            const SizedBox(width: _railGap),
+            Expanded(
+              child: _Stop(label: destination, caption: l10n.common_dropOff),
+            ),
+          ],
         ),
       ],
     );
   }
 }
 
-class _DenseStop extends StatelessWidget {
-  const _DenseStop({
-    required this.label,
-    required this.caption,
-    required this.color,
-    required this.slot,
-    this.connectorHeight,
-  });
-
-  final String label;
-  final String caption;
-  final Color color;
-
-  /// Fixed height of the name block: two lines, filled or not.
-  final double slot;
-
-  /// Length of the rule down to the next stop's dot. Null on the last stop.
-  final double? connectorHeight;
-
-  static const double dotSize = 9;
-
-  /// Drops the dot onto the middle of the name's first line.
-  static const double _dotTop = 4;
+/// The rule running between two stops. Takes its height from the slot it is
+/// given — stretched under the pickup, fixed above the drop-off.
+class _Connector extends StatelessWidget {
+  const _Connector();
 
   @override
   Widget build(BuildContext context) {
-    final name = label.isEmpty ? context.l10n.home_stopNotSet : label;
-
-    return Semantics(
-      container: true,
-      label: '$caption: $name',
-      excludeSemantics: true,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(top: _dotTop),
-            child: Column(
-              children: [
-                _TrackDot(color: color, size: dotSize),
-                if (connectorHeight != null)
-                  Container(
-                    width: 2,
-                    height: connectorHeight,
-                    color: ClientColors.borderFor(context),
-                  ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: SizedBox(
-              height: slot,
-              child: Text(
-                name,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
-                style: ClientTypography.labelLarge(
-                  context,
-                ).copyWith(fontWeight: FontWeight.w700, height: 1.25),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+    return Container(width: 2, color: ClientColors.borderFor(context));
   }
 }
 
@@ -169,6 +114,14 @@ class _Stop extends StatelessWidget {
   final String label;
   final String caption;
 
+  /// The two type sizes the rail measures itself against; kept here so the dot
+  /// offset and the text it aligns to can never drift apart.
+  static const double captionSize = 10;
+  static const double captionHeight = 1.1;
+  static const double captionGap = 2;
+  static const double nameSize = 17;
+  static const double nameHeight = 1.25;
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -176,56 +129,39 @@ class _Stop extends StatelessWidget {
       children: [
         Text(
           caption.toUpperCase(),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: ClientTypography.labelSmall(context).copyWith(
+            fontSize: captionSize,
             color: ClientColors.textTertiaryFor(context),
             fontWeight: FontWeight.w700,
             letterSpacing: 0.6,
-            height: 1.1,
+            height: captionHeight,
           ),
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: captionGap),
         Text(
           label.isEmpty ? context.l10n.home_stopNotSet : label,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
-          style: ClientTypography.headingSmall(
-            context,
-          ).copyWith(fontWeight: FontWeight.w700, height: 1.25),
+          style: ClientTypography.headingSmall(context).copyWith(
+            fontSize: nameSize,
+            fontWeight: FontWeight.w700,
+            height: nameHeight,
+          ),
         ),
       ],
     );
   }
 }
 
-/// Dot – line – dot rail sized to sit beside the two stop blocks.
-class _JourneyTrack extends StatelessWidget {
-  const _JourneyTrack();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 14),
-      child: Column(
-        children: [
-          const _TrackDot(color: ClientColors.journeyCyan),
-          Container(
-            width: 2,
-            height: 30,
-            margin: const EdgeInsets.symmetric(vertical: 3),
-            color: ClientColors.borderFor(context),
-          ),
-          const _TrackDot(color: ClientColors.journeyAmber),
-        ],
-      ),
-    );
-  }
-}
-
 class _TrackDot extends StatelessWidget {
-  const _TrackDot({required this.color, this.size = 10});
+  const _TrackDot({required this.color});
 
   final Color color;
-  final double size;
+
+  /// Full extent of the dot, halo included — and so the width of the rail.
+  static const double size = 10;
 
   @override
   Widget build(BuildContext context) {

@@ -8366,6 +8366,54 @@ abstract class AppLocalizations {
   /// **'Route stations will appear here once available.'**
   String get booking_routeStationsWillAppear;
 
+  /// No description provided for @booking_stopArrivalAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Arrives {time}'**
+  String booking_stopArrivalAt(String time);
+
+  /// No description provided for @booking_stopDepartureAt.
+  ///
+  /// In en, this message translates to:
+  /// **'Departs {time}'**
+  String booking_stopDepartureAt(String time);
+
+  /// No description provided for @booking_stopAfterDeparture.
+  ///
+  /// In en, this message translates to:
+  /// **'{duration} after departure'**
+  String booking_stopAfterDeparture(String duration);
+
+  /// No description provided for @booking_estimatedTimesFromDeparture.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated times for the {time} departure — traffic can shift them.'**
+  String booking_estimatedTimesFromDeparture(String time);
+
+  /// No description provided for @booking_estimatedTimesNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Station times are estimated from the start of the trip — traffic can shift them.'**
+  String get booking_estimatedTimesNote;
+
+  /// No description provided for @booking_openInMaps.
+  ///
+  /// In en, this message translates to:
+  /// **'Open in maps'**
+  String get booking_openInMaps;
+
+  /// No description provided for @booking_mapsAppUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open a maps app on this device.'**
+  String get booking_mapsAppUnavailable;
+
+  /// No description provided for @booking_routeMapTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Route map'**
+  String get booking_routeMapTitle;
+
   /// No description provided for @booking_routeTimeline.
   ///
   /// In en, this message translates to:

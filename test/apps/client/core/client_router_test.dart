@@ -45,6 +45,7 @@ const Map<String, String> _declaredRoutes = <String, String>{
   'BookingRoutes.routeSelection': BookingRoutes.routeSelection,
   'BookingRoutes.popularRoutes': BookingRoutes.popularRoutes,
   'BookingRoutes.mapSelection': BookingRoutes.mapSelection,
+  'BookingRoutes.routeMap': BookingRoutes.routeMap,
   'BookingRoutes.vehicleListing': BookingRoutes.vehicleListing,
   'BookingRoutes.vehicleDetails': BookingRoutes.vehicleDetails,
   'BookingRoutes.dailyBooking': BookingRoutes.dailyBooking,
