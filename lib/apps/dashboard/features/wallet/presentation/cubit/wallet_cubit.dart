@@ -4,6 +4,7 @@ import '../../domain/entities/refund_request.dart';
 import '../../domain/entities/wallet_transaction.dart';
 import '../../domain/entities/wallet_vocabulary.dart';
 import '../../domain/usecases/wallet_usecases.dart';
+import '../models/wallet_views.dart';
 import 'wallet_state.dart';
 
 /// Drives محفظة العملاء.
@@ -82,7 +83,7 @@ class WalletCubit extends Cubit<WalletState> {
           directory: workspace.directory,
         ),
       );
-      
+
       await loadRefundQueue();
     } catch (e) {
       emit(WalletErrorState(_clean(e)));
@@ -109,20 +110,18 @@ class WalletCubit extends Cubit<WalletState> {
       }
       if (current.tab == WalletTab.activity) await loadLedger();
       await loadRefundQueue();
-    } catch (_) {
-      
-    }
+    } catch (_) {}
   }
 
   Future<void> searchDirectory(String query) async {
     final current = _loaded;
     if (current == null) return;
-    emit(current.copyWith(directorySearch: query));
+    emit(current.copyWith(directorySearch: query, directoryPage: 0));
     try {
       final page = await _searchDirectory(search: query);
       if (isClosed) return;
       final now = _loaded;
-      
+
       if (now != null && now.directorySearch == query) {
         emit(now.copyWith(directory: page));
       }
@@ -135,7 +134,9 @@ class WalletCubit extends Cubit<WalletState> {
     final current = _loaded;
     if (current == null) return;
     if (clientId == null) {
-      emit(current.copyWith(clearSelection: true, clearChainVerification: true));
+      emit(
+        current.copyWith(clearSelection: true, clearChainVerification: true),
+      );
       return;
     }
     emit(
@@ -154,7 +155,7 @@ class WalletCubit extends Cubit<WalletState> {
       final summary = await _getSummary(clientId);
       if (isClosed) return;
       final current = _loaded;
-      
+
       if (current == null || current.selectedClientId != clientId) return;
       emit(current.copyWith(summary: summary, detailLoading: false));
     } catch (e) {
@@ -175,8 +176,82 @@ class WalletCubit extends Cubit<WalletState> {
   Future<void> applyFilters(WalletLedgerFilters filters) async {
     final current = _loaded;
     if (current == null) return;
-    emit(current.copyWith(filters: filters, ledgerLoading: true));
+    // Back to page one on every narrowing: staying on page four of a list that
+    // just became one page long shows the operator an empty screen and reads as
+    // "the filter matched nothing".
+    emit(
+      current.copyWith(filters: filters, ledgerLoading: true, activityPage: 0),
+    );
     await loadLedger();
+  }
+
+  /// The directory's scope and ordering. Both are client-side over the page the
+  /// RPC returned — the search term is the only narrowing the server applies —
+  /// so neither costs a round trip.
+  void applyDirectoryFilters(WalletDirectoryFilters filters) {
+    final current = _loaded;
+    if (current == null) return;
+    emit(current.copyWith(directoryFilters: filters, directoryPage: 0));
+  }
+
+  void clearDirectoryFilters() {
+    final current = _loaded;
+    if (current == null) return;
+    emit(
+      current.copyWith(
+        // The ordering is not a filter and survives the reset: an operator who
+        // chose «الأحدث نشاطاً» did not ask for it to be undone.
+        directoryFilters: WalletDirectoryFilters(
+          sort: current.directoryFilters.sort,
+        ),
+        directoryPage: 0,
+      ),
+    );
+    if (current.directorySearch.isNotEmpty) searchDirectory('');
+  }
+
+  void setDirectoryPage(int page) {
+    final current = _loaded;
+    if (current == null) return;
+    emit(current.copyWith(directoryPage: page));
+  }
+
+  /// Reorders the ledger page already on screen. No fetch: the rows are here.
+  void setActivitySort(WalletActivitySort sort) {
+    final current = _loaded;
+    if (current == null) return;
+    emit(current.copyWith(activitySort: sort, activityPage: 0));
+  }
+
+  void setActivityPage(int page) {
+    final current = _loaded;
+    if (current == null) return;
+    emit(current.copyWith(activityPage: page));
+  }
+
+  /// The refund queue's narrowing. Client-side over the queue already fetched,
+  /// which is what keeps the KPI tiles and the rows counting the same list.
+  void applyRefundFilters(WalletRefundFilters filters) {
+    final current = _loaded;
+    if (current == null) return;
+    emit(current.copyWith(refundFilters: filters, refundPage: 0));
+  }
+
+  void clearRefundFilters() {
+    final current = _loaded;
+    if (current == null) return;
+    emit(
+      current.copyWith(
+        refundFilters: WalletRefundFilters(sort: current.refundFilters.sort),
+        refundPage: 0,
+      ),
+    );
+  }
+
+  void setRefundPage(int page) {
+    final current = _loaded;
+    if (current == null) return;
+    emit(current.copyWith(refundPage: page));
   }
 
   Future<void> loadLedger() async {
@@ -196,12 +271,19 @@ class WalletCubit extends Cubit<WalletState> {
     }
   }
 
+  /// Reads the whole refund record, not only the rows awaiting a decision.
+  ///
+  /// The queue used to fetch `pending` + `approved` alone, which made "did we
+  /// already refund this customer?" a question the module could not answer at
+  /// all. Every status now arrives in one capped, ordered read, and the scope
+  /// filter decides which of them is on screen — so the tab still *opens* on
+  /// the work waiting, without hiding the history behind it.
   Future<void> loadRefundQueue() async {
     final current = _loaded;
     if (current == null) return;
     emit(current.copyWith(queueLoading: true));
     try {
-      final queue = await _getRefundQueue();
+      final queue = await _getRefundQueue(statuses: RefundStatus.values);
       if (isClosed) return;
       final now = _loaded;
       if (now == null) return;
@@ -370,7 +452,7 @@ class WalletCubit extends Cubit<WalletState> {
           actionError: result.verified ? null : result.faultLabel,
         ),
       );
-      
+
       if (!result.verified) await refresh();
       return result.verified ? null : result.faultLabel;
     } catch (e) {

@@ -120,6 +120,17 @@ class RouteCardBody extends StatelessWidget {
 
 /// `Cairo → Mansoura`, the corridor as one directional line, with the chevron
 /// that says the card is a door.
+///
+/// The endpoints are the card's headline, so they are set as a heading — the
+/// display weight with the tight tracking the scale reserves for headings —
+/// rather than as body text that happens to be bold. On a shelf of cards the
+/// city names are what a rider scans; everything under them is detail, and at
+/// body size the two competed.
+///
+/// The arrow is deliberately *not* part of that headline. Printed at the same
+/// weight it reads as a third word between two names; dropped to a regular
+/// weight in the tertiary ink it becomes what it means — a connector — and the
+/// two place names stand out as names.
 class _DirectionRow extends StatelessWidget {
   const _DirectionRow({
     required this.route,
@@ -135,9 +146,14 @@ class _DirectionRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final style =
         (dense
-                ? ClientTypography.bodyLarge(context)
-                : ClientTypography.headingSmall(context))
-            .copyWith(fontWeight: FontWeight.w800, height: 1.3);
+                ? ClientTypography.headingSmall(context)
+                : ClientTypography.headingMedium(context))
+            .copyWith(
+              fontWeight: FontWeight.w800,
+              letterSpacing: -0.3,
+              height: 1.25,
+              color: ClientColors.textPrimaryFor(context),
+            );
 
     return Row(
       children: [
@@ -149,6 +165,11 @@ class _DirectionRow extends StatelessWidget {
                   maxLines: dense ? 1 : 2,
                   overflow: TextOverflow.ellipsis,
                   style: style,
+                  connectorStyle: style.copyWith(
+                    fontWeight: FontWeight.w400,
+                    letterSpacing: 0,
+                    color: ClientColors.textTertiaryFor(context),
+                  ),
                 )
               : Text(
                   route.name,

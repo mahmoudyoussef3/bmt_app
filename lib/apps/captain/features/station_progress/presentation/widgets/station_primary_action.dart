@@ -65,7 +65,7 @@ class StationPrimaryAction extends StatelessWidget {
       StationFinishAction() || StationBoardUnavailable() => _Action(
         label: 'إنهاء الرحلة',
         icon: Icons.check_circle_rounded,
-        color: CaptainColors.success,
+        color: CaptainColors.primary,
         onPressed: () => _confirmComplete(context),
       ),
     };
@@ -80,7 +80,7 @@ class StationPrimaryAction extends StatelessWidget {
       return _Action(
         label: StationLabels.departAction(_isLastStation(station)),
         icon: Icons.arrow_forward_rounded,
-        color: CaptainColors.success,
+        color: CaptainColors.primary,
         // Leaving with everyone aboard is the normal case and stays one tap.
         // Leaving *before* the minute the riders here were published is not
         // refused — nobody is left behind — but it is confirmed, because it is
@@ -96,7 +96,7 @@ class StationPrimaryAction extends StatelessWidget {
           StationLabels.gateDetail(gate, now) ??
           StationLabels.gateHeadline(gate),
       icon: Icons.people_alt_rounded,
-      color: CaptainColors.success,
+      color: CaptainColors.primary,
       onPressed: null,
     );
   }
@@ -116,7 +116,7 @@ class StationPrimaryAction extends StatelessWidget {
           : 'صعد جميع ركاب هذه المحطة، والمغادرة الآن $hint. '
                 'هل تريد المتابعة؟',
       confirmLabel: 'نعم، تحرك الآن',
-      confirmColor: CaptainColors.success,
+      confirmColor: CaptainColors.primary,
     );
     if (confirmed) await cubit.departCurrentStation();
   }
@@ -131,7 +131,7 @@ class StationPrimaryAction extends StatelessWidget {
       title: 'إنهاء الرحلة',
       message: 'هل أنت متأكد من إنهاء الرحلة؟ لا يمكن التراجع عن هذا الإجراء.',
       confirmLabel: 'إنهاء الرحلة',
-      confirmColor: CaptainColors.success,
+      confirmColor: CaptainColors.primary,
     );
     if (confirmed) onComplete();
   }

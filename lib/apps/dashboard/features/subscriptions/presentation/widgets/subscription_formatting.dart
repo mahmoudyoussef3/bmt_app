@@ -4,33 +4,32 @@ import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_status_chip.dart';
 
 import '../../domain/entities/user_subscription.dart';
+import '../../../finance/presentation/widgets/finance_format.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
 /// One place for the module's number/date rendering, so a price on a card and
 /// the same price in the detail pane can never drift apart.
 ///
-/// Digits stay Arabic-Indic to match the rest of the RTL dashboard, but the
-/// conversion happens only at render time — never on values that are compared
-/// or sent back to the database.
-String subscriptionMoney(double value) => '${arabicNumber(value)} ج.م';
+/// Quantities and money delegate to [FinanceFormat] — the console's money
+/// vocabulary — rather than rendering their own Arabic-Indic digits, which is
+/// what this module used to do. The three المبيعات tabs (الحجوزات, الاشتراكات,
+/// العملاء) each printed the same figure a different way as a result:
+/// `١٢٬٣٤٥ ج.م` here, `12,345 ج.م` one tab over. They sit beside each other in
+/// one sidebar group and report on the same money, so the difference reads as
+/// two different amounts rather than as two spellings of one.
+///
+/// [arabicDigits] stays, and stays applied only to *identifiers* — trip codes,
+/// phone numbers, booking ids — which are read as labels rather than compared
+/// as magnitudes.
+String subscriptionMoney(double value) => FinanceFormat.money(value);
 
-String subscriptionDate(DateTime value) {
-  String two(int v) => v.toString().padLeft(2, '0');
-  return arabicDigits('${value.year}/${two(value.month)}/${two(value.day)}');
-}
+String subscriptionDate(DateTime value) => FinanceFormat.date(value);
 
-String subscriptionDateTime(DateTime value) {
-  String two(int v) => v.toString().padLeft(2, '0');
-  return '${subscriptionDate(value)} — '
-      '${arabicDigits('${two(value.hour)}:${two(value.minute)}')}';
-}
+String subscriptionDateTime(DateTime value) => FinanceFormat.dateTime(value);
 
-String arabicNumber(num value) {
-  final text = value is int || value == value.roundToDouble()
-      ? value.toInt().toString()
-      : value.toStringAsFixed(2);
-  return arabicDigits(text);
-}
+/// A quantity — a count of rides, subscribers, days. Never a year or an id:
+/// those carry no thousands separator, and `2,025` is not a year.
+String arabicNumber(num value) => FinanceFormat.count(value);
 
 const _arabicDigitMap = {
   '0': '٠',

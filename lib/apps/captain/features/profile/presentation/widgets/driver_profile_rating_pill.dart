@@ -4,12 +4,12 @@ import 'package:bmt_app/apps/captain/core/theme/captain_colors.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 
-/// The captain's rating, in the design's neutral pill: `--surface2` behind it,
-/// and the only colour is the star.
+/// The captain's rating, in the brand tint the rest of the profile is drawn in,
+/// with the star left on the rating amber.
 ///
-/// A brand-tinted pill with a brand border made the rating look like a control
-/// to be tapped. It is a fact about the captain, so it is drawn the way every
-/// other fact on this screen is.
+/// The star keeps its own colour on purpose: the rider palette holds ratings
+/// off every other ramp so a 4.8-star captain never reads as a caution, and a
+/// blue star would read as a state rather than as a score.
 class DriverProfileRatingPill extends StatelessWidget {
   const DriverProfileRatingPill({super.key, required this.rating});
 
@@ -25,7 +25,7 @@ class DriverProfileRatingPill extends StatelessWidget {
         5,
       ),
       decoration: BoxDecoration(
-        color: CaptainColors.surfaceAltFor(context),
+        color: CaptainColors.primary.withValues(alpha: 0.07),
         borderRadius: CaptainDesignTokens.brPill,
       ),
       child: Row(
@@ -39,7 +39,7 @@ class DriverProfileRatingPill extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: CaptainTypography.labelMedium(context).copyWith(
-                color: CaptainColors.textPrimaryFor(context),
+                color: CaptainColors.primaryInkFor(context),
                 letterSpacing: 0,
                 fontWeight: FontWeight.w700,
               ),

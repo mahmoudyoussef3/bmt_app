@@ -79,6 +79,7 @@ class RouteDirectionText extends StatelessWidget {
     required this.origin,
     required this.destination,
     this.style,
+    this.connectorStyle,
     this.maxLines,
     this.overflow,
     this.textAlign,
@@ -87,17 +88,53 @@ class RouteDirectionText extends StatelessWidget {
   final String origin;
   final String destination;
   final TextStyle? style;
+
+  /// Draws the arrow apart from the two place names, so a card can print the
+  /// endpoints as strong names with a quiet connector between them instead of
+  /// one flat run of type. Null keeps the arrow in [style].
+  ///
+  /// Only styling changes: the composed characters, their order, and the
+  /// isolates around each name are identical either way, so the line lays
+  /// itself out exactly as the plain form does. Spans are not isolates —
+  /// splitting the label into three of them does not make it direction-proof,
+  /// [isolatedPlaceName] does.
+  final TextStyle? connectorStyle;
+
   final int? maxLines;
   final TextOverflow? overflow;
   final TextAlign? textAlign;
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      routeDirectionLabel(
-        origin,
-        destination,
-        direction: Directionality.of(context),
+    final direction = Directionality.of(context);
+    final label = routeDirectionLabel(
+      origin,
+      destination,
+      direction: direction,
+    );
+    final connector = connectorStyle;
+    final from = isolatedPlaceName(origin);
+    final to = isolatedPlaceName(destination);
+
+    // One endpoint means no arrow to style, so there is nothing for the rich
+    // form to do that the plain one does not already do.
+    if (connector == null || from.isEmpty || to.isEmpty) {
+      return Text(
+        label,
+        style: style,
+        maxLines: maxLines,
+        overflow: overflow,
+        textAlign: textAlign,
+      );
+    }
+
+    return Text.rich(
+      TextSpan(
+        children: [
+          TextSpan(text: from),
+          TextSpan(text: ' ${directionArrow(direction)} ', style: connector),
+          TextSpan(text: to),
+        ],
       ),
       style: style,
       maxLines: maxLines,

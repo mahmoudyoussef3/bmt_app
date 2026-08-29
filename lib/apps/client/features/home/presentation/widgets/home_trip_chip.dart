@@ -3,8 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 
-/// Compact icon + label pill used for the facts on an upcoming trip card
-/// (duration, seats left).
+/// Compact icon + label pill used where a fact on a trip card has to be
+/// noticed rather than read — a departure down to its last seats, or one with
+/// none left.
 class HomeTripChip extends StatelessWidget {
   const HomeTripChip({
     super.key,

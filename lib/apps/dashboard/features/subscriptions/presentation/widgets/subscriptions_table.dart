@@ -15,25 +15,31 @@ import '../models/subscription_sort.dart';
 import 'subscription_details_sheet.dart';
 import 'subscription_formatting.dart';
 
+/// How many subscribers one page holds — in the table and in the card grid it
+/// falls back to, so resizing the console never changes what page you are on.
+const int subscriptionsPageSize = 12;
+
 /// The office-wide subscriber list, as a sortable, paginated table — the same
 /// [OpsDataTable] shape every other EWT module (Bookings, Tickets, Fleet) uses.
 ///
 /// Only for the no-trip-selected view: a trip in focus carries per-subscriber
 /// actions (check-in, ride ledger) that a table row cannot host, so that mode
 /// keeps [SubscriptionCard]'s grid instead.
-class SubscriptionsTable extends StatefulWidget {
-  const SubscriptionsTable({super.key, required this.state});
+///
+/// The page index lives in the board above rather than here: the card layout
+/// pages the same list, and two widgets each remembering their own page is how
+/// a narrowing window silently moves the operator to a different set of rows.
+class SubscriptionsTable extends StatelessWidget {
+  const SubscriptionsTable({
+    super.key,
+    required this.state,
+    required this.pageIndex,
+    required this.onPageChanged,
+  });
 
   final SubscriptionsLoaded state;
-
-  @override
-  State<SubscriptionsTable> createState() => _SubscriptionsTableState();
-}
-
-class _SubscriptionsTableState extends State<SubscriptionsTable> {
-  static const _pageSize = 12;
-
-  int _page = 0;
+  final int pageIndex;
+  final ValueChanged<int> onPageChanged;
 
   static const _sortColumns = <int, SubscriptionSortField>{
     0: SubscriptionSortField.name,
@@ -42,25 +48,9 @@ class _SubscriptionsTableState extends State<SubscriptionsTable> {
 
   int? get _sortColumnIndex {
     for (final entry in _sortColumns.entries) {
-      if (entry.value == widget.state.sortField) return entry.key;
+      if (entry.value == state.sortField) return entry.key;
     }
     return null;
-  }
-
-  void _onSort(int index) {
-    final field = _sortColumns[index];
-    if (field == null) return;
-    context.read<SubscriptionsCubit>().sortBy(field);
-    setState(() => _page = 0);
-  }
-
-  @override
-  void didUpdateWidget(covariant SubscriptionsTable oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    // A new filter/tab can shrink the result set out from under the current
-    // page — land back on the first page rather than an empty one.
-    final maxPage = (widget.state.resultCount / _pageSize).ceil() - 1;
-    if (_page > maxPage) _page = maxPage.clamp(0, 1 << 30);
   }
 
   static const _columns = <OpsColumn>[
@@ -74,25 +64,33 @@ class _SubscriptionsTableState extends State<SubscriptionsTable> {
 
   @override
   Widget build(BuildContext context) {
-    final subscriptions = widget.state.visibleSubscriptions;
-    final start = (_page * _pageSize).clamp(0, subscriptions.length);
-    final end = (start + _pageSize).clamp(0, subscriptions.length);
+    final subscriptions = state.visibleSubscriptions;
+    final start = (pageIndex * subscriptionsPageSize).clamp(
+      0,
+      subscriptions.length,
+    );
+    final end = (start + subscriptionsPageSize).clamp(0, subscriptions.length);
     final pageItems = subscriptions.sublist(start, end);
 
     return OpsDataTable(
       columns: _columns,
       rows: [for (final s in pageItems) _row(context, s)],
       onRowTap: [
-        for (final s in pageItems)
-          () => openSubscriptionDetails(context, s.id),
+        for (final s in pageItems) () => openSubscriptionDetails(context, s.id),
       ],
       total: subscriptions.length,
-      currentPage: _page,
-      pageSize: _pageSize,
-      onPageChanged: (page) => setState(() => _page = page),
+      totalLabel: 'الإجمالي ${arabicNumber(subscriptions.length)} اشتراك',
+      currentPage: pageIndex,
+      pageSize: subscriptionsPageSize,
+      onPageChanged: onPageChanged,
       sortColumnIndex: _sortColumnIndex,
-      sortDirection: widget.state.sortAscending ? OpsSort.asc : OpsSort.desc,
-      onSort: _onSort,
+      sortDirection: state.sortAscending ? OpsSort.asc : OpsSort.desc,
+      onSort: (index) {
+        final field = _sortColumns[index];
+        if (field == null) return;
+        context.read<SubscriptionsCubit>().sortBy(field);
+        onPageChanged(0);
+      },
     );
   }
 
@@ -164,7 +162,7 @@ class _SubscriberCell extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                'عميل منذ ${arabicNumber(subscription.createdAt.year)}',
+                'عميل منذ ${subscription.createdAt.year}',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),

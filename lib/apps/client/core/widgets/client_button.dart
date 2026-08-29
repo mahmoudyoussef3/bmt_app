@@ -19,7 +19,8 @@ import 'package:bmt_app/apps/client/core/widgets/pressable_scale.dart';
 ///
 /// All variants share one geometry (14px radius, 52px tall, 700-weight label)
 /// and support an inline [isLoading] state that replaces the label with a
-/// spinner and disables the tap target.
+/// spinner and disables the tap target. [dense] drops that geometry to the
+/// 44pt control a card-sized action needs.
 class ClientButton extends StatelessWidget {
   const ClientButton({
     super.key,
@@ -28,6 +29,7 @@ class ClientButton extends StatelessWidget {
     this.icon,
     this.isLoading = false,
     this.expand = true,
+    this.dense = false,
   }) : _variant = _ClientButtonVariant.primary;
 
   const ClientButton.secondary({
@@ -37,6 +39,7 @@ class ClientButton extends StatelessWidget {
     this.icon,
     this.isLoading = false,
     this.expand = true,
+    this.dense = false,
   }) : _variant = _ClientButtonVariant.secondary;
 
   const ClientButton.danger({
@@ -46,6 +49,7 @@ class ClientButton extends StatelessWidget {
     this.icon,
     this.isLoading = false,
     this.expand = true,
+    this.dense = false,
   }) : _variant = _ClientButtonVariant.danger;
 
   const ClientButton.text({
@@ -55,6 +59,7 @@ class ClientButton extends StatelessWidget {
     this.icon,
     this.isLoading = false,
     this.expand = false,
+    this.dense = false,
   }) : _variant = _ClientButtonVariant.text;
 
   final String label;
@@ -65,10 +70,21 @@ class ClientButton extends StatelessWidget {
   /// When `true` (default) the button stretches to fill its parent's width.
   final bool expand;
 
+  /// The compact control: 44pt instead of 52, on tighter padding and a 14px
+  /// label. For actions that sit *inside* a card — a list row's "book" — where
+  /// the full CTA would outweigh the card carrying it. Still above the 44pt
+  /// minimum tap target, so it is smaller without being harder to hit.
+  final bool dense;
+
   final _ClientButtonVariant _variant;
 
   /// `padding:15px` on a 15px/1.4 label — the design's CTA height.
   static const double _height = 52;
+
+  /// The [dense] control's height — Material's minimum comfortable tap target.
+  static const double _denseHeight = 44;
+
+  double get _controlHeight => dense ? _denseHeight : _height;
 
   @override
   Widget build(BuildContext context) {
@@ -77,8 +93,8 @@ class ClientButton extends StatelessWidget {
       borderRadius: BorderRadius.circular(ClientRadius.control),
     );
     final minSize = expand
-        ? const Size.fromHeight(_height)
-        : const Size(0, _height);
+        ? Size.fromHeight(_controlHeight)
+        : Size(0, _controlHeight);
 
     Widget button = switch (_variant) {
       _ClientButtonVariant.primary => _filled(context, effective, minSize),
@@ -124,7 +140,7 @@ class ClientButton extends StatelessWidget {
       scale: 0.96,
       child: Container(
         constraints: BoxConstraints(minHeight: minSize.height),
-        padding: const EdgeInsets.symmetric(horizontal: 24),
+        padding: EdgeInsets.symmetric(horizontal: dense ? 18 : 24),
         decoration: BoxDecoration(
           color: enabled
               ? ClientColors.primaryFor(context)
@@ -179,9 +195,12 @@ class ClientButton extends StatelessWidget {
   }
 
   /// `font-weight:700;font-size:15px;letter-spacing:.2px`.
-  TextStyle _labelStyle(BuildContext context) => ClientTypography.labelLarge(
-    context,
-  ).copyWith(fontSize: 15, fontWeight: FontWeight.w700, letterSpacing: 0.2);
+  TextStyle _labelStyle(BuildContext context) =>
+      ClientTypography.labelLarge(context).copyWith(
+        fontSize: dense ? 14 : 15,
+        fontWeight: FontWeight.w700,
+        letterSpacing: 0.2,
+      );
 
   Widget _buildChild(BuildContext context) {
     if (isLoading) {

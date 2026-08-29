@@ -13,10 +13,10 @@ import 'package:bmt_app/apps/captain/features/profile/presentation/pages/driver_
 import 'package:bmt_app/apps/captain/features/splash/presentation/screens/captain_splash_screen.dart';
 import 'package:bmt_app/l10n/app_localizations.dart';
 
-/// The profile header packs an avatar, name and rating pill onto a single
-/// toolbar row, and the identity block is the first thing the captain sees on
-/// both the splash and the profile. Both are pure layout, so a pump at a few
-/// real screen sizes is what actually proves they fit — the analyzer can't see
+/// The profile opens on an identity block — avatar, name and rating pill on one
+/// row — over a three-tile stats strip, and that block is the first thing the
+/// captain sees on both the splash and the profile. Both are pure layout, so a
+/// pump at a few real screen sizes is what actually proves they fit — the analyzer can't see
 /// a RenderFlex overflow.
 ///
 /// Note these assertions are deliberately conservative: `flutter_test` swaps in
@@ -137,18 +137,19 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // The captain's name is the header's title — there is no separate screen
-      // title to assert on.
+      // The toolbar names the tab; the captain's name and their rating are the
+      // identity block at the top of the page, and both are stated exactly
+      // once — the account rows below must not repeat either of them.
+      expect(find.text('حسابي'), findsOneWidget);
       expect(find.text('محمود عبد الرحمن السيد'), findsOneWidget);
+      expect(find.textContaining('ممتاز'), findsOneWidget);
 
-      // The rating sits with the rest of the account facts, which is below the
-      // fold on the smallest phone — and a sliver list does not build what it
-      // has not scrolled to. Dragging to the bottom also lays out every row on
-      // the page, which is what the overflow assertion below is really for.
+      // A sliver list does not build what it has not scrolled to, so dragging
+      // to the bottom is what lays out every row on the page — which is what
+      // the overflow assertion below is really for.
       await tester.drag(find.byType(CustomScrollView), const Offset(0, -1200));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('ممتاز'), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 
@@ -240,7 +241,7 @@ void main() {
 
   /// A captain running the system font large is a real configuration, and the
   /// profile is the densest screen in the app — an avatar, name and rating pill
-  /// on one toolbar row, then metric tiles and identity rows. It is the most
+  /// on one row, then three stat tiles and four groups of label → value rows. It is the most
   /// likely place for an enlarged font to break a layout.
   for (final scale in [1.3, 1.6]) {
     testWidgets('profile holds at small @ textScale $scale', (tester) async {
@@ -391,7 +392,8 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // No rating means no pill — the header must simply close up, not gap.
+    // No rating means no pill — the identity block must simply close up around
+    // the name, not leave a gap where the pill was.
     expect(find.textContaining('ممتاز'), findsNothing);
     expect(tester.takeException(), isNull);
   });

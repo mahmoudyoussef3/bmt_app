@@ -107,7 +107,10 @@ void main() {
           Scaffold(
             body: SingleChildScrollView(
               padding: const EdgeInsets.all(24),
-              child: CaptainRequestForm(submitting: false, onSubmit: (_, _, _, _) {}),
+              child: CaptainRequestForm(
+                submitting: false,
+                onSubmit: (_, _, _, _) {},
+              ),
             ),
           ),
         ),
@@ -143,6 +146,57 @@ void main() {
     expect(tester.takeException(), isNull);
   });
 
+  /// Regression: the banner used to lay its message out under an
+  /// `IntrinsicHeight`, which measured an `Expanded` `Text` at the wrong width
+  /// and settled one line short — so the second line of exactly the errors that
+  /// need two was clipped away. A one-line banner is ~44dp of content plus its
+  /// 16dp margin; anything at or under that means the message was truncated.
+  testWidgets('a two-line error message is drawn in full', (tester) async {
+    tester.view.physicalSize = const Size(320, 568);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    const message =
+        'هذا الرقم غير مسجّل كسائق نشط. تحقّق من الرقم أو اطلب الانضمام.';
+
+    await tester.pumpWidget(
+      _host(
+        BlocProvider<CaptainAuthCubit>(
+          create: (_) => _StubAuthCubit(const CaptainAuthError(message)),
+          child: CaptainLoginScreen(onRequestAccess: () {}),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    final banner = find.byKey(const ValueKey('captain-auth-error'));
+    expect(banner, findsOneWidget);
+    expect(tester.getSize(banner).height, greaterThan(70));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets(
+    'the phone field accepts numerals as an Arabic keypad types them',
+    (tester) async {
+      await tester.pumpWidget(
+        _host(
+          BlocProvider<CaptainAuthCubit>(
+            create: (_) => _StubAuthCubit(const CaptainAuthIdle()),
+            child: CaptainLoginScreen(onRequestAccess: () {}),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      // Arabic-Indic digits with the separators a pasted contact carries.
+      await tester.enterText(find.byType(TextFormField), '٠١٠٠ ١٢٣-٤٥٦٧');
+      await tester.pump();
+
+      final field = tester.widget<EditableText>(find.byType(EditableText));
+      expect(field.controller.text, '01001234567');
+    },
+  );
+
   testWidgets('phone field is LTR while the name field follows the app RTL', (
     tester,
   ) async {
@@ -150,7 +204,10 @@ void main() {
       _host(
         Scaffold(
           body: SingleChildScrollView(
-            child: CaptainRequestForm(submitting: false, onSubmit: (_, _, _, _) {}),
+            child: CaptainRequestForm(
+              submitting: false,
+              onSubmit: (_, _, _, _) {},
+            ),
           ),
         ),
       ),

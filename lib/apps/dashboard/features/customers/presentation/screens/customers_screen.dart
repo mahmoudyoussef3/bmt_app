@@ -6,6 +6,7 @@ import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_collapsible_section.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_results_header.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 
@@ -14,6 +15,7 @@ import '../cubit/customer_profile_cubit.dart';
 import '../cubit/customers_cubit.dart';
 import '../cubit/customers_state.dart';
 import '../widgets/customer_profile_view.dart';
+import '../widgets/customers_format.dart';
 import '../widgets/customers_kpi_strip.dart';
 import '../widgets/customers_table.dart';
 import '../widgets/customers_toolbar.dart';
@@ -168,16 +170,18 @@ class _DirectoryBody extends StatelessWidget {
             ),
           ],
           // Headers fold their summary by default across the console. This one
-          // opens: the five counts *are* this module's headline, and each tile
+          // opens: the four counts *are* this module's headline, and each tile
           // is the shortcut to the list behind it — folded, the module opens on
           // a table with no answer to "how many, and how many need me".
           initiallyExpanded: true,
           collapsedSummary: DashboardSectionSummary(
             items: [
-              'إجمالي ${state.overview.totalCustomers}',
-              'نشط ${state.overview.activeCustomers}',
-              'باشتراك ${state.overview.withActiveSubscription}',
-              'برحلة قادمة ${state.overview.withUpcomingTrip}',
+              'إجمالي ${CustomersFormat.count(state.overview.totalCustomers)}',
+              'نشط ${CustomersFormat.count(state.overview.activeCustomers)}',
+              'باشتراك '
+                  '${CustomersFormat.count(state.overview.withActiveSubscription)}',
+              'برحلة قادمة '
+                  '${CustomersFormat.count(state.overview.withUpcomingTrip)}',
             ],
           ),
           summary: CustomersKpiStrip(
@@ -193,6 +197,8 @@ class _DirectoryBody extends StatelessWidget {
         const SizedBox(height: AppSpacing.medium),
         CustomersToolbar(state: state),
         const SizedBox(height: AppSpacing.medium),
+        _ResultsHeader(state: state),
+        const SizedBox(height: AppSpacing.small),
         // A refetch dims the rows rather than replacing them: losing the list
         // while a filter is applied loses the operator's place in it.
         AnimatedOpacity(
@@ -208,6 +214,30 @@ class _DirectoryBody extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// The same strip الحجوزات and الاشتراكات put above their rows: what this list
+/// is, and how much of it is on screen.
+class _ResultsHeader extends StatelessWidget {
+  const _ResultsHeader({required this.state});
+
+  final CustomersLoadedState state;
+
+  @override
+  Widget build(BuildContext context) {
+    final showing = state.page.rows.length;
+    final first = showing == 0 ? 0 : state.pageIndex * customersPageSize + 1;
+    final last = first == 0 ? 0 : first + showing - 1;
+
+    return DashboardResultsHeader(
+      icon: DashboardIcons.customers,
+      title: 'قائمة العملاء',
+      subtitle: showing == 0
+          ? 'لا نتائج'
+          : 'عرض ${CustomersFormat.count(first)}–${CustomersFormat.count(last)} '
+                'من ${CustomersFormat.count(state.page.total)}',
     );
   }
 }

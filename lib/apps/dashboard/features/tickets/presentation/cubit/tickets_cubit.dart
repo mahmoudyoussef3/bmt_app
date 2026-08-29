@@ -12,9 +12,11 @@ import '../../domain/usecases/close_ticket_usecase.dart';
 import '../../domain/usecases/get_ticket_attachments_usecase.dart';
 import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_filter_memory.dart';
 
+import '../models/ticket_queue_tab.dart';
+import '../models/ticket_sort.dart';
 import 'tickets_state.dart';
 
-/// The support queue's three filter axes as one remembered value.
+/// The support queue's filter axes as one remembered value.
 ///
 /// Tickets keeps its filters as separate fields on the state rather than in a
 /// value object like `BookingFilters`, so this record is what gets handed to
@@ -24,6 +26,9 @@ typedef TicketFilterSnapshot = ({
   String search,
   TicketStatus? status,
   TicketPriority? priority,
+  String? category,
+  TicketAssignment assignment,
+  bool overdueOnly,
 });
 
 class TicketsCubit extends Cubit<TicketsState> {
@@ -71,6 +76,9 @@ class TicketsCubit extends Cubit<TicketsState> {
           searchQuery: remembered?.search ?? '',
           filterStatus: remembered?.status,
           filterPriority: remembered?.priority,
+          filterCategory: remembered?.category,
+          filterAssignment: remembered?.assignment ?? TicketAssignment.any,
+          overdueOnly: remembered?.overdueOnly ?? false,
         ),
       );
     } catch (error) {
@@ -143,10 +151,63 @@ class TicketsCubit extends Cubit<TicketsState> {
     );
   }
 
+  void setFilterCategory(String? category) {
+    final current = state;
+    if (current is! TicketsLoaded) return;
+    _remember(
+      current.copyWith(
+        filterCategory: category,
+        clearFilterCategory: category == null,
+      ),
+    );
+  }
+
+  void setFilterAssignment(TicketAssignment assignment) {
+    final current = state;
+    if (current is! TicketsLoaded) return;
+    _remember(current.copyWith(filterAssignment: assignment));
+  }
+
   void setSearchQuery(String query) {
     final current = state;
     if (current is! TicketsLoaded) return;
     _remember(current.copyWith(searchQuery: query));
+  }
+
+  /// Opens one queue. A tab writes the status and the overdue flag and nothing
+  /// else, so the agent's search text, priority and category survive the move —
+  /// see [TicketQueueTab] for why the strip owns exactly those two axes.
+  void switchTab(TicketQueueTab tab) {
+    final current = state;
+    if (current is! TicketsLoaded) return;
+    final status = switch (tab) {
+      TicketQueueTab.newTickets => TicketStatus.submitted,
+      TicketQueueTab.underReview => TicketStatus.underReview,
+      TicketQueueTab.resolved => TicketStatus.resolved,
+      TicketQueueTab.overdue || TicketQueueTab.all => null,
+    };
+    _remember(
+      current.copyWith(
+        filterStatus: status,
+        clearFilterStatus: status == null,
+        overdueOnly: tab == TicketQueueTab.overdue,
+      ),
+    );
+  }
+
+  /// Re-orders the queue. Handed the key already in force it flips the
+  /// direction, which is what both the toolbar's arrow and a second tap on a
+  /// column header mean.
+  void setSort(TicketSort sort) {
+    final current = state;
+    if (current is! TicketsLoaded) return;
+    if (current.sort == sort) {
+      emit(current.copyWith(sortAscending: !current.sortAscending));
+      return;
+    }
+    // The ordering is not a filter, so it is deliberately not remembered
+    // alongside them: it changes the order, not the population.
+    emit(current.copyWith(sort: sort, sortAscending: true));
   }
 
   /// Emits [next] and files its filters away for the operator's next visit.
@@ -157,6 +218,9 @@ class TicketsCubit extends Cubit<TicketsState> {
       search: next.searchQuery,
       status: next.filterStatus,
       priority: next.filterPriority,
+      category: next.filterCategory,
+      assignment: next.filterAssignment,
+      overdueOnly: next.overdueOnly,
     ));
     emit(next);
   }
@@ -174,6 +238,9 @@ class TicketsCubit extends Cubit<TicketsState> {
         searchQuery: '',
         clearFilterStatus: true,
         clearFilterPriority: true,
+        clearFilterCategory: true,
+        filterAssignment: TicketAssignment.any,
+        overdueOnly: false,
       ),
     );
   }

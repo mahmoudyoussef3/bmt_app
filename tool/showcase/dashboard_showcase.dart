@@ -48,6 +48,8 @@ import 'package:bmt_app/apps/dashboard/features/reports/domain/entities/report_e
 import 'package:bmt_app/apps/dashboard/features/reports/presentation/cubit/reports_cubit.dart';
 import 'package:bmt_app/apps/dashboard/features/reports/presentation/cubit/reports_state.dart';
 import 'package:bmt_app/apps/dashboard/features/reviews/presentation/cubit/reviews_cubit.dart';
+import 'package:bmt_app/apps/dashboard/features/tickets/presentation/cubit/tickets_cubit.dart';
+import 'package:bmt_app/apps/dashboard/features/tickets/presentation/cubit/tickets_state.dart';
 import 'package:bmt_app/apps/dashboard/features/reviews/presentation/cubit/reviews_state.dart';
 import 'package:bmt_app/apps/dashboard/features/routes/presentation/cubit/routes_cubit.dart';
 import 'package:bmt_app/apps/dashboard/features/routes/presentation/cubit/routes_state.dart';
@@ -369,6 +371,14 @@ class _FakeReviews extends Cubit<ReviewsState> implements ReviewsCubit {
   dynamic noSuchMethod(Invocation i) => null;
 }
 
+class _FakeTickets extends Cubit<TicketsState> implements TicketsCubit {
+  _FakeTickets() : super(TicketsLoaded(tickets: demo.tickets));
+  @override
+  Future<void> load() async {}
+  @override
+  dynamic noSuchMethod(Invocation i) => null;
+}
+
 class _FakeOfficeProfile extends Cubit<OfficeProfileState>
     implements OfficeProfileCubit {
   _FakeOfficeProfile() : super(OfficeProfileLoaded(demo.officeProfile));
@@ -439,6 +449,7 @@ void registerDashboardShowcaseFakes() {
     )
     ..registerFactory<ReportsCubit>(_FakeReports.new)
     ..registerFactory<ReviewsCubit>(_FakeReviews.new)
+    ..registerFactory<TicketsCubit>(_FakeTickets.new)
     ..registerFactory<OfficeProfileCubit>(_FakeOfficeProfile.new)
     ..registerFactory<PlatformLicensingCubit>(_FakeLicensing.new);
 }
@@ -477,6 +488,7 @@ const Map<String, String> dashboardScreens = {
   'dashboard-wallet': DashboardRoutes.wallet,
   'dashboard-reports': DashboardRoutes.reports,
   'dashboard-reviews': DashboardRoutes.reviews,
+  'dashboard-tickets': DashboardRoutes.tickets,
   'dashboard-office-profile': DashboardRoutes.officeProfile,
 
   // «الخطط والباقات» folded into «الباقات والميزات» when the platform console

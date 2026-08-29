@@ -189,6 +189,7 @@ class _MockReportsRepository implements ReportsRepository {
       throw StateError('report unavailable');
     }
     return ReportData(
+      type: type,
       kpis: {'type': type.name, 'إجمالي': '100'},
       rows: const [],
       trends: const [],

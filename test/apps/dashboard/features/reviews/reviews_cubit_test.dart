@@ -1,5 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_filter_memory.dart';
+
 import 'package:bmt_app/apps/dashboard/features/reviews/domain/entities/trip_review_entry.dart';
 import 'package:bmt_app/apps/dashboard/features/reviews/domain/repositories/reviews_repository.dart';
 import 'package:bmt_app/apps/dashboard/features/reviews/domain/usecases/reviews_usecases.dart';
@@ -53,6 +55,12 @@ ReviewsCubit _cubit(_FakeReviewsRepository repo) => ReviewsCubit(
 );
 
 void main() {
+  // التقييمات now files its narrowings in the session-wide filter memory, the
+  // way الشكاوى does — so one test's filter would otherwise be restored by the
+  // next test's `load()`.
+  setUp(DashboardFilterMemory.instance.clear);
+  tearDown(DashboardFilterMemory.instance.clear);
+
   group('ReviewsCubit.load', () {
     test('surfaces a load failure instead of an empty board', () async {
       final cubit = _cubit(_FakeReviewsRepository(fails: true));
@@ -85,23 +93,26 @@ void main() {
   });
 
   group('ReviewsCubit filters', () {
-    test('needsAttention catches a low score on any single dimension', () async {
-      final cubit = _cubit(
-        _FakeReviewsRepository(
-          reviews: [
-            // Averages a respectable 3.7 — but the vehicle was a 1.
-            _review(id: 'mixed', driver: 5, vehicle: 1, route: 5),
-            _review(id: 'good', driver: 5, vehicle: 5, route: 4),
-          ],
-        ),
-      );
+    test(
+      'needsAttention catches a low score on any single dimension',
+      () async {
+        final cubit = _cubit(
+          _FakeReviewsRepository(
+            reviews: [
+              // Averages a respectable 3.7 — but the vehicle was a 1.
+              _review(id: 'mixed', driver: 5, vehicle: 1, route: 5),
+              _review(id: 'good', driver: 5, vehicle: 5, route: 4),
+            ],
+          ),
+        );
 
-      await cubit.load();
-      cubit.setFilter(ReviewsFilter.needsAttention);
+        await cubit.load();
+        cubit.setFilter(ReviewsFilter.needsAttention);
 
-      final state = cubit.state as ReviewsLoaded;
-      expect(state.visibleReviews.single.id, 'mixed');
-    });
+        final state = cubit.state as ReviewsLoaded;
+        expect(state.visibleReviews.single.id, 'mixed');
+      },
+    );
 
     test('withComments hides star-only reviews', () async {
       final cubit = _cubit(
@@ -140,9 +151,7 @@ void main() {
     });
 
     test('distinguishes an empty board from an over-filtered one', () async {
-      final cubit = _cubit(
-        _FakeReviewsRepository(reviews: [_review(id: 'a')]),
-      );
+      final cubit = _cubit(_FakeReviewsRepository(reviews: [_review(id: 'a')]));
 
       await cubit.load();
       cubit.search('nobody');

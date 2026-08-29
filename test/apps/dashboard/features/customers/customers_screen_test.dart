@@ -8,6 +8,7 @@ import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_filter_memory.dar
 import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_empty_state.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_pager.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/ops_data_table.dart';
 import 'package:bmt_app/apps/dashboard/features/customers/domain/entities/customer.dart';
 import 'package:bmt_app/apps/dashboard/features/customers/domain/entities/customer_filters.dart';
@@ -238,7 +239,10 @@ void main() {
       expect(find.text('العملاء النشطون'), findsOneWidget);
       expect(find.text('لديهم اشتراك ساري'), findsOneWidget);
       expect(find.text('لديهم رحلة قادمة'), findsOneWidget);
-      expect(find.text('عملاء جدد'), findsOneWidget);
+      // "عملاء جدد" is no longer a tile of its own — it had no filter behind
+      // it, so it rides on the total's detail line and keeps the strip to the
+      // four tiles every المبيعات module shows.
+      expect(find.textContaining('أول حجز خلال ٣٠ يوماً'), findsOneWidget);
     });
 
     testWidgets('a tile applies the filter that produced its number', (
@@ -320,8 +324,9 @@ void main() {
 
       expect(find.byType(OpsDataTable), findsNothing);
       expect(find.text('أحمد محمود'), findsOneWidget);
-      // The card layout carries its own pager, so paging still works.
-      expect(find.text('1 / 1'), findsOneWidget);
+      // The card layout closes with the same pager bar the table uses, so
+      // paging still works and reads identically in both layouts.
+      expect(find.byType(DashboardPager), findsOneWidget);
     });
 
     testWidgets('renders without overflow across widths and text scales', (

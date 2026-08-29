@@ -27,6 +27,7 @@ import 'package:bmt_app/apps/captain/features/passenger_manifest/presentation/cu
 import 'package:bmt_app/apps/captain/features/passenger_manifest/presentation/cubit/passenger_manifest_state.dart';
 import 'package:bmt_app/apps/captain/features/passenger_manifest/presentation/pages/passenger_list_page.dart';
 import 'package:bmt_app/apps/captain/features/profile/presentation/cubit/driver_profile_cubit.dart';
+import 'package:bmt_app/apps/captain/features/profile/presentation/pages/driver_profile_page.dart';
 import 'package:bmt_app/apps/captain/features/profile/presentation/cubit/driver_profile_state.dart';
 import 'package:bmt_app/apps/captain/features/station_progress/presentation/cubit/station_progress_cubit.dart';
 import 'package:bmt_app/apps/captain/features/station_progress/presentation/cubit/station_progress_state.dart';
@@ -233,6 +234,20 @@ final Map<String, Widget Function()> captainScreens = {
   'captain-trip-map': () => CaptainTripMapPage(trip: demo.liveTrip),
   'captain-passengers': () => const PassengerListPage(tripId: 'T-2423'),
   'captain-notifications': () => const CaptainNotificationsPage(),
+  // The profile is a tab inside `CaptainAppShell`, which is what provides its
+  // cubit and the header's badge — mounted on its own here, it has to bring
+  // both with it.
+  'captain-profile': () => MultiBlocProvider(
+    providers: [
+      BlocProvider<DriverProfileCubit>(
+        create: (_) => captainGetIt<DriverProfileCubit>(),
+      ),
+      BlocProvider<CaptainNotificationBadgeCubit>.value(
+        value: captainGetIt<CaptainNotificationBadgeCubit>(),
+      ),
+    ],
+    child: const DriverProfilePage(),
+  ),
 };
 
 Widget buildCaptainShowcase(String screenId, {bool dark = false}) {

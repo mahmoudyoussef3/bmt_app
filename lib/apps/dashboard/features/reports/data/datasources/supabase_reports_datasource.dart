@@ -100,6 +100,7 @@ class SupabaseReportsDatasource implements ReportsDatasource {
 
     final days = rows.length;
     return ReportData(
+      type: ReportType.revenue,
       kpis: {
         'إيراد الحجوزات': _money(total),
         'عدد الحجوزات': '$bookings حجز',
@@ -171,6 +172,7 @@ class SupabaseReportsDatasource implements ReportsDatasource {
     ];
 
     return ReportData(
+      type: ReportType.trips,
       kpis: {
         'عدد الرحلات': '${rows.length} رحلة',
         'الرحلات المكتملة': '$completed رحلة',
@@ -235,6 +237,7 @@ class SupabaseReportsDatasource implements ReportsDatasource {
     }
 
     return ReportData(
+      type: ReportType.bookings,
       kpis: {
         'عدد الحجوزات': '${rows.length} حجز',
         'حجوزات محصّلة': '$earnedCount حجز',
@@ -282,6 +285,7 @@ class SupabaseReportsDatasource implements ReportsDatasource {
     rows.sort((a, b) => b.completedTrips.compareTo(a.completedTrips));
 
     return ReportData(
+      type: ReportType.drivers,
       kpis: {
         'عدد السائقين': '${rows.length} سائق',
         'السائقون النشطون': '$active سائق',
@@ -337,6 +341,7 @@ class SupabaseReportsDatasource implements ReportsDatasource {
     rows.sort((a, b) => b.completedTrips.compareTo(a.completedTrips));
 
     return ReportData(
+      type: ReportType.vehicles,
       kpis: {
         'إجمالي المركبات': '${rows.length} مركبة',
         'مركبات جاهزة للخدمة': '$ready مركبة',
@@ -381,6 +386,7 @@ class SupabaseReportsDatasource implements ReportsDatasource {
     }
 
     return ReportData(
+      type: ReportType.complaints,
       kpis: {
         'إجمالي الشكاوى': '$total شكوى',
         'تم حلها': '$resolved شكوى',
@@ -444,6 +450,7 @@ class SupabaseReportsDatasource implements ReportsDatasource {
       ..sort((a, b) => b.totalRevenue.compareTo(a.totalRevenue));
 
     return ReportData(
+      type: ReportType.subscriptions,
       kpis: {
         'عدد الباقات المُباعة': '${rows.length} باقة',
         'اشتراكات نشطة': '$active اشتراك',

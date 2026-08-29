@@ -131,6 +131,34 @@ void main() {
           isTrue,
         );
       });
+
+      testWidgets('${direction.name} styles the arrow apart without '
+          'disturbing the layout', (tester) async {
+        await tester.pumpWidget(
+          Directionality(
+            textDirection: direction,
+            child: const RouteDirectionText(
+              origin: 'New Cairo',
+              destination: 'شبرا بخوم',
+              connectorStyle: TextStyle(fontWeight: FontWeight.w400),
+            ),
+          ),
+        );
+        // Styling the connector must not change a character: same string, so
+        // the same bidi resolution as the plain form.
+        final rendered = tester
+            .widget<Text>(find.byType(Text))
+            .textSpan!
+            .toPlainText();
+        expect(
+          rendered,
+          routeDirectionLabel('New Cairo', 'شبرا بخوم', direction: direction),
+        );
+        expect(
+          _pointsAtDestination(rendered, 'New Cairo', 'شبرا بخوم', direction),
+          isTrue,
+        );
+      });
     }
   });
 }

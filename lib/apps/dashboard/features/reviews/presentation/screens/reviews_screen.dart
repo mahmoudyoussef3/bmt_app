@@ -1,20 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
-import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_kpi_card.dart';
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_collapsible_section.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 
-import '../../domain/entities/reviews_summary.dart';
 import '../cubit/reviews_cubit.dart';
 import '../cubit/reviews_state.dart';
 import '../widgets/driver_standings_panel.dart';
-import '../widgets/rating_stars.dart';
-import '../widgets/reviews_filter_bar.dart';
-import '../widgets/reviews_table.dart';
-import 'package:bmt_app/core/theme/colors.dart';
-import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
+import '../widgets/reviews_board.dart';
+import '../widgets/reviews_format.dart';
+import '../widgets/reviews_kpi_strip.dart';
+import '../widgets/reviews_toolbar.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 import 'package:bmt_app/apps/dashboard/core/query/dashboard_query_caps.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_cap_notice.dart';
@@ -24,6 +23,14 @@ import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_cap_notice.dart';
 /// This screen is the only window onto individual reviews in the whole
 /// platform. Passengers see aggregates, captains see their own average, and
 /// the written feedback lands here and nowhere else.
+///
+/// ## One shape for the whole الدعم section
+///
+/// Header with its foldable KPI strip → the shared filter bar (queue strip,
+/// pinned search and ordering, the rest behind one fold) → the results header →
+/// the rows. الشكاوى next door is composed the same way, and so are the three
+/// المبيعات modules: the section an operator is in should never change what the
+/// controls are or where they live.
 class ReviewsScreen extends StatelessWidget {
   const ReviewsScreen({super.key});
 
@@ -32,8 +39,9 @@ class ReviewsScreen extends StatelessWidget {
     return BlocBuilder<ReviewsCubit, ReviewsState>(
       builder: (context, state) {
         return switch (state) {
-          ReviewsLoading() => const DashboardLoading(),
+          ReviewsLoading() => const DashboardLoading(rows: 6),
           ReviewsError(:final message) => DashboardErrorState(
+            title: 'تعذر تحميل التقييمات',
             message: message,
             onRetry: () => context.read<ReviewsCubit>().load(),
           ),
@@ -72,71 +80,35 @@ class _LoadedView extends StatelessWidget {
                 // operator can narrow to see further back.
                 hint: '',
               ),
+            FilledButton.tonalIcon(
+              onPressed: cubit.load,
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('تحديث'),
+            ),
           ],
-        ),
-        const SizedBox(height: AppSpacing.medium),
-        _Kpis(summary: summary),
-        const SizedBox(height: AppSpacing.medium),
-        ReviewsTable(
-          state: state,
-          toolbar: ReviewsFilterBar(
-            filter: state.filter,
-            query: state.query,
-            needsAttentionCount: summary.needsAttentionCount,
-            onFilterChanged: cubit.setFilter,
-            onSearch: cubit.search,
+          sectionId: DashboardSectionIds.reviewsHeader,
+          // Open, like every other list module's header: the four numbers *are*
+          // what the module is opened to read, and three of the tiles are the
+          // shortcut to the queue behind them.
+          initiallyExpanded: true,
+          collapsedSummary: DashboardSectionSummary(
+            items: [
+              'إجمالي ${ReviewsFormat.count(summary.total)}',
+              'تحتاج متابعة ${ReviewsFormat.count(summary.needsAttentionCount)}',
+              'بها تعليقات ${ReviewsFormat.count(summary.commentedCount)}',
+              'المتوسط '
+                  '${ReviewsFormat.rating(summary.overallAverage, outOf: summary.total)}',
+            ],
           ),
+          summary: ReviewsKpiStrip(state: state, onOpenQueue: cubit.setFilter),
         ),
+        const SizedBox(height: AppSpacing.medium),
+        ReviewsToolbar(state: state),
+        const SizedBox(height: AppSpacing.medium),
+        ReviewsBoard(state: state),
         const SizedBox(height: AppSpacing.medium),
         DriverStandingsPanel(standings: state.driverStandings),
       ],
     );
   }
-}
-
-class _Kpis extends StatelessWidget {
-  const _Kpis({required this.summary});
-
-  final ReviewsSummary summary;
-
-  @override
-  Widget build(BuildContext context) {
-    return DashboardKpiGrid(
-      children: [
-        DashboardKpiCard(
-          label: 'إجمالي التقييمات',
-          value: '${summary.total}',
-          icon: Icons.reviews_outlined,
-        ),
-        DashboardKpiCard(
-          label: 'متوسط تقييم السائق',
-          value: _avg(summary.driverAverage),
-          icon: Icons.person_outline,
-          color: ratingColor(context, summary.driverAverage),
-        ),
-        DashboardKpiCard(
-          label: 'متوسط تقييم المركبة',
-          value: _avg(summary.vehicleAverage),
-          icon: Icons.directions_bus_outlined,
-          color: ratingColor(context, summary.vehicleAverage),
-        ),
-        DashboardKpiCard(
-          label: 'تحتاج متابعة',
-          value: '${summary.needsAttentionCount}',
-          detail: 'تقييم بنجمتين أو أقل',
-          icon: Icons.report_gmailerrorred_outlined,
-          color: context
-              .status(
-                summary.needsAttentionCount > 0
-                    ? AppStatusTone.error
-                    : AppStatusTone.success,
-              )
-              .accent,
-        ),
-      ],
-    );
-  }
-
-  String _avg(double value) =>
-      summary.total == 0 ? '—' : value.toStringAsFixed(1);
 }

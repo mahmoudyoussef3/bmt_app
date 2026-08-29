@@ -139,8 +139,8 @@ class _FleetVehicleLayerState extends State<FleetVehicleLayer>
           markers.add(
             Marker(
               point: LatLng(sample.latitude, sample.longitude),
-              width: selected ? 132 : 52,
-              height: selected ? 78 : 52,
+              width: selected ? _MarkerBox.selectedWidth : _MarkerBox.puck,
+              height: _MarkerBox.heightFor(context, selected: selected),
               alignment: Alignment.center,
               child: _FleetMarker(
                 trip: trip,
@@ -159,6 +159,54 @@ class _FleetVehicleLayerState extends State<FleetVehicleLayer>
       },
     );
   }
+}
+
+/// Size of a marker's box on the map.
+///
+/// flutter_map bakes `Marker.width`/`height` into the layer and lays the child
+/// out inside exactly that box, so the box has to fit everything the selected
+/// marker draws. A hand-picked height silently under-measured the label pill —
+/// its 1px border and the pill text's own line height pushed the column seven
+/// pixels past the box and painted an overflow stripe across the map — so the
+/// label is measured here instead, from the very style and text scale it is
+/// rendered with.
+class _MarkerBox {
+  const _MarkerBox._();
+
+  /// Diameter of the selection ring, the tallest thing in the puck stack (the
+  /// vehicle puck itself is smaller and sits inside it).
+  static const double puck = 52;
+
+  /// Gap between the puck and the label pill.
+  static const double gap = 4;
+
+  /// The pill's own chrome: 3px vertical padding plus a 1px border, both sides.
+  static const double labelChrome = 3 * 2 + 1 * 2;
+
+  /// The selected box never grows wider — a long vehicle label ellipsizes.
+  static const double selectedWidth = 132;
+
+  static double heightFor(BuildContext context, {required bool selected}) =>
+      selected ? puck + gap + _labelHeight(context) : puck;
+
+  /// The pill follows the desk's text size but stops at 1.3×: past that a
+  /// marker label starts covering the map it is pinned to.
+  static TextScaler labelScaler(BuildContext context) {
+    final size = _labelFontSize(context);
+    final scaled = MediaQuery.textScalerOf(context).scale(size);
+    return TextScaler.linear((scaled / size).clamp(0.8, 1.3));
+  }
+
+  static double _labelHeight(BuildContext context) {
+    final style = MapStyle.pillLabel(context);
+    final line =
+        labelScaler(context).scale(_labelFontSize(context)) *
+        (style.height ?? 1.2);
+    return line.ceilToDouble() + labelChrome;
+  }
+
+  static double _labelFontSize(BuildContext context) =>
+      MapStyle.pillLabel(context).fontSize ?? 14;
 }
 
 class _FleetMarker extends StatelessWidget {
@@ -208,8 +256,8 @@ class _FleetMarker extends StatelessWidget {
                 if (selected)
                   IgnorePointer(
                     child: Container(
-                      width: 52,
-                      height: 52,
+                      width: _MarkerBox.puck,
+                      height: _MarkerBox.puck,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border: Border.all(
@@ -240,7 +288,7 @@ class _FleetMarker extends StatelessWidget {
               ],
             ),
             if (selected) ...[
-              const SizedBox(height: 4),
+              const SizedBox(height: _MarkerBox.gap),
               _MarkerLabel(
                 text: trip.vehicleLabel,
                 speedKmh: sample.isMoving ? sample.speedKmh : null,
@@ -275,6 +323,9 @@ class _MarkerLabel extends StatelessWidget {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         textAlign: TextAlign.center,
+        // Same scaler the box was measured with, so the pill can never outgrow
+        // the marker it sits in.
+        textScaler: _MarkerBox.labelScaler(context),
         style: MapStyle.pillLabel(context),
       ),
     );

@@ -187,8 +187,7 @@ class CaptainNotificationTile extends StatelessWidget {
                   children: [
                     Text(
                       notification.title,
-                      style: CaptainTypography.bodySmall(context).copyWith(
-                        fontSize: 13.5,
+                      style: CaptainTypography.bodyMedium(context).copyWith(
                         color: CaptainColors.textPrimaryFor(context),
                         fontWeight: isUnread
                             ? FontWeight.w700

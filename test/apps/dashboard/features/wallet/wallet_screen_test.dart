@@ -3,13 +3,18 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_filter_bar.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_results_header.dart';
 import 'package:bmt_app/apps/dashboard/features/wallet/domain/entities/refund_request.dart';
 import 'package:bmt_app/apps/dashboard/features/wallet/domain/entities/wallet.dart';
 import 'package:bmt_app/apps/dashboard/features/wallet/domain/entities/wallet_transaction.dart';
 import 'package:bmt_app/apps/dashboard/features/wallet/domain/entities/wallet_vocabulary.dart';
 import 'package:bmt_app/apps/dashboard/features/wallet/presentation/cubit/wallet_cubit.dart';
 import 'package:bmt_app/apps/dashboard/features/wallet/presentation/cubit/wallet_state.dart';
+import 'package:bmt_app/apps/dashboard/features/wallet/presentation/models/wallet_views.dart';
 import 'package:bmt_app/apps/dashboard/features/wallet/presentation/screens/wallet_screen.dart';
+import 'package:bmt_app/apps/dashboard/features/wallet/presentation/widgets/wallet_refund_row.dart';
+import 'package:bmt_app/apps/dashboard/features/wallet/presentation/widgets/wallet_row_shell.dart';
 
 import 'wallet_test_fixtures.dart';
 
@@ -77,6 +82,8 @@ WalletLoadedState _loaded({
   List<RefundRequest> queue = const [],
   WalletStatus walletStatus = WalletStatus.active,
   List<RefundRequest> pendingRefunds = const [],
+  WalletDirectoryFilters directoryFilters = const WalletDirectoryFilters(),
+  WalletRefundFilters refundFilters = const WalletRefundFilters(),
 }) => WalletLoadedState(
   overview: overviewFixture(),
   directory: WalletDirectoryPage(total: 1, rows: [directoryEntryFixture()]),
@@ -86,6 +93,8 @@ WalletLoadedState _loaded({
       ? summaryFixture(status: walletStatus, pendingRefunds: pendingRefunds)
       : null,
   refundQueue: queue,
+  directoryFilters: directoryFilters,
+  refundFilters: refundFilters,
   ledger: WalletLedgerPage(
     total: 1,
     sumCredit: 200,
@@ -109,15 +118,6 @@ Finder _button(String label) => find.ancestor(
   ),
 );
 
-/// Opens the module summary, which every dashboard header now starts folded.
-///
-/// The overview strip is behind that fold, so a test that wants its figures
-/// does what the operator does: press «الملخص».
-Future<void> _openSummary(WidgetTester tester) async {
-  await tester.tap(find.text('الملخص'));
-  await tester.pumpAndSettle();
-}
-
 void main() {
   // The fold is remembered process-wide for the session, so without this one
   // test's press would decide the next test's starting state.
@@ -128,18 +128,62 @@ void main() {
       await _pump(tester, _loaded());
       expect(find.text('محفظة العملاء'), findsOneWidget);
 
-      await _openSummary(tester);
-
       // The §2.2 correction, made visible: a wallet balance is money owed back,
       // not money earned. If this label ever reads "إيراد" the report is lying.
+      // The strip is open on arrival — unlike most headers on the console —
+      // because these four tiles are the tab's headline.
       expect(find.text('الأرصدة القائمة'), findsOneWidget);
     });
 
     testWidgets('the pending-refund KPI carries a count', (tester) async {
       await _pump(tester, _loaded());
-      await _openSummary(tester);
 
       expect(find.text('طلبات معلّقة'), findsOneWidget);
+    });
+
+    testWidgets('the three tabs wear one toolbar and one list frame', (
+      tester,
+    ) async {
+      // The المالية unification pass: header tiles, then the surface strip with
+      // its counts, then a results header over a paged list — on every tab.
+      for (final tab in WalletTab.values) {
+        await _pump(tester, _loaded(tab: tab, queue: [refundFixture()]));
+
+        for (final label in WalletTab.values.map((t) => t.label)) {
+          expect(
+            find.text(label),
+            findsWidgets,
+            reason: 'the surface strip names every tab on ${tab.name}',
+          );
+        }
+        expect(
+          find.byType(DashboardFilterBar),
+          findsOneWidget,
+          reason: 'one toolbar shape on ${tab.name}',
+        );
+        expect(
+          find.byType(DashboardResultsHeader),
+          findsOneWidget,
+          reason: 'one results header on ${tab.name}',
+        );
+        expect(
+          find.byType(WalletRowShell),
+          findsWidgets,
+          reason: 'one row shape on ${tab.name}',
+        );
+      }
+    });
+
+    testWidgets('each tab brings its own stat tiles', (tester) async {
+      await _pump(tester, _loaded(tab: WalletTab.activity));
+      expect(find.text('حركات مطابقة'), findsOneWidget);
+      // The directory's liability tile belongs to the directory, and must not
+      // stay behind on a tab whose numbers are movements.
+      expect(find.text('الأرصدة القائمة'), findsNothing);
+
+      await _pump(tester, _loaded(tab: WalletTab.refunds));
+      expect(find.text('بانتظار القرار'), findsOneWidget);
+      expect(find.text('حركات مطابقة'), findsNothing);
     });
   });
 
@@ -317,8 +361,55 @@ void main() {
       await _pump(tester, _loaded(tab: WalletTab.activity));
 
       expect(find.text('الحركات المالية'), findsWidgets);
-      expect(find.textContaining('إضافات 200.00'), findsOneWidget);
-      expect(find.text('بها تصحيح'), findsOneWidget);
+      // The credits total is a stat tile now rather than a sentence in a panel
+      // subtitle, and it opens the rows it counted.
+      expect(find.text('إضافات'), findsOneWidget);
+      expect(find.text('200.00 ج.م'), findsWidgets);
+      expect(find.text('أحمد محمود'), findsWidgets);
+    });
+  });
+
+  group('filtering', () {
+    testWidgets('the refund scope decides which rows the queue shows', (
+      tester,
+    ) async {
+      final settled = refundFixture(status: RefundStatus.settled);
+
+      // The tab opens on the work waiting, so a settled refund is not in it…
+      await _pump(tester, _loaded(tab: WalletTab.refunds, queue: [settled]));
+      expect(find.text('لا توجد طلبات مطابقة للتصفية'), findsOneWidget);
+
+      // …but the record is still there, one dropdown away. Before the queue
+      // fetched every status, "did we already refund this?" had no answer here.
+      await _pump(
+        tester,
+        _loaded(
+          tab: WalletTab.refunds,
+          queue: [settled],
+          refundFilters: const WalletRefundFilters(
+            scope: WalletRefundScope.settled,
+          ),
+        ),
+      );
+      expect(find.byType(WalletRefundRow), findsOneWidget);
+    });
+
+    testWidgets('the directory scope narrows the list it is counted from', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        _loaded(
+          directoryFilters: const WalletDirectoryFilters(
+            scope: WalletDirectoryScope.frozen,
+          ),
+        ),
+      );
+
+      // The fixture's customer has an active wallet, so «محافظ مجمّدة» empties
+      // the list — and says which control emptied it.
+      expect(find.text('لا توجد نتائج مطابقة'), findsOneWidget);
+      expect(find.text('إزالة التصفية'), findsOneWidget);
     });
   });
 

@@ -5,8 +5,15 @@ import 'package:bmt_app/apps/captain/core/theme/captain_design_tokens.dart';
 import 'package:bmt_app/apps/captain/core/theme/captain_typography.dart';
 
 import '../../domain/entities/driver_profile.dart';
-import 'driver_profile_metrics.dart';
 
+/// The captain's record: a figure over the word for it, in the same tiles the
+/// home screen counts the day in.
+///
+/// Deliberately the same shape as `AssignedTripsStatsStrip` — home states
+/// today, the profile states the career, and a captain reading both should not
+/// have to learn two ways of showing a number. Home draws its tiles neutral
+/// because one of them can turn amber for a live trip; nothing here ever needs
+/// acting on, so the whole strip is free to sit in the brand tint.
 class DriverProfileStatsCard extends StatelessWidget {
   const DriverProfileStatsCard({super.key, required this.profile});
 
@@ -14,28 +21,34 @@ class DriverProfileStatsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        _Tile(
-          icon: Icons.route_rounded,
-          value: '${profile.totalTrips}',
-          label: 'رحلة مكتملة',
-        ),
-        const SizedBox(width: CaptainDesignTokens.s12),
-        _Tile(
-          icon: Icons.people_alt_rounded,
-          value: '${profile.totalPassengers}',
-          label: 'راكب نُقلوا',
-        ),
-      ],
+    final hireDate = profile.hireDate;
+    final tiles = <Widget>[
+      _Tile(value: '${profile.totalTrips}', label: 'رحلة مكتملة'),
+      _Tile(value: '${profile.totalPassengers}', label: 'راكب نُقلوا'),
+      if (hireDate != null)
+        _Tile(value: '${hireDate.year}', label: 'كابتن منذ'),
+    ];
+
+    // IntrinsicHeight, not `CrossAxisAlignment.stretch`: the strip is laid out
+    // in an unbounded-height list, where stretch asks each tile to be
+    // infinitely tall. This keeps the tiles level when one label wraps.
+    return IntrinsicHeight(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (var i = 0; i < tiles.length; i++) ...[
+            if (i > 0) const SizedBox(width: 10),
+            tiles[i],
+          ],
+        ],
+      ),
     );
   }
 }
 
 class _Tile extends StatelessWidget {
-  const _Tile({required this.icon, required this.value, required this.label});
+  const _Tile({required this.value, required this.label});
 
-  final IconData icon;
   final String value;
   final String label;
 
@@ -43,50 +56,46 @@ class _Tile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Expanded(
       child: Container(
-        constraints: const BoxConstraints(
-          minHeight: DriverProfileMetrics.statTileHeight,
-        ),
         padding: const EdgeInsets.symmetric(
-          horizontal: CaptainDesignTokens.s12,
           vertical: CaptainDesignTokens.s12,
+          horizontal: CaptainDesignTokens.s8,
         ),
         decoration: BoxDecoration(
-          color: CaptainColors.primary.withAlpha(14),
-          borderRadius: CaptainDesignTokens.br20,
-          border: Border.all(color: CaptainColors.primary.withAlpha(30)),
+          color: CaptainColors.primary.withValues(alpha: 0.07),
+          borderRadius: CaptainDesignTokens.br16,
+          border: Border.all(
+            color: CaptainColors.primary.withValues(alpha: 0.20),
+          ),
         ),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              children: [
-                Icon(icon, size: 15, color: CaptainColors.primary),
-                const SizedBox(width: 6),
-                Flexible(
-                  child: Text(
-                    label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: CaptainTypography.labelSmall(context).copyWith(
-                      color: CaptainColors.textSecondaryFor(context),
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 4),
             FittedBox(
               fit: BoxFit.scaleDown,
-              alignment: AlignmentDirectional.centerStart,
               child: Text(
                 value,
                 maxLines: 1,
-                style: CaptainTypography.headlineSmall(context).copyWith(
-                  fontWeight: FontWeight.w900,
-                  color: CaptainColors.textPrimaryFor(context),
+                style: CaptainTypography.titleLarge(context).copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: CaptainColors.primaryInkFor(context),
                 ),
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              textAlign: TextAlign.center,
+              style: CaptainTypography.labelSmall(context).copyWith(
+                // The caption stays a step under its figure — same hue, less
+                // ink — so the number still reads first.
+                color: CaptainColors.primaryInkFor(
+                  context,
+                ).withValues(alpha: 0.75),
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0,
               ),
             ),
           ],

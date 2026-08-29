@@ -298,7 +298,11 @@ class _TrendChip extends StatelessWidget {
 /// Responsive grid of [DashboardKpiCard]s — 4 / 2 / 1 columns by width.
 class DashboardKpiGrid extends StatelessWidget {
   final List<Widget> children;
+
+  /// Tile height at the reader's default text size. It grows with the text
+  /// scaler — see [_extentFor].
   final double itemExtent;
+
   final int maxColumns;
 
   const DashboardKpiGrid({
@@ -308,8 +312,23 @@ class DashboardKpiGrid extends StatelessWidget {
     this.maxColumns = 4,
   });
 
+  /// A KPI tile is a fixed-height cell holding text that is not fixed height.
+  /// At the console's declared 1.6× text scale the stacked tile's label, value
+  /// and detail line together need more room than [itemExtent] gives, and a
+  /// `GridView` cell does not grow to fit — the tile simply overflows and the
+  /// detail line is cut off.
+  ///
+  /// So the cell grows with the reader instead. Only upward, and only as far as
+  /// the scaler actually goes: at the default size this is exactly the extent
+  /// the caller asked for.
+  double _extentFor(BuildContext context) {
+    final scale = MediaQuery.textScalerOf(context).scale(1);
+    return scale <= 1 ? itemExtent : itemExtent * scale.clamp(1.0, 2.0);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final extent = _extentFor(context);
     return LayoutBuilder(
       builder: (context, constraints) {
         final base = constraints.maxWidth >= 1040
@@ -326,7 +345,7 @@ class DashboardKpiGrid extends StatelessWidget {
             crossAxisCount: columns,
             crossAxisSpacing: AppSpacing.small,
             mainAxisSpacing: AppSpacing.small,
-            mainAxisExtent: itemExtent,
+            mainAxisExtent: extent,
           ),
           itemBuilder: (context, index) => children[index],
         );

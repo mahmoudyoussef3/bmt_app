@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_theme.dart';
@@ -16,12 +18,77 @@ import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 /// neighbour ([displaySmall], [headlineLarge] and [headlineSmall]), which is
 /// the point of the unification rather than a gap in it. The accessors are all
 /// kept so no captain widget has to be touched.
+///
+/// **The captain renders that ramp one step smaller.** The rider app is a
+/// storefront — big headings, generous body — while the captain is a working
+/// tool: dense trip rows, seat grids, manifests and status stacks, read a
+/// glance at a time. At the rider sizes those screens spend their height on
+/// type instead of content. So every size here passes through [compact]
+/// before it is handed out, and `CaptainTheme` runs the ambient [TextTheme]
+/// through [compactTextTheme] so the app bar, buttons, chips, tabs, inputs
+/// and dialogs shrink by the same rule rather than staying behind.
+///
+/// This is the captain's one deliberate deviation from the shared design
+/// system: the ramp's *proportions*, weights, tracking and typeface are still
+/// the rider's — only the absolute sizes differ, by a single factor. To retune
+/// the whole app, change [scale]; nothing else.
 class CaptainTypography {
+  /// How much of the rider size the captain renders. One knob for the app.
+  ///
+  /// 0.88 is a step, not a jump: a 24px heading lands on 21, 16px body on 14.
+  /// Anything much below this and the Arabic diacritics on a sunlit phone
+  /// stop resolving — this is a screen read from a driver's seat.
+  static const double scale = 0.88;
+
+  /// The size no text drops under, whatever [scale] says.
+  ///
+  /// The ramp's smallest steps (11px labels, 12px captions) are already at the
+  /// edge of legible; scaling them further would buy a pixel and cost a
+  /// reading. So compaction takes the top of the ramp down and leaves the
+  /// bottom alone, which also widens the contrast between the two.
+  static const double minFontSize = 10;
+
+  /// The captain's size for a rider size — [scale], floored at
+  /// [minFontSize] and snapped to a half pixel so the ramp stays a ramp.
+  static double sizeOf(double riderSize) =>
+      math.max(minFontSize, (riderSize * scale * 2).roundToDouble() / 2);
+
+  /// [style] at the captain's size. A style with no explicit size inherits
+  /// one, so it is returned untouched rather than pinned here.
+  static TextStyle compact(TextStyle style) {
+    final size = style.fontSize;
+    if (size == null) return style;
+    return style.copyWith(fontSize: sizeOf(size));
+  }
+
+  /// [compact] across a whole [TextTheme] — what `CaptainTheme` feeds the
+  /// theme so Material's own components size themselves off the captain ramp.
+  static TextTheme compactTextTheme(TextTheme theme) => TextTheme(
+    displayLarge: _at(theme.displayLarge),
+    displayMedium: _at(theme.displayMedium),
+    displaySmall: _at(theme.displaySmall),
+    headlineLarge: _at(theme.headlineLarge),
+    headlineMedium: _at(theme.headlineMedium),
+    headlineSmall: _at(theme.headlineSmall),
+    titleLarge: _at(theme.titleLarge),
+    titleMedium: _at(theme.titleMedium),
+    titleSmall: _at(theme.titleSmall),
+    bodyLarge: _at(theme.bodyLarge),
+    bodyMedium: _at(theme.bodyMedium),
+    bodySmall: _at(theme.bodySmall),
+    labelLarge: _at(theme.labelLarge),
+    labelMedium: _at(theme.labelMedium),
+    labelSmall: _at(theme.labelSmall),
+  );
+
+  static TextStyle? _at(TextStyle? style) =>
+      style == null ? null : compact(style);
+
   static final Map<bool, TextTheme> _cache = {};
 
-  /// The scale the captain currently renders — whatever `ClientTheme` put on
-  /// the ambient [ThemeData], so a widget reading this cannot drift from the
-  /// app bar and dialogs beside it.
+  /// The scale the captain currently renders — whatever `CaptainTheme` put on
+  /// the ambient [ThemeData], already compacted, so a widget reading this
+  /// cannot drift from the app bar and dialogs beside it.
   static TextTheme textTheme(BuildContext context) =>
       Theme.of(context).textTheme;
 
@@ -34,60 +101,62 @@ class CaptainTypography {
     final isDark = brightness == Brightness.dark;
     return _cache.putIfAbsent(
       isDark,
-      () => (isDark ? ClientTheme.dark() : ClientTheme.light()).textTheme,
+      () => compactTextTheme(
+        (isDark ? ClientTheme.dark() : ClientTheme.light()).textTheme,
+      ),
     );
   }
 
   static TextStyle displayLarge(BuildContext context) =>
-      ClientTypography.displayLarge(context);
+      compact(ClientTypography.displayLarge(context));
 
   static TextStyle displayMedium(BuildContext context) =>
-      ClientTypography.displayMedium(context);
+      compact(ClientTypography.displayMedium(context));
 
   /// Collapses onto [displayMedium] — the rider ramp's second display step is
   /// the captain's old 32, so this is an exact match rather than a rounding.
   static TextStyle displaySmall(BuildContext context) =>
-      ClientTypography.displayMedium(context);
+      compact(ClientTypography.displayMedium(context));
 
   /// Collapses onto [headlineMedium]: the rider ramp draws one 24px heading
   /// where the captain drew 28 and 24.
   static TextStyle headlineLarge(BuildContext context) =>
-      ClientTypography.headingLarge(context);
+      compact(ClientTypography.headingLarge(context));
 
   static TextStyle headlineMedium(BuildContext context) =>
-      ClientTypography.headingLarge(context);
+      compact(ClientTypography.headingLarge(context));
 
   /// Collapses onto [headlineMedium] for the same reason — the captain's 22
   /// sat between the rider ramp's 24 and 20 and rounds up to the heading.
   static TextStyle headlineSmall(BuildContext context) =>
-      ClientTypography.headingLarge(context);
+      compact(ClientTypography.headingLarge(context));
 
   static TextStyle titleLarge(BuildContext context) =>
-      ClientTypography.headingMedium(context);
+      compact(ClientTypography.headingMedium(context));
 
   static TextStyle titleMedium(BuildContext context) =>
-      ClientTypography.headingMedium(context);
+      compact(ClientTypography.headingMedium(context));
 
   static TextStyle titleSmall(BuildContext context) =>
-      ClientTypography.headingSmall(context);
+      compact(ClientTypography.headingSmall(context));
 
   static TextStyle bodyLarge(BuildContext context) =>
-      ClientTypography.bodyLarge(context);
+      compact(ClientTypography.bodyLarge(context));
 
   static TextStyle bodyMedium(BuildContext context) =>
-      ClientTypography.bodyMedium(context);
+      compact(ClientTypography.bodyMedium(context));
 
   static TextStyle bodySmall(BuildContext context) =>
-      ClientTypography.bodySmall(context);
+      compact(ClientTypography.bodySmall(context));
 
   static TextStyle labelLarge(BuildContext context) =>
-      ClientTypography.labelLarge(context);
+      compact(ClientTypography.labelLarge(context));
 
   static TextStyle labelMedium(BuildContext context) =>
-      ClientTypography.labelMedium(context);
+      compact(ClientTypography.labelMedium(context));
 
   static TextStyle labelSmall(BuildContext context) =>
-      ClientTypography.labelSmall(context);
+      compact(ClientTypography.labelSmall(context));
 }
 
 // ---------------------------------------------------------------------------

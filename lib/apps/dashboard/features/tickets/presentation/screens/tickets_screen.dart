@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_collapsible_section.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
-import 'package:bmt_app/core/widgets/debounced_search_field.dart';
-import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_status_chip.dart';
 
-import '../../domain/entities/complaint.dart';
 import '../cubit/tickets_cubit.dart';
 import '../cubit/tickets_state.dart';
 
+import '../widgets/tickets_board.dart';
+import '../widgets/tickets_format.dart';
 import '../widgets/tickets_summary.dart';
-import '../widgets/tickets_table.dart';
+import '../widgets/tickets_toolbar.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 import 'package:bmt_app/apps/dashboard/core/query/dashboard_query_caps.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_cap_notice.dart';
@@ -23,6 +24,14 @@ import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_cap_notice.dart';
 /// Mounted inside the dashboard shell, which already supplies the page chrome
 /// (title bar, navigation, RTL) — so this screen contributes only its own
 /// content, exactly like every other module.
+///
+/// ## One shape for the whole الدعم section
+///
+/// Header with its foldable KPI strip → the shared filter bar (queue strip,
+/// pinned search and ordering, the rest behind one fold) → the results header →
+/// the rows. التقييمات next door is composed the same way, and so are the three
+/// المبيعات modules: the section an operator is in should never change what the
+/// controls are or where they live.
 class TicketsScreen extends StatelessWidget {
   const TicketsScreen({super.key});
 
@@ -42,8 +51,9 @@ class TicketsScreen extends StatelessWidget {
         context.read<TicketsCubit>().clearActionMessage();
       },
       builder: (context, state) => switch (state) {
-        TicketsLoading() => const DashboardLoading(),
+        TicketsLoading() => const DashboardLoading(rows: 6),
         TicketsError(:final message) => DashboardErrorState(
+          title: 'تعذر تحميل الشكاوى',
           message: message,
           onRetry: () => context.read<TicketsCubit>().load(),
         ),
@@ -60,127 +70,58 @@ class _LoadedView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(AppSpacing.large),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          DashboardModuleHeader(
-            icon: DashboardIcons.ticketsActive,
-            title: 'مركز الشكاوى والدعم',
-            subtitle: 'راجع شكاوى العملاء، أسندها لموظف، وتابعها حتى الإغلاق.',
-            actions: [
-              DashboardStatusChip(label: '${state.tickets.length} تذكرة'),
-              if (state.capReached)
-                const DashboardCapNotice(
-                  rowCap: DashboardQueryCaps.tickets,
-                  noun: 'تذكرة',
-                  hint: 'ضيّق الفلاتر للوصول لشكاوى أقدم.',
-                ),
-              OutlinedButton.icon(
-                onPressed: () => context.read<TicketsCubit>().load(),
-                icon: const Icon(Icons.refresh_rounded),
-                label: const Text('تحديث'),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppSpacing.medium),
-          SummaryStats(state: state),
-          const SizedBox(height: AppSpacing.medium),
-          Expanded(
-            child: SingleChildScrollView(
-              child: TicketsTable(
-                state: state,
-                toolbar: _TicketsToolbar(state: state),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Search plus the two queue filters, on one line where there is room for it.
-///
-/// The status and priority filters existed in the cubit and in
-/// [TicketsLoaded.filteredTickets] from the start, but nothing on screen ever
-/// called them — the queue could only be searched, never narrowed.
-class _TicketsToolbar extends StatelessWidget {
-  final TicketsLoaded state;
-
-  const _TicketsToolbar({required this.state});
-
-  @override
-  Widget build(BuildContext context) {
     final cubit = context.read<TicketsCubit>();
 
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final compact = constraints.maxWidth < 760;
-
-        final search = DebouncedSearchField(
-          hintText: 'ابحث برقم التذكرة أو اسم العميل أو الهاتف...',
-          initialValue: state.searchQuery,
-          onChanged: cubit.setSearchQuery,
-        );
-
-        final statusFilter = DropdownButtonFormField<TicketStatus?>(
-          initialValue: state.filterStatus,
-          decoration: const InputDecoration(labelText: 'الحالة'),
-          items: [
-            const DropdownMenuItem(value: null, child: Text('كل الحالات')),
-            ...TicketStatus.values.map(
-              (s) => DropdownMenuItem(value: s, child: Text(s.label)),
+    return ListView(
+      padding: const EdgeInsets.all(AppSpacing.large),
+      children: [
+        DashboardModuleHeader(
+          icon: DashboardIcons.ticketsActive,
+          title: 'مركز الشكاوى والدعم',
+          subtitle: 'راجع شكاوى العملاء، أسندها لموظف، وتابعها حتى الإغلاق.',
+          actions: [
+            if (state.capReached)
+              const DashboardCapNotice(
+                rowCap: DashboardQueryCaps.tickets,
+                noun: 'تذكرة',
+                hint: 'ضيّق الفلاتر للوصول لشكاوى أقدم.',
+              ),
+            if (state.actionLoading)
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: AppSpacing.small),
+                child: SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            FilledButton.tonalIcon(
+              onPressed: cubit.load,
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('تحديث'),
             ),
           ],
-          onChanged: cubit.setFilterStatus,
-        );
-
-        final priorityFilter = DropdownButtonFormField<TicketPriority?>(
-          initialValue: state.filterPriority,
-          decoration: const InputDecoration(labelText: 'الأولوية'),
-          items: [
-            const DropdownMenuItem(value: null, child: Text('كل الأولويات')),
-            ...TicketPriority.values.map(
-              (p) => DropdownMenuItem(value: p, child: Text(p.label)),
-            ),
-          ],
-          onChanged: cubit.setFilterPriority,
-        );
-
-        final chip = DashboardStatusChip(
-          label:
-              '${state.filteredTickets.length}/${state.tickets.length} تذكرة',
-        );
-
-        if (compact) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              search,
-              const SizedBox(height: AppSpacing.small),
-              statusFilter,
-              const SizedBox(height: AppSpacing.small),
-              priorityFilter,
-              const SizedBox(height: AppSpacing.small),
-              Align(alignment: AlignmentDirectional.centerStart, child: chip),
+          sectionId: DashboardSectionIds.ticketsHeader,
+          // Open, like every other list module's header: the four counts *are*
+          // what the desk is opened to read, and each tile is the shortcut to
+          // the queue behind it. Folded, the module would open on a table with
+          // no answer to "how many, and how many need me".
+          initiallyExpanded: true,
+          collapsedSummary: DashboardSectionSummary(
+            items: [
+              'جديدة ${TicketsFormat.count(state.newCount)}',
+              'قيد المراجعة ${TicketsFormat.count(state.underReviewCount)}',
+              'تم الحل ${TicketsFormat.count(state.resolvedCount)}',
+              'متأخرة ${TicketsFormat.count(state.delayedCount)}',
             ],
-          );
-        }
-
-        return Row(
-          children: [
-            Expanded(flex: 2, child: search),
-            const SizedBox(width: AppSpacing.medium),
-            SizedBox(width: 190, child: statusFilter),
-            const SizedBox(width: AppSpacing.medium),
-            SizedBox(width: 170, child: priorityFilter),
-            const SizedBox(width: AppSpacing.medium),
-            chip,
-          ],
-        );
-      },
+          ),
+          summary: SummaryStats(state: state, onOpenQueue: cubit.switchTab),
+        ),
+        const SizedBox(height: AppSpacing.medium),
+        TicketsToolbar(state: state),
+        const SizedBox(height: AppSpacing.medium),
+        TicketsBoard(state: state),
+      ],
     );
   }
 }

@@ -322,11 +322,6 @@ class FocusAction extends StatelessWidget {
           decoration: BoxDecoration(
             gradient: CaptainColors.primaryGradient(context),
             borderRadius: CaptainDesignTokens.br16,
-            boxShadow: CaptainDesignTokens.glow(
-              context,
-              CaptainColors.primary,
-              alpha: 0.45,
-            ),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,

@@ -141,6 +141,12 @@ class DashboardSectionIds {
   static const walletDirectory = 'wallet.directory';
   static const walletActivity = 'wallet.activity';
   static const walletRefundQueue = 'wallet.refundQueue';
+
+  /// One fold per tab: the three filter sets are different controls, so a
+  /// shared key would leave الاسترداد's panel open because الحركات' was.
+  static const walletDirectoryFilters = 'wallet.directory.filters';
+  static const walletActivityFilters = 'wallet.activity.filters';
+  static const walletRefundFilters = 'wallet.refunds.filters';
   static const walletDetailLedger = 'wallet.detail.ledger';
 
   static const liveOpsHeader = 'liveOps.header';
@@ -165,6 +171,7 @@ class DashboardSectionIds {
   // are tabs now, and a tab that also folds is a control that hides a control.
 
   static const ticketsHeader = 'tickets.header';
+  static const ticketsFilters = 'tickets.filters';
   static const officeProfileHeader = 'officeProfile.header';
 
   /// One entry in a plan's revision history, keyed by the revision's own id.

@@ -86,4 +86,5 @@ class DashboardFilterIds {
   static const bookings = 'bookings.filters';
   static const tickets = 'tickets.filters';
   static const customers = 'customers.filters';
+  static const reviews = 'reviews.filters';
 }

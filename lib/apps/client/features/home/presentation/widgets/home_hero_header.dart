@@ -7,8 +7,12 @@ import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_hero
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_hero_search_form.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_hero_top_bar.dart';
 
-/// Full-bleed gradient canvas at the top of home: the brand row, the
-/// headline, and the route search form.
+/// Full-bleed brand canvas at the top of home: the brand row, the headline,
+/// and the route search form.
+///
+/// The canvas is painted with [ClientColors.homeHeroGradientFor] — the brand
+/// colour deepening into itself rather than a two-hue ramp, so the header
+/// gets heavier toward the arch instead of fading out under the search card.
 ///
 /// Extends behind the status bar ([topInset]) and closes on an arch that
 /// stops partway down the search card, so the card straddles the curve — its
@@ -53,7 +57,12 @@ class HomeHeroHeader extends StatelessWidget {
           start: 0,
           end: 0,
           height: 600,
-          child: ColoredBox(color: ClientColors.heroTopFor(context)),
+          child: ColoredBox(color:
+          
+          
+           ClientColors.heroTopFor(context)
+           
+           ),
         ),
         _buildCanvas(context),
       ],
@@ -63,9 +72,11 @@ class HomeHeroHeader extends StatelessWidget {
   Widget _buildCanvas(BuildContext context) {
     return Stack(
       children: [
-        // The gradient is a backdrop rather than a container: it stops short
+        // The brand fill is a backdrop rather than a container: it stops short
         // of the content's lower edge, and the search card's tail carries on
-        // over the page background beneath the arch.
+        // over the page background beneath the arch. That crop is also why the
+        // ramp deepens over so short a run — the darkest stop lands on the
+        // arch, not somewhere off the bottom of the widget.
         Positioned(
           top: 0,
           left: 0,
@@ -73,7 +84,7 @@ class HomeHeroHeader extends StatelessWidget {
           bottom: bottomSpace + _cardTailBelowArch,
           child: DecoratedBox(
             decoration: BoxDecoration(
-              gradient: ClientColors.heroGradientFor(context),
+              gradient: ClientColors.homeHeroGradientFor(context),
               borderRadius: const BorderRadius.vertical(
                 bottom: Radius.circular(ClientRadius.xl),
               ),

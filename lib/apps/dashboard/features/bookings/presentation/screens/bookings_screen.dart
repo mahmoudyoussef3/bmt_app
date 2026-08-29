@@ -8,6 +8,7 @@ import 'package:bmt_app/core/widgets/app_snackbar.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_status_chip.dart';
 import 'package:bmt_app/apps/dashboard/core/query/dashboard_query_caps.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_cap_notice.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_collapsible_section.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_kpi_card.dart';
 import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart';
@@ -16,6 +17,7 @@ import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 import '../../domain/entities/operation_booking.dart';
 import '../cubit/bookings_cubit.dart';
 import '../cubit/bookings_state.dart';
+import '../models/booking_queue_tab.dart';
 import '../widgets/booking_bulk_actions.dart';
 import '../widgets/booking_details_panel.dart';
 import '../widgets/booking_filters_bar.dart';
@@ -251,6 +253,14 @@ class _Header extends StatelessWidget {
       // at a glance" reading the queue is opened for, not a once-a-shift figure
       // worth folding away by default.
       initiallyExpanded: true,
+      collapsedSummary: DashboardSectionSummary(
+        items: [
+          'اليوم ${state.bookingsCreatedToday}',
+          'بانتظار المراجعة ${state.awaitingReviewCount}',
+          'قيمة اليوم ${state.todayBookingValue.toStringAsFixed(0)} ج.م',
+          'ملغاة اليوم ${state.cancelledTodayCount}',
+        ],
+      ),
       summary: _SummaryCards(state: state),
     );
   }
@@ -295,6 +305,7 @@ class _SummaryCards extends StatelessWidget {
           value: '${state.bookingsCreatedToday}',
           icon: Icons.receipt_long_rounded,
           color: context.status(AppStatusTone.info).accent,
+          emphasized: true,
           trend: KpiTrend(
             label: diff == 0 ? 'بدون تغيير' : (diff > 0 ? '+$diff' : '$diff'),
             icon: trendIcon,
@@ -308,6 +319,13 @@ class _SummaryCards extends StatelessWidget {
           detail: 'إيصالات تنتظر قراراً',
           icon: Icons.hourglass_top_rounded,
           color: context.status(AppStatusTone.warning).accent,
+          emphasized: true,
+          // The tile and the tab are the same predicate — `awaitingReview` —
+          // so pressing the number can only ever show exactly those rows.
+          onTap: () => context.read<BookingsCubit>().switchTab(
+            BookingQueueTab.needsReview,
+          ),
+          tapHint: 'عرض ما ينتظر المراجعة',
         ),
         DashboardKpiCard(
           label: 'قيمة اليوم',
@@ -315,15 +333,20 @@ class _SummaryCards extends StatelessWidget {
           detail: 'من حجوزات اليوم',
           icon: Icons.account_balance_wallet_rounded,
           color: context.status(AppStatusTone.success).accent,
+          emphasized: true,
         ),
+        // Deliberately not a shortcut: this counts *today's* cancellations
+        // while the cancelled tab holds every one the office ever had, and a
+        // tile that opens a different set than it counts is a lie.
         DashboardKpiCard(
           label: 'ملغاة اليوم',
           value: '${state.cancelledTodayCount}',
           detail: state.cancelledTodayRefundedCount > 0
               ? 'منها ${state.cancelledTodayRefundedCount} مسترد'
-              : null,
+              : 'لا استردادات اليوم',
           icon: Icons.event_busy_rounded,
           color: context.status(AppStatusTone.error).accent,
+          emphasized: true,
         ),
       ],
     );

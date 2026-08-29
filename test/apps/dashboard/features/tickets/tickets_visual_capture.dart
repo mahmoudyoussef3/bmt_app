@@ -33,7 +33,7 @@ import 'package:bmt_app/apps/dashboard/features/tickets/domain/usecases/save_int
 import 'package:bmt_app/apps/dashboard/features/tickets/domain/usecases/update_ticket_status_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/tickets/presentation/cubit/tickets_cubit.dart';
 import 'package:bmt_app/apps/dashboard/features/tickets/presentation/cubit/tickets_state.dart';
-import 'package:bmt_app/apps/dashboard/features/tickets/presentation/widgets/tickets_table.dart';
+import 'package:bmt_app/apps/dashboard/features/tickets/presentation/widgets/tickets_board.dart';
 
 const _captureFont = 'CaptureArabic';
 
@@ -200,7 +200,7 @@ Future<void> _capture(
               padding: const EdgeInsets.all(24),
               child: BlocProvider.value(
                 value: cubit,
-                child: SingleChildScrollView(child: TicketsTable(state: state)),
+                child: SingleChildScrollView(child: TicketsBoard(state: state)),
               ),
             ),
           ),

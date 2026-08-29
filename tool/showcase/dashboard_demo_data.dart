@@ -1330,6 +1330,9 @@ final ReportFilter reportFilter = ReportFilter(
 );
 
 final ReportData tripsReport = ReportData(
+  // The payload tags itself now (`ReportData.type`), so the table never casts
+  // one report's rows to another's shape mid-refetch.
+  type: ReportType.trips,
   kpis: {
     'إجمالي الرحلات': '186',
     'متوسط الإشغال': '82%',

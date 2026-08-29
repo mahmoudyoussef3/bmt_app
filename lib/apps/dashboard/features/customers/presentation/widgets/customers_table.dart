@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_empty_state.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_pager.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_results_header.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/ops_data_table.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
@@ -56,15 +58,15 @@ class CustomersTable extends StatelessWidget {
   Widget build(BuildContext context) {
     final rows = state.page.rows;
 
-    if (rows.isEmpty) {
-      return AppCard(child: _emptyState(context));
-    }
+    // Bare, not inside an AppCard: DashboardEmptyState already draws its own
+    // bordered surface, and the two together read as a panel in a panel.
+    if (rows.isEmpty) return _emptyState(context);
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        // Seven columns need roughly this much before the cells start truncating
-        // into uselessness; below it the same rows read better stacked.
-        if (constraints.maxWidth < 1100) {
+        // Below the section's shared breakpoint the seven columns start
+        // truncating into uselessness, and the same rows read better stacked.
+        if (constraints.maxWidth < kDashboardTableBreakpoint) {
           return _CustomerCardList(
             rows: rows,
             now: now,
@@ -98,6 +100,7 @@ class CustomersTable extends StatelessWidget {
       rows: [for (final customer in rows) _cells(context, customer)],
       onRowTap: [for (final customer in rows) () => onOpen(customer)],
       total: state.page.total,
+      totalLabel: 'الإجمالي ${CustomersFormat.count(state.page.total)} عميل',
       currentPage: state.pageIndex,
       pageSize: customersPageSize,
       onPageChanged: onPageChanged,
@@ -344,11 +347,16 @@ class _CustomerCardList extends StatelessWidget {
           _CustomerCard(customer: customer, now: now, onOpen: onOpen),
           const SizedBox(height: AppSpacing.small),
         ],
-        _CardPager(
-          pageIndex: state.pageIndex,
-          pageCount: state.pageCount,
-          total: state.page.total,
-          onPageChanged: onPageChanged,
+        // The same bar the table closes with, so both layouts page identically.
+        AppCard(
+          padding: EdgeInsets.zero,
+          child: DashboardPagerBar(
+            totalLabel:
+                'الإجمالي ${CustomersFormat.count(state.page.total)} عميل',
+            currentPage: state.pageIndex,
+            pages: state.pageCount,
+            onPageChanged: onPageChanged,
+          ),
         ),
       ],
     );
@@ -462,59 +470,6 @@ class _Fact extends StatelessWidget {
         ),
         Text(value, style: const TextStyle(fontWeight: FontWeight.w600)),
       ],
-    );
-  }
-}
-
-/// The card list has no `OpsDataTable` to carry a pager, so it carries its own —
-/// the same numbers, so the two layouts page identically.
-class _CardPager extends StatelessWidget {
-  const _CardPager({
-    required this.pageIndex,
-    required this.pageCount,
-    required this.total,
-    required this.onPageChanged,
-  });
-
-  /// Zero-based, like `OpsDataTable.currentPage`, so both layouts speak the
-  /// same page numbers to the cubit.
-  final int pageIndex;
-  final int pageCount;
-  final int total;
-  final ValueChanged<int> onPageChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppSpacing.small),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(
-            '$total عميل',
-            style: TextStyle(color: DashboardColors.mutedInk(context)),
-          ),
-          Row(
-            children: [
-              IconButton(
-                tooltip: 'السابق',
-                icon: const Icon(DashboardIcons.paginationPrevious),
-                onPressed: pageIndex > 0
-                    ? () => onPageChanged(pageIndex - 1)
-                    : null,
-              ),
-              Text('${pageIndex + 1} / $pageCount'),
-              IconButton(
-                tooltip: 'التالي',
-                icon: const Icon(DashboardIcons.paginationNext),
-                onPressed: pageIndex < pageCount - 1
-                    ? () => onPageChanged(pageIndex + 1)
-                    : null,
-              ),
-            ],
-          ),
-        ],
-      ),
     );
   }
 }

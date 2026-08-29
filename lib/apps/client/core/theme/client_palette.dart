@@ -41,6 +41,7 @@ class ClientPalette {
     required this.shadowAlphaScale,
     required this.heroTop,
     required this.heroBottom,
+    required this.heroDeep,
     required this.heroText,
   });
 
@@ -114,6 +115,14 @@ class ClientPalette {
   /// `--home-hero-1` / `--home-hero-2` / `--home-hero-text` — the home header.
   final Color heroTop;
   final Color heroBottom;
+
+  /// The bottom stop of Home's header — [heroTop]'s own hue and saturation
+  /// driven *down* in lightness, never a lighter tint of it.
+  ///
+  /// It exists only for [homeHeroGradient]; the flat heroes elsewhere in the
+  /// app never read it.
+  final Color heroDeep;
+
   final Color heroText;
 
   /// `--primary-tint` — primary at 12% (light) / 18% (dark).
@@ -146,6 +155,25 @@ class ClientPalette {
   LinearGradient get heroGradient =>
       LinearGradient(colors: [heroTop, heroBottom]);
 
+  /// Home's header — the one hero that is *not* flat.
+  ///
+  /// It is still a single hue: the stops run [heroTop] → [heroDeep], the brand
+  /// colour driven down in lightness, so the header gains weight toward its
+  /// arch instead of the washed-out fade a lighter second stop would leave.
+  /// A second *hue* would bring back exactly the problem [brandGradient]
+  /// documents; staying on one hue also pins the header's worst contrast to
+  /// its darkest stop, which is the safe end for near-white hero text.
+  ///
+  /// The ramp starts a quarter of the way down, so the brand row and the
+  /// headline sit on the undiluted brand colour and only the ground behind
+  /// the search card deepens.
+  LinearGradient get homeHeroGradient => LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    stops: const [0.26, 1],
+    colors: [heroTop, heroDeep],
+  );
+
   static const ClientPalette light = ClientPalette._(
     bg: Color(0xFFFAF8F5),
     surface: Color(0xFFFEFDFC),
@@ -174,6 +202,7 @@ class ClientPalette {
     shadowAlphaScale: 1.0,
     heroTop: Color(0xFF004F7E),
     heroBottom: Color(0xFF004F7E),
+    heroDeep: Color(0xFF002B45),
     heroText: Color(0xFFF3F5F8),
   );
 
@@ -205,6 +234,7 @@ class ClientPalette {
     shadowAlphaScale: 5.0,
     heroTop: Color(0xFF00244D),
     heroBottom: Color(0xFF00244D),
+    heroDeep: Color(0xFF001A38),
     heroText: Color(0xFFF3F5F8),
   );
 

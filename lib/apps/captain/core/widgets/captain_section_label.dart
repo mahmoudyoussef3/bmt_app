@@ -8,12 +8,18 @@ import '../theme/captain_typography.dart';
 ///
 /// It is deliberately smaller and quieter than the content under it: it is a
 /// caption for a group, not a title competing with the rows inside.
+///
+/// [color] overrides the muted default for a screen that runs its headings in
+/// the brand tone. Size and weight stay put either way — a heading earns its
+/// rank by being small and set apart, not by shouting.
 class CaptainSectionLabel extends StatelessWidget {
-  const CaptainSectionLabel(this.text, {super.key, this.trailing});
+  const CaptainSectionLabel(this.text, {super.key, this.trailing, this.color});
 
   final String text;
 
   final Widget? trailing;
+
+  final Color? color;
 
   @override
   Widget build(BuildContext context) {
@@ -32,7 +38,7 @@ class CaptainSectionLabel extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: CaptainTypography.labelMedium(context).copyWith(
-                color: CaptainColors.textSecondaryFor(context),
+                color: color ?? CaptainColors.textSecondaryFor(context),
                 fontWeight: FontWeight.w800,
                 letterSpacing: 0,
               ),

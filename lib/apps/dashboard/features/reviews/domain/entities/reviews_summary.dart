@@ -9,21 +9,35 @@ class ReviewsSummary {
     required this.driverAverage,
     required this.vehicleAverage,
     required this.routeAverage,
+    required this.overallAverage,
     required this.needsAttentionCount,
+    required this.commentedCount,
   });
 
   final int total;
   final double driverAverage;
   final double vehicleAverage;
   final double routeAverage;
+
+  /// The mean of the three dimensions across every review — the module's one
+  /// headline quality number, and the only one a KPI tile can state without
+  /// the reader having to average three tiles in their head.
+  final double overallAverage;
+
   final int needsAttentionCount;
+
+  /// Reviews carrying written feedback. Stars say *how* it went; the comment is
+  /// the only place that says why, which is why it is a queue of its own.
+  final int commentedCount;
 
   static const ReviewsSummary empty = ReviewsSummary(
     total: 0,
     driverAverage: 0,
     vehicleAverage: 0,
     routeAverage: 0,
+    overallAverage: 0,
     needsAttentionCount: 0,
+    commentedCount: 0,
   );
 
   factory ReviewsSummary.from(List<TripReviewEntry> reviews) {
@@ -34,12 +48,18 @@ class ReviewsSummary {
       return sum / reviews.length;
     }
 
+    final driverAverage = avg((r) => r.driverRating);
+    final vehicleAverage = avg((r) => r.vehicleRating);
+    final routeAverage = avg((r) => r.routeRating);
+
     return ReviewsSummary(
       total: reviews.length,
-      driverAverage: avg((r) => r.driverRating),
-      vehicleAverage: avg((r) => r.vehicleRating),
-      routeAverage: avg((r) => r.routeRating),
+      driverAverage: driverAverage,
+      vehicleAverage: vehicleAverage,
+      routeAverage: routeAverage,
+      overallAverage: (driverAverage + vehicleAverage + routeAverage) / 3,
       needsAttentionCount: reviews.where((r) => r.needsAttention).length,
+      commentedCount: reviews.where((r) => r.hasComment).length,
     );
   }
 }

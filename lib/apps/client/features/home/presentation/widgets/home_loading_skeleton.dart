@@ -5,9 +5,9 @@ import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/core/theme/app_layout.dart';
 
-/// Branded loading state mirroring the real home layout: the hero gradient
-/// renders immediately with placeholder shapes so the screen never feels
-/// blank while Supabase data loads.
+/// Branded loading state mirroring the real home layout: the same deepening
+/// hero fill as the real header renders immediately with placeholder shapes,
+/// so the screen never feels blank while Supabase data loads.
 class HomeLoadingSkeleton extends StatelessWidget {
   const HomeLoadingSkeleton({super.key});
 
@@ -24,7 +24,7 @@ class HomeLoadingSkeleton extends StatelessWidget {
         children: [
           Container(
             decoration: BoxDecoration(
-              gradient: ClientColors.heroGradientFor(context),
+              gradient: ClientColors.homeHeroGradientFor(context),
               borderRadius: const BorderRadius.vertical(
                 bottom: Radius.circular(ClientRadius.xl),
               ),

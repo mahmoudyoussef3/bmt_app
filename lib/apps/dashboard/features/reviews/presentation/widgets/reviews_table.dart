@@ -1,80 +1,69 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
-import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
-import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_empty_state.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_status_chip.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/ops_data_table.dart';
 import 'package:bmt_app/core/theme/colors.dart';
 
 import '../../domain/entities/trip_review_entry.dart';
-import '../cubit/reviews_cubit.dart';
 import '../cubit/reviews_state.dart';
+import '../models/review_sort.dart';
 import 'rating_stars.dart';
-import 'review_details_dialog.dart';
+import 'reviews_format.dart';
 
-/// The review feed as an EWT table: same [OpsDataTable] shell as every other
-/// module, a two-line comment cell in place of the old card list, and a
-/// [ReviewDetailsDialog] on tap for the parts a row has no room for.
-class ReviewsTable extends StatefulWidget {
-  const ReviewsTable({super.key, required this.state, this.toolbar});
+/// The review feed as an [OpsDataTable] — the same table shell الشكاوى next
+/// door and the three المبيعات modules render.
+///
+/// The ordering and the page live in [ReviewsLoaded] and in the board above
+/// this widget rather than in private state here: the toolbar's pinned sort
+/// control and these column headers must drive one value, and the results
+/// header above the rows has to know which slice is on screen.
+class ReviewsTable extends StatelessWidget {
+  const ReviewsTable({
+    super.key,
+    required this.state,
+    required this.rows,
+    required this.pageIndex,
+    required this.onPageChanged,
+    required this.onSort,
+    required this.onOpen,
+  });
 
   final ReviewsLoaded state;
 
-  /// Search + quick filters, rendered inside the table's own card above the
-  /// sticky column header.
-  final Widget? toolbar;
+  /// The page of rows to draw, already ordered and sliced by the board.
+  final List<TripReviewEntry> rows;
 
-  @override
-  State<ReviewsTable> createState() => _ReviewsTableState();
-}
+  final int pageIndex;
+  final ValueChanged<int> onPageChanged;
+  final ValueChanged<ReviewSort> onSort;
+  final ValueChanged<TripReviewEntry> onOpen;
 
-class _ReviewsTableState extends State<ReviewsTable> {
-  static const _pageSize = 10;
+  /// Column index → sort key. Indices absent from this map are not sortable.
+  static const _sortColumns = <int, ReviewSort>{
+    1: ReviewSort.driver,
+    3: ReviewSort.rating,
+  };
 
-  int _page = 0;
-  bool _sortByRating = false;
-  OpsSort _direction = OpsSort.desc;
-
-  int? get _sortColumnIndex => _sortByRating ? 3 : null;
-
-  void _onSort(int index) {
-    if (index != 3) return;
-    setState(() {
-      if (_sortByRating) {
-        _direction = _direction == OpsSort.desc ? OpsSort.asc : OpsSort.desc;
-      } else {
-        _sortByRating = true;
-        _direction = OpsSort.desc;
-      }
-      _page = 0;
-    });
-  }
-
-  List<TripReviewEntry> _ordered(List<TripReviewEntry> reviews) {
-    if (!_sortByRating) return reviews;
-    final sorted = [...reviews]
-      ..sort((a, b) => a.averageRating.compareTo(b.averageRating));
-    return _direction == OpsSort.asc ? sorted : sorted.reversed.toList();
+  int? get _sortColumnIndex {
+    for (final entry in _sortColumns.entries) {
+      if (entry.value == state.sort) return entry.key;
+    }
+    return null;
   }
 
   @override
   Widget build(BuildContext context) {
-    final ordered = _ordered(widget.state.visibleReviews);
-    final start = (_page * _pageSize).clamp(0, ordered.length);
-    final end = (start + _pageSize).clamp(0, ordered.length);
-    final pageItems = ordered.sublist(start, end);
     final attentionTint = context.status(AppStatusTone.error).tint;
+    final total = state.visibleReviews.length;
 
     return OpsDataTable(
-      toolbar: widget.toolbar,
       columns: const [
         OpsColumn('التقييم', flex: 3, minWidth: 220),
-        OpsColumn('السائق', flex: 2, minWidth: 120),
+        OpsColumn('السائق', flex: 2, minWidth: 120, sortable: true),
         OpsColumn('المسار', flex: 2, minWidth: 140),
         OpsColumn(
-          'التقييم',
+          'الدرجة',
           flex: 1,
           minWidth: 84,
           numeric: true,
@@ -83,49 +72,20 @@ class _ReviewsTableState extends State<ReviewsTable> {
         OpsColumn('الحالة', flex: 2, minWidth: 116),
         OpsColumn('', minWidth: 56),
       ],
-      rows: [for (final r in pageItems) _cells(context, r)],
-      onRowTap: [
-        for (final r in pageItems)
-          () => showReviewDetailsDialog(context, r),
-      ],
-      rowTints: [
-        for (final r in pageItems) r.needsAttention ? attentionTint : null,
-      ],
-      total: ordered.length,
-      currentPage: _page,
-      pageSize: _pageSize,
-      onPageChanged: (p) => setState(() => _page = p),
+      rows: [for (final r in rows) _cells(context, r)],
+      onRowTap: [for (final r in rows) () => onOpen(r)],
+      rowTints: [for (final r in rows) r.needsAttention ? attentionTint : null],
+      total: total,
+      totalLabel: 'الإجمالي ${ReviewsFormat.count(total)} تقييم',
+      currentPage: pageIndex,
+      pageSize: reviewsPageSize,
+      onPageChanged: onPageChanged,
       sortColumnIndex: _sortColumnIndex,
-      sortDirection: _direction,
-      onSort: _onSort,
-      emptyState: _emptyState(context),
-    );
-  }
-
-  Widget _emptyState(BuildContext context) {
-    final state = widget.state;
-    final isFiltered =
-        state.query.trim().isNotEmpty || state.filter != ReviewsFilter.all;
-
-    if (isFiltered) {
-      return DashboardEmptyState(
-        icon: Icons.search_off_rounded,
-        title: 'لا توجد تقييمات مطابقة',
-        message: 'جرّب تغيير الفلتر أو مسح كلمة البحث.',
-        action: OutlinedButton.icon(
-          onPressed: () =>
-              context.read<ReviewsCubit>().setFilter(ReviewsFilter.all),
-          icon: const Icon(Icons.filter_alt_off_rounded),
-          label: const Text('عرض الكل'),
-        ),
-      );
-    }
-
-    return const DashboardEmptyState(
-      icon: DashboardIcons.reviews,
-      title: 'لا توجد تقييمات بعد',
-      message:
-          'تظهر هنا تقييمات الركاب فور إنهاء رحلاتهم وتقييمها من التطبيق.',
+      sortDirection: state.sortAscending ? OpsSort.asc : OpsSort.desc,
+      onSort: (index) {
+        final key = _sortColumns[index];
+        if (key != null) onSort(key);
+      },
     );
   }
 
@@ -150,7 +110,7 @@ class _ReviewsTableState extends State<ReviewsTable> {
             ),
           ),
           Text(
-            '${r.clientName} · ${_formatDate(r.createdAt)}',
+            '${r.clientName} · ${ReviewsFormat.shortStamp(r.createdAt)}',
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: TextStyle(
@@ -179,19 +139,11 @@ class _ReviewsTableState extends State<ReviewsTable> {
         alignment: AlignmentDirectional.centerEnd,
         child: IconButton(
           tooltip: 'عرض التفاصيل',
-          onPressed: () => showReviewDetailsDialog(context, r),
+          onPressed: () => onOpen(r),
           icon: const Icon(Icons.visibility_outlined, size: 19),
           visualDensity: VisualDensity.compact,
         ),
       ),
     ];
-  }
-
-  static String _formatDate(DateTime date) {
-    final d = date.day.toString().padLeft(2, '0');
-    final m = date.month.toString().padLeft(2, '0');
-    final hh = date.hour.toString().padLeft(2, '0');
-    final mm = date.minute.toString().padLeft(2, '0');
-    return '$d/$m · $hh:$mm';
   }
 }

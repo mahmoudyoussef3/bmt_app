@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 
-import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
-import 'package:bmt_app/core/theme/tokens.dart';
 
 import '../../domain/entities/wallet_transaction.dart';
 import '../../domain/entities/wallet_vocabulary.dart';
 import 'wallet_format.dart';
+import 'wallet_row_shell.dart';
 
 /// One line of the ledger, used by both the customer's history and the
 /// office-wide activity list.
+///
+/// Built on [WalletRowShell] so a posting read in the detail pane and the same
+/// posting read on الحركات المالية are the same row, and so it sits in a list
+/// beside a customer and a refund without changing shape.
 ///
 /// Three things are non-negotiable on this row, and each answers a question the
 /// operator is actually being asked:
@@ -40,214 +43,64 @@ class WalletLedgerEntryTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final text = Theme.of(context).textTheme;
     final tint = WalletFormat.entryColor(entry, context);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: AppSpacing.small),
-      padding: const EdgeInsets.all(AppSpacing.medium),
-      decoration: BoxDecoration(
-        color: DashboardColors.nested(context),
-        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-        border: Border.all(color: DashboardColors.border(context)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _SeqBadge(seq: entry.seq, tint: tint),
-          const SizedBox(width: AppSpacing.medium),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return WalletRowShell(
+      tone: tint,
+      // The gapless per-wallet sequence exists in the schema for tamper
+      // detection; putting it in the badge turns that into something an
+      // operator can actually notice.
+      leadingText: '#${entry.seq}',
+      title: entry.kind.label,
+      chips: [
+        WalletRowChip(label: entry.categoryLabel),
+        if (entry.source != WalletSource.dashboard)
+          WalletRowChip(label: entry.source.label),
+      ],
+      subtitle: entry.reason,
+      meta: [
+        WalletRowMeta(
+          Icons.schedule_rounded,
+          WalletFormat.dateTime(entry.createdAt),
+        ),
+        WalletRowMeta(Icons.person_outline_rounded, entry.performedByName),
+        if (showCustomer && entry.clientName != null)
+          WalletRowMeta(Icons.badge_outlined, entry.clientName!),
+        if (entry.bookingNumber != null)
+          WalletRowMeta(
+            Icons.confirmation_number_outlined,
+            'حجز #${entry.bookingNumber}',
+          ),
+      ],
+      amount: WalletFormat.signed(entry.amount),
+      amountNote: 'الرصيد ${WalletFormat.money(entry.balanceAfter)}',
+      struckThrough: entry.isReversed,
+      footnote: entry.isReversed
+          ? Row(
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        entry.kind.label,
-                        style: text.titleSmall?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: tint,
-                          decoration: entry.isReversed
-                              ? TextDecoration.lineThrough
-                              : null,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.small),
-                    _Chip(label: entry.categoryLabel),
-                    if (entry.source != WalletSource.dashboard) ...[
-                      const SizedBox(width: 4),
-                      _Chip(label: entry.source.label),
-                    ],
-                  ],
-                ),
-                const SizedBox(height: 4),
+                Icon(Icons.undo_rounded, size: 14, color: scheme.error),
+                const SizedBox(width: 4),
                 Text(
-                  entry.reason,
-                  style: text.bodySmall?.copyWith(
-                    color: DashboardColors.mutedInk(context),
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
+                  'تم عكس هذه العملية — السجل محفوظ للمراجعة',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.labelSmall?.copyWith(color: scheme.error),
                 ),
-                const SizedBox(height: 6),
-                Wrap(
-                  spacing: AppSpacing.medium,
-                  runSpacing: 4,
-                  children: [
-                    _Meta(
-                      icon: Icons.schedule_rounded,
-                      label: WalletFormat.dateTime(entry.createdAt),
-                    ),
-                    _Meta(
-                      icon: Icons.person_outline_rounded,
-                      label: entry.performedByName,
-                    ),
-                    if (showCustomer && entry.clientName != null)
-                      _Meta(
-                        icon: Icons.badge_outlined,
-                        label: entry.clientName!,
-                      ),
-                    if (entry.bookingNumber != null)
-                      _Meta(
-                        icon: Icons.confirmation_number_outlined,
-                        label: 'حجز #${entry.bookingNumber}',
-                      ),
-                  ],
-                ),
-                if (entry.isReversed) ...[
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      Icon(Icons.undo_rounded, size: 14, color: scheme.error),
-                      const SizedBox(width: 4),
-                      Text(
-                        'تم عكس هذه العملية — السجل محفوظ للمراجعة',
-                        style: text.labelSmall?.copyWith(color: scheme.error),
-                      ),
-                    ],
-                  ),
-                ],
               ],
+            )
+          : null,
+      actions: [
+        if (onReverse != null)
+          TextButton.icon(
+            onPressed: onReverse,
+            icon: const Icon(Icons.undo_rounded, size: 16),
+            label: const Text('عكس'),
+            style: TextButton.styleFrom(
+              visualDensity: VisualDensity.compact,
+              padding: const EdgeInsets.symmetric(horizontal: AppSpacing.small),
             ),
           ),
-          const SizedBox(width: AppSpacing.medium),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                WalletFormat.signed(entry.amount),
-                style: text.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w900,
-                  color: tint,
-                  decoration: entry.isReversed
-                      ? TextDecoration.lineThrough
-                      : null,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                'الرصيد ${WalletFormat.money(entry.balanceAfter)}',
-                style: text.labelSmall?.copyWith(
-                  color: DashboardColors.mutedInk(context),
-                ),
-              ),
-              if (onReverse != null) ...[
-                const SizedBox(height: 4),
-                TextButton.icon(
-                  onPressed: onReverse,
-                  icon: const Icon(Icons.undo_rounded, size: 16),
-                  label: const Text('عكس'),
-                  style: TextButton.styleFrom(
-                    visualDensity: VisualDensity.compact,
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// The gapless per-wallet sequence, rendered as `#12`. It exists in the schema
-/// for tamper detection; showing it turns that into something an operator can
-/// actually notice.
-class _SeqBadge extends StatelessWidget {
-  const _SeqBadge({required this.seq, required this.tint});
-
-  final int seq;
-  final Color tint;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 44,
-      height: 44,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: tint.withAlpha(26),
-        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-        border: Border.all(color: tint.withAlpha(70)),
-      ),
-      child: Text(
-        '#$seq',
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-          fontWeight: FontWeight.bold,
-          color: tint,
-        ),
-      ),
-    );
-  }
-}
-
-class _Chip extends StatelessWidget {
-  const _Chip({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: DashboardColors.well(context),
-        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-        border: Border.all(color: DashboardColors.border(context)),
-      ),
-      child: Text(
-        label,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: DashboardColors.mutedInk(context),
-        ),
-      ),
-    );
-  }
-}
-
-class _Meta extends StatelessWidget {
-  const _Meta({required this.icon, required this.label});
-
-  final IconData icon;
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = DashboardColors.faintInk(context);
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 13, color: color),
-        const SizedBox(width: 3),
-        Text(
-          label,
-          style: Theme.of(
-            context,
-          ).textTheme.labelSmall?.copyWith(color: color),
-        ),
       ],
     );
   }

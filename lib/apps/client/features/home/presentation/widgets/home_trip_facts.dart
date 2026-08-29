@@ -7,34 +7,49 @@ import 'package:bmt_app/core/localization/l10n_context.dart';
 import 'package:bmt_app/apps/client/features/home/domain/entities/home_data.dart';
 import 'package:bmt_app/apps/client/features/home/presentation/widgets/home_trip_chip.dart';
 
-/// The facts a rider weighs before committing: how long the ride takes, and how
-/// many seats are still open.
+/// Who runs this departure and how long it takes, as one quiet line parked in
+/// the gap the journey rail already crosses.
 ///
-/// Plain captions, the way every other client card states its meta line — two
-/// tinted chips side by side turned the bottom of the card into a toolbar and
-/// spent colour on a duration nobody is anxious about. The colour is kept for
-/// the one fact that changes a decision: a departure down to its last seats, or
-/// one with none left, is called out as a pill, and on that card nothing else on
-/// the row competes with it.
+/// Both facts are qualifiers rather than decisions — a rider picks a departure
+/// by time, price and seats, then checks who is driving it — so they are set in
+/// the meta type every other client card uses for its second line, and they
+/// cost the card no row of its own.
 ///
-/// A trip the office has not timed drops the ride-time entirely rather than
-/// printing "Not set" — an empty fact is not a fact.
+/// A trip with neither an operator nor a ride time returns nothing at all: an
+/// empty fact is not a fact, and the rail closes up around it.
 class HomeTripFacts extends StatelessWidget {
   const HomeTripFacts({super.key, required this.trip});
 
   final UpcomingTripData trip;
 
+  /// Whether this line has anything to say — the card asks before it hands the
+  /// rail a slot to draw.
+  static bool hasContent(UpcomingTripData trip) =>
+      trip.officeName.isNotEmpty || trip.duration.isNotEmpty;
+
   @override
   Widget build(BuildContext context) {
-    final l10n = context.l10n;
     final muted = ClientColors.textSecondaryFor(context);
     final style = ClientTypography.bodySmall(context).copyWith(color: muted);
-    final scarce = trip.isSoldOut || trip.hasScarceSeats;
 
     return Row(
       children: [
+        if (trip.officeName.isNotEmpty) ...[
+          Icon(Icons.directions_bus_filled_rounded, size: 14, color: muted),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              trip.officeName,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: style,
+            ),
+          ),
+        ],
+        if (trip.officeName.isNotEmpty && trip.duration.isNotEmpty)
+          Text('  ·  ', style: style),
         if (trip.duration.isNotEmpty) ...[
-          Icon(Icons.schedule_rounded, size: 15, color: muted),
+          Icon(Icons.schedule_rounded, size: 14, color: muted),
           const SizedBox(width: 6),
           Flexible(
             child: Text(
@@ -44,32 +59,54 @@ class HomeTripFacts extends StatelessWidget {
               style: style,
             ),
           ),
-          const SizedBox(width: ClientSpacing.md),
         ],
-        if (scarce)
-          Flexible(
-            child: HomeTripChip(
-              icon: Icons.event_seat_rounded,
-              label: trip.isSoldOut
-                  ? l10n.common_soldOut
-                  : l10n.home_seatsOnlyLeft(trip.seatsLeft),
-              color: trip.isSoldOut
-                  ? ClientColors.journeyRedFor(context)
-                  : ClientColors.journeyAmberFor(context),
-            ),
-          )
-        else ...[
-          Icon(Icons.event_seat_rounded, size: 15, color: muted),
-          const SizedBox(width: 6),
-          Flexible(
-            child: Text(
-              l10n.home_seatsAvailable(trip.seatsLeft),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: style,
-            ),
+      ],
+    );
+  }
+}
+
+/// What is left on this departure, on the trailing edge of the card's top line.
+///
+/// The colour is spent on the one fact that changes a decision: a departure
+/// down to its last seats, or one with none left, is called out as a pill. A
+/// board with room on it says so in plain meta type — a tinted chip on every
+/// card would be a toolbar, and a rider would stop reading it.
+class HomeTripSeats extends StatelessWidget {
+  const HomeTripSeats({super.key, required this.trip});
+
+  final UpcomingTripData trip;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+
+    if (trip.isSoldOut || trip.hasScarceSeats) {
+      return HomeTripChip(
+        icon: Icons.event_seat_rounded,
+        label: trip.isSoldOut
+            ? l10n.common_soldOut
+            : l10n.home_seatsOnlyLeft(trip.seatsLeft),
+        color: trip.isSoldOut
+            ? ClientColors.journeyRedFor(context)
+            : ClientColors.journeyAmberFor(context),
+      );
+    }
+
+    final muted = ClientColors.textSecondaryFor(context);
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(Icons.event_seat_rounded, size: 14, color: muted),
+        const SizedBox(width: ClientSpacing.xxs + 2),
+        Flexible(
+          child: Text(
+            l10n.home_seatsAvailable(trip.seatsLeft),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: ClientTypography.bodySmall(context).copyWith(color: muted),
           ),
-        ],
+        ),
       ],
     );
   }

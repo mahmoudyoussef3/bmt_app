@@ -6,6 +6,8 @@ import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_empty_state.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_pager.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_results_header.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/ops_data_table.dart';
 
 import '../../domain/entities/booking_lifecycle.dart';
@@ -18,16 +20,11 @@ import 'booking_card.dart';
 import 'booking_review_intents.dart' as intents;
 import 'booking_status_chips.dart';
 
-/// The operator's working list: a sortable, paginated table on desktop widths
-/// and a card grid below them, sharing one header strip (result count, select
-/// all, ordering) so both layouts behave the same way.
+/// The operator's working list: the shared results header, a sortable,
+/// paginated table on desktop widths and a card grid below them — both fed by
+/// the same page index, so both layouts behave the same way.
 class BookingsQueueBoard extends StatelessWidget {
   const BookingsQueueBoard({super.key, required this.state});
-
-  /// Below this the table's eight columns stop fitting without horizontal
-  /// scrolling, and the card layout reads better — which is also the width the
-  /// board gets on a 1440px screen once the inspector is open.
-  static const double tableBreakpoint = 1040;
 
   final BookingsLoaded state;
 
@@ -41,19 +38,29 @@ class BookingsQueueBoard extends StatelessWidget {
           return _EmptyBoard(state: state, onClearFilters: cubit.clearFilters);
         }
 
-        final isTable = constraints.maxWidth >= tableBreakpoint;
+        final isTable = constraints.maxWidth >= kDashboardTableBreakpoint;
 
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            _BoardHeader(state: state, cubit: cubit, showSort: !isTable),
+            _BoardHeader(state: state, cubit: cubit),
             const SizedBox(height: AppSpacing.small),
             if (isTable)
               _BoardTable(state: state, cubit: cubit)
             else ...[
               _BoardCards(state: state, width: constraints.maxWidth),
               const SizedBox(height: AppSpacing.small),
-              _CardsPagination(state: state, onPageChanged: cubit.goToPage),
+              // The same bar the table closes with, so the two layouts page
+              // identically.
+              AppCard(
+                padding: EdgeInsets.zero,
+                child: DashboardPagerBar(
+                  totalLabel: 'الإجمالي ${state.resultCount} حجز',
+                  currentPage: state.currentPage,
+                  pages: state.pageCount,
+                  onPageChanged: cubit.goToPage,
+                ),
+              ),
             ],
           ],
         );
@@ -62,152 +69,47 @@ class BookingsQueueBoard extends StatelessWidget {
   }
 }
 
-/// Result count, select-all and (on card layouts) the sort control.
+/// The open queue's name, the range in view, and the one control that acts on
+/// the whole page: select-all for a bulk review.
+///
+/// Ordering moved out to the toolbar, where the other two المبيعات modules keep
+/// theirs — it used to live here and only on card layouts, so the same list was
+/// sortable or not depending on the window width.
 class _BoardHeader extends StatelessWidget {
-  const _BoardHeader({
-    required this.state,
-    required this.cubit,
-    required this.showSort,
-  });
+  const _BoardHeader({required this.state, required this.cubit});
 
   final BookingsLoaded state;
   final BookingsCubit cubit;
-  final bool showSort;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final text = Theme.of(context).textTheme;
     final first = state.currentPage * BookingsLoaded.pageSize + 1;
     final last = first + state.pageBookings.length - 1;
     final selectable = state.selectablePageBookings.length;
 
-    return Wrap(
-      spacing: AppSpacing.medium,
-      runSpacing: AppSpacing.small,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      alignment: WrapAlignment.spaceBetween,
-      children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.event_seat_rounded, size: 18, color: scheme.primary),
-            const SizedBox(width: AppSpacing.xSmall),
-            Flexible(
-              child: Text(
-                state.activeTab.label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: text.titleSmall?.copyWith(fontWeight: FontWeight.w900),
-              ),
+    return DashboardResultsHeader(
+      icon: Icons.event_seat_rounded,
+      title: state.activeTab.label,
+      subtitle: 'عرض $first–$last من ${state.resultCount}',
+      actions: [
+        if (selectable > 0)
+          TextButton.icon(
+            onPressed: cubit.toggleSelectAllOnPage,
+            icon: Icon(
+              state.allPageSelected
+                  ? Icons.check_box_rounded
+                  : Icons.check_box_outline_blank_rounded,
+              size: 18,
             ),
-            const SizedBox(width: AppSpacing.small),
-            Flexible(
-              child: Text(
-                'عرض $first–$last من ${state.resultCount}',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
-              ),
-            ),
-          ],
-        ),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (selectable > 0)
-              Flexible(
-                child: TextButton.icon(
-                  onPressed: cubit.toggleSelectAllOnPage,
-                  icon: Icon(
-                    state.allPageSelected
-                        ? Icons.check_box_rounded
-                        : Icons.check_box_outline_blank_rounded,
-                    size: 18,
-                  ),
-                  label: Text(
-                    state.allPageSelected
-                        ? 'إلغاء تحديد الصفحة'
-                        : 'تحديد $selectable للمراجعة',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ),
-            if (showSort) ...[
-              const SizedBox(width: AppSpacing.small),
-              Flexible(
-                child: _SortControl(state: state, onSort: cubit.sortBy),
-              ),
-            ],
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-/// Ordering for the card layout, where there are no column headers to tap.
-class _SortControl extends StatelessWidget {
-  const _SortControl({required this.state, required this.onSort});
-
-  final BookingsLoaded state;
-  final ValueChanged<BookingSortField> onSort;
-
-  @override
-  Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
-    return PopupMenuButton<BookingSortField>(
-      tooltip: 'ترتيب القائمة',
-      position: PopupMenuPosition.under,
-      onSelected: onSort,
-      itemBuilder: (context) => [
-        for (final field in BookingSortField.values)
-          PopupMenuItem(
-            value: field,
-            child: Row(
-              children: [
-                Icon(
-                  state.sortField == field
-                      ? (state.sortAscending
-                            ? Icons.arrow_upward_rounded
-                            : Icons.arrow_downward_rounded)
-                      : Icons.swap_vert_rounded,
-                  size: 16,
-                ),
-                const SizedBox(width: AppSpacing.small),
-                Text(field.label),
-              ],
+            label: Text(
+              state.allPageSelected
+                  ? 'إلغاء تحديد الصفحة'
+                  : 'تحديد $selectable للمراجعة',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
       ],
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.small,
-          vertical: AppSpacing.xSmall,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.swap_vert_rounded, size: 18),
-            const SizedBox(width: AppSpacing.xSmall),
-            Flexible(
-              child: Text(
-                state.sortField.label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: text.labelLarge?.copyWith(fontWeight: FontWeight.w700),
-              ),
-            ),
-            Icon(
-              state.sortAscending
-                  ? Icons.arrow_upward_rounded
-                  : Icons.arrow_downward_rounded,
-              size: 14,
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
@@ -251,6 +153,7 @@ class _BoardTable extends StatelessWidget {
     return OpsDataTable(
       columns: _columns,
       total: state.resultCount,
+      totalLabel: 'الإجمالي ${state.resultCount} حجز',
       currentPage: state.currentPage,
       pageSize: BookingsLoaded.pageSize,
       onPageChanged: cubit.goToPage,
@@ -526,7 +429,7 @@ class _BoardCards extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final columns = width >= 720 ? 2 : 1;
+    final columns = dashboardCardColumnsFor(width);
     final rows = <List<OperationBooking>>[
       for (var i = 0; i < state.pageBookings.length; i += columns)
         state.pageBookings.skip(i).take(columns).toList(),
@@ -567,58 +470,6 @@ class _BoardCards extends StatelessWidget {
           ),
         ],
       ],
-    );
-  }
-}
-
-class _CardsPagination extends StatelessWidget {
-  const _CardsPagination({required this.state, required this.onPageChanged});
-
-  final BookingsLoaded state;
-  final ValueChanged<int> onPageChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    if (state.pageCount <= 1) return const SizedBox.shrink();
-    final page = state.currentPage;
-
-    return AppCard(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.medium,
-        vertical: AppSpacing.small,
-      ),
-      child: Row(
-        children: [
-          Flexible(
-            child: Text(
-              'الإجمالي ${state.resultCount}',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          const Spacer(),
-          Flexible(
-            child: Text(
-              'صفحة ${page + 1} من ${state.pageCount}',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          const SizedBox(width: AppSpacing.small),
-          IconButton(
-            tooltip: 'السابق',
-            onPressed: page == 0 ? null : () => onPageChanged(page - 1),
-            icon: const Icon(DashboardIcons.paginationPrevious),
-          ),
-          IconButton(
-            tooltip: 'التالي',
-            onPressed: page >= state.pageCount - 1
-                ? null
-                : () => onPageChanged(page + 1),
-            icon: const Icon(DashboardIcons.paginationNext),
-          ),
-        ],
-      ),
     );
   }
 }

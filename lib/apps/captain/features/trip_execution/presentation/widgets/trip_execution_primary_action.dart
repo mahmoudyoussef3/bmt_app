@@ -82,7 +82,7 @@ class TripExecutionPrimaryAction extends StatelessWidget {
       title: 'إنهاء الرحلة',
       message: 'هل أنت متأكد من إنهاء الرحلة؟ لا يمكن التراجع عن هذا الإجراء.',
       confirmLabel: 'إنهاء الرحلة',
-      confirmColor: CaptainColors.success,
+      confirmColor: CaptainColors.primary,
     );
     if (confirmed && context.mounted) {
       context.read<TripExecutionCubit>().complete(tripId);

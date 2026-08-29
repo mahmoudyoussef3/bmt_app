@@ -247,6 +247,14 @@ abstract final class ClientColors {
   static Gradient heroGradientFor(BuildContext context) =>
       _p(context).heroGradient;
 
+  /// Home's header only: the brand colour deepening into itself.
+  ///
+  /// One hue, driven down in lightness toward the arch — never a lighter
+  /// tint, and never a second hue. Every other hero stays flat on
+  /// [heroGradientFor].
+  static Gradient homeHeroGradientFor(BuildContext context) =>
+      _p(context).homeHeroGradient;
+
   /// First colour of the hero gradient.
   static Color heroTopFor(BuildContext context) => _p(context).heroTop;
 

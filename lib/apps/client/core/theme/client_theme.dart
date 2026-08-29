@@ -29,17 +29,31 @@ import 'client_palette.dart';
 abstract final class ClientTheme {
   const ClientTheme._();
 
-  static ThemeData light() => _apply(
-    AppTheme.lightTheme(textThemeBuilder: AppTextThemes.cairoTextThemeFor),
-    ClientPalette.light,
-    Brightness.light,
-  );
+  /// [textThemeBuilder] overrides the ramp the whole theme is derived from.
+  ///
+  /// It exists for the captain app, which renders this exact design a step
+  /// smaller (see `CaptainTheme`). It has to enter here rather than as a
+  /// `copyWith(textTheme: …)` on the result, for the reason in the class doc:
+  /// every component style below is derived from `base.textTheme`, so a later
+  /// swap would resize the body text and leave the app bar, buttons, inputs,
+  /// tabs and dialogs at the old size. Omit it and the rider ramp is used.
+  static ThemeData light({TextTheme Function(ColorScheme)? textThemeBuilder}) =>
+      _apply(
+        AppTheme.lightTheme(
+          textThemeBuilder: textThemeBuilder ?? AppTextThemes.cairoTextThemeFor,
+        ),
+        ClientPalette.light,
+        Brightness.light,
+      );
 
-  static ThemeData dark() => _apply(
-    AppTheme.darkTheme(textThemeBuilder: AppTextThemes.cairoTextThemeFor),
-    ClientPalette.dark,
-    Brightness.dark,
-  );
+  static ThemeData dark({TextTheme Function(ColorScheme)? textThemeBuilder}) =>
+      _apply(
+        AppTheme.darkTheme(
+          textThemeBuilder: textThemeBuilder ?? AppTextThemes.cairoTextThemeFor,
+        ),
+        ClientPalette.dark,
+        Brightness.dark,
+      );
 
   static ThemeData _apply(
     ThemeData base,

@@ -17,7 +17,10 @@ class DriverProfileSettingsCard extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const CaptainSectionLabel('الإعدادات'),
+        CaptainSectionLabel(
+          'الإعدادات',
+          color: CaptainColors.primaryInkFor(context),
+        ),
         CaptainListGroup(
           children: [
             BlocBuilder<CaptainThemeCubit, CaptainThemeState>(
@@ -48,6 +51,7 @@ class _AppearanceRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return CaptainListRow(
       icon: Icons.dark_mode_outlined,
+      iconColor: CaptainColors.primaryInkFor(context),
       label: 'المظهر',
       value: _themeModeLabel(themeMode),
       showChevron: true,

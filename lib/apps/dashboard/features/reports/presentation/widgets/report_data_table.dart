@@ -63,7 +63,10 @@ class ReportDataTable extends StatelessWidget {
       data: Theme.of(
         context,
       ).copyWith(dividerColor: scheme.outlineVariant.withValues(alpha: 0.2)),
-      child: switch (state.activeReportType) {
+      // Switches on the data's own type, never on the selected one: during a
+      // refetch the sidebar already shows the report being loaded while these
+      // rows are still the previous report's.
+      child: switch (state.reportData.type) {
         ReportType.trips => DataTable(
           columns: const [
             DataColumn(label: Text('كود الرحلة')),

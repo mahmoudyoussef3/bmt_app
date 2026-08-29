@@ -13,7 +13,7 @@ import 'package:bmt_app/apps/dashboard/features/tickets/domain/usecases/save_int
 import 'package:bmt_app/apps/dashboard/features/tickets/domain/usecases/update_ticket_status_usecase.dart';
 import 'package:bmt_app/apps/dashboard/features/tickets/presentation/cubit/tickets_cubit.dart';
 import 'package:bmt_app/apps/dashboard/features/tickets/presentation/cubit/tickets_state.dart';
-import 'package:bmt_app/apps/dashboard/features/tickets/presentation/widgets/tickets_table.dart';
+import 'package:bmt_app/apps/dashboard/features/tickets/presentation/widgets/tickets_board.dart';
 
 /// The support queue, at the UI.
 ///
@@ -106,8 +106,13 @@ void main() {
                 ).copyWith(textScaler: TextScaler.linear(textScale)),
                 child: BlocProvider.value(
                   value: cubit,
-                  child: SingleChildScrollView(
-                    child: TicketsTable(state: state),
+                  // The board reads the cubit's state, not the seeded object:
+                  // the ordering lives in TicketsLoaded now, so a header tap
+                  // has to come back through an emission to be visible.
+                  child: BlocBuilder<TicketsCubit, TicketsState>(
+                    builder: (context, current) => SingleChildScrollView(
+                      child: TicketsBoard(state: current as TicketsLoaded),
+                    ),
                   ),
                 ),
               ),

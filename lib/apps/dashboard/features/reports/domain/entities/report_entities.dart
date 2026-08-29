@@ -237,12 +237,23 @@ class ComplaintReportRow {
 }
 
 class ReportData {
+  /// The report these [rows] belong to.
+  ///
+  /// The rows are heterogeneous — a `TripReportRow` list for trips, a
+  /// `BookingReportRow` list for bookings — so whoever renders them has to know
+  /// which shape to cast to. Reading that from the *selected* report type is
+  /// wrong: while a refetch is in flight the selection is already the new
+  /// report and the data is still the old one, and the table crashed casting
+  /// one to the other. The payload carries its own tag so the two can never
+  /// disagree.
+  final ReportType type;
   final Map<String, String> kpis;
   final List<dynamic> rows;
   final List<MapEntry<String, double>> trends;
   final List<MapEntry<String, double>> occupancyTrends;
 
   const ReportData({
+    required this.type,
     required this.kpis,
     required this.rows,
     required this.trends,

@@ -1,20 +1,17 @@
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
-import 'package:bmt_app/apps/client/core/theme/client_design_tokens.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/apps/client/core/widgets/client_widgets.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 import 'package:bmt_app/apps/client/features/home/domain/entities/home_data.dart';
 
-/// The stub below the ticket's tear line: what the seat costs, and the single
-/// action that takes it.
+/// The action on the ticket stub: one compact control, sized to its label.
 ///
-/// The fare is stated on its own line and the action gets the card's full
-/// width, the way every other primary action in the client app is drawn — a
-/// price and a button fighting for one row meant the button had to be capped
-/// and ellipsised, and "Book another seat" (or its Arabic) lost half of itself
-/// on a narrow phone.
+/// [ClientButton.dense] rather than the full-width CTA. The stub is one row —
+/// the fare on the leading edge, this on the trailing one — so the button is a
+/// 44pt control that shares the line instead of a 52pt bar that owns a row of
+/// its own on a card a rider is only browsing.
 ///
 /// A trip the rider has already booked stays bookable — booking a second seat
 /// for a friend is a real thing riders do — but it takes the quieter outlined
@@ -35,24 +32,33 @@ class HomeTripCta extends StatelessWidget {
         : l10n.home_bookSeat;
     final onPressed = trip.isSoldOut ? null : onBook;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        _Fare(price: trip.price),
-        const SizedBox(height: ClientSpacing.sm),
-        if (trip.isBooked)
-          ClientButton.secondary(label: label, onPressed: onPressed)
-        else
-          ClientButton(label: label, onPressed: onPressed),
-      ],
+    if (trip.isBooked) {
+      return ClientButton.secondary(
+        label: label,
+        onPressed: onPressed,
+        expand: false,
+        dense: true,
+      );
+    }
+
+    return ClientButton(
+      label: label,
+      onPressed: onPressed,
+      expand: false,
+      dense: true,
     );
   }
 }
 
-/// What a seat on this departure costs, as one line: the caption that qualifies
-/// the number, then the number itself at the size a price is read at.
-class _Fare extends StatelessWidget {
-  const _Fare({required this.price});
+/// What a seat on this departure costs: the caption that qualifies the number
+/// stacked over the number itself.
+///
+/// Stacked rather than run together on one line, because the qualifier is a
+/// phrase in both languages ("FARE FROM", "السعر يبدأ من") and a fare that has
+/// to share a row with it ends up ellipsised on a narrow phone. The stack is
+/// shorter than the button beside it, so the two lines cost the card nothing.
+class HomeTripFare extends StatelessWidget {
+  const HomeTripFare({super.key, required this.price});
 
   final String price;
 
@@ -69,9 +75,9 @@ class _Fare extends StatelessWidget {
       );
     }
 
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.baseline,
-      textBaseline: TextBaseline.alphabetic,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Text(
           context.l10n.home_fareFrom,
@@ -83,15 +89,14 @@ class _Fare extends StatelessWidget {
             letterSpacing: 0.6,
           ),
         ),
-        const SizedBox(width: 8),
-        Flexible(
-          child: Text(
-            price,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: ClientTypography.priceMedium(
-              context,
-            ).copyWith(color: ClientColors.primaryFor(context)),
+        Text(
+          price,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: ClientTypography.priceSmall(context).copyWith(
+            fontSize: 18,
+            fontWeight: FontWeight.w800,
+            color: ClientColors.primaryFor(context),
           ),
         ),
       ],

@@ -135,13 +135,6 @@ class CaptainButton extends StatelessWidget {
           gradient: gradient,
           borderRadius: CaptainDesignTokens.br16,
           border: borderColor != null ? Border.all(color: borderColor) : null,
-          boxShadow: variant == CaptainButtonVariant.primary && !isDisabled
-              ? CaptainDesignTokens.glow(
-                  context,
-                  CaptainColors.primary,
-                  alpha: 0.45,
-                )
-              : null,
         ),
         child: buttonContent,
       ),

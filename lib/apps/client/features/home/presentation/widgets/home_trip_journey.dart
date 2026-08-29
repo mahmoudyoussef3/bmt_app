@@ -4,6 +4,10 @@ import 'package:bmt_app/apps/client/core/theme/client_colors.dart';
 import 'package:bmt_app/apps/client/core/theme/client_typography.dart';
 import 'package:bmt_app/core/localization/l10n_context.dart';
 
+/// Stop-name size on the dense rail — one step under the captioned rail's 17,
+/// which is what lets a browsable card carry a whole journey in two lines.
+const double _denseNameSize = 15;
+
 /// Pickup → destination as a vertical timeline, so stop names like "American
 /// University in Cairo (AUC)" stay readable instead of being squeezed side by
 /// side.
@@ -21,16 +25,34 @@ class HomeTripJourney extends StatelessWidget {
     super.key,
     required this.pickup,
     required this.destination,
+    this.dense = false,
+    this.middle,
   });
 
   final String pickup;
   final String destination;
+
+  /// The compact rail a browsable list card uses: no captions above the stop
+  /// names, one line per name, and the type a step smaller. A rider scanning a
+  /// board of departures reads the two names as a from/to pair from the rail
+  /// alone — the captions are worth their height on a card the rider has
+  /// stopped on (a seat they hold, a ticket they bought), not on three cards
+  /// they are choosing between.
+  final bool dense;
+
+  /// Optional content parked in the gap the connector crosses — the trip's
+  /// operator and ride time, on the line the rail is already drawing. [dense]
+  /// only; it buys the meta line its own row for free.
+  final Widget? middle;
 
   /// Gap between the rail and the stop names.
   static const double _railGap = 12;
 
   /// Air under the pickup block, crossed by the connector.
   static const double _stopGap = 14;
+
+  /// The run of bare connector between two dense stops with nothing in it.
+  static const double _denseGap = 14;
 
   /// Drops a dot onto the middle of its stop's *first* name line: clear the
   /// caption above it, then half a line of the name itself. Measured rather
@@ -44,6 +66,8 @@ class HomeTripJourney extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (dense) return _buildDense(context);
+
     final l10n = context.l10n;
     final dotTop = _dotTop(context);
 
@@ -91,6 +115,115 @@ class HomeTripJourney extends StatelessWidget {
               child: _Stop(label: destination, caption: l10n.common_dropOff),
             ),
           ],
+        ),
+      ],
+    );
+  }
+
+  /// The compact rail: dot, name, the connector crossing whatever [middle]
+  /// carries, then dot and name again. The dots are centred on their own name
+  /// line rather than measured against a caption, so nothing here has to be
+  /// kept in step with a type size.
+  Widget _buildDense(BuildContext context) {
+    final l10n = context.l10n;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _DenseStop(
+          label: pickup,
+          semanticsLabel: l10n.common_pickup,
+          color: ClientColors.journeyCyanFor(context),
+        ),
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(
+                width: _TrackDot.size,
+                child: Center(child: _Connector()),
+              ),
+              if (middle != null) ...[
+                const SizedBox(width: _railGap),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 5),
+                    child: middle,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        // With nothing in the gap the connector still needs a run of its own,
+        // or the two dots meet and the rail reads as one mark.
+        if (middle == null)
+          const SizedBox(
+            height: _denseGap,
+            width: _TrackDot.size,
+            child: Center(child: _Connector()),
+          ),
+        _DenseStop(
+          label: destination,
+          semanticsLabel: l10n.common_dropOff,
+          color: ClientColors.journeyAmberFor(context),
+        ),
+      ],
+    );
+  }
+}
+
+/// One stop on the [HomeTripJourney.dense] rail: its dot, then its name.
+///
+/// The name carries the caption the dense rail drops as its semantics label,
+/// so a screen reader still hears "Pickup: El-Marg" rather than a bare place
+/// name whose role is carried only by the colour of a dot.
+class _DenseStop extends StatelessWidget {
+  const _DenseStop({
+    required this.label,
+    required this.semanticsLabel,
+    required this.color,
+  });
+
+  final String label;
+  final String semanticsLabel;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    final name = label.isEmpty ? context.l10n.home_stopNotSet : label;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Half a line of the name, less half the dot: the mark lands on the
+        // middle of the text it belongs to at any text size.
+        Padding(
+          padding: EdgeInsets.only(
+            top:
+                MediaQuery.textScalerOf(context).scale(_denseNameSize) *
+                    _Stop.nameHeight /
+                    2 -
+                _TrackDot.size / 2,
+          ),
+          child: _TrackDot(color: color),
+        ),
+        const SizedBox(width: HomeTripJourney._railGap),
+        Expanded(
+          child: Semantics(
+            label: '$semanticsLabel: $name',
+            excludeSemantics: true,
+            child: Text(
+              name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: ClientTypography.headingSmall(context).copyWith(
+                fontSize: _denseNameSize,
+                fontWeight: FontWeight.w700,
+                height: _Stop.nameHeight,
+              ),
+            ),
+          ),
         ),
       ],
     );

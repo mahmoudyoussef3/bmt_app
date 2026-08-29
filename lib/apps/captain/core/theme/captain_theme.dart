@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/client/core/theme/client_theme.dart';
+import 'package:bmt_app/core/theme/text_themes.dart';
 
-/// The captain app's [ThemeData] — the rider app's theme, unchanged.
+import 'captain_typography.dart';
+
+/// The captain app's [ThemeData] — the rider app's theme, one type step down.
 ///
 /// The captain used to derive a theme of its own here: the imported Claude
 /// Design slate palette, a Tajawal type scale, and its own input/divider
@@ -21,10 +24,29 @@ import 'package:bmt_app/apps/client/core/theme/client_theme.dart';
 /// and a dozen widget tests already name it, and if the captain ever does need
 /// a deviation, one `copyWith` here is the honest place for it — not a second
 /// palette file.
+///
+/// It now carries exactly one such deviation: **the captain renders the rider
+/// design a step smaller.** See [CaptainTypography] for why, and change
+/// `CaptainTypography.scale` — not this file — to retune it.
 class CaptainTheme {
-  static ThemeData light() => ClientTheme.light();
+  static ThemeData light() =>
+      ClientTheme.light(textThemeBuilder: _compactCairoTextTheme);
 
-  static ThemeData dark() => ClientTheme.dark();
+  static ThemeData dark() =>
+      ClientTheme.dark(textThemeBuilder: _compactCairoTextTheme);
+
+  /// The rider's Cairo ramp at the captain's sizes.
+  ///
+  /// This goes in as `ClientTheme`'s *builder* rather than as a `copyWith` on
+  /// the finished theme on purpose: every component style in the shared theme
+  /// — app bar title, button labels, input hints, chips, tabs, dialogs,
+  /// snackbars, tooltips, menus — is derived from this [TextTheme]. Resizing
+  /// it here resizes all of them; resizing it afterwards would shrink the body
+  /// text and leave every one of those at the rider size.
+  static TextTheme _compactCairoTextTheme(ColorScheme scheme) =>
+      CaptainTypography.compactTextTheme(
+        AppTextThemes.cairoTextThemeFor(scheme),
+      );
 }
 
 // ---------------------------------------------------------------------------
