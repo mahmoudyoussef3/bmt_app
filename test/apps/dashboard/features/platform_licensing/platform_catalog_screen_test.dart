@@ -125,6 +125,7 @@ Future<void> _pumpScreen(
   WidgetTester tester,
   PlatformLicensingLoaded state, {
   Size size = const Size(1440, 900),
+  double textScale = 1.0,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1.0;
@@ -133,11 +134,14 @@ Future<void> _pumpScreen(
   await tester.pumpWidget(
     MaterialApp(
       theme: DashboardAppTheme.light(),
-      home: Directionality(
-        textDirection: TextDirection.rtl,
-        child: BlocProvider<PlatformLicensingCubit>.value(
-          value: _FakeLicensingCubit(state),
-          child: const Scaffold(body: PlatformCatalogScreen()),
+      home: MediaQuery(
+        data: MediaQueryData(textScaler: TextScaler.linear(textScale)),
+        child: Directionality(
+          textDirection: TextDirection.rtl,
+          child: BlocProvider<PlatformLicensingCubit>.value(
+            value: _FakeLicensingCubit(state),
+            child: const Scaffold(body: PlatformCatalogScreen()),
+          ),
         ),
       ),
     ),
@@ -149,15 +153,18 @@ Future<void> _expectNoOverflow(
   WidgetTester tester,
   PlatformLicensingLoaded state, {
   required Size size,
+  double textScale = 1.0,
 }) async {
-  await _pumpScreen(tester, state, size: size);
+  await _pumpScreen(tester, state, size: size, textScale: textScale);
 
   // An overflowing Row/Column throws during paint in debug builds and the
   // binding captures it, so a null exception here is a genuine assertion.
   expect(
     tester.takeException(),
     isNull,
-    reason: 'الخطط والباقات overflowed at ${size.width}×${size.height}',
+    reason:
+        'الخطط والباقات overflowed at ${size.width}×${size.height} '
+        'at ${textScale}x text',
   );
 }
 
@@ -176,6 +183,14 @@ void main() {
           _state(withSelection: false),
           size: size,
         );
+      });
+
+      // The workspace runs on fixed-ish lanes — an identity column, a source
+      // chip, a control lane — and a fixed lane is exactly what an Arabic label
+      // at 1.6× overruns. Pumping at the scale is the cheapest way to find it.
+      testWidgets('fits ${size.width.toInt()}×${size.height.toInt()} with a '
+          'plan open at 1.6× text', (tester) async {
+        await _expectNoOverflow(tester, _state(), size: size, textScale: 1.6);
       });
     }
 
@@ -300,17 +315,66 @@ void main() {
       expect(find.text('يُعرض 3 من 22'), findsOneWidget);
     });
 
+    testWidgets('the complement of "set here" is a place you can go', (
+      tester,
+    ) async {
+      await _pumpScreen(tester, _state());
+
+      await tester.tap(find.textContaining('تتبع الافتراضي'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('يُعرض 19 من 22'), findsOneWidget);
+    });
+
     testWidgets('the feature editor can be narrowed to one category', (
       tester,
     ) async {
       await _pumpScreen(tester, _state());
 
+      // The category axis is a named dropdown, not a row of bare chips: it has
+      // to say WHICH axis it narrows before it is opened.
+      await tester.tap(find.textContaining('التصنيف:'));
+      await tester.pumpAndSettle();
+
       // 22 features, alternating categories: 11 in التشغيل.
-      await tester.tap(find.text('التشغيل (11)'));
+      await tester.tap(find.text('التشغيل (11)').last);
       await tester.pumpAndSettle();
 
       expect(find.text('يُعرض 11 من 22'), findsOneWidget);
       expect(find.text('المالية'), findsNothing);
+    });
+
+    testWidgets(
+      'an applied filter is named, and clearing it restores the list',
+      (tester) async {
+        await _pumpScreen(tester, _state());
+
+        await tester.tap(find.textContaining('المضبوطة في الباقة'));
+        await tester.pumpAndSettle();
+
+        // Spelled out, not counted — "١ فلتر" makes the operator reopen the
+        // toolbar to find out which one.
+        expect(find.text('المضبوطة في الباقة'), findsOneWidget);
+
+        await tester.tap(find.text('مسح التصفية'));
+        await tester.pumpAndSettle();
+
+        expect(find.text('يُعرض 22 من 22'), findsOneWidget);
+      },
+    );
+
+    testWidgets('a category heading returns its whole group to the default', (
+      tester,
+    ) async {
+      await _pumpScreen(tester, _state());
+
+      expect(find.text('إرجاع الكل للافتراضي'), findsWidgets);
+
+      await tester.tap(find.text('إرجاع الكل للافتراضي').first);
+      await tester.pumpAndSettle();
+
+      // Every value the plan set in that category is now an unsaved removal.
+      expect(find.textContaining('تعديل غير محفوظ'), findsOneWidget);
     });
   });
 }

@@ -36,7 +36,9 @@ class DashboardFormField extends StatelessWidget {
     this.inputFormatters,
     this.validator,
     this.maxLines = 1,
+    this.maxLength,
     this.readOnly = false,
+    this.enabled = true,
     this.autofocus = false,
     this.textCapitalization = TextCapitalization.none,
     this.suffix,
@@ -69,7 +71,21 @@ class DashboardFormField extends StatelessWidget {
   final List<TextInputFormatter>? inputFormatters;
   final String? Function(String?)? validator;
   final int maxLines;
+
+  /// Hard ceiling on the answer, with the counter Material draws for it. Use it
+  /// where the column itself is bounded — a description the marketplace card
+  /// has to fit — so the limit is visible while typing rather than discovered
+  /// by a rejected save.
+  final int? maxLength;
+
   final bool readOnly;
+
+  /// False greys the control out entirely — the field is not the operator's to
+  /// fill right now (a role that may only read, a form mid-save). Distinct from
+  /// [readOnly], which keeps a value at full contrast because it is still worth
+  /// reading, just not typing into.
+  final bool enabled;
+
   final bool autofocus;
   final TextCapitalization textCapitalization;
   final Widget? suffix;
@@ -83,7 +99,9 @@ class DashboardFormField extends StatelessWidget {
       focusNode: focusNode,
       autofocus: autofocus,
       readOnly: readOnly,
+      enabled: enabled,
       maxLines: maxLines,
+      maxLength: maxLength,
       keyboardType:
           keyboardType ?? (multiline ? TextInputType.multiline : null),
       inputFormatters: inputFormatters,
@@ -110,6 +128,9 @@ class DashboardFormField extends StatelessWidget {
         errorMaxLines: 3,
         prefixIcon: icon == null ? null : Icon(icon),
         suffixIcon: suffix,
+        // A multi-line field's label belongs at the top of the box; centred in
+        // the middle of four empty lines it reads as placeholder text.
+        alignLabelWithHint: multiline,
         filled: readOnly,
         border: const OutlineInputBorder(),
       ),

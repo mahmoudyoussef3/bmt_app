@@ -26,6 +26,7 @@ class OfficeProfile {
     required this.rating,
     required this.ratingsCount,
     required this.joinCode,
+    this.joinCodeReadFailed = false,
     this.logoUrl,
     this.phone,
     this.email,
@@ -66,16 +67,28 @@ class OfficeProfile {
 
   /// The out-of-band code a captain types when requesting to join this office.
   /// Displayed so the operator can share it; never editable by hand, because
-  /// it is uniquely indexed platform-wide.
+  /// it is uniquely indexed platform-wide. Rotated through an RPC, never an
+  /// update statement the dashboard composes.
   final String joinCode;
+
+  /// The code could not be read this time — a different statement from "this
+  /// office has no code", and the two must not share one message. An office
+  /// told "لم يُصدر كود" for what was really a failed RPC would go looking for
+  /// a code that exists, and hand out nothing to its drivers meanwhile.
+  final bool joinCodeReadFailed;
+
+  /// Whether there is a code to show at all.
+  bool get hasJoinCode => joinCode.trim().isNotEmpty;
 
   final String? logoUrl;
   final String? phone;
   final String? email;
 
-  /// Always null for now: the column sits behind the same column-privilege
-  /// revoke as `join_code` itself, and `office_join_code()` returns only the
-  /// code. Kept so a future RPC can surface it without a signature change.
+  /// When the code was last rotated, read through `office_join_code_info()`
+  /// (migration 20260830090000) — the column itself sits behind the same
+  /// privilege revoke as `join_code`. Null on an office running against a
+  /// database without that function, and on one whose code has never been
+  /// rotated since it was issued: the card says which.
   final DateTime? joinCodeRotatedAt;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -136,6 +149,23 @@ class OfficeProfile {
     if (serviceAreas.isEmpty) 'مناطق الخدمة',
   ];
 
+  /// Why EWT would refuse to publish this office, in the office's own words.
+  ///
+  /// Mirrors the `platform_set_office_listing` guard exactly (active status, a
+  /// description, at least one service area — migration 20260721140000), so the
+  /// office is told what would actually make it listable instead of only that it
+  /// is not listed. Deliberately narrower than [missingMarketplaceFields]: the
+  /// logo and the phone make a card *thin*, these three make it *refused*.
+  List<String> get listingBlockers => [
+    if (status != 'active') 'حالة تشغيل نشطة',
+    if (description.trim().isEmpty) 'وصف المكتب',
+    if (serviceAreas.isEmpty) 'مناطق الخدمة',
+  ];
+
+  /// Nothing stands between this office and the marketplace but the platform's
+  /// own decision.
+  bool get meetsListingRequirements => listingBlockers.isEmpty;
+
   OfficeProfile copyWith({
     String? name,
     String? description,
@@ -155,6 +185,7 @@ class OfficeProfile {
       rating: rating,
       ratingsCount: ratingsCount,
       joinCode: joinCode,
+      joinCodeReadFailed: joinCodeReadFailed,
       logoUrl: logoUrl ?? this.logoUrl,
       phone: phone ?? this.phone,
       email: email ?? this.email,

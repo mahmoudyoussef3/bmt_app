@@ -211,16 +211,28 @@ Widget _wrap(
   FinanceState state, {
   _FakeFinanceCubit? cubit,
   ValueChanged<String>? onOpenModule,
+  double textScale = 1,
 }) {
+  final screen = Directionality(
+    textDirection: TextDirection.rtl,
+    child: BlocProvider<FinanceCubit>(
+      create: (_) => cubit ?? _FakeFinanceCubit(state),
+      child: FinanceScreen(onOpenModule: onOpenModule),
+    ),
+  );
+
   return MaterialApp(
     home: Scaffold(
-      body: Directionality(
-        textDirection: TextDirection.rtl,
-        child: BlocProvider<FinanceCubit>(
-          create: (_) => cubit ?? _FakeFinanceCubit(state),
-          child: FinanceScreen(onOpenModule: onOpenModule),
-        ),
-      ),
+      body: textScale == 1
+          ? screen
+          : Builder(
+              builder: (context) => MediaQuery(
+                data: MediaQuery.of(
+                  context,
+                ).copyWith(textScaler: TextScaler.linear(textScale)),
+                child: screen,
+              ),
+            ),
     ),
   );
 }
@@ -510,6 +522,31 @@ void main() {
         await tester.pumpAndSettle();
 
         expect(tester.takeException(), isNull);
+      });
+    }
+
+    // The console declares a 1.6× accessibility scale, and every block on this
+    // screen is Arabic text in a fixed-height tile or a side-by-side pair. The
+    // cheapest way to find a P0 here is to pump one.
+    for (final width in const [1180.0, 1440.0]) {
+      testWidgets('at ${width.toInt()}px wide and 1.6× text', (tester) async {
+        tester.view.physicalSize = Size(width, 5000);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        for (final section in FinanceSection.values) {
+          await tester.pumpWidget(
+            _wrap(_longNameState(section: section), textScale: 1.6),
+          );
+          await tester.pumpAndSettle();
+
+          expect(
+            tester.takeException(),
+            isNull,
+            reason: 'overflow in ${section.label} at ${width.toInt()}px / 1.6×',
+          );
+        }
       });
     }
 

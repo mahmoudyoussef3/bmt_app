@@ -65,6 +65,7 @@ class ResolvedFeature {
     this.expiresAt,
     this.used,
     this.remaining,
+    this.meterKind,
     this.isPublic = true,
     this.enforced = false,
     this.sortOrder = 100,
@@ -101,6 +102,20 @@ class ResolvedFeature {
   final int? used;
   final int? remaining;
 
+  /// `stock` | `flow`, on a `limit` feature. Null on everything else.
+  ///
+  /// The answer to the first question usage data produces — *why did my number
+  /// not go down*. A **stock** meter counts the rows that exist right now, so
+  /// deleting a driver returns the seat and the figure is self-healing. A
+  /// **flow** meter accumulates over the period and deleting the row does NOT
+  /// return the quota, or an office on a 100-trip plan would run 1,000 by
+  /// deleting each trip as it finished.
+  ///
+  /// The resolver has always sent it (`office_entitlements` selects
+  /// `f.meter_kind`); nothing on the office's side read it, which is why its own
+  /// screen could never explain a meter the platform's screen explains.
+  final String? meterKind;
+
   /// Could the office buy this on a higher plan? Decides hidden-vs-locked:
   /// hiding a purchasable feature makes it unsellable, showing an unpurchasable
   /// one is noise.
@@ -119,6 +134,9 @@ class ResolvedFeature {
 
   /// The numeric ceiling, or null when unlimited or not a limit at all.
   int? get limit => value is int ? value as int : null;
+
+  /// A meter that accumulates over the period instead of counting what exists.
+  bool get isFlowMeter => meterKind == 'flow';
 
   bool get isOverLimit {
     final l = limit;
@@ -146,6 +164,7 @@ class ResolvedFeature {
       expiresAt: DateTime.tryParse((json['expires_at'] as String?) ?? ''),
       used: (json['used'] as num?)?.toInt(),
       remaining: (json['remaining'] as num?)?.toInt(),
+      meterKind: json['meter_kind'] as String?,
       isPublic: json['is_public'] != false,
       enforced: json['enforcement_status'] == 'enforced',
       sortOrder: (json['sort_order'] as num?)?.toInt() ?? 100,
@@ -289,7 +308,7 @@ class EntitlementContext {
     if (featureKey == null) return true;
     if (!isEnforcing) return true;
     final f = features[featureKey];
-    if (f == null) return true; 
+    if (f == null) return true;
     return f.isOn;
   }
 

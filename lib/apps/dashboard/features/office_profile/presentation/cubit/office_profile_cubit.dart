@@ -11,14 +11,17 @@ class OfficeProfileCubit extends Cubit<OfficeProfileState> {
     required GetOfficeProfileUseCase getProfile,
     required UpdateOfficeProfileUseCase updateProfile,
     required UploadOfficeLogoUseCase uploadLogo,
+    required RotateOfficeJoinCodeUseCase rotateJoinCode,
   }) : _getProfile = getProfile,
        _updateProfile = updateProfile,
        _uploadLogo = uploadLogo,
+       _rotateJoinCode = rotateJoinCode,
        super(const OfficeProfileInitial());
 
   final GetOfficeProfileUseCase _getProfile;
   final UpdateOfficeProfileUseCase _updateProfile;
   final UploadOfficeLogoUseCase _uploadLogo;
+  final RotateOfficeJoinCodeUseCase _rotateJoinCode;
 
   Future<void> load() async {
     emit(const OfficeProfileLoading());
@@ -39,7 +42,6 @@ class OfficeProfileCubit extends Cubit<OfficeProfileState> {
       emit(OfficeProfileActionSuccess('تم حفظ بيانات المكتب', updated));
       emit(OfficeProfileLoaded(updated));
     } catch (error) {
-      
       emit(OfficeProfileActionFailure(_message(error), current));
       emit(OfficeProfileLoaded(current));
     }
@@ -68,6 +70,31 @@ class OfficeProfileCubit extends Cubit<OfficeProfileState> {
       emit(OfficeProfileActionFailure(_message(error), current));
       emit(OfficeProfileLoaded(current));
       return null;
+    }
+  }
+
+  /// Mints a new captain join code, invalidating the old one.
+  ///
+  /// Reported like a save — the whole profile comes back from the RPC's own
+  /// re-read — but flagged separately while it runs, so rotating a credential
+  /// never greys out a form the operator is still filling in.
+  Future<void> rotateJoinCode() async {
+    final current = _profile();
+    if (current == null) return;
+
+    emit(OfficeProfileLoaded(current, isRotatingJoinCode: true));
+    try {
+      final updated = await _rotateJoinCode();
+      emit(
+        OfficeProfileActionSuccess(
+          'تم إصدار كود انضمام جديد. الكود السابق لم يعد صالحاً.',
+          updated,
+        ),
+      );
+      emit(OfficeProfileLoaded(updated));
+    } catch (error) {
+      emit(OfficeProfileActionFailure(_message(error), current));
+      emit(OfficeProfileLoaded(current));
     }
   }
 

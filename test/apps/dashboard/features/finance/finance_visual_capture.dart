@@ -105,6 +105,40 @@ void main() {
       height: 2200,
     );
   });
+
+  testWidgets('analytics, light', (tester) async {
+    await _capture(
+      tester,
+      'finance_4_analytics_light',
+      dark: false,
+      section: FinanceSection.analytics,
+      height: 2400,
+    );
+  });
+
+  testWidgets('reports, light', (tester) async {
+    await _capture(
+      tester,
+      'finance_5_reports_light',
+      dark: false,
+      section: FinanceSection.reports,
+      height: 2400,
+    );
+  });
+
+  // 1180 is where the console drops to the icon rail, so it is the narrowest
+  // width the module is actually read at — and the width at which the
+  // workbench's two bars stop sharing a line.
+  testWidgets('overview, narrow', (tester) async {
+    await _capture(
+      tester,
+      'finance_6_overview_narrow',
+      dark: false,
+      section: FinanceSection.overview,
+      width: 1180,
+      height: 2500,
+    );
+  });
 }
 
 // ---------------------------------------------------------------------------

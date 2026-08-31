@@ -49,7 +49,6 @@ class SupabaseOfficeProfileDatasource implements OfficeProfileDatasource {
           .maybeSingle();
 
       if (row == null) {
-        
         throw Exception(
           'تعذر قراءة بيانات المكتب. سجّل الخروج ثم الدخول مرة أخرى.',
         );
@@ -61,27 +60,77 @@ class SupabaseOfficeProfileDatasource implements OfficeProfileDatasource {
     }
   }
 
-  /// Reads the office's own join code through `office_join_code()`, which
-  /// resolves the office from `current_office_id()` — there is no parameter to
-  /// point at someone else's.
+  /// The office's own join code and, when the database can say so, when it was
+  /// last rotated.
   ///
-  /// A failure here is swallowed to an empty code on purpose: the join code is
-  /// one card on a screen whose main job is the marketplace profile, and a
-  /// support agent (whom the RPC serves, but whose office may be mid-change)
-  /// losing that card is better than losing the whole screen.
-  Future<String> _fetchJoinCode() async {
+  /// Both readers resolve the office from `current_office_id()` — neither takes
+  /// a parameter that could point at someone else's. `office_join_code_info()`
+  /// (migration 20260830090000) is tried first because the rotation time is
+  /// behind the same column-privilege revoke as the code itself; an office
+  /// running against a database without that function falls back to
+  /// `office_join_code()` and simply does not learn the date.
+  ///
+  /// A failure of both is reported as [_JoinCode.failed] rather than as an empty
+  /// code: the join code is one card on a screen whose main job is the
+  /// marketplace profile, so losing it must not lose the screen — but "we could
+  /// not read it" and "no code has been issued" are different sentences and the
+  /// card says whichever is true.
+  Future<_JoinCode> _fetchJoinCode() async {
+    try {
+      final info = await _client.rpc('office_join_code_info');
+      if (info is Map) {
+        return _JoinCode(
+          code: info['code']?.toString() ?? '',
+          rotatedAt: _parseDate(info['rotated_at']),
+        );
+      }
+    } catch (_) {
+      // Falls through to the older reader below.
+    }
+
     try {
       final code = await _client.rpc('office_join_code');
-      return code?.toString() ?? '';
+      return _JoinCode(code: code?.toString() ?? '');
     } catch (_) {
-      return '';
+      return const _JoinCode(code: '', failed: true);
     }
+  }
+
+  /// Issues a new code through `office_rotate_join_code()`, which loops until
+  /// the value is unique platform-wide and stamps `join_code_rotated_at` — work
+  /// that cannot be done from an update statement the dashboard composes, which
+  /// is why the RPC exists.
+  ///
+  /// The row is re-read afterwards instead of patching the new code into the
+  /// entity in memory: the office as the database now holds it is the only
+  /// version worth showing after a credential change.
+  @override
+  Future<OfficeProfile> rotateJoinCode() async {
+    try {
+      await _client.rpc('office_rotate_join_code');
+    } on PostgrestException catch (error) {
+      throw Exception(_rotateMessage(error));
+    }
+    return getProfile();
+  }
+
+  /// The RPC raises bare condition names (`dashboard_admin_required`,
+  /// `not_an_office_user`); an operator reads them as noise, so they are named
+  /// in the words of the screen they happened on.
+  String _rotateMessage(PostgrestException error) {
+    final raw = error.message;
+    if (raw.contains('dashboard_admin_required')) {
+      return 'تدوير كود الانضمام متاح لحساب المالك فقط.';
+    }
+    if (raw.contains('not_an_office_user')) {
+      return 'تعذر تحديد المكتب. سجّل الخروج ثم الدخول مرة أخرى.';
+    }
+    return raw;
   }
 
   @override
   Future<OfficeProfile> updateProfile(OfficeProfileEdit edit) async {
     try {
-      
       final row = await _client
           .from('offices')
           .update({
@@ -100,7 +149,6 @@ class SupabaseOfficeProfileDatasource implements OfficeProfileDatasource {
           .maybeSingle();
 
       if (row == null) {
-        
         throw Exception('لا تملك صلاحية تعديل بيانات المكتب.');
       }
 
@@ -120,7 +168,6 @@ class SupabaseOfficeProfileDatasource implements OfficeProfileDatasource {
     required Uint8List bytes,
     required String fileName,
   }) async {
-    
     final path =
         '${_session.officeId}/'
         '${DateTime.now().millisecondsSinceEpoch}-${_safeFileName(fileName)}';
@@ -136,7 +183,6 @@ class SupabaseOfficeProfileDatasource implements OfficeProfileDatasource {
 
       return _client.storage.from(_logoBucket).getPublicUrl(path);
     } on StorageException catch (error) {
-      
       LicensingGuard.check(error);
       throw Exception(error.message);
     }
@@ -179,7 +225,7 @@ class SupabaseOfficeProfileDatasource implements OfficeProfileDatasource {
 
   OfficeProfile _mapProfile(
     Map<String, dynamic> row, {
-    required String joinCode,
+    required _JoinCode joinCode,
   }) {
     return OfficeProfile(
       id: row['id']?.toString() ?? '',
@@ -188,11 +234,13 @@ class SupabaseOfficeProfileDatasource implements OfficeProfileDatasource {
       description: row['description']?.toString() ?? '',
       serviceAreas: _toStringList(row['service_areas']),
       status: row['status']?.toString() ?? 'active',
-      
+
       listingStatus: row['listing_status']?.toString() ?? 'draft',
       rating: _toDouble(row['rating']),
       ratingsCount: _toInt(row['ratings_count']),
-      joinCode: joinCode,
+      joinCode: joinCode.code,
+      joinCodeReadFailed: joinCode.failed,
+      joinCodeRotatedAt: joinCode.rotatedAt,
       logoUrl: _nullIfBlank(row['logo_url']?.toString()),
       phone: _nullIfBlank(row['phone']?.toString()),
       email: _nullIfBlank(row['email']?.toString()),
@@ -231,4 +279,14 @@ class SupabaseOfficeProfileDatasource implements OfficeProfileDatasource {
     if (value == null) return null;
     return DateTime.tryParse(value.toString())?.toLocal();
   }
+}
+
+/// What the join-code readers could establish: the code, when it last changed,
+/// and whether the read succeeded at all.
+class _JoinCode {
+  const _JoinCode({required this.code, this.rotatedAt, this.failed = false});
+
+  final String code;
+  final DateTime? rotatedAt;
+  final bool failed;
 }

@@ -22,6 +22,7 @@ class OfficeProfileLoaded extends OfficeProfileState {
     this.profile, {
     this.isSaving = false,
     this.isUploadingLogo = false,
+    this.isRotatingJoinCode = false,
   });
   final OfficeProfile profile;
   final bool isSaving;
@@ -31,14 +32,21 @@ class OfficeProfileLoaded extends OfficeProfileState {
   /// the profile is unchanged until the operator presses save.
   final bool isUploadingLogo;
 
+  /// A new captain join code is being minted. Tracked apart from [isSaving] for
+  /// the same reason as the upload: it is a credential action on its own card,
+  /// and it must not disable a form the operator is in the middle of filling.
+  final bool isRotatingJoinCode;
+
   OfficeProfileLoaded copyWith({
     OfficeProfile? profile,
     bool? isSaving,
     bool? isUploadingLogo,
+    bool? isRotatingJoinCode,
   }) => OfficeProfileLoaded(
     profile ?? this.profile,
     isSaving: isSaving ?? this.isSaving,
     isUploadingLogo: isUploadingLogo ?? this.isUploadingLogo,
+    isRotatingJoinCode: isRotatingJoinCode ?? this.isRotatingJoinCode,
   );
 }
 

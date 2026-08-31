@@ -39,6 +39,7 @@ void main() {
       getProfile: GetOfficeProfileUseCase(repo),
       updateProfile: UpdateOfficeProfileUseCase(repo),
       uploadLogo: UploadOfficeLogoUseCase(repo),
+      rotateJoinCode: RotateOfficeJoinCodeUseCase(repo),
     );
   });
 
@@ -213,6 +214,91 @@ void main() {
     });
   });
 
+  group('join code', () {
+    test('a failed read is not reported as "no code issued"', () {
+      final unreadable = OfficeProfile(
+        id: 'office-1',
+        name: 'مكتب القاهرة',
+        slug: 'cairo-office',
+        description: 'وصف',
+        serviceAreas: const ['القاهرة'],
+        status: 'active',
+        listingStatus: 'listed',
+        rating: 0,
+        ratingsCount: 0,
+        joinCode: '',
+        joinCodeReadFailed: true,
+      );
+
+      // Two different facts, and the card branches on them separately: an
+      // office told "لم يُصدر كود" for a failed RPC goes looking for a code it
+      // already has.
+      expect(unreadable.hasJoinCode, isFalse);
+      expect(unreadable.joinCodeReadFailed, isTrue);
+      expect(profile().joinCodeReadFailed, isFalse);
+    });
+
+    test('rotating issues a new code and settles on the stored row', () async {
+      await cubit.load();
+
+      await cubit.rotateJoinCode();
+
+      expect(repo.rotations, 1);
+      final state = cubit.state;
+      expect(state, isA<OfficeProfileLoaded>());
+      expect((state as OfficeProfileLoaded).profile.joinCode, 'WXYZ7788');
+      expect(state.profile.joinCodeRotatedAt, DateTime(2026, 8, 30));
+      expect(state.isRotatingJoinCode, isFalse);
+    });
+
+    test('a refused rotation keeps the old code on screen', () async {
+      await cubit.load();
+      repo.failRotate = true;
+
+      final seen = <OfficeProfileState>[];
+      final sub = cubit.stream.listen(seen.add);
+
+      await cubit.rotateJoinCode();
+      await Future<void>.delayed(Duration.zero);
+      await sub.cancel();
+
+      expect(seen.whereType<OfficeProfileActionFailure>(), isNotEmpty);
+      expect(seen.whereType<OfficeProfileError>(), isEmpty);
+      expect((cubit.state as OfficeProfileLoaded).profile.joinCode, 'ABCD2345');
+    });
+
+    test('rotating before load is a no-op', () async {
+      await cubit.rotateJoinCode();
+
+      expect(repo.rotations, 0);
+      expect(cubit.state, isA<OfficeProfileInitial>());
+    });
+  });
+
+  group('listing requirements mirror the publish guard', () {
+    test('names what EWT still needs before it can publish', () {
+      final draft = profile(
+        description: '   ',
+        serviceAreas: const [],
+        listingStatus: 'draft',
+      );
+
+      expect(draft.listingBlockers, ['وصف المكتب', 'مناطق الخدمة']);
+      expect(draft.meetsListingRequirements, isFalse);
+    });
+
+    test('a suspended office is blocked on its status too', () {
+      expect(
+        profile(status: 'suspended').listingBlockers,
+        contains('حالة تشغيل نشطة'),
+      );
+    });
+
+    test('an office that meets the guard is only waiting on EWT', () {
+      expect(profile().meetsListingRequirements, isTrue);
+    });
+  });
+
   group('marketplace completeness', () {
     test('is complete when every card field is filled', () {
       expect(profile().missingMarketplaceFields, isEmpty);
@@ -241,6 +327,8 @@ class _FakeRepo implements OfficeProfileRepository {
   bool failRead = false;
   bool failWrite = false;
   bool failUpload = false;
+  bool failRotate = false;
+  int rotations = 0;
 
   @override
   Future<OfficeProfile> getProfile() async {
@@ -263,5 +351,30 @@ class _FakeRepo implements OfficeProfileRepository {
     if (failUpload) throw Exception('تعذر رفع الصورة.');
     uploadedFileName = fileName;
     return 'https://cdn.example.com/office-logos/office-1/$fileName';
+  }
+
+  @override
+  Future<OfficeProfile> rotateJoinCode() async {
+    if (failRotate) {
+      throw Exception('تدوير كود الانضمام متاح لحساب المالك فقط.');
+    }
+    rotations++;
+    profile = OfficeProfile(
+      id: profile.id,
+      name: profile.name,
+      slug: profile.slug,
+      description: profile.description,
+      serviceAreas: profile.serviceAreas,
+      status: profile.status,
+      listingStatus: profile.listingStatus,
+      rating: profile.rating,
+      ratingsCount: profile.ratingsCount,
+      joinCode: 'WXYZ7788',
+      logoUrl: profile.logoUrl,
+      phone: profile.phone,
+      email: profile.email,
+      joinCodeRotatedAt: DateTime(2026, 8, 30),
+    );
+    return profile;
   }
 }

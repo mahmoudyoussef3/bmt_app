@@ -184,50 +184,57 @@ class _IncomeStatement extends StatelessWidget {
       title: 'قائمة الدخل — ${analytics.periodLabel}',
       subtitle:
           'صافي الإيراد = إجمالي المتحصلات − المرتجعات المنفذة. المبالغ المعلقة والملغاة خارج الحساب.',
-      child: Column(
-        children: [
-          for (final line in mainLines) ...[
-            if (line.isTotal) Divider(color: scheme.outlineVariant),
-            FinanceFigureRow(
-              label: line.label,
-              value: line.label == 'المرتجعات المنفذة'
-                  ? '− ${FinanceFormat.moneyPrecise(line.amount)}'
-                  : FinanceFormat.moneyPrecise(line.amount),
-              emphasised: line.isTotal || line.isSubtotal,
-              valueColor: line.isTotal
-                  ? palette.positive
-                  : line.label == 'المرتجعات المنفذة'
-                  ? palette.negative
-                  : null,
+      // A statement has a measure. Left to the full width of the card, every
+      // line put its label against one edge and its figure against the other,
+      // a thousand pixels away, and reading one row meant tracking across
+      // empty paper. This is the width a printed income statement is set at.
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 860),
+        child: Column(
+          children: [
+            for (final line in mainLines) ...[
+              if (line.isTotal) Divider(color: scheme.outlineVariant),
+              FinanceFigureRow(
+                label: line.label,
+                value: line.label == 'المرتجعات المنفذة'
+                    ? '− ${FinanceFormat.moneyPrecise(line.amount)}'
+                    : FinanceFormat.moneyPrecise(line.amount),
+                emphasised: line.isTotal || line.isSubtotal,
+                valueColor: line.isTotal
+                    ? palette.positive
+                    : line.label == 'المرتجعات المنفذة'
+                    ? palette.negative
+                    : null,
+              ),
+            ],
+            const SizedBox(height: AppSpacing.small),
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.medium),
+              decoration: BoxDecoration(
+                color: scheme.surfaceContainerHighest.withAlpha(70),
+                borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'بنود خارج الصافي',
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+                  for (final line in memoLines)
+                    FinanceFigureRow(
+                      label: line.label,
+                      value: FinanceFormat.moneyPrecise(line.amount),
+                      muted: true,
+                    ),
+                ],
+              ),
             ),
           ],
-          const SizedBox(height: AppSpacing.small),
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.medium),
-            decoration: BoxDecoration(
-              color: scheme.surfaceContainerHighest.withAlpha(70),
-              borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'بنود خارج الصافي',
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-                for (final line in memoLines)
-                  FinanceFigureRow(
-                    label: line.label,
-                    value: FinanceFormat.moneyPrecise(line.amount),
-                    muted: true,
-                  ),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -360,16 +367,43 @@ class _RefundRequestsSummary extends StatelessWidget {
   }
 }
 
-class _DailyTable extends StatelessWidget {
+/// The day-by-day movement behind the statement.
+///
+/// Paged, like every other table in the console. It used to hand `OpsDataTable`
+/// a page size equal to the row count, which renders «كل الفترات» — a year of
+/// days — as one continuous table below four other panels. The page index is
+/// local because nothing else in the module needs it, and it is clamped in
+/// [didUpdateWidget] so changing the period cannot leave the reader on a page
+/// the new window does not have.
+class _DailyTable extends StatefulWidget {
   final FinanceAnalytics analytics;
 
   const _DailyTable({required this.analytics});
 
   @override
+  State<_DailyTable> createState() => _DailyTableState();
+}
+
+class _DailyTableState extends State<_DailyTable> {
+  static const _pageSize = 15;
+
+  int _page = 0;
+
+  @override
+  void didUpdateWidget(_DailyTable oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final pages = (widget.analytics.daily.length / _pageSize).ceil();
+    if (_page >= pages) _page = pages <= 0 ? 0 : pages - 1;
+  }
+
+  @override
   Widget build(BuildContext context) {
     final palette = DashboardChartPalette.of(context);
-    
-    final rows = analytics.daily.reversed.toList();
+
+    final all = widget.analytics.daily.reversed.toList();
+    final pageCount = (all.length / _pageSize).ceil().clamp(1, 9999);
+    final page = _page.clamp(0, pageCount - 1);
+    final rows = all.skip(page * _pageSize).take(_pageSize).toList();
 
     return OpsDataTable(
       columns: const [
@@ -397,10 +431,10 @@ class _DailyTable extends StatelessWidget {
             Text(point.pending > 0 ? FinanceFormat.money(point.pending) : '—'),
           ],
       ],
-      total: rows.length,
-      currentPage: 0,
-      pageSize: rows.isEmpty ? 1 : rows.length,
-      onPageChanged: (_) {},
+      total: all.length,
+      currentPage: page,
+      pageSize: _pageSize,
+      onPageChanged: (next) => setState(() => _page = next),
       emptyState: const DashboardEmptyState(
         icon: Icons.calendar_today_outlined,
         title: 'لا توجد حركة مالية في هذه الفترة',

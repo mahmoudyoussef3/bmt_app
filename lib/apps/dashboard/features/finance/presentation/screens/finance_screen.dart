@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_segmented_bar.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
@@ -9,19 +11,20 @@ import 'package:bmt_app/core/theme/tokens.dart';
 import '../cubit/finance_cubit.dart';
 import '../cubit/finance_state.dart';
 import '../widgets/finance_analytics_tab.dart';
+import '../widgets/finance_format.dart';
 import '../widgets/finance_ledger_tab.dart';
 import '../widgets/finance_overview_tab.dart';
 import '../widgets/finance_period_bar.dart';
 import '../widgets/finance_reports_tab.dart';
-import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 
 /// The money module: what was earned, what is still owed, what went back, and
 /// what that means. It reads — payment verification, refund decisions and
 /// subscription changes live in the modules that own those workflows.
 ///
 /// [onOpenModule] is how it stays read-only while still being useful: the
-/// attention panel and the transaction detail hand the operator off to the
-/// module that owns the decision rather than growing a decision of their own.
+/// attention panel, the KPI band and the transaction detail hand the operator
+/// off to the module that owns the decision rather than growing a decision of
+/// their own.
 class FinanceScreen extends StatelessWidget {
   final ValueChanged<String>? onOpenModule;
 
@@ -87,23 +90,11 @@ class _FinanceWorkspace extends StatelessWidget {
                 label: const Text('تحديث'),
               ),
             ],
-            // The period bar is pinned: every figure on the page is scoped by
-            // it, so an operator who cannot see it cannot read the page.
-            pinned: FinancePeriodBar(
-              window: state.analytics.window,
-              onSelected: cubit.setPeriod,
-              onCustomRange: cubit.setCustomRange,
-              loadedAt: state.loadedAt,
-              capReached: state.ledgerCapReached,
-            ),
+            // Both controls are pinned: every figure on the page is scoped by
+            // the period and reached through the section, so an operator who
+            // cannot see them cannot read the page.
+            pinned: _Workbench(state: state, cubit: cubit),
           ),
-          const SizedBox(height: AppSpacing.medium),
-          _SectionTabs(
-            selected: state.section,
-            onSelected: cubit.selectSection,
-            attentionCount: state.attention.totalItems,
-          ),
-          const SizedBox(height: AppSpacing.medium),
           Expanded(
             child: switch (state.section) {
               FinanceSection.overview => FinanceOverviewTab(
@@ -124,19 +115,20 @@ class _FinanceWorkspace extends StatelessWidget {
   }
 }
 
-class _SectionTabs extends StatelessWidget {
-  final FinanceSection selected;
-  final ValueChanged<FinanceSection> onSelected;
+/// One toolbar carrying both of the module's global controls — *which* report
+/// (the sections) and *over what* (the period) — plus the line that says what
+/// the period resolved to.
+///
+/// They used to be three stacked blocks: a chip row, a tinted restatement
+/// panel, and a segmented button on its own line, together about 190px of
+/// chrome before the first figure on the console's most-read screen. Pairing
+/// them on one line and demoting the restatement to a footnote gives that back
+/// to the numbers without hiding a single fact.
+class _Workbench extends StatelessWidget {
+  const _Workbench({required this.state, required this.cubit});
 
-  /// How many rows are waiting on a decision. Shown on the overview chip so an
-  /// operator working in الحركات or التقارير is not the last to know.
-  final int attentionCount;
-
-  const _SectionTabs({
-    required this.selected,
-    required this.onSelected,
-    this.attentionCount = 0,
-  });
+  final FinanceLoaded state;
+  final FinanceCubit cubit;
 
   static const _icons = {
     FinanceSection.overview: Icons.dashboard_customize_outlined,
@@ -147,65 +139,54 @@ class _SectionTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      child: SegmentedButton<FinanceSection>(
-        segments: [
-          for (final section in FinanceSection.values)
-            ButtonSegment(
-              value: section,
-              icon: Icon(_icons[section]),
-              label: _SegmentLabel(
-                text: section.label,
-                badgeCount: section == FinanceSection.overview
-                    ? attentionCount
-                    : 0,
-              ),
-            ),
-        ],
-        selected: {selected},
-        showSelectedIcon: false,
-        onSelectionChanged: (selection) => onSelected(selection.first),
-      ),
-    );
-  }
-}
-
-/// A segment's label with an optional red count badge — used only for the
-/// overview segment, which is where the attention panel lives.
-class _SegmentLabel extends StatelessWidget {
-  final String text;
-  final int badgeCount;
-
-  const _SegmentLabel({required this.text, this.badgeCount = 0});
-
-  @override
-  Widget build(BuildContext context) {
-    if (badgeCount <= 0) return Text(text);
-
-    final scheme = Theme.of(context).colorScheme;
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(text),
-        Padding(
-          padding: const EdgeInsetsDirectional.only(start: AppSpacing.xSmall),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-            decoration: BoxDecoration(
-              color: scheme.error,
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Text(
-              '$badgeCount',
-              style: Theme.of(
-                context,
-              ).textTheme.labelSmall?.copyWith(
-                color: scheme.onError,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
+    final sections = DashboardSegmentedBar<FinanceSection>(
+      selected: state.section,
+      onSelected: cubit.selectSection,
+      segments: [
+        for (final section in FinanceSection.values)
+          DashboardSegment(
+            value: section,
+            label: section.label,
+            icon: _icons[section],
+            // Only the overview carries a count: it is where «يحتاج المتابعة»
+            // lives, and an operator working in الحركات or التقارير must not be
+            // the last to know that money is waiting on a decision.
+            badge:
+                section == FinanceSection.overview &&
+                    state.attention.totalItems > 0
+                ? FinanceFormat.count(state.attention.totalItems)
+                : null,
           ),
+      ],
+    );
+
+    final period = FinancePeriodBar(
+      window: state.analytics.window,
+      onSelected: cubit.setPeriod,
+      onCustomRange: cubit.setCustomRange,
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // A `Wrap`, not a `LayoutBuilder` with a stacking breakpoint: both bars
+        // are built from Arabic labels whose width depends on the font the
+        // console actually loaded and on the reader's text scale, so any
+        // pixel number picked here would be wrong on some machine. Wrap
+        // measures instead of guessing — one line with the bars pushed to
+        // opposite ends while they fit, two lines the moment they do not.
+        Wrap(
+          alignment: WrapAlignment.spaceBetween,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: AppSpacing.medium,
+          runSpacing: AppSpacing.small,
+          children: [sections, period],
+        ),
+        const SizedBox(height: AppSpacing.small),
+        FinanceWindowNote(
+          window: state.analytics.window,
+          loadedAt: state.loadedAt,
+          capReached: state.ledgerCapReached,
         ),
       ],
     );

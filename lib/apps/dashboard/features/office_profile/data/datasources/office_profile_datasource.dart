@@ -18,4 +18,7 @@ abstract class OfficeProfileDatasource {
     required Uint8List bytes,
     required String fileName,
   });
+
+  /// Rotates the captain join code and returns the office as it now stands.
+  Future<OfficeProfile> rotateJoinCode();
 }

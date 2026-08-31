@@ -6,19 +6,25 @@ import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_panel.dart';
-import 'package:bmt_app/core/theme/spacing.dart';
-import 'package:bmt_app/core/theme/tokens.dart';
 
 import '../../domain/entities/business_health.dart';
 import '../../domain/entities/business_overview.dart';
+import 'overview_kit.dart';
 
-/// Section 2 — seven readings, each reduced to one word and one rule.
+/// Seven readings, each reduced to one word and one rule.
 ///
 /// The point of the section is that an owner can stop reading it in three
-/// seconds: the amber and red cards sort to the front, so "is anything wrong"
-/// is answered by the top-left corner alone. Everything under the verdict —
-/// the measured figure and the threshold that graded it — is there for the
-/// second question, not the first.
+/// seconds, so the amber and red readings **sort to the front** and "is
+/// anything wrong" is answered by the first row alone. Everything under the
+/// verdict — the measured figure and the threshold that graded it — is there
+/// for the second question, not the first.
+///
+/// It is a list of bare rows rather than the three-column grid of bordered
+/// cards it used to be: seven readings scan faster as seven lines, and a card
+/// nested inside an already-bordered panel is the card-in-card the design
+/// system rejects. The row is the kit's — the same one الرئيسية's «تقييمات
+/// تحتاج متابعة» line uses — so a reading here and a reading there are the
+/// same object.
 class BusinessHealthSection extends StatelessWidget {
   const BusinessHealthSection({
     super.key,
@@ -31,7 +37,8 @@ class BusinessHealthSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final signals = overview.healthSignals;
+    final signals = [...overview.healthSignals]
+      ..sort((a, b) => _rank(b.status).compareTo(_rank(a.status)));
     final needsAttention = signals.where((s) => s.needsAttention).length;
 
     return DashboardPanel(
@@ -42,152 +49,49 @@ class BusinessHealthSection extends StatelessWidget {
           ? 'كل المؤشرات ضمن المستهدف'
           : '$needsAttention من ${signals.length} مؤشرات تحتاج انتباهك',
       collapsedSummary: _CollapsedSummary(signals: signals),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final width = constraints.maxWidth;
-          final columns = width >= 1000
-              ? 3
-              : width >= 640
-              ? 2
-              : 1;
-          return GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: signals.length,
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: columns,
-              crossAxisSpacing: AppSpacing.small,
-              mainAxisSpacing: AppSpacing.small,
-              mainAxisExtent: 92,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (var i = 0; i < signals.length; i++) ...[
+            if (i > 0)
+              Divider(height: 1, color: DashboardColors.divider(context)),
+            _HealthRow(
+              signal: signals[i],
+              onOpen: () => onOpenModule(_specFor(signals[i].metric).route),
             ),
-            itemBuilder: (context, index) => _HealthCard(
-              signal: signals[index],
-              onOpen: () => onOpenModule(_specFor(signals[index].metric).route),
-            ),
-          );
-        },
+          ],
+        ],
       ),
     );
   }
+
+  /// Critical first, then warning, then healthy, then unmeasurable — "we can't
+  /// tell" belongs at the bottom, not beside a clean bill of health.
+  static int _rank(BusinessHealthStatus status) => switch (status) {
+    BusinessHealthStatus.critical => 3,
+    BusinessHealthStatus.warning => 2,
+    BusinessHealthStatus.healthy => 1,
+    BusinessHealthStatus.unknown => 0,
+  };
 }
 
-class _HealthCard extends StatelessWidget {
-  const _HealthCard({required this.signal, required this.onOpen});
+class _HealthRow extends StatelessWidget {
+  const _HealthRow({required this.signal, required this.onOpen});
 
   final BusinessHealthSignal signal;
   final VoidCallback onOpen;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final tone = statusColor(context, signal.status);
     final spec = _specFor(signal.metric);
-    final radius = BorderRadius.circular(AppTokens.radiusSmall);
-
-    return Material(
-      color: Colors.transparent,
-      borderRadius: radius,
-      child: InkWell(
-        onTap: onOpen,
-        borderRadius: radius,
-        child: Container(
-          padding: const EdgeInsets.all(AppSpacing.medium),
-          decoration: BoxDecoration(
-            color: DashboardColors.well(context),
-            borderRadius: radius,
-            border: Border.all(color: DashboardColors.border(context)),
-          ),
-          child: Row(
-            children: [
-              
-              Container(
-                width: 4,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: tone,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-              ),
-              const SizedBox(width: AppSpacing.small),
-              Icon(spec.icon, size: 18, color: tone),
-              const SizedBox(width: AppSpacing.small),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            spec.label,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.xSmall),
-                        Text(
-                          signal.reading,
-                          style: theme.textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            color: tone,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    Row(
-                      children: [
-                        _StatusPill(status: signal.status),
-                        const SizedBox(width: AppSpacing.xSmall),
-                        Expanded(
-                          child: Text(
-                            signal.detail,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: scheme.onSurfaceVariant,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _StatusPill extends StatelessWidget {
-  const _StatusPill({required this.status});
-
-  final BusinessHealthStatus status;
-
-  @override
-  Widget build(BuildContext context) {
-    final tone = statusColor(context, status);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-      decoration: BoxDecoration(
-        color: tone.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        statusLabel(status),
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: tone,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
+    return OverviewLinkRow(
+      icon: spec.icon,
+      label: spec.label,
+      detail: signal.detail,
+      value: signal.reading,
+      note: statusLabel(signal.status),
+      tone: statusColor(context, signal.status),
+      onTap: onOpen,
     );
   }
 }
@@ -217,9 +121,9 @@ class _CollapsedSummary extends StatelessWidget {
       text,
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
-      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-        color: Theme.of(context).colorScheme.onSurfaceVariant,
-      ),
+      style: Theme.of(
+        context,
+      ).textTheme.bodySmall?.copyWith(color: DashboardColors.mutedInk(context)),
     );
   }
 }

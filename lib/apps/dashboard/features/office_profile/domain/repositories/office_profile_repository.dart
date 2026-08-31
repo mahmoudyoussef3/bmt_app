@@ -11,4 +11,11 @@ abstract class OfficeProfileRepository {
     required Uint8List bytes,
     required String fileName,
   });
+
+  /// Issues a new captain join code and returns the office as it now stands.
+  ///
+  /// Returns the whole profile rather than the code alone so nothing on the
+  /// client reconstructs a platform-owned field: the new code and its rotation
+  /// time come back from the database that minted them.
+  Future<OfficeProfile> rotateJoinCode();
 }

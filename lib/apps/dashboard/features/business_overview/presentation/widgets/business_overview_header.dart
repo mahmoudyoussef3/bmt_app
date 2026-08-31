@@ -1,192 +1,322 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/apps/dashboard/core/query/dashboard_query_caps.dart';
 import 'package:bmt_app/apps/dashboard/core/session/office_context.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_segmented_bar.dart';
+import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 
+import '../../domain/entities/business_health.dart';
 import '../../domain/entities/business_overview.dart';
-import 'overview_format.dart';
+import '../models/overview_window.dart';
+import 'overview_kit.dart';
 
-/// The page's opening line: whose business, how it is doing, and when the
-/// figures were taken.
+/// Who is signed in, which office, which period, when the figures were taken,
+/// and the one action an owner starts from here — **a bare line on the page,
+/// not a card**.
 ///
-/// Not a copy of Home's banner. Home greets an operator starting a shift and
-/// hands them the trip planner; this states a verdict — today's takings and how
-/// many indicators are off target — because the owner opening this tab has
-/// already decided what they came to find out.
+/// This is [HomeHeaderBanner]'s block, deliberately to the letter. The previous
+/// revision opened with a full-bleed gradient hero carrying a display-size
+/// money figure and a chart; الرئيسية retired exactly that treatment in the EWT
+/// pass, and every other module's [DashboardModuleHeader] made the same trade.
+/// Keeping a brand sweep on this one page meant the console's two most-opened
+/// screens greeted the same person in two different visual languages, one
+/// after the other, all day.
 ///
-/// The "as of" time is not decoration. Every figure below is a snapshot taken
-/// at one instant, and an owner comparing this page with a module they opened
-/// ten minutes ago deserves to know which of the two is older.
+/// So the money moved to where Home keeps it — a KPI tile with its own
+/// sparkline, and a chart panel of its own — and what is left here is what a
+/// title block is for: identity, control, and the facts that are true only
+/// right now.
+///
+/// Under the title sits the **strip**: the period switcher first, because every
+/// time-scoped figure below answers to it, then the standing verdict — what is
+/// off target and what is waiting for a decision. Home's pulse chips, same
+/// shape, same weight.
 class BusinessOverviewHeader extends StatelessWidget {
   const BusinessOverviewHeader({
     super.key,
     required this.office,
     required this.overview,
+    required this.window,
+    required this.onWindowChanged,
     this.onRefresh,
     this.isRefreshing = false,
+    this.onCreateTrip,
   });
 
   final OfficeContext office;
   final BusinessOverview overview;
+  final OverviewWindow window;
+  final ValueChanged<OverviewWindow> onWindowChanged;
   final VoidCallback? onRefresh;
   final bool isRefreshing;
 
+  /// The one genuine one-click job on this page. It sits on the title line, as
+  /// «رحلة جديدة» does on Home — not five screens down in «إجراءات سريعة»,
+  /// where it used to be. An action nobody scrolls to is not a shortcut.
+  final VoidCallback? onCreateTrip;
+
   @override
   Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
-    final onHero = DashboardColors.onHero(context);
     final officeName = office.officeName.trim().isEmpty
         ? 'مكتبك'
         : office.officeName.trim();
 
-    final offTarget = overview.healthSignals
-        .where((s) => s.needsAttention)
-        .length;
-    final pending = overview.attentionItems.length;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final identity = _Identity(
+              title: 'نظرة تنفيذية',
+              contextLine: [
+                officeName,
+                window.title,
+                'آخر تحديث ${_clock(overview.generatedAt)}',
+                if (isRefreshing) 'جارٍ التحديث…',
+              ].join(' · '),
+            );
+            final actions = _Actions(
+              onCreateTrip: onCreateTrip,
+              onRefresh: onRefresh,
+              isRefreshing: isRefreshing,
+            );
 
-    final identity = Column(
+            if (constraints.maxWidth <
+                MediaQuery.textScalerOf(context).scale(640)) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  identity,
+                  const SizedBox(height: AppSpacing.medium),
+                  actions,
+                ],
+              );
+            }
+            return Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(child: identity),
+                const SizedBox(width: AppSpacing.large),
+                actions,
+              ],
+            );
+          },
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: AppSpacing.medium),
+          child: Wrap(
+            spacing: AppSpacing.small,
+            runSpacing: AppSpacing.small,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              DashboardSegmentedBar<OverviewWindow>(
+                tone: DashboardSegmentTone.raised,
+                dense: true,
+                selected: window,
+                onSelected: onWindowChanged,
+                segments: [
+                  for (final value in OverviewWindow.values)
+                    DashboardSegment(
+                      value: value,
+                      label: value.label,
+                      tooltip: value.title,
+                    ),
+                ],
+              ),
+              ..._verdictChips(overview),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// What is off target and what is waiting — the handoff to the panels that can
+/// do something about either.
+///
+/// Only non-zero readings appear. A row that always shows «٠ حرجة» trains the
+/// eye to skip the whole strip, which is the one thing it cannot afford.
+List<Widget> _verdictChips(BusinessOverview overview) {
+  final signals = overview.healthSignals;
+  int countOf(BusinessHealthStatus status) =>
+      signals.where((s) => s.status == status).length;
+
+  final critical = countOf(BusinessHealthStatus.critical);
+  final warning = countOf(BusinessHealthStatus.warning);
+  final pending = overview.attentionItems.length;
+
+  return [
+    if (critical > 0)
+      OverviewChip(
+        icon: DashboardIcons.attention,
+        label: 'حرجة',
+        value: '$critical',
+        tone: AppStatusTone.error,
+      ),
+    if (warning > 0)
+      OverviewChip(
+        icon: DashboardIcons.health,
+        label: 'تحتاج متابعة',
+        value: '$warning',
+        tone: AppStatusTone.warning,
+      ),
+    if (critical == 0 && warning == 0)
+      OverviewChip(
+        icon: DashboardIcons.allClear,
+        label: 'المؤشرات',
+        value: 'ضمن المستهدف',
+        tone: AppStatusTone.success,
+      ),
+    OverviewChip(
+      icon: pending == 0 ? DashboardIcons.allClear : DashboardIcons.quickAction,
+      label: 'بانتظار قرارك',
+      value: pending == 0 ? 'لا شيء' : '$pending',
+      tone: pending == 0 ? AppStatusTone.neutral : AppStatusTone.info,
+    ),
+  ];
+}
+
+class _Identity extends StatelessWidget {
+  const _Identity({required this.title, required this.contextLine});
+
+  final String title;
+  final String contextLine;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          'نظرة تنفيذية · $officeName',
+          title,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: text.titleLarge?.copyWith(
-            color: onHero,
-            fontWeight: FontWeight.w800,
+          style: theme.textTheme.headlineSmall,
+        ),
+        const SizedBox(height: 3),
+        Text(
+          contextLine,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.bodySmall?.copyWith(
+            color: DashboardColors.mutedInk(context),
           ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          'إيراد اليوم ${money(overview.revenueToday)}'
-          ' · ${_verdict(offTarget, pending)}',
-          maxLines: 2,
-          style: text.bodySmall?.copyWith(color: onHero.withAlpha(210)),
-        ),
-        // The as-of time joins the verdict line rather than claiming a third
-        // row of its own — it qualifies those figures, it is not a heading.
-        Text(
-          'آخر تحديث ${_clock(overview.generatedAt)}',
-          style: text.labelSmall?.copyWith(color: onHero.withAlpha(170)),
         ),
       ],
     );
+  }
+}
 
-    final actions = Wrap(
+/// One primary action, one secondary — on the same baseline as the title,
+/// exactly where Home and [DashboardModuleHeader] put every other module's.
+class _Actions extends StatelessWidget {
+  const _Actions({
+    required this.isRefreshing,
+    this.onCreateTrip,
+    this.onRefresh,
+  });
+
+  final bool isRefreshing;
+  final VoidCallback? onCreateTrip;
+  final VoidCallback? onRefresh;
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
       spacing: AppSpacing.small,
       runSpacing: AppSpacing.small,
       crossAxisAlignment: WrapCrossAlignment.center,
       children: [
-        if (isRefreshing)
-          SizedBox(
-            width: 18,
-            height: 18,
-            child: CircularProgressIndicator(strokeWidth: 2, color: onHero),
+        if (onCreateTrip != null)
+          FilledButton.icon(
+            onPressed: onCreateTrip,
+            icon: const Icon(DashboardIcons.add, size: 18),
+            label: const Text('رحلة جديدة'),
           ),
         if (onRefresh != null)
-          IconButton(
-            tooltip: 'تحديث البيانات',
+          OutlinedButton.icon(
             onPressed: isRefreshing ? null : onRefresh,
-            icon: const Icon(DashboardIcons.refresh, size: 20),
-            style: IconButton.styleFrom(
-              foregroundColor: onHero,
-              backgroundColor: onHero.withAlpha(28),
-            ),
+            icon: isRefreshing
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(DashboardIcons.refresh, size: 18),
+            label: const Text('تحديث'),
           ),
       ],
     );
-
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.large,
-        vertical: AppSpacing.medium,
-      ),
-      decoration: BoxDecoration(
-        gradient: DashboardColors.heroGradient(context),
-        borderRadius: BorderRadius.circular(AppTokens.radius),
-      ),
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          if (constraints.maxWidth < 720) {
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                identity,
-                const SizedBox(height: AppSpacing.medium),
-                actions,
-              ],
-            );
-          }
-          return Row(
-            children: [
-              Expanded(child: identity),
-              const SizedBox(width: AppSpacing.medium),
-              actions,
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  String _verdict(int offTarget, int pending) {
-    if (offTarget == 0 && pending == 0) {
-      return 'كل المؤشرات ضمن المستهدف ولا شيء بانتظار قرارك';
-    }
-    if (offTarget == 0) return '$pending بنداً بانتظار قرارك';
-    if (pending == 0) return '$offTarget مؤشراً خارج المستهدف';
-    return '$offTarget مؤشراً خارج المستهدف · $pending بنداً بانتظار قرارك';
   }
 }
 
-/// Names the feeds that did not answer, so a zero on the page is always a
-/// measured zero.
+/// Says so when the selected window reaches further back than the rows the
+/// console actually fetched.
 ///
-/// A quiet strip rather than an error: the rest of the page is still true, and
-/// an office whose plan simply does not include the wallet should not be told
-/// something is broken.
-class UnavailableSourcesNotice extends StatelessWidget {
-  const UnavailableSourcesNotice({super.key, required this.sources});
+/// Only shown when the booking query hit its own ceiling — that is what
+/// separates "this office is three weeks old" (nothing missing, and saying
+/// otherwise would be alarming) from "older rows were never loaded, so this
+/// 90-day figure is short" (a real caveat on a real number).
+///
+/// Styled as [DashboardPartialDataNotice] is, so the page's two notices are one
+/// shape.
+class OverviewCoverageNotice extends StatelessWidget {
+  const OverviewCoverageNotice({
+    super.key,
+    required this.overview,
+    required this.window,
+  });
 
-  final Set<BusinessDataSource> sources;
+  final BusinessOverview overview;
+  final OverviewWindow window;
+
+  /// Whether the notice has anything to say — asked by the page so it does not
+  /// leave a gap above a widget that renders nothing.
+  static bool isNeeded(BusinessOverview overview, OverviewWindow window) {
+    if (overview.loadedBookings < DashboardQueryCaps.bookings) return false;
+    final earliest = overview.earliestLoadedBookingDay;
+    if (earliest == null) return false;
+    final start = DateTime(
+      overview.generatedAt.year,
+      overview.generatedAt.month,
+      overview.generatedAt.day,
+    ).subtract(Duration(days: window.days - 1));
+    return earliest.isAfter(start);
+  }
 
   @override
   Widget build(BuildContext context) {
-    if (sources.isEmpty) return const SizedBox.shrink();
+    if (!isNeeded(overview, window)) return const SizedBox.shrink();
+    final earliest = overview.earliestLoadedBookingDay!;
 
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final names = sources.map((s) => s.label).join('، ');
-
+    final scheme = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.medium,
-        vertical: AppSpacing.small,
-      ),
+      padding: const EdgeInsets.all(AppSpacing.medium),
       decoration: BoxDecoration(
-        color: DashboardColors.well(context),
+        color: scheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-        border: Border.all(color: DashboardColors.border(context)),
+        border: Border.all(color: scheme.outlineVariant),
       ),
       child: Row(
         children: [
-          Icon(
-            DashboardIcons.attention,
-            size: 18,
-            color: scheme.onSurfaceVariant,
-          ),
+          Icon(DashboardIcons.time, size: 18, color: scheme.onSurfaceVariant),
           const SizedBox(width: AppSpacing.small),
           Expanded(
             child: Text(
-              'لم تُحمَّل بعض المصادر: $names. الأرقام المرتبطة بها تظهر كـ «—» '
-              'بدلاً من صفر.',
-              style: theme.textTheme.bodySmall?.copyWith(
-                color: scheme.onSurfaceVariant,
-              ),
+              'الحجوزات المحمَّلة تبدأ من ${earliest.day}/${earliest.month}، '
+              'فأرقام ${window.title} تغطي هذه المدة فقط. للفترات الأطول '
+              'استخدم التقارير.',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
             ),
           ),
         ],
@@ -195,12 +325,12 @@ class UnavailableSourcesNotice extends StatelessWidget {
   }
 }
 
-/// `10:32 ص` — hand-rolled rather than `DateFormat.jm('ar')`, which needs
+/// `12:00` — 24h plain digits, matching every other timestamp in the console
+/// (Home's own banner, trip departures, table cells), which are ASCII
+/// throughout. Hand-rolled rather than `DateFormat.jm('ar')`, which needs
 /// locale data initialised and would make every widget test that renders this
 /// header depend on it.
 String _clock(DateTime at) {
-  final isMorning = at.hour < 12;
-  final hour = at.hour % 12 == 0 ? 12 : at.hour % 12;
-  final minute = at.minute.toString().padLeft(2, '0');
-  return '$hour:$minute ${isMorning ? 'ص' : 'م'}';
+  String two(int n) => n.toString().padLeft(2, '0');
+  return '${two(at.hour)}:${two(at.minute)}';
 }

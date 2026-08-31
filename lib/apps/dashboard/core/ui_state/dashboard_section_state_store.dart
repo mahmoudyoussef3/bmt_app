@@ -68,6 +68,8 @@ class DashboardSectionIds {
   static const businessFinancial = 'business.financial';
   static const businessOperational = 'business.operational';
   static const businessCustomers = 'business.customers';
+  static const businessRevenueTrend = 'business.revenueTrend';
+  static const businessRoutes = 'business.routes';
   static const businessQuickActions = 'business.quickActions';
   static const businessAttention = 'business.attention';
 
@@ -112,8 +114,6 @@ class DashboardSectionIds {
 
   static const financeHeader = 'finance.header';
   static const financeAttention = 'finance.attention';
-  static const financeMoneyStatus = 'finance.moneyStatus';
-  static const financeRevenueTrend = 'finance.revenueTrend';
   static const financeRevenueSources = 'finance.revenueSources';
   static const financePaymentMethods = 'finance.paymentMethods';
   static const financeTopRoutes = 'finance.topRoutes';
@@ -123,7 +123,6 @@ class DashboardSectionIds {
   static const financeDailyVolume = 'finance.dailyVolume';
   static const financePeriodComparison = 'finance.periodComparison';
   static const financeStatusMix = 'finance.statusMix';
-  static const financeKpis = 'finance.kpis';
   static const financeStatements = 'finance.statements';
   static const financeCollectionByMethod = 'finance.collectionByMethod';
   static const financeRefundRequests = 'finance.refundRequests';

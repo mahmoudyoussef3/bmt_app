@@ -9,7 +9,26 @@ import 'package:bmt_app/core/theme/tokens.dart';
 class DashboardDonutChart extends StatelessWidget {
   final List<ChartDatum> data;
 
-  const DashboardDonutChart({super.key, required this.data});
+  /// Formats every figure the chart prints — the centred total and each legend
+  /// value. Defaults to a bare integer, which is right for the counts most
+  /// callers pass and wrong for money: a finance donut has to say
+  /// "12,219 ج.م", not "12219", or its slices read as a different magnitude
+  /// than the headline they are meant to explain.
+  final String Function(double value)? valueFormatter;
+
+  /// Names the centred figure. Only worth overriding when "الإجمالي" would be
+  /// vaguer than the caller can afford.
+  final String totalLabel;
+
+  const DashboardDonutChart({
+    super.key,
+    required this.data,
+    this.valueFormatter,
+    this.totalLabel = 'الإجمالي',
+  });
+
+  String _format(double value) =>
+      valueFormatter?.call(value) ?? '${value.toInt()}';
 
   @override
   Widget build(BuildContext context) {
@@ -53,13 +72,16 @@ class DashboardDonutChart extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      '${total.toInt()}',
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
+                      _format(total),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w900,
                       ),
                     ),
                     Text(
-                      'الإجمالي',
+                      totalLabel,
                       style: Theme.of(context).textTheme.labelSmall,
                     ),
                   ],
@@ -69,7 +91,7 @@ class DashboardDonutChart extends StatelessWidget {
           ),
           const SizedBox(width: AppSpacing.medium),
           Expanded(
-            child: _Legend(data: data, total: total),
+            child: _Legend(data: data, total: total, format: _format),
           ),
         ],
       ),
@@ -80,8 +102,13 @@ class DashboardDonutChart extends StatelessWidget {
 class _Legend extends StatelessWidget {
   final List<ChartDatum> data;
   final double total;
+  final String Function(double value) format;
 
-  const _Legend({required this.data, required this.total});
+  const _Legend({
+    required this.data,
+    required this.total,
+    required this.format,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -115,7 +142,9 @@ class _Legend extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    '${datum.value.toInt()}',
+                    format(datum.value),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.labelLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),

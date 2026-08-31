@@ -208,7 +208,8 @@ class BusinessOverview {
       bucket.total += t.bookedSeats;
       bucket.capacity += t.capacity;
     },
-    combine: (bucket) => bucket.capacity == 0 ? 0 : bucket.total / bucket.capacity,
+    combine: (bucket) =>
+        bucket.capacity == 0 ? 0 : bucket.total / bucket.capacity,
   );
 
   /// Net movement of customer wallet balances per day. Signed: a day of
@@ -288,6 +289,127 @@ class BusinessOverview {
     revenueSeries(days: 14),
   );
 
+  /// The day this office's loaded history starts, and how many rows that took.
+  ///
+  /// Exposed so the page can tell a young office ("we have everything, it is
+  /// only three weeks old") apart from a truncated one ("the query hit its
+  /// ceiling and older rows were never fetched"). The ceiling itself is a
+  /// query concern and stays out of the domain — presentation compares this
+  /// count against [DashboardQueryCaps] and says so only when it matters.
+  DateTime? get earliestLoadedBookingDay => _firstBookingDay;
+
+  int get loadedBookings => bookings.length;
+
+  /// The first day any loaded trip was scheduled for, cancellations included —
+  /// the baseline guard for occupancy, which is measured off trips rather than
+  /// off bookings.
+  late final DateTime? _firstTripDay = () {
+    DateTime? earliest;
+    for (final trip in trips) {
+      final at = trip.scheduledAt;
+      if (at == null) continue;
+      final day = _startOfDay(at);
+      if (earliest == null || day.isBefore(earliest)) earliest = day;
+    }
+    return earliest;
+  }();
+
+  /// Compares the window just ended against the one immediately before it.
+  ///
+  /// [doubled] is a series of exactly `2 × days` buckets: the older half is the
+  /// baseline, the newer half is the reading. Same guard as [_weekOverWeek],
+  /// and for the same reason — the series always returns its full length
+  /// because quiet days are zeros, so counting buckets proves nothing. What has
+  /// to hold is that the office was actually trading during the baseline half,
+  /// or a three-week-old office reads as a business that just collapsed.
+  MetricTrend? _windowOverWindow(
+    List<DailyMetric> doubled,
+    String previousLabel,
+  ) {
+    final half = doubled.length ~/ 2;
+    if (half < 1 || doubled.length < half * 2) return null;
+    final start = _firstBookingDay;
+    if (start == null || start.isAfter(doubled.first.day)) return null;
+
+    double sum(List<DailyMetric> days) =>
+        days.fold<double>(0, (acc, day) => acc + day.value);
+    return MetricTrend(
+      current: sum(doubled.sublist(half)),
+      previous: sum(doubled.sublist(0, half)),
+      previousLabel: previousLabel,
+    );
+  }
+
+  /// Collected fare over the last [days] against the [days] before them.
+  ///
+  /// [previousLabel] comes from the caller because the page owns the period
+  /// vocabulary — the same arithmetic is "الشهر السابق" or "الأسبوع السابق"
+  /// depending on which window the owner picked.
+  MetricTrend? revenueWindowTrend({
+    required int days,
+    required String previousLabel,
+  }) => _windowOverWindow(revenueSeries(days: days * 2), previousLabel);
+
+  /// Bookings taken over the last [days] against the [days] before them.
+  MetricTrend? bookingsWindowTrend({
+    required int days,
+    required String previousLabel,
+  }) => _windowOverWindow(bookingsSeries(days: days * 2), previousLabel);
+
+  /// Bookings taken in the window, by `created_at` — the sales figure, not the
+  /// travelling figure.
+  int bookingsOver({int days = 30}) => bookingsSeries(
+    days: days,
+  ).fold<int>(0, (sum, day) => sum + day.value.round());
+
+  /// Seats sold ÷ seats offered across the whole window, ending
+  /// [endingDaysAgo] days before today.
+  ///
+  /// Weighted by capacity rather than averaged over daily ratios: a day running
+  /// one bus and a day running twelve are not the same measurement, and taking
+  /// the mean of their percentages gives the quiet day an equal vote. Null when
+  /// no capacity was offered at all — a window with no buses has no occupancy,
+  /// which is not the same statement as 0%.
+  double? occupancyOver({int days = 30, int endingDaysAgo = 0}) {
+    final end = _today.subtract(Duration(days: endingDaysAgo));
+    final from = end.subtract(Duration(days: days - 1));
+    var booked = 0;
+    var capacity = 0;
+    for (final trip in trips) {
+      if (trip.status == OperationTripStatus.cancelled) continue;
+      final at = trip.scheduledAt;
+      if (at == null) continue;
+      final day = _startOfDay(at);
+      if (day.isBefore(from) || day.isAfter(end)) continue;
+      booked += trip.bookedSeats;
+      capacity += trip.capacity;
+    }
+    if (capacity == 0) return null;
+    return booked / capacity;
+  }
+
+  /// Occupancy over the last [days] against the [days] before them.
+  ///
+  /// Guarded on the first *trip* rather than the first booking: occupancy is
+  /// measured off the schedule, and an office that ran buses before it sold a
+  /// seat still has a measurable baseline.
+  MetricTrend? occupancyWindowTrend({
+    required int days,
+    required String previousLabel,
+  }) {
+    final current = occupancyOver(days: days);
+    final previous = occupancyOver(days: days, endingDaysAgo: days);
+    if (current == null || previous == null) return null;
+    final start = _firstTripDay;
+    final baselineStart = _today.subtract(Duration(days: days * 2 - 1));
+    if (start == null || start.isAfter(baselineStart)) return null;
+    return MetricTrend(
+      current: current,
+      previous: previous,
+      previousLabel: previousLabel,
+    );
+  }
+
   late final List<OperationTrip> todayTrips = trips.where((trip) {
     final at = trip.scheduledAt;
     return at != null && _startOfDay(at) == _today;
@@ -317,9 +439,8 @@ class BusinessOverview {
       .where((t) => t.status == OperationTripStatus.completed)
       .length;
 
-  int get tripsCancelledToday => todayTrips
-      .where((t) => t.status == OperationTripStatus.cancelled)
-      .length;
+  int get tripsCancelledToday =>
+      todayTrips.where((t) => t.status == OperationTripStatus.cancelled).length;
 
   /// Today's trips past their departure time that have not started.
   ///
@@ -385,9 +506,7 @@ class BusinessOverview {
             ),
         ]..sort((a, b) {
           final byRate = b.occupancyRate.compareTo(a.occupancyRate);
-          return byRate != 0
-              ? byRate
-              : b.bookedSeats.compareTo(a.bookedSeats);
+          return byRate != 0 ? byRate : b.bookedSeats.compareTo(a.bookedSeats);
         });
     return rows.take(limit).toList();
   }
@@ -442,9 +561,8 @@ class BusinessOverview {
   };
 
   /// Fare collected in the window — approved payments, dated by `created_at`.
-  double collected({int days = 30}) => revenueSeries(
-    days: days,
-  ).fold<double>(0, (sum, day) => sum + day.value);
+  double collected({int days = 30}) =>
+      revenueSeries(days: days).fold<double>(0, (sum, day) => sum + day.value);
 
   /// Fare sold but not yet collected: still-live bookings whose payment has not
   /// been approved. Rejected, refunded, failed and cancelled payments are not
@@ -694,9 +812,10 @@ class BusinessOverview {
     }
     final ratio = trend.changeRatio;
     final status = switch (ratio) {
-      null => trend.current > 0
-          ? BusinessHealthStatus.healthy
-          : BusinessHealthStatus.critical,
+      null =>
+        trend.current > 0
+            ? BusinessHealthStatus.healthy
+            : BusinessHealthStatus.critical,
       final r when r >= 0 => BusinessHealthStatus.healthy,
       final r when r > -0.15 => BusinessHealthStatus.warning,
       _ => BusinessHealthStatus.critical,
@@ -842,7 +961,8 @@ class BusinessOverview {
       metric: BusinessHealthMetric.collectionHealth,
       status: status,
       reading: '${(rate * 100).round()}%',
-      detail: 'من قيمة حجوزات آخر ٣٠ يوم · ${outstanding.round()} ج.م لم تُحصّل',
+      detail:
+          'من قيمة حجوزات آخر ٣٠ يوم · ${outstanding.round()} ج.م لم تُحصّل',
     );
   }
 
@@ -914,7 +1034,8 @@ class BusinessOverview {
     final totals = <int, double>{};
     final counts = <int, int>{};
     for (final point in series) {
-      totals[point.day.weekday] = (totals[point.day.weekday] ?? 0) + point.value;
+      totals[point.day.weekday] =
+          (totals[point.day.weekday] ?? 0) + point.value;
       counts[point.day.weekday] = (counts[point.day.weekday] ?? 0) + 1;
     }
     final eligible = totals.keys.where((day) => (counts[day] ?? 0) >= 3);
@@ -1132,7 +1253,7 @@ class BusinessOverview {
             kind: BusinessAttentionKind.staleTrips,
             count: staleTrips.length,
           ),
-          
+
           BusinessAttentionItem(
             kind: BusinessAttentionKind.highCancellationRate,
             count: cancellation >= 0.10 ? (cancellation * 100).round() : 0,

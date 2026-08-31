@@ -1,17 +1,23 @@
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/dashboard/core/routes/dashboard_routes.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
-import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_empty_state.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_panel.dart';
-import 'package:bmt_app/core/theme/spacing.dart';
-import 'package:bmt_app/core/theme/tokens.dart';
+import 'package:bmt_app/core/theme/colors.dart';
 
 import '../../domain/entities/business_attention.dart';
+import 'overview_kit.dart';
 
-/// Section 8 — the owner's to-do list.
+/// The owner's to-do list, full width and directly under the KPI band — the
+/// position and the shape الرئيسية gives «يحتاج إلى إجراء».
+///
+/// A grid rather than a stacked list, for the reason Home documents: a
+/// full-width row leaves a hand's width of blank paper between a two-word body
+/// and its count, and three short records per row is what a page this wide can
+/// actually be read at.
 ///
 /// Every row is a real queue with a real count, and none of them is
 /// dismissible: dismissing does not refund a passenger or assign a driver, and
@@ -47,7 +53,7 @@ class BusinessAttentionSection extends StatelessWidget {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: Theme.of(context).colorScheme.onSurfaceVariant,
+          color: DashboardColors.mutedInk(context),
         ),
       ),
       child: items.isEmpty
@@ -56,115 +62,52 @@ class BusinessAttentionSection extends StatelessWidget {
               title: 'كل شيء تحت السيطرة',
               message: 'لا يوجد ما يحتاج قراراً منك الآن.',
             )
-          : Column(
+          : OverviewTileGrid(
               children: [
                 for (final item in items)
-                  _AttentionRow(item: item, onOpenModule: onOpenModule),
+                  _AttentionTile(item: item, onOpenModule: onOpenModule),
               ],
             ),
     );
   }
 }
 
-/// One queue: what it is, what clearing it means, how many, and one tap to the
-/// screen that clears it. The whole row is the target — an icon-sized button at
-/// the end of a row is a miss waiting to happen.
-class _AttentionRow extends StatelessWidget {
-  const _AttentionRow({required this.item, required this.onOpenModule});
+/// One queue: an icon square carrying the only colour on the tile, the title
+/// and what clearing it means, then the count and a forward chevron.
+///
+/// The EWT redesign's colour budget rule, which الرئيسية's queue tile already
+/// follows: a tinted glyph reads as a category mark, while a whole tile tinted
+/// by severity turns six ordinary queues into six alert boxes shouting at once.
+/// The previous revision here tinted the fill.
+///
+/// None of these is dismissible: dismissing does not refund a passenger or
+/// assign a driver, and a list that can be cleared without doing the work stops
+/// being a to-do list within a week. An empty section therefore means the
+/// console genuinely has nothing to escalate.
+class _AttentionTile extends StatelessWidget {
+  const _AttentionTile({required this.item, required this.onOpenModule});
 
   final BusinessAttentionItem item;
   final ValueChanged<String> onOpenModule;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final scheme = theme.colorScheme;
-    final palette = DashboardChartPalette.of(context);
-    final tone = switch (item.kind.severity) {
-      BusinessAttentionSeverity.urgent => palette.negative,
-      BusinessAttentionSeverity.warning => palette.warning,
-      BusinessAttentionSeverity.info => palette.active,
-    };
     final spec = _specFor(item.kind);
-    final radius = BorderRadius.circular(AppTokens.radiusSmall);
     final title = item.subject == null
         ? spec.title
         : '${spec.title}: ${item.subject}';
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.xSmall),
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: radius,
-        child: InkWell(
-          onTap: () => onOpenModule(spec.route),
-          borderRadius: radius,
-          child: Padding(
-            padding: const EdgeInsets.all(AppSpacing.small),
-            child: Row(
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: tone.withValues(alpha: 0.12),
-                    borderRadius: radius,
-                  ),
-                  child: Icon(spec.icon, size: 18, color: tone),
-                ),
-                const SizedBox(width: AppSpacing.small),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      Text(
-                        spec.action,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: scheme.onSurfaceVariant,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: AppSpacing.small),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: tone.withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Text(
-                    item.note ?? '${item.count}',
-                    style: theme.textTheme.labelMedium?.copyWith(
-                      color: tone,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ),
-                Icon(
-                  DashboardIcons.openModule,
-                  size: 18,
-                  color: scheme.onSurfaceVariant,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+    return OverviewRecordTile(
+      icon: spec.icon,
+      title: title,
+      subtitle: spec.action,
+      tone: switch (item.kind.severity) {
+        BusinessAttentionSeverity.urgent => AppStatusTone.error,
+        BusinessAttentionSeverity.warning => AppStatusTone.warning,
+        BusinessAttentionSeverity.info => AppStatusTone.info,
+      },
+      value: item.note ?? '${item.count}',
+      onTap: () => onOpenModule(spec.route),
     );
   }
 }

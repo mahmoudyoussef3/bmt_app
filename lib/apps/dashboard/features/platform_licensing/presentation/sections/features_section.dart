@@ -183,7 +183,7 @@ class _CatalogToolbarState extends State<_CatalogToolbar> {
             selection.first == 'all' ? null : selection.first,
           ),
         ),
-        _FilterDropdown(
+        LicensingFilterDropdown(
           label: 'التصنيف',
           value: state.featureCategoryFilter == null
               ? 'الكل'
@@ -197,9 +197,10 @@ class _CatalogToolbarState extends State<_CatalogToolbar> {
                   label: '${category.nameAr} (${categoryCounts[category.key]})',
                 ),
           ],
+          isActive: state.featureCategoryFilter != null,
           onSelected: cubit.filterFeaturesByCategory,
         ),
-        _FilterDropdown(
+        LicensingFilterDropdown(
           label: 'الحالة',
           value: state.featureStatusFilter == null
               ? 'الكل'
@@ -219,6 +220,7 @@ class _CatalogToolbarState extends State<_CatalogToolbar> {
                       '${_shortStatusLabel(status)} (${statusCounts[status]})',
                 ),
           ],
+          isActive: state.featureStatusFilter != null,
           onSelected: cubit.filterFeaturesByStatus,
         ),
         if (state.hasFeatureFilters)
@@ -231,72 +233,6 @@ class _CatalogToolbarState extends State<_CatalogToolbar> {
             label: const Text('مسح التصفية'),
           ),
       ],
-    );
-  }
-}
-
-/// A named dropdown: the label is always visible, so the control never asks the
-/// operator to infer its axis from whichever value happens to be selected.
-class _FilterDropdown extends StatelessWidget {
-  const _FilterDropdown({
-    required this.label,
-    required this.value,
-    required this.options,
-    required this.onSelected,
-  });
-
-  final String label;
-  final String value;
-  final List<({String? value, String label})> options;
-  final ValueChanged<String?> onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final radius = BorderRadius.circular(AppTokens.radiusSmall);
-
-    return PopupMenuButton<String>(
-      tooltip: label,
-
-      onSelected: (picked) => onSelected(picked == '' ? null : picked),
-      itemBuilder: (context) => [
-        for (final option in options)
-          PopupMenuItem(value: option.value ?? '', child: Text(option.label)),
-      ],
-      child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.medium,
-          vertical: 10,
-        ),
-        decoration: BoxDecoration(
-          color: theme.cardColor,
-          borderRadius: radius,
-          border: Border.all(color: DashboardColors.border(context)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              '$label: ',
-              style: theme.textTheme.labelMedium?.copyWith(
-                color: DashboardColors.mutedInk(context),
-              ),
-            ),
-            Text(
-              value,
-              style: theme.textTheme.labelMedium?.copyWith(
-                fontWeight: FontWeight.w800,
-              ),
-            ),
-            const SizedBox(width: 4),
-            Icon(
-              Icons.expand_more_rounded,
-              size: 18,
-              color: DashboardColors.mutedInk(context),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
@@ -871,7 +807,8 @@ class _EnforcementPanel extends StatelessWidget {
               spacing: AppSpacing.small,
               runSpacing: AppSpacing.xSmall,
               children: [
-                for (final key in feature.requires) DashboardStatusChip(label: key),
+                for (final key in feature.requires)
+                  DashboardStatusChip(label: key),
               ],
             ),
           ],

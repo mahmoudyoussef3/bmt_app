@@ -221,25 +221,40 @@ class FeatureValueField extends StatelessWidget {
         return Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            if (!unlimited)
-              SizedBox(
-                width: 96,
-                child: TextFormField(
-                  key: ValueKey('${feature.key}-limit'),
-                  initialValue: value is num ? '$value' : '',
-                  enabled: enabled,
-                  textAlign: TextAlign.center,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    isDense: true,
-                    border: OutlineInputBorder(),
-                  ),
-                  onChanged: (raw) {
-                    final parsed = int.tryParse(raw.trim());
-                    if (parsed != null && parsed >= 0) onChanged(parsed);
-                  },
+            // The field stays on screen while «بلا حدود» is on, greyed rather
+            // than removed: dropping it made the chip jump sideways on every
+            // toggle, in a column of rows the operator is scanning. The key
+            // carries the toggle so switching back rebuilds the field around
+            // the new value instead of keeping the number it used to hold.
+            SizedBox(
+              width: 96,
+              child: TextFormField(
+                key: ValueKey('${feature.key}-limit-$unlimited'),
+                initialValue: value is num ? '$value' : '',
+                enabled: enabled && !unlimited,
+                textAlign: TextAlign.center,
+                keyboardType: TextInputType.number,
+                decoration: InputDecoration(
+                  isDense: true,
+                  border: const OutlineInputBorder(),
+                  hintText: unlimited ? '∞' : null,
+                ),
+                onChanged: (raw) {
+                  final parsed = int.tryParse(raw.trim());
+                  if (parsed != null && parsed >= 0) onChanged(parsed);
+                },
+              ),
+            ),
+            // A bare «5» is not a limit until it says five of what.
+            if (feature.unitAr.isNotEmpty) ...[
+              const SizedBox(width: 6),
+              Text(
+                feature.unitAr,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                  color: DashboardColors.mutedInk(context),
                 ),
               ),
+            ],
             const SizedBox(width: AppSpacing.small),
             FilterChip(
               label: const Text('بلا حدود'),
@@ -311,7 +326,11 @@ class FeatureSourceChip extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        DashboardStatusChip(label: label, color: color.withAlpha(20), textColor: color),
+        DashboardStatusChip(
+          label: label,
+          color: color.withAlpha(20),
+          textColor: color,
+        ),
         if (blockedBy != null) ...[
           const SizedBox(width: AppSpacing.xSmall),
           Tooltip(

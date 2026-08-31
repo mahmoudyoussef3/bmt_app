@@ -1,4 +1,3 @@
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
@@ -112,6 +111,13 @@ class FinanceDeltaBadge extends StatelessWidget {
 /// this database is the whole journey as free text — "Obour, QH, Egypt →
 /// American University in Cairo (AUC) - New Cairo, QH, Egypt" — and 140px of it
 /// is "Obour, QH, Egyp…", which ranks corridors the reader cannot identify.
+///
+/// **The bars are one hue, shaded by rank.** They were [DashboardChartPalette.
+/// categoryAt], which gives six unrelated hues — navy, teal, purple, brown,
+/// red, grey — to what is a single dimension: how much. A ranking is ordinal,
+/// two of those hues are the console's own success and danger tones, and a red
+/// bar in a revenue ranking reads as a problem rather than as fifth place. The
+/// `sequential` ramp says "more" with saturation, which is what the list means.
 class FinanceRankedList extends StatelessWidget {
   final List<FinanceBreakdownRow> rows;
   final double total;
@@ -134,31 +140,48 @@ class FinanceRankedList extends StatelessWidget {
     this.emptyLabel = 'لا توجد بيانات في هذه الفترة',
   });
 
+  /// One hue, shaded by position: the leader is the full-strength brand tone
+  /// and each rank below it steps toward the pale end. Stops short of the
+  /// ramp's lightest stop on purpose — the last bar still has to be visible
+  /// against its own track.
+  static Color _rankColor(DashboardChartPalette palette, int index, int count) {
+    final ramp = palette.sequential;
+    final position = count <= 1 ? 1.0 : 1 - (index / (count - 1)) * 0.62;
+    final scaled = position * (ramp.length - 1);
+    final low = scaled.floor().clamp(0, ramp.length - 1);
+    final high = scaled.ceil().clamp(0, ramp.length - 1);
+    return Color.lerp(ramp[low], ramp[high], scaled - low) ?? ramp.last;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final palette = DashboardChartPalette.of(context);
     final visible = rows.where((row) => row.amount > 0).take(limit).toList();
 
     if (visible.isEmpty) {
       return Text(
         emptyLabel,
-        style: Theme.of(
-          context,
-        ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: DashboardColors.mutedInk(context),
+        ),
       );
     }
 
     final peak = visible.first.amount;
+    // A fixed lane against text that is not fixed: the money block holds two
+    // lines of Arabic and digits, so the lane has to grow with the reader or
+    // the percentage clips at 1.6×.
+    final moneyLane = MediaQuery.textScalerOf(context).scale(132);
 
     return Column(
       children: [
         for (final (index, row) in visible.indexed)
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 7),
+            padding: const EdgeInsets.symmetric(vertical: 6),
             child: Row(
               children: [
                 Expanded(
-                  flex: 5,
+                  flex: 6,
                   child: labelsAreRoutes
                       ? FinanceRouteLabel(label: row.label)
                       : Text(
@@ -168,7 +191,7 @@ class FinanceRankedList extends StatelessWidget {
                           style: Theme.of(context).textTheme.bodySmall,
                         ),
                 ),
-                const SizedBox(width: AppSpacing.small),
+                const SizedBox(width: AppSpacing.medium),
                 Expanded(
                   flex: 4,
                   child: ClipRRect(
@@ -177,17 +200,15 @@ class FinanceRankedList extends StatelessWidget {
                       value: peak <= 0
                           ? 0
                           : (row.amount / peak).clamp(0, 1).toDouble(),
-                      minHeight: 10,
-                      backgroundColor: scheme.surfaceContainerHighest,
-                      color: DashboardChartPalette.of(
-                        context,
-                      ).categoryAt(index),
+                      minHeight: 8,
+                      backgroundColor: DashboardColors.well(context),
+                      color: _rankColor(palette, index, visible.length),
                     ),
                   ),
                 ),
-                const SizedBox(width: AppSpacing.small),
+                const SizedBox(width: AppSpacing.medium),
                 SizedBox(
-                  width: 132,
+                  width: moneyLane,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
@@ -196,7 +217,8 @@ class FinanceRankedList extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w800,
+                          fontFeatures: const [FontFeature.tabularFigures()],
                         ),
                       ),
                       Text(
@@ -206,7 +228,7 @@ class FinanceRankedList extends StatelessWidget {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: scheme.onSurfaceVariant,
+                          color: DashboardColors.mutedInk(context),
                         ),
                       ),
                     ],
@@ -269,59 +291,6 @@ class FinanceRouteLabel extends StatelessWidget {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: effective,
-      ),
-    );
-  }
-}
-
-/// Compact trend line for hero tiles — no axes, no grid, just the shape of the
-/// period. Deliberately unlabelled: it is a glance, and every number it implies
-/// is spelled out beside it.
-class FinanceSparkline extends StatelessWidget {
-  final List<double> values;
-  final Color color;
-  final double height;
-
-  const FinanceSparkline({
-    super.key,
-    required this.values,
-    required this.color,
-    this.height = 56,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (values.length < 2) return SizedBox(height: height);
-
-    final maxValue = values.reduce((a, b) => a > b ? a : b);
-    final minValue = values.reduce((a, b) => a < b ? a : b);
-    final span = maxValue - minValue;
-
-    return SizedBox(
-      height: height,
-      child: LineChart(
-        LineChartData(
-          minY: span == 0 ? minValue - 1 : minValue - span * 0.15,
-          maxY: span == 0 ? maxValue + 1 : maxValue + span * 0.15,
-          gridData: const FlGridData(show: false),
-          titlesData: const FlTitlesData(show: false),
-          borderData: FlBorderData(show: false),
-          lineTouchData: const LineTouchData(enabled: false),
-          lineBarsData: [
-            LineChartBarData(
-              spots: [
-                for (var i = 0; i < values.length; i++)
-                  FlSpot(i.toDouble(), values[i]),
-              ],
-              isCurved: true,
-              curveSmoothness: 0.25,
-              color: color,
-              barWidth: 2.5,
-              dotData: const FlDotData(show: false),
-              belowBarData: BarAreaData(show: true, color: color.withAlpha(36)),
-            ),
-          ],
-        ),
       ),
     );
   }

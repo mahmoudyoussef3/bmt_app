@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -71,7 +73,12 @@ class _PlansSectionState extends State<PlansSection> {
   int _tab = 0;
   String _featureQuery = '';
   String? _featureCategory;
-  bool _modifiedOnly = false;
+  _FeatureView _view = _FeatureView.all;
+
+  /// Bumped when the operator clears the feature filters, so the search field
+  /// is rebuilt around an empty controller — its own controller is `late final`
+  /// and never re-reads `initialValue`.
+  int _featureSearchEpoch = 0;
 
   @override
   void dispose() {
@@ -111,13 +118,22 @@ class _PlansSectionState extends State<PlansSection> {
       tab: _tab,
       featureQuery: _featureQuery,
       featureCategory: _featureCategory,
-      modifiedOnly: _modifiedOnly,
+      featureSearchEpoch: _featureSearchEpoch,
+      view: _view,
       onTab: (i) => setState(() => _tab = i),
       onFeatureQuery: (q) => setState(() => _featureQuery = q),
       onFeatureCategory: (c) => setState(() => _featureCategory = c),
-      onModifiedOnly: (v) => setState(() => _modifiedOnly = v),
+      onView: (v) => setState(() => _view = v),
+      onResetFilters: () => setState(() {
+        _featureQuery = '';
+        _featureCategory = null;
+        _view = _FeatureView.all;
+        _featureSearchEpoch++;
+      }),
       onValueChanged: (key, value) => setState(() => _draft[key] = value),
       onValueCleared: (key) => setState(() => _draft.remove(key)),
+      onValuesCleared: (keys) =>
+          setState(() => _draft.removeWhere((key, _) => keys.contains(key))),
       onSave: () => _saveValues(context, detail),
       onDiscard: () => setState(() => _draft = {...detail.values}),
       onBack: () => _closePlan(context, changed.length),
@@ -147,7 +163,8 @@ class _PlansSectionState extends State<PlansSection> {
       _tab = 0;
       _featureQuery = '';
       _featureCategory = null;
-      _modifiedOnly = false;
+      _view = _FeatureView.all;
+      _featureSearchEpoch++;
       _note.clear();
     }
   }
@@ -794,6 +811,13 @@ class _PlanPrice extends StatelessWidget {
 /// header over a flexed body here on purpose: that shape is what clipped this
 /// screen on a short console window, and a sticky action bar is the shape a web
 /// app uses for exactly this job.
+///
+/// **The content sits in a centred lane rather than filling the console.** A
+/// plan editor is a form, and a form row 1900px wide puts a feature's name
+/// against one edge of the monitor and its switch against the other — so the
+/// eye has to cross the whole screen to make the association the row exists to
+/// make. The save bar rides the same lane, so it never floats free of the thing
+/// it is saving.
 class _PlanWorkspace extends StatelessWidget {
   const _PlanWorkspace({
     required this.state,
@@ -804,13 +828,16 @@ class _PlanWorkspace extends StatelessWidget {
     required this.tab,
     required this.featureQuery,
     required this.featureCategory,
-    required this.modifiedOnly,
+    required this.featureSearchEpoch,
+    required this.view,
     required this.onTab,
     required this.onFeatureQuery,
     required this.onFeatureCategory,
-    required this.onModifiedOnly,
+    required this.onView,
+    required this.onResetFilters,
     required this.onValueChanged,
     required this.onValueCleared,
+    required this.onValuesCleared,
     required this.onSave,
     required this.onDiscard,
     required this.onBack,
@@ -827,13 +854,16 @@ class _PlanWorkspace extends StatelessWidget {
   final int tab;
   final String featureQuery;
   final String? featureCategory;
-  final bool modifiedOnly;
+  final int featureSearchEpoch;
+  final _FeatureView view;
   final ValueChanged<int> onTab;
   final ValueChanged<String> onFeatureQuery;
   final ValueChanged<String?> onFeatureCategory;
-  final ValueChanged<bool> onModifiedOnly;
+  final ValueChanged<_FeatureView> onView;
+  final VoidCallback onResetFilters;
   final void Function(String key, Object? value) onValueChanged;
   final ValueChanged<String> onValueCleared;
+  final ValueChanged<Iterable<String>> onValuesCleared;
   final VoidCallback onSave;
   final VoidCallback onDiscard;
   final VoidCallback onBack;
@@ -841,98 +871,129 @@ class _PlanWorkspace extends StatelessWidget {
   final VoidCallback onClone;
   final ValueChanged<String> onStatusChange;
 
+  /// Wide enough for the editor's five lanes at full spread, narrow enough that
+  /// a row's two ends stay in one glance.
+  static const double _contentWidth = 1320;
+
   @override
   Widget build(BuildContext context) {
     final cubit = context.read<PlatformLicensingCubit>();
     final isDirty = changedKeys.isNotEmpty;
+    final selectable = state.catalog.features
+        .where((f) => f.status != 'hidden')
+        .length;
 
     return LayoutBuilder(
-      builder: (context, constraints) => Stack(
-        children: [
-          ListView(
-            padding: EdgeInsets.only(
-              bottom: isDirty
-                  ? (constraints.maxWidth < 720 ? 220.0 : 132.0)
-                  : 0.0,
-            ),
-            children: [
-              _WorkspaceHeader(
-                detail: detail,
-                onBack: onBack,
-                onEdit: onEdit,
-                onClone: onClone,
-                onStatusChange: onStatusChange,
-                onPreview: () => cubit.previewPlan(detail.plan.id),
+      builder: (context, constraints) {
+        final gutter = math.max(
+          0.0,
+          (constraints.maxWidth - _contentWidth) / 2,
+        );
+
+        return Stack(
+          children: [
+            ListView(
+              padding: EdgeInsets.only(
+                left: gutter,
+                right: gutter,
+                bottom: isDirty
+                    ? (constraints.maxWidth < 720 ? 220.0 : 132.0)
+                    : 0.0,
               ),
-              const SizedBox(height: AppSpacing.medium),
-              LicensingTabs(
-                selected: tab,
-                onChanged: onTab,
-                tabs: [
-                  LicensingTab(
-                    label: 'الميزات',
-                    icon: DashboardIcons.featureCatalog,
-                    count: detail.values.length,
-                  ),
-                  LicensingTab(
-                    label: 'المكاتب',
-                    icon: DashboardIcons.platformOffices,
-                    count: detail.offices.length,
-                  ),
-                  LicensingTab(
-                    label: 'السجل',
-                    icon: DashboardIcons.audit,
-                    count: detail.revisions.length,
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.medium),
-              switch (tab) {
-                1 => _PlanOffices(detail: detail),
-                2 => _PlanRevisions(detail: detail, catalog: state.catalog),
-                _ => _FeatureEditor(
-                  catalog: state.catalog,
-                  draft: draft,
-                  saved: detail.values,
-                  changedKeys: changedKeys,
-                  preview: state.planPreview,
-                  query: featureQuery,
-                  category: featureCategory,
-                  modifiedOnly: modifiedOnly,
-                  onQuery: onFeatureQuery,
-                  onCategory: onFeatureCategory,
-                  onModifiedOnly: onModifiedOnly,
-                  onChanged: onValueChanged,
-                  onCleared: onValueCleared,
-                  onClosePreview: cubit.clearPlanPreview,
+              children: [
+                _WorkspaceHeader(
+                  detail: detail,
+                  setCount: draft.length,
+                  catalogCount: selectable,
+                  onBack: onBack,
+                  onEdit: onEdit,
+                  onClone: onClone,
+                  onStatusChange: onStatusChange,
+                  onPreview: () => cubit.previewPlan(detail.plan.id),
                 ),
-              },
-            ],
-          ),
-          if (isDirty)
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: AppSpacing.medium,
-              child: LicensingSaveBar(
-                changedCount: changedKeys.length,
-                noteController: note,
-                onDiscard: onDiscard,
-                onSave: onSave,
-                message:
-                    'الحفظ يسري فورًا على ${detail.offices.length} مكتب مشترك، '
-                    'وتُحفظ الحالة السابقة في السجل.',
-              ),
+                const SizedBox(height: AppSpacing.medium),
+                LicensingTabs(
+                  selected: tab,
+                  onChanged: onTab,
+                  tabs: [
+                    LicensingTab(
+                      label: 'الميزات',
+                      icon: DashboardIcons.featureCatalog,
+                      count: detail.values.length,
+                    ),
+                    LicensingTab(
+                      label: 'المكاتب',
+                      icon: DashboardIcons.platformOffices,
+                      count: detail.offices.length,
+                    ),
+                    LicensingTab(
+                      label: 'السجل',
+                      icon: DashboardIcons.audit,
+                      count: detail.revisions.length,
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.medium),
+                switch (tab) {
+                  1 => _PlanOffices(detail: detail),
+                  2 => _PlanRevisions(detail: detail, catalog: state.catalog),
+                  _ => _FeatureEditor(
+                    catalog: state.catalog,
+                    draft: draft,
+                    saved: detail.values,
+                    changedKeys: changedKeys,
+                    preview: state.planPreview,
+                    query: featureQuery,
+                    searchEpoch: featureSearchEpoch,
+                    category: featureCategory,
+                    view: view,
+                    onQuery: onFeatureQuery,
+                    onCategory: onFeatureCategory,
+                    onView: onView,
+                    onResetFilters: onResetFilters,
+                    onChanged: onValueChanged,
+                    onCleared: onValueCleared,
+                    onClearedMany: onValuesCleared,
+                    onClosePreview: cubit.clearPlanPreview,
+                  ),
+                },
+              ],
             ),
-        ],
-      ),
+            if (isDirty)
+              Positioned(
+                left: gutter,
+                right: gutter,
+                bottom: AppSpacing.medium,
+                child: LicensingSaveBar(
+                  changedCount: changedKeys.length,
+                  noteController: note,
+                  onDiscard: onDiscard,
+                  onSave: onSave,
+                  message:
+                      'الحفظ يسري فورًا على ${detail.offices.length} مكتب مشترك، '
+                      'وتُحفظ الحالة السابقة في السجل.',
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 }
 
+/// The open plan's identity, its commercial terms, and its actions.
+///
+/// This is where the operator confirms *which product they are editing*, so it
+/// is built like a product header rather than a row of equal pills: a way out,
+/// the plan's name and its pitch, then a vitals strip where the price carries
+/// the weight a price has in the decision. The five bordered pills it replaced
+/// said «1500 ج.م / شهر» and «بلا فترة تجريبية» in exactly the same voice,
+/// which is a header that answers nothing at a glance.
 class _WorkspaceHeader extends StatelessWidget {
   const _WorkspaceHeader({
     required this.detail,
+    required this.setCount,
+    required this.catalogCount,
     required this.onBack,
     required this.onEdit,
     required this.onClone,
@@ -941,6 +1002,12 @@ class _WorkspaceHeader extends StatelessWidget {
   });
 
   final PlanDetail detail;
+
+  /// How many features the plan pins right now — read from the working copy,
+  /// not the stored one, so the strip never disagrees with the list under it.
+  final int setCount;
+
+  final int catalogCount;
   final VoidCallback onBack;
   final VoidCallback onEdit;
   final VoidCallback onClone;
@@ -953,17 +1020,44 @@ class _WorkspaceHeader extends StatelessWidget {
     final scheme = theme.colorScheme;
     final plan = detail.plan;
     final statusColor = _planStatusColor(context, plan.status);
+    final muted = DashboardColors.mutedInk(context);
+    final tagline = plan.taglineAr.trim();
+
+    // Breakpoints are widths in *unscaled* pixels, and the actions are three
+    // Arabic buttons: at 1.6× they need half again as much room, and the
+    // identity beside them gets squeezed past its 46px glyph. Scaling the
+    // breakpoint is what makes the header stack when it actually has to.
+    final stackBelow = MediaQuery.textScalerOf(context).scale(780);
 
     return AppCard(
       padding: const EdgeInsets.all(AppSpacing.medium),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          TextButton.icon(
-            onPressed: onBack,
-            icon: const Icon(DashboardIcons.back, size: 18),
-            label: const Text('كل الباقات'),
-            style: TextButton.styleFrom(padding: EdgeInsets.zero),
+          Row(
+            children: [
+              TextButton.icon(
+                onPressed: onBack,
+                icon: const Icon(DashboardIcons.back, size: 18),
+                label: const Text('كل الباقات'),
+                style: TextButton.styleFrom(
+                  visualDensity: VisualDensity.compact,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.small,
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppSpacing.small),
+              Expanded(
+                child: Text(
+                  '${plan.key} · المراجعة رقم ${plan.revision}',
+                  textAlign: TextAlign.end,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.labelSmall?.copyWith(color: muted),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: AppSpacing.small),
           LayoutBuilder(
@@ -972,18 +1066,16 @@ class _WorkspaceHeader extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    width: 44,
-                    height: 44,
+                    width: 46,
+                    height: 46,
                     decoration: BoxDecoration(
-                      color: scheme.primary.withAlpha(20),
+                      color: statusColor.withAlpha(22),
                       borderRadius: BorderRadius.circular(
                         AppTokens.radiusSmall,
                       ),
+                      border: Border.all(color: statusColor.withAlpha(60)),
                     ),
-                    child: Icon(
-                      DashboardIcons.plansActive,
-                      color: scheme.primary,
-                    ),
+                    child: Icon(DashboardIcons.plansActive, color: statusColor),
                   ),
                   const SizedBox(width: AppSpacing.small),
                   Expanded(
@@ -1012,9 +1104,18 @@ class _WorkspaceHeader extends StatelessWidget {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          '${plan.key} · مراجعة ${plan.revision}',
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: DashboardColors.mutedInk(context),
+                          tagline.isEmpty
+                              ? 'بلا وصف تجاري — أضِفه من «بيانات البيع» ليقرأه '
+                                    'المكتب قبل الاشتراك.'
+                              : tagline,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: muted,
+                            height: 1.5,
+                            fontStyle: tagline.isEmpty
+                                ? FontStyle.italic
+                                : FontStyle.normal,
                           ),
                         ),
                       ],
@@ -1028,6 +1129,14 @@ class _WorkspaceHeader extends StatelessWidget {
                 runSpacing: AppSpacing.xSmall,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
+                  // A draft sells nothing until it is published, so that one
+                  // action never hides under «⋯».
+                  if (plan.status == 'draft')
+                    FilledButton.icon(
+                      onPressed: () => onStatusChange('active'),
+                      icon: const Icon(Icons.publish_rounded, size: 18),
+                      label: const Text('نشر الباقة'),
+                    ),
                   OutlinedButton.icon(
                     onPressed: onPreview,
                     icon: const Icon(Icons.visibility_outlined, size: 18),
@@ -1053,16 +1162,6 @@ class _WorkspaceHeader extends StatelessWidget {
                           title: Text('نسخ الباقة'),
                         ),
                       ),
-                      if (plan.status == 'draft')
-                        const PopupMenuItem(
-                          value: 'active',
-                          child: ListTile(
-                            dense: true,
-                            contentPadding: EdgeInsets.zero,
-                            leading: Icon(Icons.publish_rounded),
-                            title: Text('نشر الباقة'),
-                          ),
-                        ),
                       if (plan.isArchived)
                         const PopupMenuItem(
                           value: 'active',
@@ -1088,7 +1187,7 @@ class _WorkspaceHeader extends StatelessWidget {
                 ],
               );
 
-              if (constraints.maxWidth < 720) {
+              if (constraints.maxWidth < stackBelow) {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -1108,42 +1207,61 @@ class _WorkspaceHeader extends StatelessWidget {
             },
           ),
           const SizedBox(height: AppSpacing.medium),
-          Wrap(
-            spacing: AppSpacing.small,
-            runSpacing: AppSpacing.xSmall,
-            children: [
-              LicensingFact(
-                icon: DashboardIcons.payments,
-                label: plan.priceMonthly == null
-                    ? 'سعر تفاوضي'
-                    : '${licensingMoney(plan.priceMonthly, plan.currency)} / شهر',
-              ),
-              if (plan.priceYearly != null)
-                LicensingFact(
-                  icon: DashboardIcons.billing,
-                  label:
-                      '${licensingMoney(plan.priceYearly, plan.currency)} / سنة',
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.medium,
+              vertical: AppSpacing.small,
+            ),
+            decoration: BoxDecoration(
+              color: DashboardColors.well(context),
+              borderRadius: BorderRadius.circular(AppTokens.radius),
+              border: Border.all(color: DashboardColors.border(context)),
+            ),
+            child: LicensingStatStrip(
+              spread: true,
+              stats: [
+                LicensingStat(
+                  icon: DashboardIcons.payments,
+                  value: plan.priceMonthly == null
+                      ? 'سعر تفاوضي'
+                      : licensingMoney(plan.priceMonthly, plan.currency),
+                  label: plan.priceMonthly == null
+                      ? 'يُتفق عليه مع كل مكتب'
+                      : plan.priceYearly == null
+                      ? 'شهريًا'
+                      : 'شهريًا · '
+                            '${licensingMoney(plan.priceYearly, plan.currency)} سنويًا',
                 ),
-              LicensingFact(
-                icon: DashboardIcons.time,
-                label: plan.trialDays > 0
-                    ? 'تجربة ${plan.trialDays} يوم'
-                    : 'بلا فترة تجريبية',
-              ),
-              LicensingFact(
-                icon: DashboardIcons.platformOffices,
-                label: plan.officeCount == 0
-                    ? 'لا مكتب على هذه الباقة'
-                    : '${plan.officeCount} مكتب مشترك',
-                color: plan.officeCount > 0 ? scheme.secondary : null,
-              ),
-              LicensingFact(
-                icon: plan.isPublic
-                    ? Icons.storefront_outlined
-                    : DashboardIcons.locked,
-                label: plan.isPublic ? 'معروضة للمكاتب' : 'بالتعيين فقط',
-              ),
-            ],
+                LicensingStat(
+                  icon: DashboardIcons.platformOffices,
+                  value: '${plan.officeCount}',
+                  label: plan.officeCount == 0
+                      ? 'لا مكتب على هذه الباقة'
+                      : 'مكتب مشترك — التعديل يسري عليه فورًا',
+                  color: plan.officeCount > 0 ? scheme.secondary : null,
+                ),
+                LicensingStat(
+                  icon: DashboardIcons.featureCatalog,
+                  value: '$setCount من $catalogCount',
+                  label: 'ميزة تضبطها الباقة · الباقي يتبع الكتالوج',
+                ),
+                LicensingStat(
+                  icon: DashboardIcons.time,
+                  value: plan.trialDays > 0 ? '${plan.trialDays} يوم' : 'بلا',
+                  label: 'فترة تجريبية',
+                ),
+                LicensingStat(
+                  icon: plan.isPublic
+                      ? Icons.storefront_outlined
+                      : DashboardIcons.locked,
+                  value: plan.isPublic ? 'معروضة' : 'بالتعيين فقط',
+                  label: plan.isPublic
+                      ? 'يراها المكتب عند الاشتراك'
+                      : 'تُسند يدويًا من التراخيص',
+                ),
+              ],
+            ),
           ),
           if (plan.isArchived) ...[
             const SizedBox(height: AppSpacing.medium),
@@ -1162,6 +1280,24 @@ class _WorkspaceHeader extends StatelessWidget {
   }
 }
 
+/// Which slice of the catalog the plan editor is showing.
+///
+/// The control this replaced was a single «المضبوطة في الباقة» chip sitting in
+/// the same wrap as eight category chips — two unrelated axes in identical
+/// clothes, and only a *half* answer to the question a plan is opened with:
+/// what does it override, and what does it inherit? Both halves are now places
+/// you can go, and the complement of one is the other.
+enum _FeatureView {
+  all('الكل'),
+  setHere('المضبوطة في الباقة'),
+  inherited('تتبع الافتراضي'),
+  changed('غير محفوظة');
+
+  const _FeatureView(this.labelAr);
+
+  final String labelAr;
+}
+
 class _FeatureEditor extends StatelessWidget {
   const _FeatureEditor({
     required this.catalog,
@@ -1169,13 +1305,16 @@ class _FeatureEditor extends StatelessWidget {
     required this.saved,
     required this.changedKeys,
     required this.query,
+    required this.searchEpoch,
     required this.category,
-    required this.modifiedOnly,
+    required this.view,
     required this.onQuery,
     required this.onCategory,
-    required this.onModifiedOnly,
+    required this.onView,
+    required this.onResetFilters,
     required this.onChanged,
     required this.onCleared,
+    required this.onClearedMany,
     required this.onClosePreview,
     this.preview,
   });
@@ -1185,34 +1324,59 @@ class _FeatureEditor extends StatelessWidget {
   final Map<String, Object?> saved;
   final Set<String> changedKeys;
   final String query;
+
+  /// Bumped by the section when it clears the filters, so the search field is
+  /// rebuilt around an empty controller. Keying it on "is the query empty"
+  /// instead would tear the field down on the first character typed and take
+  /// the focus with it.
+  final int searchEpoch;
+
   final String? category;
-  final bool modifiedOnly;
+  final _FeatureView view;
   final ValueChanged<String> onQuery;
   final ValueChanged<String?> onCategory;
-  final ValueChanged<bool> onModifiedOnly;
+  final ValueChanged<_FeatureView> onView;
+  final VoidCallback onResetFilters;
   final Map<String, dynamic>? preview;
   final void Function(String key, Object? value) onChanged;
   final ValueChanged<String> onCleared;
+  final ValueChanged<Iterable<String>> onClearedMany;
   final VoidCallback onClosePreview;
 
-  bool _matches(CatalogFeature feature) {
+  bool _matches(CatalogFeature feature, _FeatureView activeView) {
     if (feature.status == 'hidden') return false;
     if (category != null && feature.categoryKey != category) return false;
-    if (modifiedOnly && !draft.containsKey(feature.key)) return false;
+
+    final inView = switch (activeView) {
+      _FeatureView.all => true,
+      _FeatureView.setHere => draft.containsKey(feature.key),
+      _FeatureView.inherited => !draft.containsKey(feature.key),
+      _FeatureView.changed => changedKeys.contains(feature.key),
+    };
+    if (!inView) return false;
+
     final q = query.trim().toLowerCase();
     if (q.isEmpty) return true;
     return feature.nameAr.contains(q) ||
         feature.key.toLowerCase().contains(q) ||
-        feature.nameEn.toLowerCase().contains(q);
+        feature.nameEn.toLowerCase().contains(q) ||
+        feature.descriptionAr.contains(q);
   }
 
   @override
   Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
     final selectable = catalog.features
         .where((f) => f.status != 'hidden')
         .toList();
-    final visible = catalog.features.where(_matches).toList();
+
+    // Discarding empties `changedKeys` while «غير محفوظة» is the open view, and
+    // a `SegmentedButton` whose selection is not among its segments asserts.
+    final activeView = view == _FeatureView.changed && changedKeys.isEmpty
+        ? _FeatureView.all
+        : view;
+
+    final setCount = selectable.where((f) => draft.containsKey(f.key)).length;
+    final visible = selectable.where((f) => _matches(f, activeView)).toList();
 
     final grouped = <String, List<CatalogFeature>>{};
     for (final feature in visible) {
@@ -1238,6 +1402,12 @@ class _FeatureEditor extends StatelessWidget {
       );
     }
 
+    final activeFilters = <String>[
+      if (query.trim().isNotEmpty) 'بحث: «${query.trim()}»',
+      if (category != null) 'التصنيف: ${catalog.categoryName(category!)}',
+      if (activeView != _FeatureView.all) activeView.labelAr,
+    ];
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -1246,37 +1416,70 @@ class _FeatureEditor extends StatelessWidget {
           const SizedBox(height: AppSpacing.medium),
         ],
         LicensingToolbar(
+          searchWidth: 320,
           search: DebouncedSearchField(
+            key: ValueKey('plan-feature-search-$searchEpoch'),
             initialValue: query,
-            hintText: 'ابحث في الميزات',
+            hintText: 'ابحث بالاسم أو المفتاح أو الوصف',
             onChanged: onQuery,
           ),
           filters: [
-            FilterChip(
-              label: Text('كل التصنيفات (${selectable.length})'),
-              selected: category == null,
-              onSelected: (_) => onCategory(null),
-            ),
-            for (final c in catalog.categories)
-              if ((categoryCounts[c.key] ?? 0) > 0)
-                FilterChip(
-                  label: Text('${c.nameAr} (${categoryCounts[c.key]})'),
-                  selected: category == c.key,
-                  onSelected: (on) => onCategory(on ? c.key : null),
+            SegmentedButton<_FeatureView>(
+              showSelectedIcon: false,
+              style: SegmentedButton.styleFrom(
+                visualDensity: VisualDensity.compact,
+              ),
+              segments: [
+                ButtonSegment(
+                  value: _FeatureView.all,
+                  label: Text('الكل (${selectable.length})'),
                 ),
-            FilterChip(
-              avatar: const Icon(Icons.tune_rounded, size: 16),
-              label: Text('المضبوطة في الباقة (${draft.length})'),
-              selected: modifiedOnly,
-              onSelected: onModifiedOnly,
+                ButtonSegment(
+                  value: _FeatureView.setHere,
+                  label: Text('المضبوطة في الباقة ($setCount)'),
+                ),
+                ButtonSegment(
+                  value: _FeatureView.inherited,
+                  label: Text(
+                    'تتبع الافتراضي (${selectable.length - setCount})',
+                  ),
+                ),
+                if (changedKeys.isNotEmpty)
+                  ButtonSegment(
+                    value: _FeatureView.changed,
+                    label: Text('غير محفوظة (${changedKeys.length})'),
+                  ),
+              ],
+              selected: {activeView},
+              onSelectionChanged: (selection) => onView(selection.first),
+            ),
+            LicensingFilterDropdown(
+              label: 'التصنيف',
+              value: category == null
+                  ? 'الكل'
+                  : catalog.categoryName(category!),
+              isActive: category != null,
+              options: [
+                (value: null, label: 'الكل (${selectable.length})'),
+                for (final c in catalog.categories)
+                  if ((categoryCounts[c.key] ?? 0) > 0)
+                    (
+                      value: c.key,
+                      label: '${c.nameAr} (${categoryCounts[c.key]})',
+                    ),
+              ],
+              onSelected: onCategory,
             ),
           ],
-          trailing: Text(
-            'يُعرض ${visible.length} من ${selectable.length}',
-            style: text.labelMedium?.copyWith(
-              color: DashboardColors.mutedInk(context),
-            ),
-          ),
+        ),
+        const SizedBox(height: AppSpacing.small),
+        LicensingResultsBar(
+          summary: 'يُعرض ${visible.length} من ${selectable.length}',
+          activeFilters: activeFilters,
+          onReset: activeFilters.isEmpty ? null : onResetFilters,
+          note:
+              'ميزة بلا قيمة في الباقة ترجع إلى الافتراضي المسجَّل في الكتالوج — '
+              'وهذا ليس نفس معنى «مُعطَّلة».',
         ),
         const SizedBox(height: AppSpacing.medium),
         if (visible.isEmpty)
@@ -1284,18 +1487,22 @@ class _FeatureEditor extends StatelessWidget {
             padding: const EdgeInsets.all(AppSpacing.large),
             child: DashboardEmptyState(
               icon: DashboardIcons.featureCatalog,
-              title: modifiedOnly
-                  ? 'لا قيمة مضبوطة في هذه الباقة'
-                  : 'لا ميزة تطابق البحث',
-              message: modifiedOnly
-                  ? 'الباقة تتبع الكتالوج بالكامل — كل ميزة على قيمتها الافتراضية.'
-                  : 'جرّب اسمًا آخر أو مفتاح الميزة.',
+              title: switch (activeView) {
+                _FeatureView.setHere => 'لا قيمة مضبوطة في هذه الباقة',
+                _FeatureView.inherited => 'الباقة تضبط كل ميزة في الكتالوج',
+                _FeatureView.changed => 'لا تعديل غير محفوظ',
+                _FeatureView.all => 'لا ميزة تطابق البحث',
+              },
+              message: switch (activeView) {
+                _FeatureView.setHere =>
+                  'الباقة تتبع الكتالوج بالكامل — كل ميزة على قيمتها الافتراضية.',
+                _FeatureView.inherited =>
+                  'لا ميزة متروكة للافتراضي هنا؛ كل شيء منصوص عليه في الباقة.',
+                _FeatureView.changed => 'كل ما عدّلته محفوظ بالفعل.',
+                _FeatureView.all => 'جرّب اسمًا آخر أو مفتاح الميزة.',
+              },
               action: TextButton(
-                onPressed: () {
-                  onModifiedOnly(false);
-                  onCategory(null);
-                  onQuery('');
-                },
+                onPressed: onResetFilters,
                 child: const Text('عرض كل الميزات'),
               ),
             ),
@@ -1315,18 +1522,11 @@ class _FeatureEditor extends StatelessWidget {
                     changedKeys: changedKeys,
                     onChanged: onChanged,
                     onCleared: onCleared,
+                    onClearedMany: onClearedMany,
                   ),
               ],
             ),
           ),
-        const SizedBox(height: AppSpacing.small),
-        Text(
-          'ميزة بلا قيمة في الباقة ترجع إلى الافتراضي المسجَّل في الكتالوج — '
-          'وهذا ليس نفس معنى «مُعطَّلة».',
-          style: text.bodySmall?.copyWith(
-            color: DashboardColors.mutedInk(context),
-          ),
-        ),
       ],
     );
   }
@@ -1337,6 +1537,10 @@ class _FeatureEditor extends StatelessWidget {
 /// Not a collapsible section: a plan is edited by sweeping the whole catalog,
 /// and a column of folded headers turns "set the limits" into fifteen clicks
 /// before the first one.
+///
+/// The heading earns its own action instead. Sweeping a category and deciding
+/// «this whole group should just follow the catalog» used to be one click per
+/// row with no way to see how many rows that was.
 class _CategoryBlock extends StatelessWidget {
   const _CategoryBlock({
     required this.name,
@@ -1346,6 +1550,7 @@ class _CategoryBlock extends StatelessWidget {
     required this.changedKeys,
     required this.onChanged,
     required this.onCleared,
+    required this.onClearedMany,
   });
 
   final String name;
@@ -1355,45 +1560,86 @@ class _CategoryBlock extends StatelessWidget {
   final Set<String> changedKeys;
   final void Function(String key, Object? value) onChanged;
   final ValueChanged<String> onCleared;
+  final ValueChanged<Iterable<String>> onClearedMany;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final setHere = features.where((f) => draft.containsKey(f.key)).length;
+    final scheme = theme.colorScheme;
+    final setHere = features.where((f) => draft.containsKey(f.key)).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppSpacing.medium,
-            vertical: AppSpacing.small,
+          padding: const EdgeInsetsDirectional.only(
+            start: AppSpacing.medium,
+            end: AppSpacing.small,
+            top: AppSpacing.small,
+            bottom: AppSpacing.small,
           ),
-          color: DashboardColors.well(context),
+          decoration: BoxDecoration(
+            color: DashboardColors.well(context),
+            border: Border(
+              top: BorderSide(color: DashboardColors.border(context)),
+            ),
+          ),
           child: Row(
             children: [
-              Icon(
-                DashboardIcons.featureCatalog,
-                size: 16,
-                color: theme.colorScheme.primary,
-              ),
-              const SizedBox(width: AppSpacing.small),
               Expanded(
-                child: Text(
-                  name,
-                  style: theme.textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w900,
+                child: Row(
+                  children: [
+                    Container(
+                      width: 3,
+                      height: 18,
+                      decoration: BoxDecoration(
+                        color: scheme.primary,
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.small),
+                    Flexible(
+                      child: Text(
+                        name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.labelLarge?.copyWith(
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.small),
+                    Text(
+                      '${features.length} ميزة',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: DashboardColors.mutedInk(context),
+                      ),
+                    ),
+                    if (setHere.isNotEmpty) ...[
+                      const SizedBox(width: AppSpacing.small),
+                      DashboardStatusChip(
+                        label: '${setHere.length} مضبوطة',
+                        color: scheme.primary.withAlpha(20),
+                        textColor: scheme.primary,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              if (setHere.isNotEmpty)
+                TextButton.icon(
+                  onPressed: () =>
+                      onClearedMany(setHere.map((f) => f.key).toList()),
+                  icon: const Icon(
+                    Icons.settings_backup_restore_rounded,
+                    size: 16,
+                  ),
+                  label: const Text('إرجاع الكل للافتراضي'),
+                  style: TextButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                    foregroundColor: DashboardColors.mutedInk(context),
                   ),
                 ),
-              ),
-              Text(
-                setHere == 0
-                    ? '${features.length} ميزة'
-                    : '${features.length} ميزة · $setHere مضبوطة',
-                style: theme.textTheme.labelSmall?.copyWith(
-                  color: DashboardColors.mutedInk(context),
-                ),
-              ),
             ],
           ),
         ),
@@ -1414,7 +1660,20 @@ class _CategoryBlock extends StatelessWidget {
   }
 }
 
-class _FeatureEditRow extends StatelessWidget {
+/// One feature, and the control that sets it.
+///
+/// **The row is lanes, not two ends.** It used to be a name, an `Expanded` gap
+/// and a control — so on a console monitor the label sat against one edge of
+/// the screen and its switch against the other, with a hand-span of nothing in
+/// between, and associating the two was the only thing the row was for. The gap
+/// is now the two facts the operator needed anyway: what the feature *does*,
+/// and where its current value comes from. A hover tint tracks the row across
+/// the width on top of that.
+///
+/// **The state rail says which of three things this row is** — untouched, set
+/// by the plan, or edited and not yet saved — in the peripheral vision, at the
+/// start edge, before any text is read.
+class _FeatureEditRow extends StatefulWidget {
   const _FeatureEditRow({
     required this.feature,
     required this.value,
@@ -1430,117 +1689,242 @@ class _FeatureEditRow extends StatelessWidget {
   final bool isSet;
   final bool isChanged;
 
-  /// What is stored for this key right now, when anything is — shown only while
-  /// the row is dirty, so "what am I about to change it from?" is answerable
-  /// without leaving the screen.
+  /// What is stored for this key right now, when anything is — surfaced only
+  /// while the row is dirty, so "what am I about to change it from?" is
+  /// answerable without leaving the screen.
   final String? savedLabel;
 
   final ValueChanged<Object?> onChanged;
   final VoidCallback onCleared;
 
   @override
+  State<_FeatureEditRow> createState() => _FeatureEditRowState();
+}
+
+class _FeatureEditRowState extends State<_FeatureEditRow> {
+  bool _hovered = false;
+
+  /// The middle lane: what this feature actually does, in the operator's words
+  /// where the catalog has them and in the system's where it does not. Never
+  /// invented — an empty lane is more honest than a restated name.
+  String _context() {
+    final feature = widget.feature;
+    if (feature.descriptionAr.trim().isNotEmpty) {
+      return feature.descriptionAr.trim();
+    }
+    if (!feature.isEnforced) {
+      return 'مُدرجة في الكتالوج ولا يوجد كود يطبّقها بعد.';
+    }
+    if (feature.gates.isNotEmpty) {
+      final kinds = feature.gates.map((g) => g.kindLabelAr).toSet();
+      return 'تُطبَّق عبر ${kinds.join(' و')}.';
+    }
+    return '';
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final feature = widget.feature;
+    final muted = DashboardColors.mutedInk(context);
 
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.medium,
-        vertical: AppSpacing.small,
-      ),
-      decoration: BoxDecoration(
-        color: isChanged ? scheme.tertiary.withAlpha(14) : null,
-        border: Border(
-          top: BorderSide(color: DashboardColors.divider(context)),
-        ),
-      ),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 10,
-            child: isChanged
-                ? Tooltip(
-                    message: savedLabel == null
-                        ? 'تعديل غير محفوظ'
-                        : 'تعديل غير محفوظ — المحفوظ الآن: $savedLabel',
-                    child: Container(
-                      width: 7,
-                      height: 7,
-                      decoration: BoxDecoration(
-                        color: scheme.tertiary,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  )
-                : null,
-          ),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        feature.nameAr,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                    ),
-                    if (!feature.isEnforced) ...[
-                      const SizedBox(width: AppSpacing.small),
-                      const EnforcementBadge(isEnforced: false),
-                    ],
-                    if (feature.isKillSwitched) ...[
-                      const SizedBox(width: AppSpacing.xSmall),
-                      DashboardStatusChip(
-                        label: 'موقوفة على مستوى المنصة',
-                        color: scheme.error.withAlpha(24),
-                        textColor: scheme.error,
-                      ),
-                    ],
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  isSet
-                      ? 'مضبوطة في الباقة · ${feature.key}'
-                      : 'تتبع الافتراضي '
-                            '(${FeatureValue.label(feature.defaultValue, unit: feature.unitAr)}) · '
-                            '${feature.key}',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: isSet
-                        ? scheme.primary
-                        : DashboardColors.mutedInk(context),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: AppSpacing.small),
+    final railColor = widget.isChanged
+        ? scheme.tertiary
+        : (widget.isSet ? scheme.primary : Colors.transparent);
 
-          ConstrainedBox(
-            constraints: const BoxConstraints(minWidth: 216),
-            child: Align(
-              alignment: AlignmentDirectional.centerEnd,
-              child: FeatureValueField(
-                feature: feature,
-                value: value,
-                onChanged: onChanged,
+    final background = widget.isChanged
+        ? scheme.tertiary.withAlpha(14)
+        : (_hovered ? DashboardColors.tableRowHover(context) : null);
+
+    final identity = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: AppSpacing.small,
+          runSpacing: 4,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            Text(
+              feature.nameAr,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w700,
               ),
             ),
+            if (!feature.isEnforced) const EnforcementBadge(isEnforced: false),
+            if (feature.isKillSwitched)
+              DashboardStatusChip(
+                label: 'موقوفة على مستوى المنصة',
+                color: scheme.error.withAlpha(24),
+                textColor: scheme.error,
+              ),
+          ],
+        ),
+        const SizedBox(height: 2),
+        Text(
+          feature.key,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.labelSmall?.copyWith(color: muted),
+        ),
+      ],
+    );
+
+    final origin = Wrap(
+      spacing: AppSpacing.xSmall,
+      runSpacing: 4,
+      children: [
+        if (widget.isSet)
+          DashboardStatusChip(
+            label: 'مضبوطة في الباقة',
+            color: scheme.primary.withAlpha(20),
+            textColor: scheme.primary,
+          )
+        else
+          DashboardStatusChip(
+            label:
+                'الافتراضي · '
+                '${FeatureValue.label(feature.defaultValue, unit: feature.unitAr)}',
+            color: DashboardColors.well(context),
+            textColor: muted,
           ),
+        if (widget.isChanged)
+          DashboardStatusChip(
+            label: widget.savedLabel == null
+                ? 'جديدة · لم تُحفظ'
+                : 'كانت: ${widget.savedLabel}',
+            color: scheme.tertiary.withAlpha(22),
+            textColor: scheme.tertiary,
+          ),
+      ],
+    );
+
+    final control = Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        FeatureValueField(
+          feature: feature,
+          value: widget.value,
+          onChanged: widget.onChanged,
+        ),
+        // A permanently greyed icon on every one of forty-seven rows is noise;
+        // the lane still holds its width so the controls stay in one column.
+        if (widget.isSet)
           IconButton(
             tooltip: 'إرجاع إلى الافتراضي',
             icon: const Icon(Icons.settings_backup_restore_rounded, size: 18),
-            onPressed: isSet ? onCleared : null,
+            onPressed: widget.onCleared,
+          )
+        else
+          const SizedBox(width: 40),
+      ],
+    );
+
+    final description = _context();
+    final scaler = MediaQuery.textScalerOf(context);
+    final stackBelow = scaler.scale(700);
+    final describeAbove = scaler.scale(1000);
+
+    return MouseRegion(
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: Container(
+        decoration: BoxDecoration(
+          color: background,
+          border: Border(
+            top: BorderSide(color: DashboardColors.divider(context)),
           ),
-        ],
+        ),
+        child: Stack(
+          children: [
+            PositionedDirectional(
+              start: 0,
+              top: 0,
+              bottom: 0,
+              child: Container(width: 3, color: railColor),
+            ),
+            Padding(
+              padding: const EdgeInsetsDirectional.only(
+                start: AppSpacing.medium,
+                end: AppSpacing.small,
+                top: AppSpacing.small,
+                bottom: AppSpacing.small,
+              ),
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  if (constraints.maxWidth < stackBelow) {
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        identity,
+                        if (description.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            description,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: muted,
+                              height: 1.5,
+                            ),
+                          ),
+                        ],
+                        const SizedBox(height: AppSpacing.small),
+                        Row(
+                          children: [
+                            Expanded(child: origin),
+                            const SizedBox(width: AppSpacing.small),
+                            control,
+                          ],
+                        ),
+                      ],
+                    );
+                  }
+
+                  final showDescription = constraints.maxWidth >= describeAbove;
+
+                  return Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(flex: 5, child: identity),
+                      if (showDescription) ...[
+                        const SizedBox(width: AppSpacing.medium),
+                        Expanded(
+                          flex: 4,
+                          child: Text(
+                            description,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: muted,
+                              height: 1.5,
+                            ),
+                          ),
+                        ),
+                      ],
+                      const SizedBox(width: AppSpacing.medium),
+                      // minWidth, never a fixed width: one Arabic chip wider
+                      // than the lane and it clips.
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(minWidth: 160),
+                        child: Align(
+                          alignment: AlignmentDirectional.centerStart,
+                          child: origin,
+                        ),
+                      ),
+                      const SizedBox(width: AppSpacing.small),
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(minWidth: 250),
+                        child: Align(
+                          alignment: AlignmentDirectional.centerEnd,
+                          child: control,
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

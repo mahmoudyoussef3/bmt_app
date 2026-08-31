@@ -5,20 +5,24 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:bmt_app/apps/dashboard/core/permissions/dashboard_role.dart';
 import 'package:bmt_app/apps/dashboard/core/routes/dashboard_routes.dart';
 import 'package:bmt_app/apps/dashboard/core/session/office_context.dart';
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_kpi_card.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 import 'package:bmt_app/apps/dashboard/features/business_overview/domain/entities/business_overview.dart';
 import 'package:bmt_app/apps/dashboard/features/business_overview/presentation/cubit/business_overview_cubit.dart';
 import 'package:bmt_app/apps/dashboard/features/business_overview/presentation/cubit/business_overview_state.dart';
+import 'package:bmt_app/apps/dashboard/features/business_overview/presentation/models/overview_window.dart';
 import 'package:bmt_app/apps/dashboard/features/business_overview/presentation/screens/business_overview_screen.dart';
 import 'package:bmt_app/apps/dashboard/features/business_overview/presentation/widgets/business_attention_section.dart';
 import 'package:bmt_app/apps/dashboard/features/business_overview/presentation/widgets/business_health_section.dart';
 import 'package:bmt_app/apps/dashboard/features/business_overview/presentation/widgets/customer_snapshot_section.dart';
 import 'package:bmt_app/apps/dashboard/features/business_overview/presentation/widgets/financial_snapshot_section.dart';
 import 'package:bmt_app/apps/dashboard/features/business_overview/presentation/widgets/operational_snapshot_section.dart';
+import 'package:bmt_app/apps/dashboard/features/business_overview/presentation/widgets/overview_kit.dart';
+import 'package:bmt_app/apps/dashboard/features/business_overview/presentation/widgets/period_kpi_band.dart';
 import 'package:bmt_app/apps/dashboard/features/business_overview/presentation/widgets/quick_actions_section.dart';
+import 'package:bmt_app/apps/dashboard/features/business_overview/presentation/widgets/route_performance_section.dart';
 import 'package:bmt_app/apps/dashboard/features/business_overview/presentation/widgets/smart_insights_section.dart';
-import 'package:bmt_app/apps/dashboard/features/business_overview/presentation/widgets/today_kpis_section.dart';
 
 import 'business_overview_test_fixtures.dart';
 
@@ -55,6 +59,7 @@ Widget _wrap({
   VoidCallback? onCreateTrip,
   bool Function(String route)? canOpenRoute,
   _FakeCubit? cubit,
+  OverviewWindow initialWindow = OverviewWindow.month,
 }) {
   return MaterialApp(
     home: Scaffold(
@@ -67,6 +72,7 @@ Widget _wrap({
             canOpenRoute: canOpenRoute ?? (_) => true,
             onOpenModule: onOpenModule,
             onCreateTrip: onCreateTrip,
+            initialWindow: initialWindow,
           ),
         ),
       ),
@@ -74,11 +80,18 @@ Widget _wrap({
   );
 }
 
+/// A console-sized window, wide enough for the two-column layout.
+void _desktop(WidgetTester tester, {Size size = const Size(1600, 2600)}) {
+  tester.view.physicalSize = size;
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
+}
+
 /// Scrolls the page until [finder] has been built and is on screen.
 ///
-/// The page is a lazy `ListView` of eight sections; the last of them sits well
-/// below any viewport a test can declare, so it is not merely off screen — it
-/// has not been built, and a plain `ensureVisible` throws "No element".
+/// The page is a lazy `ListView`, so a panel below the viewport is not merely
+/// off screen — it has not been built, and a plain `ensureVisible` throws
+/// "No element".
 Future<void> _reveal(WidgetTester tester, Finder finder) async {
   await tester.scrollUntilVisible(
     finder,
@@ -89,10 +102,14 @@ Future<void> _reveal(WidgetTester tester, Finder finder) async {
 }
 
 void main() {
+  // Fold state is process-wide by design, so one test collapsing a section
+  // would otherwise hide it from the next.
+  setUp(DashboardSectionStateStore.instance.clear);
+
   testWidgets('renders the shared skeleton while loading', (tester) async {
     await tester.pumpWidget(_wrap(state: const BusinessOverviewLoading()));
     expect(find.byType(DashboardLoading), findsOneWidget);
-    expect(find.byType(TodayKpisSection), findsNothing);
+    expect(find.byType(PeriodKpiBand), findsNothing);
   });
 
   testWidgets('a total failure offers a retry that reloads', (tester) async {
@@ -107,56 +124,56 @@ void main() {
     expect(cubit.loadCalls, 1);
   });
 
-  testWidgets('all eight sections are present once loaded', (tester) async {
-    tester.view.physicalSize = const Size(1600, 2400);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
+  testWidgets('every panel is present once loaded', (tester) async {
+    _desktop(tester);
 
     await tester.pumpWidget(
       _wrap(state: BusinessOverviewLoaded(buildOverview())),
     );
     await tester.pumpAndSettle();
 
-    expect(find.byType(TodayKpisSection), findsOneWidget);
-    expect(find.byType(BusinessHealthSection), findsOneWidget);
-    expect(find.byType(SmartInsightsSection), findsOneWidget);
+    expect(find.byType(PeriodKpiBand), findsOneWidget);
     expect(find.byType(BusinessAttentionSection), findsOneWidget);
+    expect(find.byType(BusinessHealthSection), findsOneWidget);
     expect(find.byType(FinancialSnapshotSection), findsOneWidget);
+    expect(find.byType(RoutePerformanceSection), findsOneWidget);
     expect(find.byType(OperationalSnapshotSection), findsOneWidget);
     expect(find.byType(CustomerSnapshotSection), findsOneWidget);
-
-    await _reveal(tester, find.byType(QuickActionsSection));
+    expect(find.byType(SmartInsightsSection), findsOneWidget);
     expect(find.byType(QuickActionsSection), findsOneWidget);
   });
 
-  testWidgets('the header states today\'s takings and the verdict', (
+  testWidgets('the title block states the office, the period and the verdict', (
     tester,
   ) async {
-    tester.view.physicalSize = const Size(1600, 2400);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
+    _desktop(tester);
 
     await tester.pumpWidget(
       _wrap(
         state: BusinessOverviewLoaded(
-          buildOverview(
-            bookings: [buildBooking(id: 'a', amount: 1250)],
-          ),
+          buildOverview(bookings: [buildBooking(id: 'a', amount: 1250)]),
         ),
       ),
     );
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('نظرة تنفيذية'), findsWidgets);
+    // A bare title block, styled as الرئيسية's — not a gradient hero.
+    expect(find.text('نظرة تنفيذية'), findsOneWidget);
+    expect(find.textContaining('مكتب تجريبي'), findsWidgets);
+    expect(find.textContaining('آخر ٣٠ يوماً'), findsWidgets);
+    expect(find.textContaining('بانتظار قرارك'), findsWidgets);
+    // The money leads the KPI band, where Home keeps it.
+    expect(
+      find.widgetWithText(DashboardKpiCard, 'إيراد الفترة'),
+      findsOneWidget,
+    );
     expect(find.textContaining('1,250 ج.م'), findsWidgets);
   });
 
-  testWidgets('a KPI tile with a measured baseline carries a trend chip', (
+  testWidgets('a measured baseline earns a movement chip, and only then', (
     tester,
   ) async {
-    tester.view.physicalSize = const Size(1600, 2400);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
+    _desktop(tester);
 
     await tester.pumpWidget(
       _wrap(
@@ -172,21 +189,22 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final revenueTile = tester.widget<DashboardKpiCard>(
-      find.widgetWithText(DashboardKpiCard, 'إيراد الحجوزات اليوم'),
+    // Today's takings doubled against yesterday's, which is a real baseline.
+    expect(find.text('100%'), findsWidgets);
+
+    // The window trend has no baseline: the office's first booking postdates
+    // the previous 30 days, so the tile shows its value with no arrow rather
+    // than reporting a business that appeared out of nowhere.
+    final bookingsTile = tester.widget<DashboardKpiCard>(
+      find.widgetWithText(DashboardKpiCard, 'حجوزات الفترة'),
     );
-    expect(revenueTile.trend, isNotNull);
-    expect(revenueTile.trend!.label, '100%');
-    expect(revenueTile.trend!.tone, KpiTrendTone.positive);
-    expect(revenueTile.sparkline, hasLength(7));
+    expect(bookingsTile.trend, isNull);
+    expect(bookingsTile.sparkline, hasLength(OverviewWindow.month.days));
   });
 
-  testWidgets('headcount tiles show context instead of an invented trend', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(1600, 2400);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
+  testWidgets('headcounts live in the operational panel with context, not a '
+      'trend', (tester) async {
+    _desktop(tester);
 
     await tester.pumpWidget(
       _wrap(
@@ -197,23 +215,23 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    final drivers = tester.widget<DashboardKpiCard>(
-      find.widgetWithText(DashboardKpiCard, 'سائقون في الخدمة'),
-    );
+    // Not a headline KPI: no table records yesterday's roster, so it has no
+    // baseline and does not belong beside four tiles that do.
     expect(
-      drivers.trend,
-      isNull,
-      reason: 'no table records yesterday\'s roster, so there is no baseline',
+      find.widgetWithText(DashboardKpiCard, 'سائقون في الخدمة'),
+      findsNothing,
     );
-    expect(drivers.detail, contains('6'));
+
+    final drivers = tester.widget<OverviewCell>(
+      find.widgetWithText(OverviewCell, 'سائقون في الخدمة'),
+    );
+    expect(drivers.note, contains('6'));
   });
 
   testWidgets('a KPI drills into the module its figure came from', (
     tester,
   ) async {
-    tester.view.physicalSize = const Size(1600, 2400);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
+    _desktop(tester);
 
     final opened = <String>[];
     await tester.pumpWidget(
@@ -224,19 +242,40 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(
-      find.widgetWithText(DashboardKpiCard, 'حجوزات وردت اليوم'),
-    );
+    await tester.tap(find.widgetWithText(DashboardKpiCard, 'حجوزات الفترة'));
     await tester.pump();
     expect(opened, [DashboardRoutes.bookings]);
+  });
+
+  testWidgets('the period control re-scopes every time-based figure', (
+    tester,
+  ) async {
+    _desktop(tester);
+
+    await tester.pumpWidget(
+      _wrap(state: BusinessOverviewLoaded(buildOverview())),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('آخر ٣٠ يوماً'), findsWidgets);
+    expect(find.textContaining('آخر ٧ أيام'), findsNothing);
+
+    await tester.tap(find.text('٧ أيام'));
+    await tester.pumpAndSettle();
+
+    expect(find.textContaining('آخر ٧ أيام'), findsWidgets);
+
+    // Live state keeps its own label and does not follow the period.
+    expect(
+      find.text('اليوم — أرقام لحظية لا تتبع الفترة المختارة'),
+      findsOneWidget,
+    );
   });
 
   testWidgets('failed feeds are named rather than shown as zero', (
     tester,
   ) async {
-    tester.view.physicalSize = const Size(1600, 2400);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
+    _desktop(tester);
 
     await tester.pumpWidget(
       _wrap(
@@ -247,16 +286,15 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.textContaining('لم تُحمَّل بعض المصادر'), findsOneWidget);
+    // The shared notice every other module shows for a partial load.
+    expect(find.textContaining('تعذّر تحميل:'), findsOneWidget);
     expect(find.textContaining('المحافظ'), findsWidgets);
   });
 
   testWidgets('quick actions the operator cannot open are absent', (
     tester,
   ) async {
-    tester.view.physicalSize = const Size(1600, 2400);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
+    _desktop(tester);
 
     await tester.pumpWidget(
       _wrap(
@@ -273,12 +311,9 @@ void main() {
     expect(find.text('حجز جديد'), findsOneWidget);
   });
 
-  testWidgets('the trip planner is the one true one-click action', (
-    tester,
-  ) async {
-    tester.view.physicalSize = const Size(1600, 2400);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
+  testWidgets('the trip planner is the one true one-click action, and it is '
+      'in the hero', (tester) async {
+    _desktop(tester);
 
     var planned = 0;
     await tester.pumpWidget(
@@ -289,9 +324,9 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // Quick actions sit at the foot of the page by design — the owner reads
-    // the business before acting on it — so the tap has to scroll there first.
-    await _reveal(tester, find.text('رحلة جديدة'));
+    // No scrolling: it sits in the brand band, not at the foot of the page
+    // where it used to be, and it is not repeated in «إجراءات سريعة».
+    expect(find.text('رحلة جديدة'), findsOneWidget);
     await tester.tap(find.text('رحلة جديدة'));
     await tester.pump();
     expect(planned, 1);
@@ -300,9 +335,7 @@ void main() {
   testWidgets('an empty console says so instead of listing empty queues', (
     tester,
   ) async {
-    tester.view.physicalSize = const Size(1600, 2400);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
+    _desktop(tester);
 
     await tester.pumpWidget(
       _wrap(state: BusinessOverviewLoaded(buildOverview())),
@@ -311,14 +344,51 @@ void main() {
 
     expect(find.text('كل شيء تحت السيطرة'), findsOneWidget);
     expect(find.text('لا توجد قراءات بارزة'), findsOneWidget);
+    expect(find.text('لا بيانات إشغال بعد'), findsOneWidget);
+  });
+
+  testWidgets('routes are ranked by how full they ran', (tester) async {
+    _desktop(tester);
+
+    await tester.pumpWidget(
+      _wrap(
+        state: BusinessOverviewLoaded(
+          buildOverview(
+            trips: [
+              buildTrip(
+                id: 'full',
+                route: 'طنطا - القاهرة',
+                capacity: 10,
+                bookedSeats: 9,
+                at: daysAgo(2),
+              ),
+              buildTrip(
+                id: 'empty',
+                route: 'أسيوط - القاهرة',
+                capacity: 10,
+                bookedSeats: 2,
+                at: daysAgo(3),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await _reveal(tester, find.byType(RoutePerformanceSection));
+    expect(find.text('90%'), findsOneWidget);
+    expect(find.text('20%'), findsOneWidget);
+
+    final best = tester.getTopLeft(find.text('طنطا - القاهرة'));
+    final worst = tester.getTopLeft(find.text('أسيوط - القاهرة'));
+    expect(best.dy, lessThan(worst.dy));
   });
 
   testWidgets('refresh keeps the page and asks the cubit for fresh figures', (
     tester,
   ) async {
-    tester.view.physicalSize = const Size(1600, 2400);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
+    _desktop(tester);
 
     final cubit = _FakeCubit(BusinessOverviewLoaded(buildOverview()));
     await tester.pumpWidget(
@@ -326,17 +396,65 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    await tester.tap(find.byTooltip('تحديث البيانات'));
+    await tester.tap(find.widgetWithText(OutlinedButton, 'تحديث'));
     await tester.pump();
 
     expect(cubit.refreshCalls, 1);
-    expect(find.byType(TodayKpisSection), findsOneWidget);
+    expect(find.byType(PeriodKpiBand), findsOneWidget);
+  });
+
+  testWidgets('a figure derived from a missing feed is a dash, not a zero', (
+    tester,
+  ) async {
+    _desktop(tester);
+
+    await tester.pumpWidget(
+      _wrap(
+        state: BusinessOverviewLoaded(
+          buildOverview(
+            bookings: [buildBooking(id: 'a', amount: 400)],
+            unavailable: {BusinessDataSource.wallet},
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    await _reveal(tester, find.byType(FinancialSnapshotSection));
+
+    // `refundsSettled` reports 0 with no wallet, so printing net revenue here
+    // would assert that nothing was refunded.
+    final net = tester.widget<OverviewFigure>(
+      find.widgetWithText(OverviewFigure, 'بعد المستردات'),
+    );
+    expect(net.value, '—');
+
+    final gross = tester.widget<OverviewFigure>(
+      find.widgetWithText(OverviewFigure, 'المحصّل'),
+    );
+    expect(gross.value, '400 ج.م');
+  });
+
+  testWidgets('a window that never moved draws no sparkline', (tester) async {
+    _desktop(tester);
+
+    await tester.pumpWidget(
+      _wrap(state: BusinessOverviewLoaded(buildOverview())),
+    );
+    await tester.pumpAndSettle();
+
+    final bookings = tester.widget<DashboardKpiCard>(
+      find.widgetWithText(DashboardKpiCard, 'حجوزات الفترة'),
+    );
+    expect(
+      bookings.sparkline,
+      isNull,
+      reason: 'a flat line on the floor contradicts a tile reading zero',
+    );
   });
 
   testWidgets('narrow windows stack without overflowing', (tester) async {
-    tester.view.physicalSize = const Size(600, 2400);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.reset);
+    _desktop(tester, size: const Size(600, 2600));
 
     await tester.pumpWidget(
       _wrap(
@@ -351,6 +469,27 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(tester.takeException(), isNull);
-    expect(find.byType(TodayKpisSection), findsOneWidget);
+    expect(find.byType(PeriodKpiBand), findsOneWidget);
+  });
+
+  testWidgets('the console width holds up at 1.6× text scale', (tester) async {
+    _desktop(tester, size: const Size(1280, 3200));
+
+    await tester.pumpWidget(
+      MediaQuery(
+        data: const MediaQueryData(textScaler: TextScaler.linear(1.6)),
+        child: _wrap(
+          state: BusinessOverviewLoaded(
+            buildOverview(
+              trips: [buildTrip(id: 't1', capacity: 10, bookedSeats: 7)],
+              bookings: [buildBooking(id: 'b1', amount: 500)],
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(tester.takeException(), isNull);
   });
 }

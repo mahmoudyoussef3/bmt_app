@@ -132,51 +132,104 @@ class LicensingStat {
 
 /// The header's numbers, on one line.
 class LicensingStatStrip extends StatelessWidget {
-  const LicensingStatStrip({super.key, required this.stats});
+  const LicensingStatStrip({
+    super.key,
+    required this.stats,
+    this.spread = false,
+  });
 
   final List<LicensingStat> stats;
 
+  /// Divide the full width between the figures instead of bunching them at the
+  /// start edge. A five-figure strip left-packed inside a 1300px card is half a
+  /// bar of numbers and half of nothing, which reads as an unfinished layout
+  /// rather than as a deliberate one. Only honoured when there is room for it;
+  /// below the breakpoint the strip stays a wrap.
+  final bool spread;
+
   @override
   Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
+    if (!spread) return _wrap(context);
 
-    return Wrap(
-      spacing: AppSpacing.xLarge,
-      runSpacing: AppSpacing.medium,
-      children: [
-        for (final stat in stats)
-          Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (stat.icon != null) ...[
-                Icon(
-                  stat.icon,
-                  size: 20,
-                  color: stat.color ?? DashboardColors.mutedInk(context),
-                ),
-                const SizedBox(width: AppSpacing.small),
-              ],
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
+    return LayoutBuilder(
+      builder: (context, constraints) =>
+          constraints.maxWidth < MediaQuery.textScalerOf(context).scale(1000)
+          ? _wrap(context)
+          : IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Text(
-                    stat.value,
-                    style: text.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w900,
-                      color: stat.color,
-                    ),
-                  ),
-                  Text(
-                    stat.label,
-                    style: text.labelSmall?.copyWith(
-                      color: DashboardColors.mutedInk(context),
-                    ),
-                  ),
+                  for (final (index, stat) in stats.indexed) ...[
+                    if (index > 0)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppSpacing.medium,
+                        ),
+                        child: VerticalDivider(
+                          width: 1,
+                          thickness: 1,
+                          color: DashboardColors.border(context),
+                        ),
+                      ),
+                    Expanded(child: _entry(context, stat, constrained: true)),
+                  ],
                 ],
               ),
-            ],
+            ),
+    );
+  }
+
+  Widget _wrap(BuildContext context) => Wrap(
+    spacing: AppSpacing.xLarge,
+    runSpacing: AppSpacing.medium,
+    children: [for (final stat in stats) _entry(context, stat)],
+  );
+
+  Widget _entry(
+    BuildContext context,
+    LicensingStat stat, {
+    bool constrained = false,
+  }) {
+    final text = Theme.of(context).textTheme;
+
+    final body = Column(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          stat.value,
+          maxLines: 1,
+          overflow: constrained ? TextOverflow.ellipsis : TextOverflow.clip,
+          style: text.titleMedium?.copyWith(
+            fontWeight: FontWeight.w900,
+            color: stat.color,
           ),
+        ),
+        Text(
+          stat.label,
+          maxLines: constrained ? 2 : 1,
+          overflow: TextOverflow.ellipsis,
+          style: text.labelSmall?.copyWith(
+            color: DashboardColors.mutedInk(context),
+            height: 1.4,
+          ),
+        ),
+      ],
+    );
+
+    return Row(
+      mainAxisSize: constrained ? MainAxisSize.max : MainAxisSize.min,
+      children: [
+        if (stat.icon != null) ...[
+          Icon(
+            stat.icon,
+            size: 20,
+            color: stat.color ?? DashboardColors.mutedInk(context),
+          ),
+          const SizedBox(width: AppSpacing.small),
+        ],
+        if (constrained) Expanded(child: body) else body,
       ],
     );
   }
@@ -710,6 +763,190 @@ class LicensingToolbar extends StatelessWidget {
           ?trailing,
         ],
       ),
+    );
+  }
+}
+
+/// A named dropdown filter — the console's answer to a row of bare chips.
+///
+/// Lifted out of the feature catalog when the plan editor turned out to need
+/// the identical control: its category filter was eight `FilterChip`s sharing a
+/// wrap with a modified-only toggle, so two unrelated axes wore identical
+/// clothes and the row ran the width of the console. One named control says
+/// more in less space, and — unlike a bare chip — *says which axis it narrows*.
+class LicensingFilterDropdown extends StatelessWidget {
+  const LicensingFilterDropdown({
+    super.key,
+    required this.label,
+    required this.value,
+    required this.options,
+    required this.onSelected,
+    this.isActive = false,
+  });
+
+  final String label;
+  final String value;
+  final List<({String? value, String label})> options;
+  final ValueChanged<String?> onSelected;
+
+  /// Tints the control while it is actually narrowing the list. A filter that
+  /// is *on* and looks exactly like one that is off is how a narrowed list gets
+  /// read as a whole one.
+  final bool isActive;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    final radius = BorderRadius.circular(AppTokens.radiusSmall);
+    final ink = isActive ? scheme.primary : DashboardColors.mutedInk(context);
+
+    return PopupMenuButton<String>(
+      tooltip: label,
+      onSelected: (picked) => onSelected(picked == '' ? null : picked),
+      itemBuilder: (context) => [
+        for (final option in options)
+          PopupMenuItem(value: option.value ?? '', child: Text(option.label)),
+      ],
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.medium,
+          vertical: 10,
+        ),
+        decoration: BoxDecoration(
+          color: isActive ? scheme.primary.withAlpha(18) : theme.cardColor,
+          borderRadius: radius,
+          border: Border.all(
+            color: isActive
+                ? scheme.primary.withAlpha(90)
+                : DashboardColors.border(context),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              '$label: ',
+              style: theme.textTheme.labelMedium?.copyWith(color: ink),
+            ),
+            Text(
+              value,
+              style: theme.textTheme.labelMedium?.copyWith(
+                fontWeight: FontWeight.w800,
+                color: isActive ? scheme.primary : null,
+              ),
+            ),
+            const SizedBox(width: 4),
+            Icon(Icons.expand_more_rounded, size: 18, color: ink),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// The line between a toolbar and the list it narrows.
+///
+/// It answers three things the old trailing label could not: how much of the
+/// list is showing, *which* filters are doing the narrowing — spelled out, not
+/// counted — and one way to undo all of them. [note] carries the one sentence a
+/// list needs to be read correctly, placed where it is read *before* the rows
+/// rather than under them.
+class LicensingResultsBar extends StatelessWidget {
+  const LicensingResultsBar({
+    super.key,
+    required this.summary,
+    this.activeFilters = const [],
+    this.onReset,
+    this.note,
+  });
+
+  final String summary;
+
+  /// Named filters currently applied. Naming them is the point: "٢ فلتر" makes
+  /// the operator reopen the toolbar to find out which two.
+  final List<String> activeFilters;
+
+  final VoidCallback? onReset;
+  final String? note;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final muted = DashboardColors.mutedInk(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Wrap(
+                spacing: AppSpacing.small,
+                runSpacing: AppSpacing.xSmall,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  Text(
+                    summary,
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      color: muted,
+                    ),
+                  ),
+                  for (final filter in activeFilters)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primary.withAlpha(16),
+                        borderRadius: BorderRadius.circular(
+                          AppTokens.radiusSmall,
+                        ),
+                      ),
+                      child: Text(
+                        filter,
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            if (onReset != null)
+              TextButton.icon(
+                onPressed: onReset,
+                icon: const Icon(Icons.filter_alt_off_outlined, size: 16),
+                label: const Text('مسح التصفية'),
+                style: TextButton.styleFrom(
+                  visualDensity: VisualDensity.compact,
+                ),
+              ),
+          ],
+        ),
+        if (note != null) ...[
+          const SizedBox(height: AppSpacing.xSmall),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Icon(Icons.info_outline_rounded, size: 15, color: muted),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  note!,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: muted,
+                    height: 1.5,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ],
     );
   }
 }

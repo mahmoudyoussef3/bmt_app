@@ -5,9 +5,10 @@ import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/dashboard_bar_chart.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/dashboard_line_chart.dart';
 import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_kpi_card.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_panel.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
-import 'package:bmt_app/core/theme/tokens.dart';
 
 import '../../domain/entities/finance_analytics.dart';
 import '../../domain/entities/finance_entities.dart';
@@ -30,7 +31,7 @@ class FinanceAnalyticsTab extends StatelessWidget {
     return ListView(
       padding: EdgeInsets.zero,
       children: [
-        _SignalsPanel(analytics: analytics),
+        _SignalsBand(analytics: analytics),
         const SizedBox(height: AppSpacing.medium),
         DashboardPanel(
           sectionId: DashboardSectionIds.financeCumulativeRevenue,
@@ -120,10 +121,20 @@ class FinanceAnalyticsTab extends StatelessWidget {
 }
 
 /// Headline diagnostics an owner would otherwise have to work out by hand.
-class _SignalsPanel extends StatelessWidget {
+///
+/// A band on the page, not a panel of bespoke tiles. Each of these six used to
+/// be a tinted, tinted-bordered box of its own — six colour washes stacked in a
+/// card, which is a palette sample rather than a reading. They are the console's
+/// [DashboardKpiCard] now, so a finance signal looks like a fleet signal looks
+/// like a bookings signal, and the only colour on the tile is the one that
+/// carries meaning: the icon's.
+///
+/// Three columns rather than the grid's default four, because six tiles across
+/// four columns is a row of four and an orphaned pair.
+class _SignalsBand extends StatelessWidget {
   final FinanceAnalytics analytics;
 
-  const _SignalsPanel({required this.analytics});
+  const _SignalsBand({required this.analytics});
 
   @override
   Widget build(BuildContext context) {
@@ -132,21 +143,48 @@ class _SignalsPanel extends StatelessWidget {
     final busiest = analytics.busiestDay;
     final topRoute = analytics.byRoute.isEmpty ? null : analytics.byRoute.first;
 
-    return DashboardPanel(
-      sectionId: DashboardSectionIds.financeKpis,
-      icon: Icons.insights_rounded,
-      title: 'مؤشرات الأداء',
-      subtitle: 'قراءة سريعة لسلوك الإيراد خلال ${analytics.periodLabel}',
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final columns = constraints.maxWidth >= 1040
-              ? 3
-              : constraints.maxWidth >= 620
-              ? 2
-              : 1;
-
-          final signals = <Widget>[
-            _SignalTile(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(bottom: AppSpacing.small),
+          child: Row(
+            children: [
+              Icon(
+                Icons.insights_rounded,
+                size: 18,
+                color: DashboardColors.mutedInk(context),
+              ),
+              const SizedBox(width: AppSpacing.small),
+              Expanded(
+                child: Text(
+                  'مؤشرات الأداء',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w800),
+                ),
+              ),
+              Flexible(
+                child: Text(
+                  'قراءة سريعة لسلوك الإيراد خلال ${analytics.periodLabel}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.end,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: DashboardColors.mutedInk(context),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        DashboardKpiGrid(
+          maxColumns: 3,
+          itemExtent: 92,
+          children: [
+            DashboardKpiCard(
               icon: Icons.trending_up_rounded,
               label: 'متوسط الإيراد اليومي',
               value: FinanceFormat.money(analytics.averageDailyRevenue),
@@ -154,7 +192,7 @@ class _SignalsPanel extends StatelessWidget {
                   '${FinanceFormat.count(analytics.activeDays)} يوم فيه تحصيل من ${FinanceFormat.count(analytics.daily.length)}',
               color: palette.active,
             ),
-            _SignalTile(
+            DashboardKpiCard(
               icon: Icons.emoji_events_outlined,
               label: 'أفضل يوم',
               value: best == null ? '—' : FinanceFormat.money(best.net),
@@ -163,7 +201,7 @@ class _SignalsPanel extends StatelessWidget {
                   : FinanceFormat.date(best.date),
               color: palette.positive,
             ),
-            _SignalTile(
+            DashboardKpiCard(
               icon: Icons.local_fire_department_outlined,
               label: 'أكثر يوم حركة',
               value: busiest == null
@@ -174,21 +212,21 @@ class _SignalsPanel extends StatelessWidget {
                   : FinanceFormat.date(busiest.date),
               color: palette.warning,
             ),
-            _SignalTile(
+            DashboardKpiCard(
               icon: Icons.hub_outlined,
               label: 'تركّز الإيراد',
               value: FinanceFormat.percent(analytics.routeConcentration),
-              
+
               // The route's own name is deliberately not printed here: it is a
               // whole journey as free text and would ellipsise to nothing in a
               // one-line tile. «أعلى المسارات إيراداً» on the overview names it
               // in a row wide enough to read.
               detail: topRoute == null
                   ? 'لا توجد مسارات في الفترة'
-                  : 'من أعلى مسار وحده، من ${FinanceFormat.count(analytics.byRoute.length)} مسار',
+                  : 'من أعلى مسار، من ${FinanceFormat.count(analytics.byRoute.length)} مسار',
               color: palette.accent,
             ),
-            _SignalTile(
+            DashboardKpiCard(
               icon: Icons.undo_rounded,
               label: 'معدل الاسترداد',
               value: FinanceFormat.percent(analytics.refundRate),
@@ -196,7 +234,7 @@ class _SignalsPanel extends StatelessWidget {
                   '${FinanceFormat.count(analytics.refundedCount)} عملية مستردة',
               color: palette.negative,
             ),
-            _SignalTile(
+            DashboardKpiCard(
               icon: Icons.savings_outlined,
               label: 'معدل التحصيل',
               value: FinanceFormat.percent(analytics.collectionRate),
@@ -204,89 +242,9 @@ class _SignalsPanel extends StatelessWidget {
                   'متبقٍ ${FinanceFormat.money(analytics.pending)} قيد التحصيل',
               color: palette.positive,
             ),
-          ];
-
-          return GridView.builder(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            itemCount: signals.length,
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: columns,
-              crossAxisSpacing: AppSpacing.small,
-              mainAxisSpacing: AppSpacing.small,
-              mainAxisExtent: 96,
-            ),
-            itemBuilder: (context, index) => signals[index],
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _SignalTile extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-  final String detail;
-  final Color color;
-
-  const _SignalTile({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.detail,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.medium),
-      decoration: BoxDecoration(
-        color: color.withAlpha(16),
-        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-        border: Border.all(color: color.withAlpha(45)),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: color),
-          const SizedBox(width: AppSpacing.small),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-                Text(
-                  value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                Text(
-                  detail,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+          ],
+        ),
+      ],
     );
   }
 }

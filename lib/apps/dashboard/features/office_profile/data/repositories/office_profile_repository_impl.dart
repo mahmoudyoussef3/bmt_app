@@ -21,4 +21,7 @@ class OfficeProfileRepositoryImpl implements OfficeProfileRepository {
     required Uint8List bytes,
     required String fileName,
   }) => _datasource.uploadLogo(bytes: bytes, fileName: fileName);
+
+  @override
+  Future<OfficeProfile> rotateJoinCode() => _datasource.rotateJoinCode();
 }

@@ -1,29 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
+import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
-import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_status_chip.dart';
 
 import '../../../../core/entitlements/entitlement_context.dart';
-import '../../../../core/entitlements/licensing_dialogs.dart';
 import '../../../../core/theme/dashboard_colors.dart';
 import '../../../../core/theme/dashboard_icons.dart';
-import '../../../../core/widgets/dashboard_empty_state.dart';
-import '../../../../core/widgets/dashboard_kpi_card.dart';
+import '../../../../core/widgets/dashboard_collapsible_section.dart';
 import '../../../../core/widgets/dashboard_module_header.dart';
-import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import '../../../../core/widgets/dashboard_panel.dart';
 import '../../../../core/widgets/dashboard_state_views.dart';
-import '../../../platform_licensing/presentation/widgets/licensing_widgets.dart';
 import '../cubit/office_billing_cubit.dart';
+import '../models/office_license_view.dart';
+import '../widgets/office_features_panel.dart';
+import '../widgets/office_invoices_panel.dart';
+import '../widgets/office_limits_panel.dart';
+import '../widgets/office_subscription_card.dart';
+import '../widgets/office_upgrade_request_dialog.dart';
 
 /// الباقة والفوترة — the office's own commercial screen. Owner only.
+///
+/// Four blocks, in the order the questions arrive: **حالة الاشتراك** (what am I
+/// on, what does it cost, what happens next), **الاستخدام والحدود** (what will
+/// stop me, and when), **ما تشمله باقتك** (what I have, and why I don't have the
+/// rest), **الفواتير** (what I have been charged).
 ///
 /// The office **cannot change its own plan here** (§17.2): a checkout without a
 /// payment gateway would be a lie, and a plan change has proration implications
 /// that need a real billing engine. So the call to action is contact, not
-/// purchase — and saying that plainly is better than a disabled "upgrade"
-/// button that teaches the owner the console is broken.
+/// purchase — but contact is now a prepared request rather than a sentence in a
+/// grey box.
 class OfficeBillingScreen extends StatelessWidget {
   const OfficeBillingScreen({super.key});
 
@@ -36,268 +44,179 @@ class OfficeBillingScreen extends StatelessWidget {
           message: message,
           onRetry: () => context.read<OfficeBillingCubit>().load(),
         ),
-        OfficeBillingLoaded() => _Loaded(state: state),
+        OfficeBillingLoaded() => OfficeBillingView(
+          state: state,
+          onRefresh: () => context.read<OfficeBillingCubit>().load(),
+          onRetryInvoices: () =>
+              context.read<OfficeBillingCubit>().reloadInvoices(),
+        ),
       },
     );
   }
 }
 
-class _Loaded extends StatelessWidget {
-  const _Loaded({required this.state});
+/// The loaded screen, separated from its cubit so a test can pump it against a
+/// hand-built [OfficeBillingLoaded] — the cubit needs a live Supabase client to
+/// exist, and none of what this draws depends on that.
+class OfficeBillingView extends StatelessWidget {
+  const OfficeBillingView({
+    super.key,
+    required this.state,
+    this.onRefresh,
+    this.onRetryInvoices,
+  });
 
   final OfficeBillingLoaded state;
+  final VoidCallback? onRefresh;
+  final VoidCallback? onRetryInvoices;
 
   @override
   Widget build(BuildContext context) {
     final license = state.license;
-    final limits = state.entitlements.limits;
+    final view = LicenseStatusView.of(license);
 
-    return SingleChildScrollView(
+    return ListView(
       padding: const EdgeInsets.all(AppSpacing.large),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          LicenseBanner(license: license),
-          DashboardModuleHeader(
-            icon: DashboardIcons.officeBilling,
-            title: 'الباقة والفوترة',
-            subtitle: 'باقتك الحالية، وما تشمله، وفواتيرك.',
-            sectionId: DashboardSectionIds.officeBillingHeader,
-            summary: DashboardKpiGrid(
-              children: [
-                DashboardKpiCard(
-                  label: 'الباقة',
-                  value: license.planNameAr.isEmpty ? '—' : license.planNameAr,
-                  icon: DashboardIcons.plans,
-                  detail: license.statusLabelAr,
-                ),
-                DashboardKpiCard(
-                  label: 'التجديد',
-                  value: licensingDate(license.periodEnd),
-                  icon: DashboardIcons.time,
-                  detail: license.autoRenew
-                      ? 'تجديد تلقائي'
-                      : 'بدون تجديد تلقائي',
-                ),
-                DashboardKpiCard(
-                  label: 'القيمة',
-                  value: licensingMoney(license.price, license.currency),
-                  icon: DashboardIcons.payments,
-                  detail: switch (license.billingCycle) {
-                    'yearly' => 'سنويًا',
-                    'monthly' => 'شهريًا',
-                    'custom' => 'عقد مخصص',
-                    'free' => 'مجانية',
-                    _ => '',
-                  },
-                ),
-                if (license.isTrialing)
-                  DashboardKpiCard(
-                    label: 'باقٍ من التجربة',
-                    value: '${license.trialDaysLeft ?? 0} يوم',
-                    icon: DashboardIcons.attention,
-                  ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpacing.medium),
-          if (limits.isNotEmpty) ...[
-            DashboardPanel(
-              sectionId: DashboardSectionIds.officeBillingUsage,
-              icon: DashboardIcons.usage,
-              title: 'الاستخدام',
-              subtitle: 'ما استهلكته من حدود باقتك.',
-              child: Column(
-                children: [
-                  for (final limit in limits)
-                    UsageBar(
-                      label: limit.nameAr,
-                      used: limit.used ?? 0,
-                      limit: limit.limit,
-                      unit: limit.unitAr,
-                    ),
-                  const SizedBox(height: AppSpacing.small),
-                  Text(
-                    'الحد يمنع الإضافة الجديدة فقط. لا يُحذف ولا يُعطَّل أي عنصر '
-                    'قائم عند تغيير الباقة.',
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: DashboardColors.mutedInk(context),
-                    ),
-                  ),
-                ],
+      children: [
+        DashboardModuleHeader(
+          icon: DashboardIcons.officeBilling,
+          title: 'الباقة والفوترة',
+          subtitle: 'باقتك الحالية، وما تشمله من ميزات وحدود، وفواتيرك.',
+          actions: [
+            if (onRefresh != null)
+              OutlinedButton.icon(
+                onPressed: onRefresh,
+                icon: const Icon(DashboardIcons.refresh, size: 18),
+                label: const Text('تحديث'),
               ),
-            ),
-            const SizedBox(height: AppSpacing.medium),
           ],
-          _IncludedFeatures(state: state),
+        ),
+
+        // Not folded, and not a KPI strip: the plan, its state and its next date
+        // are the reason the screen was opened, and they used to sit behind the
+        // header's «الملخص» toggle.
+        OfficeSubscriptionCard(
+          license: license,
+          onContact: () => _requestUpgrade(context),
+        ),
+        const SizedBox(height: AppSpacing.large),
+
+        DashboardPanel(
+          sectionId: DashboardSectionIds.officeBillingUsage,
+          icon: DashboardIcons.usage,
+          title: 'الاستخدام والحدود',
+          subtitle: 'ما استهلكته من حدود باقتك، وما يمنعه تجاوزها.',
+          collapsedSummary: DashboardSectionSummary(items: _usageSummary()),
+          child: OfficeLimitsPanel(
+            capped: state.cappedMeters,
+            uncapped: state.uncappedMeters,
+            closed: state.closedMeters,
+            overLimit: state.overLimitMeters,
+            nearLimit: state.nearLimitMeters,
+            isEnforcing: state.entitlements.isEnforcing,
+          ),
+        ),
+        const SizedBox(height: AppSpacing.medium),
+
+        DashboardPanel(
+          sectionId: DashboardSectionIds.officeBillingPlan,
+          icon: DashboardIcons.featureCatalog,
+          title: 'ما تشمله باقتك',
+          subtitle: 'المتاح، وسبب عدم إتاحة الباقي.',
+          child: OfficeFeaturesPanel(
+            groups: _featureGroups(),
+            nameOfFeature: (key) =>
+                state.entitlements.feature(key)?.nameAr ?? key,
+            onContact: () => _requestUpgrade(context),
+          ),
+        ),
+        const SizedBox(height: AppSpacing.medium),
+
+        DashboardPanel(
+          sectionId: DashboardSectionIds.officeBillingInvoices,
+          icon: DashboardIcons.billing,
+          title: 'الفواتير',
+          subtitle: 'ما صدر لمكتبك من فواتير اشتراك.',
+          collapsedSummary: DashboardSectionSummary(
+            items: [
+              if (state.invoicesError != null)
+                'تعذر تحميل الفواتير'
+              else
+                '${state.invoices.length} فاتورة',
+            ],
+          ),
+          child: OfficeInvoicesPanel(
+            invoices: state.invoices,
+            error: state.invoicesError,
+            isLoading: state.isLoadingInvoices,
+            onRetry: onRetryInvoices ?? () {},
+          ),
+        ),
+
+        if (view.isRestricted) ...[
           const SizedBox(height: AppSpacing.medium),
-          _Invoices(state: state),
+          const _ReadOnlyFooter(),
         ],
-      ),
+      ],
+    );
+  }
+
+  /// The folded usage section still has to answer "do I need to open this?".
+  List<String> _usageSummary() {
+    final over = state.overLimitMeters;
+    final near = state.nearLimitMeters;
+    return [
+      if (over.isNotEmpty) 'تجاوزت ${over.length} حدًّا',
+      if (over.isEmpty && near.isNotEmpty) 'اقتربت من ${near.length} حد',
+      '${state.cappedMeters.length} حد محدود',
+      if (state.uncappedMeters.isNotEmpty)
+        '${state.uncappedMeters.length} بلا حدود',
+    ];
+  }
+
+  Map<String, List<ResolvedFeature>> _featureGroups() {
+    final groups = <String, List<ResolvedFeature>>{};
+    for (final entry in OfficeFeaturesPanel.categories.entries) {
+      final features = state.included(entry.key);
+      if (features.isNotEmpty) groups[entry.value] = features;
+    }
+    return groups;
+  }
+
+  void _requestUpgrade(BuildContext context) {
+    showOfficeUpgradeRequest(
+      context,
+      license: state.license,
+      officeName: state.officeName,
+      pressuredMeters: [...state.overLimitMeters, ...state.nearLimitMeters],
     );
   }
 }
 
-class _IncludedFeatures extends StatelessWidget {
-  const _IncludedFeatures({required this.state});
-
-  final OfficeBillingLoaded state;
-
-  static const _categories = <String, String>{
-    'operations': 'التشغيل',
-    'fleet': 'الأسطول',
-    'sales': 'المبيعات والعملاء',
-    'finance': 'المالية',
-    'insight': 'التقارير والتحليل',
-    'engagement': 'التواصل والدعم',
-    'platform': 'المنصة والتوسع',
-  };
+/// Repeats the one thing a held office most needs to know, at the end of the
+/// screen it will have scrolled through looking for it.
+class _ReadOnlyFooter extends StatelessWidget {
+  const _ReadOnlyFooter();
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final text = Theme.of(context).textTheme;
-
-    return DashboardPanel(
-      sectionId: DashboardSectionIds.officeBillingPlan,
-      icon: DashboardIcons.featureCatalog,
-      title: 'ما تشمله باقتك',
-      subtitle: 'المتاح، وما يمكن إضافته بترقية.',
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          for (final category in _categories.entries)
-            () {
-              final features = state
-                  .included(category.key)
-                  .where((f) => f.valueType != 'limit')
-                  .toList();
-              if (features.isEmpty) return const SizedBox.shrink();
-              return Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.medium),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      category.value,
-                      style: text.labelLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: AppSpacing.xSmall),
-                    Wrap(
-                      spacing: AppSpacing.small,
-                      runSpacing: AppSpacing.xSmall,
-                      children: [
-                        for (final feature in features)
-                          _FeatureChip(feature: feature, scheme: scheme),
-                      ],
-                    ),
-                  ],
-                ),
-              );
-            }(),
-          Container(
-            padding: const EdgeInsets.all(AppSpacing.medium),
-            decoration: BoxDecoration(
-              color: DashboardColors.well(context),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: DashboardColors.border(context)),
-            ),
-            child: Row(
-              children: [
-                Icon(DashboardIcons.locked, size: 18, color: scheme.primary),
-                const SizedBox(width: AppSpacing.small),
-                Expanded(
-                  child: Text(
-                    'لترقية الباقة أو رفع أي حد، تواصل مع إدارة المنصة. '
-                    'تغيير الباقة لا يتم ذاتيًا في هذا الإصدار.',
-                    style: text.bodySmall,
-                  ),
-                ),
-              ],
+    final status = context.status(AppStatusTone.error);
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(DashboardIcons.locked, size: 16, color: status.accent),
+        const SizedBox(width: AppSpacing.small),
+        Expanded(
+          child: Text(
+            'وضع القراءة فقط لا يحذف شيئًا: بياناتك وتذاكرك المُباعة ورحلاتك '
+            'الجارية كما هي، ويعود الإنشاء فور عودة الترخيص.',
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: DashboardColors.mutedInk(context),
+              height: 1.7,
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FeatureChip extends StatelessWidget {
-  const _FeatureChip({required this.feature, required this.scheme});
-
-  final ResolvedFeature feature;
-  final ColorScheme scheme;
-
-  @override
-  Widget build(BuildContext context) {
-    final on = feature.isOn;
-
-    final blocked = feature.blockedBy != null;
-
-    final color = on
-        ? scheme.secondary
-        : (blocked ? scheme.tertiary : scheme.outline);
-
-    return Tooltip(
-      message: blocked
-          ? 'تتطلب تفعيل ميزة أخرى أولًا'
-          : (on ? 'متاحة في باقتك' : 'غير متاحة في باقتك الحالية'),
-      child: DashboardStatusChip(
-        label: feature.valueType == 'enum'
-            ? '${feature.nameAr}: ${feature.value}'
-            : feature.nameAr,
-        color: color.withAlpha(on ? 24 : 14),
-        textColor: color,
-      ),
-    );
-  }
-}
-
-class _Invoices extends StatelessWidget {
-  const _Invoices({required this.state});
-
-  final OfficeBillingLoaded state;
-
-  @override
-  Widget build(BuildContext context) {
-    return DashboardPanel(
-      sectionId: DashboardSectionIds.officeBillingInvoices,
-      icon: DashboardIcons.billing,
-      title: 'الفواتير',
-      child: state.invoices.isEmpty
-          ? const DashboardEmptyState(
-              icon: DashboardIcons.billing,
-              title: 'لا توجد فواتير',
-              message: 'لم تصدر أي فاتورة اشتراك لهذا المكتب بعد.',
-            )
-          : Column(
-              children: [
-                for (final invoice in state.invoices)
-                  ListTile(
-                    dense: true,
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(invoice.invoiceNumber),
-                    subtitle: Text(
-                      '${licensingDate(invoice.periodStart)} → '
-                      '${licensingDate(invoice.periodEnd)}'
-                      '${invoice.dueAt == null ? '' : ' · استحقاق ${licensingDate(invoice.dueAt)}'}',
-                    ),
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(licensingMoney(invoice.total, invoice.currency)),
-                        const SizedBox(width: AppSpacing.small),
-                        InvoiceStatusChip(
-                          status: invoice.status,
-                          label: invoice.statusLabelAr,
-                        ),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
+        ),
+      ],
     );
   }
 }

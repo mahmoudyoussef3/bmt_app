@@ -17,13 +17,6 @@ final _grouped = NumberFormat.decimalPattern('en');
 /// Rounded to whole pounds: piastres on an executive summary are noise.
 String money(num value) => '${_grouped.format(value.round())} ج.م';
 
-/// A signed amount, for figures that can legitimately fall — a wallet balance
-/// moving, a period-over-period delta.
-String signedMoney(num value) {
-  if (value == 0) return money(0);
-  return '${value > 0 ? '+' : '−'}${money(value.abs())}';
-}
-
 String count(num value) => _grouped.format(value.round());
 
 /// `68%` from a `0..1` ratio.
@@ -33,14 +26,23 @@ String percent(double ratio) => '${(ratio * 100).round()}%';
 /// data", never "zero".
 String percentOrDash(double? ratio) => ratio == null ? '—' : percent(ratio);
 
-/// Turns a measured [MetricTrend] into the tile's chip.
+/// Turns a measured [MetricTrend] into the tile's chip, in **الرئيسية's
+/// wording**: a magnitude and the window it is measured against, in one
+/// phrase — «١٢% عن الشهر السابق», «كما أمس».
 ///
-/// [upIsGood] is the caller's verdict, not the arithmetic's: refunds rising and
-/// revenue rising are the same arrow and opposite news.
+/// Home writes its movements this way and this page used to write them as a
+/// bare «١٢%» with the comparison demoted to a caption line underneath. Two
+/// screens the same operator reads back to back should not describe the same
+/// arithmetic in two grammars, and the caption was the first thing to be
+/// clipped whenever a tile ran short.
 ///
-/// The label carries **magnitude only** — the arrow already carries direction,
-/// and a `+`/`−` sign next to an arrow inside an RTL line is one glyph too many
-/// pointing at the same fact. When there is no baseline to divide by, the
+/// [upIsGood] is the caller's verdict, not the arithmetic's: refunds rising
+/// and revenue rising are the same arrow and opposite news.
+///
+/// The label carries **magnitude only** — the arrow carries direction. A
+/// literal `+`/`−` beside digits inside an RTL line is reordered by the bidi
+/// algorithm and the sign can land on the wrong side of the number; an arrow
+/// icon has no direction to lose. When there is no baseline to divide by, the
 /// absolute change is shown instead, formatted by [absolute].
 KpiTrend? kpiTrendFrom(
   MetricTrend? trend, {
@@ -49,35 +51,37 @@ KpiTrend? kpiTrendFrom(
 }) {
   if (trend == null) return null;
 
+  final against = 'عن ${trend.previousLabel}';
+  if (trend.direction == TrendDirection.flat) {
+    return KpiTrend(
+      label: 'كما ${trend.previousLabel}',
+      icon: DashboardIcons.trendFlat,
+      tone: KpiTrendTone.neutral,
+    );
+  }
+
   final ratio = trend.changeRatio;
-  final direction = trend.direction;
-  final label = ratio != null
+  final magnitude = ratio != null
       ? percent(ratio.abs())
       : (absolute ?? count)(trend.delta.abs());
-
-  final tone = switch (direction) {
-    TrendDirection.flat => KpiTrendTone.neutral,
-    TrendDirection.up => upIsGood ? KpiTrendTone.positive : KpiTrendTone.negative,
-    TrendDirection.down => upIsGood
-        ? KpiTrendTone.negative
-        : KpiTrendTone.positive,
-  };
-
-  final icon = switch (direction) {
-    TrendDirection.up => DashboardIcons.trendUp,
-    TrendDirection.down => DashboardIcons.trendDown,
-    TrendDirection.flat => DashboardIcons.trendFlat,
-  };
+  final isUp = trend.direction == TrendDirection.up;
 
   return KpiTrend(
-    label: direction == TrendDirection.flat ? 'بدون تغيير' : label,
-    icon: icon,
-    tone: tone,
-    caption: 'مقارنة بـ${trend.previousLabel}',
+    label: '$magnitude $against',
+    icon: isUp ? DashboardIcons.trendUp : DashboardIcons.trendDown,
+    tone: (isUp == upIsGood) ? KpiTrendTone.positive : KpiTrendTone.negative,
   );
 }
 
-/// The `value` list a sparkline takes, from a daily series.
-List<double> sparkValues(List<DailyMetric> series) => [
-  for (final point in series) point.value,
-];
+/// The `value` list a sparkline takes, from a daily series — or null when the
+/// series never left zero.
+///
+/// An all-zero window is a true measurement, but a straight line along the
+/// floor is not a useful drawing of it: on a tile whose value already reads
+/// «—» because nothing was measurable, that line says the opposite of the
+/// number above it. No shape is the honest rendering of no movement.
+List<double>? sparkValues(List<DailyMetric> series) {
+  if (series.length < 2) return null;
+  if (series.every((point) => point.value == 0)) return null;
+  return [for (final point in series) point.value];
+}

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
@@ -25,6 +26,14 @@ import 'finance_format.dart';
 ///    of what an attention list is for. The subtitle says so in words.
 ///  * **A clear board says so.** An empty attention panel that renders as
 ///    nothing is indistinguishable from one that failed to load.
+///
+/// The rows are one list, not six cards. Each queue used to be its own tinted,
+/// bordered, separately-rounded box with its own margin, so a busy office got a
+/// stack of six coloured slabs in which nothing ranked above anything else —
+/// the noisiest block on the module's most-read screen, for the content that
+/// most needed to be scannable. Now severity is carried by the leading glyph
+/// tile and a single edge, and the rows share one frame with hairlines between
+/// them, so the eye runs down the counts instead of around six borders.
 class FinanceAttentionPanel extends StatelessWidget {
   const FinanceAttentionPanel({
     super.key,
@@ -41,7 +50,6 @@ class FinanceAttentionPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final palette = DashboardChartPalette.of(context);
-    final scheme = Theme.of(context).colorScheme;
 
     return DashboardPanel(
       sectionId: DashboardSectionIds.financeAttention,
@@ -59,25 +67,13 @@ class FinanceAttentionPanel extends StatelessWidget {
                   '${FinanceFormat.money(attention.totalAtRisk)}',
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: Theme.of(
-          context,
-        ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: DashboardColors.mutedInk(context),
+        ),
       ),
       child: attention.isClear
           ? _ClearBoard(palette: palette)
-          : Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                for (final item in attention.items)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.small),
-                    child: _AttentionRow(
-                      item: item,
-                      onOpenModule: onOpenModule,
-                    ),
-                  ),
-              ],
-            ),
+          : _QueueList(items: attention.items, onOpenModule: onOpenModule),
     );
   }
 }
@@ -115,6 +111,37 @@ class _ClearBoard extends StatelessWidget {
   }
 }
 
+/// One frame, hairlines between rows — the console's list vocabulary.
+class _QueueList extends StatelessWidget {
+  const _QueueList({required this.items, required this.onOpenModule});
+
+  final List<FinanceAttentionItem> items;
+  final ValueChanged<String>? onOpenModule;
+
+  @override
+  Widget build(BuildContext context) {
+    final radius = BorderRadius.circular(AppTokens.radiusSmall);
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: radius,
+        border: Border.all(color: DashboardColors.border(context)),
+      ),
+      child: ClipRRect(
+        borderRadius: radius,
+        child: Column(
+          children: [
+            for (final (index, item) in items.indexed) ...[
+              if (index > 0)
+                Divider(height: 1, color: DashboardColors.divider(context)),
+              _AttentionRow(item: item, onOpenModule: onOpenModule),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _AttentionRow extends StatelessWidget {
   const _AttentionRow({required this.item, required this.onOpenModule});
 
@@ -133,9 +160,9 @@ class _AttentionRow extends StatelessWidget {
       FinanceAttentionSeverity.info => palette.neutral,
     };
 
-    // Severity is carried by an icon and by the count chip's own wording as
-    // well as by colour, so the row still ranks itself for an operator who
-    // cannot separate the two tints.
+    // Severity is carried by an icon and by the count's own wording as well as
+    // by colour, so the row still ranks itself for an operator who cannot
+    // separate the two tints.
     final glyph = switch (item.severity) {
       FinanceAttentionSeverity.urgent => Icons.priority_high_rounded,
       FinanceAttentionSeverity.warning => Icons.schedule_rounded,
@@ -146,16 +173,19 @@ class _AttentionRow extends StatelessWidget {
     final canOpen = route != null && onOpenModule != null;
 
     final content = Padding(
-      padding: const EdgeInsets.all(AppSpacing.medium),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.medium,
+        vertical: AppSpacing.small + 2,
+      ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(AppSpacing.small),
+            padding: const EdgeInsets.all(7),
             decoration: BoxDecoration(
               color: tone.withAlpha(28),
-              borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+              borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(glyph, size: 18, color: tone),
+            child: Icon(glyph, size: 16, color: tone),
           ),
           const SizedBox(width: AppSpacing.medium),
           Expanded(
@@ -167,17 +197,15 @@ class _AttentionRow extends StatelessWidget {
                   item.kind.title,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: text.titleSmall?.copyWith(
-                    fontWeight: FontWeight.w900,
-                  ),
+                  style: text.titleSmall?.copyWith(fontWeight: FontWeight.w800),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 1),
                 Text(
                   item.kind.action,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: text.bodySmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
+                    color: DashboardColors.mutedInk(context),
                   ),
                 ),
               ],
@@ -185,34 +213,31 @@ class _AttentionRow extends StatelessWidget {
           ),
           const SizedBox(width: AppSpacing.small),
           _Counts(item: item, tone: tone),
-          if (canOpen) ...[
-            const SizedBox(width: AppSpacing.small),
-            Icon(
-              DashboardIcons.openModule,
-              size: 18,
-              color: scheme.onSurfaceVariant,
-            ),
-          ],
+          const SizedBox(width: AppSpacing.small),
+          Icon(
+            DashboardIcons.openModule,
+            size: 16,
+            color: canOpen
+                ? DashboardColors.mutedInk(context)
+                : Colors.transparent,
+          ),
         ],
       ),
     );
 
     return Material(
-      color: tone.withAlpha(14),
-      borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+      // The row sits on the panel, not on a tint of its own — except the
+      // urgent ones, which keep the faintest wash so a full board still ranks
+      // at a glance rather than reading as six equal lines.
+      color: item.severity == FinanceAttentionSeverity.urgent
+          ? tone.withAlpha(12)
+          : DashboardColors.panel(context),
       child: InkWell(
         onTap: canOpen ? () => onOpenModule!(route) : null,
-        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
         mouseCursor: canOpen
             ? SystemMouseCursors.click
             : SystemMouseCursors.basic,
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-            border: Border.all(color: tone.withAlpha(60)),
-          ),
-          child: content,
-        ),
+        child: content,
       ),
     );
   }
@@ -229,7 +254,6 @@ class _Counts extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final text = Theme.of(context).textTheme;
-    final scheme = Theme.of(context).colorScheme;
     final isGap = item.kind == FinanceAttentionKind.identityBroken;
 
     return Column(
@@ -242,7 +266,7 @@ class _Counts extends StatelessWidget {
               : '${FinanceFormat.count(item.count)} ${item.kind.unit}',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: text.titleSmall?.copyWith(
+          style: text.labelLarge?.copyWith(
             fontWeight: FontWeight.w900,
             color: tone,
           ),
@@ -251,7 +275,10 @@ class _Counts extends StatelessWidget {
           isGap ? 'فارق المعادلة' : FinanceFormat.money(item.amount),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+          style: text.bodySmall?.copyWith(
+            color: DashboardColors.mutedInk(context),
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
         ),
       ],
     );

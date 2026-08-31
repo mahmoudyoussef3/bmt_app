@@ -1193,12 +1193,18 @@ void _registerOfficeProfileDependencies() {
       () => UploadOfficeLogoUseCase(dashboardDi<OfficeProfileRepository>()),
     );
   }
+  if (!dashboardDi.isRegistered<RotateOfficeJoinCodeUseCase>()) {
+    dashboardDi.registerLazySingleton(
+      () => RotateOfficeJoinCodeUseCase(dashboardDi<OfficeProfileRepository>()),
+    );
+  }
   if (!dashboardDi.isRegistered<OfficeProfileCubit>()) {
     dashboardDi.registerFactory(
       () => OfficeProfileCubit(
         getProfile: dashboardDi<GetOfficeProfileUseCase>(),
         updateProfile: dashboardDi<UpdateOfficeProfileUseCase>(),
         uploadLogo: dashboardDi<UploadOfficeLogoUseCase>(),
+        rotateJoinCode: dashboardDi<RotateOfficeJoinCodeUseCase>(),
       ),
     );
   }
@@ -1454,6 +1460,7 @@ void _registerOperationalAlertsDependencies() {
       () => OfficeBillingCubit(
         dashboardDi<GetOfficeInvoicesUseCase>(),
         dashboardDi<EntitlementService>(),
+        dashboardDi<DashboardSession>(),
       ),
     );
   }
