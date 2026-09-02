@@ -425,7 +425,11 @@ class OverviewRecordTile extends StatelessWidget {
     final radius = BorderRadius.circular(10);
 
     return Material(
-      color: DashboardColors.panel(context),
+      // The nested-tile step of the surface ladder, not the panel's own tone:
+      // a record drawn in the panel's colour is a box outlined on the very
+      // surface it sits on, which is the card-in-card the design system
+      // rejects. One step up, it reads as a thing *inside* the card.
+      color: DashboardColors.nested(context),
       borderRadius: radius,
       child: InkWell(
         onTap: onTap,

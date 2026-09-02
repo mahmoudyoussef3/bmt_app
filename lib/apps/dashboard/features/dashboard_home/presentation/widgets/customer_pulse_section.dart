@@ -10,6 +10,8 @@ import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_panel.dart';
 import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 
+import 'package:bmt_app/apps/dashboard/features/reviews/domain/entities/reviews_summary.dart';
+
 import '../../domain/entities/dashboard_home_summary.dart';
 
 /// How passengers rated the service, across the three things they are asked
@@ -64,6 +66,8 @@ class CustomerPulseSection extends StatelessWidget {
             )
           : Column(
               children: [
+                _OverallRating(summary: reviews, palette: palette),
+                const Divider(height: AppSpacing.large),
                 _RatingRow(
                   label: 'السائق',
                   icon: DashboardIcons.captain,
@@ -93,6 +97,114 @@ class CustomerPulseSection extends StatelessWidget {
                 ],
               ],
             ),
+    );
+  }
+}
+
+/// The one number the module itself calls its headline — the mean across all
+/// three dimensions — with the star row that makes it readable at a glance and
+/// the sample behind it.
+///
+/// [ReviewsSummary.overallAverage] and `commentedCount` were both computed on
+/// every load and drawn nowhere, so the panel opened on three tracks and left
+/// the reader to average them in their head. The comment count is the more
+/// useful of the two: stars say *how* it went, and a written comment is the
+/// only place that says why.
+class _OverallRating extends StatelessWidget {
+  const _OverallRating({required this.summary, required this.palette});
+
+  final ReviewsSummary summary;
+  final DashboardChartPalette palette;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = Theme.of(context).textTheme;
+    final average = summary.overallAverage;
+    final tone = average >= 4
+        ? palette.positive
+        : average >= 3
+        ? palette.warning
+        : palette.negative;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        Text(
+          average.toStringAsFixed(1),
+          style: text.displayMedium?.copyWith(
+            fontSize: 30,
+            fontWeight: FontWeight.w800,
+            letterSpacing: -0.6,
+            height: 1.1,
+            fontFeatures: const [FontFeature.tabularFigures()],
+          ),
+        ),
+        const SizedBox(width: 3),
+        Padding(
+          padding: const EdgeInsets.only(top: 6),
+          child: Text(
+            '/ ٥',
+            style: text.labelMedium?.copyWith(
+              color: DashboardColors.faintInk(context),
+            ),
+          ),
+        ),
+        const SizedBox(width: AppSpacing.medium),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _Stars(average: average, tone: tone),
+              const SizedBox(height: 3),
+              Text(
+                summary.commentedCount == 0
+                    ? 'متوسط عام · لا تعليقات مكتوبة'
+                    : 'متوسط عام · تعليقات مكتوبة: ${summary.commentedCount}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: text.labelSmall?.copyWith(
+                  color: DashboardColors.mutedInk(context),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Five glyphs, the last of which is half-filled when the average lands
+/// mid-star. Drawn from the rating rather than rounded to it: a 3.5 shown as
+/// four full stars is a better score than the passengers gave.
+class _Stars extends StatelessWidget {
+  const _Stars({required this.average, required this.tone});
+
+  final double average;
+  final Color tone;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (var i = 1; i <= 5; i++)
+          Padding(
+            padding: const EdgeInsetsDirectional.only(end: 2),
+            child: Icon(
+              average >= i
+                  ? Icons.star_rounded
+                  : average >= i - 0.5
+                  ? Icons.star_half_rounded
+                  : Icons.star_outline_rounded,
+              size: 16,
+              color: average >= i - 0.5
+                  ? tone
+                  : DashboardColors.borderStrong(context),
+            ),
+          ),
+      ],
     );
   }
 }

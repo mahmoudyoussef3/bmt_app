@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/apps/dashboard/core/session/office_context.dart';
-import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_page_title_block.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_pulse_chip.dart';
 import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 
@@ -77,125 +78,33 @@ class HomeHeaderBanner extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final identity = _Identity(
-              greeting: '${_greetingFor(at)}، ${office.displayName}',
-              contextLine: _contextLine(
-                officeName: officeName,
-                date: at,
-                tripsToday: summary.todayTripsCount,
-                updatedAt: updatedAt,
+        DashboardPageTitleBlock(
+          title: '${_greetingFor(at)}، ${office.displayName}',
+          monogramSource: officeName,
+          meta: [
+            officeName,
+            _formatArabicDate(at),
+            summary.todayTripsCount == 0
+                ? 'لا رحلات مجدولة اليوم'
+                : '${summary.todayTripsCount} رحلة مجدولة اليوم',
+            if (updatedAt != null) 'آخر تحديث ${_formatClock(updatedAt!)}',
+          ],
+          actions: [
+            if (onCreateTrip != null)
+              FilledButton.icon(
+                onPressed: onCreateTrip,
+                icon: const Icon(DashboardIcons.add, size: 18),
+                label: const Text('رحلة جديدة'),
               ),
-            );
-            final actions = _Actions(
-              onCreateTrip: onCreateTrip,
-              onRefresh: onRefresh,
-            );
-
-            if (constraints.maxWidth < 640) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  identity,
-                  const SizedBox(height: AppSpacing.medium),
-                  actions,
-                ],
-              );
-            }
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Expanded(child: identity),
-                const SizedBox(width: AppSpacing.large),
-                actions,
-              ],
-            );
-          },
+            if (onRefresh != null)
+              OutlinedButton.icon(
+                onPressed: onRefresh,
+                icon: const Icon(DashboardIcons.refresh, size: 18),
+                label: const Text('تحديث'),
+              ),
+          ],
         ),
         _PulseStrip(summary: summary, now: at),
-      ],
-    );
-  }
-
-  String _contextLine({
-    required String officeName,
-    required DateTime date,
-    required int tripsToday,
-    required DateTime? updatedAt,
-  }) {
-    final parts = <String>[
-      officeName,
-      _formatArabicDate(date),
-      tripsToday == 0
-          ? 'لا رحلات مجدولة اليوم'
-          : '$tripsToday رحلة مجدولة اليوم',
-    ];
-    if (updatedAt != null) parts.add('آخر تحديث ${_formatClock(updatedAt)}');
-    return parts.join(' · ');
-  }
-}
-
-class _Identity extends StatelessWidget {
-  const _Identity({required this.greeting, required this.contextLine});
-
-  final String greeting;
-  final String contextLine;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          greeting,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.headlineSmall,
-        ),
-        const SizedBox(height: 3),
-        Text(
-          contextLine,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: DashboardColors.mutedInk(context),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// One primary action, one secondary — on the same baseline as the greeting,
-/// exactly where [DashboardModuleHeader] puts every other module's actions.
-class _Actions extends StatelessWidget {
-  const _Actions({this.onCreateTrip, this.onRefresh});
-
-  final VoidCallback? onCreateTrip;
-  final VoidCallback? onRefresh;
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: AppSpacing.small,
-      runSpacing: AppSpacing.small,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        if (onCreateTrip != null)
-          FilledButton.icon(
-            onPressed: onCreateTrip,
-            icon: const Icon(DashboardIcons.add, size: 18),
-            label: const Text('رحلة جديدة'),
-          ),
-        if (onRefresh != null)
-          OutlinedButton.icon(
-            onPressed: onRefresh,
-            icon: const Icon(DashboardIcons.refresh, size: 18),
-            label: const Text('تحديث'),
-          ),
       ],
     );
   }
@@ -219,7 +128,7 @@ class _PulseStrip extends StatelessWidget {
 
     final chips = <Widget>[
       if (next != null)
-        _PulseChip(
+        DashboardPulseChip(
           icon: DashboardIcons.time,
           label: 'التالية',
           value:
@@ -228,20 +137,20 @@ class _PulseStrip extends StatelessWidget {
           tone: AppStatusTone.info,
         )
       else
-        const _PulseChip(
+        const DashboardPulseChip(
           icon: DashboardIcons.allClear,
           label: 'الجدول',
           value: 'انتهت رحلات اليوم',
           tone: AppStatusTone.neutral,
         ),
       if (running > 0)
-        _PulseChip(
+        DashboardPulseChip(
           icon: DashboardIcons.liveOpsActive,
           label: 'جارية الآن',
           value: '$running',
           tone: AppStatusTone.success,
         ),
-      _PulseChip(
+      DashboardPulseChip(
         icon: DashboardIcons.seats,
         label: 'مقاعد متاحة',
         value: '$seats',
@@ -255,66 +164,6 @@ class _PulseStrip extends StatelessWidget {
         spacing: AppSpacing.small,
         runSpacing: AppSpacing.small,
         children: chips,
-      ),
-    );
-  }
-}
-
-/// A bare-page chip: a hairline outline, a tinted glyph, a muted caption and
-/// the figure in ink. Deliberately not [DashboardStatusChip] — that badge
-/// tints its whole fill, which is right for a status cell in a dense table and
-/// wrong for three chips sitting directly under a page title, where three
-/// filled blocks would read as three warnings.
-class _PulseChip extends StatelessWidget {
-  const _PulseChip({
-    required this.icon,
-    required this.label,
-    required this.value,
-    required this.tone,
-  });
-
-  final IconData icon;
-  final String label;
-  final String value;
-  final AppStatusTone tone;
-
-  @override
-  Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
-    final style = DashboardColors.status(context, tone);
-
-    return Container(
-      constraints: const BoxConstraints(maxWidth: 340),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: DashboardColors.panel(context),
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: DashboardColors.border(context)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: style.accent),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: text.labelSmall?.copyWith(
-              color: DashboardColors.mutedInk(context),
-            ),
-          ),
-          const SizedBox(width: 6),
-          Flexible(
-            child: Text(
-              value,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: text.labelMedium?.copyWith(
-                fontWeight: FontWeight.w800,
-                fontFeatures: const [FontFeature.tabularFigures()],
-              ),
-            ),
-          ),
-        ],
       ),
     );
   }

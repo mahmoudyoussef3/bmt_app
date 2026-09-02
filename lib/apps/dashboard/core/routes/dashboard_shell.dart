@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
+import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_status_chip.dart';
@@ -108,6 +109,11 @@ const Key topBarSubtitleKey = Key('dashboard-topbar-subtitle');
 /// Sidebar width when it shows labels, and when it is collapsed to icons.
 const double _sidebarWidth = 256;
 const double _sidebarRailWidth = 76;
+
+/// Width of the same sidebar when it is the drawer instead of the frame.
+/// Wider than the docked rail on purpose: a drawer is the only thing on
+/// screen while it is open, so labels get the room the frame cannot spare.
+const double _drawerWidth = 288;
 
 /// Below this the shell swaps the sidebar for a drawer; between it and
 /// [_railBreakpoint] the sidebar defaults to the icon rail, because a 256px
@@ -516,6 +522,16 @@ class _DashboardShellState extends State<DashboardShell> {
         if (useDrawer) {
           return Scaffold(
             drawer: Drawer(
+              width: _drawerWidth,
+              backgroundColor: DashboardColors.sidebar(context),
+              surfaceTintColor: Colors.transparent,
+              // Only the inner edge is rounded — the outer one is flush with
+              // the screen, so rounding it would float the drawer off nothing.
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadiusDirectional.horizontal(
+                  end: Radius.circular(AppTokens.radiusLarge),
+                ),
+              ),
               child: SafeArea(
                 child: _DashboardSidebar(
                   items: visibleItems,
@@ -524,7 +540,9 @@ class _DashboardShellState extends State<DashboardShell> {
                   role: _role,
                   route: _route,
                   collapsed: false,
+                  expandedWidth: _drawerWidth,
                   onRoleChanged: _setRole,
+                  onClose: () => Navigator.of(context).maybePop(),
                   onRouteChanged: (route) {
                     if (_openRoute(route)) {
                       Navigator.of(context).maybePop();
@@ -773,6 +791,7 @@ class _DashboardShellState extends State<DashboardShell> {
           ),
         ],
         child: LiveOpsScreen(
+          onOpenModule: _openRoute,
           canResolveIncidents: DashboardPermissions.canAccess(
             widget.office.role,
             DashboardPermission.liveOpsIncidentAction,
@@ -982,6 +1001,14 @@ class _DashboardSidebar extends StatefulWidget {
   final ValueChanged<String> onRouteChanged;
   final VoidCallback? onToggleCollapsed;
 
+  /// Dismisses the drawer this sidebar is mounted in. `null` when it is the
+  /// docked frame, which has nothing to close.
+  final VoidCallback? onClose;
+
+  /// Width while labels are showing — [_sidebarWidth] docked, [_drawerWidth]
+  /// in the drawer. The collapsed rail is always [_sidebarRailWidth].
+  final double expandedWidth;
+
   /// Routes present but not purchased. Drawn locked; the tap still goes through
   /// [onRouteChanged], which turns it into the upgrade card.
   final Set<String> lockedRoutes;
@@ -995,6 +1022,8 @@ class _DashboardSidebar extends StatefulWidget {
     this.collapsed = false,
     required this.onRoleChanged,
     this.onToggleCollapsed,
+    this.onClose,
+    this.expandedWidth = _sidebarWidth,
     this.lockedRoutes = const {},
   });
 
@@ -1005,9 +1034,24 @@ class _DashboardSidebar extends StatefulWidget {
 class _DashboardSidebarState extends State<_DashboardSidebar> {
   String _searchQuery = '';
 
+  /// Horizontal inset every block in the sidebar shares, so the header, the
+  /// search field, the nav rows and the footer all sit on one vertical line.
+  double get _inset => widget.collapsed ? AppSpacing.small : AppSpacing.medium;
+
+  @override
+  void didUpdateWidget(covariant _DashboardSidebar oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Collapsing to the rail takes the search field away with it. A query left
+    // behind would keep filtering a list whose labels are no longer on screen —
+    // the operator would see missing icons and no way to tell why.
+    if (widget.collapsed && !oldWidget.collapsed && _searchQuery.isNotEmpty) {
+      _searchQuery = '';
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final width = widget.collapsed ? _sidebarRailWidth : _sidebarWidth;
+    final width = widget.collapsed ? _sidebarRailWidth : widget.expandedWidth;
 
     return AnimatedContainer(
       duration: AppTokens.motionBase,
@@ -1015,9 +1059,13 @@ class _DashboardSidebarState extends State<_DashboardSidebar> {
       width: width,
       decoration: BoxDecoration(
         color: DashboardColors.sidebar(context),
-        border: BorderDirectional(
-          end: BorderSide(color: DashboardColors.border(context)),
-        ),
+        // In the drawer the elevation already separates it from the page, and
+        // a hairline under a rounded corner only shows the corner cutting it.
+        border: widget.onClose != null
+            ? null
+            : BorderDirectional(
+                end: BorderSide(color: DashboardColors.border(context)),
+              ),
       ),
 
       child: ClipRect(
@@ -1032,52 +1080,83 @@ class _DashboardSidebarState extends State<_DashboardSidebar> {
   }
 
   Widget _content(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.symmetric(
-        horizontal: widget.collapsed ? AppSpacing.small : AppSpacing.medium,
-        vertical: AppSpacing.medium,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          _OfficeIdentityHeader(
-            office: widget.office,
-            collapsed: widget.collapsed,
-            onToggleCollapsed: widget.onToggleCollapsed,
-          ),
-          const SizedBox(height: AppSpacing.medium),
-          if (!widget.collapsed) ...[
-            _NavSearchField(
-              value: _searchQuery,
-              onChanged: (value) => setState(() => _searchQuery = value),
-            ),
-            const SizedBox(height: AppSpacing.small),
-          ],
-          Expanded(child: _buildNavList(context)),
-          const SizedBox(height: AppSpacing.small),
-          Divider(height: 1, color: DashboardColors.divider(context)),
-          const SizedBox(height: AppSpacing.small),
+    final divider = Divider(
+      height: 1,
+      thickness: 1,
+      color: DashboardColors.divider(context),
+    );
 
-          if (kDebugMode && !widget.collapsed) ...[
-            _RoleSelector(role: widget.role, onChanged: widget.onRoleChanged),
-            const SizedBox(height: AppSpacing.small),
-          ],
-          _AccountFooter(
-            office: widget.office,
-            role: widget.role,
-            collapsed: widget.collapsed,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: EdgeInsets.fromLTRB(
+            _inset,
+            AppSpacing.medium,
+            _inset,
+            AppSpacing.medium,
           ),
-        ],
-      ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _OfficeIdentityHeader(
+                office: widget.office,
+                collapsed: widget.collapsed,
+                onToggleCollapsed: widget.onToggleCollapsed,
+                onClose: widget.onClose,
+              ),
+              if (!widget.collapsed) ...[
+                const SizedBox(height: AppSpacing.medium),
+                _NavSearchField(
+                  value: _searchQuery,
+                  onChanged: (value) => setState(() => _searchQuery = value),
+                ),
+              ],
+            ],
+          ),
+        ),
+        divider,
+        Expanded(child: _NavScrollArea(builder: _buildNavList)),
+        divider,
+        Padding(
+          padding: EdgeInsets.fromLTRB(
+            _inset,
+            AppSpacing.small,
+            _inset,
+            AppSpacing.medium,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (kDebugMode && !widget.collapsed) ...[
+                _RoleSelector(
+                  role: widget.role,
+                  onChanged: widget.onRoleChanged,
+                ),
+                const SizedBox(height: AppSpacing.small),
+              ],
+              _AccountFooter(
+                office: widget.office,
+                role: widget.role,
+                collapsed: widget.collapsed,
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
-  Widget _buildNavList(BuildContext context) {
+  Widget _buildNavList(BuildContext context, ScrollController controller) {
     final query = _searchQuery.trim();
     final searching = query.isNotEmpty && !widget.collapsed;
 
+    // The group name counts as a match too: typing "المالية" should surface the
+    // section, not come back empty because no single screen is called that.
     bool matches(_DashboardNavItem item) =>
-        !searching || item.label.contains(query);
+        !searching ||
+        item.label.contains(query) ||
+        (item.group?.contains(query) ?? false);
 
     final topLevel = widget.items.where((i) => i.group == null && matches(i));
     final children = <Widget>[for (final item in topLevel) _navButton(item)];
@@ -1091,13 +1170,19 @@ class _DashboardSidebarState extends State<_DashboardSidebar> {
       children.add(
         _NavSectionHeader(label: group, collapsed: widget.collapsed),
       );
-      children.addAll(
-        (searching ? visibleItems : groupItems).map(_navButton),
-      );
+      children.addAll((searching ? visibleItems : groupItems).map(_navButton));
+    }
+
+    if (children.isEmpty) {
+      return _NavEmptyState(query: query, controller: controller);
     }
 
     return ListView.separated(
-      padding: EdgeInsets.zero,
+      controller: controller,
+      padding: EdgeInsets.symmetric(
+        horizontal: _inset,
+        vertical: AppSpacing.small,
+      ),
       itemCount: children.length,
       separatorBuilder: (context, index) =>
           const SizedBox(height: AppSpacing.xSmall),
@@ -1105,51 +1190,301 @@ class _DashboardSidebarState extends State<_DashboardSidebar> {
     );
   }
 
-  Widget _navButton(_DashboardNavItem item) => _NavButton(
-    item: item,
-    selected: item.route == widget.route,
-    collapsed: widget.collapsed,
-    locked: widget.lockedRoutes.contains(item.route),
-    onTap: () => widget.onRouteChanged(item.route),
-  );
+  Widget _navButton(_DashboardNavItem item) {
+    final selected = item.route == widget.route;
+    final locked = widget.lockedRoutes.contains(item.route);
+    void open() => widget.onRouteChanged(item.route);
+
+    // The one row that carries a live number. The bell in the top bar already
+    // reads this cubit; the nav row shows the same count so an operator who has
+    // the sidebar open does not have to look up to know something is waiting.
+    // Skipped when the module is locked — an unbuyable count is noise — and
+    // when the cubit is absent, which is how a minimal test graph mounts.
+    if (item.route == DashboardRoutes.notifications &&
+        !locked &&
+        dashboardDi.isRegistered<OperationalAlertsBadgeCubit>()) {
+      return BlocProvider.value(
+        value: dashboardDi<OperationalAlertsBadgeCubit>(),
+        child: BlocBuilder<OperationalAlertsBadgeCubit, int>(
+          builder: (context, count) => _NavButton(
+            item: item,
+            selected: selected,
+            collapsed: widget.collapsed,
+            locked: locked,
+            badgeCount: count,
+            onTap: open,
+          ),
+        ),
+      );
+    }
+
+    return _NavButton(
+      item: item,
+      selected: selected,
+      collapsed: widget.collapsed,
+      locked: locked,
+      onTap: open,
+    );
+  }
+}
+
+/// The scrolling body of the sidebar, with a fade at whichever end still has
+/// items past it.
+///
+/// Nineteen destinations do not fit a laptop's viewport, and a list that ends
+/// flush against a divider reads as finished. The fades are drawn only when
+/// there is genuinely something beyond the edge, so a short list — a filtered
+/// search, a support agent's shorter menu — shows none at all.
+class _NavScrollArea extends StatefulWidget {
+  const _NavScrollArea({required this.builder});
+
+  final Widget Function(BuildContext, ScrollController) builder;
+
+  @override
+  State<_NavScrollArea> createState() => _NavScrollAreaState();
+}
+
+class _NavScrollAreaState extends State<_NavScrollArea> {
+  final ScrollController _controller = ScrollController();
+
+  bool _fadeTop = false;
+  bool _fadeBottom = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Metrics only get announced when they *change*, so the very first layout —
+    // an already-overflowing list nobody has scrolled yet — would never light
+    // the bottom fade without this.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && _controller.hasClients) _sync(_controller.position);
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _sync(ScrollMetrics metrics) {
+    final fadeTop = metrics.extentBefore > 1;
+    final fadeBottom = metrics.extentAfter > 1;
+    if (fadeTop == _fadeTop && fadeBottom == _fadeBottom) return;
+
+    // Notifications arrive mid-layout; setState has to wait for the frame.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      setState(() {
+        _fadeTop = fadeTop;
+        _fadeBottom = fadeBottom;
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final surface = DashboardColors.sidebar(context);
+
+    return NotificationListener<ScrollMetricsNotification>(
+      onNotification: (notification) {
+        _sync(notification.metrics);
+        return false;
+      },
+      child: NotificationListener<ScrollNotification>(
+        onNotification: (notification) {
+          _sync(notification.metrics);
+          return false;
+        },
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: Scrollbar(
+                controller: _controller,
+                thickness: 4,
+                radius: const Radius.circular(4),
+                child: widget.builder(context, _controller),
+              ),
+            ),
+            if (_fadeTop) _EdgeFade(color: surface, atTop: true),
+            if (_fadeBottom) _EdgeFade(color: surface, atTop: false),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EdgeFade extends StatelessWidget {
+  const _EdgeFade({required this.color, required this.atTop});
+
+  final Color color;
+  final bool atTop;
+
+  @override
+  Widget build(BuildContext context) {
+    return PositionedDirectional(
+      top: atTop ? 0 : null,
+      bottom: atTop ? null : 0,
+      start: 0,
+      end: 0,
+      height: 20,
+      child: IgnorePointer(
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: atTop ? Alignment.topCenter : Alignment.bottomCenter,
+              end: atTop ? Alignment.bottomCenter : Alignment.topCenter,
+              colors: [color, color.withValues(alpha: 0)],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// What the nav list shows when a search matches nothing. Names the query back,
+/// because the alternative — an empty panel — reads as a broken sidebar.
+class _NavEmptyState extends StatelessWidget {
+  const _NavEmptyState({required this.query, required this.controller});
+
+  final String query;
+  final ScrollController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      controller: controller,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.medium,
+        vertical: AppSpacing.xLarge,
+      ),
+      children: [
+        Icon(
+          Icons.search_off_rounded,
+          size: 28,
+          color: DashboardColors.faintInk(context),
+        ),
+        const SizedBox(height: AppSpacing.small),
+        Text(
+          'لا توجد شاشة باسم «$query»',
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: DashboardColors.mutedInk(context),
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 /// Quick-jump filter across every nav item's label. Client-side only — the
 /// sidebar has no more than a few dozen destinations, so there is nothing to
 /// fetch and nothing to debounce.
-class _NavSearchField extends StatelessWidget {
+class _NavSearchField extends StatefulWidget {
   const _NavSearchField({required this.value, required this.onChanged});
 
+  /// Seeds the field. The controller owns the text from then on — the parent
+  /// only ever hears about it through [onChanged].
   final String value;
   final ValueChanged<String> onChanged;
 
   @override
+  State<_NavSearchField> createState() => _NavSearchFieldState();
+}
+
+class _NavSearchFieldState extends State<_NavSearchField> {
+  late final TextEditingController _controller = TextEditingController(
+    text: widget.value,
+  );
+  final FocusNode _focusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(_onFocusChanged);
+  }
+
+  void _onFocusChanged() => setState(() {});
+
+  @override
+  void dispose() {
+    _focusNode.removeListener(_onFocusChanged);
+    _focusNode.dispose();
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _clear() {
+    _controller.clear();
+    widget.onChanged('');
+    _focusNode.requestFocus();
+    setState(() {});
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final focused = _focusNode.hasFocus;
+    final hasQuery = _controller.text.isNotEmpty;
+
+    OutlineInputBorder outline(Color color, double width) => OutlineInputBorder(
+      borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+      borderSide: BorderSide(color: color, width: width),
+    );
+
     return SizedBox(
-      height: 36,
+      height: 38,
       child: TextField(
-        onChanged: onChanged,
-        style: Theme.of(context).textTheme.bodySmall,
+        controller: _controller,
+        focusNode: _focusNode,
+        textInputAction: TextInputAction.search,
+        onChanged: (value) {
+          widget.onChanged(value);
+          // Only to bring the clear button in and out; the filtering itself is
+          // the parent's business.
+          setState(() {});
+        },
+        style: theme.textTheme.bodySmall,
         decoration: InputDecoration(
           isDense: true,
           hintText: 'بحث سريع…',
+          hintStyle: theme.textTheme.bodySmall?.copyWith(
+            color: DashboardColors.faintInk(context),
+          ),
           prefixIcon: Icon(
             Icons.search_rounded,
             size: 18,
-            color: DashboardColors.faintInk(context),
+            color: focused
+                ? DashboardColors.accentInk(context)
+                : DashboardColors.faintInk(context),
           ),
-          prefixIconConstraints: const BoxConstraints(minWidth: 36),
+          prefixIconConstraints: const BoxConstraints(minWidth: 34),
+          suffixIcon: hasQuery
+              ? IconButton(
+                  tooltip: 'مسح البحث',
+                  onPressed: _clear,
+                  padding: EdgeInsets.zero,
+                  visualDensity: VisualDensity.compact,
+                  constraints: const BoxConstraints(
+                    minWidth: 28,
+                    minHeight: 28,
+                  ),
+                  icon: Icon(
+                    Icons.close_rounded,
+                    size: 16,
+                    color: DashboardColors.mutedInk(context),
+                  ),
+                )
+              : null,
+          suffixIconConstraints: const BoxConstraints(minWidth: 32),
           filled: true,
           fillColor: DashboardColors.nested(context),
           contentPadding: const EdgeInsets.symmetric(vertical: 8),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide.none,
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide.none,
-          ),
+          border: outline(DashboardColors.border(context), 1),
+          enabledBorder: outline(DashboardColors.border(context), 1),
+          focusedBorder: outline(DashboardColors.accentInk(context), 1.4),
         ),
       ),
     );
@@ -1158,10 +1493,10 @@ class _NavSearchField extends StatelessWidget {
 
 /// The section title above each nav group. Every group stays expanded, so
 /// this is a plain label rather than an accordion trigger — its only job is
-/// to separate one group's items from the next. Collapsed to icons, the
-/// label has nowhere to go, so the group boundary is drawn as a short rule
-/// instead of being dropped — otherwise the rail becomes nineteen
-/// undifferentiated icons.
+/// to separate one group's items from the next, which it does with the label
+/// and a rule running out to the sidebar's edge. Collapsed to icons, the
+/// label has nowhere to go, so only the rule survives — otherwise the rail
+/// becomes nineteen undifferentiated icons.
 class _NavSectionHeader extends StatelessWidget {
   final String label;
   final bool collapsed;
@@ -1173,7 +1508,7 @@ class _NavSectionHeader extends StatelessWidget {
     if (collapsed) {
       return Padding(
         padding: const EdgeInsets.symmetric(
-          horizontal: AppSpacing.medium,
+          horizontal: AppSpacing.small,
           vertical: AppSpacing.small,
         ),
         child: Divider(height: 1, color: DashboardColors.divider(context)),
@@ -1182,20 +1517,31 @@ class _NavSectionHeader extends StatelessWidget {
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(
+        AppSpacing.small,
         AppSpacing.medium,
-        AppSpacing.medium,
-        AppSpacing.medium,
+        AppSpacing.small,
         AppSpacing.xSmall,
       ),
-      child: Text(
-        label,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: DashboardColors.sidebarSectionInk(context),
-          fontWeight: FontWeight.w800,
-          letterSpacing: 0.4,
-        ),
+      child: Row(
+        children: [
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: DashboardColors.sidebarSectionInk(context),
+              fontWeight: FontWeight.w800,
+              letterSpacing: 0.4,
+            ),
+          ),
+          const SizedBox(width: AppSpacing.small),
+          Expanded(
+            child: Container(
+              height: 1,
+              color: DashboardColors.divider(context),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1219,14 +1565,15 @@ class _AccountFooter extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
     final initial = office.displayName.characters.isEmpty
         ? '؟'
         : office.displayName.characters.first;
 
     final avatar = Container(
-      width: 34,
-      height: 34,
+      width: 32,
+      height: 32,
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: scheme.primaryContainer,
@@ -1234,19 +1581,14 @@ class _AccountFooter extends StatelessWidget {
       ),
       child: Text(
         initial,
-        style: Theme.of(context).textTheme.labelLarge?.copyWith(
+        style: theme.textTheme.labelLarge?.copyWith(
           color: scheme.onPrimaryContainer,
           fontWeight: FontWeight.bold,
         ),
       ),
     );
 
-    final signOut = IconButton(
-      tooltip: 'تسجيل الخروج',
-      onPressed: () => _confirmSignOut(context),
-      icon: const Icon(DashboardIcons.logout),
-      style: IconButton.styleFrom(foregroundColor: scheme.error),
-    );
+    final signOut = _SignOutButton(onPressed: () => _confirmSignOut(context));
 
     if (collapsed) {
       return Column(
@@ -1261,35 +1603,50 @@ class _AccountFooter extends StatelessWidget {
       );
     }
 
-    return Row(
-      children: [
-        avatar,
-        const SizedBox(width: AppSpacing.small),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                office.displayName,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
-              ),
-              Text(
-                role.label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  color: scheme.onSurfaceVariant,
+    // Contained rather than loose on the sidebar's own colour: the footer is
+    // the one block here that is about the person, not the navigation, and the
+    // sign-out inside it is the only irreversible control in the frame.
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.small,
+        vertical: AppSpacing.xSmall,
+      ),
+      decoration: BoxDecoration(
+        color: DashboardColors.nested(context),
+        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+        border: Border.all(color: DashboardColors.border(context)),
+      ),
+      child: Row(
+        children: [
+          avatar,
+          const SizedBox(width: AppSpacing.small),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  office.displayName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: DashboardColors.ink(context),
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
-              ),
-            ],
+                Text(
+                  role.label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: DashboardColors.mutedInk(context),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        signOut,
-      ],
+          signOut,
+        ],
+      ),
     );
   }
 
@@ -1319,6 +1676,40 @@ class _AccountFooter extends StatelessWidget {
   }
 }
 
+/// Sign-out, drawn quiet and turning red only under the pointer.
+///
+/// It used to sit in the footer permanently red, which made the loudest colour
+/// in the whole sidebar belong to the one control nobody is looking for. The
+/// warning still arrives — on hover, and again in the confirm dialog.
+class _SignOutButton extends StatelessWidget {
+  const _SignOutButton({required this.onPressed});
+
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final error = Theme.of(context).colorScheme.error;
+
+    return IconButton(
+      tooltip: 'تسجيل الخروج',
+      onPressed: onPressed,
+      visualDensity: VisualDensity.compact,
+      icon: const Icon(DashboardIcons.logout, size: 18),
+      style: ButtonStyle(
+        foregroundColor: WidgetStateProperty.resolveWith(
+          (states) =>
+              states.contains(WidgetState.hovered) ||
+                  states.contains(WidgetState.pressed) ||
+                  states.contains(WidgetState.focused)
+              ? error
+              : DashboardColors.mutedInk(context),
+        ),
+        overlayColor: WidgetStateProperty.all(error.withValues(alpha: 0.10)),
+      ),
+    );
+  }
+}
+
 /// Which office this workspace belongs to, and who is signed in.
 ///
 /// Replaces the generic "لوحة التحكم / النظام" title the sidebar carried while
@@ -1330,15 +1721,19 @@ class _OfficeIdentityHeader extends StatelessWidget {
     required this.office,
     this.collapsed = false,
     this.onToggleCollapsed,
+    this.onClose,
   });
 
   final OfficeContext office;
   final bool collapsed;
   final VoidCallback? onToggleCollapsed;
 
+  /// Dismisses the drawer. Present only in drawer mode, where [onToggleCollapsed]
+  /// is absent — a drawer has no rail to collapse to, it just closes.
+  final VoidCallback? onClose;
+
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final name = office.officeName.trim().isEmpty
         ? AppLocalizations.of(context)!.dashboard_panel
         : office.officeName.trim();
@@ -1353,6 +1748,17 @@ class _OfficeIdentityHeader extends StatelessWidget {
               size: 20,
             ),
             visualDensity: VisualDensity.compact,
+            color: DashboardColors.mutedInk(context),
+          );
+
+    final close = onClose == null
+        ? null
+        : IconButton(
+            tooltip: 'إغلاق القائمة',
+            onPressed: onClose,
+            icon: const Icon(Icons.close_rounded, size: 20),
+            visualDensity: VisualDensity.compact,
+            color: DashboardColors.mutedInk(context),
           );
 
     if (collapsed) {
@@ -1379,22 +1785,64 @@ class _OfficeIdentityHeader extends StatelessWidget {
                 name,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(
-                  context,
-                ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  color: DashboardColors.ink(context),
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-              Text(
-                office.isListed ? 'معروض في السوق' : 'غير معروض في السوق',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
-              ),
+              const SizedBox(height: 3),
+              _MarketplaceStatus(listed: office.isListed),
             ],
           ),
         ),
         ?toggle,
+        ?close,
+      ],
+    );
+  }
+}
+
+/// Whether this office is on the client marketplace, as a dot and a word.
+///
+/// It was a grey line of body text under the office name, which is the same
+/// treatment the console gives a subtitle — so the one fact on this screen that
+/// changes what riders can see read as decoration. A status is a status: it
+/// gets the dot.
+class _MarketplaceStatus extends StatelessWidget {
+  const _MarketplaceStatus({required this.listed});
+
+  final bool listed;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = DashboardColors.status(
+      context,
+      listed ? AppStatusTone.success : AppStatusTone.neutral,
+    );
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 6,
+          height: 6,
+          decoration: BoxDecoration(
+            color: style.accent,
+            shape: BoxShape.circle,
+          ),
+        ),
+        const SizedBox(width: 6),
+        Flexible(
+          child: Text(
+            listed ? 'معروض في السوق' : 'غير معروض في السوق',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: DashboardColors.mutedInk(context),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -1561,6 +2009,8 @@ class _NotificationsBell extends StatelessWidget {
   }
 }
 
+/// Debug-only role switch. Labelled and shrunk so it never reads as a feature
+/// of the console — an owner in a release build never sees it at all.
 class _RoleSelector extends StatelessWidget {
   final DashboardRole role;
   final ValueChanged<DashboardRole> onChanged;
@@ -1569,21 +2019,57 @@ class _RoleSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SegmentedButton<DashboardRole>(
-      segments: DashboardRole.values
-          .map(
-            (role) => ButtonSegment<DashboardRole>(
-              value: role,
-              label: Text(
-                role.label,
-                softWrap: false,
-                overflow: TextOverflow.ellipsis,
+    final theme = Theme.of(context);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Icon(
+              Icons.science_outlined,
+              size: 13,
+              color: DashboardColors.faintInk(context),
+            ),
+            const SizedBox(width: 5),
+            Text(
+              'عرض كـ (تجريبي)',
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: DashboardColors.faintInk(context),
+                fontWeight: FontWeight.w700,
               ),
             ),
-          )
-          .toList(),
-      selected: {role},
-      onSelectionChanged: (selection) => onChanged(selection.first),
+          ],
+        ),
+        const SizedBox(height: AppSpacing.xSmall),
+        SegmentedButton<DashboardRole>(
+          // The tick eats a third of a 256px sidebar's width; the fill already
+          // says which side is selected.
+          showSelectedIcon: false,
+          style: SegmentedButton.styleFrom(
+            visualDensity: VisualDensity.compact,
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.small,
+              vertical: 4,
+            ),
+            textStyle: theme.textTheme.labelSmall,
+          ),
+          segments: DashboardRole.values
+              .map(
+                (role) => ButtonSegment<DashboardRole>(
+                  value: role,
+                  label: Text(
+                    role.label,
+                    softWrap: false,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              )
+              .toList(),
+          selected: {role},
+          onSelectionChanged: (selection) => onChanged(selection.first),
+        ),
+      ],
     );
   }
 }
@@ -1593,6 +2079,10 @@ class _NavButton extends StatelessWidget {
   final bool selected;
   final bool collapsed;
   final VoidCallback onTap;
+
+  /// Unread count to draw on the row, if this destination has one. `0` draws
+  /// nothing — an empty badge is worse than no badge.
+  final int badgeCount;
 
   /// Purchasable but not owned (§10.2). Still tappable on purpose — the tap is
   /// how the owner finds out what the module is and what it would cost, which
@@ -1605,6 +2095,7 @@ class _NavButton extends StatelessWidget {
     required this.onTap,
     this.collapsed = false,
     this.locked = false,
+    this.badgeCount = 0,
   });
 
   @override
@@ -1614,13 +2105,27 @@ class _NavButton extends StatelessWidget {
         : DashboardColors.sidebarInk(context);
 
     final ink = locked ? baseInk.withValues(alpha: 0.55) : baseInk;
-    final radius = BorderRadius.circular(8);
+    final radius = BorderRadius.circular(AppTokens.radiusSmall);
 
-    final icon = Icon(
+    // The selected row's icon is the one place brand ink appears in the list —
+    // a single mark, paired with the 2px edge, rather than a tinted row.
+    final iconColor = selected && !locked
+        ? DashboardColors.accentInk(context)
+        : ink;
+
+    Widget icon = Icon(
       selected ? item.selectedIcon : item.icon,
       size: 20,
-      color: ink,
+      color: iconColor,
     );
+
+    // Collapsed there is no room for the pill, so the count rides the icon.
+    if (collapsed && badgeCount > 0) {
+      icon = Badge(
+        label: Text(badgeCount > 99 ? '99+' : '$badgeCount'),
+        child: icon,
+      );
+    }
 
     // The selected row's fill is warm/lifted rather than brand-tinted — the
     // brand itself is spent entirely on this 2px inline edge, so the sidebar
@@ -1644,6 +2149,7 @@ class _NavButton extends StatelessWidget {
         child: InkWell(
           onTap: onTap,
           borderRadius: radius,
+          mouseCursor: SystemMouseCursors.click,
 
           hoverColor: DashboardColors.tableRowHover(context),
           child: Padding(
@@ -1651,7 +2157,7 @@ class _NavButton extends StatelessWidget {
               start:
                   (collapsed ? AppSpacing.small : AppSpacing.medium) -
                   (selected ? 2 : 0),
-              end: collapsed ? AppSpacing.small : AppSpacing.medium,
+              end: collapsed ? AppSpacing.small : AppSpacing.small,
               top: AppSpacing.small,
               bottom: AppSpacing.small,
             ),
@@ -1676,7 +2182,26 @@ class _NavButton extends StatelessWidget {
                         ),
                       ),
                       if (locked)
-                        Icon(DashboardIcons.locked, size: 14, color: ink),
+                        Padding(
+                          padding: const EdgeInsetsDirectional.only(
+                            start: AppSpacing.xSmall,
+                            end: AppSpacing.xSmall,
+                          ),
+                          child: Icon(
+                            DashboardIcons.locked,
+                            size: 14,
+                            color: ink,
+                          ),
+                        )
+                      else if (badgeCount > 0)
+                        Padding(
+                          padding: const EdgeInsetsDirectional.only(
+                            start: AppSpacing.xSmall,
+                          ),
+                          child: _NavBadge(count: badgeCount),
+                        )
+                      else
+                        const SizedBox(width: AppSpacing.xSmall),
                     ],
                   ),
           ),
@@ -1691,6 +2216,35 @@ class _NavButton extends StatelessWidget {
           : item.label,
       waitDuration: const Duration(milliseconds: 300),
       child: button,
+    );
+  }
+}
+
+/// The count pill on a nav row. Brand fill, because it is a call to act on
+/// something — the only element in the list allowed to be louder than its row.
+class _NavBadge extends StatelessWidget {
+  const _NavBadge({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: const BoxConstraints(minWidth: 20),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: DashboardColors.accentFill(context),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        count > 99 ? '99+' : '$count',
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: Theme.of(context).colorScheme.onPrimary,
+          fontWeight: FontWeight.w700,
+          height: 1.1,
+        ),
+      ),
     );
   }
 }

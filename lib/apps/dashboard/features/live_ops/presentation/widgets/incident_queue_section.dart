@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_empty_state.dart';
 import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
-import 'package:bmt_app/core/theme/tokens.dart';
-import 'package:bmt_app/core/widgets/app_card.dart';
-import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_empty_state.dart';
 
 import '../../domain/entities/trip_incident.dart';
 import 'incident_resolution_dialog.dart';
 import 'live_ops_format.dart';
-import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
 /// Moves an incident to [next], recording [note] when the operator supplied one.
 /// Returns an error message, or `null` on success.
@@ -26,6 +24,14 @@ typedef IncidentAction =
 /// A report moves through *acknowledge* then *close* rather than a single
 /// resolve click, because on a shared desk the acknowledgement is what stops two
 /// operators calling the same captain about the same fault.
+///
+/// **Rows on the panel's surface, divided.** This is Home's «يحتاج إلى إجراء»
+/// vocabulary applied to the one queue that is not on Home: a tinted glyph
+/// square carrying the severity, the report in ink, what it is about underneath,
+/// and the decision on the trailing edge. The cards it used to draw — each with
+/// its own border, shadow and 5px severity spine, stacked inside the bordered
+/// panel they already sat in — were the console's card-in-card fault, and made a
+/// queue of four reports read as four separate alarms.
 class IncidentQueueSection extends StatelessWidget {
   final List<TripIncident> incidents;
   final DateTime now;
@@ -33,7 +39,7 @@ class IncidentQueueSection extends StatelessWidget {
 
   /// Whether this operator may close reports. A support agent sees the queue —
   /// that is the point of giving them the module — but only an owner decides a
-  /// report is handled, so for them the cards render read-only.
+  /// report is handled, so for them the rows render read-only.
   final bool canAct;
 
   const IncidentQueueSection({
@@ -52,13 +58,14 @@ class IncidentQueueSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         for (final incident in incidents) ...[
-          _IncidentCard(
+          _IncidentRow(
             incident: incident,
             now: now,
             onAction: onAction,
             canAct: canAct,
           ),
-          const SizedBox(height: AppSpacing.small),
+          if (incident != incidents.last)
+            const Divider(height: AppSpacing.large),
         ],
       ],
     );
@@ -80,13 +87,13 @@ class _NoIncidents extends StatelessWidget {
   }
 }
 
-class _IncidentCard extends StatefulWidget {
+class _IncidentRow extends StatefulWidget {
   final TripIncident incident;
   final DateTime now;
   final IncidentAction onAction;
   final bool canAct;
 
-  const _IncidentCard({
+  const _IncidentRow({
     required this.incident,
     required this.now,
     required this.onAction,
@@ -94,10 +101,10 @@ class _IncidentCard extends StatefulWidget {
   });
 
   @override
-  State<_IncidentCard> createState() => _IncidentCardState();
+  State<_IncidentRow> createState() => _IncidentRowState();
 }
 
-class _IncidentCardState extends State<_IncidentCard> {
+class _IncidentRowState extends State<_IncidentRow> {
   bool _busy = false;
 
   /// Acknowledgement is a one-tap claim with no dialog: the whole point is that
@@ -140,10 +147,9 @@ class _IncidentCardState extends State<_IncidentCard> {
   @override
   Widget build(BuildContext context) {
     final incident = widget.incident;
-    final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
-    final colors = context.status(incidentSeverityTone(incident.severity));
-    final age = incident.ageAt(widget.now);
+    final tone = incidentSeverityTone(incident.severity);
+    final style = DashboardColors.status(context, tone);
 
     final tripContext = [
       incident.routeName,
@@ -151,85 +157,102 @@ class _IncidentCardState extends State<_IncidentCard> {
       incident.vehicleLabel,
     ].where((s) => s.isNotEmpty).join(' · ');
 
-    return AppCard(
-      padding: EdgeInsets.zero,
-      child: IntrinsicHeight(
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Container(width: 5, color: colors.ink),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(AppSpacing.medium),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: colors.tint,
-                            borderRadius: BorderRadius.circular(
-                              AppTokens.radiusSmall,
-                            ),
-                          ),
-                          child: Icon(
-                            incidentTypeIcon(incident.type),
-                            size: 18,
-                            color: colors.ink,
-                          ),
-                        ),
-                        const SizedBox(width: AppSpacing.small),
-                        Expanded(
-                          child: Text(
-                            incident.type.label,
-                            style: text.titleSmall?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        Text(
-                          liveOpsAgo(age),
-                          style: text.labelSmall?.copyWith(
-                            color: scheme.onSurfaceVariant,
-                          ),
-                        ),
-                      ],
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // The only colour on the row. A whole row tinted by severity turns a
+        // queue of ordinary reports into a wall of alarms — the console spends
+        // its colour budget on the category mark instead.
+        Container(
+          width: 34,
+          height: 34,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: style.tint,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(
+              color: DashboardColors.statusLine(context, tone),
+            ),
+          ),
+          child: Icon(
+            incidentTypeIcon(incident.type),
+            size: 18,
+            color: style.ink,
+          ),
+        ),
+        const SizedBox(width: 11),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: Text(
+                      incident.type.label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: text.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
-                    const SizedBox(height: AppSpacing.small),
-                    _StatusChip(status: incident.status),
-                    if (tripContext.isNotEmpty) ...[
-                      const SizedBox(height: AppSpacing.small),
-                      Text(
+                  ),
+                  const SizedBox(width: AppSpacing.small),
+                  Text(
+                    liveOpsAgo(incident.ageAt(widget.now)),
+                    maxLines: 1,
+                    style: text.labelSmall?.copyWith(
+                      color: DashboardColors.faintInk(context),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Wrap(
+                spacing: AppSpacing.small,
+                runSpacing: AppSpacing.xSmall,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  _StatusChip(status: incident.status),
+                  if (tripContext.isNotEmpty)
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 420),
+                      child: Text(
                         tripContext,
-                        maxLines: 2,
+                        maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: text.bodySmall?.copyWith(
-                          color: scheme.onSurfaceVariant,
+                        style: text.labelSmall?.copyWith(
+                          color: DashboardColors.mutedInk(context),
                         ),
                       ),
-                    ],
-                    if (incident.description.isNotEmpty) ...[
-                      const SizedBox(height: AppSpacing.xSmall),
-                      Text(incident.description, style: text.bodyMedium),
-                    ],
-                    const SizedBox(height: AppSpacing.small),
-                    _Actions(
-                      status: incident.status,
-                      busy: _busy,
-                      canAct: widget.canAct,
-                      onAcknowledge: _acknowledge,
-                      onResolve: () => _close(IncidentStatus.resolved),
-                      onDismiss: () => _close(IncidentStatus.dismissed),
                     ),
-                  ],
-                ),
+                ],
               ),
-            ),
-          ],
+              if (incident.description.isNotEmpty) ...[
+                const SizedBox(height: 4),
+                Text(
+                  incident.description,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: text.bodySmall?.copyWith(
+                    color: DashboardColors.mutedInk(context),
+                  ),
+                ),
+              ],
+              _Actions(
+                status: incident.status,
+                busy: _busy,
+                canAct: widget.canAct,
+                onAcknowledge: _acknowledge,
+                onResolve: () => _close(IncidentStatus.resolved),
+                onDismiss: () => _close(IncidentStatus.dismissed),
+              ),
+            ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }
@@ -243,51 +266,48 @@ class _StatusChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final (container, on, icon) = switch (status) {
-      IncidentStatus.pending => (
-        context.status(AppStatusTone.error).tint,
-        context.status(AppStatusTone.error).ink,
-        Icons.fiber_new_rounded,
-      ),
+    final (tone, icon) = switch (status) {
+      IncidentStatus.pending => (AppStatusTone.error, Icons.fiber_new_rounded),
       IncidentStatus.acknowledged => (
-        context.status(AppStatusTone.info).tint,
-        context.status(AppStatusTone.info).ink,
+        AppStatusTone.info,
         Icons.engineering_rounded,
       ),
       IncidentStatus.resolved => (
-        context.status(AppStatusTone.success).tint,
-        context.status(AppStatusTone.success).ink,
+        AppStatusTone.success,
         Icons.check_circle_rounded,
       ),
       IncidentStatus.dismissed => (
-        context.status(AppStatusTone.neutral).tint,
-        context.status(AppStatusTone.neutral).ink,
+        AppStatusTone.neutral,
         Icons.do_not_disturb_on_rounded,
       ),
     };
+    final style = DashboardColors.status(context, tone);
 
-    return Align(
-      alignment: AlignmentDirectional.centerStart,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-        decoration: BoxDecoration(
-          color: container,
-          borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 13, color: on),
-            const SizedBox(width: 4),
-            Text(
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: style.tint,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: DashboardColors.statusLine(context, tone)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: style.ink),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
               status.label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: on,
-                fontWeight: FontWeight.w800,
+                color: style.ink,
+                fontWeight: FontWeight.w700,
+                height: 1.3,
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -319,12 +339,15 @@ class _Actions extends StatelessWidget {
     if (!canAct) return const SizedBox.shrink();
 
     if (busy) {
-      return const Align(
-        alignment: AlignmentDirectional.centerEnd,
-        child: SizedBox(
-          width: 22,
-          height: 22,
-          child: CircularProgressIndicator(strokeWidth: 2.5),
+      return const Padding(
+        padding: EdgeInsets.only(top: AppSpacing.small),
+        child: Align(
+          alignment: AlignmentDirectional.centerEnd,
+          child: SizedBox(
+            width: 22,
+            height: 22,
+            child: CircularProgressIndicator(strokeWidth: 2.5),
+          ),
         ),
       );
     }
@@ -333,28 +356,31 @@ class _Actions extends StatelessWidget {
     final canResolve = status.canTransitionTo(IncidentStatus.resolved);
     final canDismiss = status.canTransitionTo(IncidentStatus.dismissed);
 
-    return Align(
-      alignment: AlignmentDirectional.centerEnd,
-      child: Wrap(
-        spacing: AppSpacing.small,
-        runSpacing: AppSpacing.xSmall,
-        alignment: WrapAlignment.end,
-        children: [
-          if (canDismiss)
-            TextButton(onPressed: onDismiss, child: const Text('استبعاد')),
-          if (canResolve)
-            OutlinedButton.icon(
-              onPressed: onResolve,
-              icon: const Icon(Icons.check_rounded, size: 18),
-              label: const Text('تم الحل'),
-            ),
-          if (canAcknowledge)
-            FilledButton.tonalIcon(
-              onPressed: onAcknowledge,
-              icon: const Icon(Icons.pan_tool_alt_rounded, size: 18),
-              label: const Text('استلام'),
-            ),
-        ],
+    return Padding(
+      padding: const EdgeInsets.only(top: AppSpacing.xSmall),
+      child: Align(
+        alignment: AlignmentDirectional.centerEnd,
+        child: Wrap(
+          spacing: AppSpacing.small,
+          runSpacing: AppSpacing.xSmall,
+          alignment: WrapAlignment.end,
+          children: [
+            if (canDismiss)
+              TextButton(onPressed: onDismiss, child: const Text('استبعاد')),
+            if (canResolve)
+              OutlinedButton.icon(
+                onPressed: onResolve,
+                icon: const Icon(Icons.check_rounded, size: 18),
+                label: const Text('تم الحل'),
+              ),
+            if (canAcknowledge)
+              FilledButton.tonalIcon(
+                onPressed: onAcknowledge,
+                icon: const Icon(Icons.pan_tool_alt_rounded, size: 18),
+                label: const Text('استلام'),
+              ),
+          ],
+        ),
       ),
     );
   }

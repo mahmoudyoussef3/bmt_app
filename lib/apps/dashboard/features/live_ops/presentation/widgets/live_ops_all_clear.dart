@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 
 import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
-import 'package:bmt_app/core/theme/tokens.dart';
-import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 
@@ -40,13 +38,18 @@ class LiveOpsAllClear extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
     final success = context.status(AppStatusTone.success);
     final age = now.difference(generatedAt);
 
-    return AppCard(
+    return Container(
       padding: const EdgeInsets.all(AppSpacing.large),
+      decoration: BoxDecoration(
+        color: DashboardColors.panel(context),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: DashboardColors.border(context)),
+        boxShadow: DashboardColors.panelShadow(context),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -54,15 +57,22 @@ class LiveOpsAllClear extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 44,
-                height: 44,
+                width: 40,
+                height: 40,
+                alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: success.tint,
-                  borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: DashboardColors.statusLine(
+                      context,
+                      AppStatusTone.success,
+                    ),
+                  ),
                 ),
                 child: Icon(
                   Icons.verified_rounded,
-                  size: 24,
+                  size: 21,
                   color: success.ink,
                 ),
               ),
@@ -74,14 +84,14 @@ class LiveOpsAllClear extends StatelessWidget {
                     Text(
                       'الوضع هادئ',
                       style: text.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
                       'لا شيء على الطريق يتطلب تدخلاً من فريق العمليات الآن.',
                       style: text.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
+                        color: DashboardColors.mutedInk(context),
                       ),
                     ),
                   ],
@@ -125,7 +135,7 @@ class LiveOpsAllClear extends StatelessWidget {
             },
           ),
           const SizedBox(height: AppSpacing.medium),
-          Divider(height: 1, color: scheme.outlineVariant),
+          Divider(height: 1, color: DashboardColors.divider(context)),
           const SizedBox(height: AppSpacing.small),
           _FreshnessLine(age: age),
         ],
@@ -152,14 +162,13 @@ class _QuietFact extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
     final success = context.status(AppStatusTone.success);
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 18, color: scheme.onSurfaceVariant),
+        Icon(icon, size: 18, color: DashboardColors.mutedInk(context)),
         const SizedBox(width: AppSpacing.small),
         Expanded(
           child: Column(
@@ -171,8 +180,8 @@ class _QuietFact extends StatelessWidget {
                   Flexible(
                     child: Text(
                       title,
-                      style: text.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
+                      style: text.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
                   ),
@@ -183,7 +192,9 @@ class _QuietFact extends StatelessWidget {
               const SizedBox(height: 2),
               Text(
                 message,
-                style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+                style: text.labelSmall?.copyWith(
+                  color: DashboardColors.mutedInk(context),
+                ),
               ),
             ],
           ),
@@ -204,19 +215,19 @@ class _FreshnessLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
     final seconds = LiveOpsCubit.pollInterval.inSeconds;
+    final faint = DashboardColors.faintInk(context);
 
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(Icons.autorenew_rounded, size: 15, color: scheme.onSurfaceVariant),
+        Icon(Icons.autorenew_rounded, size: 15, color: faint),
         const SizedBox(width: AppSpacing.xSmall),
         Expanded(
           child: Text(
             'تُحدَّث الشاشة تلقائياً كل $seconds ثانية · آخر قراءة ${liveOpsAgo(age)}',
-            style: text.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
+            style: text.labelSmall?.copyWith(color: faint),
           ),
         ),
       ],

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/dashboard/core/session/office_context.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_page_body.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import '../../domain/entities/dashboard_home_summary.dart';
@@ -62,6 +63,11 @@ import '../widgets/today_trips_section.dart';
 /// against the tall money panel, and the two short panels sit against each
 /// other, which is what stops one column running a screen further than its
 /// neighbour.
+///
+/// The frame itself — page inset, band gap, fold breakpoint — comes from
+/// [DashboardPageBody], not from constants of Home's own, because مركز العمليات
+/// المباشر is laid out to this same plan and the two screens may not disagree
+/// about the size of their margins.
 class DashboardHomeScreen extends StatelessWidget {
   const DashboardHomeScreen({
     super.key,
@@ -112,38 +118,30 @@ class _LoadedView extends StatelessWidget {
   final ValueChanged<String> onOpenModule;
   final VoidCallback? onCreateTrip;
 
-  /// Below this the two-column bands stack. Chosen so each column keeps ~380px
-  /// — a trip row with time, route, captain and a seat bar stops being
-  /// readable much under that.
-  static const double _splitBreakpoint = 900;
-
-  /// The gap between bands, and between the two panels of one band. One value
-  /// so a band never reads as more closely related to the band under it than
-  /// to its own other half.
-  static const double _bandGap = 24;
-
   @override
   Widget build(BuildContext context) {
-    return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+    return DashboardPageBody(
       children: [
-        HomeHeaderBanner(
-          office: office,
-          summary: summary,
-          updatedAt: DateTime.now(),
-          onRefresh: () => context.read<DashboardHomeCubit>().load(),
-          onCreateTrip: onCreateTrip,
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            HomeHeaderBanner(
+              office: office,
+              summary: summary,
+              updatedAt: DateTime.now(),
+              onRefresh: () => context.read<DashboardHomeCubit>().load(),
+              onCreateTrip: onCreateTrip,
+            ),
+            if (summary.unavailable.isNotEmpty) ...[
+              const SizedBox(height: AppSpacing.large),
+              DashboardPartialDataNotice(sources: summary.unavailable),
+            ],
+          ],
         ),
-        if (summary.unavailable.isNotEmpty) ...[
-          const SizedBox(height: AppSpacing.large),
-          DashboardPartialDataNotice(sources: summary.unavailable),
-        ],
-        const SizedBox(height: _bandGap),
         HomeKpiGrid(summary: summary, onOpenModule: onOpenModule),
-        const SizedBox(height: _bandGap),
         ActionRequiredSection(summary: summary, onOpenModule: onOpenModule),
-        const SizedBox(height: _bandGap),
-        _Band(
+        DashboardBand(
           main: TodayTripsSection(
             summary: summary,
             onOpenModule: onOpenModule,
@@ -151,8 +149,7 @@ class _LoadedView extends StatelessWidget {
           ),
           side: RevenueTrendSection(summary: summary),
         ),
-        const SizedBox(height: _bandGap),
-        _Band(
+        DashboardBand(
           main: RecentBookingsSection(
             summary: summary,
             onOpenModule: onOpenModule,
@@ -162,8 +159,7 @@ class _LoadedView extends StatelessWidget {
             onOpenModule: onOpenModule,
           ),
         ),
-        const SizedBox(height: _bandGap),
-        _Band(
+        DashboardBand(
           main: RoutePerformanceSection(
             summary: summary,
             onOpenModule: onOpenModule,
@@ -171,40 +167,6 @@ class _LoadedView extends StatelessWidget {
           side: FleetTeamSection(summary: summary, onOpenModule: onOpenModule),
         ),
       ],
-    );
-  }
-}
-
-/// One row of the page: a wider primary panel with a narrower companion,
-/// stacking to full width when the window can no longer hold both.
-class _Band extends StatelessWidget {
-  const _Band({required this.main, required this.side});
-
-  final Widget main;
-  final Widget side;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        if (constraints.maxWidth < _LoadedView._splitBreakpoint) {
-          return Column(
-            children: [
-              main,
-              const SizedBox(height: _LoadedView._bandGap),
-              side,
-            ],
-          );
-        }
-        return Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(flex: 3, child: main),
-            const SizedBox(width: _LoadedView._bandGap),
-            Expanded(flex: 2, child: side),
-          ],
-        );
-      },
     );
   }
 }

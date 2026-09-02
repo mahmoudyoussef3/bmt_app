@@ -93,7 +93,7 @@ class _InsightCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: DashboardColors.panel(context),
+          color: DashboardColors.nested(context),
           borderRadius: radius,
           border: Border.all(color: DashboardColors.border(context)),
         ),

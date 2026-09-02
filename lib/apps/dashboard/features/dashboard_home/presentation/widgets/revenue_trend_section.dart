@@ -102,6 +102,12 @@ class RevenueTrendSection extends StatelessWidget {
               padding: const EdgeInsets.only(top: AppSpacing.small),
               child: DashboardLineChart(
                 lineColor: palette.positive,
+                // The axis keeps the compact ladder a narrow rail has room
+                // for; the bubble carries the whole amount, because a reader
+                // who hovers a point is asking for the figure, not its
+                // magnitude.
+                tooltipFormatter: (value) => '${value.round()} ج.م',
+                averageLabel: 'متوسط اليوم',
                 data: [
                   for (final point in series)
                     ChartDatum(

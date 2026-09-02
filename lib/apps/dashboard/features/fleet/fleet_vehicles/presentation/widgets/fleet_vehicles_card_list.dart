@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_empty_state.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_pager.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_results_header.dart';
+import 'package:bmt_app/apps/dashboard/features/fleet/overview/presentation/widgets/fleet_format.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_workspace.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/widgets/fleet_shared_widgets.dart';
 import 'package:bmt_app/core/theme/colors.dart';
@@ -10,6 +13,16 @@ import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_status_chip.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
+/// المركبات on a narrow console — the same rows as [FleetVehiclesTable],
+/// stacked.
+///
+/// Rebuilt to mirror the drivers card one tab over, fact for fact: header
+/// (picture, code, spec, live status) → the pairing line → the one thing that
+/// needs attention, if anything does → the two facts an operator scans for →
+/// actions. It used to be a mini data sheet — a four-tile meta grid, a tinted
+/// operational strip, an alert banner and three full-width buttons per card —
+/// which made a nine-vehicle fleet several screens tall and buried the one
+/// status signal among four competing tinted blocks.
 class FleetVehiclesCardList extends StatelessWidget {
   final List<FleetVehicle> vehicles;
   final FleetWorkspace workspace;
@@ -32,14 +45,6 @@ class FleetVehiclesCardList extends StatelessWidget {
     required this.onPageChanged,
   });
 
-  static AppStatusTone _recordTone(FleetVehicleStatus status) =>
-      switch (status) {
-        FleetVehicleStatus.active => AppStatusTone.info,
-        FleetVehicleStatus.maintenance => AppStatusTone.warning,
-        FleetVehicleStatus.suspended => AppStatusTone.error,
-        FleetVehicleStatus.archived => AppStatusTone.neutral,
-      };
-
   String _driverName(String driverId) {
     if (driverId.isEmpty) return '';
     final match = workspace.drivers.where((d) => d.id == driverId);
@@ -49,7 +54,6 @@ class FleetVehiclesCardList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final start = page * pageSize;
     final end = (start + pageSize).clamp(0, vehicles.length);
     final paged = start >= vehicles.length
@@ -72,230 +76,33 @@ class FleetVehiclesCardList extends StatelessWidget {
       children: [
         LayoutBuilder(
           builder: (context, constraints) {
-            final columns = constraints.maxWidth >= 1180 ? 2 : 1;
-            final gap = AppSpacing.medium;
-            final cardWidth = columns == 1
-                ? constraints.maxWidth
-                : (constraints.maxWidth - gap) / 2;
+            const gap = AppSpacing.medium;
+            final columns = dashboardCardColumnsFor(constraints.maxWidth);
+            final cardWidth =
+                (constraints.maxWidth - gap * (columns - 1)) / columns;
 
             return Wrap(
               spacing: gap,
               runSpacing: gap,
-              children: paged.map((vehicle) {
-                final driverName = _driverName(vehicle.currentDriverId);
-                final documentColor = vehicle.hasExpiredDocument
-                    ? context.status(AppStatusTone.error).ink
-                    : vehicle.hasDocumentExpiringSoon
-                    ? context.status(AppStatusTone.warning).ink
-                    : scheme.primary;
-
-                return SizedBox(
-                  width: cardWidth,
-                  child: AppCard(
-                    padding: EdgeInsets.zero,
-                    onTap: () => onViewDetails(vehicle),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(AppSpacing.medium),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              FleetVehicleThumb(
-                                label: vehicle.imageLabel,
-                                imageUrl: vehicle.imageUrl,
-                              ),
-                              const SizedBox(width: AppSpacing.medium),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      vehicle.vehicleNumber,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleMedium
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.w900,
-                                          ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      '${vehicle.brand} ${vehicle.model} ${vehicle.modelYear}',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .bodySmall
-                                          ?.copyWith(
-                                            color: scheme.onSurfaceVariant,
-                                            fontWeight: FontWeight.w700,
-                                          ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: AppSpacing.small),
-
-                              Wrap(
-                                spacing: AppSpacing.xSmall,
-                                runSpacing: AppSpacing.xSmall,
-                                alignment: WrapAlignment.end,
-                                children: [
-                                  FleetOperationalChip(
-                                    status: workspace.operationalStatusOf(
-                                      vehicle,
-                                    ),
-                                    duty: workspace.currentDutyOf(vehicle),
-                                  ),
-                                  DashboardStatusChip(
-                                    label: vehicle.status.label,
-                                    color: context
-                                        .status(_recordTone(vehicle.status))
-                                        .tint,
-                                    textColor: context
-                                        .status(_recordTone(vehicle.status))
-                                        .ink,
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.medium,
-                          ),
-                          child: _VehicleOperationalStrip(
-                            status: driverName.isEmpty
-                                ? 'غير معين'
-                                : 'معين لسائق',
-                            reason: driverName.isEmpty
-                                ? 'جاهزة لاختيار سائق'
-                                : driverName,
-                            color: driverName.isEmpty
-                                ? scheme.tertiary
-                                : scheme.primary,
-                          ),
-                        ),
-                        if (vehicle.hasExpiredDocument) ...[
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(
-                              AppSpacing.medium,
-                              AppSpacing.small,
-                              AppSpacing.medium,
-                              0,
-                            ),
-                            child: const _VehicleAlertBanner(
-                              icon: Icons.warning_rounded,
-                              label: 'يوجد مستند منتهي',
-                              severity: _VehicleAlertSeverity.critical,
-                            ),
-                          ),
-                        ] else if (vehicle.hasDocumentExpiringSoon) ...[
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(
-                              AppSpacing.medium,
-                              AppSpacing.small,
-                              AppSpacing.medium,
-                              0,
-                            ),
-                            child: const _VehicleAlertBanner(
-                              icon: Icons.schedule_rounded,
-                              label: 'مستند يقترب من الانتهاء',
-                              severity: _VehicleAlertSeverity.warning,
-                            ),
-                          ),
-                        ],
-                        const SizedBox(height: AppSpacing.small),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: AppSpacing.medium,
-                          ),
-                          child: _VehicleMetaGrid(
-                            items: [
-                              _VehicleMetaItem(
-                                icon: Icons.confirmation_number_outlined,
-                                label: 'اللوحة',
-                                value: vehicle.plateNumber,
-                              ),
-                              _VehicleMetaItem(
-                                icon: Icons.event_seat_outlined,
-                                label: 'السعة',
-                                value: '${vehicle.capacity} مقعد',
-                              ),
-                              _VehicleMetaItem(
-                                icon: Icons.calendar_today_rounded,
-                                label: 'الرخصة',
-                                value: vehicle.licenseExpiry,
-                                valueColor: documentColor,
-                              ),
-                              _VehicleMetaItem(
-                                icon: Icons.verified_user_outlined,
-                                label: 'التأمين',
-                                value: vehicle.insuranceExpiry,
-                                valueColor: documentColor,
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: AppSpacing.medium),
-                        DecoratedBox(
-                          decoration: BoxDecoration(
-                            color: scheme.surfaceContainerHighest.withAlpha(38),
-                            border: Border(
-                              top: BorderSide(color: scheme.outlineVariant),
-                            ),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.all(AppSpacing.medium),
-                            child: Wrap(
-                              spacing: AppSpacing.small,
-                              runSpacing: AppSpacing.small,
-                              alignment: WrapAlignment.end,
-                              children: [
-                                FilledButton.icon(
-                                  onPressed: () => onViewDetails(vehicle),
-                                  icon: const Icon(Icons.open_in_new_rounded),
-                                  label: const Text('فتح ملف المركبة'),
-                                ),
-                                OutlinedButton.icon(
-                                  onPressed: () => onEdit(vehicle),
-                                  icon: const Icon(
-                                    Icons.edit_outlined,
-                                    size: 18,
-                                  ),
-                                  label: const Text('تعديل'),
-                                ),
-                                OutlinedButton.icon(
-                                  style: OutlinedButton.styleFrom(
-                                    foregroundColor: scheme.error,
-                                  ),
-                                  onPressed: () => onDelete(vehicle),
-                                  icon: const Icon(
-                                    Icons.delete_outline_rounded,
-                                    size: 18,
-                                  ),
-                                  label: const Text('حذف'),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
+              children: [
+                for (final vehicle in paged)
+                  SizedBox(
+                    width: cardWidth,
+                    child: _VehicleListCard(
+                      vehicle: vehicle,
+                      operational: workspace.operationalStatusOf(vehicle),
+                      driverName: _driverName(vehicle.currentDriverId),
+                      onViewDetails: () => onViewDetails(vehicle),
+                      onEdit: () => onEdit(vehicle),
+                      onDelete: () => onDelete(vehicle),
                     ),
                   ),
-                );
-              }).toList(),
+              ],
             );
           },
         ),
-        const SizedBox(height: AppSpacing.medium),
-        _FleetCardsPagination(
-          total: vehicles.length,
+        DashboardPagerBar(
+          totalLabel: 'الإجمالي ${FleetFormat.count(vehicles.length)} مركبة',
           currentPage: page,
           pages: pages,
           onPageChanged: onPageChanged,
@@ -305,258 +112,300 @@ class FleetVehiclesCardList extends StatelessWidget {
   }
 }
 
-class _VehicleOperationalStrip extends StatelessWidget {
-  const _VehicleOperationalStrip({
-    required this.status,
-    required this.reason,
-    required this.color,
+class _VehicleListCard extends StatelessWidget {
+  const _VehicleListCard({
+    required this.vehicle,
+    required this.operational,
+    required this.driverName,
+    required this.onViewDetails,
+    required this.onEdit,
+    required this.onDelete,
   });
 
-  final String status;
+  final FleetVehicle vehicle;
+  final FleetOperationalStatus operational;
+  final String driverName;
+  final VoidCallback onViewDetails;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  static AppStatusTone _recordTone(FleetVehicleStatus status) =>
+      switch (status) {
+        FleetVehicleStatus.active => AppStatusTone.info,
+        FleetVehicleStatus.maintenance => AppStatusTone.warning,
+        FleetVehicleStatus.suspended => AppStatusTone.error,
+        FleetVehicleStatus.archived => AppStatusTone.neutral,
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final spec = [
+      vehicle.brand,
+      vehicle.model,
+      if (vehicle.modelYear > 0) '${vehicle.modelYear}',
+    ].where((part) => part.trim().isNotEmpty).join(' ');
+
+    final attention = vehicle.hasExpiredDocument
+        ? 'يوجد مستند منتهي — راجع ملف المركبة'
+        : vehicle.hasDocumentExpiringSoon
+        ? 'مستند يقترب من الانتهاء'
+        : null;
+    final attentionTone = vehicle.hasExpiredDocument
+        ? AppStatusTone.error
+        : AppStatusTone.warning;
+
+    return AppCard(
+      padding: const EdgeInsets.all(AppSpacing.medium),
+      onTap: onViewDetails,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              FleetVehicleThumb(
+                label: vehicle.imageLabel,
+                imageUrl: vehicle.imageUrl,
+              ),
+              const SizedBox(width: AppSpacing.medium),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      vehicle.vehicleNumber,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      spec.isEmpty ? 'بدون بيانات طراز' : spec,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: textTheme.bodySmall?.copyWith(
+                        color: DashboardColors.mutedInk(context),
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppSpacing.small),
+              // One status pill, not two stacked: the record state only earns
+              // its own line when it disagrees with what the bus is doing.
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  FleetOperationalChip(status: operational, duty: null),
+                  // Only when the live reading and the record disagree — an
+                  // in-flight trip outranks the record, so this is the one
+                  // case the chip above does not already say.
+                  if (operational == FleetOperationalStatus.onTrip &&
+                      vehicle.status != FleetVehicleStatus.active) ...[
+                    const SizedBox(height: AppSpacing.xSmall),
+                    DashboardStatusChip(
+                      label: 'السجل: ${vehicle.status.label}',
+                      color: context.status(_recordTone(vehicle.status)).tint,
+                      textColor: context
+                          .status(_recordTone(vehicle.status))
+                          .ink,
+                    ),
+                  ],
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.small),
+          _DriverLine(driverName: driverName, onAssign: onEdit),
+          if (attention != null) ...[
+            const SizedBox(height: AppSpacing.small),
+            _AttentionLine(
+              reason: attention,
+              color: context.status(attentionTone).ink,
+            ),
+          ],
+          const SizedBox(height: AppSpacing.small),
+          _FactsLine(vehicle: vehicle),
+          const SizedBox(height: AppSpacing.small),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              FleetRowActionButton(
+                tooltip: 'تعديل',
+                icon: Icons.edit_outlined,
+                onPressed: onEdit,
+              ),
+              FleetRowActionButton(
+                tooltip: 'حذف',
+                icon: Icons.delete_outline_rounded,
+                onPressed: onDelete,
+                color: Theme.of(context).colorScheme.error,
+              ),
+              const SizedBox(width: AppSpacing.xSmall),
+              FilledButton.tonalIcon(
+                onPressed: onViewDetails,
+                icon: const Icon(Icons.open_in_new_rounded, size: 18),
+                label: const Text('فتح ملف المركبة'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// "Which driver, if any" — the vehicle-side mirror of the drivers card's
+/// vehicle line. An unassigned bus cannot be scheduled, so that state keeps a
+/// call to action; an assigned one is a quiet one-line fact.
+class _DriverLine extends StatelessWidget {
+  const _DriverLine({required this.driverName, required this.onAssign});
+
+  final String driverName;
+  final VoidCallback onAssign;
+
+  @override
+  Widget build(BuildContext context) {
+    if (driverName.isEmpty) {
+      final warning = context.status(AppStatusTone.warning);
+      return Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.small,
+          vertical: 6,
+        ),
+        decoration: BoxDecoration(
+          color: warning.tint,
+          borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, size: 16, color: warning.ink),
+            const SizedBox(width: AppSpacing.xSmall),
+            Expanded(
+              child: Text(
+                'بدون سائق مخصص',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: warning.ink,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: onAssign,
+              style: TextButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                minimumSize: const Size(0, 28),
+                foregroundColor: warning.ink,
+              ),
+              child: const Text('تعيين سائق'),
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Row(
+      children: [
+        Icon(
+          DashboardIcons.captains,
+          size: 16,
+          color: Theme.of(context).colorScheme.primary,
+        ),
+        const SizedBox(width: AppSpacing.xSmall),
+        Expanded(
+          child: Text(
+            driverName,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: DashboardColors.ink(context),
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AttentionLine extends StatelessWidget {
+  const _AttentionLine({required this.reason, required this.color});
+
   final String reason;
   final Color color;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.medium,
-        vertical: AppSpacing.small,
-      ),
-      decoration: BoxDecoration(
-        color: color.withAlpha(20),
-        borderRadius: BorderRadius.circular(AppTokens.radius),
-        border: Border.all(color: color.withAlpha(70)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 8,
-            height: 8,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-          ),
-          const SizedBox(width: AppSpacing.small),
-          Text(
-            status,
-            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(Icons.info_outline_rounded, size: 15, color: color),
+        const SizedBox(width: AppSpacing.xSmall),
+        Expanded(
+          child: Text(
+            reason,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: color,
-              fontWeight: FontWeight.w900,
+              fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(width: AppSpacing.small),
-          Expanded(
-            child: Text(
-              reason,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              textAlign: TextAlign.end,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: scheme.onSurfaceVariant,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }
 
-enum _VehicleAlertSeverity { warning, critical }
+/// The plate, the capacity and the paperwork verdict — the three facts a
+/// dispatcher matches a booking against, on one line.
+class _FactsLine extends StatelessWidget {
+  const _FactsLine({required this.vehicle});
 
-class _VehicleAlertBanner extends StatelessWidget {
-  const _VehicleAlertBanner({
-    required this.icon,
-    required this.label,
-    required this.severity,
-  });
-
-  final IconData icon;
-  final String label;
-  final _VehicleAlertSeverity severity;
+  final FleetVehicle vehicle;
 
   @override
   Widget build(BuildContext context) {
-    final isCritical = severity == _VehicleAlertSeverity.critical;
-    final bg = isCritical
-        ? context.status(AppStatusTone.error).tint
-        : context.status(AppStatusTone.warning).tint;
-    final fg = isCritical
-        ? context.status(AppStatusTone.error).ink
-        : context.status(AppStatusTone.warning).ink;
+    final style = Theme.of(
+      context,
+    ).textTheme.bodySmall?.copyWith(color: DashboardColors.mutedInk(context));
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.medium,
-        vertical: AppSpacing.small,
-      ),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(AppTokens.radius),
-        border: Border.all(color: fg.withAlpha(90)),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: fg, size: 18),
-          const SizedBox(width: AppSpacing.small),
-          Expanded(
-            child: Text(
-              label,
-              style: TextStyle(
-                color: fg,
-                fontSize: 12,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
+    return Row(
+      children: [
+        Icon(
+          Icons.confirmation_number_outlined,
+          size: 15,
+          color: DashboardColors.mutedInk(context),
+        ),
+        const SizedBox(width: 4),
+        Flexible(
+          child: Text(
+            vehicle.plateNumber.isEmpty ? 'بدون لوحة' : vehicle.plateNumber,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: style,
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _VehicleMetaGrid extends StatelessWidget {
-  const _VehicleMetaGrid({required this.items});
-
-  final List<_VehicleMetaItem> items;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final itemWidth = constraints.maxWidth < 560
-            ? constraints.maxWidth
-            : (constraints.maxWidth - AppSpacing.small) / 2;
-        return Wrap(
-          spacing: AppSpacing.small,
-          runSpacing: AppSpacing.small,
-          children: [
-            for (final item in items)
-              SizedBox(
-                width: itemWidth,
-                child: _VehicleMetaTile(item: item),
-              ),
+        ),
+        const SizedBox(width: AppSpacing.medium),
+        Icon(
+          Icons.event_seat_outlined,
+          size: 15,
+          color: DashboardColors.mutedInk(context),
+        ),
+        const SizedBox(width: 4),
+        Text('${FleetFormat.count(vehicle.capacity)} مقعد', style: style),
+        const Spacer(),
+        FleetDocumentsHealthCell(
+          documents: [
+            FleetDatedDocument(label: 'رخصة', date: vehicle.licenseExpiry),
+            FleetDatedDocument(label: 'تأمين', date: vehicle.insuranceExpiry),
+            FleetDatedDocument(label: 'فحص', date: vehicle.inspectionExpiry),
           ],
-        );
-      },
-    );
-  }
-}
-
-class _VehicleMetaItem {
-  const _VehicleMetaItem({
-    required this.icon,
-    required this.label,
-    required this.value,
-    this.valueColor,
-  });
-
-  final IconData icon;
-  final String label;
-  final String value;
-  final Color? valueColor;
-}
-
-class _VehicleMetaTile extends StatelessWidget {
-  const _VehicleMetaTile({required this.item});
-
-  final _VehicleMetaItem item;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(AppSpacing.small),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withAlpha(45),
-        borderRadius: BorderRadius.circular(AppTokens.radius),
-        border: Border.all(color: scheme.outlineVariant.withAlpha(80)),
-      ),
-      child: Row(
-        children: [
-          Icon(item.icon, size: 17, color: scheme.onSurfaceVariant),
-          const SizedBox(width: AppSpacing.small),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: scheme.onSurfaceVariant,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  item.value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: item.valueColor ?? scheme.onSurface,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FleetCardsPagination extends StatelessWidget {
-  const _FleetCardsPagination({
-    required this.total,
-    required this.currentPage,
-    required this.pages,
-    required this.onPageChanged,
-  });
-
-  final int total;
-  final int currentPage;
-  final int pages;
-  final ValueChanged<int> onPageChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.medium,
-        vertical: AppSpacing.small,
-      ),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withAlpha(36),
-        borderRadius: BorderRadius.circular(AppTokens.radius),
-        border: Border.all(color: scheme.outlineVariant.withAlpha(80)),
-      ),
-      child: Row(
-        children: [
-          Text('الإجمالي $total'),
-          const Spacer(),
-          Text('صفحة ${currentPage + 1} من $pages'),
-          const SizedBox(width: AppSpacing.small),
-          IconButton(
-            tooltip: 'السابق',
-            onPressed: currentPage == 0
-                ? null
-                : () => onPageChanged(currentPage - 1),
-            icon: const Icon(DashboardIcons.paginationPrevious),
-          ),
-          IconButton(
-            tooltip: 'التالي',
-            onPressed: currentPage >= pages - 1
-                ? null
-                : () => onPageChanged(currentPage + 1),
-            icon: const Icon(DashboardIcons.paginationNext),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

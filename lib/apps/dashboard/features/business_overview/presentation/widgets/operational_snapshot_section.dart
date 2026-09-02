@@ -5,6 +5,7 @@ import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/charts/dashboard_stacked_bar.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_empty_state.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_panel.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
@@ -161,149 +162,41 @@ class _TripPipeline extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
     final palette = DashboardChartPalette.of(context);
 
-    final segments = <_Segment>[
-      _Segment(
-        label: 'مكتملة',
-        value: overview.tripsCompletedToday,
-        color: palette.positive,
-      ),
-      _Segment(
-        label: 'جارية الآن',
-        value: overview.tripsRunningNow,
-        color: palette.active,
-      ),
-      _Segment(
-        label: 'قادمة',
-        value: overview.tripsUpcomingToday,
-        color: palette.neutral,
-      ),
-      _Segment(
-        label: 'ملغاة',
-        value: overview.tripsCancelledToday,
-        color: palette.negative,
-      ),
-    ];
-    final drawn = segments.where((s) => s.value > 0).toList();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                'رحلات اليوم',
-                style: text.labelMedium?.copyWith(fontWeight: FontWeight.w800),
-              ),
-            ),
-            Text(
-              '${count(overview.todayTrips.length)} رحلة مجدولة',
-              style: text.labelSmall?.copyWith(
-                color: DashboardColors.mutedInk(context),
-                fontFeatures: const [FontFeature.tabularFigures()],
-              ),
-            ),
-          ],
+    return DashboardStackedBar(
+      title: 'رحلات اليوم',
+      trailingNote: '${count(overview.todayTrips.length)} رحلة مجدولة',
+      segments: [
+        DashboardBarSegment(
+          label: 'مكتملة',
+          value: overview.tripsCompletedToday.toDouble(),
+          valueLabel: count(overview.tripsCompletedToday),
+          color: palette.positive,
+          onTap: () => onOpenModule(DashboardRoutes.trips),
         ),
-        const SizedBox(height: AppSpacing.small),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(999),
-          child: SizedBox(
-            height: 10,
-            child: drawn.isEmpty
-                ? ColoredBox(color: DashboardColors.well(context))
-                : Row(
-                    // Stretch, not the default centre: an `Expanded`
-                    // `ColoredBox` gets loose vertical constraints under
-                    // `CrossAxisAlignment.center` and paints nothing at all —
-                    // the bar was a band of empty space.
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      for (final segment in drawn)
-                        Expanded(
-                          flex: segment.value,
-                          child: Tooltip(
-                            message: '${segment.label} ${count(segment.value)}',
-                            child: ColoredBox(color: segment.color),
-                          ),
-                        ),
-                    ],
-                  ),
-          ),
+        DashboardBarSegment(
+          label: 'جارية الآن',
+          value: overview.tripsRunningNow.toDouble(),
+          valueLabel: count(overview.tripsRunningNow),
+          color: palette.active,
+          onTap: () => onOpenModule(DashboardRoutes.liveOps),
         ),
-        const SizedBox(height: AppSpacing.small),
-        Wrap(
-          spacing: AppSpacing.medium,
-          runSpacing: AppSpacing.xSmall,
-          children: [
-            for (final segment in segments)
-              _LegendEntry(
-                segment: segment,
-                onTap: () => onOpenModule(
-                  segment.label == 'جارية الآن'
-                      ? DashboardRoutes.liveOps
-                      : DashboardRoutes.trips,
-                ),
-              ),
-          ],
+        DashboardBarSegment(
+          label: 'قادمة',
+          value: overview.tripsUpcomingToday.toDouble(),
+          valueLabel: count(overview.tripsUpcomingToday),
+          color: palette.neutral,
+          onTap: () => onOpenModule(DashboardRoutes.trips),
+        ),
+        DashboardBarSegment(
+          label: 'ملغاة',
+          value: overview.tripsCancelledToday.toDouble(),
+          valueLabel: count(overview.tripsCancelledToday),
+          color: palette.negative,
+          onTap: () => onOpenModule(DashboardRoutes.trips),
         ),
       ],
-    );
-  }
-}
-
-class _Segment {
-  const _Segment({
-    required this.label,
-    required this.value,
-    required this.color,
-  });
-
-  final String label;
-  final int value;
-  final Color color;
-}
-
-class _LegendEntry extends StatelessWidget {
-  const _LegendEntry({required this.segment, required this.onTap});
-
-  final _Segment segment;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final text = Theme.of(context).textTheme;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(6),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 2),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 9,
-              height: 9,
-              decoration: BoxDecoration(
-                color: segment.color,
-                borderRadius: BorderRadius.circular(3),
-              ),
-            ),
-            const SizedBox(width: 6),
-            Text(
-              '${segment.label} ${count(segment.value)}',
-              style: text.labelSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: DashboardColors.mutedInk(context),
-                fontFeatures: const [FontFeature.tabularFigures()],
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

@@ -446,6 +446,22 @@ class DashboardAppTheme {
     );
   }
 
+  /// Lining, fixed-width digits.
+  ///
+  /// Applied to every style that carries a **figure** — the display and
+  /// headline sizes a KPI is set in, the title sizes a table cell and a panel
+  /// total use, and the label sizes that carry counts, percentages and
+  /// timestamps. A console is a page of numbers stacked in columns, and
+  /// proportional digits make those columns ragged and make a value visibly
+  /// jump as it ticks.
+  ///
+  /// Body styles are deliberately left proportional: they carry running Arabic
+  /// prose, where a monospaced digit inside a sentence reads as a typewriter
+  /// insert. Widgets that print a figure in body type ask for the feature
+  /// themselves, as they always have — this only means they no longer have to
+  /// at the ~250 places that set a title or a label.
+  static const List<FontFeature> _figures = [FontFeature.tabularFigures()];
+
   static TextTheme _dashboardTextTheme(ColorScheme scheme) {
     final base = GoogleFonts.cairoTextTheme().apply(
       bodyColor: scheme.onSurface,
@@ -458,42 +474,49 @@ class DashboardAppTheme {
         fontWeight: FontWeight.w800,
         height: 1.18,
         letterSpacing: 0,
+        fontFeatures: _figures,
       ),
       displayMedium: base.displayMedium?.copyWith(
         fontSize: 24,
         fontWeight: FontWeight.w800,
         height: 1.22,
         letterSpacing: 0,
+        fontFeatures: _figures,
       ),
       displaySmall: base.displaySmall?.copyWith(
         fontSize: 20,
         fontWeight: FontWeight.w700,
         height: 1.28,
         letterSpacing: 0,
+        fontFeatures: _figures,
       ),
       headlineSmall: base.headlineSmall?.copyWith(
         fontSize: 22,
         fontWeight: FontWeight.w800,
         height: 1.25,
         letterSpacing: 0,
+        fontFeatures: _figures,
       ),
       titleLarge: base.titleLarge?.copyWith(
         fontSize: 18,
         fontWeight: FontWeight.w800,
         height: 1.3,
         letterSpacing: 0,
+        fontFeatures: _figures,
       ),
       titleMedium: base.titleMedium?.copyWith(
         fontSize: 16,
         fontWeight: FontWeight.w700,
         height: 1.35,
         letterSpacing: 0,
+        fontFeatures: _figures,
       ),
       titleSmall: base.titleSmall?.copyWith(
         fontSize: 14,
         fontWeight: FontWeight.w700,
         height: 1.35,
         letterSpacing: 0,
+        fontFeatures: _figures,
       ),
       bodyLarge: base.bodyLarge?.copyWith(
         fontSize: 16,
@@ -518,18 +541,21 @@ class DashboardAppTheme {
         fontWeight: FontWeight.w700,
         height: 1.35,
         letterSpacing: 0,
+        fontFeatures: _figures,
       ),
       labelMedium: base.labelMedium?.copyWith(
         fontSize: 12,
         fontWeight: FontWeight.w700,
         height: 1.35,
         letterSpacing: 0,
+        fontFeatures: _figures,
       ),
       labelSmall: base.labelSmall?.copyWith(
         fontSize: 11,
         fontWeight: FontWeight.w600,
         height: 1.3,
         letterSpacing: 0,
+        fontFeatures: _figures,
       ),
     );
   }

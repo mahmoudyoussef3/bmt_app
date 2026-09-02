@@ -1,21 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_empty_state.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/ops_data_table.dart';
+import 'package:bmt_app/apps/dashboard/features/fleet/fleet_drivers/presentation/widgets/fleet_drivers_toolbar.dart';
+import 'package:bmt_app/apps/dashboard/features/fleet/overview/presentation/widgets/fleet_format.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/driver_operations.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_workspace.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/widgets/fleet_shared_widgets.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_drivers/presentation/cubit/fleet_drivers_cubit.dart';
 import 'package:bmt_app/core/theme/colors.dart';
-import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_snackbar.dart';
-import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_status_chip.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
 /// Sortable column indices exposed by the drivers table header. Kept in one
 /// place so the screen and the table agree on the column→field mapping.
 const int _kDriverCol = 1;
-const int _kLicenseCol = 6;
+const int _kLicenseCol = 5;
 
+/// السائقون, as a table.
+///
+/// ## The column budget
+///
+/// Every column declares a minimum width, and [OpsDataTable] scrolls sideways
+/// the moment they add up to more than the pane. The nine columns this used to
+/// declare summed to 1184px while the list only drops to cards below
+/// [kDashboardTableBreakpoint] (1040) — so on any console narrower than a
+/// 1440px screen *with the sidebar collapsed*, the fleet list was permanently
+/// scrolled sideways, and the actions column lived off-screen.
+///
+/// The set below sums to 946px, which leaves room for the table's own padding
+/// and inter-column gaps inside 1040. Two columns paid for it: "الصحة" and
+/// "التوفر" were one answer printed twice (see [FleetStatusReasonCell]), and
+/// the flexes are kept proportional to the minimums so a column never gets a
+/// share of a wide table that is narrower than the minimum it asked for.
 class FleetDriversTable extends StatelessWidget {
   final List<FleetDriver> drivers;
   final FleetWorkspace workspace;
@@ -26,14 +44,9 @@ class FleetDriversTable extends StatelessWidget {
   final int page;
   final int pageSize;
   final ValueChanged<int> onPageChanged;
-  final FleetSortField sortField;
+  final FleetDriverSort sort;
   final bool sortAscending;
-  final ValueChanged<FleetSortField> onSortField;
-
-  /// Search, ops filters and sort/bulk-archive controls, rendered inside the
-  /// same bordered card as the sticky column header — the EWT "isTable"
-  /// template every module table screen shares.
-  final Widget? toolbar;
+  final ValueChanged<FleetDriverSort> onSort;
 
   const FleetDriversTable({
     super.key,
@@ -46,10 +59,9 @@ class FleetDriversTable extends StatelessWidget {
     required this.page,
     required this.pageSize,
     required this.onPageChanged,
-    required this.sortField,
+    required this.sort,
     required this.sortAscending,
-    required this.onSortField,
-    this.toolbar,
+    required this.onSort,
   });
 
   String _vehicleName(String vehicleId) {
@@ -69,31 +81,18 @@ class FleetDriversTable extends StatelessWidget {
         DriverHealthLevel.critical => AppStatusTone.error,
       };
 
-  /// The semantic status role a driver's availability maps to, so "التوفر"
-  /// reads as a coloured signal rather than every status sharing one flat
-  /// tint.
-  static AppStatusTone _availabilityTone(DriverOperationalStatus status) =>
-      switch (status) {
-        DriverOperationalStatus.available => AppStatusTone.success,
-        DriverOperationalStatus.assigned => AppStatusTone.info,
-        DriverOperationalStatus.blocked => AppStatusTone.error,
-        DriverOperationalStatus.suspended => AppStatusTone.error,
-        DriverOperationalStatus.archived => AppStatusTone.neutral,
-      };
-
-  int? get _sortColumnIndex => switch (sortField) {
-    FleetSortField.name => _kDriverCol,
-    FleetSortField.licenseExpiry => _kLicenseCol,
-    _ => null,
+  int? get _sortColumnIndex => switch (sort) {
+    FleetDriverSort.name => _kDriverCol,
+    FleetDriverSort.licenseExpiry => _kLicenseCol,
   };
 
   void _handleSort(int index) {
     final field = switch (index) {
-      _kDriverCol => FleetSortField.name,
-      _kLicenseCol => FleetSortField.licenseExpiry,
+      _kDriverCol => FleetDriverSort.name,
+      _kLicenseCol => FleetDriverSort.licenseExpiry,
       _ => null,
     };
-    if (field != null) onSortField(field);
+    if (field != null) onSort(field);
   }
 
   static Future<void> _archiveWithConfirmation(
@@ -178,74 +177,73 @@ class FleetDriversTable extends StatelessWidget {
     final suspendedTint = context.status(AppStatusTone.error).tint;
 
     return OpsDataTable(
-      toolbar: toolbar,
       total: drivers.length,
+      totalLabel: 'الإجمالي ${FleetFormat.count(drivers.length)} سائق',
       currentPage: page,
       pageSize: pageSize,
       onPageChanged: onPageChanged,
       sortColumnIndex: _sortColumnIndex,
       sortDirection: sortAscending ? OpsSort.asc : OpsSort.desc,
       onSort: _handleSort,
+      // The whole row opens the driver's file — the same thing the eye icon
+      // does, without having to travel to the end of the row for it.
+      onRowTap: [for (final driver in paged) () => onView(driver)],
       rowTints: [
         for (final driver in paged)
           driver.status == FleetDriverStatus.suspended ? suspendedTint : null,
       ],
+      emptyState: const DashboardEmptyState(
+        icon: DashboardIcons.captains,
+        title: 'لا يوجد سائقون مطابقون',
+        message:
+            'لا يطابق أي سائق البحث أو الفلاتر الحالية. وسّع الفلاتر، أو أضف '
+            'سائقاً جديداً إلى الأسطول.',
+      ),
       columns: const [
-        OpsColumn('تحديد', flex: 1, minWidth: 64),
-        OpsColumn('السائق', flex: 4, sortable: true, minWidth: 240),
-        OpsColumn('الصحة', flex: 2, minWidth: 116),
-        OpsColumn('التوفر', flex: 2, minWidth: 120),
-        OpsColumn('المركبة', flex: 2, minWidth: 120),
-        OpsColumn('الرحلة', flex: 3, minWidth: 170),
-        OpsColumn('الرخصة', flex: 2, sortable: true, minWidth: 132),
-        OpsColumn('آخر تحديث', flex: 2, minWidth: 110),
-        OpsColumn('إجراءات', flex: 3, minWidth: 112),
+        OpsColumn('تحديد', flex: 2, minWidth: 44),
+        OpsColumn('السائق', flex: 10, sortable: true, minWidth: 220),
+        OpsColumn('الجاهزية', flex: 6, minWidth: 132),
+        OpsColumn('المركبة', flex: 4, minWidth: 88),
+        OpsColumn('الرحلة', flex: 6, minWidth: 132),
+        OpsColumn('الرخصة', flex: 5, sortable: true, minWidth: 110),
+        OpsColumn('آخر تحديث', flex: 4, minWidth: 88),
+        OpsColumn('إجراءات', flex: 6, minWidth: 132),
       ],
       rows: paged.map((driver) {
-        final vehicle = _vehicleName(driver.currentVehicleId);
         final snapshot = DriverOperations.snapshot(driver, workspace);
-        final health = context.status(_healthTone(snapshot.health));
-        final healthBg = health.tint;
-        final healthFg = health.ink;
+        final tone = _healthTone(snapshot.health);
         return [
           Checkbox(
             value: selectedIds.contains(driver.id),
             onChanged: (_) => cubit.toggleSelection(driver.id),
+            visualDensity: VisualDensity.compact,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
           ),
           _DriverIdentityCell(
             driver: driver,
             selected: driver.id == selectedId,
+            ringColor: context.status(tone).ink,
           ),
-          Tooltip(
-            message: snapshot.primaryReason,
-            child: DashboardStatusChip(
-              label: snapshot.health.label,
-              color: healthBg,
-              textColor: healthFg,
-            ),
-          ),
-          DashboardStatusChip(
+          FleetStatusReasonCell(
             label: snapshot.status.label,
-            color: context.status(_availabilityTone(snapshot.status)).tint,
-            textColor: context.status(_availabilityTone(snapshot.status)).ink,
+            tone: tone,
+            // Only when something is wrong: "جاهز للتشغيل" under a green chip
+            // that already says "متاح" is a second copy of the same word.
+            note: snapshot.requiresAttention ? snapshot.primaryReason : null,
+            tooltip: snapshot.attentionReasons.isEmpty
+                ? 'جاهز للتشغيل'
+                : snapshot.attentionReasons.join('\n'),
           ),
-
-          vehicle.isEmpty
-              ? DashboardStatusChip(
-                  label: 'بدون سيارة',
-                  color: context.status(AppStatusTone.warning).tint,
-                  textColor: context.status(AppStatusTone.warning).ink,
-                )
-              : Text(vehicle, maxLines: 1, overflow: TextOverflow.ellipsis),
+          FleetPairingCell(
+            icon: DashboardIcons.vehicle,
+            value: _vehicleName(driver.currentVehicleId),
+            emptyLabel: 'بدون مركبة',
+          ),
           FleetTripCell(
             underway: workspace.underwayDutyOfDriver(driver),
             next: workspace.nextDutyOfDriver(driver),
           ),
-          Text(
-            driver.licenseExpiry,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
+          FleetExpiryCell(date: driver.licenseExpiry),
           FleetLastUpdatedCell(updatedAt: driver.updatedAt),
           _DriverRowActions(
             driver: driver,
@@ -262,39 +260,57 @@ class FleetDriversTable extends StatelessWidget {
 class _DriverIdentityCell extends StatelessWidget {
   final FleetDriver driver;
   final bool selected;
+  final Color ringColor;
 
-  const _DriverIdentityCell({required this.driver, required this.selected});
+  const _DriverIdentityCell({
+    required this.driver,
+    required this.selected,
+    required this.ringColor,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final secondary = [
+      if (driver.employeeCode.isNotEmpty) driver.employeeCode,
+      if (driver.phone.isNotEmpty) driver.phone,
+    ].join(' • ');
+
     return Row(
       children: [
         FleetAvatar(
           label: driver.imageLabel,
           profileImageUrl: driver.profileImageUrl,
+          ringColor: ringColor,
+          size: 34,
         ),
-        const SizedBox(width: AppSpacing.small),
+        const SizedBox(width: 10),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Text(
                 driver.name,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
                   color: selected
                       ? Theme.of(context).colorScheme.primary
-                      : null,
+                      : DashboardColors.ink(context),
                 ),
               ),
-              Text(
-                driver.phone,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodySmall,
-              ),
+              if (secondary.isNotEmpty) ...[
+                const SizedBox(height: 2),
+                Text(
+                  secondary,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: DashboardColors.mutedInk(context),
+                  ),
+                ),
+              ],
             ],
           ),
         ),
@@ -321,19 +337,27 @@ class _DriverRowActions extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        IconButton(
+        FleetRowActionButton(
           tooltip: 'عرض جاهزية السائق',
+          icon: Icons.visibility_outlined,
           onPressed: onView,
-          icon: const Icon(Icons.visibility_outlined),
         ),
-        IconButton(
+        FleetRowActionButton(
           tooltip: 'تعديل بيانات السائق',
+          icon: Icons.edit_outlined,
           onPressed: onEdit,
-          icon: const Icon(Icons.edit_outlined),
         ),
         PopupMenuButton<String>(
           tooltip: 'المزيد من الإجراءات',
-          icon: const Icon(Icons.more_vert_rounded),
+          icon: Icon(
+            Icons.more_vert_rounded,
+            size: 18,
+            color: DashboardColors.mutedInk(context),
+          ),
+          padding: EdgeInsets.zero,
+          constraints: const BoxConstraints(minWidth: 220),
+          iconSize: 18,
+          splashRadius: 18,
           onSelected: (value) {
             if (value == 'suspend') {
               cubit.updateDriverStatus(driver.id, FleetDriverStatus.suspended);
@@ -353,58 +377,62 @@ class _DriverRowActions extends StatelessWidget {
             if (driver.status == FleetDriverStatus.active)
               const PopupMenuItem(
                 value: 'suspend',
-                child: Row(
-                  children: [
-                    Icon(Icons.pause_circle_outline_rounded),
-                    SizedBox(width: AppSpacing.small),
-                    Text('إيقاف السائق'),
-                  ],
+                child: _RowMenuItem(
+                  icon: Icons.pause_circle_outline_rounded,
+                  label: 'إيقاف السائق',
                 ),
               ),
             if (driver.status == FleetDriverStatus.suspended)
               const PopupMenuItem(
                 value: 'activate',
-                child: Row(
-                  children: [
-                    Icon(Icons.play_circle_outline_rounded),
-                    SizedBox(width: AppSpacing.small),
-                    Text('تفعيل السائق'),
-                  ],
+                child: _RowMenuItem(
+                  icon: Icons.play_circle_outline_rounded,
+                  label: 'تفعيل السائق',
                 ),
               ),
             PopupMenuItem(
               value: 'archive',
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.archive_outlined,
-                    color: Theme.of(ctx).colorScheme.error,
-                  ),
-                  const SizedBox(width: AppSpacing.small),
-                  Text(
-                    'أرشفة السائق',
-                    style: TextStyle(color: Theme.of(ctx).colorScheme.error),
-                  ),
-                ],
+              child: _RowMenuItem(
+                icon: Icons.archive_outlined,
+                label: 'أرشفة السائق',
+                color: Theme.of(ctx).colorScheme.error,
               ),
             ),
             PopupMenuItem(
               value: 'delete',
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.delete_outline_rounded,
-                    color: Theme.of(ctx).colorScheme.error,
-                  ),
-                  const SizedBox(width: AppSpacing.small),
-                  Text(
-                    'حذف من قاعدة البيانات',
-                    style: TextStyle(color: Theme.of(ctx).colorScheme.error),
-                  ),
-                ],
+              child: _RowMenuItem(
+                icon: Icons.delete_outline_rounded,
+                label: 'حذف من قاعدة البيانات',
+                color: Theme.of(ctx).colorScheme.error,
               ),
             ),
           ],
+        ),
+      ],
+    );
+  }
+}
+
+class _RowMenuItem extends StatelessWidget {
+  const _RowMenuItem({required this.icon, required this.label, this.color});
+
+  final IconData icon;
+  final String label;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 18, color: color),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(color: color),
+          ),
         ),
       ],
     );

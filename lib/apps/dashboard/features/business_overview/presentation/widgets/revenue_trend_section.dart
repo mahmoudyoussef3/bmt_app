@@ -113,6 +113,8 @@ class RevenueTrendSection extends StatelessWidget {
               padding: const EdgeInsets.only(top: AppSpacing.small),
               child: DashboardLineChart(
                 lineColor: palette.positive,
+                tooltipFormatter: money,
+                averageLabel: 'متوسط اليوم',
                 data: [
                   for (final point in series)
                     ChartDatum(

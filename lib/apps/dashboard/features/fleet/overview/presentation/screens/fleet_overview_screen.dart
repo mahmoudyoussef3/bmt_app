@@ -3,7 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/apps/dashboard/core/di/dashboard_di.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_attention.dart';
-import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_common.dart';
+import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_workspace.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/overview/presentation/cubit/fleet_overview_cubit.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/overview/presentation/cubit/fleet_overview_state.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/overview/presentation/widgets/fleet_activity_panel.dart';
@@ -18,8 +18,12 @@ import 'package:bmt_app/apps/dashboard/features/fleet/fleet_vehicles/presentatio
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_vehicles/presentation/screens/fleet_vehicles_screen.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_documents/presentation/cubit/fleet_documents_cubit.dart';
 
+import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_collapsible_section.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_module_header.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_state_views.dart';
+import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/models/fleet_queue.dart';
+import 'package:bmt_app/apps/dashboard/features/fleet/overview/presentation/widgets/fleet_format.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/app_card.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
@@ -45,6 +49,12 @@ class _FleetOverviewScreenState extends State<FleetOverviewScreen> {
   /// destination tab loads its own data in the background.
   bool _focusPending = false;
 
+  /// The queue a KPI tile asked the active tab to open. Rebuilt fresh on every
+  /// tap — see [FleetVehicleQueueRequest]'s doc comment for why identity, not
+  /// value, is what makes a repeated tap register.
+  FleetVehicleQueueRequest? _vehicleQueueRequest;
+  FleetDriverQueueRequest? _driverQueueRequest;
+
   /// One identity per tab, kept across the browse↔focus layout flip below.
   ///
   /// Focusing a driver swaps this screen's entire layout (scrolling page →
@@ -69,6 +79,30 @@ class _FleetOverviewScreenState extends State<FleetOverviewScreen> {
     setState(() {
       _activeTab = tab;
       _isListMode = true;
+    });
+  }
+
+  /// Follows a KPI tile to the rows that produced its number: switches to the
+  /// tile's tab and hands it the queue to open once it is there.
+  ///
+  /// The request is built here rather than read out of the tile because only
+  /// this screen owns the tab switch — the tile is above both tabs in the tree
+  /// and neither cubit exists at its position.
+  void _openKpiQueue(FleetKpiJump jump) {
+    setState(() {
+      _activeTab = jump.tab;
+      _isListMode = true;
+      switch (jump.tab) {
+        case FleetTab.vehicles:
+          _vehicleQueueRequest = FleetVehicleQueueRequest(
+            queue: jump.vehicleQueue,
+            recordStatus: jump.vehicleRecordStatus,
+          );
+        case FleetTab.drivers:
+          _driverQueueRequest = FleetDriverQueueRequest(
+            queue: jump.driverQueue,
+          );
+      }
     });
   }
 
@@ -131,6 +165,7 @@ class _FleetOverviewScreenState extends State<FleetOverviewScreen> {
                   ],
                   child: FleetDriversScreen(
                     focusRequest: _focusDriverRequest,
+                    queueRequest: _driverQueueRequest,
                     onFocusResolved: _resolveFocusPending,
                     onViewStateChanged: (isList) =>
                         setState(() => _isListMode = isList),
@@ -147,6 +182,7 @@ class _FleetOverviewScreenState extends State<FleetOverviewScreen> {
                   ],
                   child: FleetVehiclesScreen(
                     focusRequest: _focusVehicleRequest,
+                    queueRequest: _vehicleQueueRequest,
                     onFocusResolved: _resolveFocusPending,
                     onViewStateChanged: (isList) =>
                         setState(() => _isListMode = isList),
@@ -174,10 +210,8 @@ class _FleetOverviewScreenState extends State<FleetOverviewScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  _buildHeader(context),
-                  const SizedBox(height: AppSpacing.large),
-                  FleetSummaryCards(workspace: workspace),
-                  const SizedBox(height: AppSpacing.large),
+                  _buildHeader(context, workspace),
+                  const SizedBox(height: AppSpacing.medium),
                   FleetNeedsAttentionPanel(
                     items: buildFleetAttentionItems(workspace),
                     onOpenDriver: (id) =>
@@ -185,7 +219,7 @@ class _FleetOverviewScreenState extends State<FleetOverviewScreen> {
                     onOpenVehicle: (id) =>
                         _openAttentionTarget(FleetAttentionTarget.vehicle, id),
                   ),
-                  const SizedBox(height: AppSpacing.large),
+                  const SizedBox(height: AppSpacing.medium),
                   FleetTabBar(
                     active: _activeTab,
                     summary: workspace.summary,
@@ -222,7 +256,9 @@ class _FleetOverviewScreenState extends State<FleetOverviewScreen> {
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader(BuildContext context, FleetWorkspace workspace) {
+    final summary = workspace.summary;
+
     return DashboardModuleHeader(
       icon: DashboardIcons.fleetActive,
       title: 'إدارة الأسطول',
@@ -233,18 +269,32 @@ class _FleetOverviewScreenState extends State<FleetOverviewScreen> {
           icon: const Icon(Icons.download_rounded),
           label: const Text('تصدير'),
         ),
-        OutlinedButton.icon(
+        FilledButton.tonalIcon(
           onPressed: () => context.read<FleetOverviewCubit>().loadWorkspace(),
-          icon: const Icon(Icons.refresh_rounded),
+          icon: const Icon(DashboardIcons.refresh),
           label: const Text('تحديث'),
         ),
-        // The mock's header carries one primary "+" action, but Fleet has two
-        // entity types (drivers/vehicles) behind a tab switcher, and each
-        // add flow needs that tab's own cubit/docs-cubit/workspace context —
-        // not available at this header's position in the tree. Each tab
-        // keeps its own "+ إضافة مركبة/سائق" button instead (see
-        // FleetVehiclesScreen/FleetDriversScreen).
+        // The design's header carries one primary "+", but الأسطول has two
+        // entity types behind a tab switcher and each add flow needs that
+        // tab's own cubit, documents cubit and workspace — none of which exist
+        // at this header's position in the tree. Each tab puts «إضافة مركبة /
+        // إضافة سائق» on its own results header instead, which is inside that
+        // scope and still above the rows.
       ],
+      sectionId: DashboardSectionIds.fleetHeader,
+      // Open, like every other list module's header: the four counts *are*
+      // what this module is opened to read, and three of them are the shortcut
+      // to the rows behind them.
+      initiallyExpanded: true,
+      collapsedSummary: DashboardSectionSummary(
+        items: [
+          'مركبات ${FleetFormat.count(summary.vehiclesCount)}',
+          'سائقون ${FleetFormat.count(summary.driversCount)}',
+          'مستندات تحتاج متابعة '
+              '${FleetFormat.count(summary.documentsNeedFollowUpCount)}',
+        ],
+      ),
+      summary: FleetSummaryCards(workspace: workspace, onJump: _openKpiQueue),
     );
   }
 
@@ -280,9 +330,9 @@ class _FleetFocusLoadingOverlay extends StatelessWidget {
               const SizedBox(width: AppSpacing.small),
               Text(
                 'جارٍ الفتح...',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
               ),
             ],
           ),

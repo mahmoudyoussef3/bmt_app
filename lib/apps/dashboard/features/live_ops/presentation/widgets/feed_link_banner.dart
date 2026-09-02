@@ -3,7 +3,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
-import 'package:bmt_app/core/theme/tokens.dart';
 import 'package:bmt_app/core/tracking/link_health.dart';
 
 import '../bloc/fleet_tracking_bloc.dart';
@@ -45,8 +44,11 @@ class FeedLinkBanner extends StatelessWidget {
             : AppStatusTone.warning;
         final colors = context.status(tone);
 
+        // Spaces itself from the title block above rather than being wrapped
+        // by the caller: the banner is silent most of the time, and a wrapper
+        // would leave that gap on the page every day the feed is healthy.
         return Padding(
-          padding: const EdgeInsets.only(bottom: AppSpacing.small),
+          padding: const EdgeInsets.only(top: AppSpacing.large),
           child: Container(
             padding: const EdgeInsets.symmetric(
               horizontal: AppSpacing.medium,
@@ -54,8 +56,10 @@ class FeedLinkBanner extends StatelessWidget {
             ),
             decoration: BoxDecoration(
               color: colors.tint,
-              borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-              border: Border.all(color: colors.ink.withAlpha(60)),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: DashboardColors.statusLine(context, tone),
+              ),
             ),
             child: Row(
               children: [

@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
-import 'package:bmt_app/core/theme/tokens.dart';
-import 'package:bmt_app/core/widgets/app_card.dart';
+import 'package:bmt_app/core/widgets/progress_bar.dart';
 
 import '../../domain/entities/fleet_feed.dart';
 import '../../domain/entities/live_ops_snapshot.dart';
@@ -10,20 +11,38 @@ import 'departure_status_badge.dart';
 import 'live_ops_format.dart';
 import 'tracking_health_badge.dart';
 
-/// One trip on the road: route, crew, occupancy and — the reason this screen
-/// exists — an honest read of whether its position feed is live, when it last
-/// reported, and whether it is running late against its schedule.
+/// One trip on the road: departure, route, crew, occupancy and — the reason this
+/// screen exists — an honest read of whether its position feed is live and when
+/// it last reported.
 ///
-/// The whole card is tappable: it selects the trip, which focuses the map on it.
-/// Selection is drawn as a border plus a raised surface rather than colour
-/// alone, so it survives greyscale and high-contrast modes.
+/// **A row on the panel's surface, not a card.** It kept the name it has always
+/// had, but it is now built to the same shape as Home's departure board:
+/// departure time in its own column, a hairline, the route with its crew on one
+/// meta line, the seat track, and the tracking mark trailing. Two console laws
+/// were being broken by the card it used to be — a card nested inside the panel
+/// card it already sits in, and two screens listing the same objects at the same
+/// density in two different visual languages.
+///
+/// The whole row is tappable: it selects the trip, which focuses the map on it.
+/// Selection is drawn as a wash plus a border rather than colour alone, so it
+/// survives greyscale and high-contrast modes.
+///
+/// ## It sheds parts rather than squeezing them
+///
+/// The row is laid out three ways, and which one it takes is decided against the
+/// reader's text size, not the pixel width — what runs out at the narrow end is
+/// the text. Widest: everything, with the seat track in its own column. Middle:
+/// the track folds into the meta line as a plain «١١/١٤». Narrowest: the
+/// tracking badge drops from the trailing edge down into the meta line, and the
+/// top row keeps only the departure and the route, because a trailing badge and
+/// a departure column together leave a route nothing to be read in.
 class LiveTripCard extends StatelessWidget {
   final LiveTrip trip;
 
   /// This trip's live position, or `null` when it has never reported one.
   ///
   /// Passed in rather than read off [trip] because the roster's fix is only the
-  /// seed the board opened with; the feed Bloc holds the current one. A card
+  /// seed the board opened with; the feed Bloc holds the current one. A row
   /// reading `trip.lastFix` would keep showing the position the last roster
   /// refetch happened to carry, which after this change is up to two minutes old.
   final TrackedVehicle? vehicle;
@@ -41,113 +60,215 @@ class LiveTripCard extends StatelessWidget {
     this.onTap,
   });
 
+  /// At or above this the seat track gets a column of its own.
+  static const double _trackWidth = 620;
+
+  /// Below this the tracking badge leaves the trailing edge for the meta line.
+  static const double _badgeInlineWidth = 460;
+
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final text = Theme.of(context).textTheme;
     final health = vehicle?.healthAt(now) ?? TrackingHealth.unknown;
     final age = vehicle == null
         ? null
         : _nonNegative(now.difference(vehicle!.receivedAt));
+    final scale = MediaQuery.textScalerOf(context).scale(1).clamp(1.0, 2.0);
+    final radius = BorderRadius.circular(10);
 
-    final card = AppCard(
-      padding: const EdgeInsets.all(AppSpacing.medium),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    final body = LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final showTrack = width >= _trackWidth * scale;
+        final badgeTrails = width >= _badgeInlineWidth * scale;
+
+        final meta = Wrap(
+          spacing: AppSpacing.medium,
+          runSpacing: AppSpacing.xSmall,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            if (!badgeTrails) TrackingHealthBadge(health: health),
+            _MetaChip(
+              icon: DashboardIcons.captain,
+              label: trip.driverName.trim().isEmpty
+                  ? 'بدون سائق'
+                  : trip.driverName,
+            ),
+            _MetaChip(
+              icon: DashboardIcons.vehicle,
+              label: trip.vehicleLabel.trim().isEmpty
+                  ? 'بدون مركبة'
+                  : trip.vehicleLabel,
+            ),
+            if (!showTrack)
+              _MetaChip(
+                icon: DashboardIcons.seats,
+                label: '${trip.bookedSeats}/${trip.capacity}',
+              ),
+            _MetaChip(
+              icon: Icons.my_location_rounded,
+              label: _trackingText(health: health, age: age),
+            ),
+            if (_reportsDeparture(now))
+              DepartureStatusBadge(trip: trip, now: now),
+          ],
+        );
+
+        final departure = SizedBox(
+          width: 56 * scale,
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              Text(
+                trip.departureTime.isEmpty ? '--:--' : trip.departureTime,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: text.titleSmall?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  fontFeatures: const [FontFeature.tabularFigures()],
+                ),
+              ),
+              Text(
+                trip.isInProgress ? 'انطلقت' : 'الصعود',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: text.labelSmall?.copyWith(
+                  color: DashboardColors.faintInk(context),
+                ),
+              ),
+            ],
+          ),
+        );
+
+        final route = Text(
+          trip.routeName.isEmpty ? 'رحلة بدون مسار' : trip.routeName,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: text.bodyMedium?.copyWith(fontWeight: FontWeight.w700),
+        );
+
+        final hairline = SizedBox(
+          width: 1,
+          height: 34,
+          child: ColoredBox(color: DashboardColors.divider(context)),
+        );
+
+        if (!badgeTrails) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  departure,
+                  const SizedBox(width: AppSpacing.small),
+                  hairline,
+                  const SizedBox(width: AppSpacing.medium),
+                  Expanded(child: route),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.xSmall),
+              meta,
+            ],
+          );
+        }
+
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            departure,
+            const SizedBox(width: AppSpacing.small),
+            hairline,
+            const SizedBox(width: AppSpacing.medium),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [route, const SizedBox(height: 2), meta],
+              ),
+            ),
+            if (showTrack) ...[
+              const SizedBox(width: AppSpacing.medium),
+              SizedBox(
+                width: 96 * scale,
+                child: Row(
                   children: [
-                    Text(
-                      trip.routeName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: text.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
+                    Expanded(
+                      child: AppProgressBar(progress: trip.occupancyRatio),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(width: AppSpacing.xSmall),
                     Text(
-                      trip.statusLabel,
-                      style: text.bodySmall?.copyWith(
-                        color: scheme.onSurfaceVariant,
+                      '${trip.bookedSeats}/${trip.capacity}',
+                      maxLines: 1,
+                      style: text.labelSmall?.copyWith(
+                        color: DashboardColors.mutedInk(context),
+                        fontFeatures: const [FontFeature.tabularFigures()],
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: AppSpacing.small),
-              TrackingHealthBadge(health: health),
             ],
-          ),
-
-          Builder(
-            builder: (context) {
-              final badge = DepartureStatusBadge(trip: trip, now: now);
-              if (trip.departureStatusAt(now) == DepartureStatus.pending ||
-                  trip.departureStatusAt(now) == DepartureStatus.unknown) {
-                return const SizedBox.shrink();
-              }
-              return Padding(
-                padding: const EdgeInsets.only(top: AppSpacing.small),
-                child: Align(
-                  alignment: AlignmentDirectional.centerStart,
-                  child: badge,
-                ),
-              );
-            },
-          ),
-          const SizedBox(height: AppSpacing.medium),
-          _MetaRow(
-            icon: Icons.person_rounded,
-            label: trip.driverName,
-            secondary: trip.driverPhone.isEmpty ? null : trip.driverPhone,
-          ),
-          const SizedBox(height: AppSpacing.xSmall),
-          _MetaRow(
-            icon: Icons.directions_bus_rounded,
-            label: trip.vehicleLabel,
-            secondary: trip.departureTime.isEmpty
-                ? null
-                : 'الانطلاق ${trip.departureTime}',
-          ),
-          const SizedBox(height: AppSpacing.medium),
-          _OccupancyBar(
-            booked: trip.bookedSeats,
-            capacity: trip.capacity,
-            ratio: trip.occupancyRatio,
-          ),
-          const SizedBox(height: AppSpacing.small),
-          _TrackingLine(health: health, age: age, fix: vehicle?.fix),
-        ],
-      ),
+            const SizedBox(width: AppSpacing.medium),
+            TrackingHealthBadge(health: health),
+          ],
+        );
+      },
     );
 
-    if (onTap == null) return card;
+    final surface = Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.small,
+        vertical: AppSpacing.small,
+      ),
+      decoration: BoxDecoration(
+        color: selected ? DashboardColors.tableRowHover(context) : null,
+        borderRadius: radius,
+        border: Border.all(
+          color: selected
+              ? DashboardColors.accentFill(context)
+              : Colors.transparent,
+        ),
+      ),
+      child: body,
+    );
+
+    if (onTap == null) return surface;
 
     return Semantics(
       button: true,
       selected: selected,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppTokens.radius),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 160),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppTokens.radius),
-            border: Border.all(
-              color: selected ? scheme.primary : Colors.transparent,
-              width: 2,
-            ),
-          ),
-          child: card,
-        ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: radius,
+        child: InkWell(onTap: onTap, borderRadius: radius, child: surface),
       ),
     );
+  }
+
+  /// Whether [DepartureStatusBadge] would actually draw something at [at].
+  ///
+  /// Asked here rather than letting the badge shrink itself away, because a
+  /// zero-size child inside a [Wrap] still takes the run's spacing — a gap in the
+  /// meta line with nothing in it.
+  bool _reportsDeparture(DateTime at) => switch (trip.departureStatusAt(at)) {
+    DepartureStatus.overdue || DepartureStatus.due => true,
+    DepartureStatus.departed => trip.departureDelayAt(at) != null,
+    DepartureStatus.pending || DepartureStatus.unknown => false,
+  };
+
+  /// What the feed can honestly claim about this trip, in the width of a meta
+  /// chip.
+  static String _trackingText({
+    required TrackingHealth health,
+    required Duration? age,
+  }) {
+    if (health == TrackingHealth.unknown || age == null) {
+      return 'لم يُشارك الموقع بعد';
+    }
+    return 'آخر تحديث ${liveOpsAgo(age)}';
   }
 
   /// A captain's clock running ahead of the desk's must never render as a
@@ -155,127 +276,34 @@ class LiveTripCard extends StatelessWidget {
   static Duration _nonNegative(Duration d) => d.isNegative ? Duration.zero : d;
 }
 
-class _MetaRow extends StatelessWidget {
+/// One fact on the row's meta line — a small glyph and a muted label, the same
+/// mark Home's departure board uses for a captain and a vehicle.
+///
+/// The label is [Flexible] rather than plain: these carry a driver's full name
+/// inside a [Wrap] that may be a hundred pixels wide, and a `Text` in an
+/// unflexed `Row` has no width to ellipsize against.
+class _MetaChip extends StatelessWidget {
+  const _MetaChip({required this.icon, required this.label});
+
   final IconData icon;
   final String label;
-  final String? secondary;
-
-  const _MetaRow({required this.icon, required this.label, this.secondary});
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final text = Theme.of(context).textTheme;
+    final color = DashboardColors.mutedInk(context);
     return Row(
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 16, color: scheme.onSurfaceVariant),
-        const SizedBox(width: AppSpacing.small),
-        Expanded(
+        Icon(icon, size: 14, color: color),
+        const SizedBox(width: 4),
+        Flexible(
           child: Text(
             label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: text.bodyMedium,
-          ),
-        ),
-        if (secondary != null) ...[
-          const SizedBox(width: AppSpacing.small),
-
-          Flexible(
-            child: Text(
-              secondary!,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-}
-
-class _OccupancyBar extends StatelessWidget {
-  final int booked;
-  final int capacity;
-  final double ratio;
-
-  const _OccupancyBar({
-    required this.booked,
-    required this.capacity,
-    required this.ratio,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final text = Theme.of(context).textTheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Text(
-              'الإشغال',
-              style: text.labelSmall?.copyWith(color: scheme.onSurfaceVariant),
-            ),
-            const Spacer(),
-            Text(
-              '$booked / $capacity',
-              style: text.labelMedium?.copyWith(fontWeight: FontWeight.w700),
-            ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(999),
-          child: LinearProgressIndicator(
-            value: ratio.clamp(0, 1),
-            minHeight: 6,
-            backgroundColor: scheme.surfaceContainerHighest,
-            valueColor: AlwaysStoppedAnimation(scheme.primary),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _TrackingLine extends StatelessWidget {
-  final TrackingHealth health;
-  final Duration? age;
-  final LiveFix? fix;
-
-  const _TrackingLine({required this.health, required this.age, this.fix});
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final text = Theme.of(context).textTheme;
-
-    final String message;
-    if (health == TrackingHealth.unknown || age == null) {
-      message = 'لم يُشارك الموقع بعد';
-    } else {
-      final speed = fix?.speedKph;
-      final speedText = (speed != null && speed >= 1)
-          ? ' · ${speed.round()} كم/س'
-          : '';
-      message = 'آخر تحديث ${liveOpsAgo(age!)}$speedText';
-    }
-
-    return Row(
-      children: [
-        Icon(
-          Icons.my_location_rounded,
-          size: 14,
-          color: scheme.onSurfaceVariant,
-        ),
-        const SizedBox(width: 6),
-        Expanded(
-          child: Text(
-            message,
-            style: text.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+            style: Theme.of(
+              context,
+            ).textTheme.labelSmall?.copyWith(color: color),
           ),
         ),
       ],

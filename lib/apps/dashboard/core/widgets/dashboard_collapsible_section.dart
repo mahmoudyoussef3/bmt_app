@@ -339,11 +339,7 @@ class _SectionHeader extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 if (icon != null) ...[
-                  Icon(
-                    icon,
-                    color: DashboardColors.mutedInk(context),
-                    size: 18,
-                  ),
+                  DashboardSectionGlyph(icon: icon!),
                   const SizedBox(width: AppSpacing.small),
                 ],
                 Expanded(
@@ -387,6 +383,46 @@ class _SectionHeader extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// The chip a panel or section wears in place of a bare header icon.
+///
+/// A titled card and a KPI tile are the console's two containers, and until
+/// this existed they announced themselves in two different ways — the tile with
+/// a glyph on a wash, the panel with a loose 18px icon floating beside its
+/// title. One shape for both is what makes a page of cards read as one system;
+/// it also gives the header a fixed-width leading column, so titles line up
+/// down a column of stacked panels instead of starting wherever their glyph
+/// happened to end.
+///
+/// Deliberately **neutral**, not status-tinted: a console screen carries up to
+/// nine panels at once, and nine coloured squares down a page would spend the
+/// whole colour budget on furniture. Colour stays where it means something —
+/// the status chips, the queue tiles, the KPI glyphs.
+class DashboardSectionGlyph extends StatelessWidget {
+  const DashboardSectionGlyph({super.key, required this.icon, this.size = 30});
+
+  final IconData icon;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: DashboardColors.nested(context),
+        borderRadius: BorderRadius.circular(size * 0.27),
+        border: Border.all(color: DashboardColors.border(context)),
+      ),
+      child: Icon(
+        icon,
+        size: size * 0.56,
+        color: DashboardColors.mutedInk(context),
       ),
     );
   }

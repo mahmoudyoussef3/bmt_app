@@ -182,7 +182,10 @@ class _QueueTile extends StatelessWidget {
     final radius = BorderRadius.circular(10);
 
     return Material(
-      color: DashboardColors.panel(context),
+      // Nested-tile tone, one step up the surface ladder from the panel it
+      // sits in — a queue is an object inside the card, not an outline drawn
+      // on it.
+      color: DashboardColors.nested(context),
       borderRadius: radius,
       child: InkWell(
         onTap: () => onOpenModule(spec.route),
@@ -318,7 +321,7 @@ class _AlertRow extends StatelessWidget {
     final radius = BorderRadius.circular(8);
 
     return Material(
-      color: DashboardColors.panel(context),
+      color: DashboardColors.nested(context),
       borderRadius: radius,
       child: InkWell(
         onTap: onTap,

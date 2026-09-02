@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_empty_state.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_pager.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_results_header.dart';
+import 'package:bmt_app/apps/dashboard/features/fleet/overview/presentation/widgets/fleet_format.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/driver_operations.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_workspace.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/widgets/fleet_shared_widgets.dart';
@@ -38,14 +41,15 @@ class FleetDriversCardList extends StatelessWidget {
     return workspace.vehicles.where((v) => v.id == vehicleId).firstOrNull;
   }
 
-  Color _healthColor(BuildContext context, DriverHealthLevel health) {
-    final scheme = Theme.of(context).colorScheme;
-    return switch (health) {
-      DriverHealthLevel.healthy => scheme.primary,
-      DriverHealthLevel.warning => scheme.tertiary,
-      DriverHealthLevel.critical => scheme.error,
-    };
-  }
+  /// The same success/warning/error tones the drivers *table* paints
+  /// readiness in — the two layouts are the same list at two widths, and a
+  /// driver who is green in one and blue in the other reads as two records.
+  Color _healthColor(BuildContext context, DriverHealthLevel health) =>
+      context.status(switch (health) {
+        DriverHealthLevel.healthy => AppStatusTone.success,
+        DriverHealthLevel.warning => AppStatusTone.warning,
+        DriverHealthLevel.critical => AppStatusTone.error,
+      }).ink;
 
   @override
   Widget build(BuildContext context) {
@@ -71,11 +75,12 @@ class FleetDriversCardList extends StatelessWidget {
       children: [
         LayoutBuilder(
           builder: (context, constraints) {
-            final columns = constraints.maxWidth >= 1180 ? 2 : 1;
-            final gap = AppSpacing.medium;
-            final cardWidth = columns == 1
-                ? constraints.maxWidth
-                : (constraints.maxWidth - gap) / 2;
+            // The console's one card-grid rule, so الأسطول breaks to two and
+            // three columns at the same widths as every other list module.
+            const gap = AppSpacing.medium;
+            final columns = dashboardCardColumnsFor(constraints.maxWidth);
+            final cardWidth =
+                (constraints.maxWidth - gap * (columns - 1)) / columns;
 
             return Wrap(
               spacing: gap,
@@ -100,9 +105,8 @@ class FleetDriversCardList extends StatelessWidget {
             );
           },
         ),
-        const SizedBox(height: AppSpacing.medium),
-        _FleetCardsPagination(
-          total: drivers.length,
+        DashboardPagerBar(
+          totalLabel: 'الإجمالي ${FleetFormat.count(drivers.length)} سائق',
           currentPage: page,
           pages: pages,
           onPageChanged: onPageChanged,
@@ -155,6 +159,7 @@ class _DriverListCard extends StatelessWidget {
               FleetAvatar(
                 label: driver.imageLabel,
                 profileImageUrl: driver.profileImageUrl,
+                ringColor: healthColor,
               ),
               const SizedBox(width: AppSpacing.medium),
               Expanded(
@@ -218,18 +223,28 @@ class _DriverListCard extends StatelessWidget {
                 color: scheme.onSurfaceVariant,
               ),
               const SizedBox(width: 4),
-              Text(
-                'الرخصة ${driver.licenseExpiry}',
-                style: textTheme.bodySmall?.copyWith(
-                  color: driver.isLicenseExpired
-                      ? scheme.error
-                      : driver.isLicenseExpiringSoon
-                      ? scheme.tertiary
-                      : scheme.onSurfaceVariant,
-                  fontWeight:
-                      driver.isLicenseExpired || driver.isLicenseExpiringSoon
-                      ? FontWeight.w800
-                      : null,
+              // Never the raw `2027-09-25`: a hyphenated ISO date inside an
+              // RTL line renders its parts in the opposite order, so the card
+              // was showing "25-09-2027" for a licence expiring in 2027.
+              Flexible(
+                child: Text(
+                  driver.isLicenseExpired || driver.isLicenseExpiringSoon
+                      ? 'الرخصة ${FleetFormat.dateText(driver.licenseExpiry)}'
+                            ' • ${FleetFormat.remainingShort(driver.licenseExpiry)}'
+                      : 'الرخصة ${FleetFormat.dateText(driver.licenseExpiry)}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: textTheme.bodySmall?.copyWith(
+                    color: driver.isLicenseExpired
+                        ? context.status(AppStatusTone.error).ink
+                        : driver.isLicenseExpiringSoon
+                        ? context.status(AppStatusTone.warning).ink
+                        : scheme.onSurfaceVariant,
+                    fontWeight:
+                        driver.isLicenseExpired || driver.isLicenseExpiringSoon
+                        ? FontWeight.w800
+                        : null,
+                  ),
                 ),
               ),
             ],
@@ -238,19 +253,16 @@ class _DriverListCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              IconButton(
+              FleetRowActionButton(
                 tooltip: 'تعديل',
+                icon: Icons.edit_outlined,
                 onPressed: onEdit,
-                icon: const Icon(Icons.edit_outlined, size: 19),
               ),
-              IconButton(
+              FleetRowActionButton(
                 tooltip: 'حذف',
+                icon: Icons.delete_outline_rounded,
                 onPressed: onDelete,
-                icon: Icon(
-                  Icons.delete_outline_rounded,
-                  size: 19,
-                  color: scheme.error,
-                ),
+                color: scheme.error,
               ),
               const SizedBox(width: AppSpacing.xSmall),
               FilledButton.tonalIcon(
@@ -320,13 +332,18 @@ class _VehicleLine extends StatelessWidget {
     }
 
     final scheme = Theme.of(context).colorScheme;
+    final type = FleetFormat.vehicleType(assigned.type);
     return Row(
       children: [
         Icon(Icons.directions_bus_rounded, size: 16, color: scheme.primary),
         const SizedBox(width: AppSpacing.xSmall),
         Expanded(
           child: Text(
-            '${assigned.vehicleNumber} • ${assigned.type} • ${assigned.capacity} مقعد',
+            [
+              assigned.vehicleNumber,
+              if (type.isNotEmpty) type,
+              '${FleetFormat.count(assigned.capacity)} مقعد',
+            ].join(' • '),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -363,58 +380,6 @@ class _ReasonLine extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-class _FleetCardsPagination extends StatelessWidget {
-  const _FleetCardsPagination({
-    required this.total,
-    required this.currentPage,
-    required this.pages,
-    required this.onPageChanged,
-  });
-
-  final int total;
-  final int currentPage;
-  final int pages;
-  final ValueChanged<int> onPageChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppSpacing.medium,
-        vertical: AppSpacing.small,
-      ),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerHighest.withAlpha(36),
-        borderRadius: BorderRadius.circular(AppTokens.radius),
-        border: Border.all(color: scheme.outlineVariant.withAlpha(80)),
-      ),
-      child: Row(
-        children: [
-          Text('الإجمالي $total'),
-          const Spacer(),
-          Text('صفحة ${currentPage + 1} من $pages'),
-          const SizedBox(width: AppSpacing.small),
-          IconButton(
-            tooltip: 'السابق',
-            onPressed: currentPage == 0
-                ? null
-                : () => onPageChanged(currentPage - 1),
-            icon: const Icon(DashboardIcons.paginationPrevious),
-          ),
-          IconButton(
-            tooltip: 'التالي',
-            onPressed: currentPage >= pages - 1
-                ? null
-                : () => onPageChanged(currentPage + 1),
-            icon: const Icon(DashboardIcons.paginationNext),
-          ),
-        ],
-      ),
     );
   }
 }

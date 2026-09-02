@@ -4,6 +4,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../domain/entities/captain_request.dart';
 import '../../domain/usecases/captain_requests_usecases.dart';
+import '../models/captain_request_queue_tab.dart';
+import '../models/captain_request_sort.dart';
 import 'captain_requests_state.dart';
 
 class CaptainRequestsCubit extends Cubit<CaptainRequestsState> {
@@ -39,9 +41,63 @@ class CaptainRequestsCubit extends Cubit<CaptainRequestsState> {
     _sub?.cancel();
     _sub = _watchRequests().listen((requests) {
       final current = state;
-      final err = current is CaptainRequestsLoaded ? current.actionError : null;
-      emit(CaptainRequestsLoaded(requests: requests, actionError: err));
+      // Rebuild *from* the current state rather than fresh: a realtime row
+      // arriving while the operator has a queue open and a search typed must
+      // not silently reset them to the module's defaults.
+      emit(
+        current is CaptainRequestsLoaded
+            ? current.copyWith(
+                requests: requests,
+                actionError: current.actionError,
+              )
+            : CaptainRequestsLoaded(requests: requests),
+      );
     }, onError: (_) {});
+  }
+
+  /// Opens one queue. The tab sets the status filter and nothing else, so the
+  /// operator's search survives the switch.
+  void switchTab(CaptainRequestQueueTab tab) {
+    final current = state;
+    if (current is! CaptainRequestsLoaded) return;
+    final status = tab.status;
+    emit(
+      status == null
+          ? current.copyWith(clearStatusFilter: true)
+          : current.copyWith(filterStatus: status),
+    );
+  }
+
+  void setSearchQuery(String value) {
+    final current = state;
+    if (current is! CaptainRequestsLoaded) return;
+    emit(current.copyWith(searchQuery: value));
+  }
+
+  /// Sets the ordering, flipping the direction when handed the key already in
+  /// force — which is what tapping a sorted column header means.
+  void setSort(CaptainRequestSort sort) {
+    final current = state;
+    if (current is! CaptainRequestsLoaded) return;
+    emit(
+      current.sort == sort
+          ? current.copyWith(sortAscending: !current.sortAscending)
+          : current.copyWith(sort: sort, sortAscending: false),
+    );
+  }
+
+  void setFilterWindow(CaptainRequestWindow window) {
+    final current = state;
+    if (current is! CaptainRequestsLoaded) return;
+    emit(current.copyWith(filterWindow: window));
+  }
+
+  void clearFilters() {
+    final current = state;
+    if (current is! CaptainRequestsLoaded) return;
+    emit(
+      current.copyWith(searchQuery: '', filterWindow: CaptainRequestWindow.all),
+    );
   }
 
   /// Marks the request approved and links the driver just created for it.

@@ -2,7 +2,10 @@
 library;
 
 enum CaptainRequestStatus {
-  pending('قيد المراجعة'),
+  /// «بانتظار القرار», not «قيد المراجعة»: the queue tab, the KPI tile and this
+  /// badge all name the same set of rows, and the module read as two different
+  /// vocabularies while they disagreed.
+  pending('بانتظار القرار'),
   approved('مقبول'),
   rejected('مرفوض');
 

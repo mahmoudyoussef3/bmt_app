@@ -5,6 +5,7 @@ import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
 import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/charts/chart_palette.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/charts/dashboard_stacked_bar.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_panel.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 
@@ -169,6 +170,39 @@ class _RevenueEquation extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // The picture of the arithmetic, above the arithmetic itself. Five
+        // amounts read across a panel are five amounts; one bar split three
+        // ways is the sentence they add up to — *this is what the period
+        // collected, and this is what was given back out of it* — and it is
+        // the only place on the page where a 550-pound refund against a
+        // 108,000-pound month is visible as the rounding error it is.
+        if (hasWallet && collected > 0) ...[
+          DashboardStackedBar(
+            title: 'تركيبة المحصّل',
+            trailingNote: money(collected),
+            segments: [
+              DashboardBarSegment(
+                label: 'بعد الحوافز',
+                value: contribution < 0 ? 0 : contribution,
+                valueLabel: money(contribution),
+                color: palette.positive,
+              ),
+              DashboardBarSegment(
+                label: 'الحوافز',
+                value: incentives,
+                valueLabel: money(incentives),
+                color: palette.accent,
+              ),
+              DashboardBarSegment(
+                label: 'المستردات',
+                value: refunds,
+                valueLabel: money(refunds),
+                color: palette.negative,
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.medium),
+        ],
         Wrap(
           spacing: AppSpacing.medium,
           runSpacing: AppSpacing.small,

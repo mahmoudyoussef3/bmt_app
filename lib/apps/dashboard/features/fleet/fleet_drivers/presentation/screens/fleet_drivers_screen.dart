@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/driver_operations.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/shared/domain/entities/fleet_workspace.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_drivers/presentation/cubit/fleet_drivers_cubit.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_drivers/presentation/cubit/fleet_drivers_state.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_drivers/presentation/widgets/fleet_drivers_table.dart';
+import 'package:bmt_app/apps/dashboard/features/fleet/fleet_drivers/presentation/widgets/fleet_drivers_toolbar.dart';
+import 'package:bmt_app/apps/dashboard/features/fleet/shared/presentation/models/fleet_queue.dart';
+import 'package:bmt_app/apps/dashboard/features/fleet/overview/presentation/widgets/fleet_format.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_results_header.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_drivers/presentation/widgets/fleet_drivers_card_list.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_drivers/presentation/widgets/fleet_driver_details_view.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_drivers/presentation/widgets/fleet_driver_form_view.dart';
@@ -17,21 +21,7 @@ import 'package:bmt_app/core/theme/app_layout.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
 import 'package:bmt_app/core/widgets/async_state_view.dart';
 import 'package:bmt_app/core/widgets/app_snackbar.dart';
-import 'package:bmt_app/core/widgets/debounced_search_field.dart';
 import 'package:bmt_app/core/theme/tokens.dart';
-
-enum _DriverOpsFilter {
-  all('الكل'),
-  available('متاح الآن'),
-  assigned('معين'),
-  needsAttention('يحتاج متابعة'),
-  noVehicle('بدون مركبة'),
-  suspended('موقوف');
-
-  const _DriverOpsFilter(this.label);
-
-  final String label;
-}
 
 class FleetDriversScreen extends StatefulWidget {
   final ValueChanged<bool>? onViewStateChanged;
@@ -57,7 +47,14 @@ class FleetDriversScreen extends StatefulWidget {
     this.onViewStateChanged,
     this.focusRequest,
     this.onFocusResolved,
+    this.queueRequest,
   });
+
+  /// A queue this tab should open on, handed down by a KPI tile on the module
+  /// header above it. A fresh [FleetDriverQueueRequest] identifies each request
+  /// even when it names the same queue twice — see the type's doc comment for
+  /// why a plain enum value cannot.
+  final FleetDriverQueueRequest? queueRequest;
 
   @override
   State<FleetDriversScreen> createState() => _FleetDriversScreenState();
@@ -65,16 +62,24 @@ class FleetDriversScreen extends StatefulWidget {
 
 class _FleetDriversScreenState extends State<FleetDriversScreen> {
   int _page = 0;
-  final int _pageSize = 8;
-  FleetSortField _sortField = FleetSortField.name;
+  final int _pageSize = 12;
+  FleetDriverSort _sort = FleetDriverSort.name;
   bool _sortAscending = true;
-  _DriverOpsFilter _opsFilter = _DriverOpsFilter.all;
+
+  /// The queue strip's selection — whether this driver can be put on a bus.
+  FleetDriverQueue _queue = FleetDriverQueue.all;
+
+  /// The filter fold's selection — what state their file is in. A separate
+  /// axis on purpose.
+  FleetDriverStatus? _recordStatus;
+
   String? _pendingFocusId;
 
   @override
   void initState() {
     super.initState();
     _pendingFocusId = widget.focusRequest?.id;
+    _applyQueueRequest(widget.queueRequest);
   }
 
   @override
@@ -84,17 +89,30 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
         widget.focusRequest != oldWidget.focusRequest) {
       _pendingFocusId = widget.focusRequest!.id;
     }
+    if (widget.queueRequest != null &&
+        widget.queueRequest != oldWidget.queueRequest) {
+      _applyQueueRequest(widget.queueRequest);
+    }
+  }
+
+  /// Opens the queue a KPI tile asked for. Called from [initState] as well as
+  /// [didUpdateWidget], because a tile tapped while the *other* tab was active
+  /// builds this one for the first time with the request already in hand.
+  void _applyQueueRequest(FleetDriverQueueRequest? request) {
+    if (request == null) return;
+    _queue = request.queue ?? FleetDriverQueue.all;
+    _recordStatus = request.recordStatus;
+    _page = 0;
   }
 
   List<FleetDriver> _sortDrivers(List<FleetDriver> list) {
     final sorted = [...list];
     sorted.sort((a, b) {
-      final cmp = switch (_sortField) {
-        FleetSortField.licenseExpiry => a.licenseExpiry.compareTo(
+      final cmp = switch (_sort) {
+        FleetDriverSort.licenseExpiry => a.licenseExpiry.compareTo(
           b.licenseExpiry,
         ),
-        FleetSortField.status => a.status.label.compareTo(b.status.label),
-        _ => a.name.compareTo(b.name),
+        FleetDriverSort.name => a.name.compareTo(b.name),
       };
       return _sortAscending ? cmp : -cmp;
     });
@@ -105,30 +123,36 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
     List<FleetDriver> drivers,
     FleetWorkspace workspace,
   ) {
-    return drivers.where((driver) {
-      final snapshot = DriverOperations.snapshot(driver, workspace);
-      return switch (_opsFilter) {
-        _DriverOpsFilter.all => true,
-        _DriverOpsFilter.available => snapshot.canAssign,
-        _DriverOpsFilter.assigned =>
-          snapshot.status == DriverOperationalStatus.assigned,
-        _DriverOpsFilter.needsAttention => snapshot.requiresAttention,
-        _DriverOpsFilter.noVehicle => snapshot.assignedVehicle == null,
-        _DriverOpsFilter.suspended =>
-          driver.status == FleetDriverStatus.suspended,
-      };
-    }).toList();
+    return drivers
+        .where(
+          (driver) =>
+              _queue.matches(driver, workspace) &&
+              (_recordStatus == null || driver.status == _recordStatus),
+        )
+        .toList();
   }
 
-  /// Sets the sort field; tapping the active field flips direction.
-  void _applySort(FleetSortField field) {
+  /// "عرض ١–١٢ من ٤٥" — the same range strip every list module puts above its
+  /// rows.
+  String _rangeLabel(int total) {
+    if (total == 0) return 'لا توجد نتائج';
+    final first = _page * _pageSize + 1;
+    final last = ((_page + 1) * _pageSize).clamp(0, total);
+    return 'عرض ${FleetFormat.count(first)}–${FleetFormat.count(last)} '
+        'من ${FleetFormat.count(total)}';
+  }
+
+  /// Sets the ordering, flipping the direction when handed the key already in
+  /// force — which is what tapping a sorted column header means.
+  void _applySort(FleetDriverSort field) {
     setState(() {
-      if (_sortField == field) {
+      if (_sort == field) {
         _sortAscending = !_sortAscending;
       } else {
-        _sortField = field;
+        _sort = field;
         _sortAscending = true;
       }
+      _page = 0;
     });
   }
 
@@ -297,21 +321,40 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
           }
         }
 
-        final toolbar = _DriverTableToolbar(
-          opsFilter: _opsFilter,
-          onOpsFilterChanged: (filter) {
+        final toolbar = FleetDriversToolbar(
+          drivers: state.drivers,
+          workspace: workspace,
+          queue: _queue,
+          recordStatus: _recordStatus,
+          searchQuery: state.searchQuery,
+          sort: _sort,
+          sortAscending: _sortAscending,
+          onQueueChanged: (queue) {
             setState(() {
-              _opsFilter = filter;
+              _queue = queue;
               _page = 0;
             });
           },
-          onSearch: cubit.search,
-          sortField: _sortField,
-          sortAscending: _sortAscending,
-          onSortChanged: (field) => setState(() => _sortField = field),
-          onToggleSort: () => setState(() => _sortAscending = !_sortAscending),
+          onRecordStatusChanged: (status) {
+            setState(() {
+              _recordStatus = status;
+              _page = 0;
+            });
+          },
+          onSearch: (term) {
+            cubit.search(term);
+            setState(() => _page = 0);
+          },
+          onSort: _applySort,
+          onClearFilters: () {
+            cubit.search('');
+            setState(() {
+              _recordStatus = null;
+              _page = 0;
+            });
+          },
           selectedCount: state.selectedIds.length,
-          onArchive: state.selectedIds.isEmpty
+          onSuspendSelected: state.selectedIds.isEmpty
               ? null
               : () async {
                   final confirm = await showDialog<bool>(
@@ -345,39 +388,32 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
         final browsing = Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Align(
-              alignment: AlignmentDirectional.centerEnd,
-              child: FilledButton.icon(
-                onPressed: () => _showDriverForm(
-                  context,
-                  cubit,
-                  workspace,
-                  null,
-                  context.read<FleetDocumentsCubit>(),
-                ),
-                icon: const Icon(Icons.add_rounded),
-                label: const Text('إضافة سائق'),
-                style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 16,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppTokens.radius),
-                  ),
-                ),
-              ),
-            ),
+            toolbar,
             const SizedBox(height: AppSpacing.medium),
-            _buildListBody(
-              context,
-              state,
-              sorted,
-              workspace,
-              cubit,
-              isDesktop,
-              toolbar,
+            // The primary action lives on the results header, not in a lone
+            // right-aligned button above the list and not in the page header:
+            // «إضافة سائق» needs this tab's cubit and its documents cubit,
+            // which only exist below the module header.
+            DashboardResultsHeader(
+              icon: DashboardIcons.captains,
+              title: 'قائمة السائقين',
+              subtitle: _rangeLabel(sorted.length),
+              actions: [
+                FilledButton.icon(
+                  onPressed: () => _showDriverForm(
+                    context,
+                    cubit,
+                    workspace,
+                    null,
+                    context.read<FleetDocumentsCubit>(),
+                  ),
+                  icon: const Icon(DashboardIcons.add),
+                  label: const Text('إضافة سائق'),
+                ),
+              ],
             ),
+            const SizedBox(height: AppSpacing.small),
+            _buildListBody(context, state, sorted, workspace, cubit, isDesktop),
           ],
         );
 
@@ -437,20 +473,15 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
     FleetWorkspace workspace,
     FleetDriversCubit cubit,
     bool isDesktop,
-    Widget toolbar,
   ) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final useCards = !isDesktop || constraints.maxWidth < 1200;
+        final useCards =
+            !isDesktop || constraints.maxWidth < kDashboardTableBreakpoint;
         if (useCards) {
-          // No [OpsDataTable] card to host the toolbar in card-list mode, so
-          // it renders standalone above the cards instead — same controls,
-          // just not inside the table's bordered panel.
           return Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              toolbar,
-              const SizedBox(height: AppSpacing.medium),
               FleetDriversCardList(
                 drivers: sorted,
                 workspace: workspace,
@@ -474,7 +505,6 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
         return FleetDriversTable(
           drivers: sorted,
           workspace: workspace,
-          toolbar: toolbar,
           onView: (d) =>
               _openDriver(context, state, workspace, d, cubit, isDesktop),
           onEdit: (d) => _showDriverForm(
@@ -489,9 +519,9 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
           page: _page,
           pageSize: _pageSize,
           onPageChanged: (newPage) => setState(() => _page = newPage),
-          sortField: _sortField,
+          sort: _sort,
           sortAscending: _sortAscending,
-          onSortField: _applySort,
+          onSort: _applySort,
         );
       },
     );
@@ -591,219 +621,3 @@ class _FleetDriversScreenState extends State<FleetDriversScreen> {
     }
   }
 }
-
-class _DriverFilterBar extends StatelessWidget {
-  const _DriverFilterBar({required this.selected, required this.onSelected});
-
-  final _DriverOpsFilter selected;
-  final ValueChanged<_DriverOpsFilter> onSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: AppSpacing.small,
-      runSpacing: AppSpacing.small,
-      alignment: WrapAlignment.start,
-      children: _DriverOpsFilter.values.map((filter) {
-        final isSelected = selected == filter;
-        return ChoiceChip(
-          selected: isSelected,
-          label: Text(filter.label),
-          showCheckmark: false,
-          avatar: isSelected ? const Icon(Icons.check_rounded, size: 16) : null,
-          tooltip: 'تصفية السائقين حسب ${filter.label}',
-          onSelected: (_) => onSelected(filter),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppTokens.radiusLarge),
-          ),
-        );
-      }).toList(),
-    );
-  }
-}
-
-/// Search, ops filter chips and sort/bulk-archive controls — the EWT
-/// "isTable" toolbar shape, mirroring `_TripsTableToolbar` in
-/// `trips_screen.dart`. Rendered inside [FleetDriversTable]'s
-/// [OpsDataTable] card on desktop, and standalone above
-/// [FleetDriversCardList] on narrow/mobile, so the same controls stay
-/// reachable no matter which list rendering is active.
-class _DriverTableToolbar extends StatelessWidget {
-  const _DriverTableToolbar({
-    required this.opsFilter,
-    required this.onOpsFilterChanged,
-    required this.onSearch,
-    required this.sortField,
-    required this.sortAscending,
-    required this.onSortChanged,
-    required this.onToggleSort,
-    required this.selectedCount,
-    required this.onArchive,
-  });
-
-  final _DriverOpsFilter opsFilter;
-  final ValueChanged<_DriverOpsFilter> onOpsFilterChanged;
-  final ValueChanged<String> onSearch;
-  final FleetSortField sortField;
-  final bool sortAscending;
-  final ValueChanged<FleetSortField> onSortChanged;
-  final VoidCallback onToggleSort;
-  final int selectedCount;
-  final VoidCallback? onArchive;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final search = _DriverSearchField(onChanged: onSearch);
-        final filterChips = SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: _DriverFilterBar(
-            selected: opsFilter,
-            onSelected: onOpsFilterChanged,
-          ),
-        );
-        final controls = _DriverSortActions(
-          selectedCount: selectedCount,
-          sortField: sortField,
-          sortAscending: sortAscending,
-          onSortChanged: onSortChanged,
-          onToggleSort: onToggleSort,
-          onArchive: onArchive,
-        );
-
-        if (constraints.maxWidth < 760) {
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              search,
-              const SizedBox(height: AppSpacing.small),
-              filterChips,
-              const SizedBox(height: AppSpacing.small),
-              controls,
-            ],
-          );
-        }
-
-        return Row(
-          children: [
-            SizedBox(width: 260, child: search),
-            const SizedBox(width: AppSpacing.medium),
-            Expanded(child: filterChips),
-            const SizedBox(width: AppSpacing.medium),
-            controls,
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _DriverSearchField extends StatelessWidget {
-  const _DriverSearchField({required this.onChanged});
-
-  final ValueChanged<String> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return DebouncedSearchField(
-      hintText: 'ابحث بالاسم، الكود، أو رقم الهاتف...',
-      onChanged: onChanged,
-    );
-  }
-}
-
-class _DriverSortActions extends StatelessWidget {
-  const _DriverSortActions({
-    required this.selectedCount,
-    required this.sortField,
-    required this.sortAscending,
-    required this.onSortChanged,
-    required this.onToggleSort,
-    required this.onArchive,
-  });
-
-  final int selectedCount;
-  final FleetSortField sortField;
-  final bool sortAscending;
-  final ValueChanged<FleetSortField> onSortChanged;
-  final VoidCallback onToggleSort;
-  final VoidCallback? onArchive;
-
-  String get _sortLabel {
-    return switch (sortField) {
-      FleetSortField.status => 'الحالة',
-      FleetSortField.licenseExpiry => 'انتهاء الرخصة',
-      _ => 'الاسم',
-    };
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: AppSpacing.small,
-      runSpacing: AppSpacing.small,
-      alignment: WrapAlignment.end,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        MenuAnchor(
-          builder: (context, controller, child) {
-            return OutlinedButton.icon(
-              onPressed: () =>
-                  controller.isOpen ? controller.close() : controller.open(),
-              icon: const Icon(Icons.sort_rounded),
-              label: Text('ترتيب: $_sortLabel'),
-            );
-          },
-          menuChildren: [
-            MenuItemButton(
-              onPressed: () => onSortChanged(FleetSortField.name),
-              leadingIcon: sortField == FleetSortField.name
-                  ? const Icon(Icons.check_rounded)
-                  : null,
-              child: const Text('الاسم'),
-            ),
-            MenuItemButton(
-              onPressed: () => onSortChanged(FleetSortField.status),
-              leadingIcon: sortField == FleetSortField.status
-                  ? const Icon(Icons.check_rounded)
-                  : null,
-              child: const Text('الحالة'),
-            ),
-            MenuItemButton(
-              onPressed: () => onSortChanged(FleetSortField.licenseExpiry),
-              leadingIcon: sortField == FleetSortField.licenseExpiry
-                  ? const Icon(Icons.check_rounded)
-                  : null,
-              child: const Text('انتهاء الرخصة'),
-            ),
-          ],
-        ),
-        Tooltip(
-          message: sortAscending ? 'ترتيب تصاعدي' : 'ترتيب تنازلي',
-          child: IconButton.outlined(
-            onPressed: onToggleSort,
-            icon: Icon(
-              sortAscending
-                  ? Icons.arrow_upward_rounded
-                  : Icons.arrow_downward_rounded,
-            ),
-          ),
-        ),
-        if (selectedCount > 0)
-          FilledButton.tonalIcon(
-            onPressed: onArchive,
-            icon: const Icon(Icons.archive_outlined),
-            label: Text('أرشفة $selectedCount'),
-            style: FilledButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppTokens.radius),
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-}
-

@@ -78,7 +78,7 @@ class DashboardPanel extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Icon(icon, color: DashboardColors.mutedInk(context), size: 18),
+                DashboardSectionGlyph(icon: icon),
                 const SizedBox(width: AppSpacing.small),
                 Expanded(
                   child: Column(

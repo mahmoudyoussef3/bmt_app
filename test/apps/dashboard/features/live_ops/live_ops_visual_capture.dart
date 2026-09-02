@@ -29,6 +29,7 @@ import 'package:bmt_app/apps/dashboard/features/live_ops/domain/entities/live_op
 import 'package:bmt_app/apps/dashboard/features/live_ops/domain/entities/trip_incident.dart';
 import 'package:bmt_app/apps/dashboard/features/live_ops/domain/repositories/live_ops_repository.dart';
 import 'package:bmt_app/apps/dashboard/features/live_ops/domain/usecases/live_ops_usecases.dart';
+import 'package:bmt_app/apps/dashboard/features/live_ops/presentation/bloc/fleet_tracking_bloc.dart';
 import 'package:bmt_app/apps/dashboard/features/live_ops/presentation/cubit/live_ops_cubit.dart';
 import 'package:bmt_app/apps/dashboard/features/live_ops/presentation/screens/live_ops_screen.dart';
 import 'package:bmt_app/apps/dashboard/features/live_ops/presentation/widgets/incident_queue_section.dart';
@@ -138,6 +139,21 @@ Future<void> _capture(
   addTearDown(cubit.close);
   await cubit.load();
 
+  // The board now reads the feed above the fold — the «البث المباشر» pulse chip,
+  // the always-open KPI strip's at-risk tile, the outage banner — so the screen
+  // needs the position Bloc present even on a board with nothing on it. It is
+  // never started, so it just reports an empty, unconnected feed.
+  final feed = FleetTrackingBloc(
+    watchFleetFeed: const WatchFleetFeedUseCase(_QuietRepo()),
+    getLatestFixes: const GetLatestFleetFixesUseCase(_QuietRepo()),
+  );
+  // Fire-and-forget: an *awaited* `Bloc.close()` in a `testWidgets` tear-down
+  // never completes inside the fake-async zone, and the whole file hangs from
+  // the second capture onwards with no failure reported.
+  addTearDown(() {
+    feed.close();
+  });
+
   final key = GlobalKey();
   await tester.pumpWidget(
     MaterialApp(
@@ -148,13 +164,25 @@ Future<void> _capture(
         child: RepaintBoundary(
           key: key,
           child: Scaffold(
-            body: BlocProvider.value(value: cubit, child: child),
+            body: MultiBlocProvider(
+              providers: [
+                BlocProvider.value(value: cubit),
+                BlocProvider.value(value: feed),
+              ],
+              child: child,
+            ),
           ),
         ),
       ),
     ),
   );
-  await tester.pumpAndSettle();
+  // Bounded pumps, never `pumpAndSettle`. The board carries a pulsing tracking
+  // dot whenever a vehicle is reporting, so a settle on a live roster has
+  // nothing to settle to — and this harness exists to look at pixels, not to
+  // wait for an animation to end.
+  await tester.pump();
+  await tester.pump(const Duration(milliseconds: 350));
+  await tester.pump(const Duration(milliseconds: 350));
 
   await expectLater(find.byKey(key), matchesGoldenFile('_captures/$name.png'));
 }

@@ -107,6 +107,12 @@ class DashboardSectionIds {
   static const subscriptionDetailOrigin = 'subscriptions.detail.origin';
   static const subscriptionDetailActions = 'subscriptions.detail.actions';
 
+  static const fleetHeader = 'fleet.header';
+
+  /// One fold per tab: the roster and the buses narrow on different axes, so a
+  /// shared key would leave السائقون' panel open because المركبات' was.
+  static const fleetVehicleFilters = 'fleet.vehicles.filters';
+  static const fleetDriverFilters = 'fleet.drivers.filters';
   static const fleetDriverReadiness = 'fleet.driverReadiness';
   static const fleetVehicleStatus = 'fleet.vehicleStatus';
   static const fleetAttention = 'fleet.attention';
@@ -168,6 +174,9 @@ class DashboardSectionIds {
   static const platformBillingInvoices = 'platform.billing.invoices';
   // The six `platform.licenses.*` ids are gone: the office workspace's panels
   // are tabs now, and a tab that also folds is a control that hides a control.
+
+  static const captainRequestsHeader = 'captainRequests.header';
+  static const captainRequestsFilters = 'captainRequests.filters';
 
   static const ticketsHeader = 'tickets.header';
   static const ticketsFilters = 'tickets.filters';

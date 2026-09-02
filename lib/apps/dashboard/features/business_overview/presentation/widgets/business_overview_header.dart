@@ -4,6 +4,7 @@ import 'package:bmt_app/apps/dashboard/core/query/dashboard_query_caps.dart';
 import 'package:bmt_app/apps/dashboard/core/session/office_context.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
+import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_page_title_block.dart';
 import 'package:bmt_app/apps/dashboard/core/widgets/dashboard_segmented_bar.dart';
 import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/core/theme/spacing.dart';
@@ -69,43 +70,35 @@ class BusinessOverviewHeader extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        LayoutBuilder(
-          builder: (context, constraints) {
-            final identity = _Identity(
-              title: 'نظرة تنفيذية',
-              contextLine: [
-                officeName,
-                window.title,
-                'آخر تحديث ${_clock(overview.generatedAt)}',
-                if (isRefreshing) 'جارٍ التحديث…',
-              ].join(' · '),
-            );
-            final actions = _Actions(
-              onCreateTrip: onCreateTrip,
-              onRefresh: onRefresh,
-              isRefreshing: isRefreshing,
-            );
-
-            if (constraints.maxWidth <
-                MediaQuery.textScalerOf(context).scale(640)) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  identity,
-                  const SizedBox(height: AppSpacing.medium),
-                  actions,
-                ],
-              );
-            }
-            return Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Expanded(child: identity),
-                const SizedBox(width: AppSpacing.large),
-                actions,
-              ],
-            );
-          },
+        DashboardPageTitleBlock(
+          title: 'نظرة تنفيذية',
+          monogramSource: officeName,
+          meta: [
+            officeName,
+            window.title,
+            'آخر تحديث ${_clock(overview.generatedAt)}',
+          ],
+          trailingMeta: isRefreshing ? const _RefreshingNote() : null,
+          actions: [
+            if (onCreateTrip != null)
+              FilledButton.icon(
+                onPressed: onCreateTrip,
+                icon: const Icon(DashboardIcons.add, size: 18),
+                label: const Text('رحلة جديدة'),
+              ),
+            if (onRefresh != null)
+              OutlinedButton.icon(
+                onPressed: isRefreshing ? null : onRefresh,
+                icon: isRefreshing
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(DashboardIcons.refresh, size: 18),
+                label: const Text('تحديث'),
+              ),
+          ],
         ),
         Padding(
           padding: const EdgeInsets.only(top: AppSpacing.medium),
@@ -130,6 +123,36 @@ class BusinessOverviewHeader extends StatelessWidget {
               ),
               ..._verdictChips(overview),
             ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// «جارٍ التحديث…» beside the timestamp rather than replacing it: a reader
+/// mid-refresh still needs to know how old the figures on screen are.
+class _RefreshingNote extends StatelessWidget {
+  const _RefreshingNote();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SizedBox(
+          width: 11,
+          height: 11,
+          child: CircularProgressIndicator(
+            strokeWidth: 1.8,
+            color: DashboardColors.accentInk(context),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          'جارٍ التحديث…',
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: DashboardColors.accentInk(context),
           ),
         ),
       ],
@@ -180,82 +203,6 @@ List<Widget> _verdictChips(BusinessOverview overview) {
       tone: pending == 0 ? AppStatusTone.neutral : AppStatusTone.info,
     ),
   ];
-}
-
-class _Identity extends StatelessWidget {
-  const _Identity({required this.title, required this.contextLine});
-
-  final String title;
-  final String contextLine;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          title,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.headlineSmall,
-        ),
-        const SizedBox(height: 3),
-        Text(
-          contextLine,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: theme.textTheme.bodySmall?.copyWith(
-            color: DashboardColors.mutedInk(context),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// One primary action, one secondary — on the same baseline as the title,
-/// exactly where Home and [DashboardModuleHeader] put every other module's.
-class _Actions extends StatelessWidget {
-  const _Actions({
-    required this.isRefreshing,
-    this.onCreateTrip,
-    this.onRefresh,
-  });
-
-  final bool isRefreshing;
-  final VoidCallback? onCreateTrip;
-  final VoidCallback? onRefresh;
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: AppSpacing.small,
-      runSpacing: AppSpacing.small,
-      crossAxisAlignment: WrapCrossAlignment.center,
-      children: [
-        if (onCreateTrip != null)
-          FilledButton.icon(
-            onPressed: onCreateTrip,
-            icon: const Icon(DashboardIcons.add, size: 18),
-            label: const Text('رحلة جديدة'),
-          ),
-        if (onRefresh != null)
-          OutlinedButton.icon(
-            onPressed: isRefreshing ? null : onRefresh,
-            icon: isRefreshing
-                ? const SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(DashboardIcons.refresh, size: 18),
-            label: const Text('تحديث'),
-          ),
-      ],
-    );
-  }
 }
 
 /// Says so when the selected window reaches further back than the rows the

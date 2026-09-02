@@ -46,32 +46,40 @@ class KpiTrend {
 /// Unified KPI / stat tile used across every dashboard module.
 ///
 /// A plain surface card — border and radius carry its shape, not a tinted
-/// background — with an icon, a label, an optional [detail] line and a
-/// prominent [value]. Pair with [DashboardKpiGrid] for a responsive row of
-/// stats.
+/// background — with a tinted glyph chip, a label, an optional [detail] line
+/// and a prominent [value]. Pair with [DashboardKpiGrid] for a responsive row
+/// of stats.
 ///
 /// **Two shapes, one widget.** With neither [trend] nor [sparkline] the tile is
-/// the compact row it has always been — icon, label, value — and every existing
-/// call site is untouched. Supply either and it becomes the taller stacked
-/// form: label and movement on top, the value beneath, and the shape of the
-/// last few periods along the bottom. Give the grid a larger `itemExtent`
+/// the compact row it has always been — glyph, label, value — and every
+/// existing call site is untouched. Supply either and it becomes the taller
+/// stacked form: label and movement on top, the value beneath, and the shape of
+/// the last few periods along the bottom. Give the grid a larger `itemExtent`
 /// (~132) when using it, since the stacked form needs the height.
 ///
-/// [color], where a caller still passes one, tints only the icon — the EWT
+/// ## Where the colour goes
+///
+/// [color] tints **the glyph and its chip**, and nothing else. The EWT
 /// redesign's rule is "a KPI is a plain card, and the only colour on it is the
-/// trend chip"; the icon keeps a faint accent so the per-metric signal callers
-/// already encode in [color] is not silently discarded.
-class DashboardKpiCard extends StatelessWidget {
+/// trend chip"; a glyph in a tinted square is that rule's other half — it gives
+/// the tile an anchor the eye lands on before the digits, in the same shape the
+/// attention queues and the record tiles use, without turning four ordinary
+/// numbers into four coloured panels.
+///
+/// ## Why it reacts to a pointer
+///
+/// A KPI that can be drilled into is the shortest path from "that figure looks
+/// wrong" to the screen that explains it. When [onTap] is given the tile lifts
+/// on hover — a stronger border, a deeper shadow — so a reader can tell which
+/// of the four numbers in front of them is a door and which is a fact.
+class DashboardKpiCard extends StatefulWidget {
   final String label;
   final String value;
   final String? detail;
   final IconData icon;
   final Color? color;
 
-  /// Opens the module this number came from. A KPI that can be drilled into is
-  /// the shortest path from "that figure looks wrong" to the screen that
-  /// explains it — so when a caller passes this, the tile becomes a real
-  /// target: pointer cursor, hover wash and ripple, not just a decorated box.
+  /// Opens the module this number came from.
   final VoidCallback? onTap;
 
   /// Tooltip for the tappable tile, e.g. "افتح الحجوزات".
@@ -106,40 +114,65 @@ class DashboardKpiCard extends StatelessWidget {
     this.emphasized = false,
   });
 
+  @override
+  State<DashboardKpiCard> createState() => _DashboardKpiCardState();
+}
+
+class _DashboardKpiCardState extends State<DashboardKpiCard> {
+  bool _hovered = false;
+
   bool get _isStacked =>
-      emphasized || trend != null || (sparkline?.length ?? 0) >= 2;
+      widget.emphasized ||
+      widget.trend != null ||
+      (widget.sparkline?.length ?? 0) >= 2;
 
   @override
   Widget build(BuildContext context) {
     final tile = _isStacked ? _buildStackedTile(context) : _buildTile(context);
-    if (onTap == null) return tile;
+    if (widget.onTap == null) return tile;
 
     final radius = BorderRadius.circular(12);
-    final tappable = Material(
-      color: Colors.transparent,
-      borderRadius: radius,
-      child: InkWell(onTap: onTap, borderRadius: radius, child: tile),
+    final tappable = MouseRegion(
+      onEnter: (_) => _setHovered(true),
+      onExit: (_) => _setHovered(false),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: radius,
+        child: InkWell(onTap: widget.onTap, borderRadius: radius, child: tile),
+      ),
     );
-    final hint = tapHint;
+    final hint = widget.tapHint;
     return hint == null ? tappable : Tooltip(message: hint, child: tappable);
+  }
+
+  void _setHovered(bool value) {
+    if (_hovered == value) return;
+    setState(() => _hovered = value);
   }
 
   BoxDecoration _cardDecoration(BuildContext context) => BoxDecoration(
     color: DashboardColors.panel(context),
     borderRadius: BorderRadius.circular(12),
-    border: Border.all(color: DashboardColors.border(context)),
-    boxShadow: DashboardColors.panelShadow(context),
+    border: Border.all(
+      color: _hovered
+          ? DashboardColors.borderStrong(context)
+          : DashboardColors.border(context),
+    ),
+    boxShadow: _hovered
+        ? DashboardColors.floatingShadow(context)
+        : DashboardColors.panelShadow(context),
   );
 
-  /// The taller form: label + movement, then the value, then the shape.
+  /// The taller form: glyph + label + movement, then the value, then the shape.
   Widget _buildStackedTile(BuildContext context) {
     final theme = Theme.of(context);
-    final iconTint = color ?? DashboardColors.mutedInk(context);
-    final spark = sparkline;
-    final movement = trend;
+    final spark = widget.sparkline;
+    final movement = widget.trend;
 
-    return Container(
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 140),
+      curve: Curves.easeOut,
+      padding: const EdgeInsets.fromLTRB(14, 13, 14, 11),
       decoration: _cardDecoration(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -147,11 +180,11 @@ class DashboardKpiCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(icon, size: 16, color: iconTint),
-              const SizedBox(width: 7),
+              _GlyphChip(icon: widget.icon, color: widget.color, size: 28),
+              const SizedBox(width: 9),
               Expanded(
                 child: Text(
-                  label,
+                  widget.label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.labelMedium?.copyWith(
@@ -159,24 +192,28 @@ class DashboardKpiCard extends StatelessWidget {
                   ),
                 ),
               ),
-              if (movement != null) _TrendChip(trend: movement),
+              if (movement != null) ...[
+                const SizedBox(width: 6),
+                Flexible(child: _TrendChip(trend: movement)),
+              ],
             ],
           ),
           const SizedBox(height: 8),
           Text(
-            value,
+            widget.value,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: theme.textTheme.displayMedium?.copyWith(
               fontSize: 27,
               fontWeight: FontWeight.w800,
               letterSpacing: -0.6,
+              height: 1.1,
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),
-          if (detail != null || movement?.caption != null)
+          if (widget.detail != null || movement?.caption != null)
             Text(
-              detail ?? movement!.caption!,
+              widget.detail ?? movement!.caption!,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: theme.textTheme.labelSmall?.copyWith(
@@ -190,7 +227,7 @@ class DashboardKpiCard extends StatelessWidget {
                 alignment: Alignment.bottomCenter,
                 child: DashboardSparkline(
                   values: spark,
-                  color: color ?? DashboardColors.accentFill(context),
+                  color: widget.color ?? DashboardColors.accentFill(context),
                 ),
               ),
             ),
@@ -202,30 +239,31 @@ class DashboardKpiCard extends StatelessWidget {
 
   Widget _buildTile(BuildContext context) {
     final theme = Theme.of(context);
-    final iconTint = color ?? DashboardColors.mutedInk(context);
-    return Container(
-      padding: const EdgeInsets.fromLTRB(14, 14, 14, 12),
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 140),
+      curve: Curves.easeOut,
+      padding: const EdgeInsets.fromLTRB(13, 13, 13, 12),
       decoration: _cardDecoration(context),
       child: Row(
         children: [
-          Icon(icon, size: 16, color: iconTint),
-          const SizedBox(width: 7),
+          _GlyphChip(icon: widget.icon, color: widget.color, size: 26),
+          const SizedBox(width: 9),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  label,
+                  widget.label,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: theme.textTheme.labelMedium?.copyWith(
                     color: DashboardColors.mutedInk(context),
                   ),
                 ),
-                if (detail != null)
+                if (widget.detail != null)
                   Text(
-                    detail!,
+                    widget.detail!,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.labelSmall?.copyWith(
@@ -238,7 +276,7 @@ class DashboardKpiCard extends StatelessWidget {
           const SizedBox(width: AppSpacing.small),
           Flexible(
             child: Text(
-              value,
+              widget.value,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.end,
@@ -251,6 +289,47 @@ class DashboardKpiCard extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// The tile's anchor: the metric's glyph on a wash of its own colour, inside a
+/// hairline of the same hue.
+///
+/// The same square the attention queues and [OverviewRecordTile] draw, at KPI
+/// scale — which is what makes a number tile and a queue tile read as two
+/// members of one family rather than two designs. With no [color] it falls back
+/// to the console's neutral chip, so an untinted caller still gets the shape.
+class _GlyphChip extends StatelessWidget {
+  const _GlyphChip({required this.icon, required this.size, this.color});
+
+  final IconData icon;
+  final double size;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    final tint = color;
+    return Container(
+      width: size,
+      height: size,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: tint == null
+            ? DashboardColors.nested(context)
+            : tint.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(size * 0.29),
+        border: Border.all(
+          color: tint == null
+              ? DashboardColors.border(context)
+              : tint.withValues(alpha: 0.28),
+        ),
+      ),
+      child: Icon(
+        icon,
+        size: size * 0.58,
+        color: tint ?? DashboardColors.mutedInk(context),
       ),
     );
   }
@@ -282,11 +361,19 @@ class _TrendChip extends StatelessWidget {
         children: [
           Icon(trend.icon, size: 12, color: style.ink),
           const SizedBox(width: 2),
-          Text(
-            trend.label,
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: style.ink,
-              fontWeight: FontWeight.w700,
+          // Ellipsised, not sized to its text: a movement phrase is as long as
+          // the window it names («٢٣% عن الشهر السابق»), and on a narrow
+          // console that is wider than the half-tile it shares with the label.
+          Flexible(
+            child: Text(
+              trend.label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              softWrap: false,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: style.ink,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
         ],

@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 
-import 'package:bmt_app/core/theme/tokens.dart';
-
 import '../../domain/entities/live_ops_snapshot.dart';
 import 'live_ops_format.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 
-/// A pill that names a trip's tracking health and, for a live feed, pulses a
-/// dot so the operator can tell at a glance which vehicles they can actually
-/// see moving. The label carries the meaning; the colour and motion only
-/// reinforce it (never colour-only).
+/// Names a trip's tracking health and, for a live feed, pulses a dot so the
+/// operator can tell at a glance which vehicles they can actually see moving.
+/// The label carries the meaning; the colour and motion only reinforce it
+/// (never colour-only).
+///
+/// Drawn as the console's 6px status rect with its tone line, the same mark
+/// [DashboardStatusChip] puts in every table cell — not the full-radius pill it
+/// used to be. A pill reads as a button, and this one sits at the trailing edge
+/// of a row where every other module puts a status label.
 class TrackingHealthBadge extends StatelessWidget {
   final TrackingHealth health;
 
@@ -17,24 +20,31 @@ class TrackingHealthBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colors = context.status(trackingHealthTone(health));
+    final tone = trackingHealthTone(health);
+    final colors = context.status(tone);
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
         color: colors.tint,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: DashboardColors.statusLine(context, tone)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
           _HealthDot(color: colors.ink, pulsing: health == TrackingHealth.live),
-          const SizedBox(width: 6),
-          Text(
-            health.label,
-            style: Theme.of(context).textTheme.labelMedium?.copyWith(
-              color: colors.ink,
-              fontWeight: FontWeight.w800,
+          const SizedBox(width: 5),
+          Flexible(
+            child: Text(
+              health.label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: colors.ink,
+                fontWeight: FontWeight.w700,
+                height: 1.3,
+              ),
             ),
           ),
         ],
@@ -109,32 +119,6 @@ class _HealthDotState extends State<_HealthDot>
     return FadeTransition(
       opacity: Tween<double>(begin: 0.35, end: 1).animate(_controller),
       child: dot,
-    );
-  }
-}
-
-/// Small, non-animated dot + label used inside dense KPI tiles.
-class TrackingHealthTag extends StatelessWidget {
-  final TrackingHealth health;
-
-  const TrackingHealthTag({super.key, required this.health});
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.status(trackingHealthTone(health));
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: colors.tint,
-        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-      ),
-      child: Text(
-        health.label,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: colors.ink,
-          fontWeight: FontWeight.w800,
-        ),
-      ),
     );
   }
 }

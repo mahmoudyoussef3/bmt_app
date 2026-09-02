@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 import 'package:bmt_app/core/theme/colors.dart';
-import 'package:bmt_app/core/theme/tokens.dart';
 
 import '../../domain/entities/live_ops_snapshot.dart';
 import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
@@ -11,6 +10,9 @@ import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
 /// Only rendered when there is something to say: a trip comfortably ahead of
 /// its departure time, or one whose schedule could not be read, shows nothing
 /// rather than a reassuring badge nobody needs.
+///
+/// Wears the console's 6px status rect and its tone line, the same mark every
+/// other status label in the dashboard uses.
 class DepartureStatusBadge extends StatelessWidget {
   const DepartureStatusBadge({
     super.key,
@@ -26,49 +28,42 @@ class DepartureStatusBadge extends StatelessWidget {
     final status = trip.departureStatusAt(now);
     final delay = trip.departureDelayAt(now);
 
-    final (label, colors, icon) = switch (status) {
+    final (label, tone, icon) = switch (status) {
       DepartureStatus.overdue => (
         'تأخّر الانطلاق ${_delayText(delay)}',
-        (
-          context.status(AppStatusTone.error).tint,
-          context.status(AppStatusTone.error).ink,
-        ),
+        AppStatusTone.error,
         Icons.running_with_errors_rounded,
       ),
       DepartureStatus.due => (
         'موعد الانطلاق الآن',
-        (
-          context.status(AppStatusTone.warning).tint,
-          context.status(AppStatusTone.warning).ink,
-        ),
+        AppStatusTone.warning,
         Icons.schedule_rounded,
       ),
 
       DepartureStatus.departed when delay != null => (
         'انطلقت متأخرة ${_delayText(delay)}',
-        (
-          context.status(AppStatusTone.neutral).tint,
-          context.status(AppStatusTone.neutral).ink,
-        ),
+        AppStatusTone.neutral,
         Icons.history_rounded,
       ),
       _ => (null, null, null),
     };
 
-    if (label == null || colors == null || icon == null) {
+    if (label == null || tone == null || icon == null) {
       return const SizedBox.shrink();
     }
 
+    final style = context.status(tone);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: colors.$1,
-        borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+        color: style.tint,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: DashboardColors.statusLine(context, tone)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 13, color: colors.$2),
+          Icon(icon, size: 13, color: style.ink),
           const SizedBox(width: 5),
 
           Flexible(
@@ -77,8 +72,9 @@ class DepartureStatusBadge extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: colors.$2,
-                fontWeight: FontWeight.w800,
+                color: style.ink,
+                fontWeight: FontWeight.w700,
+                height: 1.3,
               ),
             ),
           ),

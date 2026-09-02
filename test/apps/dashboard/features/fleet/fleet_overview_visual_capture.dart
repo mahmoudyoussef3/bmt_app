@@ -21,10 +21,10 @@ import 'package:flutter/services.dart' show FontLoader;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:bmt_app/core/theme/app_dark_colors.dart';
-import 'package:bmt_app/core/theme/app_light_colors.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_color_scheme.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_dark_colors.dart';
+import 'package:bmt_app/apps/dashboard/core/theme/dashboard_light_colors.dart';
 import 'package:bmt_app/core/theme/app_surface_style.dart';
-import 'package:bmt_app/core/theme/colors.dart';
 import 'package:bmt_app/apps/dashboard/core/di/dashboard_di.dart';
 import 'package:bmt_app/apps/dashboard/core/ui_state/dashboard_section_state_store.dart';
 import 'package:bmt_app/apps/dashboard/features/fleet/fleet_documents/presentation/cubit/fleet_documents_cubit.dart';
@@ -101,6 +101,65 @@ void main() {
 
   testWidgets('the full page, dark', (tester) async {
     await _capture(tester, 'fleet_overview_2_full_dark', dark: true);
+  });
+
+  testWidgets('the vehicles tab, light', (tester) async {
+    await _capture(
+      tester,
+      'fleet_overview_3_vehicles_light',
+      dark: false,
+      initialTab: FleetTab.vehicles,
+    );
+  });
+
+  /// The width the module actually gets on a 1440px laptop: the shell's 256px
+  /// sidebar comes out of it first. This is where the fleet tables used to be
+  /// permanently scrolled sideways, so it is the capture that proves the column
+  /// budget fits.
+  testWidgets('console width — the drivers table with the sidebar taken out', (
+    tester,
+  ) async {
+    await _capture(
+      tester,
+      'fleet_overview_5_drivers_console_light',
+      dark: false,
+      width: 1184,
+      height: 2400,
+    );
+  });
+
+  testWidgets('console width — the vehicles table with the sidebar taken out', (
+    tester,
+  ) async {
+    await _capture(
+      tester,
+      'fleet_overview_6_vehicles_console_light',
+      dark: false,
+      width: 1184,
+      height: 2400,
+      initialTab: FleetTab.vehicles,
+    );
+  });
+
+  testWidgets('narrow — the card layout the tabs fall back to', (tester) async {
+    await _capture(
+      tester,
+      'fleet_overview_4_narrow_light',
+      dark: false,
+      width: 900,
+      height: 2600,
+    );
+  });
+
+  testWidgets('narrow — the vehicles cards', (tester) async {
+    await _capture(
+      tester,
+      'fleet_overview_7_vehicles_narrow_light',
+      dark: false,
+      width: 900,
+      height: 2600,
+      initialTab: FleetTab.vehicles,
+    );
   });
 }
 
@@ -799,6 +858,7 @@ Future<void> _capture(
   // open) and rounding up, so the capture is tight with a small safety
   // margin rather than mostly blank canvas.
   double height = 2180,
+  FleetTab initialTab = FleetTab.drivers,
 }) async {
   tester.view.physicalSize = Size(width, height);
   tester.view.devicePixelRatio = 1.0;
@@ -834,7 +894,7 @@ Future<void> _capture(
           child: Scaffold(
             body: BlocProvider<FleetOverviewCubit>.value(
               value: _StaticOverviewCubit(FleetOverviewLoaded(workspace)),
-              child: const FleetOverviewScreen(),
+              child: FleetOverviewScreen(initialTab: initialTab),
             ),
           ),
         ),
@@ -846,29 +906,39 @@ Future<void> _capture(
   await expectLater(find.byKey(key), matchesGoldenFile('_captures/$name.png'));
 }
 
-/// See the note in the customers/bookings harnesses: the real themes build
-/// their text theme through google_fonts, which the test binding's blocked
-/// network turns into a post-test throw. The palette is the real one; only
+/// [DashboardAppTheme] itself builds its text theme through
+/// `GoogleFonts.cairoTextTheme()`, which the test binding's blocked network
+/// turns into a hard failure — so this hand-builds a [ThemeData] from the same
+/// [DashboardLightColors]/[DashboardDarkColors] source and
+/// [AppSurfaceStyle.ewt] card treatment the real theme uses, with the host font
+/// substituted directly. The palette and card language are the real ones; only
 /// the glyphs differ.
+///
+/// This harness used to build from `lightColorSchemeFromPalette()` +
+/// `AppSurfaceStyle.dashboardLight` — the *client/captain* palette and the card
+/// factory the EWT redesign replaced — so its captures showed a console that no
+/// longer exists.
 ThemeData _themeWithHostFont({required bool dark}) {
   final scheme = dark
-      ? darkColorSchemeFromPalette()
-      : lightColorSchemeFromPalette();
+      ? dashboardDarkColorScheme()
+      : dashboardLightColorScheme();
+  final background = dark
+      ? DashboardDarkColors.background
+      : DashboardLightColors.background;
+  final shadow = dark
+      ? DashboardDarkColors.shadow
+      : DashboardLightColors.shadow;
   return ThemeData(
     useMaterial3: true,
     brightness: dark ? Brightness.dark : Brightness.light,
     colorScheme: scheme,
     fontFamily: _captureFont,
-    scaffoldBackgroundColor: dark
-        ? AppDarkColors.background
-        : AppLightColors.background,
-    canvasColor: dark ? AppDarkColors.background : AppLightColors.background,
+    scaffoldBackgroundColor: background,
+    canvasColor: background,
     cardColor: scheme.surface,
     dividerColor: scheme.outline,
-    shadowColor: dark ? AppDarkColors.shadow : AppLightColors.shadow,
-    extensions: [
-      dark ? AppSurfaceStyle.flat(scheme) : AppSurfaceStyle.dashboardLight(scheme),
-    ],
+    shadowColor: shadow,
+    extensions: [AppSurfaceStyle.ewt(scheme)],
   );
 }
 

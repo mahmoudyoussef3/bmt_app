@@ -14,6 +14,26 @@ import 'staff_account_form.dart';
 /// retype. It closes on exactly one signal: [UsersCredentialsIssued], the state that
 /// carries the one-time password — which the screen behind renders full width, because
 /// that password cannot be read back from anywhere.
+///
+/// ## Everything the operator must reach is pinned
+///
+/// The form is tall — five inputs, a role explanation and a password switch — and on
+/// any window shorter than roughly 800px it scrolls inside the dialog. So neither the
+/// primary action nor the refusal may live in that scrolling body:
+///
+/// * «إنشاء الحساب» sits in the dialog's action bar next to «إلغاء». It used to be the
+///   last widget inside the scroll view, which put it below the fold on a 1280×720
+///   console — and off screen at *every* size once the operator chose their own
+///   password. An owner who fills the form, sees only «إلغاء» and gives up is the
+///   "nothing happens" this dialog was reported for.
+/// * The failure banner sits directly above those actions, outside the scroll view.
+///   At the top of the body it was announced where the operator was not looking, and
+///   the screen's own snackbar is posted to the scaffold *under* the modal barrier,
+///   where nobody can see it either.
+///
+/// «إلغاء» stays live while a submission is in flight. A modal whose every control is
+/// disabled has no exit if the request stalls, and closing it loses nothing: the cubit
+/// keeps running and the screen behind still raises the credential reveal.
 Future<void> showStaffAccountDialog(BuildContext context) {
   final cubit = context.read<UsersCubit>();
 
@@ -27,8 +47,17 @@ Future<void> showStaffAccountDialog(BuildContext context) {
   );
 }
 
-class _StaffAccountDialog extends StatelessWidget {
+class _StaffAccountDialog extends StatefulWidget {
   const _StaffAccountDialog();
+
+  @override
+  State<_StaffAccountDialog> createState() => _StaffAccountDialogState();
+}
+
+class _StaffAccountDialogState extends State<_StaffAccountDialog> {
+  /// The handle the pinned action button submits through — the form owns the
+  /// controllers and the validation, the action bar owns the button.
+  final _formKey = GlobalKey<StaffAccountFormState>();
 
   @override
   Widget build(BuildContext context) {
@@ -51,39 +80,63 @@ class _StaffAccountDialog extends StatelessWidget {
           title: const Text('إضافة مستخدم للوحة التحكم'),
           content: SizedBox(
             width: 520,
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'يسجّل الموظف الدخول باسم المستخدم وكلمة المرور من نفس شاشة '
-                    'الدخول. الحساب يخص مكتبك وحده ولا يرى بيانات أي مكتب آخر.',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Theme.of(context).colorScheme.onSurfaceVariant,
-                      height: 1.5,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Flexible(
+                  child: SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          'يسجّل الموظف الدخول باسم المستخدم وكلمة المرور من نفس '
+                          'شاشة الدخول. الحساب يخص مكتبك وحده ولا يرى بيانات أي '
+                          'مكتب آخر.',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.onSurfaceVariant,
+                                height: 1.5,
+                              ),
+                        ),
+                        const SizedBox(height: AppSpacing.large),
+                        StaffAccountForm(
+                          key: _formKey,
+                          isSubmitting: isSubmitting,
+                          fieldErrors: fieldErrors,
+                          onSubmit: context.read<UsersCubit>().createUser,
+                        ),
+                      ],
                     ),
                   ),
-                  if (failure != null) ...[
-                    const SizedBox(height: AppSpacing.medium),
-                    _FailureBanner(message: failure),
-                  ],
-                  const SizedBox(height: AppSpacing.large),
-                  StaffAccountForm(
-                    isSubmitting: isSubmitting,
-                    fieldErrors: fieldErrors,
-                    onSubmit: context.read<UsersCubit>().createUser,
-                  ),
+                ),
+                if (failure != null) ...[
+                  const SizedBox(height: AppSpacing.medium),
+                  _FailureBanner(message: failure),
                 ],
-              ),
+              ],
             ),
           ),
           actions: [
             TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('إلغاء'),
+            ),
+            FilledButton.icon(
               onPressed: isSubmitting
                   ? null
-                  : () => Navigator.of(context).pop(),
-              child: const Text('إلغاء'),
+                  : () => _formKey.currentState?.submit(),
+              icon: isSubmitting
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.person_add_alt_1_rounded),
+              label: Text(isSubmitting ? 'جارٍ الإنشاء…' : 'إنشاء الحساب'),
             ),
           ],
         );
@@ -117,10 +170,7 @@ class _FailureBanner extends StatelessWidget {
           Icon(Icons.error_outline_rounded, size: 20, color: scheme.error),
           const SizedBox(width: AppSpacing.small),
           Expanded(
-            child: Text(
-              message,
-              style: Theme.of(context).textTheme.bodySmall,
-            ),
+            child: Text(message, style: Theme.of(context).textTheme.bodySmall),
           ),
         ],
       ),

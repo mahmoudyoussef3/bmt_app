@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bmt_app/apps/dashboard/core/permissions/dashboard_role.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -29,6 +31,15 @@ class SupabaseUsersDatasource implements UsersRepository {
   final SupabaseClient _client;
 
   static const _manageFunction = 'office-manage-user';
+
+  /// A create round-trips through PostgREST, the Auth Admin API and PostgREST
+  /// again, so it is allowed to be slow — but never unbounded.
+  ///
+  /// `functions.invoke` has no timeout of its own. Without this a stalled call
+  /// leaves the cubit in `isSubmitting` forever: the dialog spins, its fields
+  /// stay disabled, and the operator is given no error and no outcome. A
+  /// deadline turns that into a message they can act on.
+  static const _invokeTimeout = Duration(seconds: 30);
 
   @override
   Future<List<AppUser>> getUsers() async {
@@ -122,9 +133,20 @@ class SupabaseUsersDatasource implements UsersRepository {
   Future<Map<String, dynamic>> _invokeManage(Map<String, dynamic> body) async {
     final FunctionResponse response;
     try {
-      response = await _client.functions.invoke(_manageFunction, body: body);
+      response = await _client.functions
+          .invoke(_manageFunction, body: body)
+          .timeout(_invokeTimeout);
     } on FunctionException catch (error) {
       _throwForBody(error.details);
+    } on TimeoutException {
+      // Deliberately not phrased as a failure. The request may well have
+      // succeeded on the far side, and telling the owner to retry blindly is how
+      // an office ends up with two accounts — or a "username taken" refusal for
+      // a name it just took itself.
+      throw Exception(
+        'استغرقت العملية وقتاً أطول من المتوقع ولم يصل رد من الخادم. '
+        'حدّث القائمة للتأكد قبل إعادة المحاولة.',
+      );
     } catch (_) {
       throw Exception('تعذر الاتصال بالخادم. تحقق من الشبكة وحاول مرة أخرى.');
     }
@@ -201,7 +223,8 @@ class SupabaseUsersDatasource implements UsersRepository {
       return 'هذا الحساب مرتبط بمكتب آخر بالفعل.';
     }
     if (code.contains('staff_not_found') ||
-        code.contains('staff_user_not_found')) {
+        code.contains('staff_user_not_found') ||
+        code.contains('staff_user_required')) {
       return 'لم يعد هذا المستخدم موجوداً. حدّث القائمة.';
     }
     if (code.contains('auth_user_creation_failed')) {
@@ -210,8 +233,42 @@ class SupabaseUsersDatasource implements UsersRepository {
     if (code.contains('password_reset_failed')) {
       return 'تعذر تغيير كلمة المرور. حاول مرة أخرى.';
     }
+    // The Edge Function's two catch-alls: an unexpected server-side failure
+    // (500) and a Postgres error it could not lift a code out of. Both used to
+    // land on the generic message below, which told the owner nothing about
+    // where to look — the difference between "the server broke" and "the server
+    // said no" is the whole diagnosis.
+    if (code.contains('staff_action_failed')) {
+      return 'تعذّرت العملية على الخادم. حاول مرة أخرى، وإذا تكررت راجع سجلات '
+          'الخادم.';
+    }
+    if (code.contains('staff_action_rejected')) {
+      return 'رفض الخادم هذه العملية. تأكد من صلاحياتك ومن صحة البيانات ثم حاول '
+          'مرة أخرى.';
+    }
+    if (code.contains('invalid_payload') ||
+        code.contains('invalid_action') ||
+        code.contains('method_not_allowed')) {
+      return 'طلب غير صالح. حدّث الصفحة وحاول مرة أخرى.';
+    }
+    // Anything unmapped keeps its machine code. It is the operator's only handle
+    // on a refusal nobody wrote Arabic for, and it is what turns "I don't
+    // understand the error" into a support ticket somebody can act on. Safe to
+    // show: the Edge Function normalises every code to `^[a-z0-9_]+$` and drops
+    // Postgres' own text, so nothing internal travels with it — and a code that
+    // fails that shape is not printed at all.
+    if (_machineCode.hasMatch(code)) {
+      // Isolated: a latin run dropped bare into an Arabic sentence drags the
+      // closing bracket to the wrong end and the code reads as though it belongs
+      // to the next clause. U+2068/U+2069 fence it off — the same treatment
+      // `routeDirectionLabel` gives a latin station name.
+      return 'تعذر تنفيذ العملية. حاول مرة أخرى. '
+          '(رمز الخطأ: \u2068$code\u2069)';
+    }
     return 'تعذر تنفيذ العملية. حاول مرة أخرى.';
   }
+
+  static final _machineCode = RegExp(r'^[a-z0-9_]{1,48}$');
 
   String? _nullIfBlank(String? value) {
     final trimmed = value?.trim() ?? '';
