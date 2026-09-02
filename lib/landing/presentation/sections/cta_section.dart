@@ -1,63 +1,121 @@
 import 'package:flutter/material.dart';
 
-import 'package:bmt_app/apps/dashboard/core/theme/dashboard_colors.dart';
-import 'package:bmt_app/core/theme/spacing.dart';
-import '../widgets/landing_button.dart';
-import '../widgets/landing_container.dart';
-import '../widgets/landing_reveal.dart';
-import '../widgets/landing_section_header.dart';
+import '../theme/landing_theme.dart';
+import '../widgets/landing_atoms.dart';
+import '../widgets/landing_charts.dart';
+import '../widgets/landing_layout.dart';
 
-/// The closing pitch, on the same brand-gradient lockup the dashboard home
-/// banner and the client/captain hero screens use — see
-/// [DashboardColors.heroGradient] for why it is one shared object rather than
-/// a colour this page invents on its own.
+/// The closing conversion band — a navy-to-indigo gradient with a faint
+/// console wireframe bled off the leading edge.
 class CtaSection extends StatelessWidget {
-  const CtaSection({super.key, required this.onGetStarted, required this.onContactSales});
+  const CtaSection({
+    super.key,
+    required this.onGetStarted,
+    required this.onContact,
+  });
 
   final VoidCallback onGetStarted;
-  final VoidCallback onContactSales;
+  final VoidCallback onContact;
 
   @override
   Widget build(BuildContext context) {
-    final mobile = LandingContainer.isMobile(context);
-
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(gradient: DashboardColors.heroGradient(context)),
+    final headline = landingClamp(context, min: 25, vw: 3.4, max: 42);
+    return Padding(
+      padding: EdgeInsets.only(bottom: landingSectionGap(context)),
       child: LandingContainer(
-        maxWidth: 800,
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: mobile ? 56 : 88),
-          child: LandingReveal(
-            child: Column(
-              children: [
-                LandingSectionHeader(
-                  title: 'جاهز تدير مكتبك بطريقة أذكى؟',
-                  description:
-                      'ابدأ باستخدام EWT واجعل تشغيل مكتب النقل، ومتابعة الأداء، '
-                      'واتخاذ القرار في مكان واحد.',
-                  dark: true,
-                ),
-                const SizedBox(height: AppSpacing.xLarge),
-                Wrap(
-                  alignment: WrapAlignment.center,
-                  spacing: AppSpacing.medium,
-                  runSpacing: AppSpacing.medium,
-                  children: [
-                    LandingButton.primary(
-                      label: 'ابدأ مع EWT',
-                      onPressed: onGetStarted,
-                      dark: true,
-                    ),
-                    LandingButton.secondary(
-                      label: 'تواصل معنا',
-                      onPressed: onContactSales,
-                      dark: true,
-                    ),
-                  ],
-                ),
+        child: Container(
+          clipBehavior: Clip.antiAlias,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(LandingRadii.card + 10),
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [
+                LandingPalette.navy,
+                LandingPalette.navyMid,
+                LandingPalette.brandDeep,
               ],
+              stops: [0, 0.55, 1],
             ),
+          ),
+          child: Stack(
+            children: [
+              const Positioned.fill(
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      center: Alignment(-0.76, -0.84),
+                      radius: 0.9,
+                      colors: [Color(0x1AFFFFFF), Color(0x00FFFFFF)],
+                      stops: [0, 0.62],
+                    ),
+                  ),
+                ),
+              ),
+              PositionedDirectional(
+                start: -40,
+                bottom: -70,
+                width: 420,
+                child: const Opacity(opacity: 0.14, child: LandingWireframe()),
+              ),
+              Padding(
+                padding: EdgeInsets.symmetric(
+                  horizontal: landingClamp(context, min: 22, vw: 4, max: 60),
+                  vertical: landingClamp(context, min: 38, vw: 5, max: 72),
+                ),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 700),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'جاهز تدير مكتبك بشكل أذكى؟',
+                        style: LandingType.heading(
+                          headline,
+                          color: Colors.white,
+                        ).copyWith(letterSpacing: -1, height: 1.28),
+                      ),
+                      const SizedBox(height: 18),
+                      Text(
+                        'ابدأ مع EWT وخلي إدارة الرحلات والحجوزات والكباتن '
+                        'والمدفوعات أسهل وأكثر تنظيمًا.',
+                        style: LandingType.lead(
+                          16,
+                          color: Colors.white.withValues(alpha: 0.78),
+                        ),
+                      ),
+                      const SizedBox(height: 28),
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        children: [
+                          SizedBox(
+                            width: 280,
+                            child: LandingButton(
+                              label: 'ابدأ مع EWT',
+                              icon: Icons.arrow_back_rounded,
+                              style: LandingButtonStyle.onDark,
+                              expand: true,
+                              onPressed: onGetStarted,
+                            ),
+                          ),
+                          SizedBox(
+                            width: 240,
+                            child: LandingButton(
+                              label: 'تواصل معنا',
+                              style: LandingButtonStyle.onDarkOutline,
+                              expand: true,
+                              onPressed: onContact,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),

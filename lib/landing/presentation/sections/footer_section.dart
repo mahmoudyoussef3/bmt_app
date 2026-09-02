@@ -1,207 +1,104 @@
 import 'package:flutter/material.dart';
 
-import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
-import 'package:bmt_app/core/theme/spacing.dart';
-import 'package:bmt_app/core/theme/tokens.dart';
-import '../widgets/landing_container.dart';
-import '../widgets/landing_info_dialog.dart';
-import 'landing_navbar.dart' show LandingNavLink;
+import '../landing_content.dart';
+import '../theme/landing_theme.dart';
+import '../widgets/landing_brand.dart';
+import '../widgets/landing_layout.dart';
 
-/// The page's closing band: brand mark, section links, and the legal /
-/// account links that a SaaS footer is expected to carry.
-///
-/// [productLinks] reuses [LandingNavLink] from the navbar rather than a
-/// footer-local type — same list of destinations, so the two never drift out
-/// of sync when a section is renamed.
+/// The navy footer: the wordmark and one line about the product, four link
+/// columns, and the copyright rule.
 class FooterSection extends StatelessWidget {
-  const FooterSection({
-    super.key,
-    required this.productLinks,
-    required this.onLogin,
-    required this.onContactSales,
-  });
+  const FooterSection({super.key, required this.onLinkTap});
 
-  final List<LandingNavLink> productLinks;
-  final VoidCallback onLogin;
-  final VoidCallback onContactSales;
+  /// Every footer link resolves through the page so a column entry either
+  /// scrolls to its section or opens the same honest dialog the header's
+  /// CTAs use — no dead anchors.
+  final void Function(String label) onLinkTap;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final mobile = LandingContainer.isMobile(context);
-    final year = DateTime.now().year;
-
     return Container(
-      color: scheme.surfaceContainerLowest,
+      width: double.infinity,
+      color: LandingPalette.navy,
+      padding: EdgeInsets.only(
+        top: landingClamp(context, min: 42, vw: 5, max: 66),
+      ),
       child: LandingContainer(
-        maxWidth: 1160,
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: mobile ? 40 : 64),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              mobile
-                  ? Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _BrandColumn(scheme: scheme),
-                        const SizedBox(height: AppSpacing.xLarge),
-                        _LinksColumn(
-                          title: 'المنتج',
-                          links: productLinks
-                              .map((l) => (label: l.label, onTap: l.onTap))
-                              .toList(),
-                        ),
-                        const SizedBox(height: AppSpacing.xLarge),
-                        _AccountColumn(onLogin: onLogin, onContactSales: onContactSales),
-                        const SizedBox(height: AppSpacing.xLarge),
-                        _LegalColumn(),
-                      ],
-                    )
-                  : Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Expanded(flex: 2, child: _BrandColumn(scheme: scheme)),
-                        Expanded(
-                          child: _LinksColumn(
-                            title: 'المنتج',
-                            links: productLinks
-                                .map((l) => (label: l.label, onTap: l.onTap))
-                                .toList(),
-                          ),
-                        ),
-                        Expanded(
-                          child: _AccountColumn(
-                            onLogin: onLogin,
-                            onContactSales: onContactSales,
-                          ),
-                        ),
-                        Expanded(child: _LegalColumn()),
-                      ],
-                    ),
-              const SizedBox(height: AppSpacing.xLarge),
-              Divider(color: scheme.outlineVariant),
-              const SizedBox(height: AppSpacing.medium),
-              Text(
-                '© $year EWT — Easy Way Transportation',
-                style: Theme.of(
-                  context,
-                ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            LandingAutoGrid(
+              minItemWidth: 180,
+              spacing: landingClamp(context, min: 24, vw: 3, max: 38),
+              runSpacing: 32,
+              children: [
+                const _FooterBrand(),
+                for (final column in LandingContent.footerColumns)
+                  _FooterColumn(
+                    title: column.title,
+                    links: column.links,
+                    onLinkTap: onLinkTap,
+                  ),
+              ],
+            ),
+            SizedBox(height: landingClamp(context, min: 32, vw: 4, max: 48)),
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 18),
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
+                ),
               ),
-            ],
-          ),
+              child: Wrap(
+                spacing: 10,
+                runSpacing: 6,
+                alignment: WrapAlignment.spaceBetween,
+                children: [
+                  Text(
+                    '© 2026 EWT — Easy Way Transportation',
+                    style: LandingType.label(
+                      12.5,
+                      color: Colors.white.withValues(alpha: 0.55),
+                      weight: FontWeight.w400,
+                    ),
+                  ),
+                  Text(
+                    'مصمم لمكاتب النقل في مصر',
+                    style: LandingType.label(
+                      12.5,
+                      color: Colors.white.withValues(alpha: 0.55),
+                      weight: FontWeight.w400,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-class _BrandColumn extends StatelessWidget {
-  const _BrandColumn({required this.scheme});
-
-  final ColorScheme scheme;
+class _FooterBrand extends StatelessWidget {
+  const _FooterBrand();
 
   @override
   Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 30,
-              height: 30,
-              decoration: BoxDecoration(
-                color: scheme.primary,
-                borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
-              ),
-              child: Icon(DashboardIcons.fleetActive, size: 16, color: scheme.onPrimary),
-            ),
-            const SizedBox(width: AppSpacing.small),
-            Text(
-              'EWT',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
-            ),
-          ],
-        ),
-        const SizedBox(height: AppSpacing.medium),
+        const LandingBrandMark(onDark: true),
+        const SizedBox(height: 15),
         ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 280),
+          constraints: const BoxConstraints(maxWidth: 270),
           child: Text(
-            'منصة تشغيل تساعد مكاتب النقل على إدارة أعمالها ومتابعة أدائها '
-            'والنمو من مكان واحد.',
-            style: Theme.of(
-              context,
-            ).textTheme.bodySmall?.copyWith(color: scheme.onSurfaceVariant, height: 1.6),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _LinksColumn extends StatelessWidget {
-  const _LinksColumn({required this.title, required this.links});
-
-  final String title;
-  final List<({String label, VoidCallback onTap})> links;
-
-  @override
-  Widget build(BuildContext context) {
-    return _FooterColumn(
-      title: title,
-      children: [
-        for (final link in links) _FooterLink(label: link.label, onTap: link.onTap),
-      ],
-    );
-  }
-}
-
-class _AccountColumn extends StatelessWidget {
-  const _AccountColumn({required this.onLogin, required this.onContactSales});
-
-  final VoidCallback onLogin;
-  final VoidCallback onContactSales;
-
-  @override
-  Widget build(BuildContext context) {
-    return _FooterColumn(
-      title: 'الحساب',
-      children: [
-        _FooterLink(label: 'تسجيل الدخول', onTap: onLogin),
-        _FooterLink(label: 'تواصل معنا', onTap: onContactSales),
-      ],
-    );
-  }
-}
-
-class _LegalColumn extends StatelessWidget {
-  const _LegalColumn();
-
-  @override
-  Widget build(BuildContext context) {
-    return _FooterColumn(
-      title: 'قانوني',
-      children: [
-        _FooterLink(
-          label: 'الخصوصية',
-          onTap: () => LandingInfoDialog.show(
-            context,
-            title: 'سياسة الخصوصية',
-            message: 'سياسة الخصوصية الخاصة بمكاتب النقل المشتركة في EWT قيد الإعداد. '
-                'تواصل معنا إذا احتجت تفاصيل الآن.',
-          ),
-        ),
-        _FooterLink(
-          label: 'الشروط والأحكام',
-          onTap: () => LandingInfoDialog.show(
-            context,
-            title: 'الشروط والأحكام',
-            message: 'شروط استخدام EWT الخاصة بمكاتب النقل قيد الإعداد. '
-                'تواصل معنا إذا احتجت تفاصيل الآن.',
+            'نظام واحد لإدارة مكتب النقل بالكامل.',
+            style: LandingType.cardBody(
+              13,
+              color: Colors.white.withValues(alpha: 0.66),
+            ).copyWith(height: 1.85),
           ),
         ),
       ],
@@ -210,44 +107,64 @@ class _LegalColumn extends StatelessWidget {
 }
 
 class _FooterColumn extends StatelessWidget {
-  const _FooterColumn({required this.title, required this.children});
+  const _FooterColumn({
+    required this.title,
+    required this.links,
+    required this.onLinkTap,
+  });
 
   final String title;
-  final List<Widget> children;
+  final List<String> links;
+  final void Function(String label) onLinkTap;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        Text(
-          title,
-          style: Theme.of(context).textTheme.labelLarge?.copyWith(
-            color: scheme.onSurfaceVariant,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
-        const SizedBox(height: AppSpacing.medium),
-        ...children,
+        Text(title, style: LandingType.cardTitle(13, color: Colors.white)),
+        const SizedBox(height: 13),
+        for (final (index, link) in links.indexed) ...[
+          if (index > 0) const SizedBox(height: 9),
+          _FooterLink(label: link, onTap: () => onLinkTap(link)),
+        ],
       ],
     );
   }
 }
 
-class _FooterLink extends StatelessWidget {
+class _FooterLink extends StatefulWidget {
   const _FooterLink({required this.label, required this.onTap});
 
   final String label;
   final VoidCallback onTap;
 
   @override
+  State<_FooterLink> createState() => _FooterLinkState();
+}
+
+class _FooterLinkState extends State<_FooterLink> {
+  bool _hovered = false;
+
+  @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: AppSpacing.small),
-      child: InkWell(
-        onTap: onTap,
-        child: Text(label, style: Theme.of(context).textTheme.bodyMedium),
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: GestureDetector(
+        onTap: widget.onTap,
+        child: Text(
+          widget.label,
+          style: LandingType.label(
+            13,
+            color: _hovered
+                ? Colors.white
+                : Colors.white.withValues(alpha: 0.66),
+            weight: FontWeight.w600,
+          ),
+        ),
       ),
     );
   }

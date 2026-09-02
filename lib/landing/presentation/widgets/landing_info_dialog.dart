@@ -1,68 +1,80 @@
 import 'package:flutter/material.dart';
 
-import 'package:bmt_app/core/theme/spacing.dart';
-import 'landing_button.dart';
+import '../theme/landing_theme.dart';
+import 'landing_atoms.dart';
 
-/// A short, honest info dialog for CTAs that have no real destination yet
-/// (login, legal documents). Used instead of linking to a URL or document
-/// that doesn't exist — see the login/legal notes in the navbar and footer.
+/// A short, honest dialog for CTAs that have no real destination yet
+/// (sign-in, "start with EWT", contact). Used instead of linking to a page
+/// that doesn't exist — the marketing site is a standalone entry point with
+/// no signed-in state to hand off to.
 class LandingInfoDialog extends StatelessWidget {
   const LandingInfoDialog({
     super.key,
     required this.title,
     required this.message,
-    this.ctaLabel,
-    this.onCta,
   });
 
   final String title;
   final String message;
-  final String? ctaLabel;
-  final VoidCallback? onCta;
 
   static Future<void> show(
     BuildContext context, {
     required String title,
     required String message,
-    String? ctaLabel,
-    VoidCallback? onCta,
   }) {
     return showDialog(
       context: context,
-      builder: (_) => LandingInfoDialog(
-        title: title,
-        message: message,
-        ctaLabel: ctaLabel,
-        onCta: onCta,
-      ),
+      barrierColor: LandingPalette.navy.withValues(alpha: 0.42),
+      builder: (_) => LandingInfoDialog(title: title, message: message),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w800)),
-      content: Text(message, style: const TextStyle(height: 1.6)),
-      actionsPadding: const EdgeInsets.fromLTRB(
-        AppSpacing.large,
-        0,
-        AppSpacing.large,
-        AppSpacing.medium,
+    return Dialog(
+      backgroundColor: LandingPalette.surface,
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(LandingRadii.card + 4),
+        side: const BorderSide(color: LandingPalette.border),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(),
-          child: const Text('إغلاق'),
-        ),
-        if (ctaLabel != null)
-          LandingButton.primary(
-            label: ctaLabel!,
-            onPressed: () {
-              Navigator.of(context).pop();
-              onCta?.call();
-            },
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 440),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const LandingIconSquare(
+                    icon: Icons.info_outline_rounded,
+                    size: 40,
+                    iconSize: 20,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(title, style: LandingType.cardTitle(17)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text(message, style: LandingType.cardBody(13.5)),
+              const SizedBox(height: 22),
+              Align(
+                alignment: AlignmentDirectional.centerEnd,
+                child: LandingButton(
+                  label: 'إغلاق',
+                  height: 42,
+                  style: LandingButtonStyle.secondary,
+                  onPressed: () => Navigator.of(context).pop(),
+                ),
+              ),
+            ],
           ),
-      ],
+        ),
+      ),
     );
   }
 }

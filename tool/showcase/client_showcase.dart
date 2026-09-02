@@ -177,7 +177,7 @@ class _FakeSeats extends Cubit<SeatSelectionState>
     implements SeatSelectionCubit {
   _FakeSeats()
     : super(
-        SeatSelectionLoaded(data: demo.seatSelection, selectedSeatId: 'seat-3'),
+        SeatSelectionLoaded(data: demo.seatSelection, selectedSeatId: 'seat-1'),
       );
   @override
   Future<void> loadSeatSelection(String tripId) async {}
@@ -311,7 +311,7 @@ BookingWizardCubit _wizardSession({required int step}) {
     // an empty seat map says nothing about what the step does.
     cubit
       ..selectTrip(demo.middayTrip)
-      ..selectSeat('seat-3', 'A3');
+      ..selectSeat('seat-1', 'A3');
   }
   // Card is the one method that settles without a receipt upload, so the pay
   // bar is photographed ready rather than blocked on a missing attachment.

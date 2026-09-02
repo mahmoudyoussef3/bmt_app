@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 
-import 'package:bmt_app/apps/dashboard/core/theme/dashboard_icons.dart';
-import 'package:bmt_app/core/theme/spacing.dart';
-import 'package:bmt_app/core/theme/tokens.dart';
-import '../widgets/landing_button.dart';
-import '../widgets/landing_container.dart';
+import '../theme/landing_theme.dart';
+import '../widgets/landing_atoms.dart';
+import '../widgets/landing_brand.dart';
+import '../widgets/landing_layout.dart';
 
-/// One clickable label in the navbar's link row — a title plus the section
-/// it scrolls to.
+/// One entry in the header's section nav.
 class LandingNavLink {
   const LandingNavLink({required this.label, required this.onTap});
 
@@ -15,107 +13,111 @@ class LandingNavLink {
   final VoidCallback onTap;
 }
 
-/// The page's fixed header: brand mark, section links, and the two auth CTAs.
+/// The sticky page header.
 ///
-/// Collapses to a brand mark + menu button under [LandingContainer.isMobile]
-/// — a desktop link row has nowhere to go on a phone width, so it moves into
-/// a bottom sheet instead of wrapping.
+/// It shrinks from 80px to 64px once the page has scrolled past 24px and
+/// gains a shadow at the same moment — the design's `scrolled` state, which
+/// is what keeps the header from sitting as a heavy slab over the content.
+/// Below 1080px the link rail collapses into a menu button, because the six
+/// Arabic labels plus two buttons cannot share a row at tablet width without
+/// either wrapping into a second line or truncating.
 class LandingNavbar extends StatelessWidget {
   const LandingNavbar({
     super.key,
     required this.links,
+    required this.activeIndex,
+    required this.scrolled,
     required this.onLogin,
     required this.onGetStarted,
   });
 
   final List<LandingNavLink> links;
+
+  /// Which section the reader is currently in — the design marks the current
+  /// page with ink-coloured, heavier text against the muted rest.
+  final int activeIndex;
+  final bool scrolled;
   final VoidCallback onLogin;
   final VoidCallback onGetStarted;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final mobile = LandingContainer.isMobile(context);
+    final width = MediaQuery.sizeOf(context).width;
+    final compact = width < 1080;
+    final narrow = width < 620;
 
-    return Container(
-      color: scheme.surface,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          LandingContainer(
-            padding: EdgeInsets.symmetric(
-              horizontal: mobile ? 20 : 48,
-              vertical: 14,
-            ),
-            maxWidth: 1280,
-            child: Row(
-              children: [
-                _Brand(scheme: scheme),
-                const Spacer(),
-                if (!mobile) ...[
-                  for (final link in links) _NavLinkButton(link: link),
-                  const SizedBox(width: AppSpacing.medium),
-                  TextButton(onPressed: onLogin, child: const Text('تسجيل الدخول')),
-                  const SizedBox(width: AppSpacing.small),
-                  LandingButton.primary(label: 'ابدأ مع EWT', onPressed: onGetStarted),
-                ] else
-                  IconButton(
-                    onPressed: () => _showMobileMenu(context),
-                    icon: const Icon(Icons.menu_rounded),
-                    tooltip: 'القائمة',
-                  ),
-              ],
-            ),
-          ),
-          Divider(height: 1, color: scheme.outlineVariant),
-        ],
-      ),
-    );
-  }
-
-  void _showMobileMenu(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      showDragHandle: true,
-      builder: (sheetContext) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppSpacing.large,
-            0,
-            AppSpacing.large,
-            AppSpacing.xLarge,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              for (final link in links)
-                ListTile(
-                  title: Text(
-                    link.label,
-                    style: const TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                  onTap: () {
-                    Navigator.of(sheetContext).pop();
-                    link.onTap();
-                  },
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 220),
+      curve: Curves.easeOut,
+      decoration: BoxDecoration(
+        color: LandingPalette.surface.withValues(alpha: 0.92),
+        border: const Border(bottom: BorderSide(color: LandingPalette.border)),
+        boxShadow: scrolled
+            ? const [
+                BoxShadow(
+                  color: Color(0x8C0B1B34),
+                  offset: Offset(0, 10),
+                  blurRadius: 28,
+                  spreadRadius: -22,
                 ),
-              const SizedBox(height: AppSpacing.medium),
-              OutlinedButton(
-                onPressed: () {
-                  Navigator.of(sheetContext).pop();
-                  onLogin();
-                },
-                child: const Text('تسجيل الدخول'),
-              ),
-              const SizedBox(height: AppSpacing.small),
-              LandingButton.primary(
+              ]
+            : null,
+      ),
+      child: LandingContainer(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
+          curve: Curves.easeOut,
+          height: scrolled ? 64 : 80,
+          child: Row(
+            children: [
+              // When the link rail is gone the wordmark takes the free
+              // space itself, pushing the buttons to the far edge. A Flexible
+              // beside a Spacer would split that space with it and starve the
+              // logo tile instead.
+              if (compact)
+                const Expanded(child: _LandingWordmark())
+              else
+                const _LandingWordmark(),
+              if (!compact) ...[
+                Expanded(
+                  // Six Arabic labels against a fixed logo and two buttons is
+                  // the row most likely to run out of width — a longer label
+                  // or a wider face would otherwise overflow rather than
+                  // reflow, so the rail scales down before it ever clips.
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.center,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        for (var i = 0; i < links.length; i++)
+                          _NavLinkButton(
+                            link: links[i],
+                            active: i == activeIndex,
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+              if (!narrow) ...[
+                LandingButton(
+                  label: 'تسجيل الدخول',
+                  height: 42,
+                  style: LandingButtonStyle.secondary,
+                  onPressed: onLogin,
+                ),
+                const SizedBox(width: 9),
+              ],
+              LandingButton(
                 label: 'ابدأ مع EWT',
-                onPressed: () {
-                  Navigator.of(sheetContext).pop();
-                  onGetStarted();
-                },
+                height: 42,
+                onPressed: onGetStarted,
               ),
+              if (compact) ...[
+                const SizedBox(width: 9),
+                _NavMenuButton(links: links),
+              ],
             ],
           ),
         ),
@@ -124,49 +126,104 @@ class LandingNavbar extends StatelessWidget {
   }
 }
 
-class _Brand extends StatelessWidget {
-  const _Brand({required this.scheme});
-
-  final ColorScheme scheme;
+/// The brand mark: the shipping app icon plus the two-line wordmark.
+class _LandingWordmark extends StatelessWidget {
+  const _LandingWordmark();
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 34,
-          height: 34,
+    final narrow = MediaQuery.sizeOf(context).width < 480;
+    return LandingBrandMark(showWordmark: !narrow);
+  }
+}
+
+class _NavLinkButton extends StatefulWidget {
+  const _NavLinkButton({required this.link, required this.active});
+
+  final LandingNavLink link;
+  final bool active;
+
+  @override
+  State<_NavLinkButton> createState() => _NavLinkButtonState();
+}
+
+class _NavLinkButtonState extends State<_NavLinkButton> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final highlighted = widget.active || _hovered;
+    return MouseRegion(
+      cursor: SystemMouseCursors.click,
+      onEnter: (_) => setState(() => _hovered = true),
+      onExit: (_) => setState(() => _hovered = false),
+      child: GestureDetector(
+        onTap: widget.link.onTap,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 140),
+          margin: const EdgeInsets.symmetric(horizontal: 1),
+          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
           decoration: BoxDecoration(
-            color: scheme.primary,
-            borderRadius: BorderRadius.circular(AppTokens.radiusSmall),
+            color: _hovered ? LandingPalette.raised : Colors.transparent,
+            borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(DashboardIcons.fleetActive, size: 18, color: scheme.onPrimary),
+          child: Text(
+            widget.link.label,
+            style: LandingType.label(
+              13.5,
+              color: highlighted ? LandingPalette.ink : LandingPalette.muted,
+              weight: widget.active ? FontWeight.w800 : FontWeight.w600,
+            ),
+          ),
         ),
-        const SizedBox(width: AppSpacing.small),
-        Text(
-          'EWT',
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
-        ),
-      ],
+      ),
     );
   }
 }
 
-class _NavLinkButton extends StatelessWidget {
-  const _NavLinkButton({required this.link});
+/// The tablet/phone stand-in for the link rail.
+class _NavMenuButton extends StatelessWidget {
+  const _NavMenuButton({required this.links});
 
-  final LandingNavLink link;
+  final List<LandingNavLink> links;
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return TextButton(
-      onPressed: link.onTap,
-      style: TextButton.styleFrom(foregroundColor: scheme.onSurface),
-      child: Text(link.label, style: const TextStyle(fontWeight: FontWeight.w600)),
+    return PopupMenuButton<int>(
+      tooltip: 'أقسام الصفحة',
+      color: LandingPalette.surface,
+      position: PopupMenuPosition.under,
+      shape: RoundedRectangleBorder(
+        borderRadius: LandingRadii.buttonR,
+        side: const BorderSide(color: LandingPalette.border),
+      ),
+      onSelected: (index) => links[index].onTap(),
+      itemBuilder: (context) => [
+        for (var i = 0; i < links.length; i++)
+          PopupMenuItem(
+            value: i,
+            height: 42,
+            child: Text(
+              links[i].label,
+              style: LandingType.label(13.5, color: LandingPalette.ink),
+            ),
+          ),
+      ],
+      child: Container(
+        width: 42,
+        height: 42,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: LandingPalette.surface,
+          borderRadius: LandingRadii.buttonR,
+          border: Border.all(color: LandingPalette.borderStrong),
+        ),
+        child: const Icon(
+          Icons.menu_rounded,
+          size: 20,
+          color: LandingPalette.ink,
+        ),
+      ),
     );
   }
 }

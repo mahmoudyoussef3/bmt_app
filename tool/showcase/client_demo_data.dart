@@ -315,14 +315,43 @@ final HomeData homeData = HomeData(
 
 // ── Trips ───────────────────────────────────────────────────────────────────
 
+/// The fourteen seats of a Toyota Hiace, at the coordinates
+/// `VehicleSeatLayouts.hiace` places them and in the order the cabin is read:
+/// one bookable seat beside the driver, three rows of two + aisle + one, and a
+/// four-across rear bench.
+///
+/// Not a 4x4 grid. A grid is what the renderer falls back to when it cannot
+/// tell what vehicle this is, and it photographs as a spreadsheet rather than
+/// as the van the rider is about to board — so the demo data carries the real
+/// cabin, exactly as a `Hiace`-typed row in production does. `label` is the
+/// label that cabin gives the seat (row letter + its position in the row,
+/// counting the driver bench), so a ticket, a trip card and the seat map all
+/// name the same seat.
+const List<({int row, int column, String label})> _hiaceSeats = [
+  (row: 1, column: 4, label: 'A3'),
+  (row: 2, column: 1, label: 'B1'),
+  (row: 2, column: 2, label: 'B2'),
+  (row: 2, column: 4, label: 'B3'),
+  (row: 3, column: 1, label: 'C1'),
+  (row: 3, column: 2, label: 'C2'),
+  (row: 3, column: 4, label: 'C3'),
+  (row: 4, column: 1, label: 'D1'),
+  (row: 4, column: 2, label: 'D2'),
+  (row: 4, column: 4, label: 'D3'),
+  (row: 5, column: 1, label: 'E1'),
+  (row: 5, column: 2, label: 'E2'),
+  (row: 5, column: 3, label: 'E3'),
+  (row: 5, column: 4, label: 'E4'),
+];
+
 List<TripSeat> _seatMap({required List<int> mine, required List<int> taken}) {
   return [
-    for (var i = 1; i <= 14; i++)
+    for (var i = 1; i <= _hiaceSeats.length; i++)
       TripSeat(
-        label: '${String.fromCharCode(65 + (i - 1) ~/ 4)}${(i - 1) % 4 + 1}',
+        label: _hiaceSeats[i - 1].label,
         number: i,
-        row: (i - 1) ~/ 4,
-        column: (i - 1) % 4,
+        row: _hiaceSeats[i - 1].row,
+        column: _hiaceSeats[i - 1].column,
         state: mine.contains(i)
             ? TripSeatState.mine
             : taken.contains(i)
@@ -350,7 +379,8 @@ final TripData confirmedTrip = TripData(
   vehicleType: 'ميكروباص مكيّف',
   vehicleId: 'ن ص ٤٢٧',
   seats: const ['A3'],
-  seatMap: _seatMap(mine: const [3], taken: const [1, 2, 5, 6, 9, 12]),
+  seatMap: _seatMap(mine: const [1], taken: _soldSeats),
+  vehicleImageUrls: _vehiclePhotos,
   paymentStatus: PaymentStatus.paid,
   fare: 'EGP 180',
   tripId: 'T-2423',
@@ -377,7 +407,7 @@ final List<TripData> trips = [
     vehicleType: 'ميكروباص مكيّف',
     vehicleId: 'ق ر ٦٥٨',
     seats: const ['B2'],
-    seatMap: _seatMap(mine: const [6], taken: const [1, 4, 8]),
+    seatMap: _seatMap(mine: const [3], taken: const [1, 5, 9]),
     paymentStatus: PaymentStatus.pending,
     fare: 'EGP 260',
     tripId: 'T-2425',
@@ -426,7 +456,7 @@ final List<TripData> trips = [
     vehicleName: 'تويوتا هايس',
     vehicleType: 'ميكروباص مكيّف',
     vehicleId: 'د ل ٣٠٢',
-    seats: const ['A2'],
+    seats: const ['D2'],
     seatMap: const [],
     paymentStatus: PaymentStatus.paid,
     fare: 'EGP 120',
@@ -437,18 +467,23 @@ final List<TripData> trips = [
 
 // ── Seat selection ──────────────────────────────────────────────────────────
 
+/// The seats already sold on T-2423 — six of fourteen, leaving the eight the
+/// step's own counter reports. Seat 1 (`A3`) is deliberately free: it is the
+/// seat this rider picks, and the one the ticket, the wallet entry and the
+/// trip card all name.
+const _soldSeats = [2, 3, 6, 9, 11, 14];
+
 final SeatSelectionData seatSelection = SeatSelectionData(
   tripId: 'T-2423',
   seats: [
-    for (var i = 1; i <= 14; i++)
+    for (var i = 1; i <= _hiaceSeats.length; i++)
       SeatOption(
         id: 'seat-$i',
         seatNumber: i,
-        seatLabel:
-            '${String.fromCharCode(65 + (i - 1) ~/ 4)}${(i - 1) % 4 + 1}',
-        row: (i - 1) ~/ 4,
-        column: (i - 1) % 4,
-        availability: const [1, 2, 5, 6, 9, 12].contains(i)
+        seatLabel: _hiaceSeats[i - 1].label,
+        row: _hiaceSeats[i - 1].row,
+        column: _hiaceSeats[i - 1].column,
+        availability: _soldSeats.contains(i)
             ? SeatAvailability.reserved
             : SeatAvailability.available,
       ),
@@ -458,9 +493,12 @@ final SeatSelectionData seatSelection = SeatSelectionData(
   destination: 'موقف سيدي جابر',
   vehicleNumber: 'ن ص ٤٢٧',
   vehicleName: 'تويوتا هايس',
-  vehicleType: 'ميكروباص مكيّف',
+  // The raw `vehicles.vehicle_type` string, not a description of the van: it
+  // is what picks the cabin the seat step draws. An unrecognised value gets a
+  // derived grid instead of a Hiace.
+  vehicleType: 'Hiace',
   vehicleModel: '2021',
-  vehicleImageUrl: '',
+  vehicleImageUrl: _vehiclePhotos.first,
   tripDate: _today,
   departureTime: '13:00',
   arrivalTime: '16:15',
@@ -480,7 +518,7 @@ const PaymentCheckoutData checkout = PaymentCheckoutData(
   tripDate: 'اليوم',
   departureTime: '13:00',
   arrivalTime: '16:15',
-  selectedSeatId: 'seat-3',
+  selectedSeatId: 'seat-1',
   selectedSeat: 'A3',
   driverName: 'أحمد علي حسن',
   driverRating: 4.8,
@@ -793,6 +831,24 @@ List<TripStopPairPrice> _pairPrices(double fare) => [
         ),
 ];
 
+/// The pictures of the demo bus, drawn by
+/// `tool/showcase/capture/vehicle_photos.mjs`.
+///
+/// They are URLs rather than Flutter assets because the gallery loads them with
+/// `Image.network`, and they sit under `web/` — which a Flutter web build copies
+/// next to `index.html` — so the harness serves them from its own origin and the
+/// mobile app bundle never carries them.
+///
+/// Only the bus plated `ن ص ٤٢٧` gets them: the front view carries that plate, so
+/// hanging the same three pictures on the Sprinter and the H1 would have the
+/// gallery contradicting the card above it. A fleet record with no photos yet is
+/// a real state anyway, and those two trips are where the showcase shows it.
+const _vehiclePhotos = [
+  'showcase/vehicles/hiace-side.webp',
+  'showcase/vehicles/hiace-front.webp',
+  'showcase/vehicles/hiace-cabin.webp',
+];
+
 const TripVehicleProfile _hiaceProfile = TripVehicleProfile(
   brand: 'تويوتا',
   model: 'هايس',
@@ -801,8 +857,11 @@ const TripVehicleProfile _hiaceProfile = TripVehicleProfile(
   color: 'أبيض',
   manufactureYear: 2021,
   capacity: 14,
-  seatLayoutType: '2-2',
+  // 2 + aisle + 1 down the body, four across the back — the Hiace cabin
+  // `VehicleSeatLayouts` draws, not the 2-2 coach this used to claim.
+  seatLayoutType: '2-1',
   features: ['تكييف', 'واي فاي', 'شاحن USB', 'مقاعد مريحة'],
+  imageUrls: _vehiclePhotos,
   vehicleRating: 4.7,
   vehicleRatingCount: 168,
   driverName: 'أحمد علي حسن',
