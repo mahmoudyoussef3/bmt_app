@@ -22,6 +22,7 @@ class ModulesSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           LandingSectionIntro(
+            eyebrow: 'المنصة',
             headline: 'كل ما تحتاجه لإدارة مكتبك، في منصة واحدة',
             lead:
                 'بدل ما تدير أجزاء منفصلة، EWT تجمع العملية كلها في مكان واحد.',

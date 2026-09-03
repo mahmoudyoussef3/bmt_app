@@ -22,6 +22,24 @@ class LandingContent {
   static const heroPrimaryCta = 'ابدأ إدارة مكتبك مع EWT';
   static const heroSecondaryCta = 'شاهد كيف تعمل المنصة';
 
+  /// The key under the hero's three-device rig, in the order the rig lays
+  /// them out on a wide screen (right → left in RTL): captain phone, console,
+  /// rider phone. Without it the reader sees three screens and has to guess
+  /// which app is which.
+  static const heroSurfaces = <LandingPoint>[
+    LandingPoint(icon: Icons.badge_rounded, title: 'تطبيق الكابتن', body: ''),
+    LandingPoint(
+      icon: Icons.dashboard_rounded,
+      title: 'لوحة تحكم المكتب',
+      body: '',
+    ),
+    LandingPoint(
+      icon: Icons.phone_iphone_rounded,
+      title: 'تطبيق الراكب',
+      body: '',
+    ),
+  ];
+
   static const heroTrust = <LandingPoint>[
     LandingPoint(
       icon: Icons.tune_rounded,
@@ -44,6 +62,133 @@ class LandingContent {
       body: 'ينمو مع مكتبك',
     ),
   ];
+
+  // ── Hero product board ──────────────────────────────────────────────────
+  /// The demo office the hero's three drawn screens report on.
+  ///
+  /// The rig used to embed real captures. At hero size the console capture is
+  /// a wall of 9px type nobody reads, so the fold now draws a *reduced* board
+  /// instead — the same screens, cut down to the four numbers, the three trips
+  /// and the one chart a reader can actually take in at a glance. Everything
+  /// below the fold is still photographed (see `LandingShots`), which is what
+  /// keeps this board a summary rather than a claim: no figure here is stated
+  /// beside a screenshot that contradicts it.
+  static const boardConsoleTitle = 'لوحة تحكم EWT · مكتب الميجا للنقل';
+  static const boardConsoleStamp = 'تحديث مباشر · 12 مارس 2026';
+  static const boardOverview = 'نظرة عامة';
+
+  /// Right → left, the way the segmented control reads in RTL.
+  static const boardPeriods = <String>['اليوم', 'الأسبوع', 'الشهر'];
+
+  static const boardKpis = <LandingKpi>[
+    LandingKpi(
+      icon: Icons.alt_route_rounded,
+      label: 'رحلات اليوم',
+      value: '24',
+      unit: 'رحلة',
+      delta: '+3 عن أمس',
+      deltaColor: LandingPalette.good,
+    ),
+    LandingKpi(
+      icon: Icons.event_seat_rounded,
+      label: 'إجمالي الحجوزات',
+      value: '186',
+      unit: 'حجز',
+      delta: '+12% هذا الأسبوع',
+      deltaColor: LandingPalette.good,
+    ),
+    LandingKpi(
+      icon: Icons.donut_small_rounded,
+      label: 'نسبة الإشغال',
+      value: '87%',
+      delta: '+4% عن الأسبوع الماضي',
+      deltaColor: LandingPalette.good,
+    ),
+    LandingKpi(
+      icon: Icons.payments_rounded,
+      label: 'إيرادات اليوم',
+      value: '42,850',
+      unit: 'ج.م',
+      delta: '38,200 محصلة',
+    ),
+  ];
+
+  static const boardTripsTitle = 'الرحلات القادمة';
+  static const boardTripsAction = 'عرض الكل';
+  static const boardTrips = <LandingBoardTrip>[
+    LandingBoardTrip(
+      origin: 'القاهرة',
+      destination: 'الإسكندرية',
+      meta: '08:30 ص · كابتن محمود',
+      seats: '12 / 14',
+      status: 'مؤكدة',
+      tone: LandingTone.good,
+    ),
+    LandingBoardTrip(
+      origin: 'القاهرة',
+      destination: 'المنصورة',
+      meta: '10:00 ص · كابتن سيد',
+      seats: '11 / 14',
+      status: 'قادمة',
+      tone: LandingTone.brand,
+    ),
+    LandingBoardTrip(
+      origin: 'القاهرة',
+      destination: 'طنطا',
+      meta: '12:30 م · كابتن رمضان',
+      seats: '14 / 14',
+      status: 'مكتملة الحجز',
+      tone: LandingTone.warn,
+    ),
+  ];
+
+  static const boardChartTitle = 'الحجوزات خلال الأسبوع';
+  static const boardChartTotal = 'إجمالي 1,184 حجز';
+
+  /// Bar heights in [LandingBarChart]'s own 130-unit view box, and the week
+  /// running left → right the way every other chart on this page runs.
+  static const boardChartHeights = <double>[51, 66, 56, 76, 70, 92, 84];
+  static const boardChartLabels = <String>[
+    'سبت',
+    'أحد',
+    'اثنين',
+    'ثلاثاء',
+    'أربعاء',
+    'خميس',
+    'جمعة',
+  ];
+
+  // The rider phone in the rig.
+  static const boardRiderApp = 'تطبيق العميل';
+  static const boardRiderTitle = 'رحلتك القادمة تبدأ من هنا';
+  static const boardRiderFrom = 'القاهرة';
+  static const boardRiderTo = 'الإسكندرية';
+  static const boardRiderSearch = 'ابحث عن رحلة';
+  static const boardRiderBooking = 'حجزك الحالي';
+  static const boardRiderOrigin = 'موقف عبود';
+  static const boardRiderDestination = 'سيدي جابر';
+  static const boardRiderDepart =
+      'الانطلاق 13:00 · كن في نقطة الانطلاق قبل 10 دقائق';
+  static const boardRiderSeat = 'المقعد A3';
+  static const boardRiderStatus = 'مؤكدة';
+  static const boardRiderTrack = 'تتبع الرحلة';
+
+  // The captain phone in the rig.
+  static const boardCaptainLive = 'رحلة جارية · كابتن محمود';
+  static const boardCaptainOrigin = 'القاهرة';
+  static const boardCaptainDestination = 'الإسكندرية';
+  static const boardCaptainVehicle = 'تويوتا هايبس · ق ٢٧ م';
+  static const boardCaptainChips = <({String value, String label})>[
+    (value: '13:00', label: 'التوقيت'),
+    (value: '7 / 11', label: 'صعدوا'),
+    (value: '2 / 5', label: 'المحطات'),
+  ];
+  static const boardCaptainNext = 'المحطة القادمة';
+  static const boardCaptainStop = 'استراحة كيلو 100';
+  static const boardCaptainEta = 'الوصول المتوقع 14:40';
+  static const boardCaptainProgress = 0.62;
+  static const boardCaptainProgressLabel = '62%';
+  static const boardCaptainCta = 'تسجيل الوصول للمحطة';
 
   // ── Problem ─────────────────────────────────────────────────────────────
   static const problems = <LandingPoint>[
@@ -132,38 +277,91 @@ class LandingContent {
     ),
   ];
 
-  // ── Operations ──────────────────────────────────────────────────────────
-  static const operations = <LandingPoint>[
-    LandingPoint(
-      icon: Icons.alt_route_rounded,
-      title: 'إدارة الخطوط',
-      body: 'أنشئ خطوط النقل ونقاط الانطلاق والوصول ونظم رحلاتك بسهولة.',
+  // ── Operations («المميزات») ─────────────────────────────────────────────
+  /// The eight modules an office runs, in the same two groups the platform
+  /// diagram above names them in — and each one pointing at the band further
+  /// down the page that shows it working, so the features section reads as the
+  /// page's index rather than a wall of equal cards.
+  static const operationGroups = <LandingFeatureGroup>[
+    LandingFeatureGroup(
+      index: '٠١',
+      label: 'التشغيل اليومي',
+      caption: 'من إنشاء الخط لحد إقفال الرحلة',
+      features: [
+        LandingFeature(
+          icon: Icons.alt_route_rounded,
+          title: 'إدارة الخطوط',
+          body: 'أنشئ خطوط النقل ونقاط الانطلاق والوصول ونظّم رحلاتك بسهولة.',
+          capabilities: ['المحطات والمواعيد', 'سعر كل مشوار'],
+          target: LandingFeatureTarget.dashboard,
+          targetLabel: 'شوفها في لوحة التحكم',
+        ),
+        LandingFeature(
+          icon: Icons.route_rounded,
+          title: 'إدارة الرحلات',
+          body: 'أنشئ الرحلات وحدد مواعيدها وكباتنها وتابع حالتها.',
+          capabilities: ['كابتن وعربية', 'حالة الرحلة'],
+          target: LandingFeatureTarget.dashboard,
+          targetLabel: 'شوفها في لوحة التحكم',
+        ),
+        LandingFeature(
+          icon: Icons.badge_rounded,
+          title: 'إدارة الكباتن',
+          body: 'اعرف الكابتن المسؤول عن كل رحلة وتابع مهامه التشغيلية.',
+          capabilities: ['مهام مسندة', 'تنفيذ موثق'],
+          target: LandingFeatureTarget.captain,
+          targetLabel: 'شوفها في تطبيق الكابتن',
+        ),
+        LandingFeature(
+          icon: Icons.event_seat_rounded,
+          title: 'إدارة الحجوزات',
+          body: 'تابع المقاعد والحجوزات وحالة كل حجز من مكان واحد.',
+          capabilities: ['خريطة المقاعد', 'حالة الدفع'],
+          target: LandingFeatureTarget.bookings,
+          targetLabel: 'شوف شاشة الحجوزات',
+        ),
+      ],
     ),
-    LandingPoint(
-      icon: Icons.route_rounded,
-      title: 'إدارة الرحلات',
-      body: 'أنشئ الرحلات وحدد مواعيدها وكباتنها وتابع حالتها.',
-    ),
-    LandingPoint(
-      icon: Icons.badge_rounded,
-      title: 'إدارة الكباتن',
-      body: 'اعرف الكابتن المسؤول عن كل رحلة وتابع مهامه التشغيلية.',
-    ),
-    LandingPoint(
-      icon: Icons.event_seat_rounded,
-      title: 'إدارة الحجوزات',
-      body: 'تابع المقاعد والحجوزات وحالة كل حجز من مكان واحد.',
-    ),
-    LandingPoint(
-      icon: Icons.manage_accounts_rounded,
-      title: 'إدارة المستخدمين',
-      body:
-          'امنح موظفي المكتب الصلاحيات المناسبة وساعد فريقك على العمل بشكل منظم.',
-    ),
-    LandingPoint(
-      icon: Icons.group_rounded,
-      title: 'إدارة العملاء',
-      body: 'احتفظ برؤية واضحة لحجوزات وعملاء مكتبك.',
+    LandingFeatureGroup(
+      index: '٠٢',
+      label: 'المتابعة والإدارة',
+      caption: 'الأرقام والصلاحيات اللي بتدير بيها مكتبك',
+      features: [
+        LandingFeature(
+          icon: Icons.payments_rounded,
+          title: 'المدفوعات والتحصيل',
+          body:
+              'تابع الإيرادات والمدفوعات والمصروفات واعرف فلوس مكتبك رايحة فين.',
+          capabilities: ['إيرادات ومصروفات', 'حالة كل دفعة'],
+          target: LandingFeatureTarget.finance,
+          targetLabel: 'شوف الحركة المالية',
+        ),
+        LandingFeature(
+          icon: Icons.bar_chart_rounded,
+          title: 'تقارير الأداء',
+          body: 'اقرأ أداء الخطوط والإشغال والإيراد عبر الفترة اللي تختارها.',
+          capabilities: ['أداء الخطوط', 'نسب الإشغال'],
+          target: LandingFeatureTarget.analytics,
+          targetLabel: 'شوف التقارير',
+        ),
+        LandingFeature(
+          icon: Icons.group_rounded,
+          title: 'إدارة العملاء',
+          body: 'احتفظ برؤية واضحة لعملاء مكتبك وحجوزاتهم.',
+          capabilities: ['سجل الحجوزات', 'حجز من التطبيق'],
+          target: LandingFeatureTarget.client,
+          targetLabel: 'شوف تجربة العميل',
+        ),
+        LandingFeature(
+          icon: Icons.manage_accounts_rounded,
+          title: 'المستخدمون والصلاحيات',
+          body:
+              'امنح موظفي المكتب الصلاحيات المناسبة وساعد فريقك على العمل بشكل منظم.',
+          capabilities: ['صلاحيات لكل دور', 'فريق منظم'],
+          target: LandingFeatureTarget.dashboard,
+          targetLabel: 'شوفها في لوحة التحكم',
+        ),
+      ],
     ),
   ];
 
@@ -377,53 +575,88 @@ class LandingContent {
   ];
 
   /// The rider's four steps, each one a real screen of the app.
+  ///
+  /// The icon is not decoration: it is what marks the four cards as one
+  /// sequence at a glance, on a row where every card is otherwise a phone.
   static const clientJourney =
-      <({String step, String title, String body, String shot})>[
+      <({String step, IconData icon, String title, String body, String shot})>[
         (
           step: '١',
+          icon: Icons.travel_explore_rounded,
           title: 'يدوّر على رحلته',
           body: 'كل الرحلات المتاحة على خطه، بمواعيدها وأسعارها.',
           shot: LandingShots.clientSearch,
         ),
         (
           step: '٢',
+          icon: Icons.event_seat_rounded,
           title: 'يختار مقعده',
           body: 'خريطة مقاعد العربية، والمحجوز منها واضح قبل ما يدفع.',
           shot: LandingShots.clientSeats,
         ),
         (
           step: '٣',
+          icon: Icons.my_location_rounded,
           title: 'يتابع رحلته',
           body: 'يشوف العربية على الخريطة ووقت وصولها، بدون مكالمة لمكتبك.',
           shot: LandingShots.clientTrack,
         ),
         (
           step: '٤',
+          icon: Icons.account_balance_wallet_rounded,
           title: 'يدفع من محفظته',
           body: 'رصيده وحركة مدفوعاته في مكان واحد.',
           shot: LandingShots.clientWallet,
         ),
       ];
   // ── Before / after ──────────────────────────────────────────────────────
-  static const before = <String>[
-    'متابعة على واتساب',
-    'مكالمات كثيرة',
-    'جداول متفرقة',
-    'صعوبة معرفة المقاعد',
-    'متابعة يدوية للكباتن',
-    'أرقام غير واضحة',
-    'اعتماد كبير على صاحب المكتب',
+  /// The comparison is read as a table, one row per axis of the operation, so
+  /// every complaint on the "before" side has its answer on the same line
+  /// rather than in a loose second list the reader has to pair up themselves.
+  static const comparisonLead =
+      'كل بند في عمود «قبل» له مقابل مباشر في نفس السطر — نفس المهمة، بعد ما '
+      'تدخل المنصة.';
+
+  static const comparison = <({String axis, String before, String after})>[
+    (
+      axis: 'التواصل',
+      before: 'متابعة على واتساب ومكالمات كثيرة',
+      after: 'منصة واحدة لكل العمليات',
+    ),
+    (
+      axis: 'الجدولة',
+      before: 'جداول متفرقة لكل خط',
+      after: 'رحلات وخطوط منظمة',
+    ),
+    (
+      axis: 'الحجز',
+      before: 'صعوبة معرفة المقاعد المتاحة',
+      after: 'حجوزات ومقاعد واضحة',
+    ),
+    (
+      axis: 'الكباتن',
+      before: 'متابعة يدوية للكباتن',
+      after: 'متابعة الكباتن من التطبيق',
+    ),
+    (
+      axis: 'التشغيل',
+      before: 'لا توجد صورة كاملة لليوم',
+      after: 'بيانات تشغيلية لحظية',
+    ),
+    (
+      axis: 'المال',
+      before: 'أرقام غير واضحة',
+      after: 'رؤية مالية وتقارير ومؤشرات',
+    ),
+    (
+      axis: 'الإدارة',
+      before: 'اعتماد كبير على صاحب المكتب',
+      after: 'صلاحيات وتحكم موزّع على الفريق',
+    ),
   ];
-  static const after = <String>[
-    'منصة واحدة',
-    'رحلات منظمة',
-    'حجوزات واضحة',
-    'متابعة الكباتن',
-    'بيانات تشغيلية',
-    'رؤية مالية',
-    'تقارير ومؤشرات',
-    'تحكم أفضل',
-  ];
+
+  static const comparisonOutcome =
+      'النتيجة: وقت أقل في المتابعة اليدوية، وأرقام تقدر تبني عليها قرار.';
 
   // ── Growth ladder ───────────────────────────────────────────────────────
   static const growth =
@@ -541,52 +774,75 @@ class LandingContent {
   ];
 
   // ── FAQ ─────────────────────────────────────────────────────────────────
-  static const faq = <({String question, String answer})>[
+  /// Each entry carries the rail's category. The categories run in page
+  /// order and every question is contiguous with its neighbours, so the
+  /// unfiltered list already reads as four groups before the reader
+  /// narrows it.
+  static const faq = <({String category, String question, String answer})>[
     (
+      category: 'عن المنصة',
       question: 'ما هي EWT؟',
       answer:
           'نظام لإدارة مكاتب النقل: الخطوط والرحلات والكباتن والحجوزات والمدفوعات والتقارير في لوحة تحكم واحدة.',
     ),
     (
+      category: 'عن المنصة',
       question: 'هل EWT مناسبة لمكاتب النقل الصغيرة؟',
       answer:
           'نعم. تبدأ بعدد محدود من الخطوط والرحلات، وتتوسع مع نمو مكتبك بدون تغيير النظام.',
     ),
     (
+      category: 'التشغيل والفريق',
       question: 'هل يمكنني إدارة أكثر من خط ورحلة؟',
       answer:
           'نعم، يمكنك إنشاء عدد غير محدود من الخطوط والرحلات اليومية أو المتكررة ومتابعة إشغال كل خط.',
     ),
     (
+      category: 'التشغيل والفريق',
       question: 'هل يمكنني إضافة أكثر من كابتن؟',
       answer:
           'نعم، تضيف كباتن مكتبك وتسند لكل رحلة كابتنها وتتابع تنفيذه من لوحة التحكم.',
     ),
     (
+      category: 'التشغيل والفريق',
       question: 'هل يمكن لموظفي المكتب استخدام النظام؟',
       answer:
           'نعم، تضيف مستخدمين لفريقك وتمنح كل واحد الصلاحيات المناسبة لدوره.',
     ),
     (
+      category: 'الحجز والتطبيقات',
       question: 'هل يمكنني متابعة الحجوزات والمدفوعات؟',
       answer:
           'نعم، تتابع كل حجز ومقعده وحالة الدفع، مع متابعة المبالغ المحصلة والمعلقة.',
     ),
     (
+      category: 'الحجز والتطبيقات',
       question: 'هل يوجد تطبيق للكابتن؟',
       answer:
           'نعم، تطبيق الكابتن يعرض الرحلات المسندة إليه وتفاصيلها وحالتها، وكل تحديث يظهر لك في لوحة التحكم.',
     ),
     (
+      category: 'الحجز والتطبيقات',
       question: 'هل يستطيع العملاء الحجز من خلال النظام؟',
       answer:
           'نعم، يمكن للعميل استعراض الرحلات المتاحة وحجز مقعده ومتابعة حالة حجزه.',
     ),
     (
+      category: 'البدء',
       question: 'كيف أبدأ استخدام EWT؟',
       answer:
           'سجّل مكتبك، أضف خطوطك ورحلاتك وفريقك، وابدأ التشغيل والمتابعة من لوحة التحكم.',
     ),
+  ];
+
+  // ── Closing band ────────────────────────────────────────────────────────
+  /// What a reader actually gets after pressing the closing CTA. Every line
+  /// is something the page has already shown or the onboarding dialog
+  /// already promises — the band sets expectations, it does not invent them.
+  static const ctaAssurances = <String>[
+    'إعداد حساب مكتبك بمساعدة فريقنا',
+    'تجهيز خطوطك ورحلاتك خطوة بخطوة',
+    'متابعة كل شيء من لوحة تحكم واحدة',
   ];
 
   // ── Contact ─────────────────────────────────────────────────────────────
@@ -605,8 +861,56 @@ class LandingContent {
   ];
 }
 
+/// The band «المميزات» hands the reader off to for a given feature. Every
+/// card has one: a feature the page never demonstrates has no business being
+/// advertised in the index.
+enum LandingFeatureTarget {
+  dashboard,
+  captain,
+  bookings,
+  finance,
+  analytics,
+  client,
+}
+
+/// One card in «المميزات»: what the module is, two concrete things it does,
+/// and where on the page it is shown working.
+class LandingFeature {
+  const LandingFeature({
+    required this.icon,
+    required this.title,
+    required this.body,
+    required this.capabilities,
+    required this.target,
+    required this.targetLabel,
+  });
+
+  final IconData icon;
+  final String title;
+  final String body;
+  final List<String> capabilities;
+  final LandingFeatureTarget target;
+  final String targetLabel;
+}
+
+/// A named run of features — the heading rule that splits the eight cards
+/// into two readable halves instead of one eight-card field.
+class LandingFeatureGroup {
+  const LandingFeatureGroup({
+    required this.index,
+    required this.label,
+    required this.caption,
+    required this.features,
+  });
+
+  final String index;
+  final String label;
+  final String caption;
+  final List<LandingFeature> features;
+}
+
 /// An icon + title + body triple — the page's most repeated shape, used by the
-/// problem grid, the operations grid, the "why" grid and the trust rail.
+/// problem grid, the "why" grid and the trust rail.
 class LandingPoint {
   const LandingPoint({
     required this.icon,
@@ -660,6 +964,34 @@ class LandingBookingRow {
   final LandingTone payTone;
   final String status;
   final LandingTone statusTone;
+}
+
+/// One row of the hero board's «الرحلات القادمة» panel.
+///
+/// The endpoints are held apart rather than pre-joined into `'A → B'`: the
+/// panel renders them through [RouteDirectionText], which is the only form
+/// that still means *origin → destination* after the bidi algorithm has had
+/// its say.
+class LandingBoardTrip {
+  const LandingBoardTrip({
+    required this.origin,
+    required this.destination,
+    required this.meta,
+    required this.seats,
+    required this.status,
+    required this.tone,
+  });
+
+  final String origin;
+  final String destination;
+
+  /// Departure time and captain, on one quiet line under the route.
+  final String meta;
+
+  /// Booked over capacity — a Latin run, so the panel isolates it.
+  final String seats;
+  final String status;
+  final LandingTone tone;
 }
 
 class LandingMeterData {

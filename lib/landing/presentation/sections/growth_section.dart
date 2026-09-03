@@ -20,6 +20,7 @@ class GrowthSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const LandingSectionIntro(
+            eyebrow: 'النمو',
             headline: 'ابدأ منظمًا... وكبّر مكتبك بثقة',
             lead: 'EWT تساعدك تحافظ على السيطرة مع نمو عملياتك.',
             maxWidth: 620,

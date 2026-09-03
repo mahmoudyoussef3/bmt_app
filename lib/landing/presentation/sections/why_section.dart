@@ -16,6 +16,7 @@ class WhySection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const LandingSectionIntro(
+            eyebrow: 'الأسباب',
             headline: 'ليه أصحاب مكاتب النقل يختاروا EWT؟',
             maxWidth: 720,
             headlineMin: 24,

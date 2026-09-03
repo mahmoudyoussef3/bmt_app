@@ -28,7 +28,7 @@ class LandingApp extends StatelessWidget {
         brightness: Brightness.light,
         scaffoldBackgroundColor: LandingPalette.page,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: LandingPalette.brand,
+          seedColor: LandingPalette.brandDeep,
           brightness: Brightness.light,
           surface: LandingPalette.surface,
         ),

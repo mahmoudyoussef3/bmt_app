@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 
-import '../landing_content.dart';
 import '../theme/landing_theme.dart';
 import 'landing_atoms.dart';
+import 'landing_contact.dart';
 
 /// A short, honest dialog for CTAs that have no real destination yet
 /// (sign-in, "start with EWT", contact). Used instead of linking to a page
@@ -132,23 +131,14 @@ class LandingContactDialog extends StatelessWidget {
                 style: LandingType.cardBody(13.5),
               ),
               const SizedBox(height: 20),
-              _ContactRow(
-                icon: Icons.mail_outline_rounded,
-                label: LandingContent.contactEmail,
-                onTap: () => _launch(
-                  context,
-                  Uri(scheme: 'mailto', path: LandingContent.contactEmail),
+              for (final (index, channel) in LandingChannel.values.indexed) ...[
+                if (index > 0) const SizedBox(height: 10),
+                _ContactRow(
+                  icon: channel.icon,
+                  label: channel.value,
+                  onTap: () => launchLandingUri(context, channel.uri),
                 ),
-              ),
-              const SizedBox(height: 10),
-              _ContactRow(
-                icon: Icons.call_outlined,
-                label: LandingContent.contactPhone,
-                onTap: () => _launch(
-                  context,
-                  Uri(scheme: 'tel', path: LandingContent.contactPhone),
-                ),
-              ),
+              ],
               const SizedBox(height: 22),
               Align(
                 alignment: AlignmentDirectional.centerEnd,
@@ -164,15 +154,6 @@ class LandingContactDialog extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  static Future<void> _launch(BuildContext context, Uri uri) async {
-    final launched = await launchUrl(uri);
-    if (!launched && context.mounted) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('تعذر فتح ${uri.scheme}')));
-    }
   }
 }
 

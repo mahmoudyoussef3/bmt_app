@@ -75,14 +75,25 @@ void main() {
     // google_fonts would otherwise fetch every Cairo weight over HTTP; under
     // the test binding each request 400s and reports as a test error.
     GoogleFonts.config.allowRuntimeFetching = false;
-    // It resolves `Cairo_w900`-style families and falls back to the bare
-    // family name, so registering one host Arabic face as `Cairo` covers every
-    // weight the page asks for.
+    // It resolves a family per *variant* — `Cairo_regular`, `Cairo_700`,
+    // `Cairo_900` — and names the bare family only as a fallback. Registering
+    // just `Cairo` and `Cairo_regular` therefore covers body copy and nothing
+    // else: every heavier weight lands on the fallback, which draws Arabic
+    // from the host but photographs Latin digits as tofu boxes. The whole
+    // hero board is numbers, so it has to be all of them.
     const path = '/System/Library/Fonts/Supplemental/Arial Unicode.ttf';
     final file = File(path);
     if (file.existsSync()) {
       final bytes = ByteData.sublistView(file.readAsBytesSync());
-      for (final family in ['Cairo', 'Cairo_regular']) {
+      for (final family in [
+        'Cairo',
+        'Cairo_regular',
+        'Cairo_500',
+        'Cairo_600',
+        'Cairo_700',
+        'Cairo_800',
+        'Cairo_900',
+      ]) {
         await (FontLoader(family)..addFont(Future.value(bytes))).load();
       }
     }
@@ -130,25 +141,21 @@ void main() {
     ('problem', ProblemSection(onSeeDashboard: _noop), 700),
     ('modules', const ModulesSection(), 620),
     ('dashboard', const DashboardSection(), 1150),
-    ('operations', const OperationsSection(), 700),
+    ('operations', const OperationsSection(), 1020),
     ('captain', const CaptainSection(), 800),
     ('bookings', const BookingsSection(), 750),
     ('finance', const FinanceSection(), 800),
     ('analytics', const AnalyticsSection(), 750),
     ('client', const ClientSection(), 1300),
-    ('comparison', const ComparisonSection(), 700),
+    ('comparison', const ComparisonSection(), 880),
     ('growth', const GrowthSection(), 500),
     ('why', const WhySection(), 650),
     ('steps', StepsSection(onGetStarted: _noop), 620),
     ('trust', const TrustSection(), 450),
-    ('cta', CtaSection(onGetStarted: _noop, onContact: _noop), 480),
-    ('faq', const FaqSection(), 900),
-    ('footer', FooterSection(onLinkTap: _ignore), 420),
-    (
-      'contact_dialog',
-      const Center(child: LandingContactDialog()),
-      420,
-    ),
+    ('cta', CtaSection(onGetStarted: _noop), 560),
+    ('faq', const FaqSection(), 1000),
+    ('footer', FooterSection(onLinkTap: _ignore), 460),
+    ('contact_dialog', const Center(child: LandingContactDialog()), 420),
   ]) {
     testWidgets('section — $name', (tester) async {
       await _capture(

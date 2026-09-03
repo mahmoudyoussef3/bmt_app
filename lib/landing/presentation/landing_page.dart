@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'landing_content.dart';
 import 'sections/analytics_section.dart';
 import 'sections/bookings_section.dart';
 import 'sections/captain_section.dart';
@@ -21,14 +22,22 @@ import 'sections/trust_section.dart';
 import 'sections/why_section.dart';
 import 'theme/landing_theme.dart';
 import 'widgets/landing_info_dialog.dart';
+import 'widgets/landing_reveal.dart';
+import 'widgets/landing_scroll_aids.dart';
 
 /// The EWT marketing site, assembled from the `EWT Landing v2` design.
 ///
 /// Everything the header needs is derived from one scroll listener: whether
-/// the page has left the top (which shrinks the header) and which anchor the
-/// reader is currently inside (which marks the current nav link). Section
-/// anchors are [GlobalKey]s rather than offsets so the marks stay correct as
-/// sections reflow at different widths.
+/// the page has left the top (which shrinks the header), which anchor the
+/// reader is currently inside (which marks the current nav link), how far
+/// down the page they are (the header's progress rule) and whether they are
+/// far enough down to be offered the way back up. Section anchors are
+/// [GlobalKey]s rather than offsets so the marks stay correct as sections
+/// reflow at different widths.
+///
+/// The section order is the nav's order. It has to be: the header marks the
+/// current section, and a page whose bands do not run in the order its links
+/// do makes that mark jump backwards as the reader scrolls forwards.
 class LandingPage extends StatefulWidget {
   const LandingPage({super.key});
 
@@ -40,23 +49,33 @@ class _LandingPageState extends State<LandingPage> {
   final _scrollController = ScrollController();
 
   final _topKey = GlobalKey();
-  final _dashboardKey = GlobalKey();
   final _operationsKey = GlobalKey();
+  final _dashboardKey = GlobalKey();
+  final _captainKey = GlobalKey();
+  final _bookingsKey = GlobalKey();
+  final _financeKey = GlobalKey();
   final _analyticsKey = GlobalKey();
+  final _clientKey = GlobalKey();
   final _stepsKey = GlobalKey();
-  final _ctaKey = GlobalKey();
   final _faqKey = GlobalKey();
+  final _ctaKey = GlobalKey();
 
   bool _scrolled = false;
   int _activeLink = 0;
+
+  /// Read every frame the page moves, so they are notifiers rather than
+  /// [setState] flags — a progress rule that rebuilt eighteen sections per
+  /// frame would cost more than it is worth.
+  final _progress = ValueNotifier<double>(0);
+  final _showBackToTop = ValueNotifier<bool>(false);
 
   /// The nav's anchors, in page order — the same list drives both the link
   /// rail and the current-section calculation.
   late final List<GlobalKey> _anchors = [
     _topKey,
     _operationsKey,
-    _stepsKey,
     _dashboardKey,
+    _stepsKey,
     _faqKey,
     _ctaKey,
   ];
@@ -72,10 +91,21 @@ class _LandingPageState extends State<LandingPage> {
     _scrollController
       ..removeListener(_onScroll)
       ..dispose();
+    _progress.dispose();
+    _showBackToTop.dispose();
     super.dispose();
   }
 
   void _onScroll() {
+    final position = _scrollController.position;
+    final extent = position.maxScrollExtent;
+    _progress.value = extent <= 0
+        ? 0
+        : (position.pixels / extent).clamp(0.0, 1.0);
+    // One full screen past the hero — before that the header is still close
+    // enough that a button back to it is noise.
+    _showBackToTop.value = position.pixels > position.viewportDimension;
+
     final scrolled = _scrollController.offset > 24;
     final active = _resolveActiveLink();
     if (scrolled != _scrolled || active != _activeLink) {
@@ -87,9 +117,7 @@ class _LandingPageState extends State<LandingPage> {
   }
 
   /// The current anchor is the last one whose top edge has passed just under
-  /// the header. Anchors are listed in nav order, which is *not* page order
-  /// («كيف تعمل EWT؟» sits after «لوحة التحكم» on the page), so the scan
-  /// compares real positions rather than trusting the list's order.
+  /// the header.
   int _resolveActiveLink() {
     var best = 0;
     var bestTop = double.negativeInfinity;
@@ -117,6 +145,25 @@ class _LandingPageState extends State<LandingPage> {
       alignment: 0.06,
     );
   }
+
+  /// «المميزات» is the page's index: each feature card hands the reader to
+  /// the band that shows that module working. Those bands are anchors but not
+  /// nav entries — they stay out of [_anchors] so the header keeps marking
+  /// the six links the reader can actually see.
+  void _openFeature(LandingFeatureTarget target) => _scrollTo(switch (target) {
+    LandingFeatureTarget.dashboard => _dashboardKey,
+    LandingFeatureTarget.captain => _captainKey,
+    LandingFeatureTarget.bookings => _bookingsKey,
+    LandingFeatureTarget.finance => _financeKey,
+    LandingFeatureTarget.analytics => _analyticsKey,
+    LandingFeatureTarget.client => _clientKey,
+  });
+
+  void _scrollToTop() => _scrollController.animateTo(
+    0,
+    duration: const Duration(milliseconds: 520),
+    curve: Curves.easeInOutCubic,
+  );
 
   void _showGetStarted() => LandingInfoDialog.show(
     context,
@@ -160,20 +207,20 @@ class _LandingPageState extends State<LandingPage> {
       case 'إنشاء حساب':
         _showGetStarted();
       default:
-        _scrollTo(_topKey);
+        _scrollToTop();
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final links = [
-      LandingNavLink(label: 'الرئيسية', onTap: () => _scrollTo(_topKey)),
+      LandingNavLink(label: 'الرئيسية', onTap: _scrollToTop),
       LandingNavLink(label: 'المميزات', onTap: () => _scrollTo(_operationsKey)),
-      LandingNavLink(label: 'كيف تعمل EWT؟', onTap: () => _scrollTo(_stepsKey)),
       LandingNavLink(
         label: 'لوحة التحكم',
         onTap: () => _scrollTo(_dashboardKey),
       ),
+      LandingNavLink(label: 'كيف تعمل EWT؟', onTap: () => _scrollTo(_stepsKey)),
       LandingNavLink(label: 'الأسئلة الشائعة', onTap: () => _scrollTo(_faqKey)),
       LandingNavLink(label: 'تواصل معنا', onTap: () => _scrollTo(_ctaKey)),
     ];
@@ -186,45 +233,96 @@ class _LandingPageState extends State<LandingPage> {
             links: links,
             activeIndex: _activeLink,
             scrolled: _scrolled,
+            progress: _progress,
             onLogin: _showLogin,
             onGetStarted: _showGetStarted,
           ),
           Expanded(
-            child: SingleChildScrollView(
-              controller: _scrollController,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  HeroSection(
-                    key: _topKey,
-                    onGetStarted: _showGetStarted,
-                    onSeeDashboard: () => _scrollTo(_dashboardKey),
+            child: Stack(
+              children: [
+                LandingRevealScope(
+                  ticker: _scrollController,
+                  child: SingleChildScrollView(
+                    controller: _scrollController,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // The hero is above the fold by definition, so it is
+                        // the one band that never waits to be revealed.
+                        HeroSection(
+                          key: _topKey,
+                          onGetStarted: _showGetStarted,
+                          onSeeDashboard: () => _scrollTo(_dashboardKey),
+                        ),
+                        LandingReveal(
+                          child: ProblemSection(
+                            onSeeDashboard: () => _scrollTo(_dashboardKey),
+                          ),
+                        ),
+                        const LandingReveal(child: ModulesSection()),
+                        // «المميزات» then «لوحة التحكم»: what the office runs,
+                        // then the console it runs it from — and the nav's own
+                        // order, which the rest of the page now follows.
+                        LandingReveal(
+                          key: _operationsKey,
+                          child: OperationsSection(onOpen: _openFeature),
+                        ),
+                        LandingReveal(
+                          key: _dashboardKey,
+                          child: const DashboardSection(),
+                        ),
+                        LandingReveal(
+                          key: _captainKey,
+                          child: const CaptainSection(),
+                        ),
+                        LandingReveal(
+                          key: _bookingsKey,
+                          child: const BookingsSection(),
+                        ),
+                        LandingReveal(
+                          key: _financeKey,
+                          child: const FinanceSection(),
+                        ),
+                        LandingReveal(
+                          key: _analyticsKey,
+                          child: const AnalyticsSection(),
+                        ),
+                        LandingReveal(
+                          key: _clientKey,
+                          child: const ClientSection(),
+                        ),
+                        const LandingReveal(child: ComparisonSection()),
+                        const LandingReveal(child: GrowthSection()),
+                        const LandingReveal(child: WhySection()),
+                        LandingReveal(
+                          key: _stepsKey,
+                          child: StepsSection(onGetStarted: _showGetStarted),
+                        ),
+                        const LandingReveal(child: TrustSection()),
+                        // Objections are answered *before* the ask, so the
+                        // closing band is the last thing the reader passes
+                        // rather than something they scroll away from.
+                        LandingReveal(key: _faqKey, child: const FaqSection()),
+                        LandingReveal(
+                          key: _ctaKey,
+                          child: CtaSection(onGetStarted: _showGetStarted),
+                        ),
+                        LandingReveal(
+                          child: FooterSection(onLinkTap: _onFooterLink),
+                        ),
+                      ],
+                    ),
                   ),
-                  ProblemSection(
-                    onSeeDashboard: () => _scrollTo(_dashboardKey),
+                ),
+                PositionedDirectional(
+                  end: 20,
+                  bottom: 20,
+                  child: LandingBackToTop(
+                    visible: _showBackToTop,
+                    onPressed: _scrollToTop,
                   ),
-                  const ModulesSection(),
-                  DashboardSection(key: _dashboardKey),
-                  OperationsSection(key: _operationsKey),
-                  const CaptainSection(),
-                  const BookingsSection(),
-                  const FinanceSection(),
-                  AnalyticsSection(key: _analyticsKey),
-                  const ClientSection(),
-                  const ComparisonSection(),
-                  const GrowthSection(),
-                  const WhySection(),
-                  StepsSection(key: _stepsKey, onGetStarted: _showGetStarted),
-                  const TrustSection(),
-                  CtaSection(
-                    key: _ctaKey,
-                    onGetStarted: _showGetStarted,
-                    onContact: _showContact,
-                  ),
-                  FaqSection(key: _faqKey),
-                  FooterSection(onLinkTap: _onFooterLink),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
         ],

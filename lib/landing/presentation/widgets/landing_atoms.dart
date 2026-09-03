@@ -321,6 +321,7 @@ class LandingButton extends StatefulWidget {
 
 class _LandingButtonState extends State<LandingButton> {
   bool _hovered = false;
+  bool _focused = false;
 
   @override
   Widget build(BuildContext context) {
@@ -371,34 +372,59 @@ class _LandingButtonState extends State<LandingButton> {
       ],
     );
 
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        onTap: widget.onPressed,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 140),
-          height: widget.height,
-          padding: EdgeInsets.symmetric(
-            horizontal: widget.height >= 52 ? 26 : 18,
+    // The ring is a shadow rather than a wider border: a border is laid out
+    // inside the box, so growing it on focus would nudge the label by a pixel
+    // in a header row that is already the page's tightest.
+    final ring = switch (widget.style) {
+      LandingButtonStyle.onDark ||
+      LandingButtonStyle.onDarkOutline => Colors.white,
+      _ => LandingPalette.brandInk,
+    };
+
+    return Semantics(
+      button: true,
+      label: widget.label,
+      child: FocusableActionDetector(
+        mouseCursor: SystemMouseCursors.click,
+        onShowHoverHighlight: (value) => setState(() => _hovered = value),
+        onShowFocusHighlight: (value) => setState(() => _focused = value),
+        actions: {
+          ActivateIntent: CallbackAction<ActivateIntent>(
+            onInvoke: (_) {
+              widget.onPressed();
+              return null;
+            },
           ),
-          decoration: BoxDecoration(
-            color: bg,
-            borderRadius: LandingRadii.buttonR,
-            border: line == null ? null : Border.all(color: line),
-            boxShadow: widget.style == LandingButtonStyle.primary
-                ? [
-                    BoxShadow(
-                      color: LandingPalette.brand.withValues(alpha: 0.55),
-                      offset: const Offset(0, 14),
-                      blurRadius: 30,
-                      spreadRadius: -14,
-                    ),
-                  ]
-                : null,
+        },
+        child: GestureDetector(
+          onTap: widget.onPressed,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 140),
+            height: widget.height,
+            padding: EdgeInsets.symmetric(
+              horizontal: widget.height >= 52 ? 26 : 18,
+            ),
+            decoration: BoxDecoration(
+              color: bg,
+              borderRadius: LandingRadii.buttonR,
+              border: line == null ? null : Border.all(color: line),
+              boxShadow: [
+                if (widget.style == LandingButtonStyle.primary)
+                  BoxShadow(
+                    color: LandingPalette.brand.withValues(alpha: 0.55),
+                    offset: const Offset(0, 14),
+                    blurRadius: 30,
+                    spreadRadius: -14,
+                  ),
+                if (_focused)
+                  BoxShadow(
+                    color: ring.withValues(alpha: 0.55),
+                    spreadRadius: 3,
+                  ),
+              ],
+            ),
+            child: child,
           ),
-          child: child,
         ),
       ),
     );

@@ -37,6 +37,8 @@ class StepsSection extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const LandingSectionIntro(
+                    eyebrow: 'كيف تعمل EWT؟',
+                    eyebrowColor: LandingPalette.onNavyAccent,
                     headline: 'ابدأ استخدام EWT في خطوات بسيطة',
                     maxWidth: 720,
                     onDark: true,

@@ -20,11 +20,8 @@ class LandingPalette {
   static const brandDeep = Color(0xFF3730A3);
 
   /// The dark band colour behind the hero preview, the dashboard section, the
-  /// steps section and the footer.
+  /// steps section, the closing CTA panel and the footer.
   static const navy = Color(0xFF0B1B34);
-
-  /// Sits between [navy] and [brandDeep] in the CTA gradient.
-  static const navyMid = Color(0xFF14365E);
 
   /// The pale blue used for eyebrows and icons *on* the navy bands, where
   /// [brand] itself has too little contrast.

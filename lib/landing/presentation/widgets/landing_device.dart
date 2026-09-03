@@ -115,6 +115,45 @@ class LandingPhoneShot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return LandingPhoneFrame(
+      width: width,
+      tilt: tilt,
+      shadow: shadow,
+      child: _ShotImage(
+        asset: asset,
+        aspectRatio: LandingShots.phoneAspect,
+        background: LandingPalette.surface,
+        crop: crop,
+      ),
+    );
+  }
+}
+
+/// The drawn phone body on its own, around any screen.
+///
+/// Separated from [LandingPhoneShot] so the hero can put a *drawn* screen
+/// inside the same device a capture goes into — one body, so the rig's three
+/// frames stay one object whether what is inside them is photographed or not.
+/// The frame takes its height from the screen, so a drawn board sizes the
+/// phone rather than being letterboxed into a capture's aspect ratio.
+class LandingPhoneFrame extends StatelessWidget {
+  const LandingPhoneFrame({
+    super.key,
+    required this.child,
+    this.width = 240,
+    this.tilt = 0,
+    this.shadow = true,
+  });
+
+  final Widget child;
+  final double width;
+
+  /// A small rotation, in radians, for phones stacked behind another.
+  final double tilt;
+  final bool shadow;
+
+  @override
+  Widget build(BuildContext context) {
     // The bezel and corner radii are proportional so a 160px phone and a
     // 300px one read as the same object at two distances.
     final bezel = width * 0.037;
@@ -150,12 +189,7 @@ class LandingPhoneShot extends StatelessWidget {
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(outer - bezel),
-          child: _ShotImage(
-            asset: asset,
-            aspectRatio: LandingShots.phoneAspect,
-            background: LandingPalette.surface,
-            crop: crop,
-          ),
+          child: child,
         ),
       ),
     );
@@ -189,6 +223,42 @@ class LandingBrowserShot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    return LandingBrowserFrame(
+      url: url,
+      radius: radius,
+      borderColor: borderColor,
+      shadow: shadow,
+      child: _ShotImage(
+        asset: asset,
+        aspectRatio: LandingShots.consoleAspect,
+        background: LandingPalette.page,
+        crop: crop,
+        fadeCut: true,
+      ),
+    );
+  }
+}
+
+/// The browser window on its own, around any screen — see [LandingPhoneFrame]
+/// for why the chrome and its contents are separable.
+class LandingBrowserFrame extends StatelessWidget {
+  const LandingBrowserFrame({
+    super.key,
+    required this.child,
+    this.url = 'console.ewt.eg',
+    this.radius = LandingRadii.card + 8,
+    this.borderColor = LandingPalette.border,
+    this.shadow = LandingPalette.liftedShadow,
+  });
+
+  final Widget child;
+  final String url;
+  final double radius;
+  final Color borderColor;
+  final List<BoxShadow> shadow;
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
@@ -202,13 +272,7 @@ class LandingBrowserShot extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           _BrowserBar(url: url),
-          _ShotImage(
-            asset: asset,
-            aspectRatio: LandingShots.consoleAspect,
-            background: LandingPalette.page,
-            crop: crop,
-            fadeCut: true,
-          ),
+          child,
         ],
       ),
     );

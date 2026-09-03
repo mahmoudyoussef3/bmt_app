@@ -20,6 +20,7 @@ class TrustSection extends StatelessWidget {
         startFlex: 9,
         endFlex: 10,
         start: const LandingSectionIntro(
+          eyebrow: 'الأساس',
           headline: 'نظام مصمم حول طبيعة عمل مكاتب النقل',
           lead:
               'مبني على الخطوات الفعلية لتشغيل مكتب النقل: من إنشاء الرحلة، '
