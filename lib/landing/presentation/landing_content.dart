@@ -394,8 +394,8 @@ class LandingContent {
         (
           step: '٣',
           title: 'يتابع رحلته',
-          body: 'تفاصيل الحجز وحالة الرحلة بدون مكالمة واحدة لمكتبك.',
-          shot: LandingShots.clientTrip,
+          body: 'يشوف العربية على الخريطة ووقت وصولها، بدون مكالمة لمكتبك.',
+          shot: LandingShots.clientTrack,
         ),
         (
           step: '٤',

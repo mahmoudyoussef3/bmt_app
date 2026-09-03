@@ -25,10 +25,13 @@ class LandingShots {
   static const clientSearch = '$_dir/shot-client-search.webp';
   static const clientSeats = '$_dir/shot-client-seats.webp';
   static const clientTrip = '$_dir/shot-client-trip.webp';
+
+  /// Following the vehicle on a map is the rider's screen, not the captain's —
+  /// the captain app has no such view, so this is the page's only map.
+  static const clientTrack = '$_dir/shot-client-track.webp';
   static const clientWallet = '$_dir/shot-client-wallet.webp';
 
   // The captain app.
-  static const captainMap = '$_dir/shot-captain-map.webp';
   static const captainHome = '$_dir/shot-captain-home.webp';
   static const captainTrip = '$_dir/shot-captain-trip.webp';
 

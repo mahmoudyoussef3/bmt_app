@@ -41,10 +41,13 @@ const shots = [
   ['client/client-route-results', 'shot-client-search', PHONE],
   ['client/client-booking-seat', 'shot-client-seats', PHONE],
   ['client/client-trip-details', 'shot-client-trip', PHONE],
+  ['client/client-tracking', 'shot-client-track', PHONE],
   ['client/client-wallet', 'shot-client-wallet', PHONE],
 
-  // The captain app.
-  ['captain/captain-trip-map', 'shot-captain-map', PHONE],
+  // The captain app. `captain-trip-map` is deliberately absent: following a
+  // vehicle on a map is a *rider* feature, and shipping the captain's own map
+  // to the landing page told the reader the tracking story twice, once from
+  // the wrong app. `shot-client-track` is the screen that claim belongs to.
   ['captain/captain-home', 'shot-captain-home', PHONE],
   ['captain/captain-trip-execution', 'shot-captain-trip', PHONE],
 

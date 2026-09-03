@@ -31,10 +31,12 @@ class CaptainSection extends StatelessWidget {
           child: FittedBox(
             fit: BoxFit.scaleDown,
             child: LandingPhoneDuo(
-              // The live route the captain is driving, with the trip he is
-              // running it from behind it.
-              frontAsset: LandingShots.captainMap,
-              backAsset: LandingShots.captainTrip,
+              // The trip the captain is running — stop by stop, with the
+              // boarding it records — and his day's assigned trips behind it.
+              // Not the map: following a vehicle is the rider's screen, and
+              // the captain's tracking is what this one reports upward.
+              frontAsset: LandingShots.captainTrip,
+              backAsset: LandingShots.captainHome,
               width: 246,
             ),
           ),

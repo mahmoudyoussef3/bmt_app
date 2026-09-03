@@ -278,7 +278,7 @@ class _HeroRig extends StatelessWidget {
           start: 0,
           bottom: 0,
           child: LandingPhoneShot(
-            asset: LandingShots.captainMap,
+            asset: LandingShots.captainTrip,
             width: phone,
             tilt: -0.035,
           ),
@@ -315,7 +315,7 @@ class _HeroStack extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            LandingPhoneShot(asset: LandingShots.captainMap, width: phoneWidth),
+            LandingPhoneShot(asset: LandingShots.captainTrip, width: phoneWidth),
             const SizedBox(width: 16),
             LandingPhoneShot(asset: LandingShots.clientHome, width: phoneWidth),
           ],

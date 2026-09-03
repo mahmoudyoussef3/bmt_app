@@ -45,6 +45,8 @@ const client = [
   'client-wallet',
   'client-loyalty',
 ].map((id) => phone(id));
+// The rider's live map draws real OSM tiles, so it gets longer to settle.
+client.push(phone('client-tracking', 11000));
 
 const captain = [
   'captain-home',

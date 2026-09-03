@@ -96,3 +96,10 @@ site does not mean re-photographing the product. `LandingShots` in
   is kept), but its board photographs as a flat grey rectangle under the
   harness, so `landing_assets.mjs` does not ship it. The tell is the file size:
   a 738KB PNG that compresses to a 27KB WebP is a picture of nothing.
+* **`captain-trip-map` on the landing page.** It still captures, but following
+  a vehicle on a map is a **rider** feature. Shipping the captain's own map to
+  the site told the tracking story twice, the louder time from the wrong app —
+  the marquee captain phone was a map, so the page read as if the captain is
+  the one being followed. `client-tracking` (`shot-client-track`) is the screen
+  that claim belongs to, and the captain band now leads with
+  `captain-trip-execution`, which is what his app actually does with a trip.
