@@ -589,6 +589,10 @@ class LandingContent {
     ),
   ];
 
+  // ── Contact ─────────────────────────────────────────────────────────────
+  static const contactEmail = 'mahmoudyousse220@gmail.com';
+  static const contactPhone = '01204154971';
+
   // ── Footer ──────────────────────────────────────────────────────────────
   static const footerColumns = <({String title, List<String> links})>[
     (title: 'المنصة', links: ['المميزات', 'لوحة التحكم', 'كيف تعمل EWT؟']),

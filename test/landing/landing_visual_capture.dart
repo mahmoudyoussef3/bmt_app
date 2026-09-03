@@ -40,6 +40,7 @@ import 'package:bmt_app/landing/presentation/sections/steps_section.dart';
 import 'package:bmt_app/landing/presentation/sections/trust_section.dart';
 import 'package:bmt_app/landing/presentation/sections/why_section.dart';
 import 'package:bmt_app/landing/presentation/theme/landing_theme.dart';
+import 'package:bmt_app/landing/presentation/widgets/landing_info_dialog.dart';
 import 'package:bmt_app/landing/presentation/widgets/landing_shots.dart';
 
 /// Everything the page can mount an [Image] for.
@@ -143,6 +144,11 @@ void main() {
     ('cta', CtaSection(onGetStarted: _noop, onContact: _noop), 480),
     ('faq', const FaqSection(), 900),
     ('footer', FooterSection(onLinkTap: _ignore), 420),
+    (
+      'contact_dialog',
+      const Center(child: LandingContactDialog()),
+      420,
+    ),
   ]) {
     testWidgets('section — $name', (tester) async {
       await _capture(

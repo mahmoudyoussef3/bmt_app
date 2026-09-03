@@ -69,7 +69,8 @@
       "Bash(cd /Users/mahmoud/bmt_app/lib/apps/dashboard *)",
       "Bash(timeout 90 supabase db query --linked \"select vehicle_type, capacity, count\\(*\\) from public.vehicles group by 1,2 order by 3 desc;\")",
       "Bash(supabase migration *)",
-      "Bash(node -e \"console.log\\(require.resolve\\('playwright-core'\\)\\)\")"
+      "Bash(node -e \"console.log\\(require.resolve\\('playwright-core'\\)\\)\")",
+      "Bash(chromium-cli --help)"
     ],
     "additionalDirectories": [
       "/Users/mahmoud/bmt_app/lib/apps/dashboard/features/office_profile/presentation/test/apps/dashboard/features/office_profile",

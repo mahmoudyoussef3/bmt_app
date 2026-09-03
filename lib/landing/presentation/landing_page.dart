@@ -126,13 +126,7 @@ class _LandingPageState extends State<LandingPage> {
         'وهنساعدك في إعداد حساب مكتبك وتجهيز خطوطك ورحلاتك خطوة بخطوة.',
   );
 
-  void _showContact() => LandingInfoDialog.show(
-    context,
-    title: 'تواصل معنا',
-    message:
-        'دي نسخة تعريفية من منصة EWT. لمعرفة الخطة المناسبة لمكتبك أو لأي '
-        'استفسار، فريق EWT يسعده التواصل معك.',
-  );
+  void _showContact() => LandingContactDialog.show(context);
 
   void _showLogin() => LandingInfoDialog.show(
     context,
