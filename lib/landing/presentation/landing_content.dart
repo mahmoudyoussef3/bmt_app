@@ -167,7 +167,7 @@ class LandingMeterDatum {
     required this.name,
     required this.trailing,
     required this.fraction,
-    this.color = LandingPalette.brand,
+    this.color = LandingPalette.brandDeep,
   });
 
   final String name;

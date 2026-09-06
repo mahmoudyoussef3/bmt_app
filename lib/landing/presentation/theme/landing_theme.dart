@@ -13,8 +13,8 @@ class LandingPalette {
   const LandingPalette._();
 
   // Brand
-  static const brand = Color(0xFF2563EB);
-  static const brandInk = Color(0xFF1D4ED8);
+  static const brand = Color(0xFF004F7E);
+  static const brandInk = Color(0xFF004F7E);
   static const brandTint = Color(0xFFEAF0FD);
   static const brandLine = Color(0xFFC9D9FB);
   static const brandDeep = Color(0xFF3730A3);
