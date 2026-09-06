@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/landing_theme.dart';
+import 'landing_motion.dart';
 
 /// The page's charts, painted in the design file's own SVG coordinate space.
 ///
@@ -44,31 +45,37 @@ void _paintGrid(
   );
 }
 
+/// The day and month names under a chart's baseline.
+///
+/// [baselineY] is the design's own `<text y="...">`, which in SVG is the
+/// **baseline** — not the bottom of the line box. Positioning by box bottom
+/// works with a compact face and fails with Cairo, whose line box is 1.874em:
+/// the labels ride up over the bars. So the box is offset by its measured
+/// baseline instead.
+///
+/// The label is laid out in design units and left in the already-scaled
+/// canvas, exactly as the SVG's `font-size="10"` scales with its viewBox.
 void _paintAxisLabels(
   Canvas canvas,
   List<String> labels,
   List<double> centres,
-  double y,
-  double scale,
+  double baselineY,
 ) {
   for (var i = 0; i < labels.length && i < centres.length; i++) {
     final painter = TextPainter(
       text: TextSpan(
         text: labels[i],
-        style: LandingType.label(
-          10 / scale,
-          color: LandingPalette.faint,
-        ).copyWith(height: 1),
+        style: LandingType.label(10, color: LandingPalette.faint),
       ),
       textDirection: TextDirection.rtl,
     )..layout();
-    // The painter lays out in device pixels; undo the canvas scale for the
-    // draw so the glyphs stay at their designed 10px regardless of width.
-    canvas.save();
-    canvas.translate(centres[i], y);
-    canvas.scale(1 / scale);
-    painter.paint(canvas, Offset(-painter.width / 2, -painter.height));
-    canvas.restore();
+    final baseline = painter.computeDistanceToActualBaseline(
+      TextBaseline.alphabetic,
+    );
+    painter.paint(
+      canvas,
+      Offset(centres[i] - painter.width / 2, baselineY - baseline),
+    );
   }
 }
 
@@ -92,11 +99,16 @@ class LandingBarChart extends StatelessWidget {
   Widget build(BuildContext context) {
     return AspectRatio(
       aspectRatio: 340 / 130,
-      child: CustomPaint(
-        painter: _BarChartPainter(
-          heights: heights,
-          labels: labels,
-          barColor: barColor.withValues(alpha: opacity),
+      // The columns grow out of the baseline once the card arrives; the grid
+      // and the axis labels are the chart's furniture and stay put.
+      child: LandingRevealBuilder(
+        builder: (context, t) => CustomPaint(
+          painter: _BarChartPainter(
+            heights: heights,
+            labels: labels,
+            barColor: barColor.withValues(alpha: opacity),
+            grow: t,
+          ),
         ),
       ),
     );
@@ -108,11 +120,15 @@ class _BarChartPainter extends CustomPainter {
     required this.heights,
     required this.labels,
     required this.barColor,
+    required this.grow,
   });
 
   final List<double> heights;
   final List<String> labels;
   final Color barColor;
+
+  /// 0 → 1: how far each column has risen from the baseline.
+  final double grow;
 
   static const _viewBox = Size(340, 130);
   static const _baseline = 114.0;
@@ -122,10 +138,8 @@ class _BarChartPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final scale = _SvgScale(canvas, size, _viewBox);
-    final k = scale.k;
     canvas.save();
-    scale.apply();
+    _SvgScale(canvas, size, _viewBox).apply();
 
     _paintGrid(canvas, _viewBox.width, const [24, 58, 92], _baseline);
 
@@ -133,23 +147,24 @@ class _BarChartPainter extends CustomPainter {
     final centres = <double>[];
     for (var i = 0; i < heights.length; i++) {
       final x = _firstX + _pitch * i;
+      final height = heights[i] * grow;
       centres.add(x + _barWidth / 2);
       canvas.drawRRect(
         RRect.fromRectAndRadius(
-          Rect.fromLTWH(x, _baseline - heights[i], _barWidth, heights[i]),
+          Rect.fromLTWH(x, _baseline - height, _barWidth, height),
           const Radius.circular(6),
         ),
         fill,
       );
     }
 
-    _paintAxisLabels(canvas, labels, centres, 127, k);
+    _paintAxisLabels(canvas, labels, centres, 127);
     canvas.restore();
   }
 
   @override
   bool shouldRepaint(_BarChartPainter old) =>
-      old.heights != heights || old.barColor != barColor;
+      old.heights != heights || old.barColor != barColor || old.grow != grow;
 }
 
 /// The dashboard section's trend chart — a filled area under a 2.6px line
@@ -163,14 +178,13 @@ class LandingLineChart extends StatelessWidget {
   Widget build(BuildContext context) {
     return AspectRatio(
       aspectRatio: 420 / 160,
-      child: TweenAnimationBuilder<double>(
-        // The chart is swapped when the operator changes tab; easing the new
-        // series in reads as the panel updating rather than as a hard cut.
+      // Keyed on the series: the chart is swapped when the operator changes
+      // tab, and a new key restarts the draw, so the swap eases in exactly as
+      // the first arrival did rather than cutting.
+      child: LandingRevealBuilder(
         key: ValueKey(points),
-        tween: Tween(begin: 0, end: 1),
-        duration: const Duration(milliseconds: 320),
-        curve: Curves.easeOutCubic,
-        builder: (context, t, _) => CustomPaint(
+        duration: const Duration(milliseconds: 520),
+        builder: (context, t) => CustomPaint(
           painter: _LineChartPainter(points: points, reveal: t),
         ),
       ),
@@ -256,11 +270,14 @@ class LandingDualLineChart extends StatelessWidget {
   Widget build(BuildContext context) {
     return AspectRatio(
       aspectRatio: 420 / 170,
-      child: CustomPaint(
-        painter: _DualLinePainter(
-          revenue: revenue,
-          expenses: expenses,
-          markers: markers,
+      child: LandingRevealBuilder(
+        builder: (context, t) => CustomPaint(
+          painter: _DualLinePainter(
+            revenue: revenue,
+            expenses: expenses,
+            markers: markers,
+            draw: t,
+          ),
         ),
       ),
     );
@@ -272,11 +289,17 @@ class _DualLinePainter extends CustomPainter {
     required this.revenue,
     required this.expenses,
     required this.markers,
+    required this.draw,
   });
 
   final List<Offset> revenue;
   final List<Offset> expenses;
   final List<Offset> markers;
+
+  /// 0 → 1: how much of each series has been drawn. The two lines are drawn
+  /// left to right in step, and the emphasis dots land in the last third,
+  /// each as its own point is reached.
+  final double draw;
 
   static const _viewBox = Size(420, 170);
   static const _baseline = 134.0;
@@ -291,6 +314,19 @@ class _DualLinePainter extends CustomPainter {
 
   /// `stroke-dasharray: 6 5` has no Flutter equivalent on [Canvas.drawPath],
   /// so the dashed series is walked segment by segment.
+  /// The head of [source] — the first [draw] of its length.
+  Path _drawn(Path source) {
+    if (draw >= 1) return source;
+    final result = Path();
+    for (final metric in source.computeMetrics()) {
+      result.addPath(
+        metric.extractPath(0, metric.length * draw.clamp(0.0, 1.0)),
+        Offset.zero,
+      );
+    }
+    return result;
+  }
+
   Path _dashed(Path source, double dash, double gap) {
     final result = Path();
     for (final metric in source.computeMetrics()) {
@@ -312,7 +348,7 @@ class _DualLinePainter extends CustomPainter {
     _paintGrid(canvas, _viewBox.width, const [20, 58, 96], _baseline);
 
     canvas.drawPath(
-      _path(revenue),
+      _drawn(_path(revenue)),
       Paint()
         ..style = PaintingStyle.stroke
         ..color = LandingPalette.brand
@@ -322,7 +358,7 @@ class _DualLinePainter extends CustomPainter {
     );
 
     canvas.drawPath(
-      _dashed(_path(expenses), 6, 5),
+      _dashed(_drawn(_path(expenses)), 6, 5),
       Paint()
         ..style = PaintingStyle.stroke
         ..color = LandingPalette.warn
@@ -332,13 +368,21 @@ class _DualLinePainter extends CustomPainter {
 
     final dot = Paint()..color = LandingPalette.brand;
     for (var i = 0; i < markers.length; i++) {
+      // A dot appears when the line has reached its x, measured across the
+      // series' own span rather than the viewBox, so the last one lands with
+      // the end of the stroke.
+      final span = revenue.last.dx - revenue.first.dx;
+      final reached =
+          span <= 0 || (markers[i].dx - revenue.first.dx) / span <= draw;
+      if (!reached) continue;
       canvas.drawCircle(markers[i], i == markers.length - 1 ? 3.8 : 3, dot);
     }
     canvas.restore();
   }
 
   @override
-  bool shouldRepaint(_DualLinePainter old) => old.revenue != revenue;
+  bool shouldRepaint(_DualLinePainter old) =>
+      old.revenue != revenue || old.draw != draw;
 }
 
 /// The analytics card's revenue-by-period columns (viewBox 260×130).
@@ -356,18 +400,31 @@ class LandingPeriodBars extends StatelessWidget {
   Widget build(BuildContext context) {
     return AspectRatio(
       aspectRatio: 260 / 130,
-      child: CustomPaint(
-        painter: _PeriodBarsPainter(heights: heights, labels: labels),
+      child: LandingRevealBuilder(
+        builder: (context, t) => CustomPaint(
+          painter: _PeriodBarsPainter(
+            heights: heights,
+            labels: labels,
+            grow: t,
+          ),
+        ),
       ),
     );
   }
 }
 
 class _PeriodBarsPainter extends CustomPainter {
-  _PeriodBarsPainter({required this.heights, required this.labels});
+  _PeriodBarsPainter({
+    required this.heights,
+    required this.labels,
+    required this.grow,
+  });
 
   final List<double> heights;
   final List<String> labels;
+
+  /// 0 → 1: how far each column has risen from the baseline.
+  final double grow;
 
   static const _viewBox = Size(260, 130);
   static const _baseline = 112.0;
@@ -377,10 +434,8 @@ class _PeriodBarsPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final scale = _SvgScale(canvas, size, _viewBox);
-    final k = scale.k;
     canvas.save();
-    scale.apply();
+    _SvgScale(canvas, size, _viewBox).apply();
 
     _paintGrid(canvas, _viewBox.width, const [22, 56, 90], _baseline);
 
@@ -388,22 +443,24 @@ class _PeriodBarsPainter extends CustomPainter {
     final centres = <double>[];
     for (var i = 0; i < heights.length; i++) {
       final x = _firstX + _pitch * i;
+      final height = heights[i] * grow;
       centres.add(x + _barWidth / 2);
       canvas.drawRRect(
         RRect.fromRectAndRadius(
-          Rect.fromLTWH(x, _baseline - heights[i], _barWidth, heights[i]),
+          Rect.fromLTWH(x, _baseline - height, _barWidth, height),
           const Radius.circular(6),
         ),
         fill,
       );
     }
 
-    _paintAxisLabels(canvas, labels, centres, 126, k);
+    _paintAxisLabels(canvas, labels, centres, 126);
     canvas.restore();
   }
 
   @override
-  bool shouldRepaint(_PeriodBarsPainter old) => old.heights != heights;
+  bool shouldRepaint(_PeriodBarsPainter old) =>
+      old.heights != heights || old.grow != grow;
 }
 
 /// The occupancy gauge — a 14px ring, opened at the top, with the figure
@@ -427,12 +484,9 @@ class LandingDonut extends StatelessWidget {
     return SizedBox(
       width: diameter,
       height: diameter,
-      child: TweenAnimationBuilder<double>(
-        tween: Tween(begin: 0, end: fraction),
-        duration: const Duration(milliseconds: 900),
-        curve: Curves.easeOutCubic,
-        builder: (context, t, _) => CustomPaint(
-          painter: _DonutPainter(fraction: t),
+      child: LandingRevealBuilder(
+        builder: (context, t) => CustomPaint(
+          painter: _DonutPainter(fraction: fraction * t),
           child: Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,

@@ -4,8 +4,10 @@ import '../landing_content.dart';
 import '../theme/landing_theme.dart';
 import '../widgets/landing_atoms.dart';
 import '../widgets/landing_layout.dart';
+import '../widgets/landing_table.dart';
 
-/// «الحجوزات» — the booking board, filter chips and all.
+/// «الحجوزات» — who booked, on which trip, in which seat, and whether they
+/// have paid: the day's register as the office sees it.
 class BookingsSection extends StatelessWidget {
   const BookingsSection({super.key});
 
@@ -16,71 +18,106 @@ class BookingsSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const LandingSectionIntro(
-            eyebrow: 'الحجوزات',
-            headline: 'الحجوزات تحت سيطرتك',
-            lead: 'تعرف مين حجز، على أي رحلة، وأي مقعد، وحالة الدفع.',
+            eyebrow: LandingContent.bookingsEyebrow,
+            headline: LandingContent.bookingsHeadline,
+            lead: LandingContent.bookingsLead,
             maxWidth: 620,
             headlineMax: 38,
           ),
           SizedBox(height: landingClamp(context, min: 24, vw: 3, max: 38)),
-          const _BookingBoard(),
-        ],
-      ),
-    );
-  }
-}
-
-class _BookingBoard extends StatelessWidget {
-  const _BookingBoard();
-
-  static const _seatWidth = 70.0;
-  static const _payWidth = 96.0;
-  static const _statusWidth = 92.0;
-  static const _minCustomerWidth = 130.0;
-  static const _minTripWidth = 160.0;
-  static const _minWidth =
-      _seatWidth + _payWidth + _statusWidth + _minCustomerWidth + _minTripWidth;
-
-  @override
-  Widget build(BuildContext context) {
-    return LandingCard(
-      padding: EdgeInsets.zero,
-      clip: true,
-      shadow: const [
-        BoxShadow(
-          color: Color(0x4D0B1B34),
-          offset: Offset(0, 26),
-          blurRadius: 54,
-          spreadRadius: -34,
-        ),
-      ],
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const _BookingToolbar(),
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final table = SizedBox(
-                width: constraints.maxWidth < _minWidth + 32
-                    ? _minWidth + 32
-                    : constraints.maxWidth,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const _BookingHeaderRow(),
-                    for (final booking in LandingContent.bookings)
-                      _BookingRow(booking: booking),
-                  ],
-                ),
-              );
-              if (constraints.maxWidth >= _minWidth + 32) return table;
-              return SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: table,
-              );
-            },
+          LandingTable(
+            minWidth: 620,
+            radius: LandingRadii.card,
+            shadow: const [
+              BoxShadow(
+                color: Color(0x4D0B1B34),
+                offset: Offset(0, 26),
+                blurRadius: 54,
+                spreadRadius: -34,
+              ),
+            ],
+            headerPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 10,
+            ),
+            rowPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
+            ),
+            toolbar: const _BookingsToolbar(),
+            header: [
+              LandingTableHeaderCell(
+                LandingContent.bookingHeaders[0],
+                flex: 10,
+              ),
+              LandingTableHeaderCell(
+                LandingContent.bookingHeaders[1],
+                flex: 12,
+              ),
+              LandingTableHeaderCell(
+                LandingContent.bookingHeaders[2],
+                width: 70,
+              ),
+              LandingTableHeaderCell(
+                LandingContent.bookingHeaders[3],
+                width: 96,
+              ),
+              LandingTableHeaderCell(
+                LandingContent.bookingHeaders[4],
+                width: 88,
+              ),
+            ],
+            rows: [
+              for (final booking in LandingContent.bookings)
+                [
+                  Expanded(flex: 10, child: _Customer(booking: booking)),
+                  Expanded(
+                    flex: 12,
+                    child: Text(
+                      booking.trip,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: LandingType.label(12.5, weight: FontWeight.w600),
+                    ),
+                  ),
+                  SizedBox(
+                    width: 70,
+                    child: Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: Text(
+                        booking.seat,
+                        maxLines: 1,
+                        textDirection: TextDirection.ltr,
+                        style: LandingType.label(
+                          12.5,
+                          color: LandingPalette.ink,
+                          weight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    width: 96,
+                    child: Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: LandingBadge(
+                        label: booking.pay,
+                        tone: booking.payTone,
+                      ),
+                    ),
+                  ),
+                  SizedBox(
+                    width: 88,
+                    child: Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: LandingBadge(
+                        label: booking.status,
+                        tone: booking.statusTone,
+                      ),
+                    ),
+                  ),
+                ],
+            ],
           ),
         ],
       ),
@@ -88,8 +125,8 @@ class _BookingBoard extends StatelessWidget {
   }
 }
 
-class _BookingToolbar extends StatelessWidget {
-  const _BookingToolbar();
+class _BookingsToolbar extends StatelessWidget {
+  const _BookingsToolbar();
 
   @override
   Widget build(BuildContext context) {
@@ -99,18 +136,25 @@ class _BookingToolbar extends StatelessWidget {
         border: Border(bottom: BorderSide(color: LandingPalette.border)),
       ),
       child: Wrap(
-        spacing: 10,
-        runSpacing: 10,
         alignment: WrapAlignment.spaceBetween,
         crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: 10,
+        runSpacing: 10,
         children: [
-          Text('حجوزات اليوم · 186 حجز', style: LandingType.cardTitle(13.5)),
+          Text(
+            LandingContent.bookingsPanelTitle,
+            style: LandingType.metric(13.5).copyWith(letterSpacing: 0),
+          ),
           Wrap(
             spacing: 7,
             runSpacing: 7,
             children: [
               for (final filter in LandingContent.bookingFilters)
-                _FilterChip(label: filter.label, tone: filter.tone),
+                LandingPill(
+                  label: filter.label,
+                  tone: filter.tone,
+                  selected: filter.solid,
+                ),
             ],
           ),
         ],
@@ -119,188 +163,46 @@ class _BookingToolbar extends StatelessWidget {
   }
 }
 
-/// The filter row's chips. `الكل` is the selected one and takes the brand
-/// fill; the rest wear the tone of the status they filter to, so the row
-/// doubles as the table's legend.
-class _FilterChip extends StatelessWidget {
-  const _FilterChip({required this.label, required this.tone});
+class _Customer extends StatelessWidget {
+  const _Customer({required this.booking});
 
-  final String label;
-  final LandingTone? tone;
+  final LandingBooking booking;
 
   @override
   Widget build(BuildContext context) {
-    final selected = tone == null;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
-      decoration: BoxDecoration(
-        color: selected ? LandingPalette.brand : tone!.background,
-        borderRadius: BorderRadius.circular(999),
-        border: selected ? null : Border.all(color: tone!.line),
-      ),
-      child: Text(
-        label,
-        style: LandingType.label(
-          11.5,
-          color: selected ? Colors.white : tone!.foreground,
-          weight: FontWeight.w800,
-        ),
-      ),
-    );
-  }
-}
-
-class _BookingHeaderRow extends StatelessWidget {
-  const _BookingHeaderRow();
-
-  @override
-  Widget build(BuildContext context) {
-    Widget cell(String label, {double? width, int? flex}) {
-      final text = Text(
-        label,
-        style: LandingType.label(11, weight: FontWeight.w800),
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-      );
-      return width != null
-          ? SizedBox(width: width, child: text)
-          : Expanded(flex: flex ?? 1, child: text);
-    }
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: const BoxDecoration(
-        color: LandingPalette.raised,
-        border: Border(bottom: BorderSide(color: LandingPalette.border)),
-      ),
-      child: Row(
-        children: [
-          cell('العميل', flex: 10),
-          cell('الرحلة', flex: 12),
-          cell('المقعد', width: _BookingBoard._seatWidth),
-          cell('الدفع', width: _BookingBoard._payWidth),
-          cell('الحالة', width: _BookingBoard._statusWidth),
-        ],
-      ),
-    );
-  }
-}
-
-class _BookingRow extends StatefulWidget {
-  const _BookingRow({required this.booking});
-
-  final LandingBookingRow booking;
-
-  @override
-  State<_BookingRow> createState() => _BookingRowState();
-}
-
-class _BookingRowState extends State<_BookingRow> {
-  bool _hovered = false;
-
-  @override
-  Widget build(BuildContext context) {
-    final booking = widget.booking;
-    return MouseRegion(
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 120),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: _hovered ? LandingPalette.surface2 : LandingPalette.surface,
-          border: const Border(
-            bottom: BorderSide(color: LandingPalette.borderSoft),
+    return Row(
+      children: [
+        Container(
+          width: 28,
+          height: 28,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: LandingPalette.brandTint,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: LandingPalette.brandLine),
+          ),
+          child: Text(
+            booking.initial,
+            style: LandingType.metric(
+              12,
+              color: LandingPalette.brandInk,
+            ).copyWith(letterSpacing: 0),
           ),
         ),
-        child: Row(
-          children: [
-            Expanded(
-              flex: 10,
-              child: Row(
-                children: [
-                  Container(
-                    width: 28,
-                    height: 28,
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: LandingPalette.brandTint,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: LandingPalette.brandLine),
-                    ),
-                    child: Text(
-                      booking.initial,
-                      style: LandingType.label(
-                        12,
-                        color: LandingPalette.brandInk,
-                        weight: FontWeight.w900,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 9),
-                  Expanded(
-                    child: Text(
-                      booking.name,
-                      style: LandingType.label(
-                        12.5,
-                        color: LandingPalette.ink,
-                        weight: FontWeight.w800,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
-              ),
+        const SizedBox(width: 9),
+        Expanded(
+          child: Text(
+            booking.name,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: LandingType.label(
+              12.5,
+              color: LandingPalette.ink,
+              weight: FontWeight.w800,
             ),
-            Expanded(
-              flex: 12,
-              child: Text(
-                booking.trip,
-                style: LandingType.label(12.5, weight: FontWeight.w600),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            SizedBox(
-              width: _BookingBoard._seatWidth,
-              child: Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: Directionality(
-                  textDirection: TextDirection.ltr,
-                  child: Text(
-                    booking.seat,
-                    style: LandingType.label(
-                      12.5,
-                      color: LandingPalette.ink,
-                      weight: FontWeight.w800,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ),
-            ),
-            SizedBox(
-              width: _BookingBoard._payWidth,
-              child: Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: LandingBadge(label: booking.pay, tone: booking.payTone),
-              ),
-            ),
-            SizedBox(
-              width: _BookingBoard._statusWidth,
-              child: Align(
-                alignment: AlignmentDirectional.centerStart,
-                child: LandingBadge(
-                  label: booking.status,
-                  tone: booking.statusTone,
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 }

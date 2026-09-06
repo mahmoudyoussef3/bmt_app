@@ -4,7 +4,7 @@
 //
 // Unlike the marketing compositions in compose.mjs these carry **no chrome of
 // their own** — no browser bar, no phone body, no headline. The landing page
-// draws the device frame in Flutter (`landing_device.dart`), so the same
+// draws the device frame in Flutter (`landing_frames.dart`), so the same
 // capture can appear at any size without its frame resampling with it, and a
 // palette change to the site does not mean re-photographing the product.
 //

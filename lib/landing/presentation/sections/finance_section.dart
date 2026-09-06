@@ -6,8 +6,8 @@ import '../widgets/landing_atoms.dart';
 import '../widgets/landing_charts.dart';
 import '../widgets/landing_layout.dart';
 
-/// «الحركة المالية» — four money tiles beside the revenue-against-expenses
-/// chart and the payment mix beneath it.
+/// «الحركة المالية» — the four numbers an owner checks first, next to the
+/// eight-week shape behind them.
 class FinanceSection extends StatelessWidget {
   const FinanceSection({super.key});
 
@@ -18,11 +18,10 @@ class FinanceSection extends StatelessWidget {
       topBorder: true,
       bottomBorder: true,
       child: LandingSplit(
-        breakpoint: 760,
+        breakpoint: 780,
         gap: landingClamp(context, min: 28, vw: 4, max: 52),
-        // 330px / 400px bases -> roughly 8:9 once the free space is shared.
-        startFlex: 8,
-        endFlex: 9,
+        startFlex: 33,
+        endFlex: 40,
         start: const _FinanceCopy(),
         end: const _FinanceChartCard(),
       ),
@@ -36,14 +35,13 @@ class _FinanceCopy extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
       children: [
         const LandingSectionIntro(
-          eyebrow: 'الحركة المالية',
-          headline: 'اعرف فلوس مكتبك رايحة فين',
-          lead:
-              'تابع حركة الإيرادات والمدفوعات والمصروفات من مكان واحد، وخلي '
-              'قراراتك مبنية على أرقام واضحة.',
+          eyebrow: LandingContent.financeEyebrow,
+          headline: LandingContent.financeHeadline,
+          lead: LandingContent.financeLead,
           maxWidth: 500,
           headlineMin: 24,
           headlineVw: 3,
@@ -53,9 +51,10 @@ class _FinanceCopy extends StatelessWidget {
         LandingAutoGrid(
           minItemWidth: 150,
           spacing: 11,
+          stagger: true,
           children: [
             for (final kpi in LandingContent.financeKpis)
-              _FinanceKpiTile(kpi: kpi),
+              _FinanceKpiCard(kpi: kpi),
           ],
         ),
       ],
@@ -63,10 +62,10 @@ class _FinanceCopy extends StatelessWidget {
   }
 }
 
-class _FinanceKpiTile extends StatelessWidget {
-  const _FinanceKpiTile({required this.kpi});
+class _FinanceKpiCard extends StatelessWidget {
+  const _FinanceKpiCard({required this.kpi});
 
-  final LandingKpi kpi;
+  final LandingMoney kpi;
 
   @override
   Widget build(BuildContext context) {
@@ -75,13 +74,12 @@ class _FinanceKpiTile extends StatelessWidget {
       radius: 11,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             kpi.label,
-            style: LandingType.label(11.5),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
+            style: LandingType.label(11.5),
           ),
           const SizedBox(height: 6),
           Row(
@@ -91,15 +89,17 @@ class _FinanceKpiTile extends StatelessWidget {
               Flexible(
                 child: Text(
                   kpi.value,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textDirection: TextDirection.ltr,
                   style: LandingType.metric(
                     21,
-                    color: kpi.valueColor,
+                    color: kpi.color,
                   ).copyWith(letterSpacing: -0.6),
-                  maxLines: 1,
                 ),
               ),
               const SizedBox(width: 5),
-              Text('ج.م', style: LandingType.label(11)),
+              Text(LandingContent.currencySuffix, style: LandingType.label(11)),
             ],
           ),
         ],
@@ -131,42 +131,53 @@ class _FinanceChartCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  'الإيرادات مقابل المصروفات',
-                  style: LandingType.cardTitle(13.5),
+                  LandingContent.financeChartTitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: LandingType.metric(13.5).copyWith(letterSpacing: 0),
                 ),
               ),
-              Text('آخر 8 أسابيع', style: LandingType.label(11)),
+              const SizedBox(width: 9),
+              Text(
+                LandingContent.financeChartNote,
+                style: LandingType.label(11),
+              ),
             ],
           ),
           const SizedBox(height: 14),
           const LandingDualLineChart(
-            revenue: LandingContent.revenuePoints,
-            expenses: LandingContent.expensePoints,
-            markers: LandingContent.revenueMarkers,
+            revenue: LandingContent.financeRevenue,
+            expenses: LandingContent.financeExpenses,
+            markers: LandingContent.financeMarkers,
           ),
           const SizedBox(height: 10),
-          Container(
-            padding: const EdgeInsets.only(top: 12),
-            decoration: const BoxDecoration(
-              border: Border(top: BorderSide(color: LandingPalette.borderSoft)),
-            ),
-            child: const Wrap(
-              spacing: 16,
-              runSpacing: 6,
-              children: [
-                _LegendSwatch(color: LandingPalette.brand, label: 'الإيرادات'),
-                _LegendSwatch(color: LandingPalette.warn, label: 'المصروفات'),
-              ],
-            ),
+          const Divider(
+            height: 13,
+            thickness: 1,
+            color: LandingPalette.borderSoft,
+          ),
+          Wrap(
+            spacing: 16,
+            runSpacing: 8,
+            children: const [
+              _LegendItem(
+                label: LandingContent.financeRevenueLabel,
+                color: LandingPalette.brand,
+              ),
+              _LegendItem(
+                label: LandingContent.financeExpenseLabel,
+                color: LandingPalette.warn,
+              ),
+            ],
           ),
           const SizedBox(height: 14),
-          for (final (index, status) in LandingContent.payStatus.indexed) ...[
-            if (index > 0) const SizedBox(height: 10),
+          for (var i = 0; i < LandingContent.financePayStatus.length; i++) ...[
+            if (i > 0) const SizedBox(height: 10),
             LandingMeterRow(
-              label: status.name,
-              value: status.value,
-              fraction: status.fraction,
-              color: status.color,
+              label: LandingContent.financePayStatus[i].name,
+              value: LandingContent.financePayStatus[i].trailing,
+              fraction: LandingContent.financePayStatus[i].fraction,
+              color: LandingContent.financePayStatus[i].color,
             ),
           ],
         ],
@@ -175,11 +186,11 @@ class _FinanceChartCard extends StatelessWidget {
   }
 }
 
-class _LegendSwatch extends StatelessWidget {
-  const _LegendSwatch({required this.color, required this.label});
+class _LegendItem extends StatelessWidget {
+  const _LegendItem({required this.label, required this.color});
 
-  final Color color;
   final String label;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {

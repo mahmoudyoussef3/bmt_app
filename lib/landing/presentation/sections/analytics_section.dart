@@ -6,8 +6,8 @@ import '../widgets/landing_atoms.dart';
 import '../widgets/landing_charts.dart';
 import '../widgets/landing_layout.dart';
 
-/// «التقارير والمؤشرات» — the three report cards: most-booked routes, the
-/// occupancy gauge, and revenue by period.
+/// «التقارير والمؤشرات» — three read-only panels: which lines sell, how full
+/// the buses run, and what the months look like beside each other.
 class AnalyticsSection extends StatelessWidget {
   const AnalyticsSection({super.key});
 
@@ -18,20 +18,17 @@ class AnalyticsSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const LandingSectionIntro(
-            eyebrow: 'التقارير والمؤشرات',
-            headline: 'مش بس تدير مكتبك... افهم أداءه',
-            lead: 'لما تكون الأرقام واضحة، قراراتك بتكون أفضل.',
+            eyebrow: LandingContent.analyticsEyebrow,
+            headline: LandingContent.analyticsHeadline,
+            lead: LandingContent.analyticsLead,
             headlineMax: 38,
           ),
           SizedBox(height: landingClamp(context, min: 26, vw: 3.5, max: 42)),
           const LandingAutoGrid(
             minItemWidth: 250,
             spacing: 13,
-            children: [
-              _TopBookedCard(),
-              _OccupancyCard(),
-              _PeriodRevenueCard(),
-            ],
+            stagger: true,
+            children: [_TopBookedCard(), _OccupancyCard(), _PeriodCard()],
           ),
         ],
       ),
@@ -50,15 +47,21 @@ class _TopBookedCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('أكثر الخطوط حجزًا', style: LandingType.cardTitle(13.5)),
+          Text(
+            LandingContent.analyticsTopBookedTitle,
+            style: LandingType.metric(13.5).copyWith(letterSpacing: 0),
+          ),
           const SizedBox(height: 14),
-          for (final (index, line) in LandingContent.topBooked.indexed) ...[
-            if (index > 0) const SizedBox(height: 12),
+          for (
+            var i = 0;
+            i < LandingContent.analyticsTopBooked.length;
+            i++
+          ) ...[
+            if (i > 0) const SizedBox(height: 12),
             LandingMeterRow(
-              label: line.name,
-              value: line.value,
-              fraction: line.fraction,
-              color: line.color,
+              label: LandingContent.analyticsTopBooked[i].name,
+              value: LandingContent.analyticsTopBooked[i].trailing,
+              fraction: LandingContent.analyticsTopBooked[i].fraction,
             ),
           ],
         ],
@@ -76,30 +79,30 @@ class _OccupancyCard extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        // The gauge takes the space left between the title and the footnote.
+        // The design centres the gauge with `flex: 1`. A cell in a stretched
+        // run is measured with its height unbounded first, and `Expanded`
+        // asserts under that, so the free space is distributed by the main
+        // axis alignment instead.
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: Text(
-              'نسبة إشغال الرحلات',
-              style: LandingType.cardTitle(13.5),
+          Text(
+            LandingContent.analyticsOccupancyTitle,
+            style: LandingType.metric(13.5).copyWith(letterSpacing: 0),
+          ),
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: Center(
+              child: LandingDonut(
+                fraction: LandingContent.analyticsOccupancyFraction,
+                value: LandingContent.analyticsOccupancyValue,
+                caption: LandingContent.analyticsOccupancyCaption,
+              ),
             ),
           ),
-          const Center(
-            child: LandingDonut(
-              fraction: 0.87,
-              value: '87%',
-              caption: 'متوسط الشهر',
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Text(
-              '12 خطًا نشطًا · 1,248 رحلة',
-              textAlign: TextAlign.center,
-              style: LandingType.label(12),
-            ),
+          Text(
+            LandingContent.analyticsOccupancyFooter,
+            textAlign: TextAlign.center,
+            style: LandingType.label(12),
           ),
         ],
       ),
@@ -107,8 +110,8 @@ class _OccupancyCard extends StatelessWidget {
   }
 }
 
-class _PeriodRevenueCard extends StatelessWidget {
-  const _PeriodRevenueCard();
+class _PeriodCard extends StatelessWidget {
+  const _PeriodCard();
 
   @override
   Widget build(BuildContext context) {
@@ -118,38 +121,57 @@ class _PeriodRevenueCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('الإيرادات حسب الفترة', style: LandingType.cardTitle(13.5)),
+          Text(
+            LandingContent.analyticsPeriodTitle,
+            style: LandingType.metric(13.5).copyWith(letterSpacing: 0),
+          ),
           const SizedBox(height: 14),
           const LandingPeriodBars(
-            heights: LandingContent.periodHeights,
-            labels: LandingContent.periodLabels,
+            heights: LandingContent.analyticsPeriodHeights,
+            labels: LandingContent.analyticsPeriodLabels,
           ),
           const SizedBox(height: 12),
           Row(
             children: [
-              for (final (index, mini)
-                  in LandingContent.analyticsMini.indexed) ...[
-                if (index > 0) const SizedBox(width: 12),
+              for (var i = 0; i < LandingContent.analyticsMini.length; i++) ...[
+                if (i > 0) const SizedBox(width: 12),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        mini.label,
-                        style: LandingType.label(10.5),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 2),
-                      Text(mini.value, style: LandingType.cardTitle(16)),
-                    ],
-                  ),
+                  child: _MiniStat(mini: LandingContent.analyticsMini[i]),
                 ),
               ],
             ],
           ),
         ],
       ),
+    );
+  }
+}
+
+class _MiniStat extends StatelessWidget {
+  const _MiniStat({required this.mini});
+
+  final LandingMini mini;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          mini.label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: LandingType.label(10.5),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          mini.value,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: LandingType.metric(16).copyWith(letterSpacing: 0),
+        ),
+      ],
     );
   }
 }

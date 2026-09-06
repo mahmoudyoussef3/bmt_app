@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/landing_theme.dart';
 import 'landing_layout.dart';
+import 'landing_motion.dart';
 
 /// The tint + line + solid-text status pill used by every table, list and
 /// filter row on the page. One badge, five tones — the design's `B` map.
@@ -301,6 +302,8 @@ class LandingButton extends StatefulWidget {
     required this.onPressed,
     this.style = LandingButtonStyle.primary,
     this.icon,
+    this.leadingIcon,
+    this.leadingIconColor,
     this.height = 54,
     this.expand = false,
   });
@@ -308,7 +311,14 @@ class LandingButton extends StatefulWidget {
   final String label;
   final VoidCallback onPressed;
   final LandingButtonStyle style;
+
+  /// Drawn after the label — in RTL that is the leftmost edge, which is where
+  /// the design puts its forward arrows.
   final IconData? icon;
+
+  /// Drawn before the label, for the buttons the design opens with a glyph.
+  final IconData? leadingIcon;
+  final Color? leadingIconColor;
   final double height;
 
   /// Fills the available width — used where the design gives the button a
@@ -322,6 +332,7 @@ class LandingButton extends StatefulWidget {
 class _LandingButtonState extends State<LandingButton> {
   bool _hovered = false;
   bool _focused = false;
+  bool _pressed = false;
 
   @override
   Widget build(BuildContext context) {
@@ -353,6 +364,14 @@ class _LandingButtonState extends State<LandingButton> {
       mainAxisSize: widget.expand ? MainAxisSize.max : MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
+        if (widget.leadingIcon != null) ...[
+          Icon(
+            widget.leadingIcon,
+            size: widget.height >= 52 ? 20 : 18,
+            color: widget.leadingIconColor ?? fg,
+          ),
+          const SizedBox(width: 8),
+        ],
         Flexible(
           child: Text(
             widget.label,
@@ -398,32 +417,44 @@ class _LandingButtonState extends State<LandingButton> {
         },
         child: GestureDetector(
           onTap: widget.onPressed,
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 140),
-            height: widget.height,
-            padding: EdgeInsets.symmetric(
-              horizontal: widget.height >= 52 ? 26 : 18,
+          onTapDown: (_) => setState(() => _pressed = true),
+          onTapUp: (_) => setState(() => _pressed = false),
+          onTapCancel: () => setState(() => _pressed = false),
+          child: AnimatedScale(
+            // The whole button gives under the finger rather than only
+            // changing colour — on a page whose actions are all anchors, this
+            // is the only acknowledgement the reader gets before the scroll
+            // starts.
+            scale: _pressed ? 0.97 : 1,
+            duration: const Duration(milliseconds: 120),
+            curve: Curves.easeOut,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 140),
+              height: widget.height,
+              padding: EdgeInsets.symmetric(
+                horizontal: widget.height >= 52 ? 26 : 18,
+              ),
+              decoration: BoxDecoration(
+                color: bg,
+                borderRadius: LandingRadii.buttonR,
+                border: line == null ? null : Border.all(color: line),
+                boxShadow: [
+                  if (widget.style == LandingButtonStyle.primary)
+                    BoxShadow(
+                      color: LandingPalette.brand.withValues(alpha: 0.55),
+                      offset: const Offset(0, 14),
+                      blurRadius: 30,
+                      spreadRadius: -14,
+                    ),
+                  if (_focused)
+                    BoxShadow(
+                      color: ring.withValues(alpha: 0.55),
+                      spreadRadius: 3,
+                    ),
+                ],
+              ),
+              child: child,
             ),
-            decoration: BoxDecoration(
-              color: bg,
-              borderRadius: LandingRadii.buttonR,
-              border: line == null ? null : Border.all(color: line),
-              boxShadow: [
-                if (widget.style == LandingButtonStyle.primary)
-                  BoxShadow(
-                    color: LandingPalette.brand.withValues(alpha: 0.55),
-                    offset: const Offset(0, 14),
-                    blurRadius: 30,
-                    spreadRadius: -14,
-                  ),
-                if (_focused)
-                  BoxShadow(
-                    color: ring.withValues(alpha: 0.55),
-                    spreadRadius: 3,
-                  ),
-              ],
-            ),
-            child: child,
           ),
         ),
       ),
@@ -451,13 +482,18 @@ class LandingMeter extends StatelessWidget {
       child: Container(
         height: height,
         color: LandingPalette.well,
-        child: FractionallySizedBox(
-          alignment: AlignmentDirectional.centerStart,
-          widthFactor: fraction.clamp(0, 1),
-          child: Container(
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(4),
+        // The bar grows out of its well as the panel holding it arrives — a
+        // meter that is already full when the reader gets to it says nothing
+        // about being a measurement.
+        child: LandingRevealBuilder(
+          builder: (context, t) => FractionallySizedBox(
+            alignment: AlignmentDirectional.centerStart,
+            widthFactor: fraction.clamp(0.0, 1.0) * t,
+            child: Container(
+              decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(4),
+              ),
             ),
           ),
         ),
@@ -512,6 +548,90 @@ class LandingMeterRow extends StatelessWidget {
         const SizedBox(height: 6),
         LandingMeter(fraction: fraction, color: color),
       ],
+    );
+  }
+}
+
+/// The fully-rounded chip the page uses for range switches, table filters and
+/// the dashboard console's tab rail.
+///
+/// Three grounds, in the order the design reaches for them: a brand fill for
+/// the current choice, a status tint for a filter that names a status, and a
+/// bordered surface for everything else.
+class LandingPill extends StatefulWidget {
+  const LandingPill({
+    super.key,
+    required this.label,
+    this.selected = false,
+    this.tone,
+    this.onTap,
+    this.fontSize = 11.5,
+    this.padding = const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
+    this.unselectedBackground,
+  });
+
+  final String label;
+  final bool selected;
+  final LandingTone? tone;
+  final VoidCallback? onTap;
+  final double fontSize;
+  final EdgeInsetsGeometry padding;
+  final Color? unselectedBackground;
+
+  @override
+  State<LandingPill> createState() => _LandingPillState();
+}
+
+class _LandingPillState extends State<LandingPill> {
+  bool _hovered = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final tone = widget.tone;
+    final (Color background, Color foreground, Color? line) = switch (tone) {
+      final LandingTone t => (t.background, t.foreground, t.line),
+      null when widget.selected => (LandingPalette.brand, Colors.white, null),
+      null => (
+        _hovered
+            ? LandingPalette.raised
+            : widget.unselectedBackground ?? Colors.transparent,
+        LandingPalette.muted,
+        LandingPalette.border,
+      ),
+    };
+
+    final chip = AnimatedContainer(
+      duration: const Duration(milliseconds: 140),
+      padding: widget.padding,
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(999),
+        border: line == null ? null : Border.all(color: line),
+      ),
+      child: Text(
+        widget.label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: LandingType.label(
+          widget.fontSize,
+          color: foreground,
+          weight: widget.selected || tone != null
+              ? FontWeight.w800
+              : FontWeight.w700,
+        ),
+      ),
+    );
+
+    if (widget.onTap == null) return chip;
+    return Semantics(
+      button: true,
+      selected: widget.selected,
+      child: MouseRegion(
+        cursor: SystemMouseCursors.click,
+        onEnter: (_) => setState(() => _hovered = true),
+        onExit: (_) => setState(() => _hovered = false),
+        child: GestureDetector(onTap: widget.onTap, child: chip),
+      ),
     );
   }
 }

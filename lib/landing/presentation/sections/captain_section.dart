@@ -3,14 +3,10 @@ import 'package:flutter/material.dart';
 import '../landing_content.dart';
 import '../theme/landing_theme.dart';
 import '../widgets/landing_atoms.dart';
-import '../widgets/landing_device.dart';
+import '../widgets/landing_frames.dart';
 import '../widgets/landing_layout.dart';
 
-/// «تطبيق الكابتن» — the driver's phone beside what the office gets from it.
-///
-/// The band wraps in reverse so the copy leads on a narrow screen: the phone
-/// is the evidence, not the argument, and shouldn't be the first thing a
-/// reader scrolls past.
+/// «تطبيق الكابتن» — the driver's screen beside what it buys the office.
 class CaptainSection extends StatelessWidget {
   const CaptainSection({super.key});
 
@@ -21,24 +17,32 @@ class CaptainSection extends StatelessWidget {
       topBorder: true,
       bottomBorder: true,
       child: LandingSplit(
-        breakpoint: 760,
+        breakpoint: 720,
         gap: landingClamp(context, min: 30, vw: 4, max: 58),
-        // 300px phone / 380px copy bases -> ~13:15.
-        startFlex: 13,
-        endFlex: 15,
+        startFlex: 300,
+        endFlex: 380,
+        // `flex-wrap: wrap-reverse` — when the band collapses the copy leads
+        // and the phone follows it, rather than the reader meeting a screen
+        // before they have been told what it is.
         reverseWhenStacked: true,
         start: const Center(
-          child: FittedBox(
-            fit: BoxFit.scaleDown,
-            child: LandingPhoneDuo(
-              // The trip the captain is running — stop by stop, with the
-              // boarding it records — and his day's assigned trips behind it.
-              // Not the map: following a vehicle is the rider's screen, and
-              // the captain's tracking is what this one reports upward.
-              frontAsset: LandingShots.captainTrip,
-              backAsset: LandingShots.captainHome,
-              width: 246,
-            ),
+          child: LandingPhoneShell(
+            designWidth: 290,
+            bodyPadding: 10,
+            outerRadius: 36,
+            innerRadius: 28,
+            screenColor: LandingPalette.surface2,
+            shadow: [
+              BoxShadow(
+                color: Color(0x8C0B1B34),
+                offset: Offset(0, 38),
+                blurRadius: 74,
+                spreadRadius: -34,
+              ),
+            ],
+            // The captain's own day: the trip under way, the count boarded,
+            // and the rest of today's assignments under it.
+            child: LandingShotScreen(asset: LandingShots.captainHome),
           ),
         ),
         end: const _CaptainCopy(),
@@ -53,14 +57,13 @@ class _CaptainCopy extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
       children: [
         const LandingSectionIntro(
-          eyebrow: 'تطبيق الكابتن',
-          headline: 'الكابتن يعرف مهمته، وأنت تعرف حالة الرحلة',
-          lead:
-              'كل كابتن يشوف الرحلات المسندة إليه وتفاصيلها، بينما تظل أنت على '
-              'اطلاع كامل بحالة التشغيل من لوحة التحكم.',
+          eyebrow: LandingContent.captainEyebrow,
+          headline: LandingContent.captainHeadline,
+          lead: LandingContent.captainLead,
           maxWidth: 520,
           headlineMin: 24,
           headlineVw: 3,
@@ -70,10 +73,10 @@ class _CaptainCopy extends StatelessWidget {
         LandingAutoGrid(
           minItemWidth: 200,
           spacing: 11,
-          maxColumns: 2,
+          stagger: true,
           children: [
             for (final benefit in LandingContent.captainBenefits)
-              _BenefitTile(point: benefit),
+              _BenefitCard(point: benefit),
           ],
         ),
         const SizedBox(height: 20),
@@ -85,7 +88,7 @@ class _CaptainCopy extends StatelessWidget {
             border: Border.all(color: LandingPalette.brandLine),
           ),
           child: Text(
-            'خلّي الكابتن ينفذ دوره... وأنت تفضل مسيطر على العملية.',
+            LandingContent.captainClosing,
             style: LandingType.label(
               13.5,
               color: LandingPalette.navy,
@@ -98,8 +101,8 @@ class _CaptainCopy extends StatelessWidget {
   }
 }
 
-class _BenefitTile extends StatelessWidget {
-  const _BenefitTile({required this.point});
+class _BenefitCard extends StatelessWidget {
+  const _BenefitCard({required this.point});
 
   final LandingPoint point;
 
@@ -108,15 +111,17 @@ class _BenefitTile extends StatelessWidget {
     return LandingCard(
       padding: const EdgeInsets.all(14),
       background: LandingPalette.surface2,
-      shadow: const [],
       radius: 11,
+      shadow: const [],
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
         children: [
           Icon(point.icon, size: 19, color: LandingPalette.brand),
           const SizedBox(height: 8),
-          Text(point.title, style: LandingType.cardTitle(13.5)),
+          Text(
+            point.title,
+            style: LandingType.metric(13.5).copyWith(letterSpacing: 0),
+          ),
           const SizedBox(height: 4),
           Text(
             point.body,

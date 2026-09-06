@@ -5,7 +5,8 @@ import '../theme/landing_theme.dart';
 import '../widgets/landing_atoms.dart';
 import '../widgets/landing_layout.dart';
 
-/// «ليه أصحاب مكاتب النقل يختاروا EWT؟» — the six reasons.
+/// «ليه أصحاب مكاتب النقل يختاروا EWT؟» — six outcomes, stated as benefits
+/// rather than as features.
 class WhySection extends StatelessWidget {
   const WhySection({super.key});
 
@@ -15,19 +16,19 @@ class WhySection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const LandingSectionIntro(
-            eyebrow: 'الأسباب',
-            headline: 'ليه أصحاب مكاتب النقل يختاروا EWT؟',
-            maxWidth: 720,
-            headlineMin: 24,
-            headlineMax: 38,
+          Text(
+            LandingContent.whyHeadline,
+            style: LandingType.heading(
+              landingClamp(context, min: 24, vw: 3.2, max: 38),
+            ),
           ),
           SizedBox(height: landingClamp(context, min: 26, vw: 3.5, max: 42)),
           LandingAutoGrid(
             minItemWidth: 280,
             spacing: 13,
+            stagger: true,
             children: [
-              for (final reason in LandingContent.why) _WhyCard(point: reason),
+              for (final point in LandingContent.why) _WhyCard(point: point),
             ],
           ),
         ],
@@ -46,7 +47,6 @@ class _WhyCard extends StatelessWidget {
     return LandingHoverCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [

@@ -5,8 +5,8 @@ import '../theme/landing_theme.dart';
 import '../widgets/landing_atoms.dart';
 import '../widgets/landing_layout.dart';
 
-/// «التحدي» — the four pains, closed by a brand-tinted band that names EWT as
-/// the answer and points at the dashboard section.
+/// «التحدي» — the four symptoms of running an office by hand, closed by the
+/// one-line claim that answers them.
 class ProblemSection extends StatelessWidget {
   const ProblemSection({super.key, required this.onSeeDashboard});
 
@@ -20,24 +20,23 @@ class ProblemSection extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           const LandingSectionIntro(
-            eyebrow: 'التحدي',
+            eyebrow: LandingContent.problemEyebrow,
             eyebrowColor: LandingPalette.warn,
-            headline: 'مكتبك كبر... وطريقة إدارته لازم تكبر معاه',
-            lead:
-                'مع زيادة الرحلات والكباتن والحجوزات، المتابعة اليدوية بتاخد '
-                'وقت وبتخلي الوصول للصورة الكاملة أصعب.',
+            headline: LandingContent.problemHeadline,
+            lead: LandingContent.problemLead,
           ),
           SizedBox(height: landingClamp(context, min: 28, vw: 3.5, max: 44)),
           LandingAutoGrid(
             minItemWidth: 240,
             spacing: 13,
+            stagger: true,
             children: [
               for (final problem in LandingContent.problems)
                 _ProblemCard(point: problem),
             ],
           ),
           SizedBox(height: landingClamp(context, min: 24, vw: 3, max: 36)),
-          _MergeBanner(onSeeDashboard: onSeeDashboard),
+          _ProblemBanner(onSeeDashboard: onSeeDashboard),
         ],
       ),
     );
@@ -56,7 +55,6 @@ class _ProblemCard extends StatelessWidget {
       shadow: const [],
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
         children: [
           Icon(point.icon, size: 22, color: LandingPalette.warn),
           const SizedBox(height: 12),
@@ -69,8 +67,8 @@ class _ProblemCard extends StatelessWidget {
   }
 }
 
-class _MergeBanner extends StatelessWidget {
-  const _MergeBanner({required this.onSeeDashboard});
+class _ProblemBanner extends StatelessWidget {
+  const _ProblemBanner({required this.onSeeDashboard});
 
   final VoidCallback onSeeDashboard;
 
@@ -84,34 +82,56 @@ class _MergeBanner extends StatelessWidget {
         borderRadius: LandingRadii.cardR,
         border: Border.all(color: LandingPalette.brandLine),
       ),
-      child: Wrap(
-        spacing: 14,
-        runSpacing: 14,
-        crossAxisAlignment: WrapCrossAlignment.center,
-        children: [
-          const Icon(
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final icon = const Icon(
             Icons.merge_rounded,
             size: 26,
             color: LandingPalette.brandInk,
-          ),
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 520),
-            child: Text(
-              'EWT تجمع كل ده في نظام واحد.',
-              style: LandingType.heading(
-                size,
-                color: LandingPalette.navy,
-              ).copyWith(letterSpacing: -0.4),
-            ),
-          ),
-          LandingButton(
-            label: 'شوف لوحة التحكم',
-            icon: Icons.arrow_back_rounded,
-            height: 44,
-            style: LandingButtonStyle.navy,
+          );
+          final claim = Text(
+            LandingContent.problemBannerText,
+            style: LandingType.metric(
+              size,
+              color: LandingPalette.navy,
+            ).copyWith(letterSpacing: -0.4),
+          );
+          final button = LandingButton(
+            label: LandingContent.problemBannerCta,
             onPressed: onSeeDashboard,
-          ),
-        ],
+            style: LandingButtonStyle.navy,
+            icon: Icons.arrow_forward_rounded,
+            height: 44,
+          );
+          // `flex: 1 1 240px` on the claim: it keeps the row together until
+          // the icon, 240px of copy and the button stop fitting.
+          if (constraints.maxWidth >= 560) {
+            return Row(
+              children: [
+                icon,
+                const SizedBox(width: 14),
+                Expanded(child: claim),
+                const SizedBox(width: 14),
+                button,
+              ],
+            );
+          }
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  icon,
+                  const SizedBox(width: 14),
+                  Expanded(child: claim),
+                ],
+              ),
+              const SizedBox(height: 14),
+              button,
+            ],
+          );
+        },
       ),
     );
   }

@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../landing_content.dart';
 import '../theme/landing_theme.dart';
-import '../widgets/landing_atoms.dart';
 import '../widgets/landing_layout.dart';
 
-/// The closing credibility band: the claim on one side, the seven concrete
-/// capabilities backing it on the other.
+/// «نظام مصمم حول طبيعة عمل مكاتب النقل» — the claim, and the seven
+/// capabilities that back it.
 class TrustSection extends StatelessWidget {
   const TrustSection({super.key});
 
@@ -14,28 +13,37 @@ class TrustSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return LandingSection(
       child: LandingSplit(
-        breakpoint: 720,
+        breakpoint: 740,
         gap: landingClamp(context, min: 26, vw: 4, max: 48),
-        // 320px / 380px bases -> ~9:10.
-        startFlex: 9,
-        endFlex: 10,
-        start: const LandingSectionIntro(
-          eyebrow: 'الأساس',
-          headline: 'نظام مصمم حول طبيعة عمل مكاتب النقل',
-          lead:
-              'مبني على الخطوات الفعلية لتشغيل مكتب النقل: من إنشاء الرحلة، '
-              'لإسناد الكابتن، للحجز، للدفع، للتقرير.',
-          maxWidth: 480,
-          headlineMin: 23,
-          headlineVw: 2.8,
-          headlineMax: 34,
+        startFlex: 32,
+        endFlex: 38,
+        start: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              LandingContent.trustHeadline,
+              style: LandingType.heading(
+                landingClamp(context, min: 23, vw: 2.8, max: 34),
+              ).copyWith(height: 1.35, letterSpacing: -0.7),
+            ),
+            const SizedBox(height: 16),
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 480),
+              child: Text(
+                LandingContent.trustLead,
+                style: LandingType.lead(15.5),
+              ),
+            ),
+          ],
         ),
         end: LandingAutoGrid(
           minItemWidth: 190,
           spacing: 10,
+          stagger: true,
           children: [
             for (final item in LandingContent.trustItems)
-              _TrustTile(icon: item.icon, title: item.title),
+              _TrustTile(point: item),
           ],
         ),
       ),
@@ -44,25 +52,32 @@ class TrustSection extends StatelessWidget {
 }
 
 class _TrustTile extends StatelessWidget {
-  const _TrustTile({required this.icon, required this.title});
+  const _TrustTile({required this.point});
 
-  final IconData icon;
-  final String title;
+  final LandingPoint point;
 
   @override
   Widget build(BuildContext context) {
-    return LandingCard(
+    return Container(
       padding: const EdgeInsets.all(13),
-      radius: 10,
+      decoration: BoxDecoration(
+        color: LandingPalette.surface,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: LandingPalette.border),
+        boxShadow: LandingPalette.cardShadow,
+      ),
       child: Row(
         children: [
-          Icon(icon, size: 19, color: LandingPalette.navy),
+          Icon(point.icon, size: 19, color: LandingPalette.navy),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              title,
-              style: LandingType.label(13, color: LandingPalette.ink),
-              maxLines: 2,
+              point.title,
+              style: LandingType.label(
+                13,
+                color: LandingPalette.ink,
+                weight: FontWeight.w700,
+              ),
             ),
           ),
         ],

@@ -127,6 +127,14 @@ extension LandingToneStyle on LandingTone {
 /// most of the typographic work, with 600/700 for supporting copy — so the
 /// landing page states its ramp here rather than bending the shared
 /// [AppTextThemes] scale into a shape only this page wants.
+///
+/// **A style only sets `height` where the design sets `line-height`.** Cairo's
+/// own line box is 1.874x its size (typo ascent 1303, descent -571, with
+/// `USE_TYPO_METRICS` set), and that is what the browser gives every heading,
+/// figure, label and badge in the design — none of which declare a
+/// `line-height`. Pinning those to a tight ratio here quietly took a third of
+/// the vertical rhythm out of the whole page, and the phone mockups, which are
+/// nothing but stacked labels and figures, lost the most.
 class LandingType {
   const LandingType._();
 
@@ -173,30 +181,27 @@ class LandingType {
   static TextStyle lead(double size, {Color color = LandingPalette.muted}) =>
       _cairo(size, FontWeight.w400, color: color, height: 1.9);
 
+  /// A card's heading. The design gives these no `line-height`, so neither
+  /// does this — see the note on [LandingType].
   static TextStyle cardTitle(double size, {Color color = LandingPalette.ink}) =>
-      _cairo(size, FontWeight.w900, color: color, height: 1.35);
+      _cairo(size, FontWeight.w900, color: color);
 
   static TextStyle cardBody(
     double size, {
     Color color = LandingPalette.muted,
   }) => _cairo(size, FontWeight.w400, color: color, height: 1.8);
 
-  /// A metric's number — tight tracking, heaviest weight.
+  /// A metric's number — tight tracking, heaviest weight, and Cairo's own
+  /// line box, which is what the design's figures sit in.
   static TextStyle metric(double size, {Color color = LandingPalette.ink}) =>
-      _cairo(
-        size,
-        FontWeight.w900,
-        color: color,
-        height: 1.1,
-        letterSpacing: -0.8,
-      );
+      _cairo(size, FontWeight.w900, color: color, letterSpacing: -0.8);
 
   static TextStyle label(
     double size, {
     Color color = LandingPalette.muted,
     FontWeight weight = FontWeight.w700,
-  }) => _cairo(size, weight, color: color, height: 1.4);
+  }) => _cairo(size, weight, color: color);
 
   static TextStyle badge({Color color = LandingPalette.ink}) =>
-      _cairo(10.5, FontWeight.w800, color: color, height: 1.3);
+      _cairo(10.5, FontWeight.w800, color: color);
 }

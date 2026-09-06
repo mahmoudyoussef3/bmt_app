@@ -74,11 +74,13 @@ To eyeball one screen while iterating, skip the capture and open the URL:
 ## What the landing page gets
 
 `landing_assets.mjs` writes **unframed** WebP copies into `assets/showcase/`.
-The browser window and the phone body around them are drawn in Flutter by
-`lib/landing/presentation/widgets/landing_device.dart`, so the same capture can
+The phone body around them is drawn in Flutter by
+`lib/landing/presentation/widgets/landing_frames.dart`, so the same capture can
 appear at any size without its chrome resampling, and a palette change to the
-site does not mean re-photographing the product. `LandingShots` in
-`landing_shots.dart` is the list of names it produces — keep the two in step.
+site does not mean re-photographing the product. `LandingShots` in that file is
+the list of names the landing page reads — keep the two in step. The console
+mockup is the one thing the page still draws rather than photographs: a
+1600px-wide capture shown at a third of the page's width is a wall of 9px type.
 
 ## Screens deliberately not captured
 

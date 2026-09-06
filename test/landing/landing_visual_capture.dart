@@ -9,16 +9,12 @@
 library;
 
 import 'dart:async';
-import 'dart:io';
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart' show SynchronousFuture;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart'
-    show AssetManifest, FontLoader, rootBundle;
+import 'package:flutter/services.dart' show AssetManifest, rootBundle;
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'package:bmt_app/landing/presentation/landing_page.dart';
 import 'package:bmt_app/landing/presentation/sections/analytics_section.dart';
@@ -40,68 +36,31 @@ import 'package:bmt_app/landing/presentation/sections/steps_section.dart';
 import 'package:bmt_app/landing/presentation/sections/trust_section.dart';
 import 'package:bmt_app/landing/presentation/sections/why_section.dart';
 import 'package:bmt_app/landing/presentation/theme/landing_theme.dart';
-import 'package:bmt_app/landing/presentation/widgets/landing_info_dialog.dart';
-import 'package:bmt_app/landing/presentation/widgets/landing_shots.dart';
+import 'package:bmt_app/landing/presentation/widgets/landing_frames.dart';
 
-/// Everything the page can mount an [Image] for.
+import 'landing_fonts.dart';
+
+/// Every capture the page can mount an [Image] for.
 ///
 /// The product shots are the part of this page a capture most needs to show,
 /// and `Image.asset` decodes off the frame loop — inside `pump` it never
-/// arrives, so without this every shot photographs as an empty frame.
+/// arrives, so without this every phone photographs as an empty frame.
 const _images = <String>[
-  'assets/images/app_icon.png',
   LandingShots.clientHome,
-  LandingShots.clientSearch,
   LandingShots.clientSeats,
-  LandingShots.clientTrip,
-  LandingShots.clientTrack,
-  LandingShots.clientWallet,
   LandingShots.captainHome,
   LandingShots.captainTrip,
-  LandingShots.consoleOverview,
-  LandingShots.consoleHome,
-  LandingShots.consoleTrips,
-  LandingShots.consoleRoutes,
-  LandingShots.consoleBookings,
-  LandingShots.consoleFleet,
-  LandingShots.consoleFinance,
-  LandingShots.consoleAnalytics,
 ];
 
 void main() {
   setUpAll(() async {
-    final binding = TestWidgetsFlutterBinding.ensureInitialized();
+    await loadLandingFonts();
 
-    // google_fonts would otherwise fetch every Cairo weight over HTTP; under
-    // the test binding each request 400s and reports as a test error.
-    GoogleFonts.config.allowRuntimeFetching = false;
-    // It resolves a family per *variant* — `Cairo_regular`, `Cairo_700`,
-    // `Cairo_900` — and names the bare family only as a fallback. Registering
-    // just `Cairo` and `Cairo_regular` therefore covers body copy and nothing
-    // else: every heavier weight lands on the fallback, which draws Arabic
-    // from the host but photographs Latin digits as tofu boxes. The whole
-    // hero board is numbers, so it has to be all of them.
-    const path = '/System/Library/Fonts/Supplemental/Arial Unicode.ttf';
-    final file = File(path);
-    if (file.existsSync()) {
-      final bytes = ByteData.sublistView(file.readAsBytesSync());
-      for (final family in [
-        'Cairo',
-        'Cairo_regular',
-        'Cairo_500',
-        'Cairo_600',
-        'Cairo_700',
-        'Cairo_800',
-        'Cairo_900',
-      ]) {
-        await (FontLoader(family)..addFont(Future.value(bytes))).load();
-      }
-    }
-
-    // Decode each asset here, in a real async pass, and park it in the image
+    // Decode each shot here, in a real async pass, and park it in the image
     // cache under the key `AssetImage` will ask for. The alternative —
     // `tester.runAsync` inside each capture — opens the real event loop, and
     // google_fonts' load failure lands on it and fails the test outright.
+    final binding = TestWidgetsFlutterBinding.ensureInitialized();
     await AssetManifest.loadFromAssetBundle(rootBundle);
     for (final asset in _images) {
       final data = await rootBundle.load(asset);
@@ -140,22 +99,21 @@ void main() {
     ('hero', HeroSection(onGetStarted: _noop, onSeeDashboard: _noop), 1500),
     ('problem', ProblemSection(onSeeDashboard: _noop), 700),
     ('modules', const ModulesSection(), 620),
-    ('dashboard', const DashboardSection(), 1150),
-    ('operations', const OperationsSection(), 1020),
-    ('captain', const CaptainSection(), 800),
-    ('bookings', const BookingsSection(), 750),
-    ('finance', const FinanceSection(), 800),
+    ('dashboard', const DashboardSection(), 1250),
+    ('operations', const OperationsSection(), 800),
+    ('captain', const CaptainSection(), 900),
+    ('bookings', const BookingsSection(), 800),
+    ('finance', const FinanceSection(), 850),
     ('analytics', const AnalyticsSection(), 750),
-    ('client', const ClientSection(), 1300),
-    ('comparison', const ComparisonSection(), 880),
+    ('client', const ClientSection(), 750),
+    ('comparison', const ComparisonSection(), 700),
     ('growth', const GrowthSection(), 500),
     ('why', const WhySection(), 650),
     ('steps', StepsSection(onGetStarted: _noop), 620),
     ('trust', const TrustSection(), 450),
-    ('cta', CtaSection(onGetStarted: _noop), 560),
+    ('cta', CtaSection(onGetStarted: _noop, onContact: _noop), 560),
     ('faq', const FaqSection(), 1000),
     ('footer', FooterSection(onLinkTap: _ignore), 460),
-    ('contact_dialog', const Center(child: LandingContactDialog()), 420),
   ]) {
     testWidgets('section — $name', (tester) async {
       await _capture(
@@ -209,6 +167,13 @@ Future<void> _capture(
         ),
       ),
     );
+    // An empty frame first: the page's reveals start on a post-frame callback
+    // and a controller started there does not take its first tick until the
+    // next frame, so a single long pump would shoot every band at zero
+    // opacity. The clock still advances by exactly 1200ms in total — the
+    // modules hub pulses on a repeating controller, and a different total
+    // would catch it at a different point in its cycle.
+    await tester.pump();
     await tester.pump(const Duration(milliseconds: 1200));
   }, (error, stack) {});
 

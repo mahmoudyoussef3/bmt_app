@@ -5,7 +5,7 @@ import '../theme/landing_theme.dart';
 import '../widgets/landing_atoms.dart';
 import '../widgets/landing_layout.dart';
 
-/// «ابدأ استخدام EWT في خطوات بسيطة» — the four-step onboarding, on navy.
+/// «كيف تعمل EWT؟» — four numbered steps on the page's second navy band.
 class StepsSection extends StatelessWidget {
   const StepsSection({super.key, required this.onGetStarted});
 
@@ -13,37 +13,26 @@ class StepsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
+    final gap = landingSectionGap(context);
+    return ColoredBox(
       color: LandingPalette.navy,
       child: Stack(
         children: [
           const Positioned.fill(
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: RadialGradient(
-                  center: Alignment(-0.8, -1),
-                  radius: 0.95,
-                  colors: [Color(0x422563EB), Color(0x002563EB)],
-                  stops: [0, 0.65],
-                ),
-              ),
-            ),
+            child: IgnorePointer(child: CustomPaint(painter: _StepsGlow())),
           ),
           Padding(
-            padding: EdgeInsets.symmetric(vertical: landingSectionGap(context)),
+            padding: EdgeInsets.symmetric(vertical: gap),
             child: LandingContainer(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const LandingSectionIntro(
-                    eyebrow: 'كيف تعمل EWT؟',
-                    eyebrowColor: LandingPalette.onNavyAccent,
-                    headline: 'ابدأ استخدام EWT في خطوات بسيطة',
-                    maxWidth: 720,
-                    onDark: true,
-                    headlineMin: 24,
-                    headlineMax: 38,
+                  Text(
+                    LandingContent.stepsHeadline,
+                    style: LandingType.heading(
+                      landingClamp(context, min: 24, vw: 3.2, max: 38),
+                      color: Colors.white,
+                    ),
                   ),
                   SizedBox(
                     height: landingClamp(context, min: 26, vw: 3.5, max: 42),
@@ -51,23 +40,22 @@ class StepsSection extends StatelessWidget {
                   LandingAutoGrid(
                     minItemWidth: 230,
                     spacing: 13,
+                    stagger: true,
                     children: [
                       for (final step in LandingContent.steps)
-                        _StepCard(
-                          number: step.num,
-                          icon: step.icon,
-                          title: step.title,
-                          body: step.body,
-                        ),
+                        _StepCard(step: step),
                     ],
                   ),
                   const SizedBox(height: 26),
-                  LandingButton(
-                    label: 'ابدأ مع EWT',
-                    icon: Icons.arrow_back_rounded,
-                    height: 52,
-                    style: LandingButtonStyle.onDark,
-                    onPressed: onGetStarted,
+                  Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: LandingButton(
+                      label: LandingContent.getStarted,
+                      onPressed: onGetStarted,
+                      style: LandingButtonStyle.onDark,
+                      icon: Icons.arrow_forward_rounded,
+                      height: 52,
+                    ),
                   ),
                 ],
               ),
@@ -79,18 +67,40 @@ class StepsSection extends StatelessWidget {
   }
 }
 
-class _StepCard extends StatelessWidget {
-  const _StepCard({
-    required this.number,
-    required this.icon,
-    required this.title,
-    required this.body,
-  });
+/// `radial-gradient(700px 360px at 10% 0%, rgba(37,99,235,.26), transparent)`.
+class _StepsGlow extends CustomPainter {
+  const _StepsGlow();
 
-  final String number;
-  final IconData icon;
-  final String title;
-  final String body;
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.drawRect(
+      Offset.zero & size,
+      Paint()
+        ..shader =
+            RadialGradient(
+              colors: [
+                LandingPalette.brand.withValues(alpha: 0.26),
+                LandingPalette.brand.withValues(alpha: 0),
+              ],
+              stops: const [0, 0.65],
+            ).createShader(
+              Rect.fromCenter(
+                center: Offset(size.width * 0.1, 0),
+                width: 1400,
+                height: 720,
+              ),
+            ),
+    );
+  }
+
+  @override
+  bool shouldRepaint(_StepsGlow oldDelegate) => false;
+}
+
+class _StepCard extends StatelessWidget {
+  const _StepCard({required this.step});
+
+  final LandingStepCard step;
 
   @override
   Widget build(BuildContext context) {
@@ -108,12 +118,12 @@ class _StepCard extends StatelessWidget {
           Row(
             children: [
               Text(
-                number,
-                style: LandingType.label(
+                step.number,
+                textDirection: TextDirection.ltr,
+                style: LandingType.metric(
                   13,
                   color: LandingPalette.onNavyAccent,
-                  weight: FontWeight.w900,
-                ),
+                ).copyWith(letterSpacing: 0),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -123,14 +133,21 @@ class _StepCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 10),
-              Icon(icon, size: 19, color: Colors.white.withValues(alpha: 0.8)),
+              Icon(
+                step.icon,
+                size: 19,
+                color: Colors.white.withValues(alpha: 0.8),
+              ),
             ],
           ),
           const SizedBox(height: 15),
-          Text(title, style: LandingType.cardTitle(16.5, color: Colors.white)),
+          Text(
+            step.title,
+            style: LandingType.cardTitle(16.5, color: Colors.white),
+          ),
           const SizedBox(height: 7),
           Text(
-            body,
+            step.body,
             style: LandingType.cardBody(
               13.5,
               color: Colors.white.withValues(alpha: 0.7),

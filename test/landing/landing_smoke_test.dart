@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import 'package:bmt_app/landing/presentation/landing_page.dart';
 
+import 'landing_fonts.dart';
+
 void main() {
-  setUpAll(() => GoogleFonts.config.allowRuntimeFetching = false);
+  // The sweep only means something on the face the page actually renders in:
+  // Cairo is both wider and much taller than any Latin fallback, so a run
+  // without it walks past the overflows a real viewport would hit.
+  setUpAll(loadLandingFonts);
 
   Future<void> pumpAt(WidgetTester tester, Size size) async {
     tester.view.physicalSize = size;
@@ -60,11 +64,9 @@ void main() {
     );
     await tester.tap(find.text('المالية'));
     await tester.pump(const Duration(milliseconds: 400));
-    // Each tab swaps the console capture and the line describing it.
-    expect(
-      find.text('التحصيل والمدفوعات والمصروفات، ومنين جه كل جنيه.'),
-      findsOneWidget,
-    );
+    // Each tab swaps the six KPIs and the trend chart beneath them.
+    expect(find.text('الإيرادات المحصلة خلال 7 أيام'), findsOneWidget);
+    expect(find.text('مبالغ معلقة'), findsOneWidget);
 
     await tester.scrollUntilVisible(
       find.text('هل يوجد تطبيق للكابتن؟'),

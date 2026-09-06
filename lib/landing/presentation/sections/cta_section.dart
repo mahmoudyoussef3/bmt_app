@@ -1,234 +1,156 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../landing_content.dart';
 import '../theme/landing_theme.dart';
 import '../widgets/landing_atoms.dart';
-import '../widgets/landing_contact.dart';
+import '../widgets/landing_charts.dart';
 import '../widgets/landing_layout.dart';
 
-/// The closing conversion band — a navy panel split into the ask and the
-/// ways to answer it.
-///
-/// The nav's «تواصل معنا» link scrolls here, so the band has to *be* the
-/// contact surface rather than a button that opens one: the copy and the one
-/// primary action lead, and the office's two real channels sit beside them,
-/// tappable, on the panel. That also gives the second half of the card a job
-/// — it used to hold nothing but a decorative wireframe that drifted under
-/// the buttons and fought the label it sat behind.
+/// The closing panel: one dark slab carrying the ask.
 class CtaSection extends StatelessWidget {
-  const CtaSection({super.key, required this.onGetStarted});
+  const CtaSection({
+    super.key,
+    required this.onGetStarted,
+    required this.onContact,
+  });
 
   final VoidCallback onGetStarted;
+  final VoidCallback onContact;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(bottom: landingSectionGap(context)),
-      child: LandingContainer(
-        child: Container(
-          clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(LandingRadii.card + 10),
-            boxShadow: LandingPalette.liftedShadow,
-            // Flat navy, like every other dark band on the page (steps,
-            // footer): the indigo end of the old gradient read as a second
-            // brand colour and pulled the eye away from the copy.
-            color: LandingPalette.navy,
-          ),
-          child: Stack(
-            children: [
-              const Positioned.fill(
-                child: DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: RadialGradient(
-                      center: AlignmentDirectional(-0.76, -0.84),
-                      radius: 0.9,
-                      colors: [Color(0x1AFFFFFF), Color(0x00FFFFFF)],
-                      stops: [0, 0.62],
-                    ),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.symmetric(
-                  horizontal: landingClamp(context, min: 22, vw: 3.8, max: 56),
-                  vertical: landingClamp(context, min: 34, vw: 4.6, max: 64),
-                ),
-                child: LandingSplit(
-                  // The two 400px flex bases: below this the ask stacks over
-                  // the channels rather than squeezing both.
-                  breakpoint: 860,
-                  startFlex: 6,
-                  endFlex: 5,
-                  gap: landingClamp(context, min: 30, vw: 3.4, max: 52),
-                  start: _CtaAsk(onGetStarted: onGetStarted),
-                  end: const _CtaChannels(),
-                ),
-              ),
+    return LandingSection(
+      // The band sits directly under the section before it — its own panel
+      // supplies the separation, so only the bottom rhythm is padded.
+      padTop: false,
+      child: Container(
+        clipBehavior: Clip.antiAlias,
+        padding: EdgeInsets.symmetric(
+          horizontal: landingClamp(context, min: 22, vw: 4, max: 60),
+          vertical: landingClamp(context, min: 38, vw: 5, max: 72),
+        ),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(LandingRadii.card + 10),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              LandingPalette.navy,
+              Color(0xFF14365E),
+              LandingPalette.brandDeep,
             ],
+            stops: [0, 0.55, 1],
           ),
         ),
-      ),
-    );
-  }
-}
-
-/// Eyebrow, headline, lead, the page's one closing action, and the three
-/// things that follow it.
-class _CtaAsk extends StatelessWidget {
-  const _CtaAsk({required this.onGetStarted});
-
-  final VoidCallback onGetStarted;
-
-  @override
-  Widget build(BuildContext context) {
-    final headline = landingClamp(context, min: 25, vw: 3.4, max: 42);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          'ابدأ الآن',
-          style: LandingType.eyebrow(color: LandingPalette.onNavyAccent),
-        ),
-        const SizedBox(height: 12),
-        Text(
-          'جاهز تدير مكتبك بشكل أذكى؟',
-          style: LandingType.heading(
-            headline,
-            color: Colors.white,
-          ).copyWith(letterSpacing: -1, height: 1.28),
-        ),
-        const SizedBox(height: 16),
-        ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 520),
-          child: Text(
-            'ابدأ مع EWT وخلي إدارة الرحلات والحجوزات والكباتن '
-            'والمدفوعات أسهل وأكثر تنظيمًا.',
-            style: LandingType.lead(
-              16,
-              color: Colors.white.withValues(alpha: 0.78),
-            ),
-          ),
-        ),
-        const SizedBox(height: 26),
-        Align(
-          alignment: AlignmentDirectional.centerStart,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 320),
-            child: LandingButton(
-              label: 'ابدأ مع EWT',
-              icon: Icons.arrow_back_rounded,
-              style: LandingButtonStyle.onDark,
-              expand: true,
-              onPressed: onGetStarted,
-            ),
-          ),
-        ),
-        const SizedBox(height: 22),
-        Wrap(
-          spacing: 18,
-          runSpacing: 10,
+        child: Stack(
+          clipBehavior: Clip.none,
           children: [
-            for (final line in LandingContent.ctaAssurances)
-              _Assurance(label: line),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _Assurance extends StatelessWidget {
-  const _Assurance({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const Icon(
-          Icons.check_circle_outline_rounded,
-          size: 16,
-          color: LandingPalette.onNavyAccent,
-        ),
-        const SizedBox(width: 7),
-        Flexible(
-          child: Text(
-            label,
-            style: LandingType.label(
-              12.5,
-              color: Colors.white.withValues(alpha: 0.7),
-              weight: FontWeight.w600,
+            const Positioned.fill(
+              child: IgnorePointer(child: CustomPaint(painter: _CtaGlow())),
             ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// The glass panel: the two channels the office really answers on.
-class _CtaChannels extends StatelessWidget {
-  const _CtaChannels();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(LandingRadii.card + 2),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.14)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
-            children: [
-              LandingIconSquare(
-                icon: Icons.support_agent_rounded,
-                size: 38,
-                iconSize: 19,
-                radius: 11,
-                background: Colors.white.withValues(alpha: 0.10),
-                borderColor: Colors.white.withValues(alpha: 0.18),
-                iconColor: LandingPalette.onNavyAccent,
+            // `inset-inline-start: -40px` — a logical inset, so this one does
+            // follow the page direction and sits on the right in RTL.
+            const PositionedDirectional(
+              start: -40,
+              bottom: -70,
+              width: 420,
+              child: IgnorePointer(
+                child: Opacity(opacity: 0.14, child: LandingWireframe()),
               ),
-              const SizedBox(width: 12),
-              Expanded(
+            ),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 700),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'تواصل معنا مباشرة',
-                      style: LandingType.cardTitle(15, color: Colors.white),
+                      LandingContent.ctaHeadline,
+                      style: LandingType.heading(
+                        landingClamp(context, min: 25, vw: 3.4, max: 42),
+                        color: Colors.white,
+                      ).copyWith(letterSpacing: -1, height: 1.28),
                     ),
-                    const SizedBox(height: 3),
+                    const SizedBox(height: 18),
                     Text(
-                      'اختر الطريقة الأنسب لك.',
-                      style: LandingType.label(
-                        12,
-                        color: Colors.white.withValues(alpha: 0.6),
-                        weight: FontWeight.w400,
+                      LandingContent.ctaBody,
+                      style: LandingType.lead(
+                        16,
+                        color: Colors.white.withValues(alpha: 0.78),
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+                    // `flex: 1 1 200px; max-width: 280px` and
+                    // `flex: 1 1 170px; max-width: 240px` — both buttons grow
+                    // to their caps rather than hugging their labels.
+                    LayoutBuilder(
+                      builder: (context, constraints) => Wrap(
+                        spacing: 12,
+                        runSpacing: 12,
+                        children: [
+                          SizedBox(
+                            width: math.min(280, constraints.maxWidth),
+                            child: LandingButton(
+                              label: LandingContent.getStarted,
+                              onPressed: onGetStarted,
+                              style: LandingButtonStyle.onDark,
+                              icon: Icons.arrow_forward_rounded,
+                              expand: true,
+                            ),
+                          ),
+                          SizedBox(
+                            width: math.min(240, constraints.maxWidth),
+                            child: LandingButton(
+                              label: LandingContent.navContact,
+                              onPressed: onContact,
+                              style: LandingButtonStyle.onDarkOutline,
+                              expand: true,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ],
                 ),
               ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          for (final (index, channel) in LandingChannel.values.indexed) ...[
-            if (index > 0) const SizedBox(height: 10),
-            LandingChannelTile(channel: channel),
+            ),
           ],
-        ],
+        ),
       ),
     );
   }
+}
+
+/// `radial-gradient(600px 320px at 12% 8%, rgba(255,255,255,.1), transparent)`.
+class _CtaGlow extends CustomPainter {
+  const _CtaGlow();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.drawRect(
+      Offset.zero & size,
+      Paint()
+        ..shader =
+            RadialGradient(
+              colors: [
+                Colors.white.withValues(alpha: 0.1),
+                Colors.white.withValues(alpha: 0),
+              ],
+              stops: const [0, 0.62],
+            ).createShader(
+              Rect.fromCenter(
+                center: Offset(size.width * 0.12, size.height * 0.08),
+                width: 1200,
+                height: 640,
+              ),
+            ),
+    );
+  }
+
+  @override
+  bool shouldRepaint(_CtaGlow oldDelegate) => false;
 }

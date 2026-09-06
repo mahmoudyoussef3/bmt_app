@@ -2,11 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../landing_content.dart';
 import '../theme/landing_theme.dart';
-import '../widgets/landing_atoms.dart';
 import '../widgets/landing_layout.dart';
 
-/// «ابدأ منظمًا... وكبّر مكتبك بثقة» — six rungs whose bottom rule deepens
-/// from paper to brand, so the ladder shows growth without a chart.
+/// «ابدأ منظمًا... وكبّر مكتبك بثقة» — six rungs whose bars deepen toward
+/// brand as the office grows into them.
 class GrowthSection extends StatelessWidget {
   const GrowthSection({super.key});
 
@@ -19,27 +18,35 @@ class GrowthSection extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          const LandingSectionIntro(
-            eyebrow: 'النمو',
-            headline: 'ابدأ منظمًا... وكبّر مكتبك بثقة',
-            lead: 'EWT تساعدك تحافظ على السيطرة مع نمو عملياتك.',
-            maxWidth: 620,
-            headlineMin: 24,
-            headlineVw: 3,
-            headlineMax: 38,
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 620),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    LandingContent.growthHeadline,
+                    style: LandingType.heading(
+                      landingClamp(context, min: 24, vw: 3, max: 38),
+                    ).copyWith(height: 1.32),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    LandingContent.growthLead,
+                    style: LandingType.lead(15.5),
+                  ),
+                ],
+              ),
+            ),
           ),
           SizedBox(height: landingClamp(context, min: 26, vw: 3.5, max: 40)),
           LandingAutoGrid(
             minItemWidth: 150,
             spacing: 10,
+            stagger: true,
             children: [
-              for (final rung in LandingContent.growth)
-                _GrowthCard(
-                  step: rung.step,
-                  title: rung.title,
-                  bar: rung.bar,
-                  brandBorder: rung.brandBorder,
-                ),
+              for (final step in LandingContent.growth) _GrowthCard(step: step),
             ],
           ),
         ],
@@ -49,56 +56,52 @@ class GrowthSection extends StatelessWidget {
 }
 
 class _GrowthCard extends StatelessWidget {
-  const _GrowthCard({
-    required this.step,
-    required this.title,
-    required this.bar,
-    required this.brandBorder,
-  });
+  const _GrowthCard({required this.step});
 
-  final String step;
-  final String title;
-  final Color bar;
-  final bool brandBorder;
+  final LandingGrowthStep step;
 
   @override
   Widget build(BuildContext context) {
-    return LandingCard(
+    return Container(
       padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 16),
-      radius: 12,
-      borderColor: brandBorder
-          ? LandingPalette.brandLine
-          : LandingPalette.border,
+      decoration: BoxDecoration(
+        color: LandingPalette.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: step.borderColor),
+        boxShadow: LandingPalette.cardShadow,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
-        // The rule sits on the bottom edge so the rules line up across a row
-        // whose titles wrap to different heights.
+        // `margin-top: auto` on the bar. The cell is measured unbounded first,
+        // so the gap is opened by the alignment rather than by a [Spacer].
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+            crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                step,
-                style: LandingType.label(
+                step.number,
+                textDirection: TextDirection.ltr,
+                style: LandingType.metric(
                   10.5,
                   color: LandingPalette.brand,
-                  weight: FontWeight.w900,
                 ).copyWith(letterSpacing: 0.4),
               ),
               const SizedBox(height: 8),
               Text(
-                title,
-                style: LandingType.cardTitle(14).copyWith(height: 1.5),
+                step.title,
+                style: LandingType.metric(
+                  14,
+                ).copyWith(letterSpacing: 0, height: 1.5),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
             ],
           ),
           Container(
             height: 5,
             decoration: BoxDecoration(
-              color: bar,
+              color: step.barColor,
               borderRadius: BorderRadius.circular(3),
             ),
           ),

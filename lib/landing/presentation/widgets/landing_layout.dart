@@ -1,9 +1,11 @@
 import 'dart:math' as math;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 
 import '../theme/landing_theme.dart';
+import 'landing_motion.dart';
 
 /// CSS `clamp(min, Nvw, max)` in Dart.
 ///
@@ -28,6 +30,23 @@ double landingGutter(BuildContext context) =>
 /// `padding: clamp(52px, 6.5vw, 92px) 0` — the standard section rhythm.
 double landingSectionGap(BuildContext context) =>
     landingClamp(context, min: 52, vw: 6.5, max: 92);
+
+/// Wraps a leading signed-figure run — `+3`, `−2`, `+12%`, `87%` — in an
+/// explicit LTR isolate.
+///
+/// `+` and `−` are bidi neutrals, so inside an Arabic line they join the
+/// Arabic run beside them and `+3 عن أمس` renders as `3+ عن أمس`. A
+/// first-strong isolate cannot help: there is no strong character in `+12%`
+/// at all. Only an explicit U+2066 … U+2069 pair pins the run down.
+String landingIsolateFigures(String text) {
+  final match = RegExp(
+    r'^[+\-\u2212\u00B1%0-9.,/ ]*[0-9%][+\-\u2212%0-9.,/]*',
+  ).firstMatch(text);
+  if (match == null) return text;
+  final run = match.group(0)!.trimRight();
+  if (run.isEmpty) return text;
+  return '\u2066$run\u2069${text.substring(run.length)}';
+}
 
 /// The 1240px content column, centred, with the page gutter applied.
 class LandingContainer extends StatelessWidget {
@@ -116,6 +135,7 @@ class LandingAutoGrid extends StatelessWidget {
     this.runSpacing,
     this.maxColumns,
     this.stretch = true,
+    this.stagger = false,
   });
 
   final double minItemWidth;
@@ -124,6 +144,14 @@ class LandingAutoGrid extends StatelessWidget {
   final double? runSpacing;
   final int? maxColumns;
 
+  /// Fades the cells in one after another as the run arrives rather than
+  /// landing the whole row at once.
+  ///
+  /// Opt-in, because it belongs to a *section's* own card grid: the same grid
+  /// also lays out the tile clusters inside the phone mockups and the console
+  /// preview, which are one picture each and must arrive as one thing.
+  final bool stagger;
+
   /// When true every cell in a run is stretched to the tallest — the default,
   /// matching CSS grid. Set false for content that should hug its own height.
   final bool stretch;
@@ -131,12 +159,15 @@ class LandingAutoGrid extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (children.isEmpty) return const SizedBox.shrink();
+    // The reveals wrap the cells rather than the runs: a stagger that ran a
+    // row at a time would stall visibly at the end of each one.
+    final cells = stagger ? LandingReveal.stagger(children) : children;
     return LayoutBuilder(
       builder: (context, constraints) {
         final available = constraints.maxWidth;
         var columns = ((available + spacing) / (minItemWidth + spacing))
             .floor();
-        columns = columns.clamp(1, children.length);
+        columns = columns.clamp(1, cells.length);
         if (maxColumns != null && columns > maxColumns!) columns = maxColumns!;
         final itemWidth = (available - spacing * (columns - 1)) / columns;
 
@@ -145,21 +176,18 @@ class LandingAutoGrid extends StatelessWidget {
             spacing: spacing,
             runSpacing: runSpacing ?? spacing,
             children: [
-              for (final child in children)
+              for (final child in cells)
                 SizedBox(width: itemWidth, child: child),
             ],
           );
         }
 
         final rows = <Widget>[];
-        for (var i = 0; i < children.length; i += columns) {
-          final slice = children.sublist(
-            i,
-            (i + columns).clamp(0, children.length),
-          );
+        for (var i = 0; i < cells.length; i += columns) {
+          final slice = cells.sublist(i, (i + columns).clamp(0, cells.length));
           rows.add(
-            _EqualHeightRow(
-              itemWidth: itemWidth,
+            _MeasuredRow(
+              widths: List<double>.filled(slice.length, itemWidth),
               spacing: spacing,
               children: slice,
             ),
@@ -254,57 +282,110 @@ class LandingSplit extends StatelessWidget {
 /// to the tallest, but a cell that turns out taller than the measurement grows
 /// instead of overflowing, and nothing in the subtree becomes a relayout
 /// boundary.
-class _EqualHeightRow extends MultiChildRenderObjectWidget {
-  const _EqualHeightRow({
-    required this.itemWidth,
+class _MeasuredRow extends MultiChildRenderObjectWidget {
+  const _MeasuredRow({
+    required this.widths,
     required this.spacing,
     required super.children,
   });
 
-  final double itemWidth;
+  /// One width per child, resolved by the caller — equal for a grid run,
+  /// flex-weighted for a [LandingStretchRow].
+  final List<double> widths;
   final double spacing;
 
   @override
-  RenderObject createRenderObject(BuildContext context) =>
-      _RenderEqualHeightRow(
-        itemWidth: itemWidth,
-        spacing: spacing,
-        textDirection: Directionality.of(context),
-      );
+  RenderObject createRenderObject(BuildContext context) => _RenderMeasuredRow(
+    widths: widths,
+    spacing: spacing,
+    textDirection: Directionality.of(context),
+  );
 
   @override
   void updateRenderObject(
     BuildContext context,
-    _RenderEqualHeightRow renderObject,
+    _RenderMeasuredRow renderObject,
   ) {
     renderObject
-      ..itemWidth = itemWidth
+      ..widths = widths
       ..spacing = spacing
       ..textDirection = Directionality.of(context);
   }
 }
 
-class _EqualHeightParentData extends ContainerBoxParentData<RenderBox> {}
+/// A row of cells at flex-weighted widths, all stretched to the tallest.
+///
+/// CSS `display:flex;flex-wrap:wrap` with the default `align-items: stretch`
+/// and *unequal* `flex-basis` values. Below [breakpoint] — the sum of those
+/// bases plus the gaps, i.e. the width at which the browser would wrap — the
+/// row becomes a column.
+class LandingStretchRow extends StatelessWidget {
+  const LandingStretchRow({
+    super.key,
+    required this.children,
+    required this.flex,
+    required this.breakpoint,
+    this.spacing = 12,
+  });
 
-class _RenderEqualHeightRow extends RenderBox
+  final List<Widget> children;
+  final List<int> flex;
+  final double breakpoint;
+  final double spacing;
+
+  @override
+  Widget build(BuildContext context) {
+    assert(children.length == flex.length);
+    if (children.isEmpty) return const SizedBox.shrink();
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < breakpoint) {
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (var i = 0; i < children.length; i++) ...[
+                if (i > 0) SizedBox(height: spacing),
+                children[i],
+              ],
+            ],
+          );
+        }
+        final total = flex.fold<int>(0, (sum, f) => sum + f);
+        final free = constraints.maxWidth - spacing * (children.length - 1);
+        return _MeasuredRow(
+          widths: [for (final f in flex) free * f / total],
+          spacing: spacing,
+          children: children,
+        );
+      },
+    );
+  }
+}
+
+class _MeasuredRowParentData extends ContainerBoxParentData<RenderBox> {}
+
+class _RenderMeasuredRow extends RenderBox
     with
-        ContainerRenderObjectMixin<RenderBox, _EqualHeightParentData>,
-        RenderBoxContainerDefaultsMixin<RenderBox, _EqualHeightParentData> {
-  _RenderEqualHeightRow({
-    required double itemWidth,
+        ContainerRenderObjectMixin<RenderBox, _MeasuredRowParentData>,
+        RenderBoxContainerDefaultsMixin<RenderBox, _MeasuredRowParentData> {
+  _RenderMeasuredRow({
+    required List<double> widths,
     required double spacing,
     required TextDirection textDirection,
-  }) : _itemWidth = itemWidth,
+  }) : _widths = widths,
        _spacing = spacing,
        _textDirection = textDirection;
 
-  double _itemWidth;
-  double get itemWidth => _itemWidth;
-  set itemWidth(double value) {
-    if (_itemWidth == value) return;
-    _itemWidth = value;
+  List<double> _widths;
+  List<double> get widths => _widths;
+  set widths(List<double> value) {
+    if (listEquals(_widths, value)) return;
+    _widths = value;
     markNeedsLayout();
   }
+
+  double _widthAt(int index) =>
+      index < _widths.length ? _widths[index] : (_widths.lastOrNull ?? 0);
 
   double _spacing;
   double get spacing => _spacing;
@@ -324,16 +405,21 @@ class _RenderEqualHeightRow extends RenderBox
 
   @override
   void setupParentData(RenderBox child) {
-    if (child.parentData is! _EqualHeightParentData) {
-      child.parentData = _EqualHeightParentData();
+    if (child.parentData is! _MeasuredRowParentData) {
+      child.parentData = _MeasuredRowParentData();
     }
   }
 
-  /// The width the run occupies: every cell at [itemWidth], separated by
+  /// The width the run occupies: every cell at its own width, separated by
   /// [spacing]. A short final run keeps its trailing gap empty rather than
   /// stretching, exactly as a grid's last row does.
-  double get _runWidth =>
-      childCount * itemWidth + (childCount - 1).clamp(0, childCount) * spacing;
+  double get _runWidth {
+    var total = (childCount - 1).clamp(0, childCount) * spacing;
+    for (var i = 0; i < childCount; i++) {
+      total += _widthAt(i);
+    }
+    return total;
+  }
 
   @override
   double computeMinIntrinsicWidth(double height) => _runWidth;
@@ -343,27 +429,29 @@ class _RenderEqualHeightRow extends RenderBox
 
   @override
   double computeMinIntrinsicHeight(double width) =>
-      _tallest((RenderBox child) => child.getMinIntrinsicHeight(itemWidth));
+      _tallest((child, i) => child.getMinIntrinsicHeight(_widthAt(i)));
 
   @override
   double computeMaxIntrinsicHeight(double width) =>
-      _tallest((RenderBox child) => child.getMaxIntrinsicHeight(itemWidth));
+      _tallest((child, i) => child.getMaxIntrinsicHeight(_widthAt(i)));
 
-  double _tallest(double Function(RenderBox child) measure) {
+  double _tallest(double Function(RenderBox child, int index) measure) {
     var tallest = 0.0;
+    var index = 0;
     for (var child = firstChild; child != null; child = childAfter(child)) {
-      tallest = math.max(tallest, measure(child));
+      tallest = math.max(tallest, measure(child, index));
+      index++;
     }
     return tallest;
   }
 
-  BoxConstraints get _measureConstraints =>
-      BoxConstraints(minWidth: itemWidth, maxWidth: itemWidth);
+  BoxConstraints _measureConstraints(int index) =>
+      BoxConstraints(minWidth: _widthAt(index), maxWidth: _widthAt(index));
 
   @override
   Size computeDryLayout(BoxConstraints constraints) {
     final height = _tallest(
-      (RenderBox child) => child.getDryLayout(_measureConstraints).height,
+      (child, i) => child.getDryLayout(_measureConstraints(i)).height,
     );
     return constraints.constrain(Size(_runWidth, height));
   }
@@ -377,9 +465,11 @@ class _RenderEqualHeightRow extends RenderBox
 
     // Pass 1 — measure every cell at its real width with the height free.
     var tallest = 0.0;
+    var measured = 0;
     for (var child = firstChild; child != null; child = childAfter(child)) {
-      child.layout(_measureConstraints, parentUsesSize: true);
+      child.layout(_measureConstraints(measured), parentUsesSize: true);
       tallest = math.max(tallest, child.size.height);
+      measured++;
     }
 
     // Pass 2 — stretch to the tallest. `minHeight` rather than a tight height
@@ -387,15 +477,15 @@ class _RenderEqualHeightRow extends RenderBox
     // to exceed the measurement, which is then absorbed on the retry below.
     var settled = 0.0;
     for (var attempt = 0; attempt < 2; attempt++) {
-      final stretch = BoxConstraints(
-        minWidth: itemWidth,
-        maxWidth: itemWidth,
-        minHeight: tallest,
-      );
       settled = 0;
+      var index = 0;
       for (var child = firstChild; child != null; child = childAfter(child)) {
-        child.layout(stretch, parentUsesSize: true);
+        child.layout(
+          _measureConstraints(index).copyWith(minHeight: tallest),
+          parentUsesSize: true,
+        );
         settled = math.max(settled, child.size.height);
+        index++;
       }
       if (settled <= tallest) break;
       tallest = settled;
@@ -404,13 +494,15 @@ class _RenderEqualHeightRow extends RenderBox
     size = constraints.constrain(Size(_runWidth, settled));
 
     final rtl = textDirection == TextDirection.rtl;
+    var cursor = 0.0;
     var index = 0;
     for (var child = firstChild; child != null; child = childAfter(child)) {
-      final offset = index * (itemWidth + spacing);
-      (child.parentData! as _EqualHeightParentData).offset = Offset(
-        rtl ? size.width - offset - itemWidth : offset,
+      final width = _widthAt(index);
+      (child.parentData! as _MeasuredRowParentData).offset = Offset(
+        rtl ? size.width - cursor - width : cursor,
         0,
       );
+      cursor += width + spacing;
       index++;
     }
   }
