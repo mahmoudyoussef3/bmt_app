@@ -185,7 +185,7 @@ class _HeaderMark extends StatelessWidget {
                 : null,
             boxShadow: onDark
                 ? null
-                : [
+                : [ 
                     BoxShadow(
                       color: LandingPalette.brand.withValues(alpha: 0.6),
                       offset: const Offset(0, 8),

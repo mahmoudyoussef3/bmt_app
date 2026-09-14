@@ -67,3 +67,5 @@ test/landing/_captures/
 
 # FVM Version Cache
 .fvm/
+.vercel
+.env*

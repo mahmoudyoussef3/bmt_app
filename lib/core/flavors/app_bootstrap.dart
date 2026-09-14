@@ -31,17 +31,17 @@ Future<void> bootstrapFlavorApp(AppFlavor flavor) async {
   await _initializeSupabase(config);
 
   Widget app;
-  switch (flavor) {
-    case AppFlavor.client:
-      registerClientDependencies();
-      app = const ClientApp();
-    case AppFlavor.captain:
-      registerCaptainDependencies();
-      app = const CaptainApp();
-    case AppFlavor.dashboard:
+ // switch (flavor) {
+   // case AppFlavor.client:
+     // registerClientDependencies();
+     // app = const ClientApp();
+    //case AppFlavor.captain:
+      //registerCaptainDependencies();
+      //app = const CaptainApp();
+//    case AppFlavor.dashboard:
       registerDashboardDependencies();
       app = const DashboardWebApp();
-  }
+ // }
 
   runApp(_FlavorAppProviders(child: app));
 }
