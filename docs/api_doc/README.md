@@ -31,12 +31,52 @@ docs/api_doc/
 │   ├── referrals/README.md
 │   ├── loyalty/README.md
 │   └── wallet/README.md
-├── dashboard_api_doc/           ← Ops Dashboard — NOT STARTED (placeholder)
-└── captain_api_doc/             ← Captain (driver) app — NOT STARTED (placeholder)
+├── dashboard_api_doc/           ← Ops Dashboard (web console) — COMPLETE
+│   ├── README.md                ← conventions, office context, licensing layer, feature index, master inventory
+│   ├── auth/README.md
+│   ├── dashboard_home/README.md
+│   ├── business_overview/README.md
+│   ├── live_ops/README.md
+│   ├── trips/README.md
+│   ├── routes/README.md
+│   ├── bookings/README.md
+│   ├── subscriptions/README.md
+│   ├── customers/README.md
+│   ├── fleet/README.md
+│   ├── captain_requests/README.md
+│   ├── finance/README.md
+│   ├── wallet/README.md
+│   ├── tickets/README.md
+│   ├── reviews/README.md
+│   ├── reports/README.md
+│   ├── notifications/README.md
+│   ├── office_profile/README.md
+│   ├── office_billing/README.md
+│   ├── users/README.md
+│   ├── referrals/README.md
+│   ├── platform_admin/README.md
+│   ├── platform_licensing/README.md
+│   └── settings/README.md
+└── captain_api_doc/             ← Captain (driver) app — COMPLETE
+    ├── README.md                ← conventions, identity/session model, licensing gate, feature index, master inventory
+    ├── auth/README.md
+    ├── onboarding/README.md
+    ├── splash/README.md
+    ├── assigned_trips/README.md
+    ├── trip_execution/README.md
+    ├── station_progress/README.md
+    ├── passenger_manifest/README.md
+    ├── live_location/README.md
+    ├── trip_map/README.md
+    ├── incidents/README.md
+    ├── trip_status_updates/README.md
+    ├── notifications/README.md
+    ├── profile/README.md
+    └── trip_history/README.md
 ```
 
 Every statement in these files was derived by reading the Flutter source under
-`lib/apps/<app>/features/<feature>/data/` and the SQL under `supabase/migrations/`
+`lib/apps/<app>/features/<feature>/data/` (plus `lib/apps/dashboard/core/` for the dashboard's session/entitlement layer and `lib/apps/captain/core/session/` for the captain's identity/licensing layer) and the SQL under `supabase/migrations/`
 (latest definition of each function/view wins). Nothing is aspirational unless tagged.
 
 ## Tags
